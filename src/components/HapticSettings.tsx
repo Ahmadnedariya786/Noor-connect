@@ -23,13 +23,13 @@ export function HapticSettings() {
     setSettings(hapticService.getSettings());
   }, []);
 
-  const updateSetting = <K extends keyof HapticSettings>(
+  const updateSetting = async <K extends keyof HapticSettings>(
     key: K, 
     value: HapticSettings[K]
   ) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
-    hapticService.updateSettings({ [key]: value });
+    await hapticService.updateSettings({ [key]: value });
     
     // Provide haptic feedback for setting changes (if enabled)
     if (key !== 'enabled' || value === true) {

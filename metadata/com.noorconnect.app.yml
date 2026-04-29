@@ -8,6 +8,7 @@ Repo: https://github.com/darkmaster0345/Noor-connect.git
 RepoType: git
 
 AutoName: Noor Connect
+Icon: fastlane/metadata/android/en-US/images/icon.png
 AntiFeatures:
   NonFreeNet:
     en-US: App connects to external Islamic APIs (prayer times, Quran data) hosted on third-party servers. Full API list documented at API_MANIFEST.md.

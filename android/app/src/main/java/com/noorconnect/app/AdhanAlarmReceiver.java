@@ -63,6 +63,31 @@ public class AdhanAlarmReceiver extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Trigger haptic feedback for adhan notification
+     * Three gentle pulses to indicate prayer time
+     */
+    private void triggerHapticFeedback(Context context) {
+        try {
+            Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator != null && vibrator.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    // Three gentle pulses for prayer time
+                    long[] pattern = {0, 100, 200, 100, 200, 100};
+                    VibrationEffect effect = VibrationEffect.createWaveform(pattern, -1);
+                    vibrator.vibrate(effect);
+                } else {
+                    // Legacy vibration for older devices
+                    long[] pattern = {0, 100, 200, 100, 200, 100};
+                    vibrator.vibrate(pattern, -1);
+                }
+                Log.d(TAG, "Haptic feedback triggered for adhan");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to trigger haptic feedback", e);
+        }
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null || !ACTION_TRIGGER.equals(intent.getAction())) {
@@ -76,6 +101,9 @@ public class AdhanAlarmReceiver extends BroadcastReceiver {
 
         // Acquire WakeLock BEFORE starting the service to prevent Doze race condition
         acquireWakeLock(context);
+
+        // Trigger haptic feedback for adhan notification
+        triggerHapticFeedback(context);
 
         int alarmId = intent.getIntExtra(EXTRA_ALARM_ID, -1);
         String prayerName = intent.getStringExtra(EXTRA_PRAYER_NAME);

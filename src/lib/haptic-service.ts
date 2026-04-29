@@ -4,6 +4,7 @@
  */
 
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Preferences } from '@capacitor/preferences';
 
 export type HapticPattern = 
   | 'light'     // Subtle tap
@@ -35,37 +36,61 @@ const DEFAULT_SETTINGS: HapticSettings = {
 
 const STORAGE_KEY = 'haptic-settings';
 
-class HapticService {
-  private settings: HapticSettings = DEFAULT_SETTINGS;
-
-  constructor() {
-    this.loadSettings();
-  }
-
-  /**
-   * Load haptic settings from storage
-   */
-  private loadSettings(): void {
+/**
+ * Load haptic settings from Capacitor Preferences
+ */
+const loadSettingsFromPreferences = async (): Promise<HapticSettings> => {
+  try {
+    const { value } = await Preferences.get({ key: STORAGE_KEY });
+    if (value) {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(value) };
+    }
+  } catch (error) {
+    console.warn('Failed to load haptic settings from Preferences:', error);
+    // Fallback to localStorage for migration
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        this.settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+        const settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+        // Migrate to Preferences
+        await Preferences.set({ key: STORAGE_KEY, value: JSON.stringify(settings) });
+        localStorage.removeItem(STORAGE_KEY);
+        return settings;
       }
-    } catch (error) {
-      console.warn('Failed to load haptic settings:', error);
-      this.settings = DEFAULT_SETTINGS;
+    } catch (fallbackError) {
+      console.warn('Failed to load from localStorage fallback:', fallbackError);
     }
+  }
+  return DEFAULT_SETTINGS;
+};
+
+/**
+ * Save haptic settings to Capacitor Preferences
+ */
+const saveSettingsToPreferences = async (settings: HapticSettings): Promise<void> => {
+  try {
+    await Preferences.set({ key: STORAGE_KEY, value: JSON.stringify(settings) });
+  } catch (error) {
+    console.warn('Failed to save haptic settings to Preferences:', error);
+    // Fallback to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+};
+
+class HapticService {
+  private settings: HapticSettings = DEFAULT_SETTINGS;
+  private initialized: boolean = false;
+
+  constructor() {
+    this.initialize();
   }
 
   /**
-   * Save haptic settings to storage
+   * Initialize haptic service by loading settings
    */
-  private saveSettings(): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
-    } catch (error) {
-      console.warn('Failed to save haptic settings:', error);
-    }
+  private async initialize(): Promise<void> {
+    this.settings = await loadSettingsFromPreferences();
+    this.initialized = true;
   }
 
   /**
@@ -78,9 +103,9 @@ class HapticService {
   /**
    * Update haptic settings
    */
-  updateSettings(newSettings: Partial<HapticSettings>): void {
+  async updateSettings(newSettings: Partial<HapticSettings>): Promise<void> {
     this.settings = { ...this.settings, ...newSettings };
-    this.saveSettings();
+    await saveSettingsToPreferences(this.settings);
   }
 
   /**
@@ -112,6 +137,11 @@ class HapticService {
    * Trigger haptic feedback
    */
   async trigger(pattern: HapticPattern): Promise<void> {
+    // Wait for initialization if not ready
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
     // Check if haptics are globally enabled
     if (!this.settings.enabled) return;
 

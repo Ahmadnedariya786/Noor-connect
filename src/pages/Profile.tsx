@@ -17,6 +17,7 @@ import { getCalculationMethod, setCalculationMethod, type CalculationMethodName 
 import { AladhanAPI } from "@/lib/aladhan-api";
 import { getStorageStats, clearAllBooks, formatFileSize, downloadBook, isBookDownloaded } from "@/lib/ebooks-storage";
 import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize } from "@/lib/backup";
+import { clearQuranMushafImageCache } from "@/lib/quran-mushaf-image-cache";
 import { notificationManager, type NotificationPreferences } from "@/lib/notification-manager";
 import { localNotifications } from "@/lib/local-notifications";
 import { PrayerMethodSelector } from "@/components/PrayerMethodSelector";
@@ -239,7 +240,7 @@ const Profile = () => {
     } else {
       toast({
         title: "Failed to send notification",
-        description: "Please check your device notification settings.",
+        description: result.error || "Please check your device notification settings.",
         variant: "destructive",
       });
     }
@@ -469,6 +470,13 @@ const Profile = () => {
     }
   };
 
+  const handleClearQuranCache = async () => {
+    if (confirm("This will delete all cached Mushaf page images. Continue?")) {
+      await clearQuranMushafImageCache();
+      toast({ title: "Quran cache cleared" });
+    }
+  };
+
   const handleClearBooks = async () => {
     if (confirm("Delete all downloaded e-books?")) {
       await clearAllBooks();
@@ -648,6 +656,18 @@ const Profile = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="pt-4 border-t border-border/40">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearQuranCache}
+                  className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Clear Quran cache
+                </Button>
               </div>
             </Card>
           </div>

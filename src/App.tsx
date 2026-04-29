@@ -64,13 +64,15 @@ const RemedyFavorites = lazy(() => import("./pages/RemedyFavorites"));
 const Tafsir = lazy(() => import("./pages/Tafsir-New"));
 const EidChecklist = lazy(() => import("./pages/EidChecklist"));
 const FitranaCalculator = lazy(() => import("./pages/FitranaCalculator"));
+const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const bootstrapTheme = localStorage.getItem("theme") ?? "light";
-localStorage.setItem("theme", bootstrapTheme);
-document.documentElement.classList.toggle("dark", bootstrapTheme === "dark");
-document.documentElement.dataset.animations =
-  localStorage.getItem("animationEnabled") === "false" ? "off" : "on";
+// Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
+const isAnimationDisabled = localStorage.getItem("animations_enabled") === "false";
+if (isAnimationDisabled) {
+  document.documentElement.classList.add("no-animations");
+}
+document.documentElement.dataset.animations = isAnimationDisabled ? "off" : "on";
 
 function AppRoutes() {
   const location = useLocation();
@@ -79,8 +81,10 @@ function AppRoutes() {
   // Scroll to top on navigation
   useEffect(() => {
     const scrollContainer = document.getElementById("main-content");
-    scrollContainer?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
   }, [location]);
 
   return (

@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Play, Search, Sparkles, BookMarked, History, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
 import { PageTransition } from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
+import { getDailyAyah } from "@/lib/daily-content";
 
 interface Surah {
   number: number;
@@ -24,6 +26,7 @@ const Quran = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { t: ti18n } = useI18n();
+  const dailyAyah = useMemo(() => getDailyAyah(), []);
   const [surahs, setSurahs] = useState<Surah[]>(() => {
     try {
       const cached = localStorage.getItem('quran-surahs-cache');
@@ -118,6 +121,51 @@ const Quran = () => {
               </div>
             </div>
           </div>
+
+          {/* Daily Ayah Card */}
+          <div className="bg-emerald-600 text-white p-6 rounded-2xl mb-6">
+            <h3 className="text-xl font-bold mb-2">Daily Ayah Test</h3>
+            <p className="text-sm">{dailyAyah?.title || 'Verse of the Day'}</p>
+            <p className="text-xs mt-2">{dailyAyah?.content || 'Loading...'}</p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 cursor-pointer active:scale-[0.98] transition-transform"
+            onClick={() => navigate('/quran-reader')}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
+
+            <div className="relative z-10 p-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-4 h-4 text-[#e0c097]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
+                  {dailyAyah?.title || 'Verse of the Day'}
+                </span>
+              </div>
+
+              <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/5 mb-4">
+                <p className="text-white/90 text-base font-medium leading-relaxed mb-4">
+                  {dailyAyah?.content || 'Loading...'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-white/10 text-white/80 border-white/10 text-xs">
+                    {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
+                  </Badge>
+                  <span className="text-white/50 text-xs font-medium">{dailyAyah?.reference || ''}</span>
+                </div>
+              </div>
+
+              <p className="text-white/60 text-sm italic">
+                {dailyAyah?.reflection || ''}
+              </p>
+            </div>
+          </motion.div>
 
           {/* Last Read Card */}
           {lastRead && (

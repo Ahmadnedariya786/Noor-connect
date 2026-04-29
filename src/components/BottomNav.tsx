@@ -10,11 +10,11 @@ const BottomNav = memo(function BottomNav() {
   const { t } = useLanguage();
 
   const navItems = [
-    { title: t('home'), path: "/", icon: Home, gradient: 'from-emerald-500 to-teal-600' },
-    { title: t('quran'), path: "/quran", icon: BookOpen, gradient: 'from-blue-500 to-indigo-600' },
-    { title: t('qibla'), path: "/qibla", icon: Compass, gradient: 'from-purple-500 to-pink-600' },
-    { title: t('services'), path: "/services", icon: LayoutGrid, gradient: 'from-amber-500 to-orange-600' },
-    { title: t('settings'), path: "/profile", icon: Settings, gradient: 'from-rose-500 to-red-600' },
+    { title: t('home'), path: "/", icon: Home, gradient: 'from-emerald-500 to-emerald-600' },
+    { title: t('quran'), path: "/quran", icon: BookOpen, gradient: 'from-emerald-500 to-emerald-600' },
+    { title: t('qibla'), path: "/qibla", icon: Compass, gradient: 'from-emerald-500 to-emerald-600' },
+    { title: t('services'), path: "/services", icon: LayoutGrid, gradient: 'from-emerald-500 to-emerald-600' },
+    { title: t('settings'), path: "/profile", icon: Settings, gradient: 'from-emerald-500 to-emerald-600' },
   ];
 
   return (
@@ -29,7 +29,7 @@ const BottomNav = memo(function BottomNav() {
       }}
     >
       {/* Premium Floating Island with enhanced glassmorphism */}
-      <div className="w-full max-w-md bg-gradient-to-b from-background/95 to-background/80 backdrop-blur-3xl border border-white/20 shadow-[0_25px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.1)] pointer-events-auto rounded-[32px] relative mx-4">
+      <div className="w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-3xl border border-border/50 shadow-2xl pointer-events-auto rounded-[32px] relative mx-4">
         {/* Subtle animated gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-60 rounded-[32px] overflow-hidden" />
         

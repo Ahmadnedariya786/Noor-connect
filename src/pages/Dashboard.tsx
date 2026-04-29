@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useMemo, Suspense, lazy, type MouseEv
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Moon, Sun, Sunset, Cloud, CloudMoon, Calendar, BookOpen, Navigation, Calculator, Trophy, Star, Search, Loader2, Compass, Heart, ToggleLeft, ToggleRight, Sparkles, MessageCircle, Clock, TrendingUp, Award, Grid3X3, Building, Activity } from "lucide-react";
+import { PremiumDashboard } from "@/components/PremiumDashboard";
+import { Moon, Sun, Sunset, Cloud, CloudMoon, Bell, Compass, BookOpen, LayoutGrid, Settings as SettingsIcon, Wallet, Calendar, MapPin, Grid3X3, Building } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
 const DailyAyah = lazy(() => import("@/components/EnhancedDailyAyah").then(module => ({ default: module.EnhancedDailyAyah })));
@@ -19,6 +20,7 @@ import { isMenstrualModeActive, getMenstrualModeData, activateMenstrualMode, dea
 import { cn } from "@/lib/utils";
 import { EidCelebrationOverlay } from "@/components/EidCelebrationOverlay";
 import { CheckCircle, AlertTriangle } from "lucide-react";
+import { BatteryOptimizationDialog } from "@/components/BatteryOptimizationDialog";
 
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
@@ -100,6 +102,7 @@ export default function Dashboard() {
 
   const [showManualLocationDialog, setShowManualLocationDialog] = useState(false);
   const [menstrualModeData, setMenstrualModeData] = useState(getMenstrualModeData());
+  const [showBatteryOptDialog, setShowBatteryOptDialog] = useState(false);
 
 
   const prayerTimesHook = usePrayerTimes();
@@ -453,568 +456,58 @@ export default function Dashboard() {
   }, [targetTime]);
 
 
+  const prayerIcons: Record<string, React.ReactNode> = {
+    Fajr: <Moon className="w-5 h-5" />,
+    Dhuhr: <Sun className="w-5 h-5" />,
+    Asr: <Cloud className="w-5 h-5" />,
+    Maghrib: <Sunset className="w-5 h-5" />,
+    Isha: <CloudMoon className="w-5 h-5" />,
+  };
+
+  const dashboardPrayers = prayers.map(p => {
+    const prayerDate = p.date;
+    const now = currentTime;
+    const isUpcoming = prayerDate && prayerDate > now;
+    
+    return {
+      name: p.name,
+      time: p.time,
+      icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
+      isActive: nextPrayerName === p.name,
+      isUpcoming: isUpcoming
+    };
+  });
+
+  const nextPrayerInfo = {
+    name: nextPrayerName || "Loading...",
+    time: nextEventCountdown?.time || "--:--",
+    timeRemaining: nextEventCountdown?.countdown || "00:00:00",
+    progress: 70, // This should be calculated based on current time vs start/end of prayer
+  };
+
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
-        <AppBar
-          title={t('appTitle')}
-        />
-
-        <div className="max-w-lg mx-auto p-4 space-y-4">
-          {/* Header */}
-          {/* Premium Hero Card */}
-          <div className="relative overflow-hidden rounded-[28px] shadow-[var(--elevation-4)] transition-all duration-500 hover:shadow-[var(--elevation-6)] group">
-            {/* Animated Mesh Gradient Background - Changes to festive gold on Eid */}
-            <div className={cn(
-              "absolute inset-0 transition-all duration-1000",
-              isEid
-                ? "bg-gradient-to-br from-[#1a237e] via-[#0d1b40] to-[#e0c097]/40"
-                : "bg-gradient-to-br from-[#1a4a4a] via-[#2c6e6e] to-[#b38b5d]"
-            )}></div>
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-transparent opacity-60 animate-pulse"></div>
-
-            {/* Special Celebration Glow for Eid */}
-            {isEid && (
-              <>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#e0c097]/20 rounded-full blur-[100px] animate-pulse"></div>
-                <div className="absolute -bottom-10 left-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-[80px]"></div>
-              </>
-            )}
-
-            {/* Subtle Islamic Pattern (CSS-based) */}
-            <div className="absolute inset-0 opacity-[0.03] bg-gradient-to-br from-emerald-50/20 via-transparent to-blue-50/10"></div>
-
-            {/* Static Glow Orbs optimized for mobile rendering */}
-            <div className="absolute top-[-60px] right-[-60px] w-48 h-48 bg-[#e0c097] rounded-full blur-2xl opacity-10"></div>
-            <div className="absolute bottom-[-40px] left-[-40px] w-40 h-40 bg-[#4fd1c5] rounded-full blur-2xl opacity-5"></div>
-            <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-primary/20 rounded-full blur-2xl opacity-10"></div>
-
-            {/* Glassmorphism Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
-
-            {/* Content Container */}
-            <div className="relative z-10 p-6 sm:p-8 flex flex-col text-white space-y-6">
-
-              {/* Top Row: Date & Hijri with premium badges */}
-              <div className="w-full flex justify-between items-center">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 glass-card px-3 py-1.5 text-white/90 w-fit">
-                    <Calendar className="w-3.5 h-3.5 text-[#e0c097]" />
-                    <span className="text-xs font-medium">
-                      {currentTime.toLocaleDateString("en-US", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "short"
-                      })}
-                    </span>
-                  </div>
-                  {hijriDate && (
-                    <div className="text-[10px] text-[#e0c097]/80 font-arabic tracking-wide ps-1">
-                      {hijriDate}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col items-end gap-1">
-                  <p className="text-[10px] text-white/60 font-medium tracking-wide uppercase flex items-center gap-1.5 glass-card px-3 py-1">
-                    <MapPin className="w-3 h-3 text-[#e0c097]" />
-                    {locationLabel.split(',')[0]}
-                  </p>
-                </div>
-              </div>
-
-              {/* Center: Greeting & Time with premium typography */}
-              <div className="flex flex-col items-center justify-center space-y-1 py-4">
-                <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[#e0c097]" />
-                  <span className="text-xs font-semibold tracking-[0.1em] uppercase text-white">
-                    {greeting}
-                  </span>
-                </div>
-
-                <div className="relative flex items-baseline">
-                  <h1 className="text-7xl sm:text-8xl font-bold tracking-tighter text-white drop-shadow-2xl font-mono">
-                    {currentTime.toLocaleTimeString("en-US", {
-                      hour: timeFormat === '12' ? 'numeric' : '2-digit',
-                      minute: "2-digit",
-                      hour12: timeFormat === '12',
-                      timeZone: timezoneLabel || undefined
-                    }).replace(/\s+[APap][Mm]/, '')}
-                  </h1>
-                  {timeFormat === '12' && (
-                    <span className="text-xl sm:text-2xl ms-2 font-bold text-[#e0c097] tracking-tight uppercase">
-                      {currentTime.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: timezoneLabel }).split(' ')[1]}
-                    </span>
-                  )}
-                </div>
-
-                {nextEventCountdown && (
-                  <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/5 group-hover:bg-black/30 transition-colors">
-                    <div className="w-2 h-2 rounded-full bg-[#e0c097] animate-pulse" />
-                    <span className="text-xs font-medium text-white/90">
-                      {nextEventCountdown.name}: <span className="text-[#e0c097]">{nextEventCountdown.countdown}</span>
-                    </span>
-                  </div>
-                )}
-              </div>
-
-            </div>
-
-            {/* Premium Bottom Gradient Line */}
-            <div className="absolute bottom-0 inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-[#e0c097]/70 to-transparent"></div>
-
-            {/* Corner Accents */}
-            <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/20 rounded-tl-lg"></div>
-            <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/20 rounded-tr-lg"></div>
-            <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/20 rounded-bl-lg"></div>
-            <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/20 rounded-br-lg"></div>
-          </div>
-
-          <EidCelebrationOverlay />
-
-
-
-          {/* Enhanced Premium Feature Cards Grid */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-5">
-            <AnimatePresence>
-              {featureCards.map((card, index) => {
-                const Icon = card.icon;
-                const isFullWidth = index === 2; // Making the 3rd card span full width for better symmetry
-
-                return (
-                  <motion.div
-                    key={card.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-                    whileHover={{ scale: 1.02, y: -4 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate(card.route)}
-                    className={`relative overflow-hidden rounded-[24px] cursor-pointer group shadow-lg sm:shadow-xl shadow-${card.gradient.split('-')[1]}/20 ${isFullWidth ? 'col-span-2' : ''}`}
-                  >
-                    {/* Base Vivid Gradient */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient}`} />
-
-                    {/* Dynamic Lighting Effects */}
-                    <div className="absolute -top-16 -right-16 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-700" />
-                    <div className="absolute -bottom-12 -left-12 w-28 h-28 bg-black/20 rounded-full blur-xl group-hover:bg-black/10 transition-all duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/5 opacity-80" />
-
-                    {/* Premium Noise / Pattern Overlay */}
-                    <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(ellipse_at_center,_#ffffff_1px,_transparent_1px)] bg-[length:12px_12px]" />
-
-                    {/* Content Container */}
-                    <div className={`relative z-10 p-5 ${isFullWidth ? 'flex flex-row items-center justify-between h-28' : 'flex flex-col h-36 justify-between'}`}>
-                      {/* Top / Left Section: Icon & Stat */}
-                      <div className={`flex ${isFullWidth ? 'flex-col items-start gap-3' : 'items-start justify-between w-full'}`}>
-                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                          <Icon className="w-5 h-5 text-white drop-shadow-md" strokeWidth={2.5} />
-                        </div>
-                        {isFullWidth && (
-                          <div>
-                            <h3 className="font-bold text-white text-xl tracking-tight leading-none mb-1">{card.title}</h3>
-                            <p className="text-white/80 text-xs font-medium uppercase tracking-wider">{card.description}</p>
-                          </div>
-                        )}
-                        {!isFullWidth && (
-                          <div className="bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 shadow-sm">
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-white shadow-black/10 drop-shadow-sm">{card.stats}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Bottom / Right Section: Title & Description */}
-                      {!isFullWidth && (
-                        <div className="pt-2">
-                          <h3 className="font-bold text-white text-lg tracking-tight leading-none mb-1">{card.title}</h3>
-                          <p className="text-white/80 text-xs font-medium">{card.description}</p>
-                        </div>
-                      )}
-                      {isFullWidth && (
-                        <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm shrink-0">
-                          <span className="text-xs uppercase tracking-wider font-bold text-white shadow-black/10 drop-shadow-sm">{card.stats}</span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-
-          {/* Premium Prayer Times Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-[24px] p-6 shadow-xl shadow-blue-900/5 group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50"
-          >
-            {/* Subtle background flair */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors duration-500 pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1d4ed8] shadow-lg shadow-blue-500/30 text-white shrink-0 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500">
-                    <Building className="w-6 h-6" strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">Prayer Times</h3>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{locationLabel}</p>
-                  </div>
-                </div>
-                <div className="text-right bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-blue-100 dark:border-blue-800">
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-blue-600 dark:text-blue-400 mb-0.5">Next Prayer</p>
-                  <p className="font-bold text-lg text-blue-700 dark:text-blue-300 leading-none">{nextPrayerName || '---'}</p>
-                </div>
-              </div>
-
-              {/* Full Prayer Times List - Always Show All Prayers */}
-              <Suspense fallback={
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={`skeleton-${i}`} className="h-14 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl animate-pulse" />
-                  ))}
-                </div>
-              }>
-                <div className="bg-white/40 dark:bg-black/20 rounded-[20px] p-2 border border-white/50 dark:border-white/5 shadow-inner">
-                  <PrayerTimesList
-                    timings={prayerTimesHook.prayerTimesWithEnd}
-                    location={prayerTimesHook.location}
-                    isLoading={prayerTimesHook.isLoading}
-                    error={prayerTimesHook.error}
-                    needsManualLocation={prayerTimesHook.needsManualLocation}
-                    refresh={prayerTimesHook.refresh}
-                    setManualLocation={prayerTimesHook.setManualLocation}
-                    timeZone={timezoneLabel}
-                  />
-                </div>
-              </Suspense>
-            </div>
-          </motion.div>
-
-          {/* Salah Check-in & Qaza Tracker */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.5, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-[24px] p-6 shadow-xl shadow-amber-900/5 group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50"
-          >
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors duration-500 pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#f59e0b] via-[#d97706] to-[#b45309] shadow-lg shadow-amber-500/30 text-white shrink-0 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500">
-                  <CheckCircle className="w-6 h-6" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">Salah Check-in</h3>
-                  <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Track your daily prayers</p>
-                </div>
-              </div>
-              <Suspense fallback={<div className="h-32 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl animate-pulse" />}>
-                <SalahTracker />
-              </Suspense>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-[24px] p-6 shadow-xl shadow-rose-900/5 group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50"
-          >
-            <div className="absolute -top-10 -left-10 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-colors duration-500 pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#f43f5e] via-[#e11d48] to-[#be123c] shadow-lg shadow-rose-500/30 text-white shrink-0 group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-500">
-                  <AlertTriangle className="w-6 h-6" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">Qaza Tracker</h3>
-                  <p className="text-sm font-medium text-rose-600 dark:text-rose-400">Missed prayers to make up</p>
-                </div>
-              </div>
-              <Suspense fallback={<div className="h-32 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl animate-pulse" />}>
-                <QazaTracker compact />
-              </Suspense>
-            </div>
-          </motion.div>
-
-          {/* Premium Daily Content Section */}
-          <div className="grid grid-cols-1 gap-5">
-            {/* Daily Ayah Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
-              className="relative overflow-hidden rounded-[24px] p-6 shadow-xl shadow-emerald-900/5 group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50"
-            >
-              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors duration-500 pointer-events-none" />
-
-              <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#10b981] via-[#059669] to-[#047857] shadow-lg shadow-emerald-500/30 text-white shrink-0 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500">
-                    <BookOpen className="w-6 h-6" strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">Daily Ayah</h3>
-                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Quranic Inspiration</p>
-                  </div>
-                </div>
-                <Suspense fallback={<div className="h-32 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl animate-pulse" />}>
-                  <DailyAyah />
-                </Suspense>
-              </div>
-            </motion.div>
-
-            {/* Daily Hadith Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.5, ease: "easeOut" }}
-              className="relative overflow-hidden rounded-[24px] p-6 shadow-xl shadow-indigo-900/5 group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50"
-            >
-              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-colors duration-500 pointer-events-none" />
-
-              <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#6366f1] via-[#4f46e5] to-[#4338ca] shadow-lg shadow-indigo-500/30 text-white shrink-0 group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-500">
-                    <MessageCircle className="w-6 h-6" strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">Daily Hadith</h3>
-                    <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Prophetic Wisdom</p>
-                  </div>
-                </div>
-                <Suspense fallback={<div className="h-32 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl animate-pulse" />}>
-                  <DailyHadith />
-                </Suspense>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Menstrual Mode Toggle - Only show for female users */}
-          {shouldShowMenstrualFeatures() && (
-            <div
-              className={`relative overflow-hidden rounded-[24px] p-5 transition-all duration-500 shadow-xl ${menstrualModeData.isActive
-                ? 'bg-gradient-to-br from-rose-50/90 to-rose-100/50 border border-rose-200/50 shadow-rose-900/5'
-                : 'bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-slate-900/5'
-                }`}
-            >
-              {menstrualModeData.isActive && (
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
-              )}
-
-              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className={`p-3.5 rounded-2xl shadow-sm border ${menstrualModeData.isActive
-                    ? 'bg-rose-500 border-rose-400 shadow-rose-500/30 text-white'
-                    : 'bg-white border-slate-100 text-rose-500 shadow-slate-200/50'
-                    } transition-colors duration-300`}>
-                    <Heart className="w-6 h-6" strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <h3 className={`font-bold text-xl tracking-tight ${menstrualModeData.isActive ? 'text-rose-950' : 'text-slate-900 dark:text-white'}`}>{t('menstrualMode')}</h3>
-                    <p className={`text-[10px] uppercase tracking-wider font-bold ${menstrualModeData.isActive ? 'text-rose-600' : 'text-slate-500'}`}>
-                      {menstrualModeData.isActive ? 'Active' : 'Inactive'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    onClick={() => window.location.href = '/enhanced-menstrual-mode'}
-                    variant="outline"
-                    className="rounded-xl font-bold border-rose-200 text-rose-600 hover:bg-rose-50 w-full sm:w-auto h-12 sm:h-auto"
-                  >
-                    <Activity className="w-4 h-4 mr-2" />
-                    Enhanced
-                  </Button>
-                  <Button
-                    onClick={handleMenstrualModeToggle}
-                    variant={menstrualModeData.isActive ? "destructive" : "default"}
-                    className={`rounded-xl font-bold shadow-lg transition-all active:scale-95 ${menstrualModeData.isActive ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20'} w-full sm:w-auto h-12 sm:h-auto`}
-                  >
-                    {menstrualModeData.isActive ? (
-                      <>
-                        <ToggleLeft className="w-5 h-5 me-2" />
-                        End
-                      </>
-                    ) : (
-                      <>
-                        <ToggleRight className="w-5 h-5 me-2" />
-                        Start
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {menstrualModeData.isActive && menstrualModeData.startedAt && (
-                <div className="mt-4 pt-3 border-t border-rose-200/50 text-[11px] font-bold uppercase tracking-wider text-rose-500 flex items-center gap-2 relative z-10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  Started: {new Date(menstrualModeData.startedAt).toLocaleDateString()}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* AI Reciter Recognition Feature - REMOVED */}
-
-
-
-          {/* Location Detection Card */}
-          {initialLoad ? (
-            <LocationCardSkeleton />
-          ) : (
-            <div className="relative overflow-hidden rounded-[24px] p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-900/5 group">
-              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-slate-500/10 rounded-full blur-2xl group-hover:bg-slate-500/20 transition-colors duration-500 pointer-events-none" />
-
-              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                <div className="flex items-center gap-4">
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 text-slate-700 dark:text-slate-200 shadow-sm border border-white/50 dark:border-slate-600 shrink-0 group-hover:scale-105 transition-transform duration-500">
-                    <MapPin className="w-6 h-6" strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">{t('location')}</h3>
-                    <p className="text-sm font-medium text-slate-500 line-clamp-1">{location.locationName}</p>
-                  </div>
-                </div>
-                <div className="flex gap-3 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowManualLocationDialog(true)}
-                    className="flex-1 sm:flex-none gap-2 rounded-xl bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm h-12 sm:h-10"
-                  >
-                    <MapPin className="w-4 h-4 text-slate-500" />
-                    {t('manual')}
-                  </Button>
-                  <Button
-                    onClick={handleDetectLocation}
-                    disabled={location.isDetecting}
-                    className="flex-1 sm:flex-none gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 font-semibold active:scale-95 transition-all h-12 sm:h-10"
-                  >
-                    {location.isDetecting ? (
-                      <>
-                        <LoadingSpinner size="sm" />
-                        {t('detecting')}
-                      </>
-                    ) : (
-                      <>
-                        <Navigation className="w-4 h-4" />
-                        Detect
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-
-
-          {/* Manual Location Dialog */}
-          {showManualLocationDialog && (
-            <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
-              <div className="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-auto">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Set Manual Location</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowManualLocationDialog(false)}
-                    >
-                      ×
-                    </Button>
-                  </div>
-                  <LocationSearch
-                    onLocationSelect={async (city, country) => {
-                      try {
-                        setLoadingAPI(true);
-
-                        // Clear stale prayer data cache to force fresh fetch for new location
-                        AladhanAPI.clearCachedData();
-
-                        // Step 1: Get coordinates
-                        const coords = await GeocodingService.getCityCoordinates(city, country);
-
-                        // Step 2: Fetch EVERYTHING (times + timezone) from Aladhan API
-                        const result = await AladhanAPI.getTodaysPrayerTimes(
-                          coords.latitude,
-                          coords.longitude,
-                          1
-                        );
-
-                        const fetchedTimezone = result.timezone;
-
-
-                        // Step 3: Set state synchronously
-                        location.setLocation(
-                          coords.latitude,
-                          coords.longitude,
-                          `${city}, ${country}`,
-                          fetchedTimezone
-                        );
-
-                        // Step 4: Refresh hook
-                        await prayerTimesHook.setManualLocation(city, country);
-
-                        setShowManualLocationDialog(false);
-                        toast({
-                          title: "Location Updated",
-                          description: `Time adjusted to ${fetchedTimezone}`
-                        });
-                      } catch (err) {
-                        console.error('[Dashboard] Location selection error:', err);
-                        toast({
-                          title: "Selection Failed",
-                          description: "Could not sync timezone. Please try again.",
-                          variant: "destructive"
-                        });
-                      } finally {
-                        setLoadingAPI(false);
-                      }
-                    }}
-                    isLoading={prayerTimesHook.isLoading}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900/50 border border-slate-200/50 dark:border-slate-700/50 shadow-inner p-6 text-center">
-            {/* Decorative Top Line */}
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-50" />
-
-            <div className="flex flex-col items-center gap-3">
-              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-slate-800/50 shadow-sm border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                <span className="text-xs font-bold uppercase tracking-widest text-[#b8860b]">100% Private</span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-[#b8860b]">Offline-first</span>
-              </div>
-
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mt-1">
-                No tracking • FOSS Architecture
-              </p>
-
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent my-3" />
-
-              <p className="text-sm text-slate-500 dark:text-slate-400 italic font-medium leading-relaxed max-w-sm">
-                "In the remembrance of Allah do hearts find rest." <span className="not-italic text-xs font-bold text-slate-400">— 13:28</span>
-              </p>
-
-              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-200/50 dark:bg-slate-800 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
-                App Version {CURRENT_APP_VERSION}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PremiumDashboard
+        currentTime={currentTime}
+        hijriDate={hijriDate || ""}
+        nextPrayer={nextPrayerInfo}
+        prayers={dashboardPrayers}
+        locationLabel={locationLabel}
+        onServiceClick={(route) => navigate(route)}
+        onVerseClick={() => navigate('/quran')}
+        onHadithClick={() => navigate('/hadith/collections')}
+        onNotificationClick={() => navigate('/notification-history')}
+        onLocationClick={() => setShowManualLocationDialog(true)}
+        showManualLocationDialog={showManualLocationDialog}
+        setShowManualLocationDialog={setShowManualLocationDialog}
+        LocationSearch={LocationSearch}
+        GeocodingService={GeocodingService}
+        AladhanAPI={AladhanAPI}
+        location={location}
+        prayerTimesHook={prayerTimesHook}
+        setLoadingAPI={setLoadingAPI}
+        toast={toast}
+      />
     </PageTransition>
   );
 }

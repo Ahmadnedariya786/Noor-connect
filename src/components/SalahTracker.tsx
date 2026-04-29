@@ -16,6 +16,7 @@ import {
 } from "@/lib/salah-tracker";
 import { syncMissedPrayersToQaza } from "@/lib/qaza-tracker";
 import { useI18n } from "@/hooks/useI18n";
+import hapticService from "@/lib/haptic-service";
 
 const prayerNames: { id: PrayerName; label: string }[] = [
   { id: "fajr", label: "Fajr" },
@@ -84,8 +85,12 @@ export function SalahTracker() {
       setPrayers(getTodayPrayers());
       setStats(getSalahStats());
       setMessage({ type: 'success', text: result.message });
+      // Trigger haptic feedback for successful prayer entry
+      hapticService.trigger('success').catch(() => {});
     } else {
       setMessage({ type: 'error', text: result.message });
+      // Trigger haptic feedback for error
+      hapticService.trigger('error').catch(() => {});
     }
 
     // Clear message after 3 seconds

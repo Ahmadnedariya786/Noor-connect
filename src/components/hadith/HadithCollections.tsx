@@ -1,17 +1,20 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, BookOpen } from "lucide-react";
+import { ArrowLeft, Search, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CollectionCard } from "./CollectionCard";
 import { getAllCollections, HadithCollection } from "@/data/hadith-collections";
+import { useDailyHadith } from "@/lib/daily-content";
+import { motion } from "framer-motion";
 
 export function HadithCollections() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const allCollections = useMemo(() => getAllCollections(), []);
+  const dailyHadith = useDailyHadith();
 
   const filteredCollections = useMemo(() => {
     if (!searchTerm) return allCollections;
@@ -49,6 +52,44 @@ export function HadithCollections() {
             </p>
           </div>
         </div>
+
+        {/* Daily Hadith Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 mb-8"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
+          
+          <div className="relative z-10 p-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-4 h-4 text-[#e0c097]" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
+                {dailyHadith.title}
+              </span>
+            </div>
+            
+            <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/5 mb-4">
+              <p className="text-white/90 text-base font-medium leading-relaxed mb-4">
+                {dailyHadith.content}
+              </p>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-white/10 text-white/80 border-white/10 text-xs">
+                  {dailyHadith.subtitle}
+                </Badge>
+                <span className="text-white/50 text-xs font-medium">{dailyHadith.reference}</span>
+              </div>
+            </div>
+            
+            <p className="text-white/60 text-sm italic">
+              {dailyHadith.reflection}
+            </p>
+          </div>
+        </motion.div>
 
         {/* Search Bar */}
         <div className="relative max-w-md mx-auto mb-8">

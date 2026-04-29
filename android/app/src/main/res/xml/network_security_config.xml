@@ -21,4 +21,9 @@
         <domain includeSubdomains="true">api.radio-browser.info</domain>
         <domain includeSubdomains="true">all.api.radio-browser.info</domain>
     </domain-config>
+    
+    <!-- Allow localhost for local Android asset loading -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
 </network-security-config>

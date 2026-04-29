@@ -98,7 +98,7 @@ class UnifiedNotificationService {
   }
 
   // Show a notification
-  async showNotification(options: NotificationOptions): Promise<boolean> {
+  async showNotification(options: NotificationOptions, immediate: boolean = false): Promise<boolean> {
     const hasPermission = await this.getPermissionStatus();
     if (hasPermission !== 'granted') {
       console.warn('Notification permission not granted');
@@ -108,19 +108,36 @@ class UnifiedNotificationService {
     try {
       if (this.isCapacitor) {
         // Use Capacitor Local Notifications
-        await LocalNotifications.schedule({
-          notifications: [{
-            id: Date.now(),
-            title: options.title,
-            body: options.body,
-            schedule: { at: new Date() },
-            sound: 'default',
-            smallIcon: 'ic_notification',
-            largeIcon: 'icon-192x192',
-            iconColor: '#1a4a4a',
-            extra: options.data || {}
-          }]
-        });
+        if (immediate) {
+          // For immediate notifications, schedule with a very small delay to ensure it fires
+          await LocalNotifications.schedule({
+            notifications: [{
+              id: Date.now(),
+              title: options.title,
+              body: options.body,
+              schedule: { at: new Date(Date.now() + 100) }, // 100ms delay for immediate fire
+              sound: 'default',
+              smallIcon: 'ic_notification',
+              largeIcon: 'icon-192x192',
+              iconColor: '#1a4a4a',
+              extra: options.data || {}
+            }]
+          });
+        } else {
+          await LocalNotifications.schedule({
+            notifications: [{
+              id: Date.now(),
+              title: options.title,
+              body: options.body,
+              schedule: { at: new Date() },
+              sound: 'default',
+              smallIcon: 'ic_notification',
+              largeIcon: 'icon-192x192',
+              iconColor: '#1a4a4a',
+              extra: options.data || {}
+            }]
+          });
+        }
       } else {
         // Use Web Notifications API
         const notification = new Notification(options.title, {
@@ -169,7 +186,7 @@ class UnifiedNotificationService {
   }
 
   // Test notification with detailed debugging
-  async testNotification(): Promise<{ success: boolean; details: string }> {
+  async testNotification(): Promise<{ success: boolean; details: string; error?: string }> {
     const details: string[] = [];
 
     details.push(`Platform: ${this.isCapacitor ? 'Capacitor (Mobile)' : 'Web'}`);
@@ -185,10 +202,12 @@ class UnifiedNotificationService {
       details.push(`Secure context: ${isSecure}`);
 
       if (!isSecure) {
-        details.push('ERROR: Web notifications require HTTPS (except localhost)');
+        const error = 'Web notifications require HTTPS (except localhost)';
+        details.push(`ERROR: ${error}`);
         return {
           success: false,
-          details: details.join('\n')
+          details: details.join('\n'),
+          error
         };
       }
     }
@@ -197,61 +216,69 @@ class UnifiedNotificationService {
     details.push(`Permission: ${permission}`);
 
     if (!this.isNotificationSupported()) {
+      const error = 'Notifications not supported on this device';
+      details.push(`ERROR: ${error}`);
       return {
         success: false,
-        details: details.join('\n')
+        details: details.join('\n'),
+        error
       };
     }
 
     if (permission !== 'granted') {
+      details.push('Requesting permission...');
       const granted = await this.requestPermission();
       details.push(`Permission requested: ${granted ? 'granted' : 'denied'}`);
 
       if (!granted) {
+        const error = this.isCapacitor 
+          ? 'Notification permission denied. Please enable notifications in Android Settings → Apps → Noor Connect → Notifications'
+          : 'Notification permission denied. Please enable notifications in your browser settings';
+        details.push(`ERROR: ${error}`);
         return {
           success: false,
-          details: details.join('\n')
+          details: details.join('\n'),
+          error
         };
       }
     }
 
-    // Test both direct notification and service worker if available
-    let directSuccess = false;
-    let swSuccess = false;
+    // Test immediate notification
+    try {
+      const directSuccess = await this.showNotification({
+        title: '🕌 Test Notification',
+        body: 'If you see this, notifications are working correctly!',
+        tag: 'test-immediate',
+        requireInteraction: false,
+        data: { test: true, source: 'immediate' }
+      }, true); // Use immediate delivery
 
-    // Test direct notification
-    directSuccess = await this.showNotification({
-      title: '🕌 Test Notification',
-      body: 'Direct notification test successful!',
-      tag: 'test-direct',
-      requireInteraction: false,
-      data: { test: true, source: 'direct' }
-    });
+      details.push(`Immediate notification: ${directSuccess ? 'success' : 'failed'}`);
 
-    details.push(`Direct notification: ${directSuccess ? 'success' : 'failed'}`);
-
-    // Test service worker if available
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      try {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'TEST_NOTIFICATION'
-        });
-        swSuccess = true;
-        details.push('Service Worker notification: sent');
-      } catch (error) {
-        details.push(`Service Worker notification: failed - ${error}`);
+      if (!directSuccess) {
+        const error = 'Failed to send notification. Check device notification settings.';
+        details.push(`ERROR: ${error}`);
+        return {
+          success: false,
+          details: details.join('\n'),
+          error
+        };
       }
-    } else {
-      details.push('Service Worker: not available');
+
+      details.push('Overall test: success');
+      return {
+        success: true,
+        details: details.join('\n')
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      details.push(`ERROR: ${errorMessage}`);
+      return {
+        success: false,
+        details: details.join('\n'),
+        error: errorMessage
+      };
     }
-
-    const overallSuccess = directSuccess || swSuccess;
-    details.push(`Overall test: ${overallSuccess ? 'success' : 'failed'}`);
-
-    return {
-      success: overallSuccess,
-      details: details.join('\n')
-    };
   }
 
   // Schedule prayer notification
