@@ -24,7 +24,9 @@ import {
   Calculator,
   Grid3X3,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Sparkles,
+  Clock
 } from "lucide-react";
 
 interface PrayerTime {
@@ -105,7 +107,15 @@ const faithServices = [
   }
 ];
 
-export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({
+// Helper function to get greeting based on time
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+export function PremiumDashboard({
   currentTime,
   hijriDate,
   nextPrayer,
@@ -124,8 +134,8 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({
   location,
   prayerTimesHook,
   setLoadingAPI,
-  toast,
-}) => {
+  toast
+}: PremiumDashboardProps) {
   const [activeServiceIndex, setActiveServiceIndex] = useState(0);
   const [activeInspirationIndex, setActiveInspirationIndex] = useState(0);
   const dailyInspirations = useDailyInspirations();
@@ -258,46 +268,97 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({
         </div>
       )}
 
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4">
-        <div className="w-6" /> {/* Spacer */}
-        <h1 className="text-xl font-bold text-emerald-600 dark:text-emerald-500">Noor Connect</h1>
-        <button 
-          onClick={onNotificationClick}
-          className="p-2 rounded-full hover:bg-muted transition-colors"
-        >
-          <Bell className="w-6 h-6 text-emerald-600 dark:text-emerald-500" />
-        </button>
-      </header>
+      {/* Premium Header Section - Spotify-Inspired Gradient */}
+      <div className="relative overflow-hidden flex-shrink-0">
+        {/* Modern gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#10B981]/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
 
-      <main className="flex-1 px-5 pb-24 space-y-6 overflow-y-auto max-w-lg mx-auto w-full">
-        {/* Time and Hijri Date with subtle glow */}
-        <div className="flex flex-col items-center justify-center py-8 relative">
-          <div className="absolute inset-0 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
-          <motion.h2 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-8xl font-black tracking-tighter text-emerald-950 dark:text-white drop-shadow-sm"
-          >
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-          </motion.h2>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 font-bold text-sm tracking-wide shadow-sm border border-emerald-100 dark:border-emerald-800/50"
-          >
-            <Calendar className="w-4 h-4" />
-            <span>{hijriDate}</span>
-          </motion.div>
+        <div className="relative z-10 px-6 py-6">
+          {/* Top bar with notifications */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="w-10" /> {/* Spacer for balance */}
+            <h1 className="text-2xl font-arabic font-bold text-white">Noor Connect</h1>
+            <button 
+              onClick={onNotificationClick}
+              className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-105"
+            >
+              <Bell className="w-6 h-6 text-white" />
+            </button>
+          </div>
+
+          {/* Greeting and Time */}
+          <div className="text-center mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-center gap-2 mb-3"
+            >
+              <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+              <span className="text-[12px] font-black uppercase tracking-[0.2em] text-white/90">
+                {getGreeting()}
+              </span>
+            </motion.div>
+            
+            <motion.h2 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="text-6xl sm:text-7xl font-black text-white mb-3"
+            >
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+            </motion.h2>
+            
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center justify-center gap-3 text-white/80"
+            >
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                <Calendar className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium">{hijriDate}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                <MapPin className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium">{locationLabel}</span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Quick Stats with Gold/Green Accents */}
+          <div className="grid grid-cols-3 gap-2 max-w-sm mx-auto">
+            {[
+              { label: 'Prayers Today', value: '5/5', color: 'from-[#D4AF37] to-[#F4C430]' },
+              { label: 'Quran Streak', value: '7 days', color: 'from-[#10B981] to-[#059669]' },
+              { label: 'Dhikr Count', value: '33', color: 'from-[#D4AF37] to-[#10B981]' }
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + idx * 0.1 }}
+                className="bg-black/20 backdrop-blur-md rounded-2xl p-3 border border-white/5 text-center relative overflow-hidden"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-10`} />
+                <p className="relative z-10 text-white text-base font-black tracking-tighter">{stat.value}</p>
+                <p className="relative z-10 text-white/60 text-[8px] uppercase font-black tracking-widest mt-1">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        {/* Next Prayer Card - High End Gradient */}
+      <main className="flex-1 px-5 pb-24 space-y-6 overflow-y-auto max-w-lg mx-auto w-full -mt-4">
+
+        {/* Next Prayer Card - Modern Gold/Green Gradient */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           whileHover={{ scale: 1.01 }}
-          className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 shadow-2xl shadow-emerald-900/20 text-white"
+          className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#D4AF37] via-[#10B981] to-[#047857] p-8 shadow-2xl shadow-black/30 text-white"
         >
           {/* Animated decorative element */}
           <motion.div 
@@ -339,79 +400,91 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({
           </div>
         </motion.div>
 
-        {/* Prayer Schedule - Premium List */}
-        <section className="space-y-4">
+        {/* Prayer Schedule - Modern Gold/Green Design */}
+        <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black tracking-tight text-emerald-950 dark:text-emerald-50">Today's Schedule</h3>
+            <h3 className="text-2xl font-black tracking-tight text-foreground">Prayer Times</h3>
             <button 
               onClick={onLocationClick}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted text-foreground text-xs font-bold uppercase tracking-wider border border-border hover:bg-muted/80 transition-all shadow-sm hover:shadow-md"
             >
-              <MapPin className="w-3.5 h-3.5" />
+              <MapPin className="w-4 h-4" />
               <span>{locationLabel}</span>
-              <ChevronRight className="w-3 h-3 opacity-50" />
+              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
             </button>
           </div>
 
-          <div className="space-y-3">
-            {prayers.map((prayer, index) => (
-              <motion.div
-                key={prayer.name}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={cn(
-                  "flex items-center justify-between p-5 rounded-[24px] transition-all border group",
-                  prayer.isActive 
-                    ? "bg-white dark:bg-emerald-900/20 border-emerald-500 shadow-xl shadow-emerald-500/10 ring-2 ring-emerald-500/10" 
-                    : "bg-card border-border/40 hover:border-emerald-200 dark:hover:border-emerald-800 hover:shadow-md"
-                )}
-              >
-                <div className="flex items-center gap-5">
-                  <div className={cn(
-                    "w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300",
+          <div className="bg-card/50 backdrop-blur-sm rounded-[32px] border border-border/30 p-6 shadow-lg">
+            <div className="grid grid-cols-2 gap-4">
+              {prayers.map((prayer, index) => (
+                <motion.div
+                  key={prayer.name}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.08, type: "spring", stiffness: 200 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    "relative overflow-hidden rounded-2xl p-4 transition-all duration-300 cursor-pointer border",
                     prayer.isActive 
-                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110" 
-                      : "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 group-hover:scale-105"
-                  )}>
-                    {prayer.icon}
+                      ? "bg-gradient-to-br from-[#D4AF37] to-[#10B981] border-[#D4AF37]/50 shadow-xl shadow-[#D4AF37]/20" 
+                      : "bg-card border-border hover:border-[#D4AF37]/30 hover:shadow-lg"
+                  )}
+                >
+                  {/* Subtle glow effect for active prayer */}
+                  {prayer.isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/20 to-[#10B981]/20 animate-pulse" />
+                  )}
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={cn(
+                        "w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300",
+                        prayer.isActive 
+                          ? "bg-white/20 text-white" 
+                          : "bg-muted text-foreground"
+                      )}>
+                        {prayer.icon}
+                      </div>
+                      {prayer.isUpcoming && (
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#10B981] animate-pulse">
+                          NEXT
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <span className={cn(
+                        "font-black text-lg tracking-tight block",
+                        prayer.isActive ? "text-white" : "text-foreground"
+                      )}>
+                        {prayer.name}
+                      </span>
+                      <span className={cn(
+                        "font-bold text-sm tracking-tight",
+                        prayer.isActive ? "text-white/80" : "text-muted-foreground"
+                      )}>
+                        {prayer.time}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className={cn(
-                      "font-black text-lg tracking-tight block",
-                      prayer.isActive ? "text-emerald-600 dark:text-emerald-400" : "text-emerald-950 dark:text-emerald-100"
-                    )}>
-                      {prayer.name}
-                    </span>
-                    {prayer.isUpcoming && (
-                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 animate-pulse">Upcoming</span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={cn(
-                    "font-black text-xl tracking-tighter",
-                    prayer.isActive ? "text-emerald-600 dark:text-emerald-400" : "text-emerald-950/40 dark:text-emerald-100/40"
-                  )}>
-                    {prayer.time}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* Services Section with Auto-Changing Carousel */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black tracking-tight text-emerald-950 dark:text-emerald-50">Faith Services</h3>
+            <h3 className="text-xl font-black tracking-tight text-foreground">Faith Services</h3>
             <div className="flex gap-1">
               {faithServices.map((_, i) => (
                 <div 
                   key={i} 
                   className={cn(
                     "w-1.5 h-1.5 rounded-full transition-all duration-300",
-                    i === activeServiceIndex ? "w-4 bg-emerald-500" : "bg-emerald-200 dark:bg-emerald-800"
+                    i === activeServiceIndex ? "w-4 bg-[#D4AF37]" : "bg-muted"
                   )}
                 />
               ))}

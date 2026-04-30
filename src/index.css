@@ -15,46 +15,49 @@
 
   :root {
 
-    /* Enhanced Premium Gold & Black Theme */
-    --background: 60 4% 95%;
-    --foreground: 24 9% 10%;
+    /* Spotify-Inspired Modern Theme - Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3%;
 
-    --card: 60 9% 97%;
-    --card-foreground: 24 9% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 3%;
 
-    --popover: 20 5% 90%;
-    --popover-foreground: 24 9% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3%;
 
-    --primary: 37 92% 50%;
-    --primary-foreground: 47 100% 96%;
-    --primary-glow: 43 100% 60%;
+    /* Gold + Green Accent Combo */
+    --primary: 45 85% 50%; /* Gold */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 45 85% 60%;
 
-    --secondary: 24 5% 44%;
-    --secondary-foreground: 60 9% 97%;
+    --secondary: 150 70% 40%; /* Green */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 23 5% 82%;
-    --muted-foreground: 24 9% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 47 100% 96%;
-    --accent-foreground: 37 92% 50%;
+    --accent: 45 85% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 23 5% 82%;
-    --input: 23 5% 82%;
-    --ring: 37 92% 50%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 45 85% 50%;
 
     --radius: 1rem;
 
-    /* Enhanced Premium Gradients - Gold & Black */
-    --gradient-primary: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 100% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 8%), hsl(0 0% 15%));
-    --gradient-gold: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 92% 55%), hsl(32 90% 50%));
-    --gradient-premium: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(45 100% 50%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-gold-shimmer: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 92% 55%), hsl(32 90% 50%), hsl(45 100% 55%));
-    --gradient-elegant: linear-gradient(135deg, hsl(0 0% 5%), hsl(45 100% 50%), hsl(0 0% 5%));
+    /* Modern Gradients - Gold + Green Combo */
+    --gradient-primary: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520); /* Gold */
+    --gradient-secondary: linear-gradient(135deg, #10B981, #059669, #047857); /* Green */
+    --gradient-gold: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520);
+    --gradient-green: linear-gradient(135deg, #10B981, #059669, #047857);
+    --gradient-premium: linear-gradient(135deg, #D4AF37, #10B981); /* Gold-Green Blend */
+    --gradient-card: linear-gradient(145deg, #ffffff, #f8f8f8);
+    --gradient-gold-shimmer: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520, #D4AF37);
+    --gradient-elegant: linear-gradient(135deg, #D4AF37, #10B981, #D4AF37);
+    --gradient-hero-light: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
 
     /* Enhanced Material Design Elevation Shadows with Gold Tint */
     --elevation-0: none;
@@ -153,44 +156,47 @@
   }
 
   .dark {
-    /* Enhanced Premium Dark Theme - Deep Black & Bright Gold */
-    --background: 24 9% 10%;
-    --foreground: 60 9% 97%;
+    /* Spotify-Inspired Modern Theme - Dark Mode */
+    --background: 0 0% 5%; /* Deep black #121212 */
+    --foreground: 0 0% 100%;
 
-    --card: 12 6% 15%;
-    --card-foreground: 60 9% 97%;
+    --card: 0 0% 10%; /* #181818 */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 30 6% 25%;
-    --popover-foreground: 60 9% 97%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 43 96% 56%;
-    --primary-foreground: 20 91% 14%;
-    --primary-glow: 43 100% 65%;
+    /* Gold + Green Accent Combo */
+    --primary: 45 85% 55%; /* Brighter Gold for dark mode */
+    --primary-foreground: 0 0% 0%;
+    --primary-glow: 45 85% 65%;
 
-    --secondary: 24 5% 44%;
-    --secondary-foreground: 60 9% 97%;
+    --secondary: 150 70% 50%; /* Brighter Green for dark mode */
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 24 5% 44%;
-    --muted-foreground: 60 9% 97%;
+    --muted: 0 0% 15%; /* #282828 */
+    --muted-foreground: 0 0% 70%; /* #B3B3B3 */
 
-    --accent: 25 83% 14%;
-    --accent-foreground: 47 95% 53%;
+    --accent: 45 85% 55%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 33 5% 32%;
-    --input: 33 5% 32%;
-    --ring: 43 96% 56%;
+    --border: 0 0% 20%; /* #282828 */
+    --input: 0 0% 20%;
+    --ring: 45 85% 55%;
 
-    /* Enhanced Premium Gradients - Gold & Deep Black */
-    --gradient-primary: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 100% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 6%), hsl(0 0% 12%));
-    --gradient-gold: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 92% 55%), hsl(32 90% 50%));
-    --gradient-premium: linear-gradient(135deg, hsl(0 0% 3%) 0%, hsl(45 100% 55%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 10%), hsl(0 0% 8%));
-    --gradient-gold-shimmer: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 92% 55%), hsl(32 90% 50%), hsl(45 100% 55%));
-    --gradient-elegant: linear-gradient(135deg, hsl(0 0% 3%), hsl(45 100% 55%), hsl(0 0% 3%));
+    /* Modern Gradients - Dark Mode */
+    --gradient-primary: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520); /* Gold */
+    --gradient-secondary: linear-gradient(135deg, #10B981, #059669, #047857); /* Green */
+    --gradient-gold: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520);
+    --gradient-green: linear-gradient(135deg, #10B981, #059669, #047857);
+    --gradient-premium: linear-gradient(135deg, #D4AF37, #10B981); /* Gold-Green Blend */
+    --gradient-card: linear-gradient(145deg, #1e1e1e, #252525);
+    --gradient-gold-shimmer: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520, #D4AF37);
+    --gradient-elegant: linear-gradient(135deg, #D4AF37, #10B981, #D4AF37);
+    --gradient-hero-dark: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
 
     /* Enhanced Material Design Elevation Shadows for Dark Mode with Gold */
     --elevation-0: none;
@@ -258,6 +264,16 @@
 @layer base {
   * {
     @apply border-border;
+  }
+
+  /* Hide scrollbars globally for native app feel */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   body {
