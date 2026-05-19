@@ -3,6 +3,10 @@
  * All data stored locally
  */
 
+import { calculatePrayerTimes, getCalculationMethod } from "./prayer-calculator";
+import { AladhanAPI, ALADHAN_METHODS } from "./aladhan-api";
+import { getFallbackLocationByTimezone } from "./location-config";
+
 const STORAGE_KEY = 'salah-tracker';
 const STREAK_KEY = 'salah-streak';
 
@@ -72,6 +76,87 @@ export const getTodayPrayers = (): DailyPrayers => {
   return days[today];
 };
 
+// Resolve prayer times helper for validation
+export const resolvePrayerTimes = (): Record<string, { start: Date; end: Date }> | null => {
+  try {
+    let lat = 21.3891;
+    let lon = 39.8579;
+    
+    const locStr = localStorage.getItem('location-storage');
+    if (locStr) {
+      try {
+        const loc = JSON.parse(locStr);
+        if (typeof loc.latitude === 'number' && typeof loc.longitude === 'number') {
+          lat = loc.latitude;
+          lon = loc.longitude;
+        }
+      } catch (e) {
+        console.error('Error parsing stored location in salah-tracker:', e);
+      }
+    } else {
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const defaultLoc = getFallbackLocationByTimezone(timeZone);
+      lat = defaultLoc.lat;
+      lon = defaultLoc.lon;
+    }
+
+    const now = new Date();
+    const cachedDay = AladhanAPI.getPrayerTimesForDate(now, lat, lon);
+    
+    const parseTime = (timeStr: string, baseDate: Date) => {
+      const cleaned = timeStr.replace(/\s*\(.*?\)\s*/g, '').trim();
+      const parts = cleaned.split(':');
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const d = new Date(baseDate);
+      d.setHours(h, m, 0, 0);
+      return d;
+    };
+
+    let fajrStart: Date, sunriseStart: Date, dhuhrStart: Date, asrStart: Date, maghribStart: Date, ishaStart: Date;
+
+    if (cachedDay) {
+      fajrStart = parseTime(cachedDay.timings.Fajr, now);
+      sunriseStart = parseTime(cachedDay.timings.Sunrise, now);
+      dhuhrStart = parseTime(cachedDay.timings.Dhuhr, now);
+      asrStart = parseTime(cachedDay.timings.Asr, now);
+      maghribStart = parseTime(cachedDay.timings.Maghrib, now);
+      ishaStart = parseTime(cachedDay.timings.Isha, now);
+    } else {
+      const offlineResult = calculatePrayerTimes(lat, lon, now);
+      fajrStart = offlineResult.fajr;
+      sunriseStart = offlineResult.sunrise;
+      dhuhrStart = offlineResult.dhuhr;
+      asrStart = offlineResult.asr;
+      maghribStart = offlineResult.maghrib;
+      ishaStart = offlineResult.isha;
+    }
+
+    // Tomorrow's Fajr for Isha end time
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let tomorrowFajr: Date;
+    const cachedTomorrow = AladhanAPI.getPrayerTimesForDate(tomorrow, lat, lon);
+    if (cachedTomorrow) {
+      tomorrowFajr = parseTime(cachedTomorrow.timings.Fajr, tomorrow);
+    } else {
+      const tomorrowOffline = calculatePrayerTimes(lat, lon, tomorrow);
+      tomorrowFajr = tomorrowOffline.fajr;
+    }
+
+    return {
+      fajr: { start: fajrStart, end: sunriseStart },
+      dhuhr: { start: dhuhrStart, end: asrStart },
+      asr: { start: asrStart, end: maghribStart },
+      maghrib: { start: maghribStart, end: ishaStart },
+      isha: { start: ishaStart, end: tomorrowFajr },
+    };
+  } catch (e) {
+    console.error("Failed to resolve prayer times in salah-tracker:", e);
+    return null;
+  }
+};
+
 // Toggle prayer status (only if prayer time has arrived)
 export const togglePrayer = (prayer: PrayerName, prayerTimes?: Record<string, { start: Date; end: Date }>): { success: boolean; message: string; completed: boolean } => {
   const days = getAllDays();
@@ -89,16 +174,20 @@ export const togglePrayer = (prayer: PrayerName, prayerTimes?: Record<string, { 
   }
 
   // Check if prayer time has arrived
-  if (prayerTimes && prayerTimes[prayer]) {
-    const now = new Date();
-    const prayerTime = prayerTimes[prayer];
+  const isCheckingIn = !days[today][prayer];
+  if (isCheckingIn) {
+    const resolvedTimes = prayerTimes || resolvePrayerTimes();
+    if (resolvedTimes && resolvedTimes[prayer]) {
+      const now = new Date();
+      const prayerTime = resolvedTimes[prayer];
 
-    if (now < prayerTime.start) {
-      return {
-        success: false,
-        message: `Cannot check in before ${prayer} time. Prayer starts at ${prayerTime.start.toLocaleTimeString()}`,
-        completed: days[today][prayer]
-      };
+      if (now < prayerTime.start) {
+        return {
+          success: false,
+          message: `Cannot check in before ${prayer} time. Prayer starts at ${prayerTime.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          completed: days[today][prayer]
+        };
+      }
     }
   }
 

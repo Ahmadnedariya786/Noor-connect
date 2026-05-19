@@ -83,15 +83,7 @@ class IslamicEventsService {
     return upcomingEvents.sort((a, b) => a.gregorianDate.getTime() - b.gregorianDate.getTime());
   }
 
-  /**
-   * Get Gregorian date for a specific Hijri event
-   */
   private async getGregorianDateForHijriEvent(hijriMonth: number, hijriDay: number, year: number): Promise<Date> {
-    // This is a simplified approach - in production, you'd use a proper Hijri-Gregorian conversion library
-    // For now, we'll use the Islamic calendar service to find the date
-    
-    const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
-
     // Start from beginning of the year and find the matching Hijri date
     const startDate = new Date(year, 0, 1);
     
@@ -100,9 +92,7 @@ class IslamicEventsService {
       checkDate.setDate(startDate.getDate() + dayOffset);
       
       try {
-        // Throttle API calls to avoid 429 Too Many Requests
-        await delay(300);
-        const islamicDate = await islamicCalendarService.getIslamicDate(checkDate);
+        const islamicDate = islamicCalendarService.calculateIslamicDate(checkDate);
         const month = parseInt(islamicDate.hijri.month.number.toString());
         const day = parseInt(islamicDate.hijri.day);
         
@@ -110,7 +100,6 @@ class IslamicEventsService {
           return checkDate;
         }
       } catch (error) {
-        // One failure shouldn't break the whole chain
         continue;
       }
     }

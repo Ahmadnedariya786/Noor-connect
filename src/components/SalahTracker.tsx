@@ -11,6 +11,7 @@ import {
   getTodayPrayers,
   togglePrayer,
   getSalahStats,
+  resolvePrayerTimes,
   type PrayerName,
   type DailyPrayers
 } from "@/lib/salah-tracker";
@@ -98,10 +99,11 @@ export function SalahTracker() {
   };
 
   const isPrayerTimeAvailable = (prayer: PrayerName): boolean => {
-    if (!prayerTimesWithEnd) return true; // Allow if no prayer times available
+    const resolvedTimes = prayerTimesWithEnd || resolvePrayerTimes();
+    if (!resolvedTimes) return true; // Allow if no prayer times available
 
     const now = new Date();
-    const prayerTime = prayerTimesWithEnd[prayer as keyof typeof prayerTimesWithEnd];
+    const prayerTime = resolvedTimes[prayer as keyof typeof resolvedTimes];
 
     if (!prayerTime) return true;
 

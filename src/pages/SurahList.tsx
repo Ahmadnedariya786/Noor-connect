@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function SurahList() {
-  const { theme } = useSettings();
-  const isDark = theme === 'dark';
+  const { theme, effectiveTheme } = useSettings();
+  const isDark = effectiveTheme === 'dark';
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<'all' | 'meccan' | 'madinah'>('all');

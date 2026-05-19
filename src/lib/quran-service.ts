@@ -6,7 +6,7 @@ const CDN_BASE_URL = "https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist";
 // Cache configuration
 const CACHE_PREFIX = "quran-service-";
 const CACHE_VERSION = "2.0";
-const DEFAULT_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+const DEFAULT_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days for static Quran text (was 7 days)
 const MAX_CACHE_SIZE = 10 * 1024 * 1024; // 10MB limit
 
 // TypeScript interfaces for quran-json data structure

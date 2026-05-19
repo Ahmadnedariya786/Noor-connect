@@ -11,8 +11,8 @@ const LS_LAST_SURAH = 'quran-reader-last-surah';
 const BOOKMARKS_KEY = 'quran-bookmarks';
 
 export default function QuranReader() {
-  const { theme } = useSettings();
-  const isDark = theme === 'dark';
+  const { theme, effectiveTheme } = useSettings();
+  const isDark = effectiveTheme === 'dark';
   
   const { surahName } = useParams<{ surahName: string }>();
   const navigate = useNavigate();

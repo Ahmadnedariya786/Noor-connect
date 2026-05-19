@@ -190,13 +190,22 @@ export default function EbooksModern() {
       filtered = filtered.filter(b => cleanTitle(b.title).toLowerCase().includes(query));
     }
     
-    // Sort
-    const sorted = [...filtered];
-    switch (sortBy) {
-      case 'a-z': sorted.sort((a, b) => cleanTitle(a.title).localeCompare(cleanTitle(b.title))); break;
-      case 'z-a': sorted.sort((a, b) => cleanTitle(b.title).localeCompare(cleanTitle(a.title))); break;
-      case 'recent': sorted.sort(() => Math.random() - 0.5); break;
-    }
+     // Sort
+     const sorted = [...filtered];
+     switch (sortBy) {
+       case 'a-z': {
+         sorted.sort((a, b) => cleanTitle(a.title).localeCompare(cleanTitle(b.title)));
+         break;
+       }
+       case 'z-a': {
+         sorted.sort((a, b) => cleanTitle(b.title).localeCompare(cleanTitle(a.title)));
+         break;
+       }
+       case 'recent': {
+         sorted.sort(() => Math.random() - 0.5);
+         break;
+       }
+     }
     
     return sorted;
   }, [selectedCategory, debouncedQuery, sortBy]);

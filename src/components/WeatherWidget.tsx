@@ -159,15 +159,7 @@ export function WeatherWidget() {
   }, [fetchWeather]);
 
   if (loading) {
-    return (
-      <Card className="p-4">
-        <div className="space-y-3 animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/3" />
-          <div className="h-12 bg-muted rounded w-1/2" />
-          <div className="h-3 bg-muted rounded w-2/3" />
-        </div>
-      </Card>
-    );
+    return null;
   }
 
   if (error && !weather) {

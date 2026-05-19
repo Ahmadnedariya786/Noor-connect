@@ -124,18 +124,22 @@ export const CitySearch = ({ onCitySelect, showManualCoordinates = true }: CityS
     );
   };
 
-  const getPlaceTypeIcon = (osmValue: string) => {
-    switch (osmValue) {
-      case 'city':
-        return <MapPin className="w-4 h-4 text-blue-500" />;
-      case 'town':
-        return <MapPin className="w-4 h-4 text-green-500" />;
-      case 'village':
-        return <MapPin className="w-4 h-4 text-orange-500" />;
-      default:
-        return <MapPin className="w-4 h-4 text-gray-500" />;
-    }
-  };
+   const getPlaceTypeIcon = (osmValue: string) => {
+     switch (osmValue) {
+       case 'city': {
+         return <MapPin className="w-4 h-4 text-blue-500" />;
+       }
+       case 'town': {
+         return <MapPin className="w-4 h-4 text-green-500" />;
+       }
+       case 'village': {
+         return <MapPin className="w-4 h-4 text-orange-500" />;
+       }
+       default: {
+         return <MapPin className="w-4 h-4 text-gray-500" />;
+       }
+     }
+   };
 
   return (
     <Card className="w-full">

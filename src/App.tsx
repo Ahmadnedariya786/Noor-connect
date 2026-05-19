@@ -80,12 +80,22 @@ function AppRoutes() {
 
   // Scroll to top on navigation
   useEffect(() => {
-    const scrollContainer = document.getElementById("main-content");
-    if (scrollContainer) {
-      scrollContainer.scrollTop = 0;
-    }
-    window.scrollTo(0, 0);
-  }, [location]);
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      const scrollContainer = document.getElementById("main-content");
+      if (scrollContainer) {
+        scrollContainer.scrollTop = 0;
+      }
+      // Reset any inner scrolling containers (like in PremiumDashboard)
+      document.querySelectorAll('.overflow-y-auto').forEach(el => {
+        el.scrollTop = 0;
+      });
+    };
+    
+    resetScroll();
+    setTimeout(resetScroll, 10);
+    setTimeout(resetScroll, 100);
+  }, [location.pathname]);
 
   return (
     <Suspense fallback={

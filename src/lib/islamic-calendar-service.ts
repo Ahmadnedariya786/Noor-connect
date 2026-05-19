@@ -158,9 +158,6 @@ class IslamicCalendarService {
     return info.ramadanDay;
   }
 
-  /**
-   * Calculate days until next Ramadan
-   */
   async calculateDaysUntilRamadan(date: Date = new Date()): Promise<number> {
     try {
       // Get current Hijri date
@@ -180,7 +177,7 @@ class IslamicCalendarService {
       
       while (daysUntil < 365) { // Prevent infinite loop
         checkDate.setDate(checkDate.getDate() + 1);
-        const futureIslamicDate = await this.getIslamicDate(checkDate);
+        const futureIslamicDate = this.calculateIslamicDate(checkDate);
         
         if (parseInt(futureIslamicDate.hijri.month.number.toString()) === 9 && parseInt(futureIslamicDate.hijri.day) === 1) {
           break;
@@ -199,7 +196,7 @@ class IslamicCalendarService {
   /**
    * Fallback calculation for Islamic date (approximate)
    */
-  private calculateIslamicDate(date: Date): IslamicDate {
+  calculateIslamicDate(date: Date): IslamicDate {
     // This is a simplified fallback calculation
     // In a real implementation, you'd use a proper Hijri calendar library
     const hijriMonths = [

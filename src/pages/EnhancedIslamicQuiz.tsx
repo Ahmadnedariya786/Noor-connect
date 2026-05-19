@@ -382,62 +382,68 @@ export default function EnhancedIslamicQuiz() {
       
       const item = getStoreItemById(powerUpId);
       
-      switch (powerUpId) {
-        case 'fifty_fifty':
-          // Remove two incorrect answers
-          toast({
-            title: '50:50 Used!',
-            description: 'Two wrong answers eliminated.',
-          });
-          break;
-        case 'extra_time':
-          setGameState(prev => ({
-            ...prev,
-            timeLeft: prev.timeLeft + 30,
-            usedPowerUps: [...prev.usedPowerUps, powerUpId]
-          }));
-          toast({
-            title: 'Extra Time!',
-            description: '+30 seconds added to timer.',
-          });
-          break;
-        case 'skip':
-          nextQuestion();
-          toast({
-            title: 'Question Skipped!',
-            description: 'Moving to next question...',
-          });
-          break;
-        case 'freeze_time':
-          setGameState(prev => ({
-            ...prev,
-            isTimerActive: false,
-            usedPowerUps: [...prev.usedPowerUps, powerUpId]
-          }));
-          toast({
-            title: 'Time Frozen!',
-            description: 'Timer paused for 15 seconds.',
-          });
-          // Resume after 15 seconds
-          setTimeout(() => {
-            setGameState(prev => ({
-              ...prev,
-              isTimerActive: true
-            }));
-          }, 15000);
-          break;
-        case 'second_chance':
-          toast({
-            title: 'Second Chance Active!',
-            description: 'Your streak is protected for one wrong answer.',
-          });
-          break;
-        default:
-          toast({
-            title: `${item?.name || 'Power-up'} Used!`,
-            description: item?.description || 'Power-up activated.',
-          });
-      }
+       switch (powerUpId) {
+         case 'fifty_fifty': {
+           // Remove two incorrect answers
+           toast({
+             title: '50:50 Used!',
+             description: 'Two wrong answers eliminated.',
+           });
+           break;
+         }
+         case 'extra_time': {
+           setGameState(prev => ({
+             ...prev,
+             timeLeft: prev.timeLeft + 30,
+             usedPowerUps: [...prev.usedPowerUps, powerUpId]
+           }));
+           toast({
+             title: 'Extra Time!',
+             description: '+30 seconds added to timer.',
+           });
+           break;
+         }
+         case 'skip': {
+           nextQuestion();
+           toast({
+             title: 'Question Skipped!',
+             description: 'Moving to next question...',
+           });
+           break;
+         }
+         case 'freeze_time': {
+           setGameState(prev => ({
+             ...prev,
+             isTimerActive: false,
+             usedPowerUps: [...prev.usedPowerUps, powerUpId]
+           }));
+           toast({
+             title: 'Time Frozen!',
+             description: 'Timer paused for 15 seconds.',
+           });
+           // Resume after 15 seconds
+           setTimeout(() => {
+             setGameState(prev => ({
+               ...prev,
+               isTimerActive: true
+             }));
+           }, 15000);
+           break;
+         }
+         case 'second_chance': {
+           toast({
+             title: 'Second Chance Active!',
+             description: 'Your streak is protected for one wrong answer.',
+           });
+           break;
+         }
+         default: {
+           toast({
+             title: `${item?.name || 'Power-up'} Used!`,
+             description: item?.description || 'Power-up activated.',
+           });
+         }
+       }
     } else {
       toast({
         title: 'Failed to Use',

@@ -96,28 +96,33 @@ export default function EnhancedEbooksPage() {
       return matchesSearch && matchesFilter;
     });
 
-    // Sort books
-    return filtered.sort((a, b) => {
-      const titleA = 'file' in a ? cleanTitle(a.title) : a.title;
-      const titleB = 'file' in b ? cleanTitle(b.title) : b.title;
-      
-      switch (sortBy) {
-        case "title":
-          return titleA.localeCompare(titleB);
-        case "date":
-          return 0; // Would need date tracking
-        case "size":
-          const sizeA = parseInt('size' in a ? a.size || '0' : '0');
-          const sizeB = parseInt('size' in b ? b.size || '0' : '0');
-          return sizeB - sizeA;
-        case "progress":
-          const progressA = getProgressPercentage(a);
-          const progressB = getProgressPercentage(b);
-          return progressB - progressA;
-        default:
-          return 0;
-      }
-    });
+     // Sort books
+     return filtered.sort((a, b) => {
+       const titleA = 'file' in a ? cleanTitle(a.title) : a.title;
+       const titleB = 'file' in b ? cleanTitle(b.title) : b.title;
+       
+       switch (sortBy) {
+         case "title": {
+           return titleA.localeCompare(titleB);
+         }
+         case "date": {
+           return 0; // Would need date tracking
+         }
+         case "size": {
+           const sizeA = parseInt('size' in a ? a.size || '0' : '0');
+           const sizeB = parseInt('size' in b ? b.size || '0' : '0');
+           return sizeB - sizeA;
+         }
+         case "progress": {
+           const progressA = getProgressPercentage(a);
+           const progressB = getProgressPercentage(b);
+           return progressB - progressA;
+         }
+         default: {
+           return 0;
+         }
+       }
+     });
   }, [books, downloadedBooks, userBooks, searchQuery, sortBy, filterBy]);
 
   const categories = useMemo(() => {

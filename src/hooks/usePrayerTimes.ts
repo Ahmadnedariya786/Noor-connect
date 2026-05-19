@@ -482,19 +482,28 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
     }
   }, [fetchPrayerTimes]);
 
-  // Auto-refresh prayer times every minute when location is available
-  useEffect(() => {
-    if (!location || needsManualLocation) return;
+// Auto-refresh prayer times only when day changes (midnight boundary)
+   // Prayer times only change once per day, so hourly refresh is wasteful
+   useEffect(() => {
+     if (!location || needsManualLocation) return;
 
-    const interval = setInterval(() => {
-      // Only fetch if not already fetching
-      if (!isFetchingRef.current && !isCalculatingRef.current) {
-        fetchPrayerTimesWithCoordinates(location);
-      }
-    }, 3600000); // Refresh every hour - prayer times only change daily
+     const checkDayChange = () => {
+       const now = new Date();
+       const hours = now.getHours();
+       const minutes = now.getMinutes();
+       // Only check around midnight (00:00-00:05) when day changes
+       if (hours === 0 && minutes < 5) {
+         if (!isFetchingRef.current && !isCalculatingRef.current) {
+           fetchPrayerTimesWithCoordinates(location);
+         }
+       }
+     };
 
-    return () => clearInterval(interval);
-  }, [location, needsManualLocation, fetchPrayerTimesWithCoordinates]);
+     const interval = setInterval(checkDayChange, 60000); // Check every minute for day boundary
+     checkDayChange(); // Initial check
+
+     return () => clearInterval(interval);
+   }, [location, needsManualLocation, fetchPrayerTimesWithCoordinates]);
 
   // Network listener - refresh as soon as we get internet
   useEffect(() => {

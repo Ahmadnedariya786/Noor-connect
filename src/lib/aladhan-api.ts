@@ -217,12 +217,26 @@ export class AladhanAPI {
     longitude: number,
     method: number = 1
   ): Promise<{ timings: AladhanPrayerTime, timezone: string }> {
-    // Check if online to refresh cache
+    // Check if cached data is valid for this location before making API calls
+    const hasValidCache = this.isCachedDataValid(latitude, longitude);
+
+    if (hasValidCache) {
+      // Use cached data only, no API call needed
+      const cachedDay = this.getPrayerTimesForDate(new Date(), latitude, longitude);
+      if (cachedDay) {
+        return {
+          timings: cachedDay.timings,
+          timezone: cachedDay.meta.timezone
+        };
+      }
+    }
+
+    // Need to fetch - no valid cache available
     const isOnline = typeof navigator !== 'undefined' && navigator.onLine;
 
     if (isOnline) {
       try {
-        // If online, always try to fetch fresh data for the month to keep cache updated
+        // Fetch fresh data for the month to keep cache updated
         const monthlyData = await this.fetchMonthlyCalendar(latitude, longitude, undefined, undefined, method);
         const today = monthlyData.data.find(day => {
           const dayDate = new Date(parseInt(day.date.timestamp) * 1000);

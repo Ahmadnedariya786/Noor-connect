@@ -20,6 +20,7 @@ import { isMenstrualModeActive, getMenstrualModeData, activateMenstrualMode, dea
 import { cn } from "@/lib/utils";
 import { EidCelebrationOverlay } from "@/components/EidCelebrationOverlay";
 import { CheckCircle, AlertTriangle } from "lucide-react";
+import { getTodayPrayers, togglePrayer, type PrayerName, type DailyPrayers } from "@/lib/salah-tracker";
 import { BatteryOptimizationDialog } from "@/components/BatteryOptimizationDialog";
 
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
@@ -90,7 +91,7 @@ export default function Dashboard() {
   const isEid = isEidAlFitr || isEidAlAdha;
   const [timeFormat, setTimeFormat] = useState<'12' | '24'>('24');
   const [nextPrayerName, setNextPrayerName] = useState<string>("");
-  const [nextEventCountdown, setNextEventCountdown] = useState<{ name: string; time: string; countdown: string } | null>(null);
+  const [nextPrayerTime, setNextPrayerTime] = useState<string>("");
   const [loadingAPI, setLoadingAPI] = useState(false);
   const [timezone, setTimezone] = useState<string>("");
   const [initialLoad, setInitialLoad] = useState(true);
@@ -103,6 +104,19 @@ export default function Dashboard() {
   const [showManualLocationDialog, setShowManualLocationDialog] = useState(false);
   const [menstrualModeData, setMenstrualModeData] = useState(getMenstrualModeData());
   const [showBatteryOptDialog, setShowBatteryOptDialog] = useState(false);
+  const [todayPrayers, setTodayPrayers] = useState<DailyPrayers | null>(null);
+
+  // Initialize and listen for prayer tracking updates
+  useEffect(() => {
+    setTodayPrayers(getTodayPrayers());
+    
+    const handleSalahUpdated = () => {
+      setTodayPrayers(getTodayPrayers());
+    };
+    
+    window.addEventListener('salah-updated', handleSalahUpdated);
+    return () => window.removeEventListener('salah-updated', handleSalahUpdated);
+  }, []);
 
 
   const prayerTimesHook = usePrayerTimes();
@@ -210,7 +224,7 @@ export default function Dashboard() {
       const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, 1, false);
       if (nextEvent) {
         setNextPrayerName(nextEvent.name);
-        setNextEventCountdown(nextEvent);
+        setNextPrayerTime(nextEvent.time || "--:--");
         if (nextEvent.targetDate) {
           setTargetTime(nextEvent.targetDate);
         }
@@ -233,6 +247,8 @@ export default function Dashboard() {
       const nextPrayer = getNextPrayer(location.latitude, location.longitude);
       if (nextPrayer) {
         setNextPrayerName(nextPrayer.name);
+        setNextPrayerTime(formatTimeFromAPI(nextPrayer.time.toTimeString().slice(0, 5)));
+        setTargetTime(nextPrayer.time);
       }
     } finally {
       setLoadingAPI(false);
@@ -241,7 +257,7 @@ export default function Dashboard() {
   }, [location.latitude, location.longitude, location.timeZone, location.locationName, location.setLocation, formatTimeFromAPI, parseTimeToDate, timeFormat]);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
 
     // Add online listener to refresh prayer times as soon as internet is back
     const handleOnline = () => {
@@ -336,43 +352,37 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Initialize prayer times when location changes
-  useEffect(() => {
-    if (location.latitude && location.longitude) {
-      loadPrayerTimes();
-    }
-  }, [location.latitude, location.longitude, timeFormat, loadPrayerTimes]); // Add loadPrayerTimes to dependencies
+// Initialize prayer times when location changes
+   useEffect(() => {
+     if (location.latitude && location.longitude) {
+       loadPrayerTimes();
+     }
+   }, [location.latitude, location.longitude, loadPrayerTimes]);
 
-  // Listen for time format changes from settings
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'time-format' && e.newValue) {
-        setTimeFormat(e.newValue as '12' | '24');
-        // Reload prayer times to apply new format
-        if (location.latitude && location.longitude) {
-          loadPrayerTimes();
-        }
-      }
-    };
+// Listen for time format changes from settings
+   useEffect(() => {
+     const handleStorageChange = (e: StorageEvent) => {
+       if (e.key === 'time-format' && e.newValue) {
+         setTimeFormat(e.newValue as '12' | '24');
+         // Time formatting is a presentation concern - no API call needed
+       }
+     };
 
-    const handleCustomTimeFormatChange = (e: CustomEvent) => {
-      if (e.detail?.format) {
-        setTimeFormat(e.detail.format as '12' | '24');
-        // Reload prayer times to apply new format
-        if (location.latitude && location.longitude) {
-          loadPrayerTimes();
-        }
-      }
-    };
+     const handleCustomTimeFormatChange = (e: CustomEvent) => {
+       if (e.detail?.format) {
+         setTimeFormat(e.detail.format as '12' | '24');
+         // Time formatting is a presentation concern - no API call needed
+       }
+     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('time-format-changed', handleCustomTimeFormatChange as EventListener);
+     window.addEventListener('storage', handleStorageChange);
+     window.addEventListener('time-format-changed', handleCustomTimeFormatChange as EventListener);
 
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('time-format-changed', handleCustomTimeFormatChange as EventListener);
-    };
-  }, [setTimeFormat, location.latitude, location.longitude, loadPrayerTimes]);
+     return () => {
+       window.removeEventListener('storage', handleStorageChange);
+       window.removeEventListener('time-format-changed', handleCustomTimeFormatChange as EventListener);
+     };
+   }, [setTimeFormat]);
 
   // Clear stale location data on mount to prevent ISTRES issue
   useEffect(() => {
@@ -423,37 +433,7 @@ export default function Dashboard() {
 
 
 
-  // Update countdown every second
-  // Optimize countdown: Fetch target time ONCE, then countdown locally
-  // Lightweight interval: just updates the string based on targetTime
-  useEffect(() => {
-    if (!targetTime) return;
-
-    const updateDisplay = () => {
-      const now = new Date();
-      const diff = targetTime.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        // Timer finished, trigger a re-fetch
-        setTargetTime(null);
-        return;
-      }
-
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      const countdownStr = hours > 0
-        ? `${hours}h ${minutes}m ${seconds}s`
-        : `${minutes}m ${seconds}s`; // Added seconds for liveness
-
-      setNextEventCountdown(prev => prev ? { ...prev, countdown: countdownStr } : null);
-    };
-
-    updateDisplay(); // update immediately
-    const interval = setInterval(updateDisplay, 1000);
-    return () => clearInterval(interval);
-  }, [targetTime]);
+  // Countdown is handled internally in PremiumDashboard's LiveCountdown component to avoid parent renders
 
 
   const prayerIcons: Record<string, React.ReactNode> = {
@@ -468,20 +448,33 @@ export default function Dashboard() {
     const prayerDate = p.date;
     const now = currentTime;
     const isUpcoming = prayerDate && prayerDate > now;
+    const pKey = p.name.toLowerCase() as PrayerName;
+    const isCompleted = todayPrayers ? !!todayPrayers[pKey] : false;
+    
+    const handleCheckIn = () => {
+      const result = togglePrayer(pKey);
+      toast({
+        title: result.success ? "Check-in Updated" : "Cannot Check-in",
+        description: result.message,
+        variant: result.success ? "default" : "destructive",
+      });
+    };
     
     return {
       name: p.name,
       time: p.time,
       icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
       isActive: nextPrayerName === p.name,
-      isUpcoming: isUpcoming
+      isUpcoming: isUpcoming,
+      isCompleted,
+      onCheckIn: handleCheckIn,
     };
   });
 
   const nextPrayerInfo = {
     name: nextPrayerName || "Loading...",
-    time: nextEventCountdown?.time || "--:--",
-    timeRemaining: nextEventCountdown?.countdown || "00:00:00",
+    time: nextPrayerTime || "--:--",
+    targetTime: targetTime,
     progress: 70, // This should be calculated based on current time vs start/end of prayer
   };
 

@@ -84,11 +84,13 @@ export default function IslamicStreamPlayer() {
   const destroyHLS = useCallback(() => {
     const video = videoRef.current;
     if (video) { video.pause(); video.src = ''; video.load(); }
-    if (hlsRef.current) {
-      const h = hlsRef.current;
-      hlsRef.current = null;
-      setTimeout(() => { try { h.destroy(); } catch (_) {} }, 100);
-    }
+     if (hlsRef.current) {
+       const h = hlsRef.current;
+       hlsRef.current = null;
+       setTimeout(() => {
+         h.destroy();
+       }, 100);
+     }
   }, []);
 
   /* ─── Init HLS ─── */
@@ -232,14 +234,16 @@ export default function IslamicStreamPlayer() {
     if (val > 0 && isMuted) setIsMuted(false);
   }, [isMuted]);
 
-  const toggleFullscreen = useCallback(async () => {
-    const el = containerRef.current;
-    if (!el) return;
-    try {
-      if (!isFullscreen) await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
-      else await (document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.());
-    } catch (_) {}
-  }, [isFullscreen]);
+   const toggleFullscreen = useCallback(async () => {
+     const el = containerRef.current;
+     if (!el) return;
+     try {
+       if (!isFullscreen) await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
+       else await (document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.());
+     } catch (error) {
+       // Handle error if needed
+     }
+   }, [isFullscreen]);
 
   return (
     <div

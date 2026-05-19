@@ -1,113 +1,210 @@
-import { useState, useCallback, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { Home, BookOpen, Settings, Compass, LayoutGrid } from "lucide-react";
+import { BookOpen, Settings, Compass, LayoutGrid } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSettings } from "@/contexts/SettingsContext";
 
-// Premium Bottom Navigation with enhanced glassmorphism and micro-interactions
+// Crescent moon icon for center HOME button
+const CrescentIcon = ({ isActive, isDark }: { isActive: boolean; isDark: boolean }) => (
+  <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+      fill={isActive ? "white" : (isDark ? "white" : "#047857")}
+      stroke={isActive ? "white" : (isDark ? "white" : "#047857")}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const BottomNav = memo(function BottomNav() {
   const { t } = useLanguage();
+  const { animationEnabled, effectiveTheme } = useSettings();
+  const isDark = effectiveTheme === 'dark';
 
-  const navItems = [
-    { title: t('home'), path: "/", icon: Home, gradient: 'from-emerald-500 to-emerald-600' },
-    { title: t('quran'), path: "/quran", icon: BookOpen, gradient: 'from-emerald-500 to-emerald-600' },
-    { title: t('qibla'), path: "/qibla", icon: Compass, gradient: 'from-emerald-500 to-emerald-600' },
-    { title: t('services'), path: "/services", icon: LayoutGrid, gradient: 'from-emerald-500 to-emerald-600' },
-    { title: t('settings'), path: "/profile", icon: Settings, gradient: 'from-emerald-500 to-emerald-600' },
+  const sideNavItems = [
+    { title: t('qibla') || 'Qibla', path: "/qibla", icon: Compass },
+    { title: t('quran') || 'Quran', path: "/quran", icon: BookOpen },
+  ];
+
+  const rightNavItems = [
+    { title: t('services') || 'Services', path: "/services", icon: LayoutGrid },
+    { title: t('settings') || 'Settings', path: "/profile", icon: Settings },
   ];
 
   return (
     <nav
       className="w-full fixed bottom-0 left-0 right-0 z-[100] pointer-events-none flex justify-center"
       style={{
-        willChange: 'transform, opacity',
+        willChange: 'transform',
         transform: 'translateZ(0)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
-        paddingLeft: '12px',
-        paddingRight: '12px'
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+        paddingLeft: '16px',
+        paddingRight: '16px',
       }}
     >
-      {/* Premium Floating Island with enhanced glassmorphism */}
-      <div className="w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-3xl border border-border/50 shadow-2xl pointer-events-auto rounded-[32px] relative mx-4">
-        {/* Subtle animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-60 rounded-[32px] overflow-hidden" />
-        
-        <div className="relative z-10 flex flex-row items-center justify-between h-[72px] px-1">
-          {navItems.map((item, index) => (
+      {/* Floating glass pill nav */}
+      <div className="w-full max-w-sm pointer-events-auto relative flex items-end justify-center">
+        {/* Glass pill background */}
+        <div
+          className="w-full flex flex-row items-center justify-between h-[60px] px-2 rounded-[36px] relative transition-colors duration-300"
+          style={{
+            background: isDark ? 'rgba(10, 10, 10, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
+            boxShadow: isDark 
+              ? '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(16,185,129,0.08)'
+              : '0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(16,185,129,0.04)',
+          }}
+        >
+          {/* Left items: Qibla + Quran */}
+          {sideNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.path === "/"}
-              className="group flex-1 flex flex-col items-center justify-center h-full relative min-w-0"
+              end={false}
+              className="flex-1 flex flex-col items-center justify-center h-full relative min-w-0 group"
             >
               {({ isActive }) => (
-                <motion.div 
-                   className="flex flex-col items-center justify-center gap-1.5 relative z-10 w-full"
-                   whileTap={{ scale: 0.9 }}
+                <motion.div
+                  className="flex flex-col items-center justify-center gap-1"
+                  whileTap={animationEnabled ? { scale: 0.88 } : undefined}
                 >
-                  {/* Premium Active Indicator */}
-                  <div className="relative flex items-center justify-center w-full min-w-[48px] h-[36px]">
+                  <div className="relative flex items-center justify-center w-10 h-8">
                     <AnimatePresence>
                       {isActive && (
                         <motion.div
-                          layoutId="nav-bg-glow"
-                          className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-20 rounded-xl`}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                          layoutId="nav-active-bg"
+                          className="absolute inset-0 rounded-xl"
+                          style={{ background: 'rgba(16,185,129,0.15)' }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
                         />
                       )}
                     </AnimatePresence>
-
-                    <motion.div
-                      className={`p-1.5 rounded-xl transition-all duration-500 ${isActive
-                        ? `bg-gradient-to-br ${item.gradient} shadow-md`
-                        : "bg-transparent group-hover:bg-muted/10"
-                        }`}
-                    >
-                      <item.icon
-                        className={`w-[22px] h-[22px] transition-all duration-500 ${isActive
-                          ? "text-white scale-110"
-                          : "text-muted-foreground group-hover:text-foreground"
-                          }`}
-                        strokeWidth={isActive ? 2.5 : 2}
-                      />
-                    </motion.div>
+                    <item.icon
+                      className="w-5 h-5 transition-all duration-300"
+                      style={{
+                        color: isActive ? '#10B981' : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)'),
+                        strokeWidth: isActive ? 2.5 : 1.8,
+                      }}
+                    />
                   </div>
-
-                  <motion.span 
-                    className={`text-[9px] font-bold uppercase tracking-tight transition-all duration-300 truncate w-full px-1 text-center ${isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground/50 group-hover:text-foreground"
-                      }`}
+                  <span
+                    className="text-[9px] font-bold uppercase tracking-wider transition-all duration-300"
+                    style={{ color: isActive ? '#10B981' : (isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)') }}
                   >
                     {item.title}
-                  </motion.span>
+                  </span>
+                </motion.div>
+              )}
+            </NavLink>
+          ))}
+
+          {/* Center HOME button spacer */}
+          <div className="w-16 flex-shrink-0" />
+
+          {/* Right items: Services + Settings */}
+          {rightNavItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={false}
+              className="flex-1 flex flex-col items-center justify-center h-full relative min-w-0 group"
+            >
+              {({ isActive }) => (
+                <motion.div
+                  className="flex flex-col items-center justify-center gap-1"
+                  whileTap={animationEnabled ? { scale: 0.88 } : undefined}
+                >
+                  <div className="relative flex items-center justify-center w-10 h-8">
+                    <AnimatePresence>
+                      {isActive && (
+                        <motion.div
+                          layoutId="nav-active-bg-right"
+                          className="absolute inset-0 rounded-xl"
+                          style={{ background: 'rgba(16,185,129,0.15)' }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        />
+                      )}
+                    </AnimatePresence>
+                    <item.icon
+                      className="w-5 h-5 transition-all duration-300"
+                      style={{
+                        color: isActive ? '#10B981' : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)'),
+                        strokeWidth: isActive ? 2.5 : 1.8,
+                      }}
+                    />
+                  </div>
+                  <span
+                    className="text-[9px] font-bold uppercase tracking-wider transition-all duration-300"
+                    style={{ color: isActive ? '#10B981' : (isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)') }}
+                  >
+                    {item.title}
+                  </span>
                 </motion.div>
               )}
             </NavLink>
           ))}
         </div>
 
-        {/* Premium home indicator with glow */}
-        <div className="relative z-10 flex justify-center pb-2">
-          <div className="h-[4px] w-12 bg-muted/20 rounded-full overflow-hidden">
-             <motion.div 
-                className="h-full w-full bg-gradient-to-r from-primary/20 via-primary to-primary/20"
-                animate={{
-                  x: [-40, 40],
-                  opacity: [0.3, 0.7, 0.3]
+        {/* Center HOME button — elevated above the pill */}
+        <NavLink
+          to="/"
+          end
+          className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto z-10"
+          style={{ marginBottom: '0px' }}
+        >
+          {({ isActive }) => (
+            <motion.div
+              className="flex flex-col items-center gap-1"
+              whileTap={animationEnabled ? { scale: 0.9 } : undefined}
+            >
+              {/* Glowing circle button */}
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center relative transition-all duration-300"
+                style={{
+                  background: isActive
+                    ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                    : isDark 
+                      ? 'linear-gradient(135deg, #0D9464 0%, #065f46 100%)'
+                      : 'linear-gradient(135deg, #A7F3D0 0%, #10B981 100%)',
+                  boxShadow: isActive
+                    ? '0 0 24px rgba(16,185,129,0.6), 0 4px 16px rgba(0,0,0,0.4)'
+                    : isDark
+                      ? '0 0 12px rgba(16,185,129,0.25), 0 4px 12px rgba(0,0,0,0.4)'
+                      : '0 0 12px rgba(16,185,129,0.15), 0 4px 12px rgba(0,0,0,0.08)',
+                  border: isDark ? '2px solid rgba(16,185,129,0.5)' : '2px solid rgba(255,255,255,0.8)',
+                  transform: 'translateY(-12px)',
                 }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "linear"
+              >
+                {/* Subtle inner glow */}
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: 'radial-gradient(circle at 40% 35%, rgba(255,255,255,0.2) 0%, transparent 70%)' }}
+                />
+                <CrescentIcon isActive={isActive} isDark={isDark} />
+              </div>
+              <span
+                className="text-[9px] font-bold uppercase tracking-wider transition-all duration-300"
+                style={{
+                  color: isActive ? '#10B981' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
+                  transform: 'translateY(-10px)',
                 }}
-             />
-          </div>
-        </div>
+              >
+                Home
+              </span>
+            </motion.div>
+          )}
+        </NavLink>
       </div>
     </nav>
   );

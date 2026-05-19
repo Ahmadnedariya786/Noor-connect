@@ -389,8 +389,9 @@ self.addEventListener('message', (event) => {
 
 // Start periodic checks
 function startPeriodicChecks() {
-  // Check prayer times every minute
-  setInterval(checkPrayerTimes, 60000);
+  // Check prayer times every 15 minutes instead of every minute
+  // Prayer times only change daily, so frequent checks are wasteful
+  setInterval(checkPrayerTimes, 900000); // Changed from 60000ms (1 min) to 900000ms (15 min)
 
   // Check Islamic events every hour
   setInterval(checkIslamicEvents, 3600000);

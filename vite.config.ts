@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { VitePWA } from "vite-plugin-pwa";
 
 const APP_VERSION = process.env.npm_package_version ?? "0.0.0";
@@ -21,6 +22,22 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    {
+      name: 'serve-android-assets',
+      configureServer(server) {
+        server.middlewares.use('/android_asset/mushaf', (req, res, next) => {
+          const urlPath = req.url?.split('?')[0] || '';
+          const filePath = path.join(__dirname, 'android/app/src/main/assets/mushaf', urlPath);
+          if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            res.setHeader('Content-Type', 'image/webp');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+            fs.createReadStream(filePath).pipe(res);
+          } else {
+            next();
+          }
+        });
+      }
+    },
     react(),
     VitePWA({
       strategies: 'injectManifest',

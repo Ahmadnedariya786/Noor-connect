@@ -89,7 +89,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     id: 'islamic-events',
     name: 'Islamic Events',
     description: 'Upcoming Islamic holidays and events',
-    visible: true,
+    visible: false,
     order: 10,
     category: 'optional',
   },
