@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
-import { Moon, Sun, Download, Upload, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, Type, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings, Clock, Package, Vibrate, ArrowLeft } from "lucide-react";
+import { Moon, Sun, Download, Upload, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, Type, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings, Clock, Package, Vibrate, ArrowLeft, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -88,6 +88,7 @@ const Profile = () => {
   const [isCapacitorApp] = useState(() => !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
   const [requestingPerm, setRequestingPerm] = useState(false);
   const [genderSettings, setGenderSettingsState] = useState(getGenderSettings());
+  const [preferredCurrency, setPreferredCurrency] = useState(() => localStorage.getItem('preferred-currency') || 'USD');
   
   const [showChangelog, setShowChangelog] = useState(false);
 
@@ -498,6 +499,12 @@ const Profile = () => {
     });
   };
 
+  const handlePreferredCurrencyChange = (currency: string) => {
+    setPreferredCurrency(currency);
+    localStorage.setItem('preferred-currency', currency);
+    toast({ title: 'Preferred currency updated' });
+  };
+
   const handleReminderChange = (value: string) => {
     setReminderMinutes(value);
     localStorage.setItem('prayer-reminder-minutes', value);
@@ -717,6 +724,46 @@ const Profile = () => {
                     {genderSettings.gender === "female"
                       ? t('menstrualModeAvailable')
                       : t('thisHelpsPersonalizeExperience')}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Currency Settings Section */}
+          <div className="space-y-3">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+              Currency Settings
+            </h3>
+            <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
+              <div className="space-y-3">
+                <Label className="text-[11px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  Preferred Currency
+                </Label>
+                <Select value={preferredCurrency} onValueChange={handlePreferredCurrencyChange}>
+                  <SelectTrigger className="w-full h-12 rounded-xl bg-muted/30 border-none ring-0 focus:ring-primary/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/40 shadow-xl">
+                    <SelectItem value="USD">USD - US Dollar</SelectItem>
+                    <SelectItem value="PKR">PKR - Pakistani Rupee</SelectItem>
+                    <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
+                    <SelectItem value="AED">AED - UAE Dirham</SelectItem>
+                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                    <SelectItem value="INR">INR - Indian Rupee</SelectItem>
+                    <SelectItem value="BDT">BDT - Bangladeshi Taka</SelectItem>
+                    <SelectItem value="TRY">TRY - Turkish Lira</SelectItem>
+                    <SelectItem value="MYR">MYR - Malaysian Ringgit</SelectItem>
+                    <SelectItem value="IDR">IDR - Indonesian Rupiah</SelectItem>
+                    <SelectItem value="EGP">EGP - Egyptian Pound</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex items-start gap-2 pt-1">
+                  <Globe className="w-3.5 h-3.5 text-primary mt-0.5" />
+                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
+                    Used for Zakat calculator and exchange rate calculations
                   </p>
                 </div>
               </div>

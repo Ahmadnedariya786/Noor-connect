@@ -4,6 +4,7 @@
  */
 
 import { METAL_PRICE_CONSTANTS } from './constants';
+import { ExchangeRateFallbackService } from './exchange-rate-fallback';
 
 export interface ZakatNisabData {
   gold: {
@@ -178,40 +179,47 @@ export class ZakatNisabService {
     if (currency === 'USD') return 1;
 
     try {
-      // Use Open Exchange Rates (Free Tier) via er-api.com
-      const response = await fetch(`https://open.er-api.com/v6/latest/USD`);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      const rate = data.rates[currency];
-
-      if (rate) {
-        return rate;
-      }
-
-      throw new Error(`Currency ${currency} not supported by er-api`);
+      // Use the exchange rate fallback service
+      const rateData = await ExchangeRateFallbackService.getExchangeRate(currency);
+      return rateData.rate;
     } catch (error) {
-      console.warn(`Failed to get exchange rate for ${currency}, using fallback:`, error);
-      // Comprehensive fallback rates for common Islamic-world currencies
-      const fallbackRates: Record<string, number> = {
-        'PKR': 279.5,  // Pakistan Rupee
-        'AED': 3.67,   // UAE Dirham
-        'SAR': 3.75,   // Saudi Riyal
-        'BDT': 110.0,  // Bangladesh Taka
-        'EGP': 30.9,   // Egypt Pound
-        'TRY': 30.2,   // Turkish Lira
-        'MYR': 4.73,   // Malaysian Ringgit
-        'IDR': 15600,  // Indonesian Rupiah
-        'EUR': 0.92,
-        'GBP': 0.79,
-        'JPY': 149.5,
-        'CAD': 1.36,
-        'AUD': 1.53,
-        'INR': 83.0,
-      };
-      return fallbackRates[currency] || 1;
+      console.warn(`Failed to get exchange rate for ${currency} from fallback service:`, error);
+      // Fallback to original implementation
+      try {
+        const response = await fetch(`https://open.er-api.com/v6/latest/USD`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const rate = data.rates[currency];
+
+        if (rate) {
+          return rate;
+        }
+
+        throw new Error(`Currency ${currency} not supported by er-api`);
+      } catch (error) {
+        console.warn(`Failed to get exchange rate for ${currency}, using fallback:`, error);
+        // Comprehensive fallback rates for common Islamic-world currencies
+        const fallbackRates: Record<string, number> = {
+          'PKR': 279.5,
+          'AED': 3.67,
+          'SAR': 3.75,
+          'BDT': 110.0,
+          'EGP': 30.9,
+          'TRY': 30.2,
+          'MYR': 4.73,
+          'IDR': 15600,
+          'EUR': 0.92,
+          'GBP': 0.79,
+          'JPY': 149.5,
+          'CAD': 1.36,
+          'AUD': 1.53,
+          'INR': 83.0,
+        };
+        return fallbackRates[currency] || 1;
+      }
     }
   }
 

@@ -11,6 +11,7 @@ import { LayoutManager } from "@/components/LayoutManager";
 import { MetalPricesService, MetalPrices } from "@/lib/metalPrices";
 import { ZakatNisabService } from "@/lib/zakatNisab";
 import { METAL_PRICE_CONSTANTS } from "@/lib/constants";
+import { ExchangeRateFallbackService } from "@/lib/exchange-rate-fallback";
 
 interface ZakatAssets {
   cash: number;
@@ -125,8 +126,9 @@ export default function ZakatCalculator() {
   const [metalPrices, setMetalPrices] = useState<MetalPrices | null>(null);
   const [isLoadingPrices, setIsLoadingPrices] = useState(true);
   const [priceError, setPriceError] = useState<string | null>(null);
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState(() => localStorage.getItem('preferred-currency') || 'USD');
   const [nisabStandard, setNisabStandard] = useState<'classical' | 'common'>('classical');
+  const [exchangeRateData, setExchangeRateData] = useState<{ rate: number; lastUpdated: string; source: string } | null>(null);
   const [goldCalculator, setGoldCalculator] = useState<GoldCalculator>({
     amount: 0,
     karat: 24,
@@ -142,7 +144,28 @@ export default function ZakatCalculator() {
   // Load metal prices on component mount
   useEffect(() => {
     loadMetalPrices();
+    loadExchangeRate();
+    // Setup online listeners
+    ExchangeRateFallbackService.setupOnlineListeners();
   }, []);
+
+  const loadExchangeRate = async () => {
+    if (currency === 'USD') {
+      setExchangeRateData({ rate: 1, lastUpdated: new Date().toISOString(), source: 'api' });
+      return;
+    }
+
+    try {
+      const rateData = await ExchangeRateFallbackService.getExchangeRate(currency);
+      setExchangeRateData({
+        rate: rateData.rate,
+        lastUpdated: rateData.lastUpdated,
+        source: rateData.source
+      });
+    } catch (error) {
+      console.error('Failed to load exchange rate:', error);
+    }
+  };
 
   const loadMetalPrices = async () => {
     try {
@@ -178,6 +201,7 @@ export default function ZakatCalculator() {
     MetalPricesService.clearCache(currency);
     ZakatNisabService.clearCache(currency);
     loadMetalPrices();
+    loadExchangeRate();
   }, [currency, nisabStandard]);
 
   const currencyOptions = useMemo(() => {
@@ -494,6 +518,26 @@ export default function ZakatCalculator() {
 
               {metalPrices && (
                 <div className="text-xs text-muted-foreground space-y-1">
+                  {currency !== 'USD' && exchangeRateData && (
+                    <div className="flex justify-between items-center bg-primary/5 p-2 rounded-md">
+                      <span className="font-medium">Exchange Rate:</span>
+                      <div className="text-right">
+                        <span className="font-bold text-primary">
+                          1 {currency} = {ExchangeRateFallbackService.getInverseRate(exchangeRateData.rate).toFixed(6)} USD
+                        </span>
+                        <div className="flex items-center gap-1.5 justify-end mt-0.5">
+                          {exchangeRateData.source === 'api' ? (
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                          ) : (
+                            <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
+                          )}
+                          <span className="text-[10px] text-muted-foreground">
+                            {ExchangeRateFallbackService.formatTimeAgo(exchangeRateData.lastUpdated)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span>Price Source:</span>
                     <span className={`capitalize ${metalPrices.source === 'fallback' ? 'text-orange-500 font-medium' : 'text-green-500'}`}>
