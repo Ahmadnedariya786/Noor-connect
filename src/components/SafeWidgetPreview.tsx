@@ -281,28 +281,6 @@ const IslamicEventsPreview = () => (
   </div>
 );
 
-// ── Weather ───────────────────────────────────────────────────
-const WeatherPreview = () => (
-  <div className="rounded-xl border border-blue-200/60 bg-gradient-to-br from-blue-50/80 to-blue-50/20 dark:from-blue-950/30 dark:to-blue-950/10 p-3 space-y-2">
-    <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-blue-700 dark:text-blue-300">Weather</span>
-      <span className="text-[10px] text-muted-foreground">Your Location</span>
-    </div>
-    <div className="flex items-center gap-3">
-      <span className="text-4xl">⛅</span>
-      <div>
-        <p className="text-2xl font-bold text-foreground">24°C</p>
-        <p className="text-[11px] text-muted-foreground">Partly Cloudy</p>
-      </div>
-    </div>
-    <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-      <div className="rounded-lg bg-blue-100/60 dark:bg-blue-900/30 p-1.5">💧 68%<br/><span className="text-muted-foreground">Humidity</span></div>
-      <div className="rounded-lg bg-blue-100/60 dark:bg-blue-900/30 p-1.5">💨 12<br/><span className="text-muted-foreground">km/h</span></div>
-      <div className="rounded-lg bg-blue-100/60 dark:bg-blue-900/30 p-1.5">👁 8<br/><span className="text-muted-foreground">km vis</span></div>
-    </div>
-  </div>
-);
-
 // ── Prayer Stats ──────────────────────────────────────────────
 const PrayerStatsPreview = () => (
   <div className="rounded-xl border border-purple-200/60 bg-gradient-to-br from-purple-50/80 to-purple-50/20 dark:from-purple-950/30 dark:to-purple-950/10 p-3 space-y-2">
@@ -411,7 +389,6 @@ const PREVIEW_MAP: Record<string, React.FC> = {
   'weekly-chart':   WeeklyChartPreview,
   'quran-progress': QuranProgressPreview,
   'islamic-events': IslamicEventsPreview,
-  'weather':        WeatherPreview,
   'prayer-stats':   PrayerStatsPreview,
   'qaza-tracker':   QazaTrackerPreview,
   'dhikr-reminder': DhikrReminderPreview,

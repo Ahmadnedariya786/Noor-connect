@@ -19,7 +19,6 @@ import RamadanWidget from "@/components/RamadanWidget";
 import WeeklySalahChart from "@/components/WeeklySalahChart";
 import QuranProgressWidget from "@/components/QuranProgressWidget";
 import IslamicEventsWidget from "@/components/IslamicEventsWidget";
-import WeatherWidget from "@/components/WeatherWidget";
 import PrayerStatsWidget from "@/components/PrayerStatsWidget";
 import QazaTracker from "@/components/QazaTracker";
 import DhikrReminder from "@/components/DhikrReminder";
@@ -575,20 +574,6 @@ function PremiumDashboardInner({
                       })}
                     >
                       <IslamicEventsWidget />
-                    </motion.div>
-                  );
-
-                case 'weather':
-                  return (
-                    <motion.div
-                      key={widget.id}
-                      {...motionProps({
-                        initial: { opacity: 0, y: 12 },
-                        animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
-                      })}
-                    >
-                      <WeatherWidget />
                     </motion.div>
                   );
 

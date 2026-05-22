@@ -94,19 +94,11 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     category: 'optional',
   },
   {
-    id: 'weather',
-    name: 'Weather',
-    description: 'Current weather for your location',
-    visible: false,
-    order: 11,
-    category: 'optional',
-  },
-  {
     id: 'prayer-stats',
     name: 'Prayer Statistics',
     description: 'Your local salah streak & stats',
     visible: false,
-    order: 12,
+    order: 11,
     category: 'optional',
   },
   {
@@ -114,7 +106,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     name: 'Qaza Tracker',
     description: 'Track missed prayers',
     visible: true,
-    order: 13,
+    order: 12,
     category: 'optional',
   },
   {
@@ -122,7 +114,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     name: 'Dhikr Reminder',
     description: 'Gentle reminders & rotating adhkar',
     visible: false,
-    order: 14,
+    order: 13,
     category: 'premium',
   },
   {
@@ -130,7 +122,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     name: 'Quran Radio',
     description: 'Live Quranic radio and station streaming',
     visible: false,
-    order: 15,
+    order: 14,
     category: 'premium',
   },
 ];
