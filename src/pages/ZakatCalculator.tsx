@@ -29,6 +29,12 @@ interface GoldCalculator {
   unit: 'grams' | 'tolas' | 'ounces';
 }
 
+interface SilverCalculator {
+  amount: number;
+  purity: number;
+  unit: 'grams' | 'tolas' | 'ounces';
+}
+
 interface ZakatLiabilities {
   debts: number;
   loans: number;
@@ -51,6 +57,16 @@ const GOLD_KARAT_OPTIONS = [
   { value: 10, label: '10K', purity: 0.417 },
   { value: 9, label: '9K', purity: 0.375 },
   { value: 8, label: '8K', purity: 0.333 },
+];
+
+// Silver purity options
+const SILVER_PURITY_OPTIONS = [
+  { value: 999, label: '999 (Fine Silver)', purity: 0.999 },
+  { value: 958, label: '958 (Britannia)', purity: 0.958 },
+  { value: 925, label: '925 (Sterling)', purity: 0.925 },
+  { value: 900, label: '900 (Coin Silver)', purity: 0.900 },
+  { value: 835, label: '835 (Continental)', purity: 0.835 },
+  { value: 800, label: '800 (Standard)', purity: 0.800 },
 ];
 
 // Unit conversion factors to grams
@@ -114,6 +130,12 @@ export default function ZakatCalculator() {
   const [goldCalculator, setGoldCalculator] = useState<GoldCalculator>({
     amount: 0,
     karat: 24,
+    unit: 'grams'
+  });
+
+  const [silverCalculator, setSilverCalculator] = useState<SilverCalculator>({
+    amount: 0,
+    purity: 925,
     unit: 'grams'
   });
 
@@ -207,6 +229,8 @@ export default function ZakatCalculator() {
         if (data.liabilities) setLiabilities(data.liabilities);
         if (data.currency) setCurrency(data.currency);
         if (data.nisabStandard) setNisabStandard(data.nisabStandard);
+        if (data.goldCalculator) setGoldCalculator(data.goldCalculator);
+        if (data.silverCalculator) setSilverCalculator(data.silverCalculator);
       } catch (e) {
         console.error('Failed to parse saved zakat data');
       }
@@ -219,8 +243,10 @@ export default function ZakatCalculator() {
       liabilities,
       currency,
       nisabStandard,
+      goldCalculator,
+      silverCalculator,
     }));
-  }, [assets, liabilities, currency, nisabStandard]);
+  }, [assets, liabilities, currency, nisabStandard, goldCalculator, silverCalculator]);
 
   const totalAssets = Object.values(assets).reduce((a, b) => a + b, 0);
   const totalLiabilities = Object.values(liabilities).reduce((a, b) => a + b, 0);
@@ -268,14 +294,41 @@ export default function ZakatCalculator() {
     return value;
   }, [goldCalculator, goldPrice]);
 
+  // Calculate silver value based on amount, purity, and current prices
+  const calculateSilverValue = useMemo(() => {
+    if (!silverCalculator.amount || !silverPrice) return 0;
+
+    const purityOption = SILVER_PURITY_OPTIONS.find(p => p.value === silverCalculator.purity);
+    const purity = purityOption?.purity || 0.925;
+
+    // Convert to grams
+    const amountInGrams = silverCalculator.amount * UNIT_CONVERSIONS[silverCalculator.unit];
+
+    // Calculate value based on pure silver content
+    const pureSilverGrams = amountInGrams * purity;
+    const value = pureSilverGrams * silverPrice;
+
+    return value;
+  }, [silverCalculator, silverPrice]);
+
   // Update gold asset when calculator value changes
   useEffect(() => {
     const calculatedValue = calculateGoldValue;
     setAssets(prev => ({ ...prev, gold: calculatedValue }));
   }, [calculateGoldValue]);
 
+  // Update silver asset when calculator value changes
+  useEffect(() => {
+    const calculatedValue = calculateSilverValue;
+    setAssets(prev => ({ ...prev, silver: calculatedValue }));
+  }, [calculateSilverValue]);
+
   const updateGoldCalculator = (field: keyof GoldCalculator, value: string | number) => {
     setGoldCalculator(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateSilverCalculator = (field: keyof SilverCalculator, value: string | number) => {
+    setSilverCalculator(prev => ({ ...prev, [field]: value }));
   };
 
   const resetCalculator = () => {
@@ -293,6 +346,11 @@ export default function ZakatCalculator() {
     setGoldCalculator({
       amount: 0,
       karat: 24,
+      unit: 'grams'
+    });
+    setSilverCalculator({
+      amount: 0,
+      purity: 925,
       unit: 'grams'
     });
     setNisabStandard('classical'); // Reset to default
@@ -587,13 +645,79 @@ export default function ZakatCalculator() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs">Silver Value</Label>
-                    <Input
-                      type="number"
-                      value={assets.silver || ''}
-                      onChange={(e) => updateAsset('silver', e.target.value)}
-                      placeholder="0"
-                    />
+                    <Label className="text-xs">Silver Calculator</Label>
+                    <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                      {/* Amount and Unit Row */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Amount</Label>
+                          <Input
+                            type="number"
+                            value={silverCalculator.amount || ''}
+                            onChange={(e) => updateSilverCalculator('amount', parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                            step="0.01"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Unit</Label>
+                          <Select value={silverCalculator.unit} onValueChange={(value) => updateSilverCalculator('unit', value as 'grams' | 'tolas' | 'ounces')}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="grams">Grams</SelectItem>
+                              <SelectItem value="tolas">Tolas</SelectItem>
+                              <SelectItem value="ounces">Ounces</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Purity Selection */}
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Silver Purity</Label>
+                        <Select value={silverCalculator.purity.toString()} onValueChange={(value) => updateSilverCalculator('purity', parseInt(value))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SILVER_PURITY_OPTIONS.map((purity) => (
+                              <SelectItem key={purity.value} value={purity.value.toString()}>
+                                {purity.label} ({Math.round(purity.purity * 1000)/10}% pure)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Calculation Details */}
+                      <div className="space-y-1 pt-2 border-t">
+                        <div className="text-xs text-muted-foreground">
+                          <div className="flex justify-between">
+                            <span>Pure Silver Content:</span>
+                            <span>
+                              {(silverCalculator.amount * UNIT_CONVERSIONS[silverCalculator.unit] *
+                                SILVER_PURITY_OPTIONS.find(p => p.value === silverCalculator.purity)?.purity || 0).toFixed(2)} grams
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Current Silver Price:</span>
+                            <span>{silverPrice.toFixed(2)} {currency}/gram</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Calculated Value */}
+                      <div className="bg-primary/10 p-3 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Total Silver Value:</span>
+                          <span className="text-lg font-bold text-primary">
+                            {formatMoney(calculateSilverValue)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <Label className="text-xs">Stocks & Investments</Label>
