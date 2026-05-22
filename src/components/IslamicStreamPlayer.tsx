@@ -162,20 +162,19 @@ export default function IslamicStreamPlayer() {
 
   /* ─── Fetch remote playlist once ─── */
   useEffect(() => {
-    fetchSaudiPlaylist().then(playlist => {
-      const makkah = playlist.makkah || FALLBACK_STREAMS.makkah;
-      const madinah = playlist.madinah || FALLBACK_STREAMS.madinah;
-      streamUrlsRef.current = {
-        makkah: makkah?.url || null,
-        madinah: madinah?.url || null,
-      };
-      setStreams(prev => ({
-        makkah: { ...prev.makkah, channel: makkah, isLoading: false },
-        madinah: { ...prev.madinah, channel: madinah, isLoading: false },
-      }));
-      const url = streamUrlsRef.current[activeTabRef.current];
-      if (url) initHLS(url, activeTabRef.current);
-    });
+    // Skip IPTV playlist fetch and use fallback URLs directly to avoid 404 errors
+    const makkah = FALLBACK_STREAMS.makkah;
+    const madinah = FALLBACK_STREAMS.madinah;
+    streamUrlsRef.current = {
+      makkah: makkah?.url || null,
+      madinah: madinah?.url || null,
+    };
+    setStreams(prev => ({
+      makkah: { ...prev.makkah, channel: makkah, isLoading: false },
+      madinah: { ...prev.madinah, channel: madinah, isLoading: false },
+    }));
+    const url = streamUrlsRef.current[activeTabRef.current];
+    if (url) initHLS(url, activeTabRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
