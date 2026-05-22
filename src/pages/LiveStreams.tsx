@@ -30,7 +30,7 @@ export default function LiveStreams() {
             </div>
             <p className="text-xs font-bold text-foreground">HLS Stream</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Official Saudi IPTV via iptv-org open playlist. Falls back to Akamai CDN automatically.
+              Official Saudi streams via Akamai CDN (hls_roku). Direct HLS streaming for reliability.
             </p>
           </div>
 

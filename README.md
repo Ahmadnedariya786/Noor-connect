@@ -39,10 +39,11 @@
 - **Islamic Remedies (Tibb-e-Nabawi)**: Prophetic medicine index with a favorites list for quick reference.
 - **Eid & Festive Checklist**: Special event mode with checklists and celebratory popups to prepare for Eid and other significant Islamic events.
 
-### 📻 Rich Media & Islamic Library 
+### 📻 Rich Media & Islamic Library
 - **Optimized E-books & Hadith**: Effortlessly read through massive PDF libraries and Hadith encyclopedias using an optimized, lag-free UI design.
-- **24/7 Quran Radio & Streams**: Direct live video and audio streams right from Makkah, Madinah, and specialized global recitation networks.
-- **Weather & Custom Widgets**: Customizable dashboard layers including localized weather, Islamic dates, and quick-action shortcuts.
+- **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via Akamai CDN (hls_roku) for reliable HLS streaming. CSP-compliant HTTP support included.
+- **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication and reduce APK size (168MB → 84MB). F-Droid compatible.
+
 
 ### 📱 Enhanced Widget System & Dashboard
 - **Native Android Widgets Suite**: Beautiful, lightning-fast native Kotlin widgets including Next Adhan, Daily Ayah, and Daily Schedule arrays.
