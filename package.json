@@ -15,7 +15,8 @@
     "optimize:all": "npm run optimize:images",
     "test-optimization": "node scripts/test-optimization.js",
     "analyze-assets": "node scripts/analyze-assets.js",
-    "simple-optimize": "node scripts/simple-optimize.js"
+    "simple-optimize": "node scripts/simple-optimize.js",
+    "android:build": "npm run build && cap sync android && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
@@ -104,6 +105,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
+    "baseline-browser-mapping": "^2.10.31",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

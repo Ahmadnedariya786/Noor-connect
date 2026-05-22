@@ -2,15 +2,13 @@
  * Mushaf Viewer – Full-screen Madinah Mushaf image reader
  *
  * Features:
- *  • CDN images from images.quran.com  (604 pages)
- *  • Cache API with LRU eviction (max 50)
+ *  • Local mushaf images from assets (604 pages)
  *  • Swipe left/right via touch events (no library)
  *  • Pinch-to-zoom via CSS transforms
  *  • Auto-hide navigation arrows (3 s)
  *  • Surah index sheet (shadcn Sheet)
  *  • Bookmark to localStorage, resume last-read page
- *  • Loading skeleton & download progress bar
- *  • Cached-page green dot indicator
+ *  • Loading skeleton
  *  • Dark / light theme aware
  */
 
@@ -35,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { mushafImageCache } from '@/lib/mushaf-image-cache';
+import { getMushafPageUrl } from '@/lib/quran-mushaf-image-cache';
 import { SURAH_START_PAGES } from '@/lib/mushaf-service';
 import { quranService } from '@/lib/quran-service';
 
@@ -84,7 +82,6 @@ export default function MushafViewer() {
   });
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState<[number, number] | null>(null);
   const [isCached, setIsCached] = useState(false);
   const [bookmarks, setBookmarks] = useState<number[]>(getBookmarks);
   const [showNav, setShowNav] = useState(true);
@@ -119,28 +116,18 @@ export default function MushafViewer() {
   // ── Load image ──
   const loadPage = useCallback(async (page: number) => {
     setLoading(true);
-    setProgress(null);
     setImgSrc(null);
     setScale(1);
     setTranslate({ x: 0, y: 0 });
 
     try {
-      const cached = await mushafImageCache.isPageCached(page);
-      setIsCached(cached);
-
-      const url = await mushafImageCache.getPageImage(page, (loaded, total) => {
-        setProgress([loaded, total]);
-      });
+      const url = getMushafPageUrl(page);
       setImgSrc(url);
       setIsCached(true);
-
-      // Pre-fetch adjacent pages
-      mushafImageCache.prefetchPages(page);
     } catch (e) {
       console.error('Failed to load mushaf page', e);
     } finally {
       setLoading(false);
-      setProgress(null);
     }
   }, []);
 
@@ -351,24 +338,13 @@ export default function MushafViewer() {
 
       {/* ── Image Area ──────────────────────────────────── */}
       <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-        {/* Loading skeleton / progress */}
+        {/* Loading skeleton */}
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
             {/* Skeleton pulse */}
             <div className="w-[80%] max-w-sm aspect-[3/4] rounded-2xl bg-amber-200/30 dark:bg-amber-800/20 animate-pulse" />
-
-            {/* Progress bar */}
-            {progress && progress[1] > 0 && (
-              <div className="w-48 h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-150"
-                  style={{ width: `${Math.round((progress[0] / progress[1]) * 100)}%` }}
-                />
-              </div>
-            )}
-
             <p className="text-xs text-amber-700/70 dark:text-amber-300/60 font-medium">
-              {progress ? `${Math.round((progress[0] / progress[1]) * 100)}%` : 'Loading…'}
+              Loading…
             </p>
           </div>
         )}

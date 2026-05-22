@@ -51,6 +51,60 @@ android {
     }
 }
 
+// Task to move mushaf images from public to android assets and remove from dist to avoid duplication
+task moveMushafImages {
+    def sourceDir = file("${project.projectDir}/../../public/mushaf")
+    def targetDir = file("${project.projectDir}/src/main/assets/public/mushaf")
+    def distDir = file("${project.projectDir}/../../dist/mushaf")
+    
+    doLast {
+        println "Source dir: ${sourceDir.absolutePath}, exists: ${sourceDir.exists()}"
+        println "Target dir: ${targetDir.absolutePath}"
+        println "Dist dir: ${distDir.absolutePath}, exists: ${distDir.exists()}"
+        
+        // Only run if source directory exists
+        if (sourceDir.exists()) {
+            // Create target directory if it doesn't exist
+            targetDir.mkdirs()
+            
+            // Copy images from public/mushaf to android assets
+            def copied = 0
+            sourceDir.eachFile { file ->
+                if (file.name.endsWith('.webp')) {
+                    def targetFile = new File(targetDir, file.name)
+                    targetFile.bytes = file.bytes
+                    copied++
+                }
+            }
+            println "Copied ${copied} images to ${targetDir.absolutePath}"
+            
+            // Remove images from dist/mushaf if it exists (to avoid duplication after Capacitor sync)
+            if (distDir.exists()) {
+                def deleted = 0
+                distDir.eachFile { file ->
+                    if (file.name.endsWith('.webp')) {
+                        file.delete()
+                        deleted++
+                    }
+                }
+                println "Deleted ${deleted} images from ${distDir.absolutePath}"
+                // Remove empty directory
+                if (distDir.listFiles().length == 0) {
+                    distDir.deleteDir()
+                    println "Removed empty dist/mushaf directory"
+                }
+            }
+            
+            println "Moved mushaf images from public/mushaf to android assets and removed from dist/mushaf"
+        } else {
+            println "Source directory does not exist, skipping"
+        }
+    }
+}
+
+// Run the move task before preBuild
+preBuild.dependsOn moveMushafImages
+
 repositories {
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
