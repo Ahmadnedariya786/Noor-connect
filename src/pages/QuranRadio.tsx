@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Radio, Play, Pause, Volume2 } from "lucide-react";
+import { ArrowLeft, Radio, Play, Pause, Volume2, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { radioStations, type RadioStation } from "@/data/radio-stations";
@@ -89,6 +89,9 @@ const QuranRadio = () => {
               <h1 className="text-2xl font-bold text-foreground">Quran Radio</h1>
               <p className="text-sm text-muted-foreground">Live Quran recitation 24/7</p>
             </div>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/radio-stats")} className="rounded-full">
+              <BarChart3 className="w-5 h-5" />
+            </Button>
           </div>
         </div>
       </div>

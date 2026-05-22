@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalRadio, getGlobalAudioRef, setGlobalAudioRef } from "@/lib/global-radio";
 import { radioStations } from "@/data/radio-stations";
+import { recordListeningTime } from "@/lib/radio-stats";
 import Hls from 'hls.js';
 
 // Helper to format seconds to MM:SS or HH:MM:SS
@@ -175,6 +176,20 @@ export function GlobalRadioPlayer() {
         accumulatedTime: globalRadio.accumulatedTime + additionalTime
       });
       setIsLoading(false);
+
+      // Record listening time for statistics (non-blocking)
+      if (globalRadio.currentStation && additionalTime > 0) {
+        console.log('Recording listening time:', {
+          stationId: globalRadio.currentStation.id,
+          stationName: globalRadio.currentStation.name,
+          seconds: additionalTime
+        });
+        recordListeningTime(
+          String(globalRadio.currentStation.id),
+          globalRadio.currentStation.name,
+          additionalTime
+        ).catch(err => console.error('Failed to record listening time:', err));
+      }
     };
 
     const handleEnded = () => {
@@ -491,6 +506,18 @@ export function GlobalRadioPlayer() {
   };
 
   const handleClose = () => {
+    // Record listening time before stopping
+    if (globalRadio.currentStation && globalRadio.isPlaying && globalRadio.sessionStartTime) {
+      const additionalTime = Math.floor((Date.now() - globalRadio.sessionStartTime) / 1000);
+      if (additionalTime > 0) {
+        recordListeningTime(
+          String(globalRadio.currentStation.id),
+          globalRadio.currentStation.name,
+          additionalTime
+        ).catch(err => console.error('Failed to record listening time:', err));
+      }
+    }
+
     if (audioRef.current) {
       audioRef.current.pause();
     }

@@ -58,6 +58,7 @@ const HabitTracker = lazy(() => import("./pages/HabitTracker"));
 const QuranRadio = lazy(() => import("./pages/QuranRadio"));
 const QuranAudio = lazy(() => import("./pages/QuranAudio"));
 const LiveStreams = lazy(() => import("./pages/LiveStreams"));
+const RadioStats = lazy(() => import("./pages/RadioStats"));
 const Services = lazy(() => import("./pages/Services"));
 const IslamicRemedies = lazy(() => import("./pages/IslamicRemedies"));
 const RemedyFavorites = lazy(() => import("./pages/RemedyFavorites"));
@@ -147,6 +148,7 @@ function AppRoutes() {
         <Route path="/quran-radio" element={<QuranRadio />} />
         <Route path="/quran-audio" element={<QuranAudio />} />
         <Route path="/live" element={<LiveStreams />} />
+        <Route path="/radio-stats" element={<RadioStats />} />
         <Route path="/services" element={<Services />} />
         <Route path="/islamic-remedies" element={<IslamicRemedies />} />
         <Route path="/remedy-favorites" element={<RemedyFavorites />} />
