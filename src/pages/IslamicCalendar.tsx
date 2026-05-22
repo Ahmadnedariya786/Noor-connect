@@ -3,10 +3,11 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Moon, Star, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Calendar, Moon, Star, ChevronLeft, ChevronRight, X, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { calendarApiResponseSchema, safeParseApiResponse } from "@/lib/api-schemas";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
+import { useNavigate } from "react-router-dom";
 
 const importantDates = [
   { name: "Ramadan", icon: "🌙", description: "Month of Fasting", color: "bg-primary/10 text-foreground border border-primary/20" },
@@ -33,6 +34,7 @@ interface CalendarDay {
 }
 
 export default function IslamicCalendar() {
+  const navigate = useNavigate();
   // Use the Maghrib-aware hook (same as Dashboard) for the header date
   const { islamicInfo, isLoading: dateLoading } = useIslamicCalendar();
 
@@ -211,6 +213,17 @@ export default function IslamicCalendar() {
   return (
     <div className="min-h-screen bg-background pt-6 px-4">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Islamic Calendar</h1>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hijri Dates</p>
+          </div>
+        </div>
+
         {/* Current Islamic Date */}
         <Card className="bg-card elevation-4 border-primary/20">
           <CardHeader className="text-center pb-4">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Clock, Radio, Trash2, Trophy, Flame, Target, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BarChart3, Clock, Radio, Trash2, Trophy, Flame, Target, TrendingUp, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getSortedStationStats, getTotalListeningTime, resetRadioStats, formatDuration, type StationStats } from '@/lib/radio-stats';
@@ -7,6 +8,7 @@ import { getAllAchievements, getCurrentStreak } from '@/lib/radio-achievements';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RadioStats() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState<StationStats[]>([]);
   const [totalTime, setTotalTime] = useState<number>(0);
@@ -84,22 +86,20 @@ export default function RadioStats() {
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
         {/* Page Header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <BarChart3 className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-black text-foreground tracking-tight">Radio Statistics</h1>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Listening Habits</p>
-            </div>
-            {streak > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
-                <Flame className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-bold text-orange-500">{streak} day streak</span>
-              </div>
-            )}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/quran-radio")} className="rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Radio Statistics</h1>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Listening Habits</p>
           </div>
+          {streak > 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+              <Flame className="w-4 h-4 text-orange-500" />
+              <span className="text-sm font-bold text-orange-500">{streak} day streak</span>
+            </div>
+          )}
         </div>
 
         {/* Stats Grid */}

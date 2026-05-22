@@ -1,21 +1,23 @@
 import IslamicStreamPlayer from '@/components/IslamicStreamPlayer';
-import { Radio, Wifi, Shield } from 'lucide-react';
+import { Radio, Wifi, Shield, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export default function LiveStreams() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
 
         {/* Page Header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Radio className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-foreground tracking-tight">Live Transmission</h1>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Makkah · Madinah</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Live Transmission</h1>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Makkah · Madinah</p>
           </div>
         </div>
 
