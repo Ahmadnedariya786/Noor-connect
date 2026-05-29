@@ -172,9 +172,12 @@ public class WidgetPlugin extends Plugin {
             String ayahData = call.getString("ayahData");
 
             if (prayerData == null || ayahData == null) {
+                Log.e(TAG, "notifyWidgetDataChanged: missing data - prayerData=" + prayerData + " ayahData=" + ayahData);
                 call.reject("missing_data", "prayerData and ayahData are required");
                 return;
             }
+
+            Log.d(TAG, "notifyWidgetDataChanged: received prayerData length=" + prayerData.length() + " ayahData length=" + ayahData.length());
 
             final Context context = getContext();
 
@@ -186,9 +189,13 @@ public class WidgetPlugin extends Plugin {
                 .putString("widget_ayah_data", ayahData)
                 .apply();
 
+            Log.d(TAG, "notifyWidgetDataChanged: data stored in SharedPreferences");
+
             // Schedule next prayer alarm
             com.noorconnect.app.widgets.AlarmScheduler.INSTANCE
                 .scheduleNextPrayerAlarm(context, prayerData);
+
+            Log.d(TAG, "notifyWidgetDataChanged: prayer alarm scheduled");
 
             // Enqueue immediate widget sync via WorkManager
             androidx.work.WorkManager.getInstance(context).enqueueUniqueWork(
@@ -201,7 +208,7 @@ public class WidgetPlugin extends Plugin {
                     .build()
             );
 
-            Log.d(TAG, "notifyWidgetDataChanged: prayer+ayah data stored, sync enqueued");
+            Log.d(TAG, "notifyWidgetDataChanged: widget sync enqueued via WorkManager");
 
             JSObject ret = new JSObject();
             ret.put("status", "ok");

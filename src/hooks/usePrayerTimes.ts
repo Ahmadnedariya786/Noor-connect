@@ -390,7 +390,8 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
             WidgetService.updateWidget(
               locationData.latitude,
               locationData.longitude,
-              locationLabel
+              locationLabel,
+              times
             ).catch(() => {});
           } catch {
             // WidgetService not available on this platform
@@ -618,6 +619,30 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       window.removeEventListener('madhab-changed', handleMadhabChange);
     };
   }, [location, fetchPrayerTimesWithCoordinates]);
+
+  // Listen for widget update requests
+  useEffect(() => {
+    const handleWidgetUpdate = async () => {
+      if (location && prayerTimes) {
+        const locationLabel = location.city || location.country || 'Unknown';
+        try {
+          const { WidgetService } = await import('@/lib/widget-service');
+          WidgetService.updateWidget(
+            location.latitude,
+            location.longitude,
+            locationLabel,
+            prayerTimes
+          ).catch(() => {});
+        } catch {
+          // WidgetService not available on this platform
+        }
+      }
+    };
+    window.addEventListener('widget-update-requested', handleWidgetUpdate);
+    return () => {
+      window.removeEventListener('widget-update-requested', handleWidgetUpdate);
+    };
+  }, [location, prayerTimes]);
 
 
   return useMemo(() => ({

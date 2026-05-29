@@ -3,11 +3,12 @@
   Next Adhan Widget (2×2)
   Shows next prayer name, countdown timer, progress bar.
   RemoteViews only — no ConstraintLayout.
+  Material Design 3 styling.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="@drawable/widget_background">
 
     <!-- Data content -->
     <LinearLayout
@@ -16,47 +17,49 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/prayer_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Dhuhr"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textColor="@color/m3_on_primary_container"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
 
         <TextView
             android:id="@+id/countdown"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="1h 23m"
-            android:textColor="@color/m3_secondary_container"
-            android:textSize="26sp"
+            android:textColor="@color/m3_primary"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="8dp" />
 
         <ProgressBar
             android:id="@+id/progress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_height="6dp"
+            android:layout_marginTop="12dp"
             android:max="100"
             android:progress="45"
-            android:progressTint="@color/m3_secondary_container" />
+            android:progressTint="@color/m3_primary"
+            android:progressBackgroundTint="@color/m3_primary_container" />
 
         <TextView
             android:id="@+id/last_updated"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:alpha="0.6"
+            android:alpha="0.7"
             android:gravity="bottom|end"
             android:text=""
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="11sp"
-            android:layout_marginTop="4dp" />
+            android:textColor="@color/m3_on_surface_variant"
+            android:textSize="10sp"
+            android:layout_marginTop="8dp" />
     </LinearLayout>
 
     <!-- Empty state -->
@@ -66,6 +69,7 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
+        android:padding="16dp"
         android:visibility="gone">
 
         <TextView
@@ -73,8 +77,8 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="Open app to sync prayer times"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp" />
+            android:textColor="@color/m3_on_surface_variant"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <!-- Full-size invisible touch overlay for PendingIntent -->

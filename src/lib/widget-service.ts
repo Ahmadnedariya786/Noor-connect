@@ -5,7 +5,8 @@
 import { registerPlugin } from '@capacitor/core';
 import { calculatePrayerTimes, formatPrayerTime, getNextPrayer } from './prayer-calculator';
 import type { WidgetPluginInterface, PrayerEntry, WidgetStrings } from './widgetPlugin';
-import { runIfNative } from './capacitor-utils'; // Added user's utility
+import { runIfNative } from './capacitor-utils';
+import { getMadhab } from './storage';
 
 /* Re-export the plugin type for convenience */
 export type { WidgetPluginInterface, PrayerEntry, WidgetStrings };
@@ -42,6 +43,40 @@ function getCurrentTimeString(): string {
         minute: '2-digit',
         hour12: false,
     });
+}
+
+/**
+ * Build prayer data JSON for Kotlin widgets with timestamps.
+ * Format: { prayers: [{name, time (timestamp)}, ...], nextPrayerIndex, lastUpdated }
+ */
+function buildPrayerDataJson(prayerTimes: any, lat: number, lon: number): string {
+    const now = new Date();
+    const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
+    const dates = [prayerTimes.fajr, prayerTimes.dhuhr, prayerTimes.asr, prayerTimes.maghrib, prayerTimes.isha];
+
+    const prayers = dates.map((date, i) => ({
+        name: names[i],
+        time: date.getTime(), // Timestamp for countdown calculation
+        timeStr: formatPrayerTime(date) // Display time
+    }));
+
+    // Find next prayer index
+    let nextPrayerIndex = 0;
+    for (let i = 0; i < prayers.length; i++) {
+        if (prayers[i].time > now.getTime()) {
+            nextPrayerIndex = i;
+            break;
+        }
+    }
+
+    const data = {
+        prayers,
+        nextPrayerIndex,
+        lastUpdated: now.getTime(),
+        location: { lat, lon }
+    };
+
+    return JSON.stringify(data);
 }
 
 /**
@@ -112,8 +147,12 @@ export class WidgetService {
         latitude: number,
         longitude: number,
         locationName?: string,
+        prayerTimes?: any,
     ) {
         try {
+            // Calculate prayer times if not provided
+            const times = prayerTimes || calculatePrayerTimes(latitude, longitude, new Date());
+            
             const next = getNextPrayer(latitude, longitude);
             if (!next) return;
 
@@ -133,7 +172,27 @@ export class WidgetService {
             const allPrayers = buildAllPrayers(latitude, longitude);
             const quran = getStoredQuranVerse();
 
-            // Using the user's runIfNative utility!
+            // Build prayer data JSON for new Kotlin widgets
+            const prayerData = buildPrayerDataJson(times, latitude, longitude);
+
+            // Build ayah data JSON
+            const ayahData = JSON.stringify({
+                arabic: quran?.arabic ?? '',
+                transliteration: quran?.translit ?? '',
+                reference: quran?.ref ?? '',
+                hijriDate: getHijriDateString(),
+                location: locationName ?? ''
+            });
+
+            // Use notifyWidgetDataChanged for new Kotlin widgets
+            await runIfNative(() => 
+                WidgetPlugin.notifyWidgetDataChanged({
+                    prayerData,
+                    ayahData
+                })
+            );
+
+            // Also call updateWidgetFull for backward compatibility with old Java widgets
             await runIfNative(() => 
                 WidgetPlugin.updateWidgetFull({
                     name: prayerName,
@@ -148,6 +207,8 @@ export class WidgetService {
                     quranRef: quran?.ref ?? '',
                 })
             );
+
+            console.log('[WidgetService] Widget updated with prayer data for Kotlin widgets');
 
         } catch (error) {
             console.error('[WidgetService] updateWidget failed:', error);
