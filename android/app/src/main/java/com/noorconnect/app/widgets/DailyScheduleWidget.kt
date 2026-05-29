@@ -30,24 +30,28 @@ class DailyScheduleWidget : AppWidgetProvider() {
             mgr: AppWidgetManager,
             id: Int
         ) {
-            val rv = RemoteViews(context.packageName, R.layout.widget_daily_schedule)
+            try {
+                val rv = RemoteViews(context.packageName, R.layout.widget_daily_schedule)
 
-            // Set the RemoteAdapter for the ListView
-            val serviceIntent = Intent(context, PrayerListService::class.java)
-            rv.setRemoteAdapter(R.id.prayer_list, serviceIntent)
-            rv.setEmptyView(R.id.prayer_list, R.id.empty_state)
+                // Set the RemoteAdapter for the ListView
+                val serviceIntent = Intent(context, PrayerListService::class.java)
+                rv.setRemoteAdapter(R.id.prayer_list, serviceIntent)
+                rv.setEmptyView(R.id.prayer_list, R.id.empty_state)
 
-            // Tap anywhere → open app
-            val intent = Intent(context, MainActivity::class.java)
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            val pi = PendingIntent.getActivity(
-                context, 101, intent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            rv.setOnClickPendingIntent(R.id.prayer_list, pi)
+                // Tap anywhere → open app
+                val intent = Intent(context, MainActivity::class.java)
+                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val pi = PendingIntent.getActivity(
+                    context, 101, intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                rv.setOnClickPendingIntent(R.id.prayer_list, pi)
 
-            mgr.updateAppWidget(id, rv)
-            mgr.notifyAppWidgetViewDataChanged(id, R.id.prayer_list)
+                mgr.updateAppWidget(id, rv)
+                mgr.notifyAppWidgetViewDataChanged(id, R.id.prayer_list)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update schedule widget $id", e)
+            }
         }
     }
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Crescent moon and star - Islamic symbol for Noor Connect -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M54,24C35.2,24 20,39.2 20,58C20,76.8 35.2,92 54,92C62.4,92 70,88.8 76,83.2C71.2,87.2 65.6,89.6 59.2,89.6C42.4,89.6 28.8,76 28.8,59.2C28.8,42.4 42.4,28.8 59.2,28.8C65.6,28.8 71.2,31.2 76,35.2C70,29.6 62.4,26.4 54,24Z"/>
+    <!-- Star -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M80,38L84,48L94,48L86,54L89,64L80,58L71,64L74,54L66,48L76,48Z"/>
+</vector>

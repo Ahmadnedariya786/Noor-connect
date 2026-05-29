@@ -52,27 +52,31 @@ public class QuranVerseWidget extends AppWidgetProvider {
     }
 
     private static void updateWidget(Context context, AppWidgetManager mgr, int widgetId) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
-        String arabic = prefs.getString(KEY_QURAN_ARABIC, context.getString(R.string.widget_quran_arabic_default));
-        String translit = prefs.getString(KEY_QURAN_TRANSLIT,
-                context.getString(R.string.widget_quran_translit_default));
-        String ref = prefs.getString(KEY_QURAN_REF, context.getString(R.string.widget_quran_ref_default));
+            String arabic = prefs.getString(KEY_QURAN_ARABIC, context.getString(R.string.widget_quran_arabic_default));
+            String translit = prefs.getString(KEY_QURAN_TRANSLIT,
+                    context.getString(R.string.widget_quran_translit_default));
+            String ref = prefs.getString(KEY_QURAN_REF, context.getString(R.string.widget_quran_ref_default));
 
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.quran_verse_widget);
-        views.setTextViewText(R.id.widget_quran_arabic, arabic);
-        views.setTextViewText(R.id.widget_quran_translit, translit);
-        views.setTextViewText(R.id.widget_quran_ref, ref);
+            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.quran_verse_widget);
+            views.setTextViewText(R.id.widget_quran_arabic, arabic);
+            views.setTextViewText(R.id.widget_quran_translit, translit);
+            views.setTextViewText(R.id.widget_quran_ref, ref);
 
-        // Tap → open app
-        Intent tapIntent = new Intent(context, MainActivity.class);
-        tapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        tapIntent.putExtra("navigate", "quran");
-        PendingIntent pi = PendingIntent.getActivity(context, 1, tapIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(R.id.quran_widget_root, pi);
+            // Tap → open app
+            Intent tapIntent = new Intent(context, MainActivity.class);
+            tapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            tapIntent.putExtra("navigate", "quran");
+            PendingIntent pi = PendingIntent.getActivity(context, 1, tapIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            views.setOnClickPendingIntent(R.id.quran_widget_root, pi);
 
-        mgr.updateAppWidget(widgetId, views);
-        Log.d(TAG, "Quran widget updated: ref=" + ref);
+            mgr.updateAppWidget(widgetId, views);
+            Log.d(TAG, "Quran widget updated: ref=" + ref);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to update Quran widget " + widgetId, e);
+        }
     }
 }
