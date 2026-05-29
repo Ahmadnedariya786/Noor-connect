@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { getMadhab, setMadhab, getTimeFormat, setTimeFormat as saveTimeFormat } from "@/lib/storage";
+import { getMadhab, setMadhab, getTimeFormat, setTimeFormat as saveTimeFormat, type MadhabType } from "@/lib/storage";
 import { AdhanSelector } from "@/components/AdhanSelector";
 import { CustomAdhanUpload } from "@/components/CustomAdhanUpload";
 import { getCalculationMethod, setCalculationMethod, type CalculationMethodName } from "@/lib/prayer-calculator";
@@ -64,7 +64,7 @@ const Profile = () => {
   } = useSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [madhab, setMadhabState] = useState<"shafi" | "hanafi">("shafi");
+  const [madhab, setMadhabState] = useState<MadhabType>("shafi");
   const [timeFormat, setTimeFormatState] = useState<"12" | "24">("24");
   const [calculationMethod, setCalculationMethodState] = useState<CalculationMethodName>("MuslimWorldLeague");
   const [quranFontSize, setQuranFontSizeState] = useState(24);
@@ -320,10 +320,18 @@ const Profile = () => {
 
   const toggleTheme = (checked: boolean) => setTheme(checked ? "dark" : "light");
 
-  const handleMadhabChange = (value: "shafi" | "hanafi") => {
+  const handleMadhabChange = (value: MadhabType) => {
     setMadhabState(value);
     setMadhab(value);
-    toast({ title: `${t('madhab')}: ${value === "shafi" ? "Shafi'i" : "Hanafi"}` });
+    const madhabNames = {
+      shafi: "Shafi'i",
+      hanafi: "Hanafi",
+      maliki: "Maliki",
+      hanbali: "Hanbali"
+    };
+    toast({ title: `${t('madhab')}: ${madhabNames[value]}` });
+    // Trigger prayer time recalculation
+    window.dispatchEvent(new CustomEvent('madhab-changed', { detail: { madhab: value } }));
   };
 
   const handleTimeFormatChange = (value: "12" | "24") => {
@@ -791,13 +799,15 @@ const Profile = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t('madhab')}</Label>
-                  <Select value={madhab} onValueChange={(v) => handleMadhabChange(v as "shafi" | "hanafi")}>
+                  <Select value={madhab} onValueChange={(v) => handleMadhabChange(v as MadhabType)}>
                     <SelectTrigger className="rounded-xl bg-muted/30 border-none h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-lg">
                       <SelectItem value="shafi">{t('madhabShafi').replace('Madhab: ', '')}</SelectItem>
                       <SelectItem value="hanafi">{t('madhabHanafi').replace('Madhab: ', '')}</SelectItem>
+                      <SelectItem value="maliki">{t('madhabMaliki').replace('Madhab: ', '')}</SelectItem>
+                      <SelectItem value="hanbali">{t('madhabHanbali').replace('Madhab: ', '')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

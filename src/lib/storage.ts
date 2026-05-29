@@ -67,11 +67,13 @@ export const setTheme = (theme: 'dark' | 'light'): void => {
 };
 
 // Madhab
-export const getMadhab = (): 'shafi' | 'hanafi' => {
-  return (localStorage.getItem(STORAGE_KEYS.MADHAB) as 'shafi' | 'hanafi') || 'shafi';
+export type MadhabType = 'shafi' | 'hanafi' | 'maliki' | 'hanbali';
+
+export const getMadhab = (): MadhabType => {
+  return (localStorage.getItem(STORAGE_KEYS.MADHAB) as MadhabType) || 'shafi';
 };
 
-export const setMadhab = (madhab: 'shafi' | 'hanafi'): void => {
+export const setMadhab = (madhab: MadhabType): void => {
   localStorage.setItem(STORAGE_KEYS.MADHAB, madhab);
 };
 

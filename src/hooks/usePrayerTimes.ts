@@ -13,6 +13,7 @@ import { GeolocationService } from '@/lib/geolocation-service';
 import { isNativePlatform } from '@/lib/capacitor-utils';
 import { getMenstrualModeData } from '@/lib/menstrual-mode';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
+import { getMadhab } from '@/lib/storage';
 
 export interface PrayerTimes {
   fajr: Date;
@@ -70,6 +71,10 @@ type PrayerTimingMap = {
   Asr: string;
   Maghrib: string;
   Isha: string;
+  Imsak?: string;
+  Midnight?: string;
+  Firstthird?: string;
+  Lastthird?: string;
 };
 
 export function usePrayerTimes(): UsePrayerTimesReturn {
@@ -244,7 +249,8 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       const locationKey = `${locationData.latitude.toFixed(4)},${locationData.longitude.toFixed(4)}`;
       const now = new Date();
       const dayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const fetchSignature = `${locationKey}|${dayKey}|${methodId}`;
+      const madhab = getMadhab();
+      const fetchSignature = `${locationKey}|${dayKey}|${methodId}|${madhab}`;
 
       if (lastFetchSignatureRef.current === fetchSignature && prayerTimesRef.current) {
         return;
@@ -257,10 +263,15 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       let timeZone = locationData.timeZone;
 
       try {
+        const madhab = getMadhab();
+        // Aladhan API: 0 = Shafi, 1 = Hanafi
+        // Maliki and Hanbali follow Shafi calculation for Asr
+        const schoolParam = madhab === 'hanafi' ? 1 : 0;
         const result = await AladhanAPI.getTodaysPrayerTimes(
           locationData.latitude,
           locationData.longitude,
-          methodId
+          methodId,
+          schoolParam
         );
         timings = result.timings;
         timeZone = result.timezone;
@@ -302,6 +313,14 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
         isha: parseTime(timings.Isha),
       };
 
+      // Parse optional times from API if available
+      const optionalTimes = {
+        imsak: timings.Imsak ? parseTime(timings.Imsak) : null,
+        midnight: timings.Midnight ? parseTime(timings.Midnight) : null,
+        firstthird: timings.Firstthird ? parseTime(timings.Firstthird) : null,
+        lastthird: timings.Lastthird ? parseTime(timings.Lastthird) : null,
+      };
+
       // Tomorrow's Fajr for Isha end time
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -313,11 +332,11 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
 
       const times: PrayerTimes = {
         ...prayerDates,
-        midnight,
-        imsak: new Date(prayerDates.fajr.getTime() - 10 * 60000),
+        midnight: optionalTimes.midnight || midnight,
+        imsak: optionalTimes.imsak || new Date(prayerDates.fajr.getTime() - 10 * 60000),
         ishraq: new Date(prayerDates.sunrise.getTime() + 15 * 60000),
         duha: new Date(prayerDates.sunrise.getTime() + (prayerDates.dhuhr.getTime() - prayerDates.sunrise.getTime()) / 2),
-        tahajjud: new Date(midnight.getTime() + (tomorrowResult.fajr.getTime() - midnight.getTime()) / 2),
+        tahajjud: optionalTimes.lastthird || new Date(midnight.getTime() + (tomorrowResult.fajr.getTime() - midnight.getTime()) / 2),
       };
 
       const withEnd: PrayerTimesWithEnd = {
@@ -367,14 +386,14 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
           const locationLabel = locationData.city || locationData.country || 'Unknown';
 
           try {
-            const { WidgetUpdateService } = await import('@/lib/widget-service');
-            WidgetUpdateService.updateWidgetBasic(
+            const { WidgetService } = await import('@/lib/widget-service');
+            WidgetService.updateWidget(
               locationData.latitude,
               locationData.longitude,
               locationLabel
             ).catch(() => {});
           } catch {
-            // WidgetUpdateService not available on this platform
+            // WidgetService not available on this platform
           }
         }
 
@@ -582,6 +601,24 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       window.removeEventListener('prayer-method-changed', handleMethodChange);
     };
   }, [location, fetchPrayerTimesWithCoordinates]);
+  // Listen for madhab changes
+  useEffect(() => {
+    const handleMadhabChange = () => {
+      // Reset cache key to force update
+      // Reset both cache refs to force re-fetch and re-schedule after madhab change
+      lastFetchSignatureRef.current = null;
+      previousNotificationSignatureRef.current = null;
+      if (location) {
+        fetchPrayerTimesWithCoordinates(location);
+      }
+    };
+
+    window.addEventListener('madhab-changed', handleMadhabChange);
+    return () => {
+      window.removeEventListener('madhab-changed', handleMadhabChange);
+    };
+  }, [location, fetchPrayerTimesWithCoordinates]);
+
 
   return useMemo(() => ({
     prayerTimes,

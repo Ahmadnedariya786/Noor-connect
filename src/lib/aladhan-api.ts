@@ -2,6 +2,7 @@
  * Aladhan API Integration for Dynamic Prayer Times
  * Fetches monthly calendar data with localStorage persistence
  */
+import { getMadhab } from './storage';
 
 export interface AladhanPrayerTime {
   Fajr: string;
@@ -83,6 +84,7 @@ export interface AladhanMonthlyData {
   latitude: number;
   longitude: number;
   method: number;
+  school?: number; // 0 for Shafi, 1 for Hanafi
   data: AladhanDayData[];
   lastUpdated: string;
 }
@@ -114,9 +116,13 @@ export class AladhanAPI {
     longitude: number,
     year: number = new Date().getFullYear(),
     month: number = new Date().getMonth() + 1,
-    method: number = 1 // Pakistan/Karachi (1), ISNA (2)
+    method: number = 1, // Pakistan/Karachi (1), ISNA (2)
+    school?: number // 0 for Shafi, 1 for Hanafi
   ): Promise<AladhanMonthlyData> {
-    const url = `${API_BASE}/calendar/${year}/${month}?latitude=${latitude}&longitude=${longitude}&method=${method}`;
+    let url = `${API_BASE}/calendar/${year}/${month}?latitude=${latitude}&longitude=${longitude}&method=${method}`;
+    if (school !== undefined) {
+      url += `&school=${school}`;
+    }
 
     try {
       const response = await fetch(url);
@@ -136,6 +142,7 @@ export class AladhanAPI {
         latitude,
         longitude,
         method,
+        school: school,
         data: result.data,
         lastUpdated: new Date().toISOString()
       };
@@ -186,9 +193,13 @@ export class AladhanAPI {
   static async getTodaysPrayerTimesByCity(
     city: string,
     country: string,
-    method: number = 1
+    method: number = 1,
+    school?: number // 0 for Shafi, 1 for Hanafi
   ): Promise<AladhanPrayerTime> {
-    const url = `${API_BASE}/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}`;
+    let url = `${API_BASE}/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}`;
+    if (school !== undefined) {
+      url += `&school=${school}`;
+    }
 
     try {
       const response = await fetch(url);
@@ -215,10 +226,15 @@ export class AladhanAPI {
   static async getTodaysPrayerTimes(
     latitude: number,
     longitude: number,
-    method: number = 1
+    method: number = 1,
+    school?: number // 0 for Shafi, 1 for Hanafi
   ): Promise<{ timings: AladhanPrayerTime, timezone: string }> {
     // Check if cached data is valid for this location before making API calls
-    const hasValidCache = this.isCachedDataValid(latitude, longitude);
+    const madhab = getMadhab();
+    // Aladhan API: 0 = Shafi, 1 = Hanafi
+    // Maliki and Hanbali follow Shafi calculation for Asr
+    const schoolParam = madhab === 'hanafi' ? 1 : 0;
+    const hasValidCache = this.isCachedDataValid(latitude, longitude, schoolParam);
 
     if (hasValidCache) {
       // Use cached data only, no API call needed
@@ -237,7 +253,7 @@ export class AladhanAPI {
     if (isOnline) {
       try {
         // Fetch fresh data for the month to keep cache updated
-        const monthlyData = await this.fetchMonthlyCalendar(latitude, longitude, undefined, undefined, method);
+        const monthlyData = await this.fetchMonthlyCalendar(latitude, longitude, undefined, undefined, method, schoolParam);
         const today = monthlyData.data.find(day => {
           const dayDate = new Date(parseInt(day.date.timestamp) * 1000);
           return dayDate.toDateString() === new Date().toDateString();
@@ -286,7 +302,7 @@ export class AladhanAPI {
   /**
    * Check if cached data is still valid (same month and year)
    */
-  static isCachedDataValid(latitude?: number, longitude?: number): boolean {
+  static isCachedDataValid(latitude?: number, longitude?: number, school?: number): boolean {
     const monthlyData = this.getStoredMonthlyData();
     if (!monthlyData) return false;
 
@@ -301,7 +317,12 @@ export class AladhanAPI {
       const latDiff = Math.abs(monthlyData.latitude - latitude);
       const lngDiff = Math.abs(monthlyData.longitude - longitude);
       // 0.1 degree tolerance (approx 11km)
-      return latDiff < 0.1 && lngDiff < 0.1;
+      if (latDiff >= 0.1 || lngDiff >= 0.1) return false;
+    }
+
+    // If school provided, check if it matches
+    if (school !== undefined && monthlyData.school !== undefined && monthlyData.school !== school) {
+      return false;
     }
 
     return true;
@@ -343,7 +364,8 @@ export class AladhanAPI {
   static async getRamadanTimes(
     latitude: number,
     longitude: number,
-    method: number = 1
+    method: number = 1,
+    school?: number // 0 for Shafi, 1 for Hanafi
   ): Promise<{ suhoor: string; iftar: string } | null> {
     try {
       const { timings } = await this.getTodaysPrayerTimes(latitude, longitude, method);

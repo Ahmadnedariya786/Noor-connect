@@ -3,7 +3,7 @@
  * No API calls required - calculates locally
  */
 import { Coordinates, CalculationMethod, PrayerTimes, CalculationParameters, Madhab, Shafaq } from 'adhan';
-import { getMadhab } from './storage';
+import { getMadhab, type MadhabType } from './storage';
 
 export type CalculationMethodName = 
   | 'MuslimWorldLeague'
@@ -89,7 +89,13 @@ export const calculatePrayerTimes = (
   
   // Set madhab for Asr calculation
   const madhab = getMadhab();
-  params.madhab = madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
+  // Maliki and Hanbali follow Shafi for Asr calculation (earlier time)
+  // Hanafi uses later Asr time
+  if (madhab === 'hanafi') {
+    params.madhab = Madhab.Hanafi;
+  } else {
+    params.madhab = Madhab.Shafi; // Shafi, Maliki, Hanbali all use Shafi calculation
+  }
   
   const prayerTimes = new PrayerTimes(coordinates, date, params);
   

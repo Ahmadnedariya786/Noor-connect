@@ -218,7 +218,6 @@
   "audioSettings": "Audio Settings",
   "customAdhan": "Custom Adhan",
   "nature": "Nature",
-  "prayer": "Prayer",
   "endsIn": "Ends In",
   "checkForUpdates": "Check for Updates",
   "checkingForUpdates": "Checking for updates...",
@@ -233,5 +232,7 @@
   "lastChecked": "Last checked: {time}",
   "version": "Version",
   "qiblaDisclaimerLine1": "The qibla feature is currently in development and may not be 100% accurate.",
-  "qiblaDisclaimerLine2": "Please use a physical compass for religious obligations."
+  "qiblaDisclaimerLine2": "Please use a physical compass for religious obligations.",
+  "madhabMaliki": "Madhab: Maliki",
+  "madhabHanbali": "Madhab: Hanbali"
 }
