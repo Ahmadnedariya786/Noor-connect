@@ -17,6 +17,9 @@ interface SettingsContextProps {
   splashGreetingEnabled: boolean;
   setSplashGreetingEnabled: (enabled: boolean) => void;
   toggleSplashGreeting: () => void;
+  splashEnabled: boolean;
+  setSplashEnabled: (enabled: boolean) => void;
+  toggleSplash: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextProps | undefined>(undefined);
@@ -26,6 +29,7 @@ const ANIMATION_KEY = 'animations_enabled';
 const GREETING_KEY = 'greetingEnabled';
 const LEGACY_GREETING_KEY = 'salam-greeting-enabled';
 const SPLASH_GREETING_KEY = 'splash_greeting_enabled';
+const SPLASH_ENABLED_KEY = 'splash_enabled';
 
 const getSystemTheme = (): 'light' | 'dark' => {
   if (typeof window === 'undefined' || !window.matchMedia) return 'light';
@@ -112,6 +116,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     return getStoredBoolean(LEGACY_GREETING_KEY, true);
   });
   const [splashGreetingEnabled, setSplashGreetingEnabledState] = useState<boolean>(true); // Will be loaded from Preferences
+  const [splashEnabled, setSplashEnabledState] = useState<boolean>(true); // Will be loaded from Preferences
 
   // Load settings from Capacitor Preferences on mount
   useEffect(() => {
@@ -129,6 +134,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       // Load splash greeting setting from Preferences
       const storedSplashGreeting = await getStoredBooleanFromPreferences(SPLASH_GREETING_KEY, true);
       setSplashGreetingEnabledState(storedSplashGreeting);
+
+      // Load splash enabled setting from Preferences
+      const storedSplashEnabled = await getStoredBooleanFromPreferences(SPLASH_ENABLED_KEY, true);
+      setSplashEnabledState(storedSplashEnabled);
 
       setIsLoaded(true);
     };
@@ -184,6 +193,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(SPLASH_GREETING_KEY, splashGreetingEnabled.toString());
   }, [splashGreetingEnabled, isLoaded]);
 
+  // Persist splash enabled changes to Preferences
+  useEffect(() => {
+    if (!isLoaded) return;
+    setStoredBooleanToPreferences(SPLASH_ENABLED_KEY, splashEnabled);
+    localStorage.setItem(SPLASH_ENABLED_KEY, splashEnabled.toString());
+  }, [splashEnabled, isLoaded]);
+
   const setTheme = (nextTheme: ThemePreference) => {
     setThemeState(nextTheme);
     setEffectiveTheme(getEffectiveTheme(nextTheme));
@@ -198,6 +214,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const toggleGreeting = () => setGreetingEnabledState((prev) => !prev);
   const setSplashGreetingEnabled = (enabled: boolean) => setSplashGreetingEnabledState(enabled);
   const toggleSplashGreeting = () => setSplashGreetingEnabledState((prev) => !prev);
+  const setSplashEnabled = (enabled: boolean) => setSplashEnabledState(enabled);
+  const toggleSplash = () => setSplashEnabledState((prev) => !prev);
 
   return (
     <SettingsContext.Provider
@@ -215,6 +233,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         splashGreetingEnabled,
         setSplashGreetingEnabled,
         toggleSplashGreeting,
+        splashEnabled,
+        setSplashEnabled,
+        toggleSplash,
       }}
     >
       {children}

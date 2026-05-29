@@ -129,10 +129,40 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
+        // Adaptive timing based on device performance
+        const measurePerformance = () => {
+            const start = performance.now();
+            // Run a simple operation to measure performance
+            for (let i = 0; i < 1000000; i++) {
+                Math.sqrt(i);
+            }
+            const end = performance.now();
+            return end - start;
+        };
+
+        const performanceScore = measurePerformance();
+        
+        // Calculate adaptive duration based on performance
+        // Fast device (< 10ms): shorter duration
+        // Medium device (10-30ms): medium duration
+        // Slow device (> 30ms): longer duration
+        let baseDuration: number;
+        if (performanceScore < 10) {
+            baseDuration = 800; // Fast device
+        } else if (performanceScore < 30) {
+            baseDuration = 1200; // Medium device
+        } else {
+            baseDuration = 1800; // Slow device
+        }
+
+        // Apply animation multiplier
+        const duration = animationsEnabled ? baseDuration * 1.5 : baseDuration * 0.8;
+        const exitDuration = animationsEnabled ? 400 : 0;
+
         const timer = setTimeout(() => {
             setIsVisible(false);
-            setTimeout(onComplete, animationsEnabled ? 400 : 0);
-        }, animationsEnabled ? 1500 : 900);
+            setTimeout(onComplete, exitDuration);
+        }, duration);
 
         return () => clearTimeout(timer);
     }, [animationsEnabled, onComplete]);

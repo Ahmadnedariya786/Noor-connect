@@ -197,7 +197,14 @@ function AppContent() {
 
 function AppShell() {
   const [showSplash, setShowSplash] = useState(true);
-  const { animationEnabled, splashGreetingEnabled } = useSettings();
+  const { animationEnabled, splashGreetingEnabled, splashEnabled } = useSettings();
+
+  useEffect(() => {
+    // If splash is disabled, hide it immediately
+    if (!splashEnabled) {
+      setShowSplash(false);
+    }
+  }, [splashEnabled]);
 
   useEffect(() => {
     const monitor = getPerformanceMonitor();
@@ -234,7 +241,7 @@ function AppShell() {
       <Toaster />
       <Sonner />
       <AnimatePresence>
-        {showSplash && (
+        {showSplash && splashEnabled && (
           <SplashScreen
             animationsEnabled={animationEnabled}
             showGreeting={splashGreetingEnabled}

@@ -61,6 +61,8 @@ const Profile = () => {
     setGreetingEnabled,
     splashGreetingEnabled,
     setSplashGreetingEnabled,
+    splashEnabled,
+    setSplashEnabled,
   } = useSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -186,6 +188,11 @@ const Profile = () => {
   const handleSplashGreetingToggle = (checked: boolean) => {
     setSplashGreetingEnabled(checked);
     toast({ title: checked ? 'Splash text enabled' : 'Splash text hidden' });
+  };
+
+  const handleSplashToggle = (checked: boolean) => {
+    setSplashEnabled(checked);
+    toast({ title: checked ? 'Splash screen enabled' : 'Splash screen disabled' });
   };
 
   const handleNotificationToggle = async (key: keyof NotificationPreferences, checked: boolean) => {
@@ -625,6 +632,19 @@ const Profile = () => {
                     </div>
                   </div>
                   <Switch checked={splashGreetingEnabled} onCheckedChange={handleSplashGreetingToggle} className="data-[state=checked]:bg-primary" />
+                </div>
+
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2.5 rounded-xl ${splashEnabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                      <Smartphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-bold">Splash Screen</Label>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Show launch animation</p>
+                    </div>
+                  </div>
+                  <Switch checked={splashEnabled} onCheckedChange={handleSplashToggle} className="data-[state=checked]:bg-primary" />
                 </div>
               </div>
             </Card>
