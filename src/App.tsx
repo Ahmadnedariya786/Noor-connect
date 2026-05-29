@@ -249,9 +249,11 @@ function AppShell() {
 
 function App() {
   return (
-    <SettingsProvider>
-      <AppShell />
-    </SettingsProvider>
+    <ErrorBoundary>
+      <SettingsProvider>
+        <AppShell />
+      </SettingsProvider>
+    </ErrorBoundary>
   );
 }
 

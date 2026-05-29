@@ -12,10 +12,19 @@ const QuranRadio = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [popularStations, setPopularStations] = useState<RadioStation[]>([]);
   const [allStations, setAllStations] = useState<RadioStation[]>([]);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadStations();
   }, []);
+
+  const FallbackIcon = () => (
+    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+      <svg className="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+      </svg>
+    </div>
+  );
 
   const loadStations = async () => {
     try {
@@ -160,18 +169,12 @@ const StationCard: React.FC<StationCardProps> = ({ station, isPlaying, onSelect 
           src={station.img}
           alt={station.name}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            target.parentElement!.innerHTML = `
-              <div class="w-full h-full bg-primary/10 flex items-center justify-center">
-                <svg class="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
-                </svg>
-              </div>
-            `;
+          onError={() => {
+            setImageErrors(prev => new Set(prev).add(station.id));
           }}
+          style={{ display: imageErrors.has(station.id) ? 'none' : 'block' }}
         />
+        {imageErrors.has(station.id) && <FallbackIcon />}
 
         {/* Play Overlay */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

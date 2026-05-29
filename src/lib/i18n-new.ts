@@ -33,7 +33,7 @@ i18n
     showSupportNotice: false,
 
     interpolation: {
-      escapeValue: false, // React already escapes values
+      escapeValue: true, // Enable escaping for security
     },
 
     detection: {
