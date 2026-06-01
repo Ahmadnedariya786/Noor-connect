@@ -105,8 +105,8 @@ export const islamicWellnessContent: IslamicGuidance[] = [
       'Increase voluntary prayers',
       'Read Quran with renewed focus',
       'Attend mosque regularly',
-      'Give thanks for restored ability to worship'
-    },
+      'Give thanks for restored ability to worship' ,
+    ],
     duas: [
       {
         arabic: 'الْحَمْدُ لِلَّهِ الَّذِي بِعَافِيَتِهِ تَتَمُّ الصَّحَّةُ',
@@ -233,7 +233,7 @@ export const islamicWellnessContent: IslamicGuidance[] = [
       'Prepare for making up missed worship',
       'Practice gratitude for current ability to worship',
       'Help others while you have the energy'
-    },
+    ],
     duas: [
       {
         arabic: 'اللَّهُمَّ يَسِّرْ لِي أَمْرِي وَرَفِقْ بِي فِي أَمْرِي',

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Settings, RefreshCw, Info, CheckCircle } from "lucide-react";
+import { Settings as SettingsIcon, RefreshCw, Info, CheckCircle } from "lucide-react";
 import { prayerMethods, type PrayerMethod } from "@/lib/prayer-methods";
 import { useLocationState } from "@/lib/location-state";
 import { useToast } from "@/hooks/use-toast";
@@ -78,7 +78,7 @@ export const PrayerMethodSelector = () => {
     <Card className="w-full">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Settings className="w-5 h-5" />
+          <SettingsIcon className="w-5 h-5" />
           <CardTitle>Prayer Calculation Method</CardTitle>
         </div>
         <CardDescription>

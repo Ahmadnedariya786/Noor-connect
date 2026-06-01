@@ -33,7 +33,7 @@ import {
   WifiOff, 
   HardDrive, 
   Clock, 
-  Settings,
+  Settings as SettingsIcon,
   CheckCircle,
   AlertCircle,
   XCircle

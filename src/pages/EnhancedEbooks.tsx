@@ -5,7 +5,7 @@ import {
   TrendingUp, Star, Filter, ChevronRight, BarChart3, LibraryBig,
   Grid3X3, List, Sparkles, MoreHorizontal, Play, Pause, Heart,
   ChevronLeft, BookMarked, FolderHeart, Zap, Eye, Info, Layers,
-  FileText, Users, Calendar, Tag, Settings, Shuffle, SortAsc,
+  FileText, Users, Calendar, Tag, Settings as SettingsIcon, Shuffle, SortAsc,
   Home, BookOpenText, DownloadCloud, BookmarkPlus, History
 } from "lucide-react";
 import { Input } from "@/components/ui/input";

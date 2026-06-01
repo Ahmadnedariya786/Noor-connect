@@ -335,13 +335,13 @@ const QiblaCompassModern = () => {
                   setDeviceHeading(next);
                   setCompassState('active');
                 }
-              } catch { }
+              } catch (e) { console.error(e); }
             }).then((listener) => {
               motionListenerRef.current = listener;
-            }).catch(() => { });
+            }).catch((e) => { console.error(e); });
           })
-          .catch(() => { });
-      } catch { }
+          .catch((e) => { console.error(e); });
+      } catch (e) { console.error(e); }
 
       sensorTimeoutRef.current = window.setTimeout(() => {
         if (!hasSensorEventRef.current) {
@@ -461,7 +461,7 @@ const QiblaCompassModern = () => {
 
   // ── Refresh Location ───────────────────────────────────────────
   const refreshLocation = useCallback(async (mode: 'initial' | 'manual' = 'manual') => {
-    mode === 'initial' ? setIsLoadingLocation(true) : setIsRefreshingLocation(true);
+    if (mode === "initial") setIsLoadingLocation(true); else setIsRefreshingLocation(true);
     setLocationError(null);
     stopDistanceTracking();
 

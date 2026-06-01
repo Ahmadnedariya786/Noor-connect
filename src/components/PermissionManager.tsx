@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, ShieldCheck, ShieldOff, MapPin, Bell, BellOff, Smartphone, Globe, AlertTriangle, RefreshCw, Settings, Info } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldOff, MapPin, Bell, BellOff, Smartphone, Globe, AlertTriangle, RefreshCw, Settings as SettingsIcon, Info } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Card } from '@/components/ui/card';
@@ -237,7 +237,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
                 onClick={() => handleOpenSettings('location')}
                 className="w-full"
               >
-                <Settings className="w-4 h-4 me-2" />
+                <SettingsIcon className="w-4 h-4 me-2" />
                 Open {platform === 'mobile' ? 'App Settings' : 'Browser Settings'}
               </Button>
             </div>
@@ -376,7 +376,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
                     }}
                     className="w-full"
                   >
-                    <Settings className="w-4 h-4 me-2" />
+                    <SettingsIcon className="w-4 h-4 me-2" />
                     Open Browser Settings
                   </Button>
                   <Button
@@ -415,7 +415,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
                 onClick={() => handleOpenSettings('notifications')}
                 className="w-full"
               >
-                <Settings className="w-4 h-4 mr-2" />
+                <SettingsIcon className="w-4 h-4 mr-2" />
                 Open {platform === 'mobile' ? 'Notification Settings' : 'Browser Settings'}
               </Button>
             </div>

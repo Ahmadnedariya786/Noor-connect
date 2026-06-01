@@ -91,7 +91,7 @@ export const calculateMakeUpSchedule = (
     // Fridays alone (Sunnah to fast Thu+Fri or Fri+Sat)
   ];
 
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   currentDate.setDate(currentDate.getDate() + 1); // Start tomorrow
 
   let count = 0;

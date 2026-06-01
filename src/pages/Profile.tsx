@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
-import { Moon, Sun, Download, Upload, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, Type, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings, Clock, Package, Vibrate, ArrowLeft, DollarSign } from "lucide-react";
+import { Moon, Sun, Download, Upload, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, Type, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings as SettingsIcon, Clock, Package, Vibrate, ArrowLeft, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -551,7 +551,7 @@ const Profile = () => {
             <p className="text-sm font-bold text-primary/80 uppercase tracking-[0.2em]">{t('appTitle')}</p>
           </div>
           <div className="w-14 h-14 rounded-[20px] bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-            <Settings className="w-7 h-7 text-primary animate-spin-slow" />
+            <SettingsIcon className="w-7 h-7 text-primary animate-spin-slow" />
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { Home, BookOpen, Compass, LayoutGrid, Settings, Clock, Trophy, Star, Search, Loader2, Compass, Heart, ToggleLeft, ToggleRight, Sparkles, MessageCircle, Activity, Building, Grid3X3, Calendar, Info, Moon, Sun, Cloud, CloudMoon, Sunset } from "lucide-react";
+import { Home, BookOpen, Compass, LayoutGrid, Settings as SettingsIcon, Clock, Trophy, Star, Search, Loader2, Heart, ToggleLeft, ToggleRight, Sparkles, MessageCircle, Activity, Building, Grid3X3, Calendar, Info, Moon, Sun, Cloud, CloudMoon, Sunset } from "lucide-react";
 
 export const prayerIcons = {
   Fajr: <Moon className="w-5 h-5 text-indigo-400" />,

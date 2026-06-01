@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { User, ChevronDown, Plus, Check, Settings } from 'lucide-react';
+import { User, ChevronDown, Plus, Check, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfileContext } from '@/contexts/ProfileContext';
@@ -83,7 +83,7 @@ export function ProfileSwitcher({ onManageProfiles }: ProfileSwitcherProps) {
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
                 >
-                  <Settings className="w-4 h-4 text-muted-foreground" />
+                  <SettingsIcon className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">Manage Profiles</span>
                 </button>
               )}

@@ -16,7 +16,7 @@ import {
   Languages,
   MoreVertical,
   Type,
-  Settings,
+  Settings as SettingsIcon,
   ChevronDown,
   Info
 } from "lucide-react";
@@ -367,7 +367,7 @@ const Tafsir = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-emerald-700">
-                    <Settings className="w-5 h-5" />
+                    <SettingsIcon className="w-5 h-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">

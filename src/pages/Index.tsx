@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Clock, BookOpen, Compass, RotateCcw, BookHeart, BookMarked, Moon, Sun, Settings } from "lucide-react";
+import { Clock, BookOpen, Compass, RotateCcw, BookHeart, BookMarked, Moon, Sun, Settings as SettingsIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -87,7 +87,7 @@ const Index = () => {
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} className="rounded-full">
-              <Settings className="w-5 h-5" />
+              <SettingsIcon className="w-5 h-5" />
             </Button>
           </div>
         </div>

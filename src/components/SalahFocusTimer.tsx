@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Play, Pause, Plus, Clock, Settings } from 'lucide-react';
+import { X, Play, Pause, Plus, Clock, Settings as SettingsIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -147,7 +147,7 @@ export function SalahFocusTimerComponent({ onClose }: SalahFocusTimerProps) {
           
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={toggleSettings}>
-              <Settings className="w-4 h-4" />
+              <SettingsIcon className="w-4 h-4" />
             </Button>
             {onClose && (
               <Button variant="ghost" size="sm" onClick={onClose}>
@@ -242,7 +242,6 @@ export function SalahFocusTimerComponent({ onClose }: SalahFocusTimerProps) {
               </Button>
             </div>
           </div>
-        </div>
       )}
 
       {/* Settings Panel */}
@@ -250,7 +249,7 @@ export function SalahFocusTimerComponent({ onClose }: SalahFocusTimerProps) {
         <Card className="fixed top-20 right-4 bg-background/95 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border-border/50 z-50 min-w-[320px]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
+              <SettingsIcon className="w-4 h-4" />
               Focus Timer Settings
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={toggleSettings}>

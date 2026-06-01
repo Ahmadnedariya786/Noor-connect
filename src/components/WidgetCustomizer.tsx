@@ -7,7 +7,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Settings, RotateCcw, Eye, Plus, EyeOff, Check, X,
+  Settings as SettingsIcon, RotateCcw, Eye, Plus, EyeOff, Check, X,
   Building, BookOpen, MessageCircle, Navigation, Compass, Star,
   TrendingUp, Calendar, Heart, CloudSun, Target, Flame, Mic,
 } from "lucide-react";
@@ -40,7 +40,7 @@ const getWidgetIcon = (id: string, className = "w-5 h-5") => {
     case "qaza-tracker":   return <Heart className={className} />;
     case "dhikr-reminder": return <Flame className={className} />;
     case "quran-radio":    return <Mic className={className} />;
-    default:               return <Settings className={className} />;
+    default:               return <SettingsIcon className={className} />;
   }
 };
 
@@ -294,7 +294,7 @@ export function WidgetCustomizer() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-2xl flex items-center gap-2">
-                <Settings className="w-6 h-6 text-primary" />
+                <SettingsIcon className="w-6 h-6 text-primary" />
                 Customize Dashboard
               </CardTitle>
               <CardDescription className="text-base mt-1">

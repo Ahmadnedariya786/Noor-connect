@@ -24,7 +24,9 @@ import {
   Lock,
   Sparkles,
   Timer,
-  Infinity,
+Timer,
+AlertCircle,
+  Crown
   AlertCircle,
   Crown
 } from 'lucide-react';

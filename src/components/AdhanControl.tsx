@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, BellOff, Volume2, User, Play, TestTube, Settings, Smartphone } from 'lucide-react';
+import { Bell, BellOff, Volume2, User, Play, TestTube, Settings as SettingsIcon, Smartphone } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Switch } from './ui/switch';
@@ -142,7 +142,7 @@ export function AdhanControl({ className }: AdhanControlProps) {
               size="sm"
               onClick={() => setShowSettings(!showSettings)}
             >
-              <Settings className="w-4 h-4" />
+              <SettingsIcon className="w-4 h-4" />
             </Button>
           </div>
         </div>

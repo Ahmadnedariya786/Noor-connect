@@ -28,7 +28,7 @@ registerRoute(
   new StaleWhileRevalidate({
     cacheName: ASSET_CACHE_NAME,
     plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new CacheableResponsePlugin({ statuses: [200], types: ['basic'] }),
       new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],
   })
@@ -40,7 +40,7 @@ registerRoute(
     cacheName: API_CACHE_NAME,
     networkTimeoutSeconds: 5,
     plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new CacheableResponsePlugin({ statuses: [200], types: ['basic'] }),
       new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 }),
     ],
   })

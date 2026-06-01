@@ -3,7 +3,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { QuranAudioPlayer } from "@/components/QuranAudio/QuranAudioPlayer";
 import { QuranAudioErrorBoundary } from "@/components/QuranAudio/QuranAudioErrorBoundary";
 import { Card, CardContent } from "@/components/ui/card";
-import { Headphones, Download, PlayCircle, Settings, Sparkles, Volume2, Radio, Mic, Heart, Star } from "lucide-react";
+import { Headphones, Download, PlayCircle, Settings as SettingsIcon, Sparkles, Volume2, Radio, Mic, Heart, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function QuranAudio() {
@@ -168,7 +168,7 @@ export default function QuranAudio() {
                             <CardContent className="relative z-10 p-6">
                                 <div className="flex items-start gap-4">
                                     <div className="p-3 bg-amber-500/20 rounded-2xl backdrop-blur-sm border border-amber-500/30">
-                                        <Settings className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                                        <SettingsIcon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-bold text-amber-900 dark:text-amber-100 mb-2">Smart Controls</h3>

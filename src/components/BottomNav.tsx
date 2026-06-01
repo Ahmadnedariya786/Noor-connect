@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { BookOpen, Settings, Compass, LayoutGrid } from "lucide-react";
+import { BookOpen, Settings as SettingsIcon, Compass, LayoutGrid } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,7 +31,7 @@ const BottomNav = memo(function BottomNav() {
 
   const rightNavItems = [
     { title: t('services') || 'Services', path: "/services", icon: LayoutGrid },
-    { title: t('settings') || 'Settings', path: "/profile", icon: Settings },
+    { title: t('settings') || 'Settings', path: "/profile", icon: SettingsIcon },
   ];
 
   return (
