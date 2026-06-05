@@ -61,10 +61,10 @@ const featureCards = [
   {
     id: 'prayer',
     title: 'Prayer',
-    description: 'Times & Qibla',
+    description: 'Times',
     icon: Building,
     gradient: 'from-[#3b82f6] via-[#2563eb] to-[#1d4ed8]', // Deep blue
-    route: '/qibla',
+    route: '/prayer-times',
     stats: '5 Daily'
   },
   {
@@ -451,6 +451,15 @@ export default function Dashboard() {
     const pKey = p.name.toLowerCase() as PrayerName;
     const isCompleted = todayPrayers ? !!todayPrayers[pKey] : false;
     
+    // Check if it's Friday and handle Jummah logic
+    const isFriday = now.getDay() === 5;
+    const isAfter2PM = now.getHours() >= 14;
+    let displayName = p.name;
+    
+    if (p.name === 'Dhuhr' && isFriday && !isAfter2PM) {
+      displayName = 'Jummah';
+    }
+    
     const handleCheckIn = () => {
       const result = togglePrayer(pKey);
       toast({
@@ -461,7 +470,8 @@ export default function Dashboard() {
     };
     
     return {
-      name: p.name,
+      name: displayName,
+      originalName: p.name,
       time: p.time,
       icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
       isActive: nextPrayerName === p.name,

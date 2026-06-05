@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Clock, BookOpen, Compass, RotateCcw, BookHeart, BookMarked, Moon, Sun, Settings as SettingsIcon } from "lucide-react";
+import { Clock, BookOpen, RotateCcw, BookHeart, BookMarked, Moon, Sun, Settings as SettingsIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -68,7 +68,6 @@ const Index = () => {
     { icon: Clock, label: "Prayer Times", path: "/prayer-times" },
     { icon: BookOpen, label: "Qur'an", path: "/quran" },
     { icon: RotateCcw, label: "Tasbeeh", path: "/tasbeeh" },
-    { icon: Compass, label: "Qibla", path: "/qibla" },
     { icon: BookHeart, label: "Duas", path: "/duas" },
     { icon: BookMarked, label: "Hadith", path: "/hadith" },
   ];

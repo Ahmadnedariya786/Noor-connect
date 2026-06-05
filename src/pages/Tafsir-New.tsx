@@ -18,7 +18,10 @@ import {
   Type,
   Settings as SettingsIcon,
   ChevronDown,
-  Info
+  Info,
+  Download,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,6 +87,13 @@ interface SurahTafsir {
 }
 
 
+// Offline editions available locally
+const OFFLINE_EDITIONS = [
+  "en-tafisr-ibn-kathir",
+  "ar-tafsir-ibn-kathir",
+  "ur-tafseer-ibn-e-kaseer"
+];
+
 const Tafsir = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -115,6 +125,7 @@ const Tafsir = () => {
   const [currentAyahForNote, setCurrentAyahForNote] = useState<{ surah: number, ayah: number } | null>(null);
   const [activeTab, setActiveTab] = useState<"surahs" | "bookmarks" | "history">("surahs");
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg" | "xl">("base");
+  const [loadingFromOffline, setLoadingFromOffline] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fontSizeClasses = {
@@ -174,6 +185,7 @@ const Tafsir = () => {
   const handleSurahSelect = async (surah: Surah) => {
     setSelectedSurah(surah);
     setTafsirLoading(true);
+    setLoadingFromOffline(OFFLINE_EDITIONS.includes(selectedEdition));
 
     // Add to history
     const historyEntry = {
@@ -201,6 +213,7 @@ const Tafsir = () => {
       if (cached) {
         setCurrentSurahTafsir(JSON.parse(cached));
         setTafsirLoading(false);
+        setLoadingFromOffline(false);
         return;
       }
 
@@ -273,6 +286,7 @@ const Tafsir = () => {
       });
     } finally {
       setTafsirLoading(false);
+      setLoadingFromOffline(false);
     }
   };
 
@@ -406,7 +420,15 @@ const Tafsir = () => {
                         className={cn("flex items-center justify-between", selectedEdition === edition.id && "bg-emerald-50 text-emerald-700")}
                       >
                         <div className="flex flex-col">
-                          <span>{edition.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span>{edition.name}</span>
+                            {OFFLINE_EDITIONS.includes(edition.id) && (
+                              <Badge className="text-[8px] bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                                <Download className="w-2.5 h-2.5" />
+                                Offline
+                              </Badge>
+                            )}
+                          </div>
                           {edition.author && (
                             <span className="text-[10px] opacity-70">by {edition.author}</span>
                           )}
@@ -507,7 +529,15 @@ const Tafsir = () => {
                       {TAFSIR_EDITIONS.map((edition) => (
                         <SelectItem key={edition.id} value={edition.id} className="rounded-lg py-3">
                           <div className="flex flex-col text-left">
-                            <span className="font-bold text-slate-800">{edition.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-800">{edition.name}</span>
+                              {OFFLINE_EDITIONS.includes(edition.id) && (
+                                <Badge className="text-[9px] bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                                  <Download className="w-3 h-3" />
+                                  Offline
+                                </Badge>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 mt-0.5">
                               <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-100">
                                 {edition.language}
@@ -700,7 +730,15 @@ const Tafsir = () => {
                           className={cn("flex items-center justify-between py-3 rounded-xl", selectedEdition === edition.id && "bg-emerald-50 text-emerald-700")}
                         >
                           <div className="flex flex-col">
-                            <span className="font-bold">{edition.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold">{edition.name}</span>
+                              {OFFLINE_EDITIONS.includes(edition.id) && (
+                                <Badge className="text-[8px] bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                                  <Download className="w-2.5 h-2.5" />
+                                  Offline
+                                </Badge>
+                              )}
+                            </div>
                             {edition.author && (
                               <span className="text-[10px] opacity-70">by {edition.author}</span>
                             )}
@@ -734,6 +772,12 @@ const Tafsir = () => {
                   <div className="text-center">
                     <p className="text-lg font-bold text-slate-800">{t('fetchingWisdom')}</p>
                     <p className="text-sm text-slate-500">{t('loadingComprehensiveTafsir')} {selectedSurah.englishName}...</p>
+                    {loadingFromOffline && (
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <Download className="w-4 h-4 text-emerald-600" />
+                        <p className="text-xs text-emerald-600 font-medium">Loading from offline storage</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

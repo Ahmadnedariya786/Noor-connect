@@ -35,6 +35,7 @@ const DashboardWidgets = lazy(() => import("./pages/DashboardWidgets"));
 const SurahList = lazy(() => import("./pages/SurahList"));
 const QuranReader = lazy(() => import("./pages/QuranReader"));
 const QuranProgress = lazy(() => import("./pages/QuranProgress"));
+const MushafViewer = lazy(() => import("./pages/MushafViewer"));
 const Tasbeeh = lazy(() => import("./pages/Tasbeeh"));
 const Qibla = lazy(() => import("./pages/Qibla"));
 const Duas = lazy(() => import("./pages/Duas"));
@@ -67,6 +68,10 @@ const EidChecklist = lazy(() => import("./pages/EidChecklist"));
 const FitranaCalculator = lazy(() => import("./pages/FitranaCalculator"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const SeerahHome = lazy(() => import("./pages/SeerahHome"));
+const SeerahReader = lazy(() => import("./pages/SeerahReader"));
+const QisasHome = lazy(() => import("./pages/QisasHome"));
+const QisasReader = lazy(() => import("./pages/QisasReader"));
 
 // Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
 const isAnimationDisabled = localStorage.getItem("animations_enabled") === "false";
@@ -121,8 +126,10 @@ function AppRoutes() {
         <Route path="/dashboard-widgets" element={<DashboardWidgets />} />
         <Route path="/quran" element={<SurahList />} />
         <Route path="/quran-reader/:surahNumber" element={<Navigate to="/quran" replace />} />
-        <Route path="/mushaf/:surahNumber" element={<Navigate to="/quran" replace />} />
-        <Route path="/mushaf-viewer" element={<Navigate to="/quran" replace />} />
+        <Route path="/mushaf" element={<MushafViewer />} />
+        <Route path="/mushaf/:pageNum" element={<MushafViewer />} />
+        <Route path="/mushaf/surah/:surahNumber" element={<MushafViewer />} />
+        <Route path="/mushaf-viewer" element={<MushafViewer />} />
         <Route path="/quran/:surahName" element={<QuranReader />} />
         <Route path="/quran-progress" element={<QuranProgress />} />
         <Route path="/tasbeeh" element={<Tasbeeh />} />
@@ -132,6 +139,10 @@ function AppRoutes() {
         <Route path="/hadith/collections" element={<HadithCollections />} />
         <Route path="/hadith/collections/:collection" element={<HadithBook />} />
         <Route path="/hadith/collections/:collection/:book" element={<HadithBookContent />} />
+        <Route path="/seerah" element={<SeerahHome />} />
+        <Route path="/seerah/:chapterId" element={<SeerahReader />} />
+        <Route path="/qisas" element={<QisasHome />} />
+        <Route path="/qisas/:prophetId" element={<QisasReader />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/calendar" element={<IslamicCalendar />} />
         <Route path="/ebooks" element={<Ebooks />} />

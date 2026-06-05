@@ -139,6 +139,21 @@ export const TAFSIR_EDITIONS: TafsirEdition[] = [
 ];
 
 const BASE_URL = "https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir";
+const LOCAL_BASE_URL = "/data/tafsir";
+
+// Offline editions available locally
+const OFFLINE_EDITIONS = [
+    "en-tafisr-ibn-kathir",
+    "ar-tafsir-ibn-kathir",
+    "ur-tafseer-ibn-e-kaseer"
+];
+
+/**
+ * Check if an edition is available offline
+ */
+function isOfflineEdition(edition: string): boolean {
+    return OFFLINE_EDITIONS.includes(edition);
+}
 
 /**
  * Fetches tafsir for a specific ayah
@@ -152,6 +167,21 @@ export async function fetchTafsir(
     ayah: number,
     edition: string
 ): Promise<TafsirResponse> {
+    // Try local file first if edition is offline
+    if (isOfflineEdition(edition)) {
+        try {
+            const localUrl = `${LOCAL_BASE_URL}/${edition}/${surah}/${ayah}.json`;
+            const response = await fetch(localUrl);
+            if (response.ok) {
+                const data = await response.json();
+                return data as TafsirResponse;
+            }
+        } catch (error) {
+            console.warn(`Failed to load local tafsir for ${edition}/${surah}:${ayah}, falling back to API`);
+        }
+    }
+
+    // Fallback to API
     const url = `${BASE_URL}/${edition}/${surah}/${ayah}.json`;
 
     const response = await fetch(url);
@@ -177,6 +207,28 @@ export async function fetchSurahTafsir(
     surah: number,
     edition: string
 ): Promise<TafsirResponse[]> {
+    // Try local file first if edition is offline
+    if (isOfflineEdition(edition)) {
+        try {
+            const localUrl = `${LOCAL_BASE_URL}/${edition}/${surah}.json`;
+            const response = await fetch(localUrl);
+            if (response.ok) {
+                const data = await response.json();
+                const normalized = normalizeSurahTafsir(data, surah);
+                if (normalized.length === 0) {
+                    if (import.meta.env.DEV) {
+                        console.error("[fetchSurahTafsir] Unexpected tafsir payload:", data);
+                    }
+                    throw new Error("Invalid tafsir data format");
+                }
+                return normalized;
+            }
+        } catch (error) {
+            console.warn(`Failed to load local surah tafsir for ${edition}/${surah}, falling back to API`);
+        }
+    }
+
+    // Fallback to API
     const url = `${BASE_URL}/${edition}/${surah}.json`;
 
     const response = await fetch(url);

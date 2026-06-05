@@ -41,7 +41,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     id: 'qibla-quick',
     name: 'Qibla',
     description: 'Quick direction & distance to Kaaba',
-    visible: true,
+    visible: false,
     order: 4,
     category: 'optional',
   },
@@ -49,7 +49,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     id: 'tasbeeh-quick',
     name: 'Tasbeeh',
     description: 'Fast dhikr counter for today',
-    visible: true,
+    visible: false,
     order: 5,
     category: 'optional',
   },
@@ -57,7 +57,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     id: 'ramadan',
     name: 'Ramadan',
     description: 'Suhoor/Iftar and Ramadan mode',
-    visible: true,
+    visible: false,
     order: 6,
     category: 'optional',
   },
@@ -203,7 +203,12 @@ export function loadDashboardWidgetConfig(): DashboardWidgetConfig[] {
         category: (w.category as DashboardWidgetCategory) ?? 'optional',
       }));
 
-    const merged = normalizeDashboardWidgetConfig(parsedWidgets);
+    // Migration: Force hide qibla-quick and tasbeeh-quick widgets
+    const migratedWidgets = parsedWidgets.map(w => 
+      (w.id === 'qibla-quick' || w.id === 'tasbeeh-quick') ? { ...w, visible: false } : w
+    );
+
+    const merged = normalizeDashboardWidgetConfig(migratedWidgets);
 
     // If defaults changed (new widgets added), persist silently so the customizer can show them.
     const mergedString = JSON.stringify(merged);

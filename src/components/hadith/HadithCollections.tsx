@@ -9,6 +9,7 @@ import { CollectionCard } from "./CollectionCard";
 import { getAllCollections, HadithCollection } from "@/data/hadith-collections";
 import { useDailyHadith } from "@/lib/daily-content";
 import { motion } from "framer-motion";
+import { goBackOrFallback } from "@/lib/navigation";
 
 export function HadithCollections() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export function HadithCollections() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => goBackOrFallback(navigate, '/hadith')}
             className="rounded-xl"
           >
             <ArrowLeft className="w-5 h-5" />

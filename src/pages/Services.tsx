@@ -7,7 +7,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import {
     MessageCircle, Radio, Target, Heart, Calculator,
     Star, Trophy, Coins, Calendar, Library, Tv, Sparkles, HeartHandshake, BookOpen, BookText, Moon, Headphones,
-    CheckCircle, AlertTriangle, RotateCcw
+    CheckCircle, AlertTriangle, RotateCcw, Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -44,6 +44,8 @@ export default function Services() {
         { title: "Quran Audio", path: "/quran-audio", icon: Headphones, gradient: 'from-[#0ea5e9] to-[#0369a1]' },
         { title: "Live Mecca", path: "/live", icon: Tv, gradient: 'from-[#f43f5e] to-[#be123c]' },
         { title: "Hadith", path: "/hadith/collections", icon: BookText, gradient: 'from-[#8b5cf6] to-[#6d28d9]' },
+        { title: t('seerah'), path: "/seerah", icon: BookOpen, gradient: 'from-[#D4AF37] to-[#8B6914]' },
+        { title: t('qisas'), path: "/qisas", icon: Users, gradient: 'from-[#10B981] to-[#047857]' },
         { title: "Radio", path: "/quran-radio", icon: Radio, gradient: 'from-[#14b8a6] to-[#0f766e]' },
         { title: "Habits", path: "/habit-tracker", icon: Target, gradient: 'from-[#ec4899] to-[#be185d]' },
         { title: "Duas", path: "/duas", icon: Heart, gradient: 'from-[#f97316] to-[#c2410c]' },

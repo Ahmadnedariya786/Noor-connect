@@ -7,6 +7,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { goBackOrFallback } from "@/lib/navigation";
 
 export default function SurahList() {
   const { theme, effectiveTheme } = useSettings();
@@ -68,7 +69,7 @@ export default function SurahList() {
           <div className="relative z-10 p-8 flex flex-col items-center text-center">
             <div className="flex items-center gap-4 mb-6 w-full">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => goBackOrFallback(navigate, '/dashboard')}
                 className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
               >
                 <ChevronLeft className="w-6 h-6 text-white" />
@@ -178,7 +179,7 @@ export default function SurahList() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 cursor-pointer active:scale-[0.98] transition-transform"
-            onClick={() => navigate('/quran-reader')}
+            onClick={() => navigate('/quran')}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse" />

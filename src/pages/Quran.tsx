@@ -151,7 +151,7 @@ const Quran = () => {
                 whileTap: { scale: 0.98 }
             })}
             className="relative overflow-hidden rounded-[32px] cursor-pointer transition-transform bg-[#141414] border border-white/5 shadow-2xl group"
-            onClick={() => navigate('/quran-reader')}
+            onClick={() => navigate('/quran')}
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#10B981]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-[#10B981]/20 transition-colors duration-700" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#D4AF37]/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none group-hover:bg-[#D4AF37]/20 transition-colors duration-700" />
@@ -186,7 +186,7 @@ const Quran = () => {
           {lastRead && (
             <motion.button
               {...motionProps({ whileTap: { scale: 0.98 } })}
-              onClick={() => navigate(`/quran-reader/${lastRead.number}`)}
+              onClick={() => navigate(`/quran/surah-${lastRead.number}`)}
               className="w-full flex items-center p-4 bg-[#10B981]/10 border border-[#10B981]/20 rounded-[24px] gap-4 hover:bg-[#10B981]/15 transition-all group backdrop-blur-sm"
             >
               <div className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-xl flex items-center justify-center shadow-lg shadow-[#10B981]/20 group-hover:scale-110 transition-transform">
@@ -233,7 +233,7 @@ const Quran = () => {
                     })}
                   >
                     <button
-                      onClick={() => navigate(`/quran-reader/${surah.number}`)}
+                      onClick={() => navigate(`/quran/surah-${surah.number}`)}
                       className="w-full flex items-center p-5 bg-[#141414] border border-white/5 rounded-[24px] hover:bg-white/5 hover:border-white/10 transition-all duration-300 group active:scale-[0.98] text-left"
                     >
                       {/* Number Plate - Premium Octagonal Style */}

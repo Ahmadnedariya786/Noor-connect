@@ -2,6 +2,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import { goBackOrFallback } from "@/lib/navigation";
 
 interface AppBarProps {
   title: string;
@@ -51,7 +52,7 @@ export function AppBar({
                 if (onBack) {
                   onBack();
                 } else {
-                  navigate(-1);
+                  goBackOrFallback(navigate, "/dashboard");
                 }
               }}
               className="ms-2 -me-2 text-white/90 hover:bg-white/10 hover:text-white transition-all duration-200 hover:scale-105 rounded-xl nav-back"

@@ -28,7 +28,7 @@ const Tasbeeh = () => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const currentDhikr = DHIKR_OPTIONS.find(d => d.value === selectedDhikr) || DHIKR_OPTIONS[0];
-  const label = `${currentDhikr.label} (${currentDhikr.transliteration})`;
+  const label = currentDhikr.transliteration;
 
   useEffect(() => {
     setTotalCount(getTasbeehTotal());

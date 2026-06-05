@@ -181,6 +181,19 @@ function PremiumDashboardInner({
     };
   }, []);
 
+  // Show ramadan widget only during Ramadan
+  useEffect(() => {
+    setWidgets(prevWidgets => {
+      const ramadanWidget = prevWidgets.find(w => w.id === 'ramadan');
+      if (ramadanWidget) {
+        return prevWidgets.map(w => 
+          w.id === 'ramadan' ? { ...w, visible: isRamadan } : w
+        );
+      }
+      return prevWidgets;
+    });
+  }, [isRamadan]);
+
   useEffect(() => {
     const handleFormatChange = (e: CustomEvent) => {
       if (e.detail?.format) setTimeFormat(e.detail.format as '12' | '24');

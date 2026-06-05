@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { goBackOrFallback } from "@/lib/navigation";
 import {
   activateMenstrualMode,
   deactivateMenstrualMode,
@@ -159,7 +160,7 @@ export default function MenstrualMode() {
 
         <div className="max-w-lg mx-auto p-4 space-y-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+            <Button variant="ghost" size="icon" onClick={() => goBackOrFallback(navigate, '/dashboard')} className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex-1">

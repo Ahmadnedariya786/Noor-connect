@@ -14,11 +14,13 @@ type TasbeehPreset = {
 
 const PRESETS: TasbeehPreset[] = [
   { label: "SubhanAllah", arabic: "سُبْحَانَ اللَّهِ", accent: "from-purple-500 to-fuchsia-600" },
-  { label: "Alhamdulillah", arabic: "الْحَمْدُ لِلَّهِ", accent: "from-emerald-500 to-teal-600" },
-  { label: "Allahu Akbar", arabic: "اللَّهُ أَكْبَرُ", accent: "from-amber-500 to-orange-600" },
+  { label: "Alhamdulillah", arabic: "ٱلْحَمْدُ لِلَّٰهِ", accent: "from-emerald-500 to-teal-600" },
+  { label: "Allahu Akbar", arabic: "اللَّٰهُ أَكْبَرُ", accent: "from-amber-500 to-orange-600" },
+  { label: "La ilaha illallah", arabic: "لَا إِلَٰهَ إِلَّا ٱللَّٰهِ", accent: "from-blue-500 to-cyan-600" },
+  { label: "Astagfirullah", arabic: "أَسْتَغْفُرُ ٱللَّٰهِ", accent: "from-rose-500 to-pink-600" },
 ];
 
-const getTodayKey = () => new Date().toLocaleDateString();
+const getTodayKey = () => new Date().toISOString().split('T')[0];
 
 export function TasbeehQuickWidget() {
   const navigate = useNavigate();
@@ -100,7 +102,7 @@ export function TasbeehQuickWidget() {
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {PRESETS.map((preset) => {
             const count = todayByLabel[preset.label] ?? 0;
 

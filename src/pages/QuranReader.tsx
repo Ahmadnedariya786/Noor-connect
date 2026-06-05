@@ -6,6 +6,7 @@ import { MushafSurahPages } from '@/components/Quran/MushafSurahPages';
 import { PageTransition } from '@/components/PageTransition';
 import { Preferences } from '@capacitor/preferences';
 import { useSettings } from '@/contexts/SettingsContext';
+import { goBackOrFallback } from '@/lib/navigation';
 
 const LS_LAST_SURAH = 'quran-reader-last-surah';
 const BOOKMARKS_KEY = 'quran-bookmarks';
@@ -102,7 +103,7 @@ export default function QuranReader() {
         <div className={`sticky top-0 z-30 backdrop-blur-md border-b ${isDark ? 'bg-[#000000]/95 border-[#C9A84C]/20' : 'bg-[#F5F5F5]/95 border-[#C9A84C]/20'}`}>
           <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => goBackOrFallback(navigate, '/quran')}
               className={`p-2 rounded-full transition-colors ${isDark ? 'text-white/60 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'}`}
             >
               <ChevronLeft className="w-6 h-6" />

@@ -36,6 +36,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { getMushafPageUrl } from '@/lib/quran-mushaf-image-cache';
 import { SURAH_START_PAGES } from '@/lib/mushaf-service';
 import { quranService } from '@/lib/quran-service';
+import { goBackOrFallback } from '@/lib/navigation';
 
 // ─── Constants ────────────────────────────────────────────────
 const TOTAL_PAGES = 604;
@@ -72,10 +73,16 @@ function saveBookmarks(pages: number[]) {
 // ─── Component ────────────────────────────────────────────────
 export default function MushafViewer() {
   const navigate = useNavigate();
-  const { pageNum } = useParams<{ pageNum: string }>();
+  const { pageNum, surahNumber: surahNumberParam } = useParams<{ pageNum?: string; surahNumber?: string }>();
 
   // ── State ──
   const [currentPage, setCurrentPage] = useState<number>(() => {
+    if (surahNumberParam) {
+      const parsedSurah = Number(surahNumberParam);
+      if (Number.isFinite(parsedSurah) && parsedSurah >= 1 && parsedSurah <= 114) {
+        return SURAH_START_PAGES[parsedSurah] || 1;
+      }
+    }
     if (pageNum) return Math.min(604, Math.max(1, Number(pageNum) || 1));
     const saved = localStorage.getItem(LS_LAST_PAGE);
     return saved ? Math.min(604, Math.max(1, Number(saved))) : 1;
@@ -288,7 +295,7 @@ export default function MushafViewer() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => goBackOrFallback(navigate, '/quran')}
             className="text-white/90 hover:bg-white/10 rounded-xl shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />

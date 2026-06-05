@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { calendarApiResponseSchema, safeParseApiResponse } from "@/lib/api-schemas";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { useNavigate } from "react-router-dom";
+import { goBackOrFallback } from "@/lib/navigation";
 
 const importantDates = [
   { name: "Ramadan", icon: "🌙", description: "Month of Fasting", color: "bg-primary/10 text-foreground border border-primary/20" },
@@ -215,7 +216,7 @@ export default function IslamicCalendar() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => goBackOrFallback(navigate, '/dashboard')} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">

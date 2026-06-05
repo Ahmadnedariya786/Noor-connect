@@ -4,6 +4,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
 import { ChevronLeft, Sun, Moon, Monitor, Sparkles, Zap, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { goBackOrFallback } from "@/lib/navigation";
 
 const Settings = () => {
   const { 
@@ -27,7 +28,7 @@ const Settings = () => {
       {/* ── Header ── */}
       <div className="flex items-center px-6 py-6 sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <button 
-          onClick={() => navigate(-1)}
+          onClick={() => goBackOrFallback(navigate, '/dashboard')}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-card hover:bg-card/80 transition-colors border border-border"
         >
           <ChevronLeft className="w-5 h-5 text-foreground" />
