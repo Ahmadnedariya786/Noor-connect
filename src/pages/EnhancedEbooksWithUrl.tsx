@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Book, Download, Plus, X, Search, LibraryBig, Share2, Link } from "lucide-react";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { Book, Download, Plus, X, Search, LibraryBig, Share2, Link, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,10 +21,13 @@ import {
   detectCategory, cleanTitle, CATEGORY_THEMES, type BookCategory
 } from "@/lib/book-themes";
 import ebooksData from "@/data/ebooks-library.json";
-import EnhancedNativePdfViewer from "@/components/EnhancedNativePdfViewer";
 import { useEbookUrlParser, useEbookSharing } from "@/hooks/useEbookUrl";
 import { storeEbookMapping } from "@/components/EnhancedNativePdfViewer";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/LoadingSkeleton";
+
+// Lazy load PDF viewer to reduce bundle size
+const EnhancedNativePdfViewer = lazy(() => import('@/components/EnhancedNativePdfViewer').then(module => ({ default: module.default })));
 
 // --- Types ---
 interface LibraryBook {
@@ -291,16 +294,18 @@ export default function EnhancedEbooksWithUrlPage() {
   // --- If viewing PDF, show viewer ---
   if (viewingBook) {
     return (
-      <EnhancedNativePdfViewer
-        url={viewingBook.url}
-        title={viewingBook.title}
-        localKey={('localKey' in viewingBook) ? viewingBook.localKey : undefined}
-        onClose={() => {
-          setViewingBook(null);
-          // Clear URL parameters when closing
-          window.history.replaceState({}, '', window.location.pathname);
-        }}
-      />
+      <Suspense fallback={<div className="fixed inset-0 bg-background z-[100] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+        <EnhancedNativePdfViewer
+          url={viewingBook.url}
+          title={viewingBook.title}
+          localKey={('localKey' in viewingBook) ? viewingBook.localKey : undefined}
+          onClose={() => {
+            setViewingBook(null);
+            // Clear URL parameters when closing
+            window.history.replaceState({}, '', window.location.pathname);
+          }}
+        />
+      </Suspense>
     );
   }
 

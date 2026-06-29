@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, memo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, ChevronLeft, Sparkles, BookOpen, History, Filter, MapPin, Moon } from "lucide-react";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
@@ -8,6 +8,68 @@ import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { goBackOrFallback } from "@/lib/navigation";
+import { FixedSizeList as List } from 'react-window';
+
+interface SurahCardProps {
+  surah: SurahInfo;
+  index: number;
+  isDark: boolean;
+  onClick: (number: number) => void;
+}
+
+const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: SurahCardProps) {
+  return (
+    <button
+      onClick={() => onClick(surah.number)}
+      className="w-full text-left group outline-none"
+    >
+      <div className={`rounded-[24px] p-5 border transition-all duration-300 ${
+        isDark
+          ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
+          : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
+      }`}>
+        <div className="flex items-center gap-4">
+          {/* Surah Number - Premium Octagonal Style */}
+          <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+            <div className="absolute inset-0 bg-primary/10 rotate-45 rounded-xl group-hover:rotate-[135deg] transition-transform duration-700" />
+            <div className="absolute inset-1 bg-primary/5 rotate-12 rounded-lg" />
+            <span className="relative z-10 font-black text-primary text-xs tracking-tighter">{surah.number}</span>
+          </div>
+
+          {/* Center: Arabic + English */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="font-arabic text-2xl text-primary drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">
+                  {surah.name}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full bg-muted text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                    {surah.revelationType}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                    {surah.numberOfAyahs} Ayahs
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">{surah.englishName}</p>
+                <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-tighter mt-1">{surah.englishNameTranslation}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.surah.number === nextProps.surah.number &&
+    prevProps.surah.name === nextProps.surah.name &&
+    prevProps.surah.englishName === nextProps.surah.englishName &&
+    prevProps.isDark === nextProps.isDark
+  );
+});
 
 export default function SurahList() {
   const { theme, effectiveTheme } = useSettings();
@@ -16,6 +78,7 @@ export default function SurahList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<'all' | 'meccan' | 'madinah'>('all');
   const [lastRead, setLastRead] = useState<{ number: number; name: string; englishName: string } | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const dailyAyah = useMemo(() => getDailyAyah(), []);
   const allSurahs: SurahInfo[] = quranService.getAllSurahs();
@@ -214,59 +277,27 @@ export default function SurahList() {
         </div>
 
         {/* Surah List */}
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-3">
-          <AnimatePresence>
-            {filteredSurahs.map((surah, index) => (
-              <motion.button
-                key={surah.number}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.02 }}
-                onClick={() => handleSurahClick(surah.number)}
-                className="w-full text-left group outline-none"
-              >
-                <div className={`rounded-[24px] p-5 border transition-all duration-300 ${
-                  isDark
-                    ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
-                    : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
-                }`}>
-                  <div className="flex items-center gap-4">
-                    {/* Surah Number - Premium Octagonal Style */}
-                    <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
-                      <div className="absolute inset-0 bg-primary/10 rotate-45 rounded-xl group-hover:rotate-[135deg] transition-transform duration-700" />
-                      <div className="absolute inset-1 bg-primary/5 rotate-12 rounded-lg" />
-                      <span className="relative z-10 font-black text-primary text-xs tracking-tighter">{surah.number}</span>
-                    </div>
-
-                    {/* Center: Arabic + English */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="space-y-1">
-                          <h3 className="font-arabic text-2xl text-primary drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">
-                            {surah.name}
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-full bg-muted text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                              {surah.revelationType}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
-                              {surah.numberOfAyahs} Ayahs
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">{surah.englishName}</p>
-                          <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-tighter mt-1">{surah.englishNameTranslation}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        <div className="max-w-2xl mx-auto px-4 py-6" ref={listRef}>
+          {filteredSurahs.length > 0 ? (
+            <List
+              height={Math.min(filteredSurahs.length * 130, (listRef.current?.clientHeight || window.innerHeight) - 200)}
+              itemCount={filteredSurahs.length}
+              itemSize={130}
+              width="100%"
+              itemData={{ surahs: filteredSurahs, isDark, onClick: handleSurahClick }}
+            >
+              {({ index, style, data }) => (
+                <div style={style} className="py-1">
+                  <SurahCard
+                    surah={data.surahs[index]}
+                    index={index}
+                    isDark={data.isDark}
+                    onClick={data.onClick}
+                  />
                 </div>
-              </motion.button>
-            ))}
-          </AnimatePresence>
-
-          {filteredSurahs.length === 0 && (
+              )}
+            </List>
+          ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

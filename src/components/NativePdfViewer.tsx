@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll } from 'lucide-react';
-import * as pdfjsLib from 'pdfjs-dist';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
 import PdfAudioPlayer from '@/components/PdfAudioPlayer';
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Lazy load pdfjs-dist to reduce bundle size
+let pdfjsLib: any = null;
+let workerConfigured = false;
+
+async function getPdfjsLib() {
+  if (!pdfjsLib) {
+    pdfjsLib = await import('pdfjs-dist');
+    if (!workerConfigured) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      workerConfigured = true;
+    }
+  }
+  return pdfjsLib;
+}
 
 interface NativePdfViewerProps {
   url: string;
@@ -163,17 +174,32 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
         throw new Error('No PDF URL available');
       }
 
+      // Handle archive.org URLs - get direct download URL
+      if (pdfUrl.includes('archive.org')) {
+        const directUrl = getBetterViewerUrl(pdfUrl);
+        if (directUrl !== pdfUrl) {
+          console.log('Converted archive.org URL to direct download:', directUrl);
+          pdfUrl = directUrl;
+        }
+      }
+
       console.log('Loading PDF from:', pdfUrl);
       setResolvedPdfSource(pdfUrl);
 
+      // Lazy load pdfjs-dist
+      const lib = await getPdfjsLib();
+
       // Configure PDF.js with proper settings
-      const loadingTask = pdfjsLib.getDocument({
+      const loadingTask = lib.getDocument({
         url: pdfUrl,
         cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
         cMapPacked: true,
         enableXfa: true,
         // Add withCredentials: false to avoid credential issues
         withCredentials: false,
+        // Try to disable XFA for better compatibility
+        disableAutoFetch: true,
+        disableStream: true,
       });
 
       const pdf = await loadingTask.promise;
@@ -202,8 +228,8 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
         err?.message?.includes('CORS');
 
       if (isCorsError) {
-        console.log('CORS error detected, switching to iframe viewer');
-        // Fall back to iframe-based viewer for CORS-restricted PDFs
+        console.log('CORS error detected, using iframe with direct PDF URL');
+        // Fall back to iframe-based viewer with direct PDF URL for CORS-restricted PDFs
         setViewerMode('iframe');
       } else {
         setError(`Unable to load PDF: ${err?.message || 'Unknown error'}`);
@@ -343,11 +369,23 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   // Helper to handle archive.org URLs and other external links
   const getBetterViewerUrl = (pdfUrl: string): string => {
     if (pdfUrl.includes('archive.org')) {
-      const downloadMatch = pdfUrl.match(/archive\.org\/download\/([^/]+)/);
+      // Try to get the direct PDF download URL from archive.org
+      const downloadMatch = pdfUrl.match(/archive\.org\/download\/([^/]+)\/.*\.pdf/);
       if (downloadMatch?.[1]) {
-        return `https://archive.org/details/${downloadMatch[1]}`;
+        // Keep the direct download URL for the PDF
+        return pdfUrl;
       }
-      if (pdfUrl.includes('archive.org/details/')) {
+      
+      // If it's a details page, try to construct the download URL
+      const detailsMatch = pdfUrl.match(/archive\.org\/details\/([^/]+)/);
+      if (detailsMatch?.[1]) {
+        // Try to get the first PDF file from the archive
+        // This assumes there's a PDF with the same name as the identifier
+        return `https://archive.org/download/${detailsMatch[1]}/${detailsMatch[1]}.pdf`;
+      }
+      
+      // If it's already a download URL, keep it as is
+      if (pdfUrl.includes('archive.org/download/')) {
         return pdfUrl;
       }
     }
@@ -376,18 +414,18 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
           </Button>
         </header>
 
-        {/* Content - Embedded online reader */}
+        {/* Content - Embedded PDF viewer using direct PDF URL */}
         <div className="flex-1 bg-muted/20">
           <iframe
-            src={viewerUrl}
+            src={`${viewerUrl}#toolbar=0&navpanes=0&scrollbar=0`}
             title={title}
             className="w-full h-full border-0"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
           />
         </div>
 
-        <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
-          If the PDF does not load here, use the external open button in the header.
+        <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground text-center">
+          Viewing PDF directly. Use the external button to open in archive.org if needed.
         </div>
       </div>
     );

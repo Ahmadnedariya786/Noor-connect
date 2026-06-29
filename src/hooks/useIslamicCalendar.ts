@@ -13,6 +13,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { AladhanAPI, AladhanDayData } from '@/lib/aladhan-api';
 import { useLocationState } from '@/lib/location-state';
+import { globalTimerManager } from '@/lib/timer-manager';
 
 export interface UseIslamicCalendarReturn {
   islamicInfo: {
@@ -200,16 +201,16 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
   // Refresh if the Gregorian date rolls over while the app stays open.
   useEffect(() => {
     lastUpdateKey.current = `${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`;
-    const interval = setInterval(() => {
+    const timerId = globalTimerManager.addCallback(() => {
       const now = new Date();
       const key = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
       if (key !== lastUpdateKey.current) {
         lastUpdateKey.current = key;
         computeIslamicDate();
       }
-    }, 60000);
+    }, 60000, 'islamic-calendar');
 
-    return () => clearInterval(interval);
+    return () => globalTimerManager.removeCallback(timerId);
   }, [computeIslamicDate]);
 
   // Derived values

@@ -3,23 +3,24 @@
  * Displays cycle length history and symptom correlation heatmap
  */
 
-import { useMemo, useState } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ReferenceLine,
-} from 'recharts';
+import { useMemo, useState, lazy, Suspense } from 'react';
 import { BarChart3, Grid3X3 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { CycleRecord } from '@/types/menstrual';
 import { generateCycleLengthChartData, generateCorrelationHeatmap, analyzeCorrelations } from '@/lib/pattern-analysis';
+import { Skeleton } from '@/components/LoadingSkeleton';
+
+// Lazy load Recharts components to reduce bundle size
+const BarChart = lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
+const Bar = lazy(() => import('recharts').then(module => ({ default: module.Bar })));
+const XAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
+const YAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
+const CartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
+const Tooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
+const ResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
+const Cell = lazy(() => import('recharts').then(module => ({ default: module.Cell })));
+const ReferenceLine = lazy(() => import('recharts').then(module => ({ default: module.ReferenceLine })));
 
 interface CycleLengthChartProps {
   cycles: CycleRecord[];
@@ -120,41 +121,43 @@ export function CycleLengthChart({ cycles }: CycleLengthChartProps) {
       {viewMode === 'bars' && chartData.length > 0 && (
         <>
           <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10 }}
-                  className="fill-muted-foreground"
-                />
-                <YAxis
-                  domain={[20, 40]}
-                  tick={{ fontSize: 10 }}
-                  className="fill-muted-foreground"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value: number) => [`${value} days`, 'Cycle Length']}
-                />
-                <ReferenceLine
-                  y={averageLength}
-                  stroke="#6b7280"
-                  strokeDasharray="5 5"
-                  label={{ value: `Avg: ${averageLength}d`, position: 'right', fontSize: 10 }}
-                />
-                <Bar dataKey="length" radius={[4, 4, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={index} fill={getBarColor(entry.length)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<Skeleton className="h-full w-full" />}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} barCategoryGap="20%">
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 10 }}
+                    className="fill-muted-foreground"
+                  />
+                  <YAxis
+                    domain={[20, 40]}
+                    tick={{ fontSize: 10 }}
+                    className="fill-muted-foreground"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                    }}
+                    formatter={(value: number) => [`${value} days`, 'Cycle Length']}
+                  />
+                  <ReferenceLine
+                    y={averageLength}
+                    stroke="#6b7280"
+                    strokeDasharray="5 5"
+                    label={{ value: `Avg: ${averageLength}d`, position: 'right', fontSize: 10 }}
+                  />
+                  <Bar dataKey="length" radius={[4, 4, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={index} fill={getBarColor(entry.length)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Suspense>
           </div>
 
           <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">

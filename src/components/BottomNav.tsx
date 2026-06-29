@@ -2,11 +2,11 @@ import { NavLink } from "react-router-dom";
 import { BookOpen, Settings as SettingsIcon, Compass, LayoutGrid } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useSettings } from "@/contexts/SettingsContext";
 
 // Crescent moon icon for center HOME button
-const CrescentIcon = ({ isActive, isDark }: { isActive: boolean; isDark: boolean }) => (
+const CrescentIcon = memo(({ isActive, isDark }: { isActive: boolean; isDark: boolean }) => (
   <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
@@ -17,7 +17,7 @@ const CrescentIcon = ({ isActive, isDark }: { isActive: boolean; isDark: boolean
       strokeLinejoin="round"
     />
   </svg>
-);
+));
 
 const BottomNav = memo(function BottomNav() {
   const { t } = useLanguage();
@@ -69,14 +69,14 @@ const BottomNav = memo(function BottomNav() {
               className="flex-1 flex flex-col items-center justify-center h-full relative min-w-0 group"
             >
               {({ isActive }) => (
-                <motion.div
+                <m.div
                   className="flex flex-col items-center justify-center gap-1"
                   whileTap={animationEnabled ? { scale: 0.88 } : undefined}
                 >
                   <div className="relative flex items-center justify-center w-10 h-8">
                     <AnimatePresence>
                       {isActive && (
-                        <motion.div
+                        <m.div
                           layoutId="nav-active-bg"
                           className="absolute inset-0 rounded-xl"
                           style={{ background: 'rgba(16,185,129,0.15)' }}
@@ -101,7 +101,7 @@ const BottomNav = memo(function BottomNav() {
                   >
                     {item.title}
                   </span>
-                </motion.div>
+                </m.div>
               )}
             </NavLink>
           ))}
@@ -118,14 +118,14 @@ const BottomNav = memo(function BottomNav() {
               className="flex-1 flex flex-col items-center justify-center h-full relative min-w-0 group"
             >
               {({ isActive }) => (
-                <motion.div
+                <m.div
                   className="flex flex-col items-center justify-center gap-1"
                   whileTap={animationEnabled ? { scale: 0.88 } : undefined}
                 >
                   <div className="relative flex items-center justify-center w-10 h-8">
                     <AnimatePresence>
                       {isActive && (
-                        <motion.div
+                        <m.div
                           layoutId="nav-active-bg-right"
                           className="absolute inset-0 rounded-xl"
                           style={{ background: 'rgba(16,185,129,0.15)' }}
@@ -150,7 +150,7 @@ const BottomNav = memo(function BottomNav() {
                   >
                     {item.title}
                   </span>
-                </motion.div>
+                </m.div>
               )}
             </NavLink>
           ))}
@@ -164,7 +164,7 @@ const BottomNav = memo(function BottomNav() {
           style={{ marginBottom: '0px' }}
         >
           {({ isActive }) => (
-            <motion.div
+            <m.div
               className="flex flex-col items-center gap-1"
               whileTap={animationEnabled ? { scale: 0.9 } : undefined}
             >
@@ -202,7 +202,7 @@ const BottomNav = memo(function BottomNav() {
               >
                 Home
               </span>
-            </motion.div>
+            </m.div>
           )}
         </NavLink>
       </div>

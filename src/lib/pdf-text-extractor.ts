@@ -1,8 +1,15 @@
 // PDF Text Extraction Utility using pdf.js
-import * as pdfjsLib from 'pdfjs-dist';
+// Lazy load pdfjs-dist to reduce bundle size
+let pdfjsLib: any = null;
 
-// Configure PDF.js worker (should match the version used in NativePdfViewer)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+async function getPdfjsLib() {
+  if (!pdfjsLib) {
+    pdfjsLib = await import('pdfjs-dist');
+    // Configure PDF.js worker (should match the version used in NativePdfViewer)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  }
+  return pdfjsLib;
+}
 
 export interface ExtractedText {
   text: string;
@@ -18,30 +25,31 @@ export async function extractTextFromPage(
   pageNumber: number
 ): Promise<string> {
   try {
+    const lib = await getPdfjsLib();
     // Load the PDF document
     const source =
       typeof pdfUrl === 'string'
         ? pdfUrl
         : { data: new Uint8Array(await pdfUrl.arrayBuffer()) };
-    const loadingTask = pdfjsLib.getDocument(source);
+    const loadingTask = lib.getDocument(source);
     const pdf = await loadingTask.promise;
-    
+
     // Get the specific page
     const page = await pdf.getPage(pageNumber);
-    
+
     // Extract text content
     const textContent = await page.getTextContent();
-    
+
     // Combine all text items into a single string
     const text = textContent.items
       .map((item: any) => item.str)
       .join(' ')
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
-    
+
     // Clean up
     page.cleanup();
-    
+
     return text;
   } catch (error) {
     console.error('Error extracting text from PDF page:', error);
@@ -56,36 +64,37 @@ export async function extractTextFromAllPages(
   pdfUrl: string | Blob
 ): Promise<ExtractedText[]> {
   try {
+    const lib = await getPdfjsLib();
     const source =
       typeof pdfUrl === 'string'
         ? pdfUrl
         : { data: new Uint8Array(await pdfUrl.arrayBuffer()) };
-    const loadingTask = pdfjsLib.getDocument(source);
+    const loadingTask = lib.getDocument(source);
     const pdf = await loadingTask.promise;
-    
+
     const totalPages = pdf.numPages;
     const results: ExtractedText[] = [];
-    
+
     // Extract text from each page
     for (let i = 1; i <= totalPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      
+
       const text = textContent.items
         .map((item: any) => item.str)
         .join(' ')
         .replace(/\s+/g, ' ')
         .trim();
-      
+
       results.push({
         text,
         pageNumber: i,
         totalPages
       });
-      
+
       page.cleanup();
     }
-    
+
     return results;
   } catch (error) {
     console.error('Error extracting text from all PDF pages:', error);
@@ -99,14 +108,15 @@ export async function extractTextFromAllPages(
 export class PdfTextCache {
   private cache: Map<string, any> = new Map();
   private textCache: Map<string, Map<number, string>> = new Map();
-  
+
   async preload(pdfUrl: string | Blob, cacheKey: string): Promise<void> {
     try {
+      const lib = await getPdfjsLib();
       const source =
         typeof pdfUrl === 'string'
           ? pdfUrl
           : { data: new Uint8Array(await pdfUrl.arrayBuffer()) };
-      const loadingTask = pdfjsLib.getDocument(source);
+      const loadingTask = lib.getDocument(source);
       const pdf = await loadingTask.promise;
       this.cache.set(cacheKey, pdf);
       this.textCache.set(cacheKey, new Map());
@@ -115,35 +125,35 @@ export class PdfTextCache {
       throw error;
     }
   }
-  
+
   async getText(cacheKey: string, pageNumber: number): Promise<string> {
     const pdf = this.cache.get(cacheKey);
     if (!pdf) {
       throw new Error('PDF not preloaded. Call preload() first.');
     }
-    
+
     // Check text cache first
     const pageCache = this.textCache.get(cacheKey);
     if (pageCache?.has(pageNumber)) {
       return pageCache.get(pageNumber)!;
     }
-    
+
     // Extract and cache
     const page = await pdf.getPage(pageNumber);
     const textContent = await page.getTextContent();
-    
+
     const text = textContent.items
       .map((item: any) => item.str)
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
-    
+
     pageCache?.set(pageNumber, text);
     page.cleanup();
-    
+
     return text;
   }
-  
+
   clear(cacheKey?: string): void {
     if (cacheKey) {
       const pdf = this.cache.get(cacheKey);
@@ -163,7 +173,7 @@ export class PdfTextCache {
       this.textCache.clear();
     }
   }
-  
+
   isLoaded(cacheKey: string): boolean {
     return this.cache.has(cacheKey);
   }

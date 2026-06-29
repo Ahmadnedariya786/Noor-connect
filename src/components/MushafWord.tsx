@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { MushafWord as MushafWordType } from '@/lib/mushaf-service';
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,7 +11,7 @@ interface MushafWordProps {
   onShowTooltip?: (word: MushafWordType, position: { x: number; y: number }) => void;
 }
 
-export function MushafWord({
+export const MushafWord = memo(function MushafWord({
   word,
   fontSize,
   isPlaying = false,
@@ -81,7 +81,16 @@ export function MushafWord({
       {word.word}
     </span>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.word.location === nextProps.word.location &&
+    prevProps.word.word === nextProps.word.word &&
+    prevProps.fontSize === nextProps.fontSize &&
+    prevProps.isPlaying === nextProps.isPlaying &&
+    prevProps.isHighlighted === nextProps.isHighlighted
+  );
+});
 
 interface WordTooltipProps {
   word: MushafWordType | null;

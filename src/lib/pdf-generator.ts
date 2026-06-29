@@ -3,9 +3,18 @@
  * Generates comprehensive menstrual health reports using jsPDF
  */
 
-import { jsPDF } from 'jspdf';
 import type { CycleRecord, CycleStatistics, MedicationDefinition, ExportOptions } from '@/types/menstrual';
 import { format, parseISO, subMonths } from 'date-fns';
+
+// Lazy load jsPDF to reduce bundle size
+let jsPDFModule: any = null;
+
+async function getJsPDF() {
+  if (!jsPDFModule) {
+    jsPDFModule = await import('jspdf');
+  }
+  return jsPDFModule.jsPDF;
+}
 
 interface ReportData {
   profileName: string;
@@ -31,6 +40,7 @@ const COLORS = {
  * Generate a comprehensive PDF report
  */
 export const generatePDFReport = async (data: ReportData, options?: Partial<ExportOptions>): Promise<Blob> => {
+  const jsPDF = await getJsPDF();
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',

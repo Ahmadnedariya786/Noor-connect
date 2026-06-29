@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Bell, MapPin, ChevronRight, Activity, Compass, Grid3X3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -9,6 +9,7 @@ import {
   DASHBOARD_WIDGET_CONFIG_CHANGED_EVENT,
   type DashboardWidgetConfig
 } from "@/lib/dashboard-widget-config";
+import { globalTimerManager } from "@/lib/timer-manager";
 
 // Widget component imports
 import EnhancedDailyAyah from "@/components/EnhancedDailyAyah";
@@ -65,10 +66,8 @@ function LiveClock({ animationEnabled, hijriDate }: { animationEnabled: boolean;
 
   useEffect(() => {
     // Clock updates every 10 seconds since it only shows HH:MM format
-    const interval = setInterval(() => {
-      setTime(new Date());
-    }, 10000);
-    return () => clearInterval(interval);
+    const timerId = globalTimerManager.addCallback(() => setTime(new Date()), 10000, 'premium-clock');
+    return () => globalTimerManager.removeCallback(timerId);
   }, []);
 
   const timeStr = time.toLocaleTimeString([], {
@@ -81,7 +80,7 @@ function LiveClock({ animationEnabled, hijriDate }: { animationEnabled: boolean;
 
   return (
     <div className="text-center pt-2 pb-2 min-h-[120px] flex flex-col justify-center items-center">
-      <motion.h1
+      <m.h1
         className="font-black leading-none tracking-tighter text-foreground"
         style={{ fontSize: 'clamp(72px, 22vw, 96px)' }}
         {...motionProps({ 
@@ -91,13 +90,13 @@ function LiveClock({ animationEnabled, hijriDate }: { animationEnabled: boolean;
         })}
       >
         {timeStr}
-      </motion.h1>
-      <motion.p
+      </m.h1>
+      <m.p
         className="text-sm font-semibold mt-2 tracking-wide text-primary"
         {...motionProps({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: 0.15, duration: 0.4 } })}
       >
         {hijriDate}
-      </motion.p>
+      </m.p>
     </div>
   );
 }
@@ -132,8 +131,8 @@ function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
     };
 
     updateDisplay();
-    const interval = setInterval(updateDisplay, 1000);
-    return () => clearInterval(interval);
+    const timerId = globalTimerManager.addCallback(updateDisplay, 1000, 'premium-countdown');
+    return () => globalTimerManager.removeCallback(timerId);
   }, [targetTime]);
 
   return <span className="text-sm font-black text-emerald-500 font-mono tabular-nums">{timeRemaining}</span>;
@@ -211,7 +210,7 @@ function PremiumDashboardInner({
       {/* Manual Location Dialog */}
       {showManualLocationDialog && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <motion.div
+          <m.div
             {...motionProps({ initial: { opacity: 0, scale: 0.95 }, animate: { opacity: 1, scale: 1 } })}
             className="w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-card border border-border/40 shadow-2xl rounded-[32px] transition-colors"
           >
@@ -271,7 +270,7 @@ function PremiumDashboardInner({
                 />
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
 
@@ -305,7 +304,7 @@ function PremiumDashboardInner({
         <LiveClock animationEnabled={animationEnabled} hijriDate={hijriDate} />
 
         {/* ── Next Prayer Card ── */}
-        <motion.div
+        <m.div
           {...motionProps({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 } })}
           className="relative overflow-hidden rounded-[28px] bg-card/40 border border-emerald-500/20 shadow-[inset_2px_0_0_rgba(16,185,129,0.6)] backdrop-blur-md"
         >
@@ -340,7 +339,7 @@ function PremiumDashboardInner({
               <div
                 className="h-1.5 w-full rounded-full overflow-hidden bg-muted/60"
               >
-                <motion.div
+                <m.div
                   className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                   {...motionProps({ initial: { width: 0 }, animate: { width: `${nextPrayer.progress}%` }, transition: { duration: 1, ease: 'easeOut', delay: 0.4 } })}
                 />
@@ -348,7 +347,7 @@ function PremiumDashboardInner({
 
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* ── Dynamic Widgets Container ── */}
         <div className="space-y-6">
@@ -359,7 +358,7 @@ function PremiumDashboardInner({
               switch (widget.id) {
                 case 'prayer-times':
                   return (
-                    <motion.section
+                    <m.section
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -380,7 +379,7 @@ function PremiumDashboardInner({
 
                       <div className="grid grid-cols-2 gap-3">
                         {prayers.map((prayer, i) => (
-                          <motion.div
+                          <m.div
                             key={prayer.name}
                             {...motionProps({
                               initial: { opacity: 0, scale: 0.92 },
@@ -419,15 +418,15 @@ function PremiumDashboardInner({
                                 {prayer.time}
                               </p>
                             </div>
-                          </motion.div>
+                          </m.div>
                         ))}
                       </div>
-                    </motion.section>
+                    </m.section>
                   );
 
                 case 'salah-tracker':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -470,12 +469,12 @@ function PremiumDashboardInner({
                           </button>
                         ))}
                       </div>
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'daily-ayah':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -484,12 +483,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <EnhancedDailyAyah />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'daily-hadith':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -498,12 +497,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <EnhancedDailyHadith />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'qibla-quick':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -512,12 +511,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <QiblaQuickWidget />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'tasbeeh-quick':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -526,12 +525,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <TasbeehQuickWidget />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'ramadan':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -545,12 +544,12 @@ function PremiumDashboardInner({
                         prayerTimesWithEnd={prayerTimesHook?.prayerTimesWithEnd || null}
                         timeFormat={timeFormat}
                       />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'weekly-chart':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -559,12 +558,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <WeeklySalahChart />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'quran-progress':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -573,12 +572,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <QuranProgressWidget />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'islamic-events':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -587,12 +586,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <IslamicEventsWidget />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'prayer-stats':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -601,12 +600,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <PrayerStatsWidget />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'qaza-tracker':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -615,12 +614,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <QazaTracker compact={true} />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'dhikr-reminder':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -629,12 +628,12 @@ function PremiumDashboardInner({
                       })}
                     >
                       <DhikrReminder />
-                    </motion.div>
+                    </m.div>
                   );
 
                 case 'quran-radio':
                   return (
-                    <motion.div
+                    <m.div
                       key={widget.id}
                       {...motionProps({
                         initial: { opacity: 0, y: 12 },
@@ -643,7 +642,7 @@ function PremiumDashboardInner({
                       })}
                     >
                       <QuranRadio />
-                    </motion.div>
+                    </m.div>
                   );
 
                 default:

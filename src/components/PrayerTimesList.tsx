@@ -41,7 +41,7 @@ interface PrayerTimeCardProps {
   timeZone?: string;
 }
 
-const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({ prayer, isCurrent, isNext, timeZone }) => {
+const PrayerTimeCard = memo(function PrayerTimeCard({ prayer, isCurrent, isNext, timeZone }: PrayerTimeCardProps) {
   const { t } = useLanguage();
   const status = getPrayerStatus(prayer);
   const countdown = useCountdown(prayer.endTime);
@@ -126,7 +126,17 @@ const PrayerTimeCard: React.FC<PrayerTimeCardProps> = ({ prayer, isCurrent, isNe
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.prayer.name === nextProps.prayer.name &&
+    prevProps.prayer.datetime.getTime() === nextProps.prayer.datetime.getTime() &&
+    prevProps.prayer.endTime.getTime() === nextProps.prayer.endTime.getTime() &&
+    prevProps.isCurrent === nextProps.isCurrent &&
+    prevProps.isNext === nextProps.isNext &&
+    prevProps.timeZone === nextProps.timeZone
+  );
+});
 
 export interface PrayerTimesListProps {
   timings?: PrayerTimesWithEnd | null;
@@ -154,7 +164,7 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-const PrayerTimesListComponent = function PrayerTimesList(props: PrayerTimesListProps) {
+const PrayerTimesListComponent = memo(function PrayerTimesList(props: PrayerTimesListProps) {
   const { t } = useLanguage();
   const { t: ti18n } = useI18n();
   const prayerTimesHook = usePrayerTimes();
@@ -438,5 +448,4 @@ const PrayerTimesListComponent = function PrayerTimesList(props: PrayerTimesList
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
-export const PrayerTimesList = memo(PrayerTimesListComponent);
+export const PrayerTimesList = PrayerTimesListComponent;

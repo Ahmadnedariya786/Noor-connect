@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { Preferences } from '@capacitor/preferences';
+import { isLowEndDevice } from '@/lib/device-performance';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -73,6 +74,18 @@ const getStoredBooleanFromPreferences = async (key: string, fallback = true): Pr
   }
 };
 
+const getStoredBooleanOrNullFromPreferences = async (key: string): Promise<boolean | null> => {
+  try {
+    const { value } = await Preferences.get({ key });
+    if (value === null) return null;
+    return value === 'true';
+  } catch (error) {
+    console.warn(`Failed to read ${key} from Preferences, falling back to localStorage:`, error);
+    const storedValue = localStorage.getItem(key);
+    return storedValue === null ? null : storedValue === 'true';
+  }
+};
+
 const setStoredBooleanToPreferences = async (key: string, value: boolean): Promise<void> => {
   try {
     await Preferences.set({ key, value: value.toString() });
@@ -103,11 +116,16 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>(() => getEffectiveTheme('system'));
   const [isLoaded, setIsLoaded] = useState(false);
   const [animationEnabled, setAnimationEnabledState] = useState<boolean>(() => {
-    // Default: respect prefers-reduced-motion
+    // Default: respect prefers-reduced-motion and low-end device detection
     const storedValue = localStorage.getItem(ANIMATION_KEY);
     if (storedValue === null) {
-      return !getPrefersReducedMotion();
+      // No user preference set - check device capabilities
+      const isLowEnd = isLowEndDevice();
+      const prefersReducedMotion = getPrefersReducedMotion();
+      // Disable animations if device is low-end OR user prefers reduced motion
+      return !isLowEnd && !prefersReducedMotion;
     }
+    // User has set a preference - respect it
     return storedValue === 'true';
   });
   const [greetingEnabled, setGreetingEnabledState] = useState<boolean>(() => {
@@ -126,10 +144,25 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       setThemeState(storedTheme);
       setEffectiveTheme(getEffectiveTheme(storedTheme));
 
-      // Load animation setting from Preferences (with prefers-reduced-motion fallback)
-      const storedAnimation = await getStoredBooleanFromPreferences(ANIMATION_KEY, !getPrefersReducedMotion());
-      setAnimationEnabledState(storedAnimation);
-      applyAnimationClass(storedAnimation);
+      // Load animation setting from Preferences (with prefers-reduced-motion and low-end device fallback)
+      const storedAnimation = await getStoredBooleanOrNullFromPreferences(ANIMATION_KEY);
+      let finalAnimationValue: boolean;
+      
+      if (storedAnimation === null) {
+        // No stored preference - use device detection
+        const isLowEnd = isLowEndDevice();
+        const prefersReducedMotion = getPrefersReducedMotion();
+        finalAnimationValue = !isLowEnd && !prefersReducedMotion;
+        // Store this initial preference so it persists
+        await setStoredBooleanToPreferences(ANIMATION_KEY, finalAnimationValue);
+        localStorage.setItem(ANIMATION_KEY, finalAnimationValue.toString());
+      } else {
+        // User has a stored preference - respect it
+        finalAnimationValue = storedAnimation;
+      }
+      
+      setAnimationEnabledState(finalAnimationValue);
+      applyAnimationClass(finalAnimationValue);
 
       // Load splash greeting setting from Preferences
       const storedSplashGreeting = await getStoredBooleanFromPreferences(SPLASH_GREETING_KEY, true);
@@ -217,27 +250,35 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const setSplashEnabled = (enabled: boolean) => setSplashEnabledState(enabled);
   const toggleSplash = () => setSplashEnabledState((prev) => !prev);
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    theme,
+    effectiveTheme,
+    setTheme,
+    toggleTheme,
+    animationEnabled,
+    setAnimationEnabled,
+    toggleAnimation,
+    greetingEnabled,
+    setGreetingEnabled,
+    toggleGreeting,
+    splashGreetingEnabled,
+    setSplashGreetingEnabled,
+    toggleSplashGreeting,
+    splashEnabled,
+    setSplashEnabled,
+    toggleSplash,
+  }), [
+    theme,
+    effectiveTheme,
+    animationEnabled,
+    greetingEnabled,
+    splashGreetingEnabled,
+    splashEnabled,
+  ]);
+
   return (
-    <SettingsContext.Provider
-      value={{
-        theme,
-        effectiveTheme,
-        setTheme,
-        toggleTheme,
-        animationEnabled,
-        setAnimationEnabled,
-        toggleAnimation,
-        greetingEnabled,
-        setGreetingEnabled,
-        toggleGreeting,
-        splashGreetingEnabled,
-        setSplashGreetingEnabled,
-        toggleSplashGreeting,
-        splashEnabled,
-        setSplashEnabled,
-        toggleSplash,
-      }}
-    >
+    <SettingsContext.Provider value={contextValue}>
       {children}
     </SettingsContext.Provider>
   );

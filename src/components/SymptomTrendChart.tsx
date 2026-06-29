@@ -3,25 +3,26 @@
  * Visualizes symptom severity over time using Recharts
  */
 
-import { useMemo, useState } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  Area,
-  AreaChart,
-} from 'recharts';
+import { useMemo, useState, lazy, Suspense } from 'react';
 import { Activity, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { DailySymptoms, CycleRecord } from '@/types/menstrual';
 import { format, parseISO, subDays } from 'date-fns';
+import { Skeleton } from '@/components/LoadingSkeleton';
+
+// Lazy load Recharts components to reduce bundle size
+const LineChart = lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
+const Line = lazy(() => import('recharts').then(module => ({ default: module.Line })));
+const XAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
+const YAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
+const CartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
+const Tooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
+const ResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
+const Legend = lazy(() => import('recharts').then(module => ({ default: module.Legend })));
+const Area = lazy(() => import('recharts').then(module => ({ default: module.Area })));
+const AreaChart = lazy(() => import('recharts').then(module => ({ default: module.AreaChart })));
 
 interface SymptomTrendChartProps {
   cycles: CycleRecord[];
@@ -177,62 +178,64 @@ export function SymptomTrendChart({ cycles, days = 30 }: SymptomTrendChartProps)
 
       {/* Chart */}
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <Chart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis
-              dataKey="date"
-              tick={{ fontSize: 11 }}
-              className="fill-muted-foreground"
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              domain={[0, 5]}
-              tick={{ fontSize: 11 }}
-              className="fill-muted-foreground"
-              ticks={[0, 1, 2, 3, 4, 5]}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
-              labelStyle={{ fontWeight: 'bold' }}
-            />
-            {selectedSymptoms.size > 0 && <Legend />}
-            {Object.entries(SYMPTOM_COLORS).map(([key, color]) => {
-              if (!selectedSymptoms.has(key)) return null;
-              if (chartType === 'line') {
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
+          <ResponsiveContainer width="100%" height="100%">
+            <Chart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11 }}
+                className="fill-muted-foreground"
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                domain={[0, 5]}
+                tick={{ fontSize: 11 }}
+                className="fill-muted-foreground"
+                ticks={[0, 1, 2, 3, 4, 5]}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                }}
+                labelStyle={{ fontWeight: 'bold' }}
+              />
+              {selectedSymptoms.size > 0 && <Legend />}
+              {Object.entries(SYMPTOM_COLORS).map(([key, color]) => {
+                if (!selectedSymptoms.has(key)) return null;
+                if (chartType === 'line') {
+                  return (
+                    <Line
+                      key={key}
+                      type="monotone"
+                      dataKey={key}
+                      stroke={color}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: color }}
+                      activeDot={{ r: 5 }}
+                      name={SYMPTOM_LABELS[key]}
+                    />
+                  );
+                }
                 return (
-                  <Line
+                  <Area
                     key={key}
                     type="monotone"
                     dataKey={key}
                     stroke={color}
+                    fill={color}
+                    fillOpacity={0.1}
                     strokeWidth={2}
-                    dot={{ r: 3, fill: color }}
-                    activeDot={{ r: 5 }}
                     name={SYMPTOM_LABELS[key]}
                   />
                 );
-              }
-              return (
-                <Area
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={color}
-                  fill={color}
-                  fillOpacity={0.1}
-                  strokeWidth={2}
-                  name={SYMPTOM_LABELS[key]}
-                />
-              );
-            })}
-          </Chart>
-        </ResponsiveContainer>
+              })}
+            </Chart>
+          </ResponsiveContainer>
+        </Suspense>
       </div>
 
       <p className="text-xs text-muted-foreground mt-2 text-center">

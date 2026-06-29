@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/lib/i18n-new';
 import {
@@ -180,12 +180,13 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     [i18n]
   );
 
-  const value: LanguageContextType = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     language,
     setLanguage,
     t,
     isRTL: isLanguageRTL,
-  };
+  }), [language, setLanguage, isLanguageRTL]);
 
   return (
     <LanguageContext.Provider value={value}>

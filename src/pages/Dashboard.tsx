@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useMemo, Suspense, lazy, type MouseEvent } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense, lazy, type MouseEvent, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PremiumDashboard } from "@/components/PremiumDashboard";
-import { Moon, Sun, Sunset, Cloud, CloudMoon, Bell, Compass, BookOpen, LayoutGrid, Settings as SettingsIcon, Wallet, Calendar, MapPin, Grid3X3, Building } from "lucide-react";
+import { Moon, Sun, Sunset, Cloud, CloudMoon, Bell, Compass, LayoutGrid, Settings as SettingsIcon, Wallet, Calendar, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
 const DailyAyah = lazy(() => import("@/components/EnhancedDailyAyah").then(module => ({ default: module.EnhancedDailyAyah })));
@@ -22,6 +22,7 @@ import { EidCelebrationOverlay } from "@/components/EidCelebrationOverlay";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import { getTodayPrayers, togglePrayer, type PrayerName, type DailyPrayers } from "@/lib/salah-tracker";
 import { BatteryOptimizationDialog } from "@/components/BatteryOptimizationDialog";
+import { FeatureCards } from "@/components/DashboardFeatureCards";
 
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
@@ -38,6 +39,7 @@ import { GeocodingService } from "@/lib/geocoding";
 import { PRAYER_ALARM_CONTROL_EVENT, PRAYER_ALARM_TOGGLE_EVENT } from "@/lib/prayer-alarm-events";
 import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
+import { globalTimerManager } from "@/lib/timer-manager";
 
 const prayerIcons: Record<string, React.ReactNode> = {
   Fajr: <Moon className="w-5 h-5 text-indigo-400" />,
@@ -46,37 +48,6 @@ const prayerIcons: Record<string, React.ReactNode> = {
   Maghrib: <Sunset className="w-5 h-5 text-orange-400" />,
   Isha: <CloudMoon className="w-5 h-5 text-purple-400" />,
 };
-
-// Premium high-fidelity gradient definitions for main features
-const featureCards = [
-  {
-    id: 'quran',
-    title: 'Quran',
-    description: 'Read & Listen',
-    icon: BookOpen,
-    gradient: 'from-[#10b981] via-[#059669] to-[#047857]', // Rich emerald
-    route: '/quran',
-    stats: '114 Surahs'
-  },
-  {
-    id: 'prayer',
-    title: 'Prayer',
-    description: 'Times',
-    icon: Building,
-    gradient: 'from-[#3b82f6] via-[#2563eb] to-[#1d4ed8]', // Deep blue
-    route: '/prayer-times',
-    stats: '5 Daily'
-  },
-  {
-    id: 'services',
-    title: 'Services',
-    description: 'All Features',
-    icon: Grid3X3,
-    gradient: 'from-[#f59e0b] via-[#d97706] to-[#b45309]', // Vibrant amber
-    route: '/services',
-    stats: '15+ Features'
-  }
-];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -257,7 +228,7 @@ export default function Dashboard() {
   }, [location.latitude, location.longitude, location.timeZone, location.locationName, location.setLocation, formatTimeFromAPI, parseTimeToDate, timeFormat]);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    const timerId = globalTimerManager.addCallback(() => setCurrentTime(new Date()), 30000, 'dashboard-time');
 
     // Add online listener to refresh prayer times as soon as internet is back
     const handleOnline = () => {
@@ -268,7 +239,7 @@ export default function Dashboard() {
     window.addEventListener('online', handleOnline);
 
     return () => {
-      clearInterval(timer);
+      globalTimerManager.removeCallback(timerId);
       window.removeEventListener('online', handleOnline);
     };
   }, [loadPrayerTimes]);

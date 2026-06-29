@@ -1,7 +1,94 @@
-import { useMemo } from 'react';
-import { MushafPage as MushafPageType, MushafLine } from '@/lib/mushaf-service';
+import { useMemo, useRef, useEffect, useState } from 'react';
+import { MushafPage as MushafPageType, MushafLine, MushafWord as MushafWordType } from '@/lib/mushaf-service';
 import { MushafWord } from './MushafWord';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+// Lazy word list component to optimize rendering of many words
+interface LazyWordListProps {
+  words: MushafWordType[];
+  fontSize: number;
+  currentPlayingLocation?: string;
+  highlightedWord?: string;
+  onPlayWordAudio?: (location: string) => void;
+  onShowTooltip?: (word: any, position: { x: number; y: number }) => void;
+}
+
+function LazyWordList({ words, fontSize, currentPlayingLocation, highlightedWord, onPlayWordAudio, onShowTooltip }: LazyWordListProps) {
+  const [visibleWords, setVisibleWords] = useState<Set<number>>(new Set());
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.getAttribute('data-index') || '0');
+            setVisibleWords(prev => new Set([...prev, index]));
+          }
+        });
+      },
+      { rootMargin: '50px' }
+    );
+
+    const wordElements = containerRef.current?.querySelectorAll('[data-index]');
+    wordElements?.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [words]);
+
+  return (
+    <div ref={containerRef}>
+      {words.map((word, wordIndex) => {
+        const wordMatch = word.word.match(/^(.*?)(\d+)$/);
+        const isLastWord = !!wordMatch;
+        const verseNum = isLastWord ? parseInt(wordMatch[2]) : null;
+        const textOnly = isLastWord ? wordMatch[1] : word.word;
+        const isVisible = visibleWords.has(wordIndex);
+
+        return (
+          <span key={wordIndex} className="inline-block" data-index={wordIndex}>
+            {isVisible ? (
+              <>
+                <MushafWord
+                  word={{...word, word: textOnly || word.word}}
+                  fontSize={fontSize + 4}
+                  isPlaying={currentPlayingLocation === word.location}
+                  isHighlighted={highlightedWord === word.location}
+                  onPlayAudio={onPlayWordAudio}
+                  onShowTooltip={onShowTooltip}
+                />
+                {isLastWord && verseNum && (
+                  <span className="inline-flex items-center justify-center mx-1">
+                    <span 
+                      className="w-7 h-7 rounded-full border-2 border-amber-600 dark:border-amber-500 flex items-center justify-center text-sm font-bold text-amber-800 dark:text-amber-200 font-arabic bg-gradient-to-br from-white to-amber-50 dark:from-amber-900 dark:to-amber-950 shadow-sm"
+                      style={{
+                        fontFamily: 'var(--quran-font), "Uthmani", "Traditional Arabic", serif',
+                      }}
+                    >
+                      {verseNum}
+                    </span>
+                  </span>
+                )}
+              </>
+            ) : (
+              <span style={{ opacity: 0 }} className="inline-block">
+                {/* Placeholder to maintain layout */}
+                <span style={{ 
+                  fontFamily: 'var(--quran-font), "Uthmani", "Traditional Arabic", serif',
+                  fontSize: `${fontSize + 4}px`,
+                  lineHeight: '2.8',
+                  letterSpacing: '0.02em'
+                }}>
+                  {textOnly || word.word}
+                </span>
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 interface MushafPageProps {
   page: MushafPageType;
@@ -74,38 +161,14 @@ export function MushafPage({
               }}
             >
               {line.words && line.words.length > 0 ? (
-                line.words.map((word, wordIndex) => {
-                  // Check if this is the last word of a verse (contains verse number)
-                  const wordMatch = word.word.match(/^(.*?)(\d+)$/);
-                  const isLastWord = !!wordMatch;
-                  const verseNum = isLastWord ? parseInt(wordMatch[2]) : null;
-                  const textOnly = isLastWord ? wordMatch[1] : word.word;
-
-                  return (
-                    <span key={wordIndex} className="inline-block">
-                      <MushafWord
-                        word={{...word, word: textOnly || word.word}}
-                        fontSize={fontSize + 4}
-                        isPlaying={currentPlayingLocation === word.location}
-                        isHighlighted={highlightedWord === word.location}
-                        onPlayAudio={onPlayWordAudio}
-                        onShowTooltip={onShowTooltip}
-                      />
-                      {isLastWord && verseNum && (
-                        <span className="inline-flex items-center justify-center mx-1">
-                          <span 
-                            className="w-7 h-7 rounded-full border-2 border-amber-600 dark:border-amber-500 flex items-center justify-center text-sm font-bold text-amber-800 dark:text-amber-200 font-arabic bg-gradient-to-br from-white to-amber-50 dark:from-amber-900 dark:to-amber-950 shadow-sm"
-                            style={{
-                              fontFamily: 'var(--quran-font), "Uthmani", "Traditional Arabic", serif',
-                            }}
-                          >
-                            {verseNum}
-                          </span>
-                        </span>
-                      )}
-                    </span>
-                  );
-                })
+                <LazyWordList 
+                  words={line.words} 
+                  fontSize={fontSize}
+                  currentPlayingLocation={currentPlayingLocation}
+                  highlightedWord={highlightedWord}
+                  onPlayWordAudio={onPlayWordAudio}
+                  onShowTooltip={onShowTooltip}
+                />
               ) : (
                 <span className="text-amber-800 dark:text-amber-200">
                   {line.text}

@@ -1,14 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Share2, Link, BookmarkPlus } from 'lucide-react';
-import * as pdfjsLib from 'pdfjs-dist';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
 import PdfAudioPlayer from '@/components/PdfAudioPlayer';
 import { useToast } from '@/hooks/use-toast';
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Lazy load pdfjs-dist to reduce bundle size
+let pdfjsLib: any = null;
+let workerConfigured = false;
+
+async function getPdfjsLib() {
+  if (!pdfjsLib) {
+    pdfjsLib = await import('pdfjs-dist');
+    if (!workerConfigured) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      workerConfigured = true;
+    }
+  }
+  return pdfjsLib;
+}
 
 interface NativePdfViewerProps {
   url: string;
@@ -296,9 +307,11 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
       const pdfSource = blobUrl || url;
       setResolvedPdfSource(pdfSource);
 
-      const loadingTask = pdfjsLib.getDocument(pdfSource);
+      // Lazy load pdfjs-dist
+      const lib = await getPdfjsLib();
+      const loadingTask = lib.getDocument(pdfSource);
       const pdf = await loadingTask.promise;
-      
+
       setPdfDocument(pdf);
       setTotalPages(pdf.numPages);
       setCurrentPage(initialPage);

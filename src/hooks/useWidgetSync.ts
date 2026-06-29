@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { WidgetPlugin } from '@/lib/widgetPlugin';
 import { isNativePlatform } from '@/lib/capacitor-utils';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
+import { globalTimerManager } from '@/lib/timer-manager';
 
 /**
  * Custom hook to synchronize prayer and ayah data with the native Android
@@ -76,10 +77,10 @@ export function useWidgetSync() {
 
   // Also sync every 10 minutes so the countdown widget stays fresh
   useEffect(() => {
-    const interval = setInterval(() => {
+    const timerId = globalTimerManager.addCallback(() => {
       doSync(prayerTimesRef.current);
-    }, 10 * 60 * 1000);
+    }, 10 * 60 * 1000, 'widget-sync');
 
-    return () => clearInterval(interval);
+    return () => globalTimerManager.removeCallback(timerId);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }

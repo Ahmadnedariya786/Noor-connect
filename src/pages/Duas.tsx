@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, Share2, BookHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,47 @@ import { useToast } from "@/hooks/use-toast";
 import { getFavorites, toggleFavorite } from "@/lib/storage";
 import { duasData, duaCategories } from "@/data/duas";
 
-const Duas = () => {
+interface DuaCardProps {
+  dua: typeof duasData[0];
+  isFavorite: boolean;
+  onToggleFavorite: (id: string) => void;
+  onShare: (dua: typeof duasData[0]) => void;
+}
+
+const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onShare }: DuaCardProps) {
+  return (
+    <Card className="p-4">
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+            {dua.category}
+          </span>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onToggleFavorite(dua.id)}>
+              <Heart className={`w-4 h-4 ${isFavorite ? "fill-destructive text-destructive" : ""}`} />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShare(dua)}>
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <p className="text-xl font-arabic text-right leading-loose">{dua.arabic}</p>
+        <p className="text-sm italic text-primary/80">{dua.transliteration}</p>
+        <p className="text-sm text-muted-foreground">{dua.translation}</p>
+        {dua.reference && (
+          <p className="text-xs text-muted-foreground">{dua.reference}</p>
+        )}
+      </div>
+    </Card>
+  );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.dua.id === nextProps.dua.id &&
+    prevProps.isFavorite === nextProps.isFavorite
+  );
+});
+
+const Duas = memo(function Duas() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -83,35 +123,19 @@ const Duas = () => {
         <ScrollArea className="h-[calc(100vh-220px)]">
           <div className="space-y-3">
             {filteredDuas.map((dua) => (
-              <Card key={dua.id} className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
-                      {dua.category}
-                    </span>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleFavorite(dua.id)}>
-                        <Heart className={`w-4 h-4 ${favorites.includes(dua.id) ? "fill-destructive text-destructive" : ""}`} />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => shareDua(dua)}>
-                        <Share2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-xl font-arabic text-right leading-loose">{dua.arabic}</p>
-                  <p className="text-sm italic text-primary/80">{dua.transliteration}</p>
-                  <p className="text-sm text-muted-foreground">{dua.translation}</p>
-                  {dua.reference && (
-                    <p className="text-xs text-muted-foreground">{dua.reference}</p>
-                  )}
-                </div>
-              </Card>
+              <DuaCard
+                key={dua.id}
+                dua={dua}
+                isFavorite={favorites.includes(dua.id)}
+                onToggleFavorite={handleToggleFavorite}
+                onShare={shareDua}
+              />
             ))}
           </div>
         </ScrollArea>
       </div>
     </div>
   );
-};
+});
 
 export default Duas;

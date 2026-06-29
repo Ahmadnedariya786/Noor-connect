@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Moon, Star, X, Sparkles, Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
@@ -56,7 +56,7 @@ export function EidCelebrationOverlay() {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -64,7 +64,7 @@ export function EidCelebrationOverlay() {
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(20)].map((_, i) => (
-            <motion.div
+            <m.div
               key={i}
               initial={{ 
                 x: Math.random() * window.innerWidth, 
@@ -85,11 +85,11 @@ export function EidCelebrationOverlay() {
               className="absolute text-yellow-500/20"
             >
               <Star className="w-4 h-4" />
-            </motion.div>
+            </m.div>
           ))}
         </div>
 
-        <motion.div
+        <m.div
           initial={{ scale: 0.8, y: 50, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           transition={{ type: "spring", damping: 15 }}
@@ -108,7 +108,7 @@ export function EidCelebrationOverlay() {
 
           <div className="relative z-10 space-y-8">
             <div className="flex justify-center">
-              <motion.div
+              <m.div
                 animate={{ 
                   rotate: [0, 10, -10, 10, 0],
                   scale: [1, 1.1, 1]
@@ -117,11 +117,11 @@ export function EidCelebrationOverlay() {
                 className="w-24 h-24 bg-[#e0c097]/10 rounded-3xl border border-[#e0c097]/20 flex items-center justify-center"
               >
                 <Moon className="w-12 h-12 text-[#e0c097]" />
-              </motion.div>
+              </m.div>
             </div>
 
             <div className="space-y-3">
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -132,19 +132,19 @@ export function EidCelebrationOverlay() {
                 <p className="text-[#e0c097] text-lg font-arabic mt-1">
                   {safeEidType === 'fitr' ? 'عيد الفطر مبارك' : 'عيد الأضحى مبارك'}
                 </p>
-              </motion.div>
+              </m.div>
               
-              <motion.p 
+              <m.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
                 className="text-white/60 text-sm leading-relaxed"
               >
                 May this blessed day bring joy, peace, and prosperity to you and your loved ones. May Allah accept our deeds.
-              </motion.p>
+              </m.p>
             </div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.7 }}
@@ -178,10 +178,10 @@ export function EidCelebrationOverlay() {
                 <Heart className="w-3 h-3 text-red-500/50" />
                 <span>With love from Noor Connect</span>
               </div>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

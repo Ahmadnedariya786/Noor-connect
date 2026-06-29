@@ -1,10 +1,12 @@
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect, lazy, Suspense } from "react";
 import { ArrowLeft, Share2, Loader2, RefreshCw, ExternalLink, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { saveReadingProgress, getReadingProgress } from "@/lib/reading-progress";
 import { getPdfBlobUrl } from "@/lib/ebooks-storage";
-import NativePdfViewer from "@/components/NativePdfViewer";
+
+// Lazy load NativePdfViewer to reduce bundle size
+const NativePdfViewer = lazy(() => import('@/components/NativePdfViewer').then(module => ({ default: module.default })));
 
 interface PdfViewerProps {
   url: string;
@@ -77,7 +79,11 @@ export default function PdfViewer({ url, title, localKey, onClose }: PdfViewerPr
 
   // Use native PDF viewer
   if (useNativeViewer) {
-    return <NativePdfViewer url={url} title={title} localKey={localKey} progressKey={progressKey} onClose={onClose} />;
+    return (
+      <Suspense fallback={<div className="fixed inset-0 bg-background z-[100] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+        <NativePdfViewer url={url} title={title} localKey={localKey} progressKey={progressKey} onClose={onClose} />
+      </Suspense>
+    );
 
   }
 

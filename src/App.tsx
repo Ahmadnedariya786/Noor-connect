@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import BottomNav from "@/components/BottomNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { notificationManager } from "@/lib/notification-manager";
@@ -13,9 +14,26 @@ import { LayoutManager } from "@/components/LayoutManager";
 import { SplashScreen } from "@/components/SplashScreen";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { AnimatePresence, MotionConfig } from "framer-motion";
+import { LazyMotionWrapper } from "@/components/LazyMotionWrapper";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n-new";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
+import { isLowEndDevice } from "@/lib/device-performance";
+
+// Create QueryClient for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 60 * 1000, // 1 hour
+      gcTime: 5 * 60 * 1000, // 5 minutes (renamed from cacheTime in v5)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 // Global Players
 import { GlobalRadioPlayer } from "@/components/GlobalRadioPlayer";
@@ -74,7 +92,21 @@ const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
 
 // Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
-const isAnimationDisabled = localStorage.getItem("animations_enabled") === "false";
+// Check for low-end device and disable animations if no user preference is set
+const storedAnimationPreference = localStorage.getItem("animations_enabled");
+const isLowEnd = isLowEndDevice();
+let isAnimationDisabled: boolean;
+
+if (storedAnimationPreference === null) {
+  // No user preference set - use device detection
+  isAnimationDisabled = isLowEnd;
+  // Store the initial preference so it persists
+  localStorage.setItem("animations_enabled", isAnimationDisabled.toString());
+} else {
+  // User has set a preference - respect it
+  isAnimationDisabled = storedAnimationPreference === "false";
+}
+
 if (isAnimationDisabled) {
   document.documentElement.classList.add("no-animations");
 }
@@ -178,30 +210,32 @@ function AppContent() {
   
   return (
     <MotionConfig reducedMotion={animationEnabled ? "never" : "always"}>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="flex flex-col min-h-screen overflow-hidden">
-          <div className="flex-shrink-0">
-            <Suspense fallback={null}>
-              <GlobalPrayerAlarm />
-              {greetingEnabled && <SalamGreeting />}
-              <FestivePopup />
-              <PWAInstallPrompt />
-              <EidChecklistNotification />
-              <FitranaCalculatorNotification />
-            </Suspense>
+      <LazyMotionWrapper>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <div className="flex flex-col min-h-screen overflow-hidden">
+            <div className="flex-shrink-0">
+              <Suspense fallback={null}>
+                <GlobalPrayerAlarm />
+                {greetingEnabled && <SalamGreeting />}
+                <FestivePopup />
+                <PWAInstallPrompt />
+                <EidChecklistNotification />
+                <FitranaCalculatorNotification />
+              </Suspense>
+            </div>
+
+            <LayoutManager>
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+            </LayoutManager>
           </div>
 
-          <LayoutManager>
-            <ErrorBoundary>
-              <AppRoutes />
-            </ErrorBoundary>
-          </LayoutManager>
-        </div>
-
-        <BottomNav />
-        <GlobalRadioPlayer />
-        <GlobalQuranPlayer />
-      </BrowserRouter>
+          <BottomNav />
+          <GlobalRadioPlayer />
+          <GlobalQuranPlayer />
+        </BrowserRouter>
+      </LazyMotionWrapper>
     </MotionConfig>
   );
 }
@@ -268,9 +302,11 @@ function AppShell() {
 function App() {
   return (
     <ErrorBoundary>
-      <SettingsProvider>
-        <AppShell />
-      </SettingsProvider>
+      <QueryClientProvider client={queryClient}>
+        <SettingsProvider>
+          <AppShell />
+        </SettingsProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

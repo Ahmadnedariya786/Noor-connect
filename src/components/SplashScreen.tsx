@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Smartphone } from "lucide-react";
 
 interface NavigatorWithStandalone extends Navigator {
@@ -30,7 +30,7 @@ function FloatingStars({ enabled }: { enabled: boolean }) {
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {!enabled ? null : stars.map((star) => (
-                <motion.div
+                <m.div
                     key={star.id}
                     initial={{ opacity: 0.2, scale: 0.8 }}
                     animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
@@ -56,7 +56,7 @@ function FloatingStars({ enabled }: { enabled: boolean }) {
 // App Icon Component
 function AppIcon({ animationsEnabled }: { animationsEnabled: boolean }) {
     return (
-        <motion.div
+        <m.div
             initial={animationsEnabled ? { scale: 0.8, opacity: 0, rotate: -180 } : false}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={animationsEnabled ? { duration: 1, ease: "easeOut" } : { duration: 0 }}
@@ -104,7 +104,7 @@ function AppIcon({ animationsEnabled }: { animationsEnabled: boolean }) {
             </div>
 
             {/* Glow Effect */}
-            <motion.div
+            <m.div
                 className="absolute inset-0 rounded-2xl"
                 initial={animationsEnabled ? { opacity: 0 } : { opacity: 0.35 }}
                 animate={{ opacity: animationsEnabled ? 0.6 : 0.35 }}
@@ -115,7 +115,7 @@ function AppIcon({ animationsEnabled }: { animationsEnabled: boolean }) {
                     transform: "scale(1.2)",
                 }}
             />
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -170,7 +170,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     return (
         <AnimatePresence>
             {isVisible && (
-                <motion.div
+                <m.div
                     initial={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={animationsEnabled ? { duration: 0.4, ease: "easeInOut" } : { duration: 0.08 }}
@@ -211,9 +211,9 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
                         {/* Reserve vertical space to prevent CLS when switching splash content */}
                         <div className="w-full max-w-sm min-h-[50px] flex items-center justify-center mt-8">
-                            <motion.div className="flex space-x-2">
+                            <m.div className="flex space-x-2">
                                 {[0, 1, 2].map((i) => (
-                                    <motion.div
+                                    <m.div
                                         key={i}
                                         className="w-2 h-2 rounded-full bg-[#D4AF37]"
                                         animate={animationsEnabled ? { y: [0, -6, 0] } : { y: 0 }}
@@ -228,7 +228,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                                         }}
                                     />
                                 ))}
-                            </motion.div>
+                            </m.div>
                         </div>
                     </div>
 
@@ -247,7 +247,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                             <span className="text-xs text-white/60">App Mode</span>
                         </div>
                     )}
-                </motion.div>
+                </m.div>
             )}
         </AnimatePresence>
     );

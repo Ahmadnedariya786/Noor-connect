@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { globalTimerManager } from '@/lib/timer-manager';
 
 interface CountdownReturn {
   minutes: number;
@@ -15,6 +16,8 @@ export const useCountdown = (targetTime: Date): CountdownReturn => {
     return Math.max(0, Math.floor(difference / 1000));
   });
 
+  const timerIdRef = useRef<string | null>(null);
+
   const calculateTimeLeft = useCallback(() => {
     const now = new Date();
     const difference = targetTime.getTime() - now.getTime();
@@ -22,15 +25,23 @@ export const useCountdown = (targetTime: Date): CountdownReturn => {
   }, [targetTime]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const updateCountdown = () => {
       const remaining = calculateTimeLeft();
       setTimeLeft(remaining);
-      if (remaining <= 0) {
-        clearInterval(timer);
+      if (remaining <= 0 && timerIdRef.current) {
+        globalTimerManager.removeCallback(timerIdRef.current);
+        timerIdRef.current = null;
       }
-    }, 1000);
+    };
 
-    return () => clearInterval(timer);
+    timerIdRef.current = globalTimerManager.addCallback(updateCountdown, 1000, 'countdown');
+
+    return () => {
+      if (timerIdRef.current) {
+        globalTimerManager.removeCallback(timerIdRef.current);
+        timerIdRef.current = null;
+      }
+    };
   }, [calculateTimeLeft]);
 
   const minutes = Math.floor(timeLeft / 60);
