@@ -1,0 +1,217 @@
+{
+  "name": "mishkat",
+  "title": "Mishkat al-Masabih",
+  "arabicTitle": "مشكاة المصابيح",
+  "author": "Imam al-Khatib al-Tabrizi",
+  "death": "741 AH",
+  "description": "A comprehensive hadith collection compiled from multiple authentic sources.",
+  "authenticity": "Varied",
+  "compilerPeriod": "",
+  "totalHadith": 5319,
+  "totalBooks": 29,
+  "books": [
+    {
+      "number": "1",
+      "name": "Faith",
+      "arabicName": "",
+      "hadithCount": 188,
+      "description": "Fundamental teachings on faith (Iman), its branches, and matters of belief in Allah, His Angels, Books, Messengers, and the Last Day."
+    },
+    {
+      "number": "2",
+      "name": "Knowledge",
+      "arabicName": "",
+      "hadithCount": 75,
+      "description": "The virtues of seeking Islamic knowledge, the etiquette of a student, and the responsibility of scholars to convey the truth."
+    },
+    {
+      "number": "3",
+      "name": "Purification",
+      "arabicName": "",
+      "hadithCount": 258,
+      "description": "Comprehensive rulings on Taharah, including all forms of ritual purity required for acts of worship."
+    },
+    {
+      "number": "4",
+      "name": "Prayer",
+      "arabicName": "",
+      "hadithCount": 921,
+      "description": "Detailed instructions on the times, methods, and spiritual dimensions of the five daily prayers (Salat)."
+    },
+    {
+      "number": "5",
+      "name": "Funerals",
+      "arabicName": "",
+      "hadithCount": 243,
+      "description": "Instructions on washing, shrouding, praying over, and burying the deceased, as well as mourning etiquette."
+    },
+    {
+      "number": "6",
+      "name": "Zakat",
+      "arabicName": "",
+      "hadithCount": 180,
+      "description": "Comprehensive guide to the obligatory almsgiving (Zakat), detailing who must pay, allowable recipients, and calculable wealth types."
+    },
+    {
+      "number": "7",
+      "name": "Fasting",
+      "arabicName": "",
+      "hadithCount": 148,
+      "description": "Regulations regarding obligatory fasting during Ramadan and voluntary fasts throughout the year."
+    },
+    {
+      "number": "8",
+      "name": "The Excellent Qualities of the Qur'an",
+      "arabicName": "",
+      "hadithCount": 112,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "9",
+      "name": "Supplications",
+      "arabicName": "",
+      "hadithCount": 272,
+      "description": "The texts and virtues of calling upon Allah (Du'a) in various situations."
+    },
+    {
+      "number": "10",
+      "name": "The Rites of Pilgrimage",
+      "arabicName": "",
+      "hadithCount": 246,
+      "description": "Complete rites and spiritual significance of the major pilgrimage to Mecca (Hajj)."
+    },
+    {
+      "number": "11",
+      "name": "Business Transactions",
+      "arabicName": "",
+      "hadithCount": 274,
+      "description": "Islamic commercial law, including permissible trade, prohibited transactions, and business ethics."
+    },
+    {
+      "number": "12",
+      "name": "Inheritance and Wills",
+      "arabicName": "",
+      "hadithCount": 37,
+      "description": "The complex and precise distribution of inherited wealth among surviving relatives as ordained in Islam."
+    },
+    {
+      "number": "13",
+      "name": "Marriage",
+      "arabicName": "",
+      "hadithCount": 293,
+      "description": "Extensive teachings on the marital contract, domestic harmony, choosing a spouse, and spousal rights."
+    },
+    {
+      "number": "14",
+      "name": "Emancipation",
+      "arabicName": "",
+      "hadithCount": 24,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "15",
+      "name": "Oaths and Vows",
+      "arabicName": "",
+      "hadithCount": 39,
+      "description": "Rulings on swearing oaths, fulfilling vows, and the expiation required when breaking them."
+    },
+    {
+      "number": "16",
+      "name": "Retaliation",
+      "arabicName": "",
+      "hadithCount": 100,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "17",
+      "name": "Prescribed Punishments",
+      "arabicName": "",
+      "hadithCount": 94,
+      "description": "The prescribed penalties (Hudud) for major transgressions to preserve societal justice and security."
+    },
+    {
+      "number": "18",
+      "name": "The Offices of Commander and Qadi",
+      "arabicName": "",
+      "hadithCount": 121,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "19",
+      "name": "Jihad",
+      "arabicName": "",
+      "hadithCount": 273,
+      "description": "The principles of struggle, rules of military engagement, treaties, and the high status of martyrs."
+    },
+    {
+      "number": "20",
+      "name": "Game and Animals Which May Be Slaughtered",
+      "arabicName": "",
+      "hadithCount": 93,
+      "description": "Rules regarding lawful hunting practices, use of hunting animals, and slaughtering conditions."
+    },
+    {
+      "number": "21",
+      "name": "Foods",
+      "arabicName": "",
+      "hadithCount": 135,
+      "description": "Dietary laws distinguishing lawful (Halal) provisions from unlawful (Haram) foods, and etiquette of eating."
+    },
+    {
+      "number": "22",
+      "name": "Clothing",
+      "arabicName": "",
+      "hadithCount": 198,
+      "description": "Islamic guidelines regarding modesty in dress, adornment, prohibitions on certain fabrics, and personal grooming."
+    },
+    {
+      "number": "23",
+      "name": "Medicine and Spells",
+      "arabicName": "",
+      "hadithCount": 88,
+      "description": "The Prophetic approach to health, remedies, diseases, and the balance between relying on Allah and seeking treatment."
+    },
+    {
+      "number": "24",
+      "name": "Visions",
+      "arabicName": "",
+      "hadithCount": 20,
+      "description": "The significance of dreams, visions, and their interpretations in Islamic tradition."
+    },
+    {
+      "number": "27",
+      "name": "Fitan",
+      "arabicName": "",
+      "hadithCount": 141,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "28",
+      "name": "Events of the Day of Resurrection and the Beginning of Creation",
+      "arabicName": "",
+      "hadithCount": 207,
+      "description": "Descriptions of the Day of Resurrection, its terrors, the Reckoning, and the ultimate scales of justice."
+    },
+    {
+      "number": "29",
+      "name": "Excellent Qualities and Description of the Prophet",
+      "arabicName": "",
+      "hadithCount": 234,
+      "description": "Details covering the noble lineage, physical characteristics, and extraordinary signs (Mu'jizat) of Prophet Muhammad (ﷺ)."
+    },
+    {
+      "number": "30",
+      "name": "Fine Qualities",
+      "arabicName": "",
+      "hadithCount": 304,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "Author's",
+      "name": "Introduction مقدمة المؤلف",
+      "arabicName": "",
+      "hadithCount": 1,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}

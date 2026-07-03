@@ -1,0 +1,28 @@
+{
+  "name": "hisn",
+  "title": "Hisnul Muslim",
+  "arabicTitle": "حصن المسلم",
+  "author": "Sa'id bin Ali bin Wahf Al-Qahtani",
+  "death": "",
+  "description": "Fortress of the Muslim - Collection of daily supplications and remembrances.",
+  "authenticity": "Sahih (Authentic)",
+  "compilerPeriod": "",
+  "totalHadith": 2,
+  "totalBooks": 2,
+  "books": [
+    {
+      "number": "(more)",
+      "name": "(more)",
+      "arabicName": "",
+      "hadithCount": 1,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "Merits",
+      "name": "of Dhikr",
+      "arabicName": "",
+      "hadithCount": 1,
+      "description": "Encouragement towards continuous remembrance of Allah (Dhikr) and the immense rewards it carries."
+    }
+  ]
+}

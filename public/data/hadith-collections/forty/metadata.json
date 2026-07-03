@@ -1,0 +1,21 @@
+{
+  "name": "forty",
+  "title": "40 Hadith Nawawi",
+  "arabicTitle": "الأربعون النووية",
+  "author": "Imam al-Nawawi",
+  "death": "676 AH / 1277 CE",
+  "description": "Forty essential hadith covering the foundations of Islam.",
+  "authenticity": "Sahih (Authentic)",
+  "compilerPeriod": "631-676 AH",
+  "totalHadith": 122,
+  "totalBooks": 1,
+  "books": [
+    {
+      "number": "Forty",
+      "name": "Hadith of an-Nawawi الأربعون النووية",
+      "arabicName": "",
+      "hadithCount": 122,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}

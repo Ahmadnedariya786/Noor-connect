@@ -1,0 +1,126 @@
+{
+  "name": "bulugh",
+  "title": "Bulugh al-Maram",
+  "arabicTitle": "بلوغ المرام",
+  "author": "Imam Ibn Hajar al-Asqalani",
+  "death": "852 AH / 1449 CE",
+  "description": "Collection of hadith pertaining to jurisprudence rulings.",
+  "authenticity": "Varied",
+  "compilerPeriod": "773-852 AH",
+  "totalHadith": 1767,
+  "totalBooks": 16,
+  "books": [
+    {
+      "number": "1",
+      "name": "The Book of Purification",
+      "arabicName": "",
+      "hadithCount": 179,
+      "description": "Comprehensive rulings on Taharah, including all forms of ritual purity required for acts of worship."
+    },
+    {
+      "number": "2",
+      "name": "The Book of Prayer",
+      "arabicName": "",
+      "hadithCount": 461,
+      "description": "Detailed instructions on the times, methods, and spiritual dimensions of the five daily prayers (Salat)."
+    },
+    {
+      "number": "3",
+      "name": "Funerals",
+      "arabicName": "",
+      "hadithCount": 66,
+      "description": "Instructions on washing, shrouding, praying over, and burying the deceased, as well as mourning etiquette."
+    },
+    {
+      "number": "4",
+      "name": "The Book of Zakah",
+      "arabicName": "",
+      "hadithCount": 51,
+      "description": "Comprehensive guide to the obligatory almsgiving (Zakat), detailing who must pay, allowable recipients, and calculable wealth types."
+    },
+    {
+      "number": "5",
+      "name": "Fasting",
+      "arabicName": "",
+      "hadithCount": 58,
+      "description": "Regulations regarding obligatory fasting during Ramadan and voluntary fasts throughout the year."
+    },
+    {
+      "number": "6",
+      "name": "Hajj",
+      "arabicName": "",
+      "hadithCount": 74,
+      "description": "Complete rites and spiritual significance of the major pilgrimage to Mecca (Hajj)."
+    },
+    {
+      "number": "7",
+      "name": "Business Transactions",
+      "arabicName": "",
+      "hadithCount": 233,
+      "description": "Islamic commercial law, including permissible trade, prohibited transactions, and business ethics."
+    },
+    {
+      "number": "8",
+      "name": "Marriage",
+      "arabicName": "",
+      "hadithCount": 222,
+      "description": "Extensive teachings on the marital contract, domestic harmony, choosing a spouse, and spousal rights."
+    },
+    {
+      "number": "9",
+      "name": "Crimes (Qisas or Retaliation)",
+      "arabicName": "",
+      "hadithCount": 47,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "10",
+      "name": "Hudud",
+      "arabicName": "",
+      "hadithCount": 57,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "11",
+      "name": "Jihad",
+      "arabicName": "",
+      "hadithCount": 63,
+      "description": "The principles of struggle, rules of military engagement, treaties, and the high status of martyrs."
+    },
+    {
+      "number": "12",
+      "name": "Food",
+      "arabicName": "",
+      "hadithCount": 44,
+      "description": "Dietary laws distinguishing lawful (Halal) provisions from unlawful (Haram) foods, and etiquette of eating."
+    },
+    {
+      "number": "13",
+      "name": "Oaths and Vows",
+      "arabicName": "",
+      "hadithCount": 23,
+      "description": "Rulings on swearing oaths, fulfilling vows, and the expiation required when breaking them."
+    },
+    {
+      "number": "14",
+      "name": "Judgments",
+      "arabicName": "",
+      "hadithCount": 36,
+      "description": "Descriptions of the Day of Resurrection, its terrors, the Reckoning, and the ultimate scales of justice."
+    },
+    {
+      "number": "15",
+      "name": "Emancipation",
+      "arabicName": "",
+      "hadithCount": 20,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "16",
+      "name": "The Comprehensive Book",
+      "arabicName": "",
+      "hadithCount": 133,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}

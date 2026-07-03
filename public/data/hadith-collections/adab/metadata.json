@@ -1,0 +1,413 @@
+{
+  "name": "adab",
+  "title": "Al-Adab al-Mufrad",
+  "arabicTitle": "الأدب المفرد",
+  "author": "Imam al-Bukhari",
+  "death": "256 AH / 870 CE",
+  "description": "Collection of hadith focused on Islamic manners and etiquette.",
+  "authenticity": "Varied",
+  "compilerPeriod": "194-256 AH",
+  "totalHadith": 1326,
+  "totalBooks": 57,
+  "books": [
+    {
+      "number": "1",
+      "name": "Parents",
+      "arabicName": "",
+      "hadithCount": 46,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "2",
+      "name": "Ties of Kinship",
+      "arabicName": "",
+      "hadithCount": 27,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "3",
+      "name": "Mawlas (Clients of Manumission)",
+      "arabicName": "",
+      "hadithCount": 2,
+      "description": "Methods and immense rewards associated with freeing slaves and promoting human liberation."
+    },
+    {
+      "number": "4",
+      "name": "Looking after girls",
+      "arabicName": "",
+      "hadithCount": 8,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "5",
+      "name": "Looking after children",
+      "arabicName": "",
+      "hadithCount": 17,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "6",
+      "name": "Neighbours",
+      "arabicName": "",
+      "hadithCount": 28,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "7",
+      "name": "Generosity and Orphans",
+      "arabicName": "",
+      "hadithCount": 14,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "8",
+      "name": "Children's Death",
+      "arabicName": "",
+      "hadithCount": 13,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "9",
+      "name": "Being a master",
+      "arabicName": "",
+      "hadithCount": 56,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "10",
+      "name": "Supervision",
+      "arabicName": "",
+      "hadithCount": 9,
+      "description": "The significance of dreams, visions, and their interpretations in Islamic tradition."
+    },
+    {
+      "number": "11",
+      "name": "Good Conduct",
+      "arabicName": "",
+      "hadithCount": 17,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "12",
+      "name": "Cheerfulness Towards People",
+      "arabicName": "",
+      "hadithCount": 18,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "13",
+      "name": "Consultation",
+      "arabicName": "",
+      "hadithCount": 4,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "14",
+      "name": "Excellence in Character",
+      "arabicName": "",
+      "hadithCount": 50,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "15",
+      "name": "Cursing",
+      "arabicName": "",
+      "hadithCount": 24,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "16",
+      "name": "Praise",
+      "arabicName": "",
+      "hadithCount": 11,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "17",
+      "name": "Visitation",
+      "arabicName": "",
+      "hadithCount": 10,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "18",
+      "name": "The Elderly",
+      "arabicName": "",
+      "hadithCount": 9,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "19",
+      "name": "Children",
+      "arabicName": "",
+      "hadithCount": 10,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "20",
+      "name": "Mercy",
+      "arabicName": "",
+      "hadithCount": 13,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "21",
+      "name": "Social Behaviour",
+      "arabicName": "",
+      "hadithCount": 12,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "22",
+      "name": "Abandonment",
+      "arabicName": "",
+      "hadithCount": 18,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "23",
+      "name": "Advising",
+      "arabicName": "",
+      "hadithCount": 4,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "24",
+      "name": "Disparaging",
+      "arabicName": "",
+      "hadithCount": 23,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "25",
+      "name": "Extravagance in Building",
+      "arabicName": "",
+      "hadithCount": 20,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "26",
+      "name": "Compassion",
+      "arabicName": "",
+      "hadithCount": 13,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "27",
+      "name": "Attending to this world",
+      "arabicName": "",
+      "hadithCount": 8,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "28",
+      "name": "Injustice",
+      "arabicName": "",
+      "hadithCount": 8,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "29",
+      "name": "Visiting the Ill",
+      "arabicName": "",
+      "hadithCount": 47,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "30",
+      "name": "General Behavior",
+      "arabicName": "",
+      "hadithCount": 66,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "31",
+      "name": "Supplication",
+      "arabicName": "",
+      "hadithCount": 135,
+      "description": "The texts and virtues of calling upon Allah (Du'a) in various situations."
+    },
+    {
+      "number": "32",
+      "name": "Guests and Spending",
+      "arabicName": "",
+      "hadithCount": 15,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "33",
+      "name": "Sayings",
+      "arabicName": "",
+      "hadithCount": 57,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "34",
+      "name": "Names",
+      "arabicName": "",
+      "hadithCount": 31,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "35",
+      "name": "Kunyas",
+      "arabicName": "",
+      "hadithCount": 14,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "36",
+      "name": "Poetry",
+      "arabicName": "",
+      "hadithCount": 19,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "37",
+      "name": "Words",
+      "arabicName": "",
+      "hadithCount": 13,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "38",
+      "name": "Consequences",
+      "arabicName": "",
+      "hadithCount": 19,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "39",
+      "name": "Omens",
+      "arabicName": "",
+      "hadithCount": 12,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "40",
+      "name": "Sneezing and Yawning",
+      "arabicName": "",
+      "hadithCount": 33,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "41",
+      "name": "Gestures",
+      "arabicName": "",
+      "hadithCount": 13,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "42",
+      "name": "Greetings",
+      "arabicName": "",
+      "hadithCount": 87,
+      "description": "The etiquette of spreading peace (Salam), shaking hands, seeking permission to enter, and gathering norms."
+    },
+    {
+      "number": "43",
+      "name": "Asking Permission",
+      "arabicName": "",
+      "hadithCount": 50,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "44",
+      "name": "The People of the Book",
+      "arabicName": "",
+      "hadithCount": 16,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "45",
+      "name": "Letters",
+      "arabicName": "",
+      "hadithCount": 19,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "46",
+      "name": "Gatherings",
+      "arabicName": "",
+      "hadithCount": 17,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "47",
+      "name": "Behaviour with people",
+      "arabicName": "",
+      "hadithCount": 22,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "48",
+      "name": "Sitting and lying down باب الجلوس والاستلقاء",
+      "arabicName": "",
+      "hadithCount": 24,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "49",
+      "name": "Mornings and evenings",
+      "arabicName": "",
+      "hadithCount": 6,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "50",
+      "name": "Sleep and night lodging",
+      "arabicName": "",
+      "hadithCount": 27,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "51",
+      "name": "Animals",
+      "arabicName": "",
+      "hadithCount": 6,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "52",
+      "name": "Midday Naps",
+      "arabicName": "",
+      "hadithCount": 6,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "53",
+      "name": "Circumcision",
+      "arabicName": "",
+      "hadithCount": 15,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "54",
+      "name": "Betting and similar pastimes",
+      "arabicName": "",
+      "hadithCount": 23,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "55",
+      "name": "Recognition",
+      "arabicName": "",
+      "hadithCount": 23,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "56",
+      "name": "Meddling and Harshness",
+      "arabicName": "",
+      "hadithCount": 12,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "57",
+      "name": "Anger",
+      "arabicName": "",
+      "hadithCount": 7,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "ahmad",
+  "title": "Musnad Ahmad",
+  "arabicTitle": "مسند أحمد بن حنبل",
+  "author": "Imam Ahmad ibn Hanbal",
+  "death": "241 AH / 855 CE",
+  "description": "Large collection organized primarily by companion narrators.",
+  "authenticity": "Varied",
+  "compilerPeriod": "164-241 AH",
+  "totalHadith": 1374,
+  "totalBooks": 8,
+  "books": [
+    {
+      "number": "1",
+      "name": "Musnad Abu Bakr as-Siddiq (ra) مُسْنَدُ أَبِي بَكْرٍ الصِّدِّيقِ رَضِيَ اللَّهُ عَنْهُ",
+      "arabicName": "",
+      "hadithCount": 77,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "2",
+      "name": "Musnad `Umar b. al-Khattab (ra) مُسْنَدِ عُمَرَ بْنِ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ",
+      "arabicName": "",
+      "hadithCount": 291,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "3",
+      "name": "The Hadeeth of Saqeefah حَدِيثُ السَّقِيفَةِ",
+      "arabicName": "",
+      "hadithCount": 8,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "4",
+      "name": "Musnad Uthman ibn Affan مُسْنَدُ عُثْمَانَ بْنِ عَفَّانَ رَضِيَ اللَّهُ عَنْهُ",
+      "arabicName": "",
+      "hadithCount": 152,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "5",
+      "name": "Musnad 'Ali Ibn Abi Talib وَمِنْ مُسْنَدِ عَلِيِّ بْنِ أَبِي طَالِبٍ رَضِيَ اللَّهُ عَنْهُ",
+      "arabicName": "",
+      "hadithCount": 778,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "6",
+      "name": "Musnad of Abu Muhammad Talhah bin 'Ubaidullah مُسْنَدُ أَبِي مُحَمَّدٍ طَلْحَةَ بْنِ عُبَيْدِ اللَّهِ رَضِيَ اللَّهُ تَعَالَى عَنْهُ",
+      "arabicName": "",
+      "hadithCount": 22,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "7",
+      "name": "The Musnad of az-Zubair bin al-'Awwam مُسْنَدُ الزُّبَيْرِ بْنِ الْعَوَّامِ رَضِيَ اللَّهُ عَنْهُ",
+      "arabicName": "",
+      "hadithCount": 31,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "31",
+      "name": "حَدِيثُ أَبِي رِمْثَةَ عَنْ النَّبِيَّ رَضِيَ اللَّهُ عَنْهُ",
+      "arabicName": "",
+      "hadithCount": 15,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}

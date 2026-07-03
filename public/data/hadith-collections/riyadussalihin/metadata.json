@@ -1,0 +1,147 @@
+{
+  "name": "riyadussalihin",
+  "title": "Riyad us-Salihin",
+  "arabicTitle": "رياض الصالحين",
+  "author": "Imam al-Nawawi",
+  "death": "676 AH / 1277 CE",
+  "description": "Collection focusing on spirituality, character, and daily Islamic practice.",
+  "authenticity": "Sahih (Authentic)",
+  "compilerPeriod": "631-676 AH",
+  "totalHadith": 1217,
+  "totalBooks": 19,
+  "books": [
+    {
+      "number": "1",
+      "name": "The Book of Good Manners",
+      "arabicName": "",
+      "hadithCount": 47,
+      "description": "The essence of excellent character (Adab), emphasizing respect, kindness, and societal morals."
+    },
+    {
+      "number": "2",
+      "name": "The Book About the Etiquette of Eating",
+      "arabicName": "",
+      "hadithCount": 51,
+      "description": "Dietary laws distinguishing lawful (Halal) provisions from unlawful (Haram) foods, and etiquette of eating."
+    },
+    {
+      "number": "3",
+      "name": "The Book of Dress",
+      "arabicName": "",
+      "hadithCount": 35,
+      "description": "Islamic guidelines regarding modesty in dress, adornment, prohibitions on certain fabrics, and personal grooming."
+    },
+    {
+      "number": "4",
+      "name": "The Book of the Etiquette of Sleeping, Lying and Sitting etc",
+      "arabicName": "",
+      "hadithCount": 31,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "5",
+      "name": "The Book of Greetings",
+      "arabicName": "",
+      "hadithCount": 50,
+      "description": "The etiquette of spreading peace (Salam), shaking hands, seeking permission to enter, and gathering norms."
+    },
+    {
+      "number": "6",
+      "name": "The Book of Visiting the Sick",
+      "arabicName": "",
+      "hadithCount": 62,
+      "description": "The Prophetic approach to health, remedies, diseases, and the balance between relying on Allah and seeking treatment."
+    },
+    {
+      "number": "7",
+      "name": "The Book of Etiquette of Traveling",
+      "arabicName": "",
+      "hadithCount": 35,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "8",
+      "name": "The Book of Virtues",
+      "arabicName": "",
+      "hadithCount": 277,
+      "description": "Accounts of the exceptional qualities and achievements of various Muslims and tribes."
+    },
+    {
+      "number": "9",
+      "name": "The Book of I'tikaf",
+      "arabicName": "",
+      "hadithCount": 3,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "10",
+      "name": "The Book of Hajj",
+      "arabicName": "",
+      "hadithCount": 14,
+      "description": "Complete rites and spiritual significance of the major pilgrimage to Mecca (Hajj)."
+    },
+    {
+      "number": "11",
+      "name": "The Book of Jihad",
+      "arabicName": "",
+      "hadithCount": 91,
+      "description": "The principles of struggle, rules of military engagement, treaties, and the high status of martyrs."
+    },
+    {
+      "number": "12",
+      "name": "The Book of Knowledge",
+      "arabicName": "",
+      "hadithCount": 17,
+      "description": "The virtues of seeking Islamic knowledge, the etiquette of a student, and the responsibility of scholars to convey the truth."
+    },
+    {
+      "number": "13",
+      "name": "The Book of Praise and Gratitude to Allah",
+      "arabicName": "",
+      "hadithCount": 4,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "14",
+      "name": "The Book of Supplicating Allah to Exalt the Mention of Allah's Messenger",
+      "arabicName": "",
+      "hadithCount": 11,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "15",
+      "name": "The Book of the Remembrance of Allah",
+      "arabicName": "",
+      "hadithCount": 57,
+      "description": "Encouragement towards continuous remembrance of Allah (Dhikr) and the immense rewards it carries."
+    },
+    {
+      "number": "16",
+      "name": "The Book of Du'a (Supplications)",
+      "arabicName": "",
+      "hadithCount": 46,
+      "description": "The texts and virtues of calling upon Allah (Du'a) in various situations."
+    },
+    {
+      "number": "17",
+      "name": "The Book of the Prohibited actions",
+      "arabicName": "",
+      "hadithCount": 297,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "18",
+      "name": "The Book of Miscellaneous ahadith of Significant Values",
+      "arabicName": "",
+      "hadithCount": 61,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "19",
+      "name": "The Book of Forgiveness",
+      "arabicName": "",
+      "hadithCount": 28,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}

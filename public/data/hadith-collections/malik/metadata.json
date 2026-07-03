@@ -1,0 +1,21 @@
+{
+  "name": "malik",
+  "title": "Muwatta Malik",
+  "arabicTitle": "موطأ مالك",
+  "author": "Imam Malik ibn Anas",
+  "death": "179 AH / 795 CE",
+  "description": "Early collection of Hadith and legal rulings compiled in Medina.",
+  "authenticity": "Sahih (Authentic)",
+  "compilerPeriod": "93-179 AH",
+  "totalHadith": 3715,
+  "totalBooks": 1,
+  "books": [
+    {
+      "number": "1",
+      "name": "Book 1",
+      "arabicName": "",
+      "hadithCount": 3715,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}

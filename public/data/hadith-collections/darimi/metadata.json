@@ -1,0 +1,182 @@
+{
+  "name": "darimi",
+  "title": "Sunan al-Darimi",
+  "arabicTitle": "سنن الدارمي",
+  "author": "Imam Abdullah ibn Abd al-Rahman al-Darimi",
+  "death": "255 AH / 869 CE",
+  "description": "Early hadith collection organized by subject matter.",
+  "authenticity": "Varied",
+  "compilerPeriod": "181-255 AH",
+  "totalHadith": 3406,
+  "totalBooks": 24,
+  "books": [
+    {
+      "number": "1",
+      "name": "كِتَاب الطَّهَارَةِ",
+      "arabicName": "",
+      "hadithCount": 510,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "2",
+      "name": "كِتَاب الصَّلَاةِ",
+      "arabicName": "",
+      "hadithCount": 419,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "3",
+      "name": "مِنْ كِتَابِ الزَّكَاةِ",
+      "arabicName": "",
+      "hadithCount": 59,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "4",
+      "name": "وَمِنْ كِتَابِ الصَّوْمِ",
+      "arabicName": "",
+      "hadithCount": 98,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "5",
+      "name": "مِنْ كِتَابِ الْمَنَاسِكِ",
+      "arabicName": "",
+      "hadithCount": 153,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "6",
+      "name": "مِنْ كِتَابِ الْأَضَاحِيِّ",
+      "arabicName": "",
+      "hadithCount": 55,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "7",
+      "name": "وَمِنْ كِتَابِ الصَّيْدِ",
+      "arabicName": "",
+      "hadithCount": 16,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "8",
+      "name": "وَمِنْ كِتَابِ الْأَطْعِمَةِ",
+      "arabicName": "",
+      "hadithCount": 63,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "9",
+      "name": "وَمِنْ كِتَابِ الْأَشْرِبَةِ",
+      "arabicName": "",
+      "hadithCount": 49,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "10",
+      "name": "وَمِنْ كِتَابِ الرُّؤْيَا",
+      "arabicName": "",
+      "hadithCount": 27,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "11",
+      "name": "وَمِنْ كِتَابِ النِّكَاحِ",
+      "arabicName": "",
+      "hadithCount": 92,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "12",
+      "name": "وَمِنْ كِتَابِ الطَّلَاقِ",
+      "arabicName": "",
+      "hadithCount": 32,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "13",
+      "name": "وَمِنْ كِتَابِ الْحُدُودِ",
+      "arabicName": "",
+      "hadithCount": 33,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "14",
+      "name": "وَمِنْ كِتَابِ النُّذُورِ وَالْأَيْمَانِ",
+      "arabicName": "",
+      "hadithCount": 18,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "15",
+      "name": "وَمِنْ كِتَابِ الدِّيَاتِ",
+      "arabicName": "",
+      "hadithCount": 38,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "16",
+      "name": "كِتَاب الْجِهَادِ",
+      "arabicName": "",
+      "hadithCount": 48,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "17",
+      "name": "وَمِنْ كِتَابِ السِّيَرِ",
+      "arabicName": "",
+      "hadithCount": 91,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "18",
+      "name": "وَمِنْ كِتَابِ الْبُيُوعِ",
+      "arabicName": "",
+      "hadithCount": 97,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "19",
+      "name": "وَمِنْ كِتَابِ الِاسْتِئْذَانِ",
+      "arabicName": "",
+      "hadithCount": 75,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "20",
+      "name": "وَمِنْ كِتَابِ الرِّقَاقِ",
+      "arabicName": "",
+      "hadithCount": 137,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "21",
+      "name": "مِنْ كِتَابِ الْفَرَائِضِ",
+      "arabicName": "",
+      "hadithCount": 325,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "22",
+      "name": "مِنْ كِتَابِ الْوَصَايَا",
+      "arabicName": "",
+      "hadithCount": 126,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "23",
+      "name": "وَمِنْ كِتَابِ فَضَائِلِ الْقُرْآنِ",
+      "arabicName": "",
+      "hadithCount": 196,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    },
+    {
+      "number": "سنن",
+      "name": "الدارمي",
+      "arabicName": "",
+      "hadithCount": 649,
+      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+    }
+  ]
+}
