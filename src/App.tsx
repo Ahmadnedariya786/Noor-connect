@@ -61,7 +61,6 @@ const Hadith = lazy(() => import("./pages/Hadith"));
 const HadithCollections = lazy(() => import("./pages/HadithCollections"));
 const HadithBook = lazy(() => import("./pages/HadithBook"));
 const HadithBookContent = lazy(() => import("./pages/HadithBookContent"));
-const HadithDetailPage = lazy(() => import("./pages/HadithDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
 const IslamicCalendar = lazy(() => import("./pages/IslamicCalendar"));
 const Ebooks = lazy(() => import("./pages/EbooksModern"));
@@ -91,7 +90,6 @@ const SeerahHome = lazy(() => import("./pages/SeerahHome"));
 const SeerahReader = lazy(() => import("./pages/SeerahReader"));
 const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
-const HaidhTracker = lazy(() => import("./pages/HaidhTracker"));
 
 // Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
 // Check for low-end device and disable animations if no user preference is set
@@ -173,7 +171,6 @@ function AppRoutes() {
         <Route path="/hadith/collections" element={<HadithCollections />} />
         <Route path="/hadith/collections/:collection" element={<HadithBook />} />
         <Route path="/hadith/collections/:collection/:book" element={<HadithBookContent />} />
-        <Route path="/hadith/:collection/:book/:hadithNumber" element={<HadithDetailPage />} />
         <Route path="/seerah" element={<SeerahHome />} />
         <Route path="/seerah/:chapterId" element={<SeerahReader />} />
         <Route path="/qisas" element={<QisasHome />} />
@@ -185,7 +182,6 @@ function AppRoutes() {
         <Route path="/ramadan" element={<RamadanMode />} />
         <Route path="/menstrual-mode" element={<MenstrualMode />} />
         <Route path="/enhanced-menstrual-mode" element={<EnhancedMenstrualModePage />} />
-        <Route path="/haidh-tracker" element={<HaidhTracker />} />
         <Route path="/notification-history" element={<NotificationHistory />} />
         <Route path="/zakat" element={<ZakatCalculator />} />
         <Route path="/names-of-allah" element={<NamesOfAllah />} />
