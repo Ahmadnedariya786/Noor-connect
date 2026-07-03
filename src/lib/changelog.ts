@@ -31,6 +31,19 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
+    version: '1.3.0',
+    date: '2026-07-03',
+    title: 'Haidh Tracker, Hadith Collections & Sensor Libraries',
+    changes: [
+      { type: 'feature', description: 'Added Haidh Tracker with Calendar, Ghusl Checklist, Islamic rulings, Log, and Settings tabs.' },
+      { type: 'feature', description: 'Added 10 new Hadith collections (Adab, Ahmad, Bulugh, Darimi, Forty, Hisn, Malik, Mishkat, Riyadussalihin, Shamail).' },
+      { type: 'feature', description: 'Added Hadith Detail page with full hadith viewing.' },
+      { type: 'feature', description: 'Added Habit Widget component.' },
+      { type: 'feature', description: 'Added Madgwick filter, magnetic declination, and figure-8 calibration sensor libraries.' },
+      { type: 'feature', description: 'Added Arabic text mojibake fix scripts.' },
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-03-30',
     title: 'Live Radio Widget & Native Android Improvements',
