@@ -1,0 +1,57 @@
+[33mcommit ee46c40c662e2af68d3e83eede201dd55a2279e3[m
+Author: Dark Master <arifubaid0345@gmail.com>
+Date:   Fri Jul 3 22:34:55 2026 +0500
+
+    feat: add HaidhTracker, HabitWidget, HadithDetail, hadith collections & sensor libs
+    
+    - Add HaidhTracker page with 5 tabs (Calendar, Ghusl, Islamic, Log, Settings, Today)
+    - Add haidh-tracker lib and notifications
+    - Add HabitWidget component and widget-types
+    - Add HadithDetail page and component
+    - Add 10 hadith collections (adab, ahmad, bulugh, darimi, forty, hisn, malik, mishkat, riyadussalihin, shamail)
+    - Add Madgwick filter, magnetic declination, figure-8 calibration libs
+    - Add Arabic text fix scripts (mojibake, cp437, cp850)
+
+ .kilo/kilo.jsonc                                   |     4 [32m+[m
+ public/data/hadith-collections/adab/hadiths.json   | 21638 [32m+++++[m
+ public/data/hadith-collections/adab/metadata.json  |   413 [32m+[m
+ public/data/hadith-collections/ahmad/hadiths.json  | 22405 [32m+++++[m
+ public/data/hadith-collections/ahmad/metadata.json |    70 [32m+[m
+ public/data/hadith-collections/bulugh/hadiths.json | 29210 [32m+++++++[m
+ .../data/hadith-collections/bulugh/metadata.json   |   126 [32m+[m
+ public/data/hadith-collections/darimi/hadiths.json | 51092 [32m++++++++++++[m
+ .../data/hadith-collections/darimi/metadata.json   |   182 [32m+[m
+ public/data/hadith-collections/forty/hadiths.json  |  1974 [32m+[m
+ public/data/hadith-collections/forty/metadata.json |    21 [32m+[m
+ public/data/hadith-collections/hisn/hadiths.json   |    32 [32m+[m
+ public/data/hadith-collections/hisn/metadata.json  |    28 [32m+[m
+ public/data/hadith-collections/malik/hadiths.json  | 66872 [32m+++++++++++++++[m
+ public/data/hadith-collections/malik/metadata.json |    21 [32m+[m
+ .../data/hadith-collections/mishkat/hadiths.json   | 82853 [32m+++++++++++++++++++[m
+ .../data/hadith-collections/mishkat/metadata.json  |   217 [32m+[m
+ .../hadith-collections/riyadussalihin/hadiths.json | 18257 [32m++++[m
+ .../riyadussalihin/metadata.json                   |   147 [32m+[m
+ .../data/hadith-collections/shamail/hadiths.json   |  6640 [32m++[m
+ .../data/hadith-collections/shamail/metadata.json  |   413 [32m+[m
+ scripts/fix-all-mojibake.cjs                       |   108 [32m+[m
+ scripts/fix-arabic-text-2.cjs                      |   110 [32m+[m
+ scripts/fix-arabic-text.cjs                        |   192 [32m+[m
+ scripts/test-cp437.cjs                             |    34 [32m+[m
+ scripts/test-cp850.cjs                             |    36 [32m+[m
+ src/components/HabitWidget.tsx                     |   109 [32m+[m
+ src/components/hadith/HadithDetail.tsx             |   158 [32m+[m
+ src/components/haidh/HaidhCalendarTab.tsx          |   236 [32m+[m
+ src/components/haidh/HaidhGhuslChecklist.tsx       |   102 [32m+[m
+ src/components/haidh/HaidhIslamicTab.tsx           |   272 [32m+[m
+ src/components/haidh/HaidhLogTab.tsx               |   323 [32m+[m
+ src/components/haidh/HaidhSettingsTab.tsx          |   259 [32m+[m
+ src/components/haidh/HaidhTodayTab.tsx             |   274 [32m+[m
+ src/lib/figure8-calibration.ts                     |   374 [32m+[m
+ src/lib/haidh-notifications.ts                     |    83 [32m+[m
+ src/lib/haidh-tracker.ts                           |   632 [32m+[m
+ src/lib/madgwick-filter.ts                         |   374 [32m+[m
+ src/lib/magnetic-declination.ts                    |   242 [32m+[m
+ src/lib/widget-types.ts                            |    92 [32m+[m
+ src/pages/HadithDetail.tsx                         |     5 [32m+[m
+ src/pages/HaidhTracker.tsx                         |   248 [32m+[m
+ 42 files changed, 306878 insertions(+)

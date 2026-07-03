@@ -129,35 +129,21 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        // Adaptive timing based on device performance
-        const measurePerformance = () => {
-            const start = performance.now();
-            // Run a simple operation to measure performance
-            for (let i = 0; i < 1000000; i++) {
-                Math.sqrt(i);
-            }
-            const end = performance.now();
-            return end - start;
-        };
-
-        const performanceScore = measurePerformance();
-        
-        // Calculate adaptive duration based on performance
-        // Fast device (< 10ms): shorter duration
-        // Medium device (10-30ms): medium duration
-        // Slow device (> 30ms): longer duration
+        // Non-blocking adaptive timing — uses hardwareConcurrency (instant, no main-thread loop)
+        // Old code ran a 1M-iteration Math.sqrt loop on mount, freezing the UI.
+        const cores = navigator.hardwareConcurrency || 4;
         let baseDuration: number;
-        if (performanceScore < 10) {
-            baseDuration = 800; // Fast device
-        } else if (performanceScore < 30) {
-            baseDuration = 1200; // Medium device
+        if (cores >= 8) {
+            baseDuration = 900;   // Fast device
+        } else if (cores >= 4) {
+            baseDuration = 1200;  // Medium device
         } else {
-            baseDuration = 1800; // Slow device
+            baseDuration = 1500;  // Low-end device
         }
 
-        // Apply animation multiplier
-        const duration = animationsEnabled ? baseDuration * 1.5 : baseDuration * 0.8;
-        const exitDuration = animationsEnabled ? 400 : 0;
+        // Animations add a little time; disabled = snappier exit
+        const duration = animationsEnabled ? baseDuration : baseDuration * 0.7;
+        const exitDuration = animationsEnabled ? 300 : 0;
 
         const timer = setTimeout(() => {
             setIsVisible(false);

@@ -116,39 +116,27 @@ function AppRoutes() {
   const location = useLocation();
   const { t } = useTranslation(undefined, { i18n });
 
-  // Scroll to top on navigation
+  // Scroll to top on navigation — single pass, no repeated layout thrashing
   useEffect(() => {
     const resetScroll = () => {
       window.scrollTo(0, 0);
+      // Only reset the main scroll container instead of querySelectorAll('.overflow-y-auto')
+      // which forces a layout query across the whole DOM on every navigation.
       const scrollContainer = document.getElementById("main-content");
-      if (scrollContainer) {
-        scrollContainer.scrollTop = 0;
-      }
-      // Reset any inner scrolling containers (like in PremiumDashboard)
-      document.querySelectorAll('.overflow-y-auto').forEach(el => {
-        el.scrollTop = 0;
-      });
+      if (scrollContainer) scrollContainer.scrollTop = 0;
     };
-    
     resetScroll();
-    setTimeout(resetScroll, 10);
-    setTimeout(resetScroll, 100);
+    // A single deferred reset handles containers that mount after navigation.
+    const id = requestAnimationFrame(resetScroll);
+    return () => cancelAnimationFrame(id);
   }, [location.pathname]);
 
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0a1128] via-[#1a237e] to-[#0d1b2a] relative overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#e0c097] rounded-full opacity-5 blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-[#4fd1c5] rounded-full opacity-[0.03] blur-3xl" />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0a1128] via-[#1a237e] to-[#0d1b2a]">
         <div className="relative z-10 flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full border-2 border-[#e0c097]/20 scale-150" />
-            <div className="animate-spin rounded-full h-16 w-16 border-[3px] border-[#e0c097]/30 border-t-[#e0c097]" />
-            <div className="absolute inset-2 rounded-full bg-[#e0c097] blur-xl opacity-30 animate-pulse" />
-          </div>
-          <div className="glass-card px-6 py-3 rounded-2xl">
-            <p className="text-[#e0c097] text-sm font-semibold tracking-widest uppercase">{t('loading')}</p>
-          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-[#e0c097]/30 border-t-[#e0c097]" />
+          <p className="text-[#e0c097] text-sm font-semibold tracking-widest uppercase">{t('loading')}</p>
         </div>
       </div>
     }>
