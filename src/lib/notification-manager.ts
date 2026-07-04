@@ -6,6 +6,7 @@
 
 import { importantIslamicDates, IslamicDate, isRamadanCountdownPeriod, getDaysUntilRamadan } from '@/data/islamic-dates';
 import { getRandomContent, getContentByType, getContentByCategory, IslamicContent } from '@/data/expanded-islamic-content';
+import { isLowEndDevice } from '@/lib/device-performance';
 
 export interface NotificationPreferences {
   ramadanCountdowns: boolean;
@@ -324,6 +325,8 @@ export class NotificationManager {
     }
 
     const icon = event.icon.trim();
+
+    // Emoji and non-URL strings are silently replaced with default icon
     const isUrl =
       icon.startsWith('/') ||
       icon.startsWith('http://') ||
@@ -331,7 +334,7 @@ export class NotificationManager {
       icon.startsWith('data:') ||
       icon.startsWith('blob:');
 
-    if (!isUrl || icon === '/eid-icon.png') {
+    if (!isUrl) {
       return defaultIcon;
     }
 
@@ -427,7 +430,7 @@ export class NotificationManager {
           type: 'ramadan-countdown',
           timestamp: Date.now(),
           priority: daysUntil <= 7 ? 'high' : 'medium',
-          icon: daysUntil <= 7 ? '🌙' : '/icon-192x192.png'
+          icon: daysUntil <= 7 ? '/icon-512x512.png' : DEFAULT_NOTIFICATION_ICON
         };
 
         await this.sendNotification(event);
@@ -523,17 +526,17 @@ export class NotificationManager {
         {
           title: 'Friday Blessings',
           body: 'Don\'t forget to read Surah Al-Kahf today! It\'s a Sunnah with great rewards.',
-          icon: '📖'
+          icon: ''
         },
         {
           title: 'Jumu\'ah Mubarak',
           body: 'Friday is here! Send blessings upon the Prophet and read Surah Al-Kahf.',
-          icon: '✨'
+          icon: ''
         },
         {
           title: 'Best Day of the Week',
           body: 'Friday is the best day! Seize its blessings with Surah Al-Kahf and good deeds.',
-          icon: '🌟'
+          icon: ''
         }
       ];
       
@@ -559,27 +562,33 @@ export class NotificationManager {
       return;
     }
 
-    // Send at different times to avoid predictability
     const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    
-    // Random time between 8 AM - 8 PM
-    const targetHour = 8 + Math.floor(Math.random() * 12);
-    const targetMinute = Math.floor(Math.random() * 60);
-    
-    if (hour === targetHour && minute === targetMinute) {
+    const today = now.toDateString();
+    const stored = localStorage.getItem('daily-hadith-target');
+    let target = stored ? JSON.parse(stored) : null;
+
+    // Generate new target if none stored or it's from a different day
+    if (!target || target.date !== today) {
+      target = {
+        date: today,
+        hour: 8 + Math.floor(Math.random() * 12),
+        minute: Math.floor(Math.random() * 60),
+      };
+      localStorage.setItem('daily-hadith-target', JSON.stringify(target));
+    }
+
+    // Only fire once when the target minute arrives
+    if (now.getHours() === target.hour && now.getMinutes() === target.minute) {
       const content = getRandomContent('hadith');
-      
+
       if (content) {
         const event: NotificationEvent = {
-          id: `daily-hadith-${now.toDateString()}`,
+          id: `daily-hadith-${today}`,
           title: 'Daily Hadith',
           body: content.translation,
           type: 'daily-hadith',
           contentType: 'hadith',
           timestamp: Date.now(),
-          icon: '📜',
           priority: 'medium'
         };
 
@@ -749,10 +758,12 @@ export class NotificationManager {
       return;
     }
 
-    // Check notifications every minute using plain setInterval (outside React)
+    // On low-end devices, check less frequently to reduce battery/CPU impact
+    const checkInterval = isLowEndDevice() ? 300000 : 60000;
+
     this.intervalId = setInterval(() => {
       this.checkAllNotifications();
-    }, 60000);
+    }, checkInterval);
 
     // For APK users, add persistent permission checking
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||

@@ -187,9 +187,8 @@ export const GlobalPrayerAlarm = () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
         if (Capacitor.isNativePlatform()) {
-          const { LocalNotificationManager } = await import('@/lib/local-notifications');
-          const manager = new LocalNotificationManager();
-          await manager.schedulePrayerNotifications(
+          const { localNotifications } = await import('@/lib/local-notifications');
+          await localNotifications.schedulePrayerNotifications(
             prayerTimes.map(p => ({
               name: p.name,
               time: p.time,

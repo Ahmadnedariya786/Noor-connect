@@ -29,14 +29,21 @@ class IslamicEventsService {
     return IslamicEventsService.instance;
   }
 
+  private lastScheduleDate: string | null = null;
+
   /**
    * Check and schedule notifications for upcoming Islamic events
    */
   async scheduleUpcomingEvents(): Promise<void> {
+    const today = new Date().toDateString();
+    // Only schedule once per day to avoid re-scheduling on every mount
+    if (this.lastScheduleDate === today) return;
+    this.lastScheduleDate = today;
+
     try {
       const calendarInfo = await islamicCalendarService.getIslamicCalendarInfo();
       const upcomingEvents = await this.getUpcomingEvents(calendarInfo);
-      
+
       for (const event of upcomingEvents) {
         await this.scheduleEventNotification(event);
       }
@@ -83,27 +90,33 @@ class IslamicEventsService {
     return upcomingEvents.sort((a, b) => a.gregorianDate.getTime() - b.gregorianDate.getTime());
   }
 
+  private hijriDateCache: Map<string, Date> = new Map();
+
   private async getGregorianDateForHijriEvent(hijriMonth: number, hijriDay: number, year: number): Promise<Date> {
-    // Start from beginning of the year and find the matching Hijri date
+    const cacheKey = `${hijriMonth}-${hijriDay}-${year}`;
+    const cached = this.hijriDateCache.get(cacheKey);
+    if (cached) return cached;
+
     const startDate = new Date(year, 0, 1);
-    
+
     for (let dayOffset = 0; dayOffset < 365; dayOffset++) {
       const checkDate = new Date(startDate);
       checkDate.setDate(startDate.getDate() + dayOffset);
-      
+
       try {
         const islamicDate = islamicCalendarService.calculateIslamicDate(checkDate);
-        const month = parseInt(islamicDate.hijri.month.number.toString());
-        const day = parseInt(islamicDate.hijri.day);
-        
+        const month = Number(islamicDate.hijri.month.number);
+        const day = Number(islamicDate.hijri.day);
+
         if (month === hijriMonth && day === hijriDay) {
+          this.hijriDateCache.set(cacheKey, checkDate);
           return checkDate;
         }
       } catch (error) {
         continue;
       }
     }
-    
+
     throw new Error(`Could not find Gregorian date for Hijri ${hijriMonth}-${hijriDay}`);
   }
 
@@ -225,10 +238,16 @@ class IslamicEventsService {
     }
   }
 
+  private lastRamadanCheckDay: number = -1;
+
   /**
    * Check if Ramadan is approaching and show special notifications
    */
   async checkRamadanApproaching(): Promise<void> {
+    const todayDayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    if (this.lastRamadanCheckDay === todayDayOfYear) return;
+    this.lastRamadanCheckDay = todayDayOfYear;
+
     try {
       const calendarInfo = await islamicCalendarService.getIslamicCalendarInfo();
       const daysUntilRamadan = calendarInfo.daysUntilRamadan;
@@ -242,13 +261,12 @@ class IslamicEventsService {
           message = daysUntilRamadan === 1 
             ? 'Ramadan starts tomorrow! Prepare yourself for the blessed month.'
             : `Ramadan starts in ${daysUntilRamadan} days! Start preparing yourself.`;
-        } else if (daysUntilRamadan <= 30) {
+        } else {
           title = 'Ramadan Preparation';
           message = `Ramadan starts in ${daysUntilRamadan} days. It's time to start preparing spiritually and physically.`;
         }
 
         if (title && message) {
-          // Schedule reminder for tomorrow if not already scheduled
           const tomorrow = new Date();
           tomorrow.setDate(tomorrow.getDate() + 1);
           tomorrow.setHours(9, 0, 0, 0);
