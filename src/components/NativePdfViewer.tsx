@@ -37,6 +37,11 @@ function PdfPage({ pdf, pageNumber, scale }: { pdf: any; pageNumber: number; sca
   const [inView, setInView] = useState(false);
   const renderTaskRef = useRef<any>(null);
 
+  const getOptimalScale = (baseScale: number) => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1);
+    return baseScale / dpr;
+  };
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -62,14 +67,13 @@ function PdfPage({ pdf, pageNumber, scale }: { pdf: any; pageNumber: number; sca
         const page = await pdf.getPage(pageNumber);
         if (!mounted) return;
 
-        const viewport = page.getViewport({ scale });
+        const viewport = page.getViewport({ scale: getOptimalScale(scale) });
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const context = canvas.getContext('2d');
         if (!context) return;
 
-        // Only resize if different to avoid flickering
         if (canvas.height !== viewport.height || canvas.width !== viewport.width) {
           canvas.height = viewport.height;
           canvas.width = viewport.width;
@@ -116,6 +120,8 @@ function PdfPage({ pdf, pageNumber, scale }: { pdf: any; pageNumber: number; sca
 export default function NativePdfViewer({ url, title, localKey, progressKey, onClose }: NativePdfViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pdfDocumentRef = useRef<any>(null);
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -123,8 +129,9 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   const [viewerMode, setViewerMode] = useState<ViewerMode>('loading');
   const [error, setError] = useState<string | null>(null);
   const [isVertical, setIsVertical] = useState(false);
-  const [showAudioPlayer, setShowAudioPlayer] = useState(false); // New state for vertical scroll mode
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [resolvedPdfSource, setResolvedPdfSource] = useState(url);
+  const [visibleWindow, setVisibleWindow] = useState({ start: 1, end: 20 });
   const effectiveProgressKey = progressKey || (localKey ? `local:${localKey}` : url);
 
   useEffect(() => {
@@ -142,9 +149,29 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
         URL.revokeObjectURL(objectUrlRef.current);
         objectUrlRef.current = null;
       }
+      if (pdfDocumentRef.current) {
+        try { pdfDocumentRef.current.destroy(); } catch {}
+      }
     };
   }, []);
 
+  // Windowed rendering for vertical mode
+  useEffect(() => {
+    if (!isVertical || !scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const handleScroll = () => {
+      const pageHeight = container.scrollHeight / totalPages;
+      const scrollTop = container.scrollTop;
+      const viewHeight = container.clientHeight;
+      const buffer = 5;
+      const start = Math.max(1, Math.floor(scrollTop / pageHeight) - buffer + 1);
+      const end = Math.min(totalPages, Math.ceil((scrollTop + viewHeight) / pageHeight) + buffer);
+      setVisibleWindow({ start, end });
+    };
+    handleScroll();
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isVertical, totalPages]);
 
   const loadPdf = async () => {
     try {
@@ -209,6 +236,7 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
         : 1;
 
       setPdfDocument(pdf);
+      pdfDocumentRef.current = pdf;
       setTotalPages(pdf.numPages);
       setCurrentPage(initialPage);
       setViewerMode('pdfjs');
@@ -238,6 +266,11 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
     }
   };
 
+  const getOptimalScale = (baseScale: number) => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1); // cap at 1 for memory savings on HiDPI
+    return baseScale / dpr;
+  };
+
   const renderPage = async (pdf: any, pageNum: number, scaleValue: number) => {
     try {
       const page = await pdf.getPage(pageNum);
@@ -247,7 +280,7 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
       const context = canvas.getContext('2d');
       if (!context) return;
 
-      const viewport = page.getViewport({ scale: scaleValue });
+      const viewport = page.getViewport({ scale: getOptimalScale(scaleValue) });
       canvas.height = viewport.height;
       canvas.width = viewport.width;
 
@@ -507,18 +540,25 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
       </div>
 
       {/* PDF Content Area */}
-      <div className="flex-1 overflow-auto bg-muted/30 p-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto bg-muted/30 p-4">
         <div className="flex justify-center flex-col items-center">
           {isVertical ? (
-            // Vertical Scroll Mode: Render all pages with lazy loading
-            Array.from({ length: totalPages }, (_, i) => (
-              <PdfPage
-                key={i + 1}
-                pdf={pdfDocument}
-                pageNumber={i + 1}
-                scale={scale}
-              />
-            ))
+            // Vertical Scroll Mode: Windowed rendering of visible pages + buffer
+            Array.from({ length: totalPages }, (_, i) => {
+              const pageNum = i + 1;
+              if (pageNum < visibleWindow.start || pageNum > visibleWindow.end) {
+                // Render placeholder for hidden pages to maintain scroll height
+                return <div key={pageNum} className="flex justify-center my-4 min-h-[400px] items-center text-muted-foreground/30">...</div>;
+              }
+              return (
+                <PdfPage
+                  key={pageNum}
+                  pdf={pdfDocument}
+                  pageNumber={pageNum}
+                  scale={scale}
+                />
+              );
+            })
           ) : (
             // Single Page Mode: Render simplified single canvas
             <canvas

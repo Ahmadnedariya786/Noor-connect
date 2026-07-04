@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchSaudiPlaylist, FALLBACK_STREAMS, type Channel } from '@/lib/m3u-parser';
+import { isLowEndDevice } from '@/lib/device-performance';
 
 type StreamLocation = 'makkah' | 'madinah';
 
@@ -43,6 +44,9 @@ export default function IslamicStreamPlayer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef<Record<StreamLocation, number>>({ makkah: 0, madinah: 0 });
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
   const streamUrlsRef = useRef<Record<StreamLocation, string | null>>({
     makkah: FALLBACK_STREAMS.makkah?.url || null,
     madinah: FALLBACK_STREAMS.madinah?.url || null,
@@ -54,6 +58,7 @@ export default function IslamicStreamPlayer() {
   const [showControls, setShowControls] = useState(true);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const [streams, setStreams] = useState<Record<StreamLocation, StreamState>>({
     makkah: {
@@ -68,6 +73,7 @@ export default function IslamicStreamPlayer() {
 
   const current = streams[activeTab];
   const meta = LOCATION_META[activeTab];
+  const lowEnd = isLowEndDevice();
 
   /* ─── Controls auto-hide ─── */
   const scheduleHide = useCallback(() => {
@@ -93,6 +99,20 @@ export default function IslamicStreamPlayer() {
      }
   }, []);
 
+  /* ─── Auto-retry with backoff ─── */
+  const scheduleRetry = useCallback((tab: StreamLocation) => {
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    const attempt = retryCountRef.current[tab] || 0;
+    if (attempt >= 3) return;
+    const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
+    retryCountRef.current[tab] = attempt + 1;
+    retryTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
+      const url = streamUrlsRef.current[tab];
+      if (url) initHLS(url, tab);
+    }, delay);
+  }, []);
+
   /* ─── Init HLS ─── */
   const initHLS = useCallback((url: string, tab: StreamLocation) => {
     const video = videoRef.current;
@@ -106,21 +126,22 @@ export default function IslamicStreamPlayer() {
 
     if (Hls.isSupported()) {
       const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 90,
-        maxBufferLength: 30,
-        manifestLoadingTimeOut: 12000,
-        manifestLoadingMaxRetry: 3,
-        levelLoadingTimeOut: 12000,
-        levelLoadingMaxRetry: 3,
-        startLevel: -1,
+        enableWorker: !lowEnd,
+        lowLatencyMode: !lowEnd,
+        backBufferLength: lowEnd ? 30 : 90,
+        maxBufferLength: lowEnd ? 15 : 30,
+        manifestLoadingTimeOut: lowEnd ? 20000 : 12000,
+        manifestLoadingMaxRetry: lowEnd ? 5 : 3,
+        levelLoadingTimeOut: lowEnd ? 20000 : 12000,
+        levelLoadingMaxRetry: lowEnd ? 5 : 3,
+        startLevel: lowEnd ? 0 : -1,
       });
       hlsRef.current = hls;
 
       hls.on(Hls.Events.MEDIA_ATTACHED, () => hls.loadSource(url));
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        retryCountRef.current[tab] = 0;
         setStreams(prev => ({
           ...prev,
           [tab]: { ...prev[tab], isLoading: false, isBuffering: false, isPlaying: true },
@@ -137,6 +158,7 @@ export default function IslamicStreamPlayer() {
           ? 'Network error — check your connection.'
           : 'Stream unavailable. Try again shortly.';
         setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: msg, isLoading: false, isBuffering: false } }));
+        scheduleRetry(tab);
       });
 
       hls.on(Hls.Events.BUFFER_APPENDING, () =>
@@ -146,7 +168,6 @@ export default function IslamicStreamPlayer() {
 
       hls.attachMedia(video);
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS
       video.src = url;
       video.addEventListener('loadedmetadata', () => {
         setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], isLoading: false, isPlaying: true } }));
@@ -158,11 +179,35 @@ export default function IslamicStreamPlayer() {
         [tab]: { ...prev[tab], error: 'HLS not supported in this browser.', isLoading: false },
       }));
     }
-  }, [destroyHLS]);
+  }, [destroyHLS, scheduleRetry, lowEnd]);
+
+  /* ─── Online/Offline Monitor ─── */
+  useEffect(() => {
+    const goOnline = () => {
+      setIsOnline(true);
+      const url = streamUrlsRef.current[activeTabRef.current];
+      if (url && streams[activeTabRef.current]?.error) initHLS(url, activeTabRef.current);
+    };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
+  /* ─── Mounted ref cleanup ─── */
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
 
   /* ─── Fetch remote playlist once ─── */
   useEffect(() => {
-    // Skip IPTV playlist fetch and use fallback URLs directly to avoid 404 errors
     const makkah = FALLBACK_STREAMS.makkah;
     const madinah = FALLBACK_STREAMS.madinah;
     streamUrlsRef.current = {
@@ -284,6 +329,12 @@ export default function IslamicStreamPlayer() {
           <span className={`w-2 h-2 rounded-full ${current.isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/20'}`} />
           LIVE
         </div>
+        {!isOnline && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ml-1 bg-amber-500/20 border-amber-500/40 text-amber-400 shrink-0">
+            <WifiOff className="w-3.5 h-3.5" />
+            OFFLINE
+          </div>
+        )}
       </div>
 
       {/* ── Video Area ── */}

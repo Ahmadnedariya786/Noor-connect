@@ -18,6 +18,9 @@ const STORAGE_KEYS = {
   CACHED_PRAYER_TIMES: 'cached-prayer-times',
   LAST_HADITH: 'last-hadith',
   SHOW_EXTRA_PRAYERS: 'show-extra-prayers',
+  BEFORE_SLEEP_ENABLED: 'before-sleep-enabled',
+  BEDTIME_HOUR: 'bedtime-hour',
+  BEDTIME_MINUTE: 'bedtime-minute',
 } as const;
 
 // ... (skipping some exports for brevity)
@@ -240,4 +243,31 @@ export const getCachedHadith = (): CachedHadith | null => {
 
 export const setCachedHadith = (hadith: CachedHadith): void => {
   storage.set(STORAGE_KEYS.LAST_HADITH, hadith);
+};
+
+// Bedtime / Before-sleep notification settings
+export const isBeforeSleepEnabled = (): boolean => {
+  return localStorage.getItem(STORAGE_KEYS.BEFORE_SLEEP_ENABLED) === 'true';
+};
+
+export const setBeforeSleepEnabled = (enabled: boolean): void => {
+  localStorage.setItem(STORAGE_KEYS.BEFORE_SLEEP_ENABLED, enabled ? 'true' : 'false');
+};
+
+export const getBedtimeHour = (): number => {
+  const h = localStorage.getItem(STORAGE_KEYS.BEDTIME_HOUR);
+  return h !== null ? parseInt(h, 10) : 22;
+};
+
+export const setBedtimeHour = (hour: number): void => {
+  localStorage.setItem(STORAGE_KEYS.BEDTIME_HOUR, hour.toString());
+};
+
+export const getBedtimeMinute = (): number => {
+  const m = localStorage.getItem(STORAGE_KEYS.BEDTIME_MINUTE);
+  return m !== null ? parseInt(m, 10) : 0;
+};
+
+export const setBedtimeMinute = (minute: number): void => {
+  localStorage.setItem(STORAGE_KEYS.BEDTIME_MINUTE, minute.toString());
 };
