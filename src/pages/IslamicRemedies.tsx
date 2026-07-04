@@ -4,7 +4,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { m } from "framer-motion";
-import { Heart, Sparkles, BookOpen, Quote, Target, Play, Copy, Check, X, ArrowRight, Flame, Search, HeartHandshake } from "lucide-react";
+import { Heart, Sparkles, BookOpen, Quote, Target, Play, Copy, Check, X, ArrowRight, Search, HeartHandshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { moods, type Mood, type MoodContent } from "@/data/mood-data";
@@ -34,8 +34,6 @@ const TYPE_STYLES: Record<string, { bg: string; icon: React.ReactNode }> = {
   dhikr: { bg: "bg-teal-500", icon: <Target className="h-3 w-3" /> },
 };
 
-const LEVEL_THRESHOLDS = [0, 50, 150, 300, 500, 750, 1000, 1500, 2000, 3000];
-
 const containerVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.035 } },
@@ -62,16 +60,8 @@ export default function IslamicRemedies() {
   const { playSurah, reciter } = useGlobalQuran();
   const { toast } = useToast();
 
-  const stats = useMemo(() => remedyGamification.getStats(), [phase]);
   const dailyRemedy = useMemo(() => remedyGamification.getDailyRemedy(), [phase]);
   const favorites = useMemo(() => remedyGamification.getFavorites(), [phase]);
-  const levelProgress = useMemo(() => {
-    const idx = stats.level - 1;
-    if (idx >= LEVEL_THRESHOLDS.length - 1) return 100;
-    const cur = stats.xp - LEVEL_THRESHOLDS[idx];
-    const need = LEVEL_THRESHOLDS[idx + 1] - LEVEL_THRESHOLDS[idx];
-    return Math.min(100, Math.max(0, (cur / need) * 100));
-  }, [stats]);
 
   const currentIndex = selectedMood ? activeIndexes[selectedMood.id] ?? 0 : 0;
   const currentItem = selectedMood ? selectedMood.content[currentIndex] ?? selectedMood.content[0] : null;
@@ -271,29 +261,6 @@ export default function IslamicRemedies() {
               >
                 <Check className="w-4 h-4 text-primary" />
               </button>
-            </div>
-          )}
-
-          {stats.totalRemediesViewed > 0 && (
-            <div className="bg-card border border-border/60 rounded-2xl px-5 py-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-xs shadow">
-                    {stats.level}
-                  </div>
-                  <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-600" style={{ width: `${levelProgress}%` }} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">{stats.totalRemediesViewed}</span> viewed
-                  <span className="flex items-center gap-1">
-                    <Flame className="w-3.5 h-3.5 text-orange-500" />
-                    <span className="font-semibold text-foreground">{stats.currentStreak}</span>
-                  </span>
-                  <span className="font-semibold text-foreground">{favorites.length}</span> saved
-                </div>
-              </div>
             </div>
           )}
 
