@@ -31,6 +31,18 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
+    version: '2.0.0',
+    date: '2026-07-04',
+    title: 'Noor Connect 2.0 — Major Release',
+    changes: [
+      { type: 'feature', description: 'Major 2.0 release with rebuilt widget system and expanded feature set.' },
+      { type: 'feature', description: 'Noor Cycle: ovulation day tracking, cycle insights, fertile window, and PDF report export.' },
+      { type: 'feature', description: 'New Analytics tab and Education FAQ across Haidh/Nifas trackers.' },
+      { type: 'fix', description: 'Critical Haidh Tracker fixes — prayer pause, backup, and gender filter.' },
+      { type: 'improvement', description: 'Route consolidation and overall stability improvements.' },
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-03-30',
     title: 'Live Radio Widget & Native Android Improvements',

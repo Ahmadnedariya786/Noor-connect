@@ -15,8 +15,8 @@ AntiFeatures:
 
 
 Builds:
-  - versionName: 1.2.0
-    versionCode: 4
+  - versionName: 2.0.0
+    versionCode: 5
     commit: b6868cfb3ab355175911e948ad3e6fb29ca97e96
     subdir: android/app
     sudo:
@@ -38,5 +38,5 @@ MaintainerNotes: >
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 1.2.0
-CurrentVersionCode: 4
+CurrentVersion: 2.0.0
+CurrentVersionCode: 5

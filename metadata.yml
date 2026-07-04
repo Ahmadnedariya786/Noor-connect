@@ -38,9 +38,9 @@ Author: darkmaster0345
 AutoName: Noor Connect
 
 Builds:
-  - versionName: 1.2.0
-    versionCode: 4
-    commit: v1.2.0
+  - versionName: 2.0.0
+    versionCode: 5
+    commit: v2.0.0
     subdir: android
     sudo:
       - apt-get update
@@ -56,5 +56,5 @@ Builds:
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags
-CurrentVersion: 1.2.0
-CurrentVersionCode: 4
+CurrentVersion: 2.0.0
+CurrentVersionCode: 5
