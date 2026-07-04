@@ -4,6 +4,7 @@ import { ChevronLeft, Calendar as CalIcon, Droplets, BookOpen, Settings as Setti
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { goBackOrFallback } from "@/lib/navigation";
+import { PRAYER_ALARM_CONTROL_EVENT, PRAYER_ALARM_TOGGLE_EVENT } from "@/lib/prayer-alarm-events";
 
 import {
   getHaidhData,
@@ -55,8 +56,39 @@ export default function HaidhTracker() {
     void syncHaidhNotifications(data);
   }, [data]);
 
-  const handleStart = (type: 'haidh' | 'nifas') => startCycle(new Date(), type);
-  const handleEnd = () => endCycle();
+  const handleStart = async (type: 'haidh' | 'nifas') => {
+    const updated = startCycle(new Date(), type);
+
+    localStorage.setItem("prayer-alarm-enabled", "false");
+    window.dispatchEvent(new CustomEvent(PRAYER_ALARM_TOGGLE_EVENT, { detail: { enabled: false } }));
+    window.dispatchEvent(new CustomEvent(PRAYER_ALARM_CONTROL_EVENT, { detail: { action: "stop" } }));
+
+    if (updated.pausePrayerNotifications) {
+      try {
+        const { localNotifications } = await import("@/lib/local-notifications");
+        await localNotifications.clearPrayerNotifications();
+      } catch (error) {
+        console.error("Failed to clear prayer notifications", error);
+      }
+    }
+  };
+
+  const handleEnd = async () => {
+    endCycle();
+    const updated = getHaidhData();
+
+    localStorage.setItem("prayer-alarm-enabled", "true");
+    window.dispatchEvent(new CustomEvent(PRAYER_ALARM_TOGGLE_EVENT, { detail: { enabled: true } }));
+
+    if (updated.pausePrayerNotifications) {
+      try {
+        const { localNotifications } = await import("@/lib/local-notifications");
+        await localNotifications.schedulePrayerNotificationsFromAPI();
+      } catch (error) {
+        console.error("Failed to reschedule prayer notifications", error);
+      }
+    }
+  };
   const handleLog = (log: Partial<DailyLog>) => logDay(new Date(), log);
   const handleSettingsUpdate = (patch: Partial<HaidhTrackerData>) => updateSettings(patch);
 

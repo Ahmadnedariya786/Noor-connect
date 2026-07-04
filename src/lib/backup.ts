@@ -33,6 +33,7 @@ const STORAGE_KEYS = [
   'qaza-prayers',
   'processed-salah-qaza',
   'menstrual-mode-data',
+  'haidh-tracker-v2',
 
   // Quran Reader & Features
   'quran-bookmarks',

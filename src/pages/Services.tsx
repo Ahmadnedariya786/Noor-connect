@@ -4,6 +4,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { useSettings } from "@/contexts/SettingsContext";
+import { shouldShowMenstrualFeatures } from "@/lib/gender-settings";
 import {
     MessageCircle, Radio, Target, Heart, Calculator,
     Star, Trophy, Coins, Calendar, Library, Tv, Sparkles, HeartHandshake, BookOpen, BookText, Moon, Headphones,
@@ -38,6 +39,8 @@ export default function Services() {
         return false;
     })();
 
+    const showNoorCycle = shouldShowMenstrualFeatures();
+
     const baseServices = [
         { title: "Salah Tracker", path: "/prayer-stats", icon: CheckCircle, gradient: 'from-[#10B981] to-[#059669]' },
         { title: "Qaza Tracker", path: "/qaza", icon: AlertTriangle, gradient: 'from-[#D4AF37] to-[#B8962E]' },
@@ -49,7 +52,7 @@ export default function Services() {
         { title: "Radio", path: "/quran-radio", icon: Radio, gradient: 'from-[#14b8a6] to-[#0f766e]' },
         { title: "Habits", path: "/habit-tracker", icon: Target, gradient: 'from-[#ec4899] to-[#be185d]' },
         { title: "Duas", path: "/duas", icon: Heart, gradient: 'from-[#f97316] to-[#c2410c]' },
-        { title: "Noor Cycle", path: "/noor-cycle", icon: HeartPulse, gradient: 'from-[#e11d48] to-[#be123c]' },
+        ...(showNoorCycle ? [{ title: "Noor Cycle", path: "/noor-cycle", icon: HeartPulse as React.ComponentType<any>, gradient: 'from-[#e11d48] to-[#be123c]' as const }] : []),
         { title: "Remedies", path: "/islamic-remedies", icon: HeartHandshake, gradient: 'from-[#a855f7] to-[#7e22ce]' },
         { title: t('tasbih') || "Tasbih", path: "/tasbeeh", icon: Calculator, gradient: 'from-[#10B981] to-[#047857]' },
         { title: "Names", path: "/names-of-allah", icon: Star, gradient: 'from-[#D4AF37] to-[#eab308]' },
