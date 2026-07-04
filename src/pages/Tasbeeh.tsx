@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RotateCcw, Sparkles, History, ChevronRight, Volume2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, Sparkles, History, ChevronRight, Volume2, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,8 @@ const Tasbeeh = () => {
   const [selectedDhikr, setSelectedDhikr] = useState(DHIKR_OPTIONS[0].value);
   const [dailyHistory, setDailyHistory] = useState<{ date: string; count: number; label: string }[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentDhikr = DHIKR_OPTIONS.find(d => d.value === selectedDhikr) || DHIKR_OPTIONS[0];
   const label = currentDhikr.transliteration;
@@ -91,8 +93,62 @@ const Tasbeeh = () => {
     triggerHapticFeedback('select');
   };
 
+  const toggleZenMode = () => {
+    setZenMode(!zenMode);
+    triggerHapticFeedback('select');
+  };
+
+  const handleZenTouchStart = () => {
+    longPressRef.current = setTimeout(() => {
+      setZenMode(false);
+      triggerHapticFeedback('reset');
+      longPressRef.current = null;
+    }, 800);
+  };
+
+  const handleZenTouchEnd = () => {
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current);
+      longPressRef.current = null;
+    }
+  };
+
   const nextMilestone = count < 33 ? 33 : count < 99 ? 99 : count < 100 ? 100 : Math.ceil((count + 1) / 100) * 100;
   const progress = (count / nextMilestone) * 100;
+
+  // Zen Mode overlay
+  if (zenMode) {
+    return (
+      <div
+        className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center select-none"
+        onClick={handleIncrement}
+        onTouchStart={handleZenTouchStart}
+        onTouchEnd={handleZenTouchEnd}
+        onMouseDown={handleZenTouchStart}
+        onMouseUp={handleZenTouchEnd}
+        onMouseLeave={handleZenTouchEnd}
+      >
+        {/* Dhikr label */}
+        <div className="absolute top-12 left-0 right-0 text-center">
+          <p className="text-white/40 text-sm font-medium tracking-wide">{currentDhikr.transliteration}</p>
+        </div>
+
+        {/* Count */}
+        <span className="text-[15rem] font-black text-white leading-none select-none">{count}</span>
+
+        {/* Next goal */}
+        <div className="absolute bottom-12 left-0 right-0 text-center">
+          <p className="text-white/20 text-xs uppercase tracking-[0.3em] mb-1">Next Goal</p>
+          <p className="text-white/40 text-lg font-semibold">{nextMilestone}</p>
+        </div>
+
+        {/* Exit hint */}
+        <div className="absolute top-4 left-4">
+          <p className="text-white/15 text-[10px] tracking-wide">Hold to exit</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <PageTransition>
@@ -111,9 +167,18 @@ const Tasbeeh = () => {
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('selectDhikr')}</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 rounded-full text-[10px] font-bold text-primary">
-                  <History className="w-3 h-3" />
-                  {t('total')}: {totalCount.toLocaleString()}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleZenMode}
+                    className="p-1.5 bg-primary/10 rounded-full text-primary hover:bg-primary/20 transition-colors"
+                    title="Zen Mode"
+                  >
+                    <Moon className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 rounded-full text-[10px] font-bold text-primary">
+                    <History className="w-3 h-3" />
+                    {t('total')}: {totalCount.toLocaleString()}
+                  </div>
                 </div>
               </div>
 

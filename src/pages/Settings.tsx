@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
-import { ChevronLeft, Sun, Moon, Monitor, Sparkles, Zap, Heart } from 'lucide-react';
+import { ChevronLeft, Sun, Moon, Monitor, Sparkles, Zap, Heart, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { goBackOrFallback } from "@/lib/navigation";
+import { getMadhab, setMadhab, type MadhabType } from '@/lib/storage';
 
 const Settings = () => {
   const { 
@@ -20,6 +21,14 @@ const Settings = () => {
   } = useSettings();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [madhab, setMadhabState] = useState<MadhabType>(getMadhab());
+
+  const handleMadhabChange = (value: MadhabType) => {
+    setMadhab(value);
+    setMadhabState(value);
+    // Clear cached prayer times so the new fiqh is fetched on next render
+    try { localStorage.removeItem('cached_prayer_times'); } catch {}
+  };
 
   const motionProps = (props: any) => animationEnabled ? props : {};
 
@@ -160,6 +169,47 @@ const Settings = () => {
               </button>
             </div>
           </div>
+        </section>
+
+        {/* ── Prayer / Fiqh Section ── */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
+              <BookOpen className="w-4 h-4 text-sky-400" />
+            </div>
+            <h2 className="text-sm font-black uppercase tracking-widest text-sky-400">Prayer Times</h2>
+          </div>
+
+          <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
+            {([
+              { id: 'shafi',  label: 'Shafi / Maliki / Hanbali', short: 'Shafi' },
+              { id: 'hanafi', label: 'Hanafi', short: 'Hanafi' },
+            ] as { id: MadhabType; label: string; short: string }[]).map(({ id, label, short }) => {
+              const isActive = madhab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => handleMadhabChange(id)}
+                  aria-pressed={isActive}
+                  title={label}
+                  className={`flex-1 relative h-12 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 ${
+                    isActive ? 'text-foreground' : 'text-foreground/40 hover:text-foreground/70'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      {...motionProps({ layoutId: 'fiqh-active' })}
+                      className="absolute inset-0 bg-background rounded-2xl border border-border shadow-sm"
+                    />
+                  )}
+                  <span className="text-sm font-bold relative z-10">{short}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs font-medium text-muted-foreground px-4">
+            Determines Asr calculation. Currently using <span className="text-foreground/70">{madhab === 'hanafi' ? 'Hanafi' : 'Shafi'}</span> school.
+          </p>
         </section>
 
       </div>

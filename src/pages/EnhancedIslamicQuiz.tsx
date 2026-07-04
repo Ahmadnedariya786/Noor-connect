@@ -33,7 +33,8 @@ import {
   Lock,
   Heart,
   Package,
-  Gift as GiftIcon
+  Gift as GiftIcon,
+  ArrowLeft
 } from 'lucide-react';
 import { quizManager } from '@/lib/quiz-manager';
 import { quizStore } from '@/lib/quiz-store';
@@ -76,6 +77,7 @@ interface GameState {
   categoryAnswers: Record<string, { correct: number; total: number }>;
   quizMode: 'classic' | 'timeAttack' | 'survival' | 'daily' | 'category';
   gameModeConfig?: any;
+  userAnswers: { questionId: string; selectedAnswer: number; correct: boolean }[];
 }
 
 export default function EnhancedIslamicQuiz() {
@@ -91,7 +93,8 @@ export default function EnhancedIslamicQuiz() {
     isTimerActive: false,
     usedPowerUps: [],
     categoryAnswers: {},
-    quizMode: 'classic'
+    quizMode: 'classic',
+    userAnswers: []
   });
   
   const [quizComplete, setQuizComplete] = useState(false);
@@ -308,6 +311,8 @@ export default function EnhancedIslamicQuiz() {
       categoryAnswers[question.category].correct += 1;
     }
     
+    const userAnswer = { questionId: question.id, selectedAnswer: answerIndex, correct: isCorrect };
+
     setGameState(prev => ({
       ...prev,
       selectedAnswer: answerIndex,
@@ -315,7 +320,8 @@ export default function EnhancedIslamicQuiz() {
       isTimerActive: false,
       score: isCorrect ? prev.score + question.points : prev.score,
       streak: isCorrect ? prev.streak + 1 : 0,
-      categoryAnswers
+      categoryAnswers,
+      userAnswers: [...prev.userAnswers, userAnswer]
     }));
     
     // In survival mode, end quiz if answer is wrong
@@ -328,12 +334,17 @@ export default function EnhancedIslamicQuiz() {
   }, [gameState.showResult, gameState.questions, gameState.currentQuestion, gameState.quizMode, finishQuiz, toast]);
 
   const handleTimeUp = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      showResult: true,
-      isTimerActive: false,
-      streak: 0
-    }));
+    setGameState(prev => {
+      const question = prev.questions[prev.currentQuestion];
+      const userAnswer = question ? { questionId: question.id, selectedAnswer: -1, correct: false } : null;
+      return {
+        ...prev,
+        showResult: true,
+        isTimerActive: false,
+        streak: 0,
+        userAnswers: userAnswer ? [...prev.userAnswers, userAnswer] : prev.userAnswers
+      };
+    });
     
     // In survival mode, time up also ends the quiz
     if (gameState.quizMode === 'survival') {
@@ -725,6 +736,8 @@ export default function EnhancedIslamicQuiz() {
               newAchievements={newAchievements}
               showAchievements={showAchievements}
               setShowAchievements={setShowAchievements}
+              questions={gameState.questions}
+              userAnswers={gameState.userAnswers}
             />
           )}
         </div>
@@ -1004,11 +1017,59 @@ function QuizResults({
   onBackToMenu,
   newAchievements,
   showAchievements,
-  setShowAchievements 
+  setShowAchievements,
+  questions,
+  userAnswers
 }: any) {
   const accuracy = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
   const xpEarned = score * 10 + (score === totalQuestions ? 50 : 0);
+  const [showReview, setShowReview] = useState(false);
   
+  if (showReview && questions) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => setShowReview(false)} className="rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h2 className="text-lg font-bold">Review Answers</h2>
+            <p className="text-xs text-muted-foreground">{score}/{totalQuestions} correct</p>
+          </div>
+        </div>
+        {questions.map((q: any, idx: number) => {
+          const ua = userAnswers?.find((a: any) => a.questionId === q.id);
+          const isCorrect = ua?.correct;
+          const selectedIdx = ua?.selectedAnswer;
+          return (
+            <Card key={q.id} className={`border-l-4 ${isCorrect ? 'border-l-green-500' : 'border-l-red-500'}`}>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-muted-foreground">Q{idx + 1}</span>
+                  <Badge variant={isCorrect ? 'default' : 'destructive'} className="text-[10px]">
+                    {isCorrect ? '+ Correct' : 'Wrong'}
+                  </Badge>
+                </div>
+                <p className="text-sm font-medium">{q.question}</p>
+                {q.options.map((opt: string, oi: number) => {
+                  let cls = "text-xs p-2 rounded-md ";
+                  if (oi === q.correctAnswer) cls += "bg-green-100 text-green-700";
+                  else if (oi === selectedIdx && oi !== q.correctAnswer) cls += "bg-red-100 text-red-700";
+                  else cls += "text-muted-foreground";
+                  return <div key={oi} className={cls}>{String.fromCharCode(65 + oi)}. {opt}</div>;
+                })}
+                <p className="text-xs text-muted-foreground pt-1 border-t">{q.explanation}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
+        <Button onClick={() => setShowReview(false)} variant="outline" className="w-full">
+          Back to Results
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
@@ -1047,7 +1108,7 @@ function QuizResults({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {newAchievements.map(achievement => (
+            {newAchievements.map((achievement: any) => (
               <div key={achievement.id} className="flex items-center gap-3 p-2 bg-yellow-50 rounded-lg">
                 <span className="text-2xl">{achievement.icon}</span>
                 <div>
@@ -1084,6 +1145,14 @@ function QuizResults({
               <p className="text-xs text-muted-foreground">Daily Streak</p>
             </div>
           </div>
+          
+          {/* Review Answers Button */}
+          {questions && questions.length > 0 && (
+            <Button onClick={() => setShowReview(true)} variant="secondary" className="w-full">
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Review Answers
+            </Button>
+          )}
           
           <div className="flex gap-2">
             <Button onClick={onPlayAgain} className="flex-1">

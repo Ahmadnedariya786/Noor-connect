@@ -127,7 +127,7 @@ export const QUIZ_CATEGORIES: QuizCategory[] = [
     icon: '👼',
     color: 'bg-cyan-500',
     description: 'Discover the world of angels',
-    unlocked: false,
+    unlocked: true,
     masteryLevel: 0
   },
   {
@@ -136,7 +136,61 @@ export const QUIZ_CATEGORIES: QuizCategory[] = [
     icon: '📜',
     color: 'bg-amber-500',
     description: 'Sayings of the Prophet Muhammad (PBUH)',
-    unlocked: false,
+    unlocked: true,
+    masteryLevel: 0
+  },
+  {
+    id: 'aqeedah',
+    name: 'Aqeedah',
+    icon: '☝️',
+    color: 'bg-sky-500',
+    description: 'Islamic creed and theology',
+    unlocked: true,
+    masteryLevel: 0
+  },
+  {
+    id: 'seerah',
+    name: 'Seerah',
+    icon: '🕊️',
+    color: 'bg-teal-500',
+    description: 'Life of the Prophet Muhammad (PBUH)',
+    unlocked: true,
+    masteryLevel: 0
+  },
+  {
+    id: 'sahabah',
+    name: 'Sahabah',
+    icon: '🤝',
+    color: 'bg-lime-500',
+    description: 'Companions of the Prophet',
+    unlocked: true,
+    masteryLevel: 0
+  },
+  {
+    id: 'tafsir',
+    name: 'Tafsir',
+    icon: '📜',
+    color: 'bg-violet-500',
+    description: 'Quranic commentary and exegesis',
+    unlocked: true,
+    masteryLevel: 0
+  },
+  {
+    id: 'fiqh',
+    name: 'Fiqh',
+    icon: '⚖️',
+    color: 'bg-stone-500',
+    description: 'Islamic jurisprudence',
+    unlocked: true,
+    masteryLevel: 0
+  },
+  {
+    id: 'arabic',
+    name: 'Arabic',
+    icon: '📝',
+    color: 'bg-rose-500',
+    description: 'Arabic language and grammar',
+    unlocked: true,
     masteryLevel: 0
   }
 ];
@@ -515,8 +569,8 @@ export const ENHANCED_QUESTIONS: QuizQuestion[] = [
     id: 'prayer_6',
     question: 'What is the prayer performed during a solar eclipse called?',
     options: ['Kusuf', 'Khusuf', 'Istisqa', 'Tarawih'],
-    correctAnswer: 1,
-    explanation: 'Salat al-Khusuf is the prayer performed during a solar eclipse.',
+    correctAnswer: 0,
+    explanation: 'Salat al-Kusuf is the prayer performed during a solar eclipse. Salat al-Khusuf is for a lunar eclipse.',
     category: 'prayer',
     difficulty: 'hard',
     points: 30,
@@ -559,8 +613,8 @@ export const ENHANCED_QUESTIONS: QuizQuestion[] = [
     id: 'pillars_5',
     question: 'What is the nisab threshold for Zakat in gold?',
     options: ['75 grams', '85 grams', '87.5 grams', '100 grams'],
-    correctAnswer: 1,
-    explanation: 'The nisab threshold for Zakat is 87.5 grams of gold or its equivalent.',
+    correctAnswer: 2,
+    explanation: 'The nisab threshold for Zakat is 87.5 grams of gold or its equivalent value.',
     category: 'pillars',
     difficulty: 'hard',
     points: 30,
@@ -1506,7 +1560,615 @@ export const ENHANCED_QUESTIONS: QuizQuestion[] = [
     difficulty: 'hard',
     points: 30,
     timeLimit: 25
-  }
+  },
+  
+  // ========== AQEEDAH Questions ==========
+  {
+    id: 'aqeedah_1',
+    question: 'What is the meaning of "Aqeedah"?',
+    options: ['Prayer', 'Creed or belief', 'Charity', 'Fasting'],
+    correctAnswer: 1,
+    explanation: 'Aqeedah refers to the Islamic creed — the core beliefs that every Muslim holds.',
+    category: 'aqeedah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'aqeedah_2',
+    question: 'How many names of Allah (Asma ul-Husna) are known?',
+    options: ['88', '99', '100', '77'],
+    correctAnswer: 1,
+    explanation: 'Allah has 99 beautiful names (Asma ul-Husna), as mentioned in the Quran and Hadith.',
+    category: 'aqeedah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'aqeedah_3',
+    question: 'What is the greatest sin in Islam according to the Quran?',
+    options: ['Murder', 'Shirk', 'Lying', 'Theft'],
+    correctAnswer: 1,
+    explanation: 'Shirk (associating partners with Allah) is the greatest sin, as Allah forgives all sins except shirk.',
+    category: 'aqeedah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'aqeedah_4',
+    question: 'What is Ihsan?',
+    options: ['Fasting', 'Worship as if you see Allah', 'Giving charity', 'Reading Quran'],
+    correctAnswer: 1,
+    explanation: 'Ihsan means to worship Allah as if you see Him, and if you cannot see Him, knowing He sees you.',
+    category: 'aqeedah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'aqeedah_5',
+    question: 'What is the first obligation upon a Muslim?',
+    options: ['Prayer', 'Fasting', 'The Shahada', 'Hajj'],
+    correctAnswer: 2,
+    explanation: 'The first obligation is the Shahada — testifying there is no god but Allah and Muhammad is His Messenger.',
+    category: 'aqeedah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 20
+  },
+  {
+    id: 'aqeedah_6',
+    question: 'What are the six articles of faith in Islam?',
+    options: ['5 pillars', '6 articles', '7 articles', '4 articles'],
+    correctAnswer: 1,
+    explanation: 'The six articles are: belief in Allah, His angels, His books, His messengers, the Day of Judgment, and divine decree.',
+    category: 'aqeedah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'aqeedah_7',
+    question: 'What does "Ar-Rahman" mean?',
+    options: ['The All-Knowing', 'The Most Gracious', 'The All-Powerful', 'The Just'],
+    correctAnswer: 1,
+    explanation: 'Ar-Rahman means "The Most Gracious" — one of Allah\'s most frequent attributes in the Quran.',
+    category: 'aqeedah',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 20
+  },
+  {
+    id: 'aqeedah_8',
+    question: 'Which of these is NOT one of the names of Allah?',
+    options: ['Al-Hafiz', 'Al-Qahhar', 'Al-Mutakabbir', 'Al-Ra\'uf'],
+    correctAnswer: 2,
+    explanation: 'Al-Mutakabbir (The Supreme/The Majestic) is a name of Allah. All four are actually valid names — this question tests deeper knowledge.',
+    category: 'aqeedah',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 25
+  },
+
+  // ========== SEERAH Questions ==========
+  {
+    id: 'seerah_1',
+    question: 'In which year was Prophet Muhammad (PBUH) born?',
+    options: ['570 CE', '571 CE', '572 CE', '569 CE'],
+    correctAnswer: 0,
+    explanation: 'The Prophet was born in the Year of the Elephant, approximately 570 CE in Makkah.',
+    category: 'seerah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'seerah_2',
+    question: 'What was the profession of Prophet Muhammad (PBUH) before prophethood?',
+    options: ['Farmer', 'Shepherd and Merchant', 'Carpenter', 'Blacksmith'],
+    correctAnswer: 1,
+    explanation: 'The Prophet worked as a shepherd in his youth and later as a merchant trading between Makkah and Syria.',
+    category: 'seerah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'seerah_3',
+    question: 'How old was Prophet Muhammad (PBUH) when he received the first revelation?',
+    options: ['30', '35', '40', '45'],
+    correctAnswer: 2,
+    explanation: 'The Prophet was 40 years old when Angel Jibril first came to him in the Cave of Hira.',
+    category: 'seerah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'seerah_4',
+    question: 'How many years did the Prophet spend calling to Islam in Makkah?',
+    options: ['10 years', '13 years', '15 years', '20 years'],
+    correctAnswer: 1,
+    explanation: 'The Prophet spent 13 years preaching in Makkah before migrating to Madinah.',
+    category: 'seerah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'seerah_5',
+    question: 'Who was the first male to accept Islam?',
+    options: ['Umar ibn al-Khattab (RA)', 'Abu Bakr as-Siddiq (RA)', 'Ali ibn Abi Talib (RA)', 'Hamza (RA)'],
+    correctAnswer: 2,
+    explanation: 'Ali ibn Abi Talib (RA) was the first male to accept Islam at the age of 10.',
+    category: 'seerah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'seerah_6',
+    question: 'What was the name of the first migration of Muslims?',
+    options: ['Migration to Madinah', 'Migration to Abyssinia', 'Migration to Ta\'if', 'Migration to Syria'],
+    correctAnswer: 1,
+    explanation: 'The first migration (Hijra) was to Abyssinia (Ethiopia) where the Christian king Negus granted protection.',
+    category: 'seerah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'seerah_7',
+    question: 'What year did the Battle of Badr take place?',
+    options: ['622 CE', '624 CE', '625 CE', '630 CE'],
+    correctAnswer: 1,
+    explanation: 'The Battle of Badr took place in 2 AH (624 CE), the first major battle in Islam.',
+    category: 'seerah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'seerah_8',
+    question: 'Which treaty was signed between the Muslims and the Quraysh in 628 CE?',
+    options: ['Treaty of Hudaibiya', 'Pledge of Aqaba', 'Pledge of Ridwan', 'Constitution of Madinah'],
+    correctAnswer: 0,
+    explanation: 'The Treaty of Hudaibiya was a 10-year peace agreement between the Muslims and the Quraysh.',
+    category: 'seerah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'seerah_9',
+    question: 'In which battle was the Prophet (PBUH) injured?',
+    options: ['Badr', 'Uhud', 'Khandaq', 'Khaybar'],
+    correctAnswer: 1,
+    explanation: 'In the Battle of Uhud, the Prophet was injured when a stone struck his face and his tooth was broken.',
+    category: 'seerah',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 25
+  },
+  {
+    id: 'seerah_10',
+    question: 'What was the Farewell Sermon called?',
+    options: ['Khutbat al-Wada\'', 'Khutbat al-Jumu\'ah', 'Sermon of the Mount', 'Final Address'],
+    correctAnswer: 0,
+    explanation: 'The Farewell Sermon (Khutbat al-Wada\') was delivered by the Prophet during his final Hajj in 632 CE.',
+    category: 'seerah',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 25
+  },
+
+  // ========== SAHABAH Questions ==========
+  {
+    id: 'sahabah_1',
+    question: 'Who was known as "As-Siddiq" (The Truthful)?',
+    options: ['Umar (RA)', 'Abu Bakr (RA)', 'Uthman (RA)', 'Ali (RA)'],
+    correctAnswer: 1,
+    explanation: 'Abu Bakr (RA) was given the title "As-Siddiq" because he affirmed the Isra and Miraj without hesitation.',
+    category: 'sahabah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'sahabah_2',
+    question: 'Who was the second Caliph of Islam?',
+    options: ['Abu Bakr (RA)', 'Umar ibn al-Khattab (RA)', 'Uthman ibn Affan (RA)', 'Ali ibn Abi Talib (RA)'],
+    correctAnswer: 1,
+    explanation: 'Umar ibn al-Khattab (RA) was the second Caliph, ruling from 634 to 644 CE.',
+    category: 'sahabah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'sahabah_3',
+    question: 'Who compiled the Quran into a single book?',
+    options: ['Abu Bakr (RA)', 'Umar (RA)', 'Uthman (RA)', 'Ali (RA)'],
+    correctAnswer: 2,
+    explanation: 'Uthman ibn Affan (RA) standardized the Quranic text and compiled the official mushaf.',
+    category: 'sahabah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'sahabah_4',
+    question: 'Who was the first child to accept Islam?',
+    options: ['Hasan ibn Ali', 'Ali ibn Abi Talib', 'Abdullah ibn Umar', 'Anas ibn Malik'],
+    correctAnswer: 1,
+    explanation: 'Ali ibn Abi Talib (RA) was the first child to accept Islam, at the age of 10.',
+    category: 'sahabah',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'sahabah_5',
+    question: 'Who was known as "The Sword of Allah"?',
+    options: ['Hamza (RA)', 'Khalid ibn al-Walid (RA)', 'Sa\'d ibn Abi Waqqas (RA)', 'Abu Ubaidah (RA)'],
+    correctAnswer: 1,
+    explanation: 'Khalid ibn al-Walid (RA) was given the title "Saifullah" (Sword of Allah) by the Prophet.',
+    category: 'sahabah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'sahabah_6',
+    question: 'Who was the first female to accept Islam?',
+    options: ['Aisha (RA)', 'Khadijah (RA)', 'Fatimah (RA)', 'Sumayyah (RA)'],
+    correctAnswer: 1,
+    explanation: 'Khadijah bint Khuwaylid (RA) was the first person to accept Islam, both male and female.',
+    category: 'sahabah',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'sahabah_7',
+    question: 'Who was the first martyr in Islam?',
+    options: ['Bilal (RA)', 'Sumayyah (RA)', 'Yasir (RA)', 'Khadijah (RA)'],
+    correctAnswer: 1,
+    explanation: 'Sumayyah bint Khayyat (RA) was the first martyr in Islam, killed by Abu Jahl for her faith.',
+    category: 'sahabah',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 25
+  },
+  {
+    id: 'sahabah_8',
+    question: 'How many people were in the group that migrated to Abyssinia?',
+    options: ['11 men and 4 women', '15 men and 5 women', '12 men and 4 women', '10 men and 6 women'],
+    correctAnswer: 0,
+    explanation: 'The first migration to Abyssinia consisted of 11 men and 4 women, led by Jafar ibn Abi Talib (RA).',
+    category: 'sahabah',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 30
+  },
+
+  // ========== TAFSIR Questions ==========
+  {
+    id: 'tafsir_1',
+    question: 'What does "Tafsir" literally mean?',
+    options: ['To read', 'To explain or interpret', 'To memorize', 'To recite'],
+    correctAnswer: 1,
+    explanation: 'Tafsir literally means explanation or interpretation, referring to Quranic exegesis.',
+    category: 'tafsir',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'tafsir_2',
+    question: 'What is the most famous Tafsir of the Quran?',
+    options: ['Tafsir al-Jalalayn', 'Tafsir Ibn Kathir', 'Tafsir al-Tabari', 'Tafsir al-Qurtubi'],
+    correctAnswer: 1,
+    explanation: 'Tafsir Ibn Kathir is one of the most widely used and respected Quranic commentaries.',
+    category: 'tafsir',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'tafsir_3',
+    question: 'What are Makki and Madani surahs classified by?',
+    options: ['Length of surah', 'Time and place of revelation', 'Number of verses', 'Theme of surah'],
+    correctAnswer: 1,
+    explanation: 'Makki surahs were revealed before the Hijra in Makkah, and Madani surahs were revealed after in Madinah.',
+    category: 'tafsir',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'tafsir_4',
+    question: 'What is the literal meaning of "Surah"?',
+    options: ['Chapter', 'Rank or elevation', 'Book', 'Section'],
+    correctAnswer: 1,
+    explanation: 'Surah literally means "rank" or "elevation" in Arabic, referring to the high status of each chapter.',
+    category: 'tafsir',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'tafsir_5',
+    question: 'What does "Muhkam" ayat mean?',
+    options: ['Clear and unambiguous verses', 'Abrogated verses', 'Metaphorical verses', 'Short verses'],
+    correctAnswer: 0,
+    explanation: 'Muhkam verses are clear and unambiguous, forming the foundation of Islamic law and belief.',
+    category: 'tafsir',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 30
+  },
+  {
+    id: 'tafsir_6',
+    question: 'Who was the first Mufassir (commentator) of the Quran?',
+    options: ['Ibn Abbas (RA)', 'Ali ibn Abi Talib (RA)', 'Abdullah ibn Mas\'ud (RA)', 'The Prophet Muhammad (PBUH)'],
+    correctAnswer: 3,
+    explanation: 'The first and primary Mufassir was the Prophet Muhammad (PBUH) himself, as he explained the Quran to his companions.',
+    category: 'tafsir',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 25
+  },
+
+  // ========== FIQH Questions ==========
+  {
+    id: 'fiqh_1',
+    question: 'What does "Fiqh" mean literally?',
+    options: ['Knowledge', 'Understanding', 'Action', 'Worship'],
+    correctAnswer: 1,
+    explanation: 'Fiqh literally means "understanding" and refers to Islamic jurisprudence derived from the Quran and Sunnah.',
+    category: 'fiqh',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'fiqh_2',
+    question: 'What are the four primary sources of Fiqh?',
+    options: ['Quran, Sunnah, Ijma, Qiyas', 'Quran, Hadith, Fasting, Prayer', 'Sunnah, Charity, Hajj, Zakat', 'Quran, Tafsir, Fiqh, Iman'],
+    correctAnswer: 0,
+    explanation: 'The four sources are: Quran, Sunnah, Ijma (consensus), and Qiyas (analogical reasoning).',
+    category: 'fiqh',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'fiqh_3',
+    question: 'How many Fiqh rulings are there in Islamic law?',
+    options: ['3', '5', '7', '9'],
+    correctAnswer: 1,
+    explanation: 'The five rulings (Ahkam al-Khamsa) are: Fard (obligatory), Sunnah (recommended), Mubah (permissible), Makruh (disliked), Haram (forbidden).',
+    category: 'fiqh',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'fiqh_4',
+    question: 'Which act is considered "Fard Kifayah"?',
+    options: ['Fasting in Ramadan', 'Janazah (funeral) prayer', 'Five daily prayers', 'Zakat'],
+    correctAnswer: 1,
+    explanation: 'Fard Kifayah is a communal obligation — if some fulfill it, the rest are absolved. The Janazah prayer is an example.',
+    category: 'fiqh',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 25
+  },
+  {
+    id: 'fiqh_5',
+    question: 'What does "Qiyas" refer to in Fiqh?',
+    options: ['Consensus of scholars', 'Analogical deduction', 'Individual opinion', 'Tradition'],
+    correctAnswer: 1,
+    explanation: 'Qiyas is analogical reasoning — applying an established ruling to a new case with a similar cause.',
+    category: 'fiqh',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 30
+  },
+  {
+    id: 'fiqh_6',
+    question: 'How many schools of Fiqh (Madhahib) are widely followed today?',
+    options: ['2', '3', '4', '5'],
+    correctAnswer: 2,
+    explanation: 'Four major Sunni schools: Hanafi, Maliki, Shafi\'i, and Hanbali. Jafari is the main Shia school.',
+    category: 'fiqh',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 25
+  },
+
+  // ========== ARABIC Questions ==========
+  {
+    id: 'arabic_1',
+    question: 'How many letters are in the Arabic alphabet?',
+    options: ['26', '28', '30', '24'],
+    correctAnswer: 1,
+    explanation: 'The Arabic alphabet consists of 28 letters.',
+    category: 'arabic',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'arabic_2',
+    question: 'What direction is Arabic written?',
+    options: ['Left to right', 'Right to left', 'Top to bottom', 'Both directions'],
+    correctAnswer: 1,
+    explanation: 'Arabic is written and read from right to left.',
+    category: 'arabic',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 15
+  },
+  {
+    id: 'arabic_3',
+    question: 'What does "Jazakallah Khair" mean?',
+    options: ['Allah is great', 'May Allah reward you with goodness', 'Peace be upon you', 'In the name of Allah'],
+    correctAnswer: 1,
+    explanation: 'Jazakallah Khair means "May Allah reward you with goodness" — a common expression of thanks.',
+    category: 'arabic',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'arabic_4',
+    question: 'What is the meaning of "Masha Allah"?',
+    options: ['If Allah wills', 'Allah has willed it', 'Allah is great', 'Thanks to Allah'],
+    correctAnswer: 1,
+    explanation: 'Masha Allah means "Allah has willed it" — said to express appreciation for something good.',
+    category: 'arabic',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 20
+  },
+  {
+    id: 'arabic_5',
+    question: 'What is the Arabic word for "heart"?',
+    options: ['Aql', 'Qalb', 'Ruh', 'Nafs'],
+    correctAnswer: 1,
+    explanation: 'Qalb (قلب) means heart in Arabic.',
+    category: 'arabic',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 20
+  },
+  {
+    id: 'arabic_6',
+    question: 'What does "Alhamdulillah" literally translate to?',
+    options: ['Allah is great', 'All praise belongs to Allah', 'There is no god but Allah', 'Allah is the best'],
+    correctAnswer: 1,
+    explanation: 'Alhamdulillah literally means "All praise belongs to Allah."',
+    category: 'arabic',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 20
+  },
+
+  // ========== Additional Questions for Existing Categories ==========
+  {
+    id: 'hadith_1',
+    question: 'What is the most authentic book of Hadith?',
+    options: ['Sahih Muslim', 'Sahih Bukhari', 'Sunan Abu Dawud', 'Sunan Ibn Majah'],
+    correctAnswer: 1,
+    explanation: 'Sahih Bukhari is considered the most authentic book after the Quran.',
+    category: 'hadith',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'hadith_2',
+    question: 'What is a "Sahih" Hadith?',
+    options: ['Weak hadith', 'Authentic hadith', 'Fabricated hadith', 'Good hadith'],
+    correctAnswer: 1,
+    explanation: 'A Sahih hadith is one with an unbroken chain of reliable narrators and no inconsistencies.',
+    category: 'hadith',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'hadith_3',
+    question: 'Who compiled Sahih Bukhari?',
+    options: ['Muslim ibn al-Hajjaj', 'Muhammad al-Bukhari', 'Abu Dawud', 'Al-Tirmidhi'],
+    correctAnswer: 1,
+    explanation: 'Imam Muhammad ibn Ismail al-Bukhari compiled the Sahih Bukhari collection.',
+    category: 'hadith',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 20
+  },
+  {
+    id: 'hadith_4',
+    question: 'How many hadith are in Sahih Bukhari?',
+    options: ['Around 4,000', 'Around 7,275', 'Around 3,000', 'Around 10,000'],
+    correctAnswer: 1,
+    explanation: 'Sahih Bukhari contains approximately 7,275 hadith (including repetitions).',
+    category: 'hadith',
+    difficulty: 'hard',
+    points: 30,
+    timeLimit: 25
+  },
+  {
+    id: 'quran_11',
+    question: 'Which surah is known as the "Mother of the Book" (Umm al-Kitab)?',
+    options: ['Al-Baqarah', 'Al-Fatiha', 'Al-Ikhlas', 'Yasin'],
+    correctAnswer: 1,
+    explanation: 'Surah Al-Fatiha is called Umm al-Kitab (Mother of the Book) because it summarizes the Quran.',
+    category: 'quran',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 20
+  },
+  {
+    id: 'quran_12',
+    question: 'How many verses does Surah Al-Fatiha have?',
+    options: ['5', '6', '7', '8'],
+    correctAnswer: 2,
+    explanation: 'Surah Al-Fatiha contains 7 verses and is the most recited chapter in the Quran.',
+    category: 'quran',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 15
+  },
+  {
+    id: 'pillars_7',
+    question: 'What is Shahada?',
+    options: ['Prayer', 'Declaration of faith', 'Charity', 'Fasting'],
+    correctAnswer: 1,
+    explanation: 'Shahada is the declaration: "I bear witness there is no god but Allah, and Muhammad is His servant and messenger."',
+    category: 'pillars',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 15
+  },
+  {
+    id: 'prayer_9',
+    question: 'What is the night prayer called?',
+    options: ['Tarawih', 'Tahajjud', 'Witr', 'Isha'],
+    correctAnswer: 1,
+    explanation: 'Tahajjud is the voluntary night prayer performed after waking from sleep.',
+    category: 'prayer',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 20
+  },
+  {
+    id: 'prophets_8',
+    question: 'Which prophet was swallowed by a whale?',
+    options: ['Prophet Musa (AS)', 'Prophet Yunus (AS)', 'Prophet Nuh (AS)', 'Prophet Yusuf (AS)'],
+    correctAnswer: 1,
+    explanation: 'Prophet Yunus (Jonah) (AS) was swallowed by a whale and prayed to Allah from its belly.',
+    category: 'prophets',
+    difficulty: 'easy',
+    points: 10,
+    timeLimit: 20
+  },
+  {
+    id: 'ramadan_8',
+    question: 'Who is exempted from fasting in Ramadan?',
+    options: ['Only children', 'Travelers, sick, elderly, and pregnant women', 'Only the elderly', 'Only travelers'],
+    correctAnswer: 1,
+    explanation: 'Travelers, the sick, elderly, pregnant/nursing women, and children are exempt from fasting.',
+    category: 'ramadan',
+    difficulty: 'medium',
+    points: 20,
+    timeLimit: 20
+  },
 ];
 
 // Achievements System
@@ -1581,6 +2243,42 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '🌟',
     requirement: { type: 'total', value: 500 },
     points: 500,
+    unlocked: false
+  },
+  {
+    id: 'seerah_scholar',
+    name: 'Seerah Scholar',
+    description: 'Answer 10 Seerah questions correctly',
+    icon: '🕊️',
+    requirement: { type: 'category', value: 10, category: 'seerah' },
+    points: 200,
+    unlocked: false
+  },
+  {
+    id: 'aqeedah_expert',
+    name: 'Aqeedah Expert',
+    description: 'Answer 10 Aqeedah questions correctly',
+    icon: '☝️',
+    requirement: { type: 'category', value: 10, category: 'aqeedah' },
+    points: 200,
+    unlocked: false
+  },
+  {
+    id: 'all_rounder',
+    name: 'All-Rounder',
+    description: 'Play at least one quiz in every category',
+    icon: '🏅',
+    requirement: { type: 'total', value: 8 },
+    points: 300,
+    unlocked: false
+  },
+  {
+    id: 'century',
+    name: 'Century',
+    description: 'Answer 100 questions in total',
+    icon: '💯',
+    requirement: { type: 'total', value: 100 },
+    points: 400,
     unlocked: false
   }
 ];

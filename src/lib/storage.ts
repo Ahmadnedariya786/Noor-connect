@@ -66,11 +66,17 @@ export const setTheme = (theme: 'dark' | 'light'): void => {
   document.documentElement.classList.toggle('dark', theme === 'dark');
 };
 
-// Madhab
-export type MadhabType = 'shafi' | 'hanafi' | 'maliki' | 'hanbali';
+// Madhab / Fiqh — simplified to the 2 options used by the app.
+// (Asr calculation only differs between Hanafi and Shafi; Maliki & Hanbali
+//  follow Shafi, so we expose just the two meaningful choices.)
+export type MadhabType = 'shafi' | 'hanafi';
+
+const VALID_MADHABS: MadhabType[] = ['shafi', 'hanafi'];
 
 export const getMadhab = (): MadhabType => {
-  return (localStorage.getItem(STORAGE_KEYS.MADHAB) as MadhabType) || 'shafi';
+  const stored = localStorage.getItem(STORAGE_KEYS.MADHAB) as MadhabType | null;
+  // Normalize legacy values (maliki/hanbali → shafi) so old installs migrate cleanly.
+  return stored && VALID_MADHABS.includes(stored) ? stored : 'shafi';
 };
 
 export const setMadhab = (madhab: MadhabType): void => {
