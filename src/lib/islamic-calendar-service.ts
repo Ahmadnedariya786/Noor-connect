@@ -160,45 +160,51 @@ class IslamicCalendarService {
 
   async calculateDaysUntilRamadan(date: Date = new Date()): Promise<number> {
     try {
-      // Get current Hijri date
       const currentIslamicDate = await this.getIslamicDate(date);
       const currentHijriMonth = parseInt(currentIslamicDate.hijri.month.number.toString());
       const currentHijriDay = parseInt(currentIslamicDate.hijri.day);
       const currentHijriYear = parseInt(currentIslamicDate.hijri.year);
 
-      // If we're in Ramadan, return 0
-      if (currentHijriMonth.toString() === "9") {
-        return 0;
-      }
-
-      // Try to get exact date by checking forward
-      let daysUntil = 0;
-      const checkDate = new Date(date);
-      
-      while (daysUntil < 365) { // Prevent infinite loop
-        checkDate.setDate(checkDate.getDate() + 1);
-        const futureIslamicDate = this.calculateIslamicDate(checkDate);
-        
-        if (parseInt(futureIslamicDate.hijri.month.number.toString()) === 9 && parseInt(futureIslamicDate.hijri.day) === 1) {
-          break;
-        }
-        
-        daysUntil++;
-      }
-
-      return daysUntil;
+      return this.calculateDaysUntilRamadanFromHijri(currentHijriMonth, currentHijriDay, currentHijriYear);
     } catch (error) {
       console.error('Error calculating days until Ramadan:', error);
-      return -1; // Error value
+      return -1;
     }
   }
 
+  calculateDaysUntilRamadanFromHijri(hijriMonth: number, hijriDay: number, hijriYear?: number): number {
+    if (hijriMonth === 9) return 0;
+
+    const getMonthLength = (month: number): number => {
+      if (month === 12) return 29;
+      if (month % 2 === 1) return 30;
+      return 29;
+    };
+
+    let days = getMonthLength(hijriMonth) - hijriDay + 1;
+
+    if (hijriMonth > 9) {
+      for (let m = hijriMonth + 1; m <= 12; m++) {
+        days += getMonthLength(m);
+      }
+      for (let m = 1; m < 9; m++) {
+        days += getMonthLength(m);
+      }
+    } else {
+      for (let m = hijriMonth + 1; m < 9; m++) {
+        days += getMonthLength(m);
+      }
+    }
+
+    return days;
+  }
+
   /**
-   * Fallback calculation for Islamic date (approximate)
+   * Fallback calculation for Islamic date using the tabular Islamic calendar
+   * (30-year cycle with 11 leap years). Accurate to within 1-2 days of the
+   * moon-sighting calendar — suitable as an offline fallback.
    */
   calculateIslamicDate(date: Date): IslamicDate {
-    // This is a simplified fallback calculation
-    // In a real implementation, you'd use a proper Hijri calendar library
     const hijriMonths = [
       { en: 'Muharram', ar: 'محرم' },
       { en: 'Safar', ar: 'صفر' },
@@ -224,11 +230,41 @@ class IslamicCalendarService {
       { en: 'As-Sabt', ar: 'السبت' }
     ];
 
-    // Approximate calculation (this is not accurate, just for fallback)
+    // Tabular Islamic calendar
+    // Epoch: Friday, July 16, 622 CE (Julian) = JDN 1948439.5
+    const hijriEpoch = 1948439.5;
     const julianDay = this.getJulianDay(date);
-    const hijriDay = Math.floor((julianDay - 1948439.5) % 30) + 1;
-    const hijriMonth = Math.floor(((julianDay - 1948439.5) / 30) % 12) + 1;
-    const hijriYear = Math.floor((julianDay - 1948439.5) / 354.4) + 1;
+    const daysSinceEpoch = Math.floor(julianDay - hijriEpoch);
+
+    // Each 30-year cycle contains 10631 days (19 common years × 354 + 11 leap years × 355)
+    const cycleLength = 10631;
+    const yearLength = (y: number) => this.isHijriLeapYear(y) ? 355 : 354;
+
+    // Find the Hijri year by walking forward from epoch
+    let year = 1;
+    let accumulatedDays = 0;
+    while (accumulatedDays + yearLength(year) <= daysSinceEpoch) {
+      accumulatedDays += yearLength(year);
+      year++;
+    }
+
+    const dayOfYear = daysSinceEpoch - accumulatedDays;
+
+    // Find the month within the year
+    let month = 1;
+    let monthStart = 1;
+    for (let m = 1; m <= 12; m++) {
+      const ml = this.getTabularMonthLength(m, year);
+      if (dayOfYear < monthStart + ml - 1) {
+        month = m;
+        break;
+      }
+      monthStart += ml;
+    }
+
+    const hijriDay = dayOfYear - monthStart + 2;
+    const hijriMonth = month;
+    const hijriYear = year;
 
     return {
       hijri: {
@@ -266,6 +302,21 @@ class IslamicCalendarService {
         }
       }
     };
+  }
+
+  /**
+   * Tabular Islamic calendar helpers
+   */
+  private isHijriLeapYear(year: number): boolean {
+    // In the 30-year cycle, years 2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29 are leap
+    const cyclePosition = year % 30;
+    return [2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29].includes(cyclePosition);
+  }
+
+  private getTabularMonthLength(month: number, year: number): number {
+    if (month % 2 === 1) return 30; // Odd months: 30 days
+    if (month === 12) return this.isHijriLeapYear(year) ? 30 : 29;
+    return 29; // Even months (except Dhul-Hijjah): 29 days
   }
 
   /**

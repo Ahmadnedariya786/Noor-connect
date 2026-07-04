@@ -1,54 +1,66 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 
 interface IslamicEvent {
   name: string;
   greeting: string;
   arabicGreeting: string;
-  month: number;
-  day: number;
-  hijri?: boolean;
+  hijriMonth: number;
+  hijriDay: number;
 }
 
-// Approximate Gregorian dates for 2024-2025 (these change yearly)
 const islamicEvents: IslamicEvent[] = [
-  { name: "Eid al-Fitr", greeting: "Eid Mubarak!", arabicGreeting: "عيد مبارك", month: 4, day: 10 },
-  { name: "Eid al-Adha", greeting: "Eid Mubarak!", arabicGreeting: "عيد مبارك", month: 6, day: 16 },
-  { name: "Ramadan", greeting: "Ramadan Mubarak!", arabicGreeting: "رمضان مبارك", month: 3, day: 11 },
-  { name: "Islamic New Year", greeting: "Happy Islamic New Year!", arabicGreeting: "سنة هجرية مباركة", month: 7, day: 7 },
-  { name: "Jumu'ah", greeting: "Jumu'ah Mubarak!", arabicGreeting: "جمعة مباركة", month: -1, day: 5 }, // Friday
+  { name: "Eid al-Fitr", greeting: "Eid Mubarak!", arabicGreeting: "عيد مبارك", hijriMonth: 10, hijriDay: 1 },
+  { name: "Eid al-Adha", greeting: "Eid Mubarak!", arabicGreeting: "عيد مبارك", hijriMonth: 12, hijriDay: 10 },
+  { name: "Ramadan", greeting: "Ramadan Mubarak!", arabicGreeting: "رمضان مبارك", hijriMonth: 9, hijriDay: 1 },
+  { name: "Islamic New Year", greeting: "Happy Islamic New Year!", arabicGreeting: "سنة هجرية مباركة", hijriMonth: 1, hijriDay: 1 },
+  { name: "Ashura", greeting: "Blessed Ashura!", arabicGreeting: "عاشوراء مبارك", hijriMonth: 1, hijriDay: 10 },
+  { name: "Laylat al-Qadr", greeting: "Laylat al-Qadr Mubarak!", arabicGreeting: "ليلة القدر مباركة", hijriMonth: 9, hijriDay: 27 },
+  { name: "Arafah Day", greeting: "Day of Arafah", arabicGreeting: "يوم عرفة", hijriMonth: 12, hijriDay: 9 },
 ];
 
 export function IslamicGreeting() {
   const [greeting, setGreeting] = useState<IslamicEvent | null>(null);
 
   useEffect(() => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
+    const fetchGreeting = async () => {
+      try {
+        const { islamicCalendarService } = await import('@/lib/islamic-calendar-service');
+        const today = new Date();
+        const islamicDate = await islamicCalendarService.getIslamicDate(today);
+        const todayHijriMonth = parseInt(islamicDate.hijri.month.number.toString());
+        const todayHijriDay = parseInt(islamicDate.hijri.day);
 
-    // Check for Friday (Jumu'ah)
-    if (dayOfWeek === 5) {
-      const friday = islamicEvents.find(e => e.day === 5 && e.month === -1);
-      if (friday) {
-        setGreeting(friday);
-        return;
+        // Check Jumu'ah first (Friday)
+        if (today.getDay() === 5) {
+          setGreeting({
+            name: "Jumu'ah",
+            greeting: "Jumu'ah Mubarak!",
+            arabicGreeting: "جمعة مباركة",
+            hijriMonth: todayHijriMonth,
+            hijriDay: todayHijriDay,
+          });
+          return;
+        }
+
+        // Check for special Hijri dates
+        const event = islamicEvents.find(
+          e => e.hijriMonth === todayHijriMonth && e.hijriDay === todayHijriDay
+        );
+        if (event) {
+          setGreeting(event);
+        }
+      } catch {
+        // Silently fail — no greeting shown if API unavailable
       }
-    }
+    };
 
-    // Check for special Islamic dates (approximate)
-    const event = islamicEvents.find(e => e.month === month && e.day === day);
-    if (event) {
-      setGreeting(event);
-    }
+    fetchGreeting();
   }, []);
 
   if (!greeting) return null;
 
   return (
-
     <div className="mb-4">
       <div className="relative overflow-hidden rounded-full bg-gradient-to-r from-primary/20 via-primary/10 to-primary/5 border border-primary/20 p-1 shadow-sm">
         <div className="absolute inset-0 bg-white/5 backdrop-blur-sm"></div>

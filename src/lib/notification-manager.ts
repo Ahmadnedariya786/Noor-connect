@@ -454,7 +454,7 @@ export class NotificationManager {
 
     for (const eid of eidDates) {
       // Simplified check - would need proper Hijri calendar conversion
-      if (this.isEidDay(today, eid)) {
+      if (await this.isEidDay(today, eid)) {
         const event: NotificationEvent = {
           id: `eid-${eid.id}`,
           title: eid.name,
@@ -473,43 +473,23 @@ export class NotificationManager {
     }
   }
 
-  // Simplified Eid day check (would need proper Hijri calendar in production)
-  private isEidDay(date: Date, eid: IslamicDate): boolean {
-    // This is a placeholder - implement proper Hijri calendar conversion
-    // For now, using approximate Gregorian dates
-    const currentYear = date.getFullYear();
+  private async isEidDay(date: Date, eid: IslamicDate): Promise<boolean> {
+    try {
+      const { islamicCalendarService } = await import('@/lib/islamic-calendar-service');
+      const islamicDate = await islamicCalendarService.getIslamicDate(date);
+      const hijriMonth = parseInt(islamicDate.hijri.month.number.toString());
+      const hijriDay = parseInt(islamicDate.hijri.day);
 
-    if (eid.id === 'eid-ul-fitr') {
-      // Approximate dates for Eid-ul-Fitr
-      const eidFitrDates: Record<number, { month: number; day: number }> = {
-        2025: { month: 3, day: 30 },
-        2026: { month: 3, day: 21 },
-        2027: { month: 3, day: 9 },
-        2028: { month: 2, day: 26 },
-        2029: { month: 2, day: 15 },
-        2030: { month: 2, day: 5 },
-      };
-
-      const targetDate = eidFitrDates[currentYear];
-      return targetDate && date.getMonth() === targetDate.month - 1 && date.getDate() === targetDate.day;
+      if (eid.id === 'eid-ul-fitr') {
+        return hijriMonth === 10 && hijriDay === 1;
+      }
+      if (eid.id === 'eid-ul-adha') {
+        return hijriMonth === 12 && hijriDay === 10;
+      }
+      return false;
+    } catch {
+      return false;
     }
-
-    if (eid.id === 'eid-ul-adha') {
-      // Approximate dates for Eid-ul-Adha
-      const eidAdhaDates: Record<number, { month: number; day: number }> = {
-        2025: { month: 6, day: 7 },
-        2026: { month: 5, day: 27 },
-        2027: { month: 5, day: 17 },
-        2028: { month: 5, day: 5 },
-        2029: { month: 4, day: 25 },
-        2030: { month: 4, day: 14 },
-      };
-
-      const targetDate = eidAdhaDates[currentYear];
-      return targetDate && date.getMonth() === targetDate.month - 1 && date.getDate() === targetDate.day;
-    }
-
-    return false;
   }
 
   // Enhanced Friday Surah Kahf reminder with varied content

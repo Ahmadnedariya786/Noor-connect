@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { AladhanAPI, AladhanDayData } from '@/lib/aladhan-api';
 import { useLocationState } from '@/lib/location-state';
 import { globalTimerManager } from '@/lib/timer-manager';
+import { islamicCalendarService } from '@/lib/islamic-calendar-service';
 
 export interface UseIslamicCalendarReturn {
   islamicInfo: {
@@ -67,6 +68,7 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
   const [hijriYear, setHijriYear] = useState('');
   const [hijriWeekday, setHijriWeekday] = useState({ en: '', ar: '' });
   const [hijriHolidays, setHijriHolidays] = useState<string[]>([]);
+  const [daysUntilRamadan, setDaysUntilRamadan] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastUpdateKey = useRef<string>('');
@@ -191,6 +193,15 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
     computeIslamicDate();
   }, [computeIslamicDate]);
 
+  // Compute daysUntilRamadan whenever Hijri data changes
+  useEffect(() => {
+    if (hijriMonthNum) {
+      const day = parseInt(hijriDay) || 0;
+      const year = parseInt(hijriYear) || 0;
+      setDaysUntilRamadan(islamicCalendarService.calculateDaysUntilRamadanFromHijri(hijriMonthNum, day, year));
+    }
+  }, [hijriMonthNum, hijriDay, hijriYear]);
+
   // Listen for manual Hijri offset changes
   useEffect(() => {
     const handleOffsetChange = () => computeIslamicDate();
@@ -236,7 +247,7 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
     },
     isRamadan,
     ramadanDay,
-    daysUntilRamadan: isRamadan ? 0 : -1,
+    daysUntilRamadan,
     isEidAlFitr,
     isEidAlAdha,
     hijriMonth: hijriMonthNumber,
@@ -250,10 +261,10 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
     error,
     isRamadan,
     ramadanDay,
-    daysUntilRamadan: isRamadan ? 0 : -1,
+    daysUntilRamadan,
     isEidAlFitr,
     isEidAlAdha,
     hijriDate,
     refresh: computeIslamicDate,
-  }), [islamicInfo, isLoading, error, isRamadan, ramadanDay, isEidAlFitr, isEidAlAdha, hijriDate, computeIslamicDate]);
+  }), [islamicInfo, isLoading, error, isRamadan, ramadanDay, daysUntilRamadan, isEidAlFitr, isEidAlAdha, hijriDate, computeIslamicDate]);
 }
