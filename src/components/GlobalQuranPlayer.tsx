@@ -1,16 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useReciters } from "@/hooks/useReciters";
-import { Pause, Play, User, X, ChevronDown, Repeat, Wifi, WifiOff } from "lucide-react";
+import { AlertCircle, Pause, Play, User, Volume2, X, ChevronUp, ChevronDown, Repeat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Slider } from "./ui/slider";
 import { androidAudioHelper } from "@/lib/android-audio-helper";
-import { useGlobalRadio } from "@/lib/global-radio";
-import { useGlobalQuran, setGlobalQuranAudioRef } from "@/lib/global-quran";
+import { useGlobalRadio } from "@/lib/global-radio"; // To pause radio
+import { useGlobalQuran, setGlobalQuranAudioRef, Reciter } from "@/lib/global-quran";
 import { downloadManager } from "@/lib/download-manager";
-import { isLowEndDevice } from "@/lib/device-performance";
 
 const formatTime = (time: number): string => {
     if (!time || isNaN(time)) return "0:00";
@@ -23,8 +22,6 @@ const RECITER_STORAGE_KEY = 'mp3quran-selected-reciter';
 
 export function GlobalQuranPlayer() {
     const audioRef = useRef<HTMLAudioElement>(null);
-    const preloadRef = useRef<HTMLAudioElement | null>(null);
-    const wakeLockRef = useRef<any>(null);
     const {
         isPlaying, surahNumber, surahName, reciter, volume, progress, duration, isBackgroundMode,
         updateState, playSurah, pause, resume, setProgress, setDuration
@@ -33,65 +30,15 @@ export function GlobalQuranPlayer() {
     const { isPlaying: isRadioPlaying, updateRadioState: updateRadioState } = useGlobalRadio();
 
     const [isExpanded, setIsExpanded] = useState(false);
-    const [connectionType, setConnectionType] = useState('');
 
     // Use shared reciter hook
     const { reciters, isLoading: isReciterLoading, error: fetchError } = useReciters();
     const [isAudioLoading, setIsAudioLoading] = useState(false);
     const isLoading = isReciterLoading || isAudioLoading;
 
-    const isLowEnd = isLowEndDevice();
-
-    // Connection monitoring
-    useEffect(() => {
-        const updateConnection = () => {
-            const conn = (navigator as any).connection;
-            if (conn) {
-                setConnectionType(conn.effectiveType || conn.type || '');
-            }
-        };
-        updateConnection();
-        const conn = (navigator as any).connection;
-        if (conn) conn.addEventListener('change', updateConnection);
-        return () => { if (conn) conn.removeEventListener('change', updateConnection); };
-    }, []);
-
-    // Wake-lock management
-    useEffect(() => {
-        const requestWakeLock = async () => {
-            try {
-                if (wakeLockRef.current) await wakeLockRef.current.release();
-                wakeLockRef.current = await navigator.wakeLock.request('screen');
-            } catch {}
-        };
-        if (isPlaying) requestWakeLock();
-        else if (wakeLockRef.current) {
-            wakeLockRef.current.release();
-            wakeLockRef.current = null;
-        }
-        return () => {
-            if (wakeLockRef.current) { wakeLockRef.current.release(); wakeLockRef.current = null; }
-        };
-    }, [isPlaying]);
-
-    // Preload next surah
-    useEffect(() => {
-        if (!surahNumber || !reciter || !preloadRef.current) return;
-        const nextSurah = surahNumber < 114 ? surahNumber + 1 : 1;
-        const padded = nextSurah.toString().padStart(3, '0');
-        const server = reciter.server.endsWith('/') ? reciter.server : `${reciter.server}/`;
-        preloadRef.current.src = `${server}${padded}.mp3`;
-        preloadRef.current.load();
-    }, [surahNumber, reciter]);
-
     // Initialize Global Ref
     useEffect(() => {
         setGlobalQuranAudioRef(audioRef.current);
-        preloadRef.current = new Audio();
-        preloadRef.current.preload = 'auto';
-        return () => {
-            if (preloadRef.current) { preloadRef.current.src = ''; preloadRef.current = null; }
-        };
     }, []);
 
     // Set default reciter when loaded
@@ -266,9 +213,11 @@ export function GlobalQuranPlayer() {
             <>
                 <audio ref={audioRef} />
                 <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
-                    <Card className={`w-full max-w-lg mx-auto bg-zinc-900/95 backdrop-blur-xl text-white border-white/10 shadow-2xl rounded-full p-2 pr-4 flex items-center justify-between ${isLowEnd ? '' : 'transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-bottom'} border`}>
+                    <Card className="w-full max-w-lg mx-auto bg-zinc-900/95 backdrop-blur-xl text-white border-white/10 shadow-2xl rounded-full p-2 pr-4 flex items-center justify-between transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-bottom border">
+                        {/* Clickable Area to Expand */}
                         <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={() => setIsExpanded(true)}>
-                            <div className={`w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0 border border-white/10 ${isPlaying && !isLowEnd ? 'animate-spin-slow' : ''}`}>
+                            {/* Rotating Vinyl Icon */}
+                            <div className={`w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0 border border-white/10 ${isPlaying ? 'animate-spin-slow' : ''}`}>
                                 <Play className="w-4 h-4 text-primary fill-current" />
                             </div>
 
@@ -278,12 +227,8 @@ export function GlobalQuranPlayer() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                            {connectionType && (
-                                <div className="text-[10px] text-zinc-500 mr-1" title={`Connection: ${connectionType}`}>
-                                    {connectionType === 'offline' ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
-                                </div>
-                            )}
+                        {/* Controls */}
+                        <div className="flex items-center gap-2">
                             <Button size="icon" variant="ghost" onClick={togglePlayback} disabled={isLoading} className="text-white hover:text-primary hover:bg-white/10 rounded-full w-9 h-9">
                                 {isLoading ? (
                                     <div className="w-4 h-4 border-2 border-primary border-t-transparent animate-spin rounded-full" />
@@ -294,6 +239,7 @@ export function GlobalQuranPlayer() {
                                 )}
                             </Button>
 
+                            {/* Close/Stop Button */}
                             <Button size="icon" variant="ghost" onClick={() => { pause(); updateState({ surahNumber: null }); }} className="text-zinc-500 hover:text-destructive hover:bg-white/10 rounded-full w-8 h-8">
                                 <X className="w-4 h-4" />
                             </Button>
