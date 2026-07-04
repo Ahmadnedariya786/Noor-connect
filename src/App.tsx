@@ -89,6 +89,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const SeerahHome = lazy(() => import("./pages/SeerahHome"));
 const SeerahReader = lazy(() => import("./pages/SeerahReader"));
+const HaidhTracker = lazy(() => import("./pages/HaidhTracker"));
 const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
 
@@ -172,6 +173,7 @@ function AppRoutes() {
         <Route path="/ramadan" element={<RamadanMode />} />
         <Route path="/menstrual-mode" element={<MenstrualMode />} />
         <Route path="/enhanced-menstrual-mode" element={<EnhancedMenstrualModePage />} />
+        <Route path="/noor-cycle" element={<HaidhTracker />} />
         <Route path="/notification-history" element={<NotificationHistory />} />
         <Route path="/zakat" element={<ZakatCalculator />} />
         <Route path="/names-of-allah" element={<NamesOfAllah />} />
