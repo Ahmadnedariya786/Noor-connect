@@ -30,8 +30,9 @@ const STATUS_BASE: Record<DayStatus, string> = {
   tuhr:      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
   predicted: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
   fertile:   "bg-violet-500/15 text-violet-600 dark:text-violet-300",
+  ovulation: "bg-yellow-400/30 text-yellow-600 dark:text-yellow-300 ring-2 ring-yellow-400/50",
   future:    "bg-transparent text-muted-foreground/40",
-  today:     "bg-muted text-foreground", // unused as a real status now; kept for type safety
+  today:     "bg-muted text-foreground",
 };
 
 function buildCalendar(year: number, month: number) {
@@ -65,6 +66,8 @@ export function HaidhCalendarTab({ data }: Props) {
   const legend = [
     { label: "Ḥaidh", cls: "bg-rose-500/40" },
     { label: "Ṭuhr", cls: "bg-emerald-500/30" },
+    { label: "Fertile", cls: "bg-violet-500/40" },
+    { label: "Ovulation", cls: "bg-yellow-400/50" },
     { label: "Predicted", cls: "bg-amber-500/40" },
     { label: "Today", cls: "ring-2 ring-foreground/60" },
   ];
@@ -87,7 +90,7 @@ export function HaidhCalendarTab({ data }: Props) {
           {MONTHS[month]} {year}
         </h3>
         <button
-          onClick={() => setOffset(o => Math.min(o + 1, 2))}
+          onClick={() => setOffset(o => o + 1)}
           aria-label="Next month"
           className="w-10 h-10 rounded-[16px] flex items-center justify-center bg-muted hover:bg-muted/70 transition-colors"
         >

@@ -4,8 +4,9 @@ import {
   LineChart, Line, PieChart, Pie, Cell
 } from "recharts";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { FileDown, TrendingUp, CalendarDays, Activity, Heart } from "lucide-react";
-import type { HaidhTrackerData, CycleEntry, DailyLog } from "@/lib/haidh-tracker";
+import { getRegularityInfo, calculateOvulationDay, type HaidhTrackerData, type CycleEntry, type DailyLog } from "@/lib/haidh-tracker";
 
 interface Props {
   data: HaidhTrackerData;
@@ -180,6 +181,41 @@ export function HaidhAnalyticsTab({ data }: Props) {
         </div>
       ) : (
         <>
+          {/* Cycle insights summary */}
+          {(() => {
+            const r = getRegularityInfo(data);
+            const ovDay = calculateOvulationDay(data);
+            return (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-card border border-border rounded-3xl p-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Regularity</span>
+                  <p className={cn(
+                    "text-lg font-black mt-1",
+                    r.score === "regular" && "text-emerald-500",
+                    r.score === "slightly-irregular" && "text-amber-500",
+                    r.score === "irregular" && "text-rose-500",
+                  )}>
+                    {r.score === "regular" ? "Regular" : r.score === "slightly-irrigular" ? "Slighty Irregular" : "Irregular"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">±{r.variation}d · {r.trend}</p>
+                </div>
+                <div className="bg-card border border-border rounded-3xl p-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Avg Cycle</span>
+                  <p className="text-lg font-black mt-1 text-foreground">{r.averageCycle} <span className="text-xs font-medium text-muted-foreground">days</span></p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Range {r.minCycle}–{r.maxCycle}d · {completedCycles.length} cycles</p>
+                </div>
+                {ovDay && (
+                  <div className="bg-card border border-border rounded-3xl p-4 col-span-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-yellow-500">Predicted Ovulation</span>
+                    <p className="text-base font-black mt-1 text-foreground">
+                      {new Date(ovDay).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           <div className="bg-card border border-border rounded-3xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <CalendarDays className="w-4 h-4 text-rose-500" />

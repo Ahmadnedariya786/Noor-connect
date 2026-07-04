@@ -7,6 +7,8 @@ import { HaidhGhuslChecklist as GhuslChecklist } from "@/components/haidh/HaidhG
 import {
   getCurrentCycle,
   getPredictionConfidence,
+  calculateOvulationDay,
+  getRegularityInfo,
   type HaidhTrackerData,
   type FiqhStatus,
 } from "@/lib/haidh-tracker";
@@ -65,6 +67,13 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
   // Has the most recent cycle just ended (and ghusl not yet logged today)?
   const lastCycle = data.cycles[0];
   const justEnded = !data.isActive && lastCycle?.endDate && daysToNext !== null && daysToNext < 2;
+
+  // Cycle insights
+  const regularity = useMemo(() => getRegularityInfo(data), [data]);
+  const ovulationDay = useMemo(() => calculateOvulationDay(data), [data]);
+  const daysToOvulation = ovulationDay
+    ? Math.round((new Date(ovulationDay).getTime() - new Date(today).getTime()) / 86400000)
+    : null;
 
   return (
     <div className="space-y-6 pb-24">
@@ -263,7 +272,39 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
             </span>
           </div>
           <p className="text-sm text-foreground/80 leading-relaxed">
-            You may be in your fertile window. Ovulation typically occurs around {daysToNext !== null ? daysToNext - 14 : "~14"} days before your next cycle.
+            You may be in your fertile window.
+            {daysToOvulation !== null && daysToOvulation >= 0
+              ? ` Ovulation predicted in ~${daysToOvulation} day${daysToOvulation !== 1 ? "s" : ""}.`
+              : ` Ovulation typically occurs around ${daysToNext !== null ? daysToNext - 14 : "~14"} days before your next cycle.`}
+          </p>
+        </div>
+      )}
+
+      {/* Cycle insights */}
+      {regularity.variation > 0 && (
+        <div className="bg-card border border-border rounded-3xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">📊</span>
+            <span className="text-xs font-black uppercase tracking-widest text-primary">Cycle Insights</span>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className={cn(
+              "text-xs font-bold px-2.5 py-1 rounded-full",
+              regularity.score === "regular" && "bg-emerald-500/15 text-emerald-500",
+              regularity.score === "slightly-irregular" && "bg-amber-500/15 text-amber-500",
+              regularity.score === "irregular" && "bg-rose-500/15 text-rose-500",
+            )}>
+              {regularity.score === "regular" ? "Regular" : regularity.score === "slightly-irregular" ? "Slightly Irregular" : "Irregular"}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              ±{regularity.variation}d variation
+            </span>
+            <span className="text-xs text-muted-foreground ml-auto">
+              {regularity.trend === "increasing" ? "📈" : regularity.trend === "decreasing" ? "📉" : "➡️"} {regularity.trend}
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Avg {regularity.averageCycle}d · Range {regularity.minCycle}–{regularity.maxCycle}d · Based on last {data.cycles.filter(c => c.endDate).length} cycles
           </p>
         </div>
       )}

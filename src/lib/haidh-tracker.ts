@@ -474,7 +474,7 @@ export const clearAllData = (): void => {
 };
 
 // ─── Calendar helpers ────────────────────────────────────────
-export type DayStatus = 'haidh' | 'tuhr' | 'predicted' | 'today' | 'future' | 'fertile';
+export type DayStatus = 'haidh' | 'tuhr' | 'predicted' | 'today' | 'future' | 'fertile' | 'ovulation';
 
 export const getDayStatus = (data: HaidhTrackerData, dateStr: string): DayStatus => {
   const today = toDateStr(new Date());
@@ -499,12 +499,15 @@ export const getDayStatus = (data: HaidhTrackerData, dateStr: string): DayStatus
     }
   }
 
-  // Fertile window: ~5 days before ovulation, ovulation ~14 days before next period
+  // Ovulation day + fertile window: ovulation ~14 days before next period
   if (data.nextPredictedStart) {
     const nextPeriod = new Date(data.nextPredictedStart);
     const check = new Date(dateStr);
     const daysUntilNext = Math.round((nextPeriod.getTime() - check.getTime()) / 86400000);
-    if (daysUntilNext >= 14 && daysUntilNext <= 19 && dateStr <= today) {
+    if (daysUntilNext === 14 && dateStr <= today) {
+      return 'ovulation';
+    }
+    if (daysUntilNext >= 15 && daysUntilNext <= 19 && dateStr <= today) {
       return 'fertile';
     }
   }
@@ -566,6 +569,105 @@ export const PHASE_DUAS = {
     dhikr: [],
   },
 };
+
+// ─── Ovulation day ────────────────────────────────────────────
+export const calculateOvulationDay = (data: HaidhTrackerData): string | null => {
+  if (!data.nextPredictedStart) return null;
+  const nextPeriod = new Date(data.nextPredictedStart);
+  const ovulation = new Date(nextPeriod);
+  ovulation.setDate(ovulation.getDate() - 14);
+  return toDateStr(ovulation);
+};
+
+// ─── Cycle regularity & trend ─────────────────────────────────
+export interface RegularityInfo {
+  score: 'regular' | 'slightly-irregular' | 'irregular';
+  variation: number;
+  trend: 'increasing' | 'decreasing' | 'stable';
+  averageCycle: number;
+  minCycle: number;
+  maxCycle: number;
+}
+
+export const getRegularityInfo = (data: HaidhTrackerData): RegularityInfo => {
+  const gaps: number[] = [];
+  const sorted = [...data.cycles].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i - 1].startDate).getTime();
+    const curr = new Date(sorted[i].startDate).getTime();
+    const gap = Math.round((curr - prev) / 86400000);
+    if (gap > 0 && gap < 100) gaps.push(gap);
+  }
+
+  if (gaps.length < 2) {
+    return { score: 'regular', variation: 0, trend: 'stable', averageCycle: data.averageCycleLength, minCycle: data.averageCycleLength, maxCycle: data.averageCycleLength };
+  }
+
+  const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+  const stdDev = Math.sqrt(gaps.reduce((sum, g) => sum + (g - mean) ** 2, 0) / gaps.length);
+  const cv = stdDev / mean;
+  const min = Math.min(...gaps);
+  const max = Math.max(...gaps);
+
+  let score: RegularityInfo['score'];
+  if (cv < 0.08) score = 'regular';
+  else if (cv < 0.18) score = 'slightly-irregular';
+  else score = 'irregular';
+
+  const mid = Math.floor(gaps.length / 2);
+  const firstHalf = gaps.slice(0, mid).reduce((a, b) => a + b, 0) / mid;
+  const secondHalf = gaps.slice(mid).reduce((a, b) => a + b, 0) / (gaps.length - mid);
+  const diff = secondHalf - firstHalf;
+  const trend: RegularityInfo['trend'] = diff > 2 ? 'increasing' : diff < -2 ? 'decreasing' : 'stable';
+
+  return { score, variation: Math.round(stdDev), trend, averageCycle: Math.round(mean), minCycle: min, maxCycle: max };
+};
+
+// ─── Education content ────────────────────────────────────────
+export interface EducationTopic {
+  question: string;
+  answer: string;
+  source?: string;
+}
+
+export const HAIDH_EDUCATION: EducationTopic[] = [
+  {
+    question: 'What is the difference between Ḥaidh and Istiḥāḍah?',
+    answer: 'Ḥaidh (menstruation) is the natural monthly bleeding that girls and women experience. Istiḥāḍah (irregular/continuous bleeding) is bleeding outside the normal menstrual cycle — it can be caused by illness, injury, or hormonal imbalance. The key difference: during Ḥaidh, salah and fasting are prohibited; during Istiḥāḍah, you must still pray and fast after performing wuḍū for each prayer time.',
+    source: 'Sahih al-Bukhari 228, Sahih Muslim 333',
+  },
+  {
+    question: 'How long does Ḥaidh last according to the madhāhib?',
+    answer: 'The minimum and maximum durations differ by madhab:\n• Ḥanafī: minimum 3 days, maximum 10 days\n• Mālikī: minimum 1 day, maximum 15 days\n• Shāfiʿī: minimum 1 day, maximum 15 days\n• Ḥanbalī: minimum 1 day, maximum 15 days\nIf bleeding exceeds your madhab\'s maximum, it is considered Istiḥāḍah.',
+  },
+  {
+    question: 'What is the minimum period of purity (Ṭuhr) between cycles?',
+    answer: 'The minimum period of purity (tuhr) between two menstrual cycles is 15 days according to the Ḥanafī and Ḥanbalī schools, and 15 days according to the Mālikī and Shāfiʿī schools as well. If bleeding starts again within this period, it may be considered Istiḥāḍah.',
+  },
+  {
+    question: 'Can I read or touch the Quran during Ḥaidh?',
+    answer: 'There is a scholarly difference of opinion:\n• Reciting from memory: Permitted by most scholars.\n• Touching the Muṣḥaf (physical Quran): Most scholars say it is not permitted until after ghusl. You may read from a phone/tablet as these are not considered a Muṣḥaf.\n• Listening to Quran: Always permitted and rewarded.',
+    source: 'The Majority (Ḥanafī, Shāfiʿī, Ḥanbalī) prohibit touching the Muṣḥaf; Mālikīs allow it with wuḍū.',
+  },
+  {
+    question: 'Do I need to make up missed prayers after Ḥaidh?',
+    answer: 'No. According to the consensus of scholars, a woman does not need to make up the prayers she missed during her menstrual period. The Prophet ﷺ said: "Is it not the case that when she menstruates, she does not pray or fast?" (Sahih al-Bukhari 304). However, missed fasts during Ramadan must be made up.',
+    source: 'Sahih al-Bukhari 304',
+  },
+  {
+    question: 'What is Nifās (postpartum bleeding)?',
+    answer: 'Nifās is the bleeding that occurs after childbirth. The maximum duration is 40 days according to the Ḥanafī and Ḥanbalī schools, and 60 days according to the Mālikī and Shāfiʿī schools. If bleeding stops before the maximum, you should perform ghusl and resume prayers. If it continues beyond the maximum, it is considered Istiḥāḍah.',
+    source: 'Sunan al-Tirmidhi 139',
+  },
+  {
+    question: 'Can I fast voluntarily during Ḥaidh?',
+    answer: 'No. Voluntary fasts are not valid during Ḥaidh just as obligatory fasts are not. However, unlike Ramadan fasts, voluntary fasts do not need to be made up.',
+  },
+  {
+    question: 'What acts of worship can I do during Ḥaidh?',
+    answer: 'You can still earn immense reward:\n• Dhikr (remembrance of Allah): سبحان الله، الحمد لله، الله أكبر، etc.\n• Duʿā (supplication) — this is a great time to make duʿā.\n• Listening to the Quran.\n• Learning Islamic knowledge.\n• Giving charity.\n• Sending salutations upon the Prophet ﷺ.\n• Making istighfār (seeking forgiveness).',
+  },
+];
 
 // ─── Legacy compat shims ──────────────────────────────────────
 // These allow Dashboard.tsx to keep working without modification

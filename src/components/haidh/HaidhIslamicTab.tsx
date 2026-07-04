@@ -1,4 +1,5 @@
-import { Heart, BookOpen, AlertTriangle, CheckCircle, Moon, Wind, BookHeart, Droplets } from "lucide-react";
+import { useState } from "react";
+import { Heart, BookOpen, AlertTriangle, CheckCircle, Moon, Wind, BookHeart, Droplets, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import {
   MADHAB_RULES,
   markFastMadeUp,
   getCurrentCycle,
+  HAIDH_EDUCATION,
   type HaidhTrackerData,
   type FiqhStatus,
 } from "@/lib/haidh-tracker";
@@ -29,6 +31,7 @@ function phaseContent(data: HaidhTrackerData, fiqh: FiqhStatus) {
 }
 
 export function HaidhIslamicTab({ data, fiqh }: Props) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const cycle = getCurrentCycle(data);
   const isNifas = cycle?.bleedingType === "nifas";
   const content = phaseContent(data, fiqh);
@@ -80,17 +83,31 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
         </div>
       )}
 
-      {/* Nifas explainer */}
+      {/* Nifas explainer + postpartum wellness */}
       {isNifas && !fiqh.istihadhahDetected && (
-        <div className="bg-rose-500/10 border border-rose-500/30 rounded-3xl p-5">
-          <div className="flex items-start gap-3">
-            <Heart className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-black text-rose-600 dark:text-rose-400">Nifās (Postpartum)</h3>
-              <p className="text-sm text-foreground/80 mt-1 leading-relaxed">
-                You are logging postpartum bleeding. The same exemptions as Ḥaidh apply. The {MADHAB_LABEL[data.madhab]} limit is up to {rules.maxNifas} days; bleeding beyond that is treated as Istiḥāḍah.
-              </p>
+        <div className="space-y-4">
+          <div className="bg-rose-500/10 border border-rose-500/30 rounded-3xl p-5">
+            <div className="flex items-start gap-3">
+              <Heart className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-black text-rose-600 dark:text-rose-400">Nifās (Postpartum)</h3>
+                <p className="text-sm text-foreground/80 mt-1 leading-relaxed">
+                  You are logging postpartum bleeding. The same exemptions as Ḥaidh apply. The {MADHAB_LABEL[data.madhab]} limit is up to {rules.maxNifas} days; bleeding beyond that is treated as Istiḥāḍah.
+                </p>
+              </div>
             </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-3xl p-5">
+            <h3 className="font-black text-rose-600 dark:text-rose-400 mb-3 flex items-center gap-2">
+              <Heart className="w-4 h-4" /> Postpartum Wellness
+            </h3>
+            <ul className="space-y-2 text-sm text-foreground/80">
+              <li className="flex gap-2 items-start"><Moon className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Rest as much as possible — your body is recovering.</li>
+              <li className="flex gap-2 items-start"><BookHeart className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Make duʿā for your newborn: <span dir="rtl" className="font-arabic">بارك الله لك في الموهوب</span> (Bārak Allāhu laka fī al-mawhūb).</li>
+              <li className="flex gap-2 items-start"><Wind className="w-4 h-4 text-primary shrink-0 mt-0.5" /> During Nifās, the same exemptions as Ḥaidh apply — focus on dhikr and duʿā.</li>
+              <li className="flex gap-2 items-start"><CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" /> When bleeding stops, perform Ghusl and resume prayers even if before {rules.maxNifas} days.</li>
+            </ul>
           </div>
         </div>
       )}
@@ -241,6 +258,37 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* Education FAQ */}
+      <div className="bg-card border border-border rounded-[32px] p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className="w-4 h-4 text-primary" />
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Islamic Knowledge</h3>
+        </div>
+        <div className="space-y-2">
+          {HAIDH_EDUCATION.map((item, i) => (
+            <div key={i} className="border border-border rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="w-full flex items-center justify-between p-4 text-left text-sm font-bold text-foreground hover:bg-muted/30 transition-colors"
+              >
+                {item.question}
+                <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform ml-2", openFaq === i && "rotate-180")} />
+              </button>
+              {openFaq === i && (
+                <div className="px-4 pb-4 text-sm text-foreground/80 leading-relaxed space-y-2">
+                  {item.answer.split('\n').map((line, j) => (
+                    <p key={j}>{line}</p>
+                  ))}
+                  {item.source && (
+                    <p className="text-[10px] text-muted-foreground mt-2 italic">{item.source}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Verified Islamic Resources */}
