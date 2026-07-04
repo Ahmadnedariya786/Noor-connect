@@ -1,12 +1,13 @@
 // PDF Text Extraction Utility using pdf.js
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
 // Lazy load pdfjs-dist to reduce bundle size
 let pdfjsLib: any = null;
 
 async function getPdfjsLib() {
   if (!pdfjsLib) {
     pdfjsLib = await import('pdfjs-dist');
-    // Configure PDF.js worker (should match the version used in NativePdfViewer)
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
   }
   return pdfjsLib;
 }

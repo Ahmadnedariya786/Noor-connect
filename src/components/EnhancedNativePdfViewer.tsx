@@ -7,6 +7,8 @@ import PdfAudioPlayer from '@/components/PdfAudioPlayer';
 import { useToast } from '@/hooks/use-toast';
 
 // Lazy load pdfjs-dist to reduce bundle size
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
 let pdfjsLib: any = null;
 let workerConfigured = false;
 
@@ -14,7 +16,7 @@ async function getPdfjsLib() {
   if (!pdfjsLib) {
     pdfjsLib = await import('pdfjs-dist');
     if (!workerConfigured) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
       workerConfigured = true;
     }
   }
