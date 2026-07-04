@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, BookOpen, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Search, BookOpen, ChevronRight, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { getCollectionByName, HadithBook, HadithCollection, EnhancedHadith } from "@/data/hadith-collections";
 import { getHadithBookData, getHadithCollectionMetadata } from "@/lib/hadith";
 
@@ -16,6 +17,7 @@ function normalizeBookNumber(bookNumber: string): string {
 export function HadithBookContent() {
   const { collection, book } = useParams<{ collection: string; book: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [hadithData, setHadithData] = useState<EnhancedHadith[]>([]);
@@ -258,14 +260,20 @@ export function HadithBookContent() {
         </div>
 
         {loading && (
-          <Card className="border-border/50">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Loading hadith...</span>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {[1,2,3,4,5].map(i => (
+              <Card key={i} className="border-border/50">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-12 bg-muted rounded animate-pulse" />
+                    <div className="h-5 w-16 bg-muted rounded animate-pulse" />
+                  </div>
+                  <div className="h-24 bg-muted/50 rounded-xl animate-pulse" />
+                  <div className="h-12 bg-muted/50 rounded-lg animate-pulse" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
 
         {/* Hadith List */}
@@ -277,9 +285,7 @@ export function HadithBookContent() {
                 <Card
                   key={`${hadith.id}-${hadith.bookNumber}-${hadith.hadithNumber}-${index}`}
                   className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-border/50 hover:border-primary/30"
-                  onClick={() => {
-                    // Individual hadith route can be added later.
-                  }}
+                  onClick={() => navigate(`/hadith/collections/${collection}/${book}/${hadith.hadithNumber}`)}
                 >
                   <CardContent className="p-6 space-y-4">
                     <div className="flex items-start justify-between">
@@ -315,6 +321,25 @@ export function HadithBookContent() {
                             Narrated by: {hadith.narrator}
                           </p>
                         )}
+
+                        {/* Copy */}
+                        <div className="flex items-center gap-2 mt-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs rounded-lg hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const text = `${hadith.arabic}\n\n${hadith.englishTranslation || ""}\n\n— ${collection} (${hadith.hadithNumber})`;
+                              navigator.clipboard.writeText(text).then(() => {
+                                toast({ title: "Copied to clipboard" });
+                              });
+                            }}
+                          >
+                            <Copy className="w-3.5 h-3.5 mr-1" />
+                            Copy
+                          </Button>
+                        </div>
 
                         {/* Tags */}
                         {tags.length > 0 && (

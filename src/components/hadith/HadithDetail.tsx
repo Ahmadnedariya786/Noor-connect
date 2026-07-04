@@ -66,8 +66,12 @@ export function HadithDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading hadith...</p>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+          <div className="h-8 w-32 bg-muted rounded-lg animate-pulse" />
+          <div className="h-48 bg-muted/50 rounded-xl animate-pulse" />
+          <div className="h-32 bg-muted/50 rounded-xl animate-pulse" />
+        </div>
       </div>
     );
   }

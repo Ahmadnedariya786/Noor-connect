@@ -1,7 +1,7 @@
 // Shared Reading Storage Helpers
 // Used by Seerah and Qisas readers for progress, bookmarks, font size, etc.
 
-export type ReadingFeature = "seerah" | "qisas";
+export type ReadingFeature = "seerah" | "qisas" | "hadith";
 
 const STORAGE_PREFIX = "noor";
 

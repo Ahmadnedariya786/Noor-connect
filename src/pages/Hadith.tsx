@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import hadithData from "../data/hadith.json";
 import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
+import { PageTransition } from "@/components/PageTransition";
 
 interface HadithData {
   hadith: string;
@@ -133,6 +134,7 @@ const Hadith = () => {
   };
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Islamic geometric pattern overlay */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
@@ -255,6 +257,7 @@ const Hadith = () => {
         )}
       </div>
     </div>
+    </PageTransition>
   );
 };
 

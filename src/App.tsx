@@ -61,6 +61,7 @@ const Hadith = lazy(() => import("./pages/Hadith"));
 const HadithCollections = lazy(() => import("./pages/HadithCollections"));
 const HadithBook = lazy(() => import("./pages/HadithBook"));
 const HadithBookContent = lazy(() => import("./pages/HadithBookContent"));
+const HadithDetail = lazy(() => import("./pages/HadithDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
 const IslamicCalendar = lazy(() => import("./pages/IslamicCalendar"));
 const Ebooks = lazy(() => import("./pages/EbooksModern"));
@@ -159,6 +160,7 @@ function AppRoutes() {
         <Route path="/hadith/collections" element={<HadithCollections />} />
         <Route path="/hadith/collections/:collection" element={<HadithBook />} />
         <Route path="/hadith/collections/:collection/:book" element={<HadithBookContent />} />
+        <Route path="/hadith/collections/:collection/:book/:hadithNumber" element={<HadithDetail />} />
         <Route path="/seerah" element={<SeerahHome />} />
         <Route path="/seerah/:chapterId" element={<SeerahReader />} />
         <Route path="/qisas" element={<QisasHome />} />

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Users } from "lucide-react";
+import { ArrowLeft, Search, Users, BookOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { PageTransition } from "@/components/PageTransition";
 import { ProphetCard } from "@/components/qisas/ProphetCard";
 import { goBackOrFallback } from "@/lib/navigation";
+import { getLastRead, getReadingProgress } from "@/lib/reading-storage";
 import {
   loadProphetList,
   loadQisasMetadata,
@@ -97,9 +99,20 @@ export default function QisasHome() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">{t("loading")}</div>
-      </div>
+      <PageTransition>
+        <div className="min-h-screen bg-background pb-24">
+          <div className="max-w-6xl mx-auto px-4 py-6">
+            <div className="h-8 w-32 bg-muted rounded-lg animate-pulse mb-8" />
+            <div className="h-48 bg-muted/50 rounded-[28px] animate-pulse mb-6" />
+            <div className="h-10 bg-muted/50 rounded-xl animate-pulse mb-6 max-w-md mx-auto" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="h-36 bg-muted/50 rounded-[20px] animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </PageTransition>
     );
   }
 
@@ -121,6 +134,42 @@ export default function QisasHome() {
               <p className="text-muted-foreground">{t("qisasDescription")}</p>
             </div>
           </div>
+          {/* Continue Reading */}
+          {(() => {
+            const lastReadId = getLastRead("qisas");
+            const lastReadProphet = lastReadId ? prophets.find(p => p.id === lastReadId) : null;
+            if (lastReadProphet && !loading) {
+              const progress = getReadingProgress(lastReadId!, "qisas");
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card
+                    className="p-4 cursor-pointer hover:bg-muted/50 transition-colors border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent"
+                    onClick={() => handleProphetClick(lastReadProphet.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-emerald-500/10">
+                        <BookOpen className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground mb-0.5">Continue Reading</p>
+                        <p className="text-sm font-semibold truncate">{lastReadProphet.name}</p>
+                        {progress > 0 && (
+                          <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                          </div>
+                        )}
+                      </div>
+                      <BookOpen className="w-4 h-4 text-emerald-500 shrink-0" />
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            }
+            return null;
+          })()}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -8,8 +8,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Type,
+  Share2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,10 +113,24 @@ export default function QisasReader() {
     setFontSize(size, "qisas");
   };
 
+  const { toast } = useToast();
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = prophet?.name ?? "";
+    if (navigator.share) {
+      await navigator.share({ title, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied to clipboard" });
+    }
+  };
+
   const handleBookmarkToggle = () => {
     if (!prophetId) return;
     const bookmarked = toggleBookmark(prophetId, "qisas");
     setIsBookmarked(bookmarked);
+    toast({ title: bookmarked ? "Bookmarked" : "Bookmark removed" });
   };
 
   const scrollToTop = () => {
@@ -226,6 +242,14 @@ export default function QisasReader() {
                 className="rounded-xl"
               >
                 <Type className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShare}
+                className="rounded-xl"
+              >
+                <Share2 className="w-5 h-5" />
               </Button>
               <Button
                 variant="ghost"

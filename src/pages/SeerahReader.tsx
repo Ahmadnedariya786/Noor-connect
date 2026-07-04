@@ -8,7 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Type,
+  Share2,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -110,10 +112,24 @@ export default function SeerahReader() {
     setFontSize(size, "seerah");
   };
 
+  const { toast } = useToast();
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = chapter?.title ?? "";
+    if (navigator.share) {
+      await navigator.share({ title, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied to clipboard" });
+    }
+  };
+
   const handleBookmarkToggle = () => {
     if (!chapterId) return;
     const bookmarked = toggleBookmark(chapterId, "seerah");
     setIsBookmarked(bookmarked);
+    toast({ title: bookmarked ? "Bookmarked" : "Bookmark removed" });
   };
 
   const scrollToTop = () => {
@@ -214,6 +230,14 @@ export default function SeerahReader() {
                 className="rounded-xl"
               >
                 <Type className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShare}
+                className="rounded-xl"
+              >
+                <Share2 className="w-5 h-5" />
               </Button>
               <Button
                 variant="ghost"
