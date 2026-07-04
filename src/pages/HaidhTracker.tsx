@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Calendar as CalIcon, Droplets, BookOpen, Settings as SettingsIcon, HeartPulse } from "lucide-react";
+import { ChevronLeft, Calendar as CalIcon, Droplets, BookOpen, Settings as SettingsIcon, HeartPulse, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { goBackOrFallback } from "@/lib/navigation";
@@ -23,11 +23,13 @@ import { HaidhCalendarTab as CalendarTab } from "@/components/haidh/HaidhCalenda
 import { HaidhLogTab as LogTab } from "@/components/haidh/HaidhLogTab";
 import { HaidhIslamicTab as IslamicTab } from "@/components/haidh/HaidhIslamicTab";
 import { HaidhSettingsTab as SettingsTab } from "@/components/haidh/HaidhSettingsTab";
+import { HaidhAnalyticsTab as AnalyticsTab } from "@/components/haidh/HaidhAnalyticsTab";
 
 const TABS = [
   { id: "today", icon: HeartPulse, label: "Today" },
   { id: "calendar", icon: CalIcon, label: "Calendar" },
   { id: "log", icon: Droplets, label: "Log" },
+  { id: "analytics", icon: TrendingUp, label: "Analytics" },
   { id: "islamic", icon: BookOpen, label: "Fiqh" },
   { id: "settings", icon: SettingsIcon, label: "Settings" },
 ] as const;
@@ -270,6 +272,7 @@ export default function HaidhTracker() {
             {activeTab === "today" && <TodayTab data={data} fiqh={fiqh} onStart={handleStart} onEnd={handleEnd} onTabChange={(t) => setActiveTab(t as typeof activeTab)} />}
             {activeTab === "calendar" && <CalendarTab data={data} />}
             {activeTab === "log" && <LogTab data={data} onLog={handleLog} />}
+            {activeTab === "analytics" && <AnalyticsTab data={data} />}
             {activeTab === "islamic" && <IslamicTab data={data} fiqh={fiqh} />}
             {activeTab === "settings" && <SettingsTab data={data} onUpdate={handleSettingsUpdate} />}
           </motion.div>

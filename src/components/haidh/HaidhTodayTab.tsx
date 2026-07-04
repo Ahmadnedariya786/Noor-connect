@@ -55,10 +55,11 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
     : null;
 
   // Predict phase relative to the current cycle (only meaningful while pure).
+  // Ovulation ~14 days before next period; fertile window is ~5 days before ovulation.
   let currentPhase: "tuhr" | "premenstrual" | "fertile" = "tuhr";
   if (!data.isActive && daysToNext !== null) {
     if (daysToNext <= 7 && daysToNext > 0) currentPhase = "premenstrual";
-    else if (daysToNext > 12 && daysToNext <= 16) currentPhase = "fertile";
+    else if (daysToNext >= 14 && daysToNext <= 19) currentPhase = "fertile";
   }
 
   // Has the most recent cycle just ended (and ghusl not yet logged today)?
@@ -251,6 +252,21 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
           </div>
         </div>
       </div>
+
+      {/* Fertile window info */}
+      {currentPhase === "fertile" && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🌱</span>
+            <span className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+              Fertile Window
+            </span>
+          </div>
+          <p className="text-sm text-foreground/80 leading-relaxed">
+            You may be in your fertile window. Ovulation typically occurs around {daysToNext !== null ? daysToNext - 14 : "~14"} days before your next cycle.
+          </p>
+        </div>
+      )}
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-3">

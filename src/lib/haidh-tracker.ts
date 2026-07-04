@@ -499,6 +499,16 @@ export const getDayStatus = (data: HaidhTrackerData, dateStr: string): DayStatus
     }
   }
 
+  // Fertile window: ~5 days before ovulation, ovulation ~14 days before next period
+  if (data.nextPredictedStart) {
+    const nextPeriod = new Date(data.nextPredictedStart);
+    const check = new Date(dateStr);
+    const daysUntilNext = Math.round((nextPeriod.getTime() - check.getTime()) / 86400000);
+    if (daysUntilNext >= 14 && daysUntilNext <= 19 && dateStr <= today) {
+      return 'fertile';
+    }
+  }
+
   if (dateStr > today) return 'future';
   return 'tuhr';
 };
