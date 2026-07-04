@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Play, ChevronRight } from "lucide-react";
 import { CATEGORY_THEMES, cleanTitle, detectCategory } from "@/lib/book-themes";
 import { BookSource } from "@/types/ebooks";
+import { getReadingProgress } from "@/lib/reading-progress";
 
 interface ContinueReadingCardProps {
   book: BookSource;
@@ -22,6 +23,7 @@ export const ContinueReadingCard = memo(({
   const title = 'file' in book ? cleanTitle(book.title) : book.title;
   const category = detectCategory(title);
   const theme = CATEGORY_THEMES[category];
+  const progressData = 'url' in book ? getReadingProgress(book.url) : null;
   
   return (
     <motion.div
@@ -55,7 +57,11 @@ export const ContinueReadingCard = memo(({
             {/* Progress */}
             <div className="flex items-center gap-3 mt-2">
               <Progress value={progress} className="h-1.5 flex-1" />
-              <span className="text-xs text-muted-foreground font-medium">{progress}%</span>
+              <span className="text-xs text-muted-foreground font-medium" title={`Page ${progressData?.currentPage ?? '?'} of ${progressData?.totalPages ?? '?'}`}>
+                {progressData?.currentPage && progressData?.totalPages
+                  ? `${progressData.currentPage}/${progressData.totalPages}`
+                  : `${progress}%`}
+              </span>
             </div>
           </div>
           

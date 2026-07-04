@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { BookCover } from "./BookCover";
 import { cleanTitle, detectCategory } from "@/lib/book-themes";
 import { ensureHttps } from "@/lib/ebooks-storage";
-import { getProgressPercentage } from "@/lib/reading-progress";
+import { getProgressPercentage, getReadingProgress } from "@/lib/reading-progress";
 import { LibraryBook } from "@/types/ebooks";
 
 interface BookCardProps {
@@ -38,7 +38,9 @@ export const BookCard = memo(({
   collectionsCount = 0
 }: BookCardProps) => {
   const category = detectCategory(cleanTitle(book.title));
-  const readProgress = getProgressPercentage(ensureHttps(book.url));
+  const bookUrl = ensureHttps(book.url);
+  const readProgress = getProgressPercentage(bookUrl);
+  const readProgressData = getReadingProgress(bookUrl);
   const clean = cleanTitle(book.title);
   
   return (
@@ -141,7 +143,11 @@ export const BookCard = memo(({
         <div className="flex items-center justify-between mt-1">
           <span className="text-[10px] text-muted-foreground">{category}</span>
           {readProgress > 0 && (
-            <span className="text-[10px] text-emerald-500 font-medium">{readProgress}%</span>
+            <span className="text-[10px] text-emerald-500 font-medium" title={`Page ${readProgressData?.currentPage ?? '?'} of ${readProgressData?.totalPages ?? '?'}`}>
+              {readProgressData?.currentPage && readProgressData?.totalPages
+                ? `${readProgressData.currentPage}/${readProgressData.totalPages}`
+                : `${readProgress}%`}
+            </span>
           )}
         </div>
       </div>

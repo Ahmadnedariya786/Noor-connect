@@ -22,6 +22,7 @@ import {
 import {
   getProgressPercentage, getRecentlyRead, getReadingStats,
   getLastReadBook, getBookBookmarks, toggleBookBookmark,
+  getReadingProgress,
   type EbookBookmark, type ReadingProgress
 } from "@/lib/reading-progress";
 import {
@@ -879,18 +880,35 @@ export default function EbooksModern() {
                     <section>
                       <h3 className="text-sm font-semibold mb-3">Your Uploads</h3>
                       <div className="space-y-2">
-                        {userBooks.map(book => (
+                        {userBooks.map(book => {
+                          const progressKey = `local:${book.localKey}`;
+                          const userProgress = getReadingProgress(progressKey);
+                          const userProgressPct = getProgressPercentage(progressKey);
+                          return (
                           <Card key={book.id} className="p-3 flex items-center gap-3">
                             <div className="w-12 h-16 rounded-lg bg-muted flex items-center justify-center text-lg shrink-0 cursor-pointer" onClick={() => openBook(book)}><Book className="w-6 h-6 text-muted-foreground" /></div>
                             <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openBook(book)}>
                               <h4 className="font-medium text-sm truncate">{book.title}</h4>
                               <p className="text-xs text-muted-foreground">{formatFileSize(book.fileSize)}</p>
+                              {userProgressPct > 0 && (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <div className="w-20 h-1 rounded-full bg-muted overflow-hidden">
+                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${userProgressPct}%` }} />
+                                  </div>
+                                  <span className="text-[10px] text-emerald-500 font-medium">
+                                    {userProgress?.currentPage && userProgress?.totalPages
+                                      ? `${userProgress.currentPage}/${userProgress.totalPages}`
+                                      : `${userProgressPct}%`}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center gap-1">
                               <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openBook(book)}><BookOpen className="w-4 h-4" /></Button>
                             </div>
                           </Card>
-                        ))}
+                          );
+                        })}
                       </div>
                     </section>
                   )}

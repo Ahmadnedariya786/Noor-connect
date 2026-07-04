@@ -14,7 +14,8 @@ import {
   CATEGORY_THEMES, cleanTitle, detectCategory, 
   extractAuthor, generateSubtitle, getDecorationElements 
 } from "@/lib/book-themes";
-import { formatFileSize } from "@/lib/ebooks-storage";
+import { formatFileSize, ensureHttps } from "@/lib/ebooks-storage";
+import { getReadingProgress } from "@/lib/reading-progress";
 import { LibraryBook } from "@/types/ebooks";
 
 interface BookDetailModalProps {
@@ -45,6 +46,7 @@ export const BookDetailModal = ({
   const category = detectCategory(cleanTitle(book.title));
   const theme = CATEGORY_THEMES[category];
   const clean = cleanTitle(book.title);
+  const progressData = getReadingProgress(ensureHttps(book.url));
   const author = extractAuthor(book.title);
   const subtitle = generateSubtitle(book.title, category);
   
@@ -132,7 +134,11 @@ export const BookDetailModal = ({
             <div className="mb-5">
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-muted-foreground">Reading progress</span>
-                <span className="font-medium">{progress}%</span>
+                <span className="font-medium" title={`Page ${progressData?.currentPage ?? '?'} of ${progressData?.totalPages ?? '?'}`}>
+                  {progressData?.currentPage && progressData?.totalPages
+                    ? `${progressData.currentPage}/${progressData.totalPages}`
+                    : `${progress}%`}
+                </span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
