@@ -62,7 +62,7 @@ interface PremiumDashboardProps {
   toast: any;
 }
 
-function LiveClock({ animationEnabled, hijriDate }: { animationEnabled: boolean; hijriDate: string }) {
+function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabled: boolean; hijriDate: string; timeFormat: '12' | '24' }) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -74,7 +74,7 @@ function LiveClock({ animationEnabled, hijriDate }: { animationEnabled: boolean;
   const timeStr = time.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
+    hour12: timeFormat === '12',
   });
 
   const motionProps = (props: any) => animationEnabled ? props : {};
@@ -302,7 +302,7 @@ function PremiumDashboardInner({
         </div>
 
         {/* ── Hero Time & Date ── */}
-        <LiveClock animationEnabled={animationEnabled} hijriDate={hijriDate} />
+        <LiveClock animationEnabled={animationEnabled} hijriDate={hijriDate} timeFormat={timeFormat} />
 
         {/* ── Next Prayer Card ── */}
         <m.div

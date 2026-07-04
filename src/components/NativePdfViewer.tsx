@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll } from 'lucide-react';
+import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Eye, EyeOff } from 'lucide-react';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
 import PdfAudioPlayer from '@/components/PdfAudioPlayer';
@@ -134,6 +134,7 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [resolvedPdfSource, setResolvedPdfSource] = useState(url);
   const [visibleWindow, setVisibleWindow] = useState({ start: 1, end: 20 });
+  const [focusMode, setFocusMode] = useState(false);
   const effectiveProgressKey = progressKey || (localKey ? `local:${localKey}` : url);
 
   useEffect(() => {
@@ -470,76 +471,113 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   return (
     <div className="fixed inset-0 bg-background z-[1000] flex flex-col animate-in fade-in slide-in-from-bottom-5 duration-300">
       {/* Header */}
-      <header className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top">
-        <Button size="icon" variant="ghost" onClick={onClose}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <h1 className="flex-1 font-medium text-sm truncate">{title}</h1>
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant={isVertical ? "secondary" : "ghost"}
-            onClick={toggleLayout}
-            title={isVertical ? "Switch to Page View" : "Switch to Vertical Scroll"}
-          >
-            <Scroll className="w-4 h-4" />
+      {!focusMode && (
+        <header className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top">
+          <Button size="icon" variant="ghost" onClick={onClose}>
+            <ArrowLeft className="w-5 h-5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={downloadPdf}>
-            <Download className="w-4 h-4" />
-          </Button>
-        </div>
-      </header>
+          <h1 className="flex-1 font-medium text-sm truncate">{title}</h1>
+          <div className="flex items-center gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setFocusMode(true)}
+              title="Focus mode (hide controls)"
+            >
+              <EyeOff className="w-4 h-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant={isVertical ? "secondary" : "ghost"}
+              onClick={toggleLayout}
+              title={isVertical ? "Switch to Page View" : "Switch to Vertical Scroll"}
+            >
+              <Scroll className="w-4 h-4" />
+            </Button>
+            <Button size="icon" variant="ghost" onClick={downloadPdf}>
+              <Download className="w-4 h-4" />
+            </Button>
+          </div>
+        </header>
+      )}
 
       {/* PDF Controls */}
-      <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
-        <div className="flex items-center gap-2">
-          {!isVertical && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => changePage(currentPage - 1)}
-                disabled={currentPage <= 1}
-              >
-                Previous
-              </Button>
+      {!focusMode && (
+        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
+          <div className="flex items-center gap-2">
+            {!isVertical && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => changePage(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                >
+                  Previous
+                </Button>
+                <input
+                  type="range"
+                  min={1}
+                  max={totalPages || 1}
+                  value={currentPage}
+                  onChange={e => changePage(Number(e.target.value))}
+                  className="w-24 h-1.5 cursor-pointer accent-primary"
+                  title="Scrub through pages"
+                />
+                <span className="text-sm font-medium px-1 min-w-[80px] text-center tabular-nums">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => changePage(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                </Button>
+              </>
+            )}
+            {isVertical && (
               <span className="text-sm font-medium px-2">
-                {currentPage} / {totalPages}
+                {totalPages} Pages
               </span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => changePage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-              >
-                Next
-              </Button>
-            </>
-          )}
-          {isVertical && (
-            <span className="text-sm font-medium px-2">
-              {totalPages} Pages
-            </span>
-          )}
-        </div>
+            )}
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={zoomOut}>
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <span className="text-sm font-medium px-2">
-            {Math.round(scale * 100)}%
-          </span>
-          <Button size="sm" variant="outline" onClick={zoomIn}>
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          {!isVertical && (
-            <Button size="sm" variant="outline" onClick={rotate}>
-              <RotateCw className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={zoomOut}>
+              <ZoomOut className="w-4 h-4" />
             </Button>
-          )}
+            <span className="text-sm font-medium px-2">
+              {Math.round(scale * 100)}%
+            </span>
+            <Button size="sm" variant="outline" onClick={zoomIn}>
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+            {!isVertical && (
+              <Button size="sm" variant="outline" onClick={rotate}>
+                <RotateCw className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Focus mode floating exit button */}
+      {focusMode && (
+        <div className="absolute top-2 right-2 z-[1001] opacity-20 hover:opacity-100 transition-opacity">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setFocusMode(false)}
+            title="Exit focus mode"
+            className="shadow-lg"
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            Show controls
+          </Button>
+        </div>
+      )}
 
       {/* PDF Content Area */}
       <div ref={scrollContainerRef} className="flex-1 overflow-auto bg-muted/30 p-4">

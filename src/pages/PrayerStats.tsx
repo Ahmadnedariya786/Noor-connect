@@ -1,22 +1,10 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppBar } from "@/components/AppBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, TrendingUp, Award, Target, CheckCircle, Circle } from "lucide-react";
 import { getPrayerHistory, type DailyPrayers } from "@/lib/salah-tracker";
-import { Skeleton } from "@/components/LoadingSkeleton";
-
-// Lazy load Recharts components to reduce bundle size
-const BarChart = lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
-const Bar = lazy(() => import('recharts').then(module => ({ default: module.Bar })));
-const XAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
-const YAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
-const CartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
-const Tooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
-const ResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const PieChart = lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
-const Pie = lazy(() => import('recharts').then(module => ({ default: module.Pie })));
-const Cell = lazy(() => import('recharts').then(module => ({ default: module.Cell })));
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const PRAYER_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
@@ -34,7 +22,7 @@ export default function PrayerStats() {
     prayerBreakdown: [] as { name: string; completed: number; total: number }[],
   });
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     const data = getPrayerHistory(30); // Last 30 days
     setHistory(data);
     
@@ -105,6 +93,12 @@ export default function PrayerStats() {
       prayerBreakdown,
     });
   }, []);
+
+  useEffect(() => {
+    loadData();
+    window.addEventListener('salah-updated', loadData);
+    return () => window.removeEventListener('salah-updated', loadData);
+  }, [loadData]);
 
   const completionRate = stats.totalPrayers > 0 
     ? Math.round((stats.completedPrayers / stats.totalPrayers) * 100) 
@@ -182,23 +176,21 @@ export default function PrayerStats() {
           </CardHeader>
           <CardContent>
             <div className="h-48">
-              <Suspense fallback={<Skeleton className="h-full w-full" />}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weeklyChartData}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                      }}
-                    />
-                    <Bar dataKey="completed" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Suspense>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyChartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Bar dataKey="completed" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -211,24 +203,22 @@ export default function PrayerStats() {
           <CardContent>
             <div className="flex gap-4">
               <div className="w-32 h-32">
-                <Suspense fallback={<Skeleton className="w-full h-full rounded-full" />}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={25}
-                        outerRadius={50}
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Suspense>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={25}
+                      outerRadius={50}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
               <div className="flex-1 space-y-2">
                 {stats.prayerBreakdown.map((prayer, index) => {

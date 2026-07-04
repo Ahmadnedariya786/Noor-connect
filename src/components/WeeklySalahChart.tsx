@@ -2,20 +2,13 @@
  * Weekly Salah History Chart
  * Shows prayer completion over the past 7 days
  */
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Calendar } from "lucide-react";
 import { getPrayerHistory, type DailyPrayers } from "@/lib/salah-tracker";
 import { Skeleton } from "@/components/LoadingSkeleton";
 import { useI18n } from "@/hooks/useI18n";
-
-// Lazy load Recharts components to reduce bundle size
-const BarChart = lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
-const Bar = lazy(() => import('recharts').then(module => ({ default: module.Bar })));
-const XAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
-const YAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
-const ResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const Cell = lazy(() => import('recharts').then(module => ({ default: module.Cell })));
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
 
 interface ChartData {
   day: string;
@@ -27,6 +20,7 @@ interface ChartData {
 export function WeeklySalahChart() {
   const { t: ti18n } = useI18n();
   const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [dataVersion, setDataVersion] = useState(0);
   const [weeklyStats, setWeeklyStats] = useState({ completed: 0, total: 0, percentage: 0 });
 
   const refreshData = useCallback(() => {
@@ -51,6 +45,7 @@ export function WeeklySalahChart() {
       setWeeklyStats({ completed: 0, total: 0, percentage: 0 });
     } else {
       setChartData(data);
+      setDataVersion(v => v + 1);
 
       // Calculate weekly stats
       const totalCompleted = data.reduce((sum, d) => sum + d.completed, 0);
@@ -68,7 +63,11 @@ export function WeeklySalahChart() {
 
     // Listen for real-time updates
     window.addEventListener('salah-updated', refreshData);
-    return () => window.removeEventListener('salah-updated', refreshData);
+    window.addEventListener('widget-refresh', refreshData);
+    return () => {
+      window.removeEventListener('salah-updated', refreshData);
+      window.removeEventListener('widget-refresh', refreshData);
+    };
   }, [refreshData]);
 
   const getBarColor = (completed: number): string => {
@@ -103,28 +102,26 @@ export function WeeklySalahChart() {
         {/* Chart with fixed height to prevent CLS */}
         <div className="h-24 w-full min-h-[96px]">
           {chartData.length > 0 ? (
-            <Suspense fallback={<Skeleton className="h-full w-full" />}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} barCategoryGap="20%">
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <YAxis hide domain={[0, 5]} />
-                  <Bar
-                    dataKey="completed"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={28}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getBarColor(entry.completed)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </Suspense>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart key={dataVersion} data={chartData} barCategoryGap="20%">
+                <XAxis
+                  dataKey="day"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis hide domain={[0, 5]} />
+                <Bar
+                  dataKey="completed"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={28}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getBarColor(entry.completed)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           ) : (
             <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground text-xs">
               <Calendar className="w-8 h-8 mb-2 opacity-50" />

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Share2, Link, BookmarkPlus } from 'lucide-react';
+import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Share2, Link, BookmarkPlus, Eye, EyeOff } from 'lucide-react';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
 import PdfAudioPlayer from '@/components/PdfAudioPlayer';
@@ -105,7 +105,9 @@ const EnhancedPdfHeader = ({
   setShowAudioPlayer, 
   isVertical, 
   toggleLayout, 
-  downloadPdf 
+  downloadPdf,
+  focusMode,
+  onToggleFocus,
 }: {
   title: string;
   onClose: () => void;
@@ -116,7 +118,10 @@ const EnhancedPdfHeader = ({
   isVertical: boolean;
   toggleLayout: () => void;
   downloadPdf: () => void;
+  focusMode: boolean;
+  onToggleFocus: () => void;
 }) => {
+  if (focusMode) return null;
   return (
     <header className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top">
       <Button size="icon" variant="ghost" onClick={onClose}>
@@ -125,6 +130,16 @@ const EnhancedPdfHeader = ({
       <h1 className="flex-1 font-medium text-sm truncate">{title}</h1>
       
       <div className="flex items-center gap-1">
+        {/* Focus mode toggle */}
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onToggleFocus}
+          title="Focus mode (hide controls)"
+        >
+          <EyeOff className="w-4 h-4" />
+        </Button>
+
         {/* Share Button */}
         <Button
           size="icon"
@@ -290,6 +305,7 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   const [resolvedPdfSource, setResolvedPdfSource] = useState<string | null>(null);
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [visibleWindow, setVisibleWindow] = useState({ start: 1, end: 20 });
+  const [focusMode, setFocusMode] = useState(false);
   const { toast } = useToast();
 
   // URL persistence and sharing
@@ -585,58 +601,87 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
         isVertical={isVertical}
         toggleLayout={toggleLayout}
         downloadPdf={downloadPdf}
+        focusMode={focusMode}
+        onToggleFocus={() => setFocusMode(!focusMode)}
       />
 
       {/* PDF Controls */}
-      <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
-        <div className="flex items-center gap-2">
-          {!isVertical && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => changePage(currentPage - 1)}
-                disabled={currentPage <= 1}
-              >
-                Previous
-              </Button>
+      {!focusMode && (
+        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
+          <div className="flex items-center gap-2">
+            {!isVertical && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => changePage(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                >
+                  Previous
+                </Button>
+                <input
+                  type="range"
+                  min={1}
+                  max={totalPages || 1}
+                  value={currentPage}
+                  onChange={e => changePage(Number(e.target.value))}
+                  className="w-24 h-1.5 cursor-pointer accent-primary"
+                  title="Scrub through pages"
+                />
+                <span className="text-sm font-medium px-1 min-w-[80px] text-center tabular-nums">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => changePage(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                </Button>
+              </>
+            )}
+            {isVertical && (
               <span className="text-sm font-medium px-2">
-                {currentPage} / {totalPages}
+                {totalPages} Pages
               </span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => changePage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-              >
-                Next
-              </Button>
-            </>
-          )}
-          {isVertical && (
-            <span className="text-sm font-medium px-2">
-              {totalPages} Pages
-            </span>
-          )}
-        </div>
+            )}
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={zoomOut}>
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <span className="text-sm font-medium px-2">
-            {Math.round(scale * 100)}%
-          </span>
-          <Button size="sm" variant="outline" onClick={zoomIn}>
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          {!isVertical && (
-            <Button size="sm" variant="outline" onClick={rotate}>
-              <RotateCw className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={zoomOut}>
+              <ZoomOut className="w-4 h-4" />
             </Button>
-          )}
+            <span className="text-sm font-medium px-2">
+              {Math.round(scale * 100)}%
+            </span>
+            <Button size="sm" variant="outline" onClick={zoomIn}>
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+            {!isVertical && (
+              <Button size="sm" variant="outline" onClick={rotate}>
+                <RotateCw className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Focus mode floating exit button */}
+      {focusMode && (
+        <div className="absolute top-2 right-2 z-[1001] opacity-20 hover:opacity-100 transition-opacity">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setFocusMode(false)}
+            title="Exit focus mode"
+            className="shadow-lg"
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            Show controls
+          </Button>
+        </div>
+      )}
 
       {/* PDF Content Area */}
       <div ref={scrollContainerRef} className="flex-1 overflow-auto bg-muted/30 p-4">

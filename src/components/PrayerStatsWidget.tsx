@@ -34,7 +34,6 @@ export function PrayerStatsWidget() {
   const [timeRange, setTimeRange] = useState<RangeKey>("week");
 
   const loadStats = useCallback(() => {
-    setLoading(true);
     try {
       const rangeDays = timeRange === "week" ? 7 : 30;
       const history = getPrayerHistory(rangeDays);

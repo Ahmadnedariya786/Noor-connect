@@ -77,6 +77,7 @@ export default function EbooksModern() {
   const [isEditingCollection, setIsEditingCollection] = useState(false);
   const [editingCollectionName, setEditingCollectionName] = useState('');
   const [editingCollectionDescription, setEditingCollectionDescription] = useState('');
+  const [progressVersion, setProgressVersion] = useState(0);
   
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,7 +88,7 @@ export default function EbooksModern() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
   
-  // Load data
+  // Load data + bump progress version so BookCard re-reads from localStorage
   useEffect(() => {
     const load = async () => {
       const [downloaded, user] = await Promise.all([
@@ -101,6 +102,7 @@ export default function EbooksModern() {
       setBookmarks(getBookBookmarks());
       setLastReadBookKey(getLastReadBook());
       setCollections(getCollections());
+      setProgressVersion(v => v + 1);
     };
     load();
   }, [viewingBook]);
@@ -698,7 +700,7 @@ export default function EbooksModern() {
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                   {visibleItems.map((book, i) => (
                     <BookCard
-                      key={`${book.url}-${i}`}
+                      key={`${book.url}-v${progressVersion}`}
                       book={book}
                       onClick={() => openBookDetail(book)}
                       onDownload={(e) => handleDownload(book, e)}
@@ -809,7 +811,7 @@ export default function EbooksModern() {
                     {bookmarks.map(bookmark => {
                       const book = books.find(b => ensureHttps(b.url) === bookmark.bookUrl);
                       if (!book) return null;
-                      return <BookCard key={bookmark.bookUrl} book={book} onClick={() => openBookDetail(book)} onDownload={(e) => handleDownload(book, e)} onBookmark={(e) => handleToggleBookmark(book, e)} isBookmarked={true} isDownloaded={downloadedSet.has(ensureHttps(book.url))} downloadProgress={downloadProgress[book.url]} onAddToCollection={() => handleAddToCollection(book)} collectionsCount={getBookCollectionsCount(book.url)} />;
+                      return <BookCard key={`${bookmark.bookUrl}-v${progressVersion}`} book={book} onClick={() => openBookDetail(book)} onDownload={(e) => handleDownload(book, e)} onBookmark={(e) => handleToggleBookmark(book, e)} isBookmarked={true} isDownloaded={downloadedSet.has(ensureHttps(book.url))} downloadProgress={downloadProgress[book.url]} onAddToCollection={() => handleAddToCollection(book)} collectionsCount={getBookCollectionsCount(book.url)} />;
                     })}
                   </div>
                 )}
@@ -1037,7 +1039,7 @@ export default function EbooksModern() {
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto">
                     {booksInCollection.map((book) => (
-                      <BookCard key={book.url} book={book} onClick={() => openBookDetail(book)} onDownload={(e) => handleDownload(book, e)} onBookmark={(e) => handleToggleBookmark(book, e)} isBookmarked={bookmarkedSet.has(ensureHttps(book.url))} isDownloaded={downloadedSet.has(ensureHttps(book.url))} downloadProgress={downloadProgress[book.url]} onAddToCollection={() => handleAddToCollection(book)} />
+                      <BookCard key={`${book.url}-v${progressVersion}`} book={book} onClick={() => openBookDetail(book)} onDownload={(e) => handleDownload(book, e)} onBookmark={(e) => handleToggleBookmark(book, e)} isBookmarked={bookmarkedSet.has(ensureHttps(book.url))} isDownloaded={downloadedSet.has(ensureHttps(book.url))} downloadProgress={downloadProgress[book.url]} onAddToCollection={() => handleAddToCollection(book)} />
                     ))}
                   </div>
                 );
