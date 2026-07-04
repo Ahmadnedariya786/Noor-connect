@@ -109,25 +109,51 @@ export function EnhancedMoodSelector() {
     }
   };
 
+  const isFavorite = selectedMood && currentItem ? remedyGamification.isFavorite(remedyId) : false;
+
+  const handleToggleFavorite = () => {
+    if (!currentItem || !selectedMood) return;
+    const id = remedyId;
+    if (isFavorite) {
+      remedyGamification.removeFromFavorites(id);
+      toast({ title: "Removed from favorites" });
+    } else {
+      remedyGamification.addToFavorites({
+        id,
+        moodId: selectedMood.id,
+        text: currentItem.text,
+        arabic: currentItem.arabic,
+        reference: currentItem.reference,
+        type: currentItem.type,
+      });
+      toast({ title: "Saved to favorites" });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 p-3">
-          <Sparkles className="h-6 w-6 text-primary" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 p-3">
+            <Sparkles className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">What's on your mind?</h2>
+            <p className="text-sm text-muted-foreground">Pick a feeling to receive guidance</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">What's on your mind?</h2>
-          <p className="text-sm text-muted-foreground">Pick a feeling to receive guidance</p>
-        </div>
+        <button
+          onClick={() => window.location.href = "/remedy-favorites"}
+          className="relative rounded-full p-2 hover:bg-muted transition-colors"
+        >
+          <Heart className="h-5 w-5 text-muted-foreground" />
+        </button>
       </div>
 
-      {/* Mood Selection */}
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {moods.map((mood) => {
           const Icon = mood.icon;
           const isActive = selectedMood?.id === mood.id;
-
           return (
             <button
               key={mood.id}
@@ -138,7 +164,6 @@ export function EnhancedMoodSelector() {
                   ? "border-primary/50 bg-primary/10 text-primary shadow-lg shadow-primary/20 scale-105"
                   : "border-border/60 bg-card/70 text-foreground hover:border-primary/30 hover:bg-primary/5 hover:shadow-md"
               }`}
-              aria-label={`Show remedies for ${mood.label}`}
             >
               <div className={`rounded-xl p-2 transition-colors duration-300 ${
                 isActive ? selectedMood.gradient : 'bg-muted/50'
@@ -155,7 +180,6 @@ export function EnhancedMoodSelector() {
         })}
       </div>
 
-      {/* Remedy Display */}
       {selectedMood && currentItem ? (
         <Card className="border-border/60 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-sm overflow-hidden">
           <div className="flex items-start justify-between gap-4 mb-4">
@@ -176,11 +200,12 @@ export function EnhancedMoodSelector() {
                 {getTypeIcon(currentItem.type)}
                 {currentItem.type}
               </div>
-              {currentItem.category && (
-                <Badge variant="outline" className="text-xs px-2 py-1">
-                  {currentItem.category}
-                </Badge>
-              )}
+              <button
+                onClick={handleToggleFavorite}
+                className={`rounded-full p-2 transition-colors ${isFavorite ? "text-rose-500 bg-rose-500/10" : "text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5"}`}
+              >
+                <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
+              </button>
             </div>
           </div>
 
@@ -198,7 +223,6 @@ export function EnhancedMoodSelector() {
             </p>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
             {currentItem.type === "surah" && currentItem.surahNumber && (
               <Button size="sm" className="rounded-full px-4 py-2 h-auto bg-green-600 hover:bg-green-700" onClick={handlePlaySurah}>
@@ -230,5 +254,4 @@ export function EnhancedMoodSelector() {
         </Card>
       )}
     </div>
-  );
-}
+  );}

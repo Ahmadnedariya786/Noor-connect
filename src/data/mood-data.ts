@@ -28,7 +28,7 @@ export const moods: Mood[] = [
         label: "Anxious",
         icon: CloudRain,
         color: "text-blue-500",
-        gradient: "from-blue-500/10 via-blue-500/5 to-transparent",
+        gradient: "from-blue-500/20 via-blue-500/10 to-transparent",
         glow: "shadow-blue-500/20",
         description: "Find peace and tranquility",
         content: [
@@ -100,7 +100,7 @@ export const moods: Mood[] = [
         label: "Sad",
         icon: Frown,
         color: "text-indigo-500",
-        gradient: "from-indigo-500/10 via-indigo-500/5 to-transparent",
+        gradient: "from-indigo-500/20 via-indigo-500/10 to-transparent",
         glow: "shadow-indigo-500/20",
         description: "Find comfort and hope",
         content: [
@@ -166,7 +166,7 @@ export const moods: Mood[] = [
         label: "Happy",
         icon: Smile,
         color: "text-amber-500",
-        gradient: "from-amber-500/10 via-amber-500/5 to-transparent",
+        gradient: "from-amber-500/20 via-amber-500/10 to-transparent",
         glow: "shadow-amber-500/20",
         description: "Express gratitude and joy",
         content: [
@@ -231,7 +231,7 @@ export const moods: Mood[] = [
         label: "Lost",
         icon: Zap,
         color: "text-purple-500",
-        gradient: "from-purple-500/10 via-purple-500/5 to-transparent",
+        gradient: "from-purple-500/20 via-purple-500/10 to-transparent",
         glow: "shadow-purple-500/20",
         description: "Find guidance and direction",
         content: [
@@ -290,7 +290,7 @@ export const moods: Mood[] = [
         label: "Grateful",
         icon: Heart,
         color: "text-rose-500",
-        gradient: "from-rose-500/10 via-rose-500/5 to-transparent",
+        gradient: "from-rose-500/20 via-rose-500/10 to-transparent",
         glow: "shadow-rose-500/20",
         description: "Cultivate thankfulness",
         content: [
@@ -355,7 +355,7 @@ export const moods: Mood[] = [
         label: "Tired",
         icon: Sun,
         color: "text-orange-500",
-        gradient: "from-orange-500/10 via-orange-500/5 to-transparent",
+        gradient: "from-orange-500/20 via-orange-500/10 to-transparent",
         glow: "shadow-orange-500/20",
         description: "Find strength and energy",
         content: [
@@ -414,7 +414,7 @@ export const moods: Mood[] = [
         label: "Stressed",
         icon: Brain,
         color: "text-red-500",
-        gradient: "from-red-500/10 via-red-500/5 to-transparent",
+        gradient: "from-red-500/20 via-red-500/10 to-transparent",
         glow: "shadow-red-500/20",
         description: "Find relief from stress",
         content: [
@@ -480,7 +480,7 @@ export const moods: Mood[] = [
         label: "Angry",
         icon: Wind,
         color: "text-teal-500",
-        gradient: "from-teal-500/10 via-teal-500/5 to-transparent",
+        gradient: "from-teal-500/20 via-teal-500/10 to-transparent",
         glow: "shadow-teal-500/20",
         description: "Find calm and forgiveness",
         content: [
@@ -545,7 +545,7 @@ export const moods: Mood[] = [
         label: "Confused",
         icon: Moon,
         color: "text-cyan-500",
-        gradient: "from-cyan-500/10 via-cyan-500/5 to-transparent",
+        gradient: "from-cyan-500/20 via-cyan-500/10 to-transparent",
         glow: "shadow-cyan-500/20",
         description: "Find clarity and wisdom",
         content: [
@@ -610,7 +610,7 @@ export const moods: Mood[] = [
         label: "Lonely",
         icon: Shield,
         color: "text-emerald-500",
-        gradient: "from-emerald-500/10 via-emerald-500/5 to-transparent",
+        gradient: "from-emerald-500/20 via-emerald-500/10 to-transparent",
         glow: "shadow-emerald-500/20",
         description: "Find companionship and comfort",
         content: [
@@ -675,7 +675,7 @@ export const moods: Mood[] = [
         label: "Sick",
         icon: Star,
         color: "text-violet-500",
-        gradient: "from-violet-500/10 via-violet-500/5 to-transparent",
+        gradient: "from-violet-500/20 via-violet-500/10 to-transparent",
         glow: "shadow-violet-500/20",
         description: "Find healing and recovery",
         content: [
@@ -740,7 +740,7 @@ export const moods: Mood[] = [
         label: "Motivated",
         icon: Coffee,
         color: "text-pink-500",
-        gradient: "from-pink-500/10 via-pink-500/5 to-transparent",
+        gradient: "from-pink-500/20 via-pink-500/10 to-transparent",
         glow: "shadow-pink-500/20",
         description: "Find inspiration and drive",
         content: [

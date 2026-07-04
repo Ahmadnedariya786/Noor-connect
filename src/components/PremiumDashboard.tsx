@@ -24,6 +24,7 @@ import PrayerStatsWidget from "@/components/PrayerStatsWidget";
 import QazaTracker from "@/components/QazaTracker";
 import DhikrReminder from "@/components/DhikrReminder";
 import { QuranRadio } from "@/components/QuranRadio";
+import { MoodSelector } from "@/components/MoodSelector";
 
 interface PrayerTime {
   name: string;
@@ -642,6 +643,20 @@ function PremiumDashboardInner({
                       })}
                     >
                       <QuranRadio />
+                    </m.div>
+                  );
+
+                case 'remedy':
+                  return (
+                    <m.div
+                      key={widget.id}
+                      {...motionProps({
+                        initial: { opacity: 0, y: 12 },
+                        animate: { opacity: 1, y: 0 },
+                        transition: { duration: 0.4 }
+                      })}
+                    >
+                      <MoodSelector />
                     </m.div>
                   );
 

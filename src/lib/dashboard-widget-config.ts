@@ -125,6 +125,14 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     order: 14,
     category: 'premium',
   },
+  {
+    id: 'remedy',
+    name: 'Quick Remedy',
+    description: 'Mood-based Islamic remedies from Quran and Sunnah',
+    visible: true,
+    order: 15,
+    category: 'optional',
+  },
 ];
 
 const isWidgetConfigLike = (value: unknown): value is Partial<DashboardWidgetConfig> =>
