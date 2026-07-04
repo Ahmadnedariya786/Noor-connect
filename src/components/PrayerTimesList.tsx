@@ -446,6 +446,6 @@ const PrayerTimesListComponent = memo(function PrayerTimesList(props: PrayerTime
       ))}
     </motion.div>
   );
-};
+});
 
 export const PrayerTimesList = PrayerTimesListComponent;

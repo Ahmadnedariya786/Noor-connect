@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { getMadhab, setMadhab, getTimeFormat, setTimeFormat as saveTimeFormat, type MadhabType } from "@/lib/storage";
+import { getMadhab, setMadhab, getTimeFormat, setTimeFormat as saveTimeFormat, isIslamicSleepReminderEnabled, setIslamicSleepReminderEnabled, type MadhabType } from "@/lib/storage";
 import { AdhanSelector } from "@/components/AdhanSelector";
 import { CustomAdhanUpload } from "@/components/CustomAdhanUpload";
 import { getCalculationMethod, setCalculationMethod, type CalculationMethodName } from "@/lib/prayer-calculator";
@@ -32,6 +32,7 @@ import { HapticSettings } from "@/components/HapticSettings";
 import { CURRENT_APP_VERSION } from "@/lib/constants";
 import { hasUnseenChangelog } from "@/lib/changelog";
 import { useSettings } from "@/contexts/SettingsContext";
+import { scheduleIslamicSleepReminder, cancelIslamicSleepReminder, getNextIslamicSleepReminderTime } from "@/lib/islamic-sleep-reminder";
 
 // Changelog badge component
 const ChangelogBadge = () => {
@@ -112,8 +113,9 @@ const Profile = () => {
   const [prayerNotificationsEnabled, setPrayerNotificationsEnabled] = useState(false);
   const [prayerNotificationsLoading, setPrayerNotificationsLoading] = useState(true);
   const [scheduledPrayerCount, setScheduledPrayerCount] = useState(0);
-
-
+  const [islamicSleepEnabled, setIslamicSleepEnabled] = useState(false);
+  const [nextSleepReminderTime, setNextSleepReminderTime] = useState<string | null>(null);
+  const [sleepContentPreview, setSleepContentPreview] = useState('');
 
   const refreshPermissionStatus = useCallback(async () => {
     const status = await unifiedNotifications.getPermissionStatus();
@@ -128,6 +130,16 @@ const Profile = () => {
     setQuranFontSizeState(getQuranFontSize());
     setQuranFontState(quranFontManager.getCurrentFont());
     setGenderSettingsState(getGenderSettings());
+    const sleepEnabled = isIslamicSleepReminderEnabled();
+    setIslamicSleepEnabled(sleepEnabled);
+    if (sleepEnabled) {
+      const previews = [
+        'Recite Ayatul Kursi before sleeping.',
+        'Recite Surah Al-Ikhlas, Al-Falaq, An-Nas (3x).',
+        'Sleep on your right side facing the Qibla.',
+      ];
+      setSleepContentPreview(previews[new Date().getDate() % previews.length]);
+    }
 
     // Initialize Quran font manager
     quranFontManager.initialize();
@@ -162,6 +174,50 @@ const Profile = () => {
       window.removeEventListener('gender-settings-updated', handleGenderSettingsUpdate);
     };
   }, []);
+
+  useEffect(() => {
+    if (islamicSleepEnabled) {
+      scheduleIslamicSleepReminder();
+    } else {
+      cancelIslamicSleepReminder();
+    }
+
+    const updateNextTime = () => {
+      const next = getNextIslamicSleepReminderTime();
+      if (next) {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const isTomorrow = next.toDateString() === tomorrow.toDateString();
+        const prefix = isTomorrow ? 'Tomorrow' : 'Today';
+        const hours = next.getHours().toString().padStart(2, '0');
+        const minutes = next.getMinutes().toString().padStart(2, '0');
+        setNextSleepReminderTime(`${prefix} at ${hours}:${minutes}`);
+      } else {
+        setNextSleepReminderTime(null);
+      }
+    };
+
+    updateNextTime();
+    const interval = setInterval(updateNextTime, 60000);
+
+    const handlePrayerUpdate = () => {
+      if (islamicSleepEnabled) {
+        cancelIslamicSleepReminder();
+        scheduleIslamicSleepReminder();
+      }
+      updateNextTime();
+    };
+
+    window.addEventListener('prayer-method-changed', handlePrayerUpdate);
+    window.addEventListener('madhab-changed', handlePrayerUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('prayer-method-changed', handlePrayerUpdate);
+      window.removeEventListener('madhab-changed', handlePrayerUpdate);
+    };
+  }, [islamicSleepEnabled]);
 
   // Listen for prayer method changes to reload prayer times
   useEffect(() => {
@@ -332,11 +388,9 @@ const Profile = () => {
     setMadhabState(value);
     setMadhab(value);
     const madhabNames = {
-      shafi: "Shafi'i",
-      hanafi: "Hanafi",
-      maliki: "Maliki",
-      hanbali: "Hanbali"
-    };
+      shafi: "Maliki, Shafi, Hanbali",
+      hanafi: "Hanafi"
+    } as const;
     toast({ title: `${t('madhab')}: ${madhabNames[value]}` });
     // Trigger prayer time recalculation
     window.dispatchEvent(new CustomEvent('madhab-changed', { detail: { madhab: value } }));
@@ -346,6 +400,26 @@ const Profile = () => {
     setTimeFormatState(value);
     saveTimeFormat(value);
     toast({ title: `${t('timeFormat')}: ${value}-Hour` });
+  };
+
+  const handleIslamicSleepToggle = (checked: boolean) => {
+    setIslamicSleepEnabled(checked);
+    setIslamicSleepReminderEnabled(checked);
+    if (checked) {
+      const content = [
+        'Recite Ayatul Kursi before sleeping.',
+        'Recite Surah Al-Ikhlas, Al-Falaq, An-Nas (3x).',
+        'Sleep on your right side facing the Qibla.',
+      ];
+      setSleepContentPreview(content[new Date().getDate() % content.length]);
+      scheduleIslamicSleepReminder();
+      toast({ title: 'Islamic Sleep Reminder enabled' });
+    } else {
+      cancelIslamicSleepReminder();
+      setNextSleepReminderTime(null);
+      setSleepContentPreview('');
+      toast({ title: 'Islamic Sleep Reminder disabled' });
+    }
   };
 
   const handleMethodChange = (value: string) => {
@@ -825,10 +899,8 @@ const Profile = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-lg">
-                      <SelectItem value="shafi">{t('madhabShafi').replace('Madhab: ', '')}</SelectItem>
-                      <SelectItem value="hanafi">{t('madhabHanafi').replace('Madhab: ', '')}</SelectItem>
-                      <SelectItem value="maliki">{t('madhabMaliki').replace('Madhab: ', '')}</SelectItem>
-                      <SelectItem value="hanbali">{t('madhabHanbali').replace('Madhab: ', '')}</SelectItem>
+                      <SelectItem value="shafi">{t('madhabShafi')}</SelectItem>
+                      <SelectItem value="hanafi">{t('madhabHanafi')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -866,6 +938,54 @@ const Profile = () => {
               </div>
             </Card>
           </div>
+        </div>
+
+        {/* Islamic Sleep Reminder */}
+        <div className="space-y-3">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            Islamic Sleep Reminder
+          </h3>
+          <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500">
+                  <Moon className="w-5 h-5" />
+                </div>
+                <div>
+                  <Label className="text-sm font-bold">Sleep Reminder</Label>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                    Reminds you of Islamic adhkar before sleep
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={islamicSleepEnabled}
+                onCheckedChange={handleIslamicSleepToggle}
+              />
+            </div>
+
+            {islamicSleepEnabled && (
+              <div className="space-y-3 pt-4 border-t border-border/40">
+                {nextSleepReminderTime && (
+                  <div className="flex items-center gap-2 p-3 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
+                    <div className="p-1.5 rounded-lg bg-indigo-500/10">
+                      <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-foreground">Next reminder: {nextSleepReminderTime}</p>
+                      <p className="text-[9px] text-muted-foreground">Based on Isha prayer time</p>
+                    </div>
+                  </div>
+                )}
+                {sleepContentPreview && (
+                  <div className="p-3 bg-muted/30 rounded-2xl">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Tonight's Reminder</p>
+                    <p className="text-xs text-foreground/80 leading-relaxed">{sleepContentPreview}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
         </div>
 
         {/* Adhan & Prayer Notifications */}

@@ -191,7 +191,7 @@ const Settings = () => {
 
           <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
             {([
-              { id: 'shafi',  label: 'Shafi / Maliki / Hanbali', short: 'Shafi' },
+              { id: 'shafi',  label: 'Maliki, Shafi, Hanbali', short: 'Shafi' },
               { id: 'hanafi', label: 'Hanafi', short: 'Hanafi' },
             ] as { id: MadhabType; label: string; short: string }[]).map(({ id, label, short }) => {
               const isActive = madhab === id;
@@ -217,7 +217,7 @@ const Settings = () => {
             })}
           </div>
           <p className="text-xs font-medium text-muted-foreground px-4">
-            Determines Asr calculation. Currently using <span className="text-foreground/70">{madhab === 'hanafi' ? 'Hanafi' : 'Shafi'}</span> school.
+            Determines Asr calculation. Currently using <span className="text-foreground/70">{madhab === 'hanafi' ? 'Hanafi' : 'Maliki, Shafi, Hanbali'}</span> school.
           </p>
         </section>
 

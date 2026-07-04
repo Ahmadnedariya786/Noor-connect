@@ -8,7 +8,7 @@ import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { goBackOrFallback } from "@/lib/navigation";
-import { FixedSizeList as List } from 'react-window';
+import { List } from 'react-window';
 
 interface SurahCardProps {
   surah: SurahInfo;

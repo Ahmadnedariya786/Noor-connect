@@ -271,3 +271,14 @@ export const getBedtimeMinute = (): number => {
 export const setBedtimeMinute = (minute: number): void => {
   localStorage.setItem(STORAGE_KEYS.BEDTIME_MINUTE, minute.toString());
 };
+
+// Islamic Sleep Reminder
+const ISLAMIC_SLEEP_ENABLED = 'islamic-sleep-enabled';
+
+export const isIslamicSleepReminderEnabled = (): boolean => {
+  return localStorage.getItem(ISLAMIC_SLEEP_ENABLED) === 'true';
+};
+
+export const setIslamicSleepReminderEnabled = (enabled: boolean): void => {
+  localStorage.setItem(ISLAMIC_SLEEP_ENABLED, enabled ? 'true' : 'false');
+};

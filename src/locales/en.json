@@ -92,6 +92,8 @@
   "woman": "Woman",
   "preferNotToSay": "Prefer Not To Say",
   "madhab": "Madhab",
+  "madhabShafi": "Maliki, Shafi, Hanbali",
+  "madhabHanafi": "Hanafi",
   "timeFormat": "Time Format",
   "hijriAdjustment": "Hijri Adjustment",
   "days": "Days",
