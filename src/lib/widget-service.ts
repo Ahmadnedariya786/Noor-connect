@@ -1,137 +1,180 @@
 /**
  * widget-service.ts
- * Sends enriched prayer + Quran data to the Android home-screen widgets.
+ *
+ * Thin compatibility shim that preserves the old `WidgetService.updateWidget`
+ * API but routes everything through the new `WidgetBridge` plugin.
+ *
+ * Old code calls:
+ *   WidgetService.updateWidget(lat, lon, locationName?, prayerTimes?)
+ *   WidgetService.startAutoUpdate(lat, lon, locationName?)
+ *
+ * Under the hood this now:
+ *   1. Builds a PrayerPayload from the prayer times
+ *   2. Builds a DailyContentPayload from localStorage caches
+ *   3. Pushes both to the native widgets via WidgetBridge
  */
-import { registerPlugin } from '@capacitor/core';
+
+import {
+  syncPrayerData,
+  syncDailyContent,
+} from './widgetBridge';
 import { calculatePrayerTimes, formatPrayerTime, getNextPrayer } from './prayer-calculator';
-import type { WidgetPluginInterface, PrayerEntry, WidgetStrings } from './widgetPlugin';
-import { runIfNative } from './capacitor-utils';
 import { getMadhab } from './storage';
-
-/* Re-export the plugin type for convenience */
-export type { WidgetPluginInterface, PrayerEntry, WidgetStrings };
-
-const WidgetPlugin = registerPlugin<WidgetPluginInterface>('WidgetPlugin');
+import { isNativePlatform } from './capacitor-utils';
+import type {
+  PrayerPayload,
+  PrayerEntry,
+  DailyContentPayload,
+  AyahContent,
+  HadithContent,
+} from './widget-types';
 
 // ─────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────
 
-/**
- * Convert a Gregorian Date to a human-readable Hijri string.
- * Uses the `Intl` API — no external library required.
- */
 function getHijriDateString(): string {
-    try {
-        const islamicFormatter = new Intl.DateTimeFormat('en-u-ca-islamic', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-        });
-        return islamicFormatter.format(new Date());
-    } catch {
-        return '';
-    }
-}
-
-/**
- * Get a formatted clock string for the widget header (e.g. "14:35").
- */
-function getCurrentTimeString(): string {
-    return new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
+  try {
+    const fmt = new Intl.DateTimeFormat('en-u-ca-islamic', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     });
+    return fmt.format(new Date());
+  } catch {
+    return '';
+  }
 }
 
-/**
- * Build prayer data JSON for Kotlin widgets with timestamps.
- * Format: { prayers: [{name, time (timestamp)}, ...], nextPrayerIndex, lastUpdated }
- */
-function buildPrayerDataJson(prayerTimes: any, lat: number, lon: number): string {
-    const now = new Date();
-    const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
-    const dates = [prayerTimes.fajr, prayerTimes.dhuhr, prayerTimes.asr, prayerTimes.maghrib, prayerTimes.isha];
-
-    const prayers = dates.map((date, i) => ({
-        name: names[i],
-        time: date.getTime(), // Timestamp for countdown calculation
-        timeStr: formatPrayerTime(date) // Display time
-    }));
-
-    // Find next prayer index
-    let nextPrayerIndex = 0;
-    for (let i = 0; i < prayers.length; i++) {
-        if (prayers[i].time > now.getTime()) {
-            nextPrayerIndex = i;
-            break;
-        }
-    }
-
-    const data = {
-        prayers,
-        nextPrayerIndex,
-        lastUpdated: now.getTime(),
-        location: { lat, lon }
-    };
-
-    return JSON.stringify(data);
+function getGregorianDateString(): string {
+  try {
+    return new Date().toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {
+    return '';
+  }
 }
 
-/**
- * Build the all-5-prayers array with pass/active/upcoming status.
- */
-function buildAllPrayers(lat: number, lon: number): PrayerEntry[] {
-    const now = new Date();
-    const times = calculatePrayerTimes(lat, lon, now);
-    const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
-    const dates = [times.fajr, times.dhuhr, times.asr, times.maghrib, times.isha];
-
-    let activeAssigned = false;
-    const result: PrayerEntry[] = [];
-
-    for (let i = dates.length - 1; i >= 0; i--) {
-        if (!activeAssigned && now >= dates[i]) {
-            result[i] = {
-                name: names[i],
-                time: formatPrayerTime(dates[i]),
-                status: 'active',
-            };
-            activeAssigned = true;
-        }
-    }
-
-    for (let i = 0; i < dates.length; i++) {
-        if (!result[i]) {
-            result[i] = {
-                name: names[i],
-                time: formatPrayerTime(dates[i]),
-                status: now > dates[i] ? 'passed' : 'upcoming',
-            };
-        }
-    }
-
-    return result;
+function getCurrentTimeString(): string {
+  return new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
-/**
- * Read today's Quran verse from localStorage (set by the DailyAyah component).
- */
-function getStoredQuranVerse(): { arabic: string; translit: string; ref: string } | null {
+function getCurrentLocale(): string {
+  try {
+    const stored = localStorage.getItem('app-language') || localStorage.getItem('i18nextLng');
+    if (stored) return stored.split('-')[0];
+  } catch {}
+  return typeof navigator !== 'undefined'
+    ? (navigator.language || 'en').split('-')[0]
+    : 'en';
+}
+
+function buildPrayerPayload(
+  prayerTimes: any,
+  locationLabel: string,
+): PrayerPayload | null {
+  if (!prayerTimes) return null;
+  const now = Date.now();
+
+  const entries: PrayerEntry[] = [
+    { name: 'Fajr',    time: prayerTimes.fajr?.getTime()    ?? 0, formattedTime: formatPrayerTime(prayerTimes.fajr)    ?? '--:--' },
+    { name: 'Sunrise', time: prayerTimes.sunrise?.getTime() ?? 0, formattedTime: formatPrayerTime(prayerTimes.sunrise) ?? '--:--' },
+    { name: 'Dhuhr',   time: prayerTimes.dhuhr?.getTime()   ?? 0, formattedTime: formatPrayerTime(prayerTimes.dhuhr)   ?? '--:--' },
+    { name: 'Asr',     time: prayerTimes.asr?.getTime()     ?? 0, formattedTime: formatPrayerTime(prayerTimes.asr)     ?? '--:--' },
+    { name: 'Maghrib', time: prayerTimes.maghrib?.getTime() ?? 0, formattedTime: formatPrayerTime(prayerTimes.maghrib) ?? '--:--' },
+    { name: 'Isha',    time: prayerTimes.isha?.getTime()    ?? 0, formattedTime: formatPrayerTime(prayerTimes.isha)    ?? '--:--' },
+  ].filter(e => e.time > 0);
+
+  if (entries.length === 0) return null;
+
+  let nextPrayerIndex = 0;
+  for (let i = 0; i < entries.length; i++) {
+    if (entries[i].time > now) {
+      nextPrayerIndex = i;
+      break;
+    }
+  }
+
+  const madhab = (() => {
     try {
-        const raw = localStorage.getItem('daily-ayah-cache');
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        // Support both camelCase and snake_case keys from different sources
-        return {
-            arabic: parsed.arabic || parsed.text_arabic || parsed.textArabic || '',
-            translit: parsed.transliteration || parsed.translit || '',
-            ref: parsed.reference || parsed.ref || '',
-        };
-    } catch {
-        return null;
-    }
+      const m = getMadhab?.();
+      if (m === 1 || m === '1' || m === 'shafi' || m === 'SHAFI') return 'SHAFI';
+    } catch {}
+    return 'HANAFI';
+  })();
+
+  return {
+    prayers: entries,
+    nextPrayerIndex,
+    hijriDate: getHijriDateString(),
+    gregorianDate: getGregorianDateString(),
+    locationLabel,
+    madhab: madhab as 'HANAFI' | 'SHAFI',
+    calculationMethod: 'MWL',
+    currentTime24h: getCurrentTimeString(),
+    lastUpdated: now,
+  };
+}
+
+function getStoredQuranVerse(): AyahContent | null {
+  try {
+    const raw = localStorage.getItem('daily-ayah-cache');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const arabic = parsed.arabic || parsed.text_arabic || parsed.textArabic || '';
+    const translation = parsed.translation || parsed.englishTranslation || '';
+    const transliteration = parsed.translit || parsed.transliteration || '';
+    const reference = parsed.reference || parsed.ref || '';
+    const surahNumber = parsed.surahNumber || parsed.surah_number || 1;
+    const ayahNumber = parsed.ayahNumber || parsed.ayah_number || 1;
+    if (!arabic && !translation) return null;
+    return { arabic, translation, transliteration, reference, surahNumber, ayahNumber };
+  } catch {
+    return null;
+  }
+}
+
+function getStoredHadith(): HadithContent | null {
+  try {
+    const raw = localStorage.getItem('daily-hadith-cache');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return {
+      arabic:      parsed.arabic ?? '',
+      translation: parsed.englishTranslation || parsed.translation || '',
+      narrator:    parsed.narrator ?? '',
+      source:      parsed.source ?? '',
+      grade:       parsed.grade || 'Sahih',
+      collection:  parsed.collection ?? 'bukhari',
+      bookNumber:  Number(parsed.bookNumber ?? 0),
+      hadithNumber: Number(parsed.hadithNumber ?? 0),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function buildDailyContentPayload(): DailyContentPayload | null {
+  const ayah = getStoredQuranVerse();
+  if (!ayah) return null;
+  const hadith = getStoredHadith() ?? {
+    arabic: '',
+    translation: '',
+    narrator: '',
+    source: '',
+    grade: 'Sahih',
+    collection: 'bukhari',
+    bookNumber: 0,
+    hadithNumber: 0,
+  };
+  return { ayah, hadith, locale: getCurrentLocale() };
 }
 
 // ─────────────────────────────────────────────────────────
@@ -139,95 +182,51 @@ function getStoredQuranVerse(): { arabic: string; translit: string; ref: string 
 // ─────────────────────────────────────────────────────────
 
 export class WidgetService {
-    /**
-     * Full widget update: sends prayer schedule, Hijri date, current time,
-     * and today's Quran verse to ALL Noor Connect home-screen widgets.
-     */
-    static async updateWidget(
-        latitude: number,
-        longitude: number,
-        locationName?: string,
-        prayerTimes?: any,
-    ) {
-        try {
-            // Calculate prayer times if not provided
-            const times = prayerTimes || calculatePrayerTimes(latitude, longitude, new Date());
-            
-            const next = getNextPrayer(latitude, longitude);
-            if (!next) return;
+  /**
+   * Full widget update — pushes prayer + daily content to all native widgets.
+   * No-op on web.
+   */
+  static async updateWidget(
+    latitude: number,
+    longitude: number,
+    locationName?: string,
+    prayerTimes?: any,
+  ): Promise<void> {
+    if (!isNativePlatform()) return;
+    try {
+      const times = prayerTimes || calculatePrayerTimes(latitude, longitude, new Date());
 
-            const isRamadan = localStorage.getItem('ramadan-mode') === 'true';
-            let prayerName = next.name;
-            if (isRamadan) {
-                if (next.name === 'Maghrib') prayerName += ' (Iftar)';
-                if (next.name === 'Fajr') prayerName += ' (Suhoor)';
-            }
+      const locationLabel = locationName || 'Unknown location';
 
-            const nextTimeStr = next.time.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-            });
+      // 1. Push prayer data
+      const prayerPayload = buildPrayerPayload(times, locationLabel);
+      if (prayerPayload) {
+        await syncPrayerData(prayerPayload);
+      }
 
-            const allPrayers = buildAllPrayers(latitude, longitude);
-            const quran = getStoredQuranVerse();
-
-            // Build prayer data JSON for new Kotlin widgets
-            const prayerData = buildPrayerDataJson(times, latitude, longitude);
-
-            // Build ayah data JSON
-            const ayahData = JSON.stringify({
-                arabic: quran?.arabic ?? '',
-                transliteration: quran?.translit ?? '',
-                reference: quran?.ref ?? '',
-                hijriDate: getHijriDateString(),
-                location: locationName ?? ''
-            });
-
-            // Use notifyWidgetDataChanged for new Kotlin widgets
-            await runIfNative(() => 
-                WidgetPlugin.notifyWidgetDataChanged({
-                    prayerData,
-                    ayahData
-                })
-            );
-
-            // Also call updateWidgetFull for backward compatibility with old Java widgets
-            await runIfNative(() => 
-                WidgetPlugin.updateWidgetFull({
-                    name: prayerName,
-                    time: nextTimeStr,
-                    remaining: next.timeUntil,
-                    location: locationName ?? '',
-                    hijriDate: getHijriDateString(),
-                    currentTime: getCurrentTimeString(),
-                    allPrayers,
-                    quranArabic: quran?.arabic ?? '',
-                    quranTranslit: quran?.translit ?? '',
-                    quranRef: quran?.ref ?? '',
-                })
-            );
-
-            console.log('[WidgetService] Widget updated with prayer data for Kotlin widgets');
-
-        } catch (error) {
-            console.error('[WidgetService] updateWidget failed:', error);
-        }
+      // 2. Push daily content (ayah + hadith)
+      const dailyPayload = buildDailyContentPayload();
+      if (dailyPayload) {
+        await syncDailyContent(dailyPayload);
+      }
+    } catch (err) {
+      console.warn('[WidgetService] updateWidget failed:', err);
     }
+  }
 
-    /**
-     * Start auto-update timer (every 30 minutes).
-     * Returns the interval ID for cleanup.
-     */
-    static startAutoUpdate(
-        latitude: number,
-        longitude: number,
-        locationName?: string,
-    ): ReturnType<typeof setInterval> {
-        WidgetService.updateWidget(latitude, longitude, locationName).catch(console.error);
-        return setInterval(
-            () => WidgetService.updateWidget(latitude, longitude, locationName).catch(console.error),
-            30 * 60 * 1000,
-        );
-    }
+  /**
+   * Start the 30-minute auto-update timer.
+   * Returns the interval ID for cleanup.
+   */
+  static startAutoUpdate(
+    latitude: number,
+    longitude: number,
+    locationName?: string,
+  ): ReturnType<typeof setInterval> {
+    WidgetService.updateWidget(latitude, longitude, locationName).catch(() => {});
+    return setInterval(
+      () => WidgetService.updateWidget(latitude, longitude, locationName).catch(() => {}),
+      30 * 60 * 1000,
+    );
+  }
 }

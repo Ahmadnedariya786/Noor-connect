@@ -19,7 +19,7 @@ public class BatteryOptimizationReceiver extends BroadcastReceiver {
         }
 
         String action = intent.getAction();
-        if (android.os.action.POWER_SAVE_MODE_CHANGED.equals(action)) {
+        if (android.os.PowerManager.ACTION_POWER_SAVE_MODE_CHANGED.equals(action)) {
             Log.d(TAG, "Power save mode changed, rescheduling adhan alarms");
             // Reschedule alarms to ensure they work with new battery optimization state
             NativeAdhanScheduler.rescheduleAlarms(context);

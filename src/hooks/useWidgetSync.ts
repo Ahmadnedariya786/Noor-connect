@@ -1,86 +1,106 @@
-import { useEffect, useRef } from 'react';
-import { WidgetPlugin } from '@/lib/widgetPlugin';
-import { isNativePlatform } from '@/lib/capacitor-utils';
-import { usePrayerTimes } from '@/hooks/usePrayerTimes';
-import { globalTimerManager } from '@/lib/timer-manager';
-
 /**
- * Custom hook to synchronize prayer and ayah data with the native Android
- * widget suite. Runs whenever prayerTimes updates AND every 10 minutes so
- * the Next-Adhan countdown stays alive even when the user doesn't navigate.
+ * useWidgetSync — React hook that pushes Quran-progress and tasbeeh state
+ * to native Android widgets.
+ *
+ * Prayer data is already pushed by `WidgetService.startAutoUpdate` from
+ * App.tsx (preserved from the legacy wiring). This hook handles the other
+ * two payloads that need to fire on specific UI events:
+ *
+ *  - QuranProgressPayload: pushed when the user finishes a reading session
+ *    (we listen for changes to `localStorage['quran-reading-progress']`)
+ *  - Tasbeeh increments: pushed when the user taps count in-app (we listen
+ *    for changes to `localStorage['tasbeeh-total']`)
+ *
+ * The hook is a no-op on web (WidgetBridge internally no-ops).
+ *
+ * This file replaces the deleted `useWidgetSync.ts` which only handled
+ * the legacy `notifyWidgetDataChanged` API.
  */
+
+import { useEffect, useRef } from 'react';
+import { syncQuranProgress, pushTasbeehIncrement } from '@/lib/widgetBridge';
+import type { QuranProgressPayload } from '@/lib/widget-types';
+
+const QURAN_PROGRESS_KEY = 'quran-reading-progress';
+const TASBEEH_TOTAL_KEY = 'tasbeeh-total';
+const STORAGE_EVENT = 'storage';
+
+function parseQuranProgress(raw: string | null): QuranProgressPayload | null {
+  if (!raw) return null;
+  try {
+    const p = JSON.parse(raw);
+    return {
+      currentSurah: Number(p.currentSurah ?? p.surahNumber ?? 1),
+      currentAyah: Number(p.currentAyah ?? p.ayahNumber ?? 1),
+      currentJuz: Number(p.currentJuz ?? p.juzNumber ?? 1),
+      totalPagesRead: Number(p.totalPagesRead ?? p.pagesRead ?? 0),
+      totalPercent: Number(p.totalPercent ?? p.percent ?? 0),
+      dailyStreak: Number(p.dailyStreak ?? p.streak ?? 0),
+      lastReadTimestamp: Number(p.lastReadTimestamp ?? p.lastRead ?? Date.now()),
+      lastReadLabel: String(p.lastReadLabel ?? p.lastRead ?? ''),
+      goalPercent: Number(p.goalPercent ?? p.goal ?? 0),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function useWidgetSync() {
-  const { prayerTimes } = usePrayerTimes();
-  // Keep a stable ref to prayerTimes so the interval can read the latest value
-  const prayerTimesRef = useRef(prayerTimes);
-  prayerTimesRef.current = prayerTimes;
+  // Keep the previous tasbeeh total so we can compute deltas
+  const prevTasbeehRef = useRef<number | null>(null);
 
-  const doSync = (pt: typeof prayerTimes) => {
-    if (!pt) return;
-    // Only push to native if running inside Capacitor
-    if (!isNativePlatform()) return;
-
+  useEffect(() => {
+    // Initial read
     try {
-      // ── 1. Prayer Data ──────────────────────────────────────────────
-      const now = Date.now();
-      const prayersArray = [
-        { name: 'Fajr',    time: pt.fajr.getTime() },
-        { name: 'Sunrise', time: pt.sunrise.getTime() },
-        { name: 'Dhuhr',   time: pt.dhuhr.getTime() },
-        { name: 'Asr',     time: pt.asr.getTime() },
-        { name: 'Maghrib', time: pt.maghrib.getTime() },
-        { name: 'Isha',    time: pt.isha.getTime() },
-      ];
-
-      let nextIndex = prayersArray.findIndex(p => p.time > now);
-      if (nextIndex === -1) nextIndex = 0; // Fallback to Fajr tomorrow
-
-      const prayerData = JSON.stringify({
-        prayers: prayersArray,
-        nextPrayerIndex: nextIndex,
-        lastUpdated: now,
-      });
-
-      // ── 2. Ayah Data ────────────────────────────────────────────────
-      const ayahDataObj: { ayahs: { arabic: string; translation: string; reference: string }[] } =
-        { ayahs: [] };
-      try {
-        const raw = localStorage.getItem('daily-ayah-cache');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          ayahDataObj.ayahs.push({
-            arabic:      parsed.text_arabic    || parsed.textArabic    || parsed.arabic      || '',
-            translation: parsed.translation    || parsed.translit      || '',
-            reference:   parsed.reference      || parsed.ref           || '',
-          });
-        }
-      } catch (e) {
-        console.warn('[useWidgetSync] Ayah cache parse error:', e);
-      }
-
-      const ayahData = JSON.stringify(ayahDataObj);
-
-      // ── 3. Push to native plugin ────────────────────────────────────
-      WidgetPlugin.notifyWidgetDataChanged({ prayerData, ayahData }).catch(err => {
-        console.warn('[useWidgetSync] notifyWidgetDataChanged failed:', err);
-      });
-
-    } catch (err) {
-      console.warn('[useWidgetSync] sync error:', err);
+      const initial = Number(localStorage.getItem(TASBEEH_TOTAL_KEY) ?? '0');
+      prevTasbeehRef.current = isNaN(initial) ? 0 : initial;
+    } catch {
+      prevTasbeehRef.current = 0;
     }
-  };
 
-  // Sync when prayer times first load / change
-  useEffect(() => {
-    doSync(prayerTimes);
-  }, [prayerTimes]); // eslint-disable-line react-hooks/exhaustive-deps
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === QURAN_PROGRESS_KEY) {
+        const payload = parseQuranProgress(e.newValue);
+        if (payload) syncQuranProgress(payload).catch(() => {});
+      } else if (e.key === TASBEEH_TOTAL_KEY) {
+        const next = Number(e.newValue ?? '0');
+        if (!isNaN(next) && prevTasbeehRef.current !== null) {
+          const delta = next - prevTasbeehRef.current;
+          if (delta > 0) {
+            pushTasbeehIncrement(delta).catch(() => {});
+          }
+        }
+        prevTasbeehRef.current = isNaN(next) ? prevTasbeehRef.current : next;
+      }
+    };
 
-  // Also sync every 10 minutes so the countdown widget stays fresh
-  useEffect(() => {
-    const timerId = globalTimerManager.addCallback(() => {
-      doSync(prayerTimesRef.current);
-    }, 10 * 60 * 1000, 'widget-sync');
+    // Same-tab change events (storage event only fires cross-tab)
+    const onQuranProgressCustom = () => {
+      try {
+        const payload = parseQuranProgress(localStorage.getItem(QURAN_PROGRESS_KEY));
+        if (payload) syncQuranProgress(payload).catch(() => {});
+      } catch {}
+    };
 
-    return () => globalTimerManager.removeCallback(timerId);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const onTasbeehCustom = () => {
+      try {
+        const next = Number(localStorage.getItem(TASBEEH_TOTAL_KEY) ?? '0');
+        if (prevTasbeehRef.current !== null && !isNaN(next)) {
+          const delta = next - prevTasbeehRef.current;
+          if (delta > 0) pushTasbeehIncrement(delta).catch(() => {});
+          prevTasbeehRef.current = next;
+        }
+      } catch {}
+    };
+
+    window.addEventListener(STORAGE_EVENT, onStorage);
+    window.addEventListener('noorconnect:quran-progress-changed', onQuranProgressCustom);
+    window.addEventListener('noorconnect:tasbeeh-changed', onTasbeehCustom);
+
+    return () => {
+      window.removeEventListener(STORAGE_EVENT, onStorage);
+      window.removeEventListener('noorconnect:quran-progress-changed', onQuranProgressCustom);
+      window.removeEventListener('noorconnect:tasbeeh-changed', onTasbeehCustom);
+    };
+  }, []);
 }

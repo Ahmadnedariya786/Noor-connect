@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.PowerManager;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
 import android.util.Log;
 
 /**

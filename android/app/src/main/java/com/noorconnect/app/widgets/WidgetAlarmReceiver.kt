@@ -7,41 +7,46 @@ import android.util.Log
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkManager
 
 /**
- * Receives alarm broadcasts at each prayer time.
- * Enqueues an expedited WidgetDataWorker and reschedules the next alarm.
+ * Receives alarms fired at each prayer time.
+ *
+ * On receive:
+ *  1. Enqueues an expedited [WidgetRefreshWorker] to refresh all widgets.
+ *  2. Re-reads [WidgetPrefs.getPrayerPayload] and reschedules the next prayer alarm.
+ *
+ * Also listens for ACTION_BOOT_COMPLETED, ACTION_TIME_SET, ACTION_TIMEZONE_CHANGED,
+ * ACTION_LOCALE_CHANGED so widgets survive system events.
  */
 class WidgetAlarmReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "WidgetAlarmReceiver"
+        const val ACTION_REFRESH_ALL = "com.noorconnect.app.WIDGET_REFRESH"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "Alarm received: ${intent.action}")
+        val action = intent.action ?: return
+        Log.d(TAG, "onReceive: $action")
 
         try {
-            // 1. Enqueue one-time WidgetDataWorker (expedited)
-            val workRequest = OneTimeWorkRequestBuilder<WidgetDataWorker>()
+            // Always enqueue an expedited refresh
+            val workRequest = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
 
-            androidx.work.WorkManager.getInstance(context).enqueueUniqueWork(
-                "widget_alarm_refresh",
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "widget_alarm_refresh_${System.currentTimeMillis()}",
                 ExistingWorkPolicy.REPLACE,
                 workRequest
             )
 
-            // 2. Re-read SharedPreferences and reschedule next prayer alarm
-            val prefs = context.getSharedPreferences(
-                "NoorConnectWidgetPrefs", Context.MODE_PRIVATE
-            )
-            val prayerJson = prefs.getString("widget_prayer_data", null)
-            if (prayerJson != null) {
-                AlarmScheduler.scheduleNextPrayerAlarm(context, prayerJson)
+            // Reschedule next prayer alarm if we have prayer data
+            val prayerPayload = WidgetPrefs.getPrayerPayload(context)
+            if (prayerPayload != null) {
+                WidgetAlarmScheduler.scheduleNextPrayerAlarm(context, prayerPayload)
             }
-
         } catch (e: Exception) {
             Log.e(TAG, "Error in onReceive", e)
         }

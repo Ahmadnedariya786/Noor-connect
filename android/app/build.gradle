@@ -106,10 +106,61 @@ task moveMushafImages {
 // Run the move task before preBuild
 preBuild.dependsOn moveMushafImages
 
+// Task to (re)generate the bundled widget hadiths JSON from public/data/hadith-collections
+task buildWidgetHadiths {
+    def script = file("${project.projectDir}/../../scripts/build-widget-hadiths.cjs")
+    def collectionsDir = file("${project.projectDir}/../../public/data/hadith-collections")
+    def outDir = file("${project.projectDir}/src/main/assets")
+    def outFile = new File(outDir, "widget_hadiths.json")
+
+    inputs.dir collectionsDir
+    inputs.file script
+    outputs.file outFile
+
+    doLast {
+        if (script.exists()) {
+            println "Building widget hadiths bundle..."
+            outDir.mkdirs()
+            exec {
+                executable "node"
+                args script.absolutePath
+            }
+        } else {
+            println "WARN: build-widget-hadiths.cjs not found at ${script.absolutePath}, skipping"
+        }
+    }
+}
+
+// Run the hadiths build before preBuild (only if assets dir is missing or stale)
+preBuild.dependsOn buildWidgetHadiths
+
+// Task to strip .gz / .br compressed variants from the synced web assets.
+// vite-plugin-compression produces these for the browser, but AAPT2 rejects
+// them as duplicate resources in android assets (e.g. 1.json + 1.json.gz).
+task stripCompressedAssets {
+    def assetsPublicDir = file("${project.projectDir}/src/main/assets/public")
+    inputs.dir assetsPublicDir
+    doLast {
+        if (!assetsPublicDir.exists()) return
+        def deleted = 0
+        assetsPublicDir.eachFileRecurse { f ->
+            if (f.isFile() && (f.name.endsWith('.gz') || f.name.endsWith('.br'))) {
+                f.delete()
+                deleted++
+            }
+        }
+        if (deleted > 0) {
+            println "Stripped ${deleted} compressed (.gz/.br) duplicate assets from android/assets/public"
+        }
+    }
+}
+
+preBuild.dependsOn stripCompressedAssets
+
 repositories {
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
-		dirs '../../node_modules/@capacitor/background-runner/android/src/main/libs', 'libs'
+                dirs '../../node_modules/@capacitor/background-runner/android/src/main/libs', 'libs'
         dirs '../../node_modules/@capacitor/background-runner/android/src/main/libs', 'libs'
     }
 }
@@ -130,9 +181,6 @@ dependencies {
 
     // Coroutines for async widget operations
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
-
-    // Media for Radio Widget playback controls in notification
-    implementation "androidx.media:media:1.7.0"
 }
 
 apply from: 'capacitor.build.gradle'

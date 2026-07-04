@@ -1,8 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="splash_background">#0D0D0D</color>
-    <color name="m3_secondary_container">#FFD8F4</color>
-    <color name="m3_on_secondary_container">#1E192B</color>
-    <color name="m3_surface">#FFFBFE</color>
-    <color name="m3_on_surface">#1C1B1F</color>
+    <!-- Brand fallback (API < 31). Material You overrides live in values-v31/colors.xml -->
+
+    <!-- Backgrounds -->
+    <color name="widget_bg_primary">#FF0B0F14</color>
+    <color name="widget_bg_surface">#FF111827</color>
+    <color name="widget_bg_elevated">#FF1A2330</color>
+
+    <!-- Accents -->
+    <color name="widget_accent_emerald">#FF10B981</color>
+    <color name="widget_accent_emerald_dim">#FF065F46</color>
+    <color name="widget_accent_gold">#FFF59E0B</color>
+    <color name="widget_accent_gold_dim">#FF92400E</color>
+
+    <!-- Text -->
+    <color name="widget_text_primary">#FFF9FAFB</color>
+    <color name="widget_text_secondary">#FF9CA3AF</color>
+    <color name="widget_text_on_accent">#FF0B0F14</color>
+
+    <!-- Misc -->
+    <color name="widget_divider">#FF1F2937</color>
+    <color name="widget_pattern_overlay">#1A10B981</color>
+
+    <!-- Status dots -->
+    <color name="widget_dot_active_fill">#FF10B981</color>
+    <color name="widget_dot_passed_fill">#FF4B5563</color>
+    <color name="widget_dot_upcoming_stroke">#FF6B7280</color>
+
+    <!-- Tasbeeh -->
+    <color name="widget_tasbeeh_ring">#1A10B981</color>
+    <color name="widget_tasbeeh_ring_complete">#FF10B981</color>
+    <color name="widget_grade_sahih">#FF10B981</color>
+    <color name="widget_grade_hasan">#FFF59E0B</color>
+    <color name="widget_grade_daif">#FFEF4444</color>
+
+    <!-- Splash retained -->
+    <color name="splash_background">#FF0D0D0D</color>
 </resources>

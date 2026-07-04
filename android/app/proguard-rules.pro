@@ -18,11 +18,13 @@
 -keep class com.noorconnect.app.QiblaPlugin { *; }
 -keep class com.noorconnect.app.MainActivity { *; }
 
-# Widget providers
--keep class com.noorconnect.app.PrayerWidgetSmall { *; }
--keep class com.noorconnect.app.PrayerWidgetMedium { *; }
--keep class com.noorconnect.app.PrayerWidgetLarge { *; }
--keep class com.noorconnect.app.QuranVerseWidget { *; }
+# Widget providers (new unified widget suite)
+-keep class com.noorconnect.app.widgets.** { *; }
+-keep class com.noorconnect.app.widgets.nextprayer.** { *; }
+-keep class com.noorconnect.app.widgets.dailyayah.** { *; }
+-keep class com.noorconnect.app.widgets.dailyhadith.** { *; }
+-keep class com.noorconnect.app.widgets.quranprogress.** { *; }
+-keep class com.noorconnect.app.widgets.tasbeeh.** { *; }
 
 # ── Capacitor Framework ──────────────────────────────────────────
 -keep class com.getcapacitor.** { *; }

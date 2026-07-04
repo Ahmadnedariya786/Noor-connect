@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tasbeeh Counter Widget (2×2)
+  - Background: faint target ring
+  - Top: current dhikr name
+  - Center: huge count
+  - Below: target "/ 33"
+  - Bottom: total today
+  - Bottom-left: reset icon (separate PendingIntent)
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg_shape"
+    android:padding="12dp">
+
+    <!-- Faint target ring background -->
+    <ImageView
+        android:id="@+id/widget_target_ring"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:src="@drawable/widget_tasbeeh_target_ring" />
+
+    <!-- Main content (vertical) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- Current dhikr name -->
+        <TextView
+            android:id="@+id/widget_dhikr_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.1"
+            android:text="@string/widget_tasbeeh_subhanallah"
+            android:textAllCaps="true"
+            android:textColor="@color/widget_accent_gold"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <!-- Huge count -->
+        <TextView
+            android:id="@+id/widget_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:fontFamily="sans-serif-condensed"
+            android:letterSpacing="-0.04"
+            android:text="0"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="@dimen/widget_text_tasbeeh_count"
+            android:textStyle="bold" />
+
+        <!-- Target -->
+        <TextView
+            android:id="@+id/widget_target"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/widget_tasbeeh_target_format"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="13sp" />
+
+        <!-- Total today -->
+        <TextView
+            android:id="@+id/widget_total_today"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/widget_tasbeeh_total_today_format"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Reset icon (bottom-left) -->
+    <ImageView
+        android:id="@+id/widget_reset"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="bottom|start"
+        android:alpha="0.5"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Reset"
+        android:padding="6dp"
+        android:src="@drawable/widget_ornament_corner"
+        android:tint="@color/widget_text_secondary" />
+
+    <!-- Open-in-app chevron (bottom-right) -->
+    <ImageView
+        android:id="@+id/widget_open_app"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="bottom|end"
+        android:alpha="0.5"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Open app"
+        android:padding="6dp"
+        android:rotation="180"
+        android:src="@drawable/widget_ornament_corner"
+        android:tint="@color/widget_text_secondary" />
+
+</FrameLayout>

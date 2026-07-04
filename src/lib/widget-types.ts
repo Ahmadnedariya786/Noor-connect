@@ -1,92 +1,67 @@
 /**
- * Unified Widget Data Models
- * Single source of truth for widget data structure shared between TypeScript and Android
+ * Type definitions for the Noor Connect widget bridge.
+ *
+ * These types MUST stay in sync with the Kotlin data classes in
+ * android/app/src/main/java/com/noorconnect/app/widgets/WidgetPayloads.kt.
+ *
+ * If you change a field on one side, change it on the other.
  */
 
-// ─────────────────────────────────────────────────────────────
-// Core Types
-// ─────────────────────────────────────────────────────────────
-
-export interface PrayerTimeData {
+export interface PrayerEntry {
+  /** "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha" */
   name: string;
-  time: number;           // Unix timestamp in milliseconds
-  timeStr: string;        // Formatted time string (e.g., "05:30")
-  status: 'passed' | 'active' | 'upcoming';
+  /** epoch milliseconds */
+  time: number;
+  /** "05:15" — already localized for display */
+  formattedTime: string;
 }
 
-export interface WidgetPrayerData {
-  prayers: PrayerTimeData[];
-  nextPrayerIndex: number;
-  lastUpdated: number;    // Unix timestamp
-  location?: {
-    lat: number;
-    lon: number;
-    name?: string;
-  };
+export interface PrayerPayload {
+  prayers: PrayerEntry[];          // exactly 6 entries
+  nextPrayerIndex: number;         // 0..5
+  hijriDate: string;               // "5 Rajab 1447"
+  gregorianDate: string;           // "4 July 2026"
+  locationLabel: string;           // "Karachi, Pakistan"
+  madhab: 'HANAFI' | 'SHAFI';
+  calculationMethod: string;       // 'KARACHI' | 'MWL' | 'ISNA' | ...
+  currentTime24h: string;          // "14:35"
+  lastUpdated: number;             // epoch millis
 }
 
-export interface WidgetAyahData {
+export interface AyahContent {
   arabic: string;
+  translation: string;
   transliteration: string;
-  reference: string;
-  hijriDate: string;
-  location?: string;
+  reference: string;               // "Al-Baqarah 2:255"
+  surahNumber: number;
+  ayahNumber: number;
 }
 
-export interface WidgetRadioData {
-  isPlaying: boolean;
-  stationName: string;
-  reciterName: string;
-  surahName?: string;
+export interface HadithContent {
+  arabic: string;
+  translation: string;
+  narrator: string;
+  source: string;                  // "Sahih Bukhari 1:1"
+  grade: string;                   // "Sahih" | "Hasan" | "Daif"
+  collection: string;              // "bukhari" | "muslim" | ...
+  bookNumber: number;
+  hadithNumber: number;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Widget Identifiers (matching Android widget providers)
-// ─────────────────────────────────────────────────────────────
-
-export enum WidgetType {
-  NEXT_ADHAN = 'next_adhan',           // 2x2 - Next prayer countdown
-  DAILY_SCHEDULE = 'daily_schedule',   // 4x2 - All 5 prayers list
-  DAILY_AYAH = 'daily_ayah',           // 4x4 - Quran verse of the day
-  RADIO = 'radio',                     // 4x1 - Radio controls
+export interface DailyContentPayload {
+  ayah: AyahContent;
+  hadith: HadithContent;
+  locale: string;                  // "en" | "ar" | "ur" | "tr" | "id"
 }
 
-// ─────────────────────────────────────────────────────────────
-// Capacitor Plugin Interface
-// ─────────────────────────────────────────────────────────────
-
-export interface WidgetPluginInterface {
-  /**
-   * Update all widgets with prayer and ayah data in a single call.
-   * This is the primary method - replaces all legacy methods.
-   */
-  updateWidgets(options: {
-    prayerData: string;  // JSON string of WidgetPrayerData
-    ayahData: string;    // JSON string of WidgetAyahData
-    radioData?: string;  // JSON string of WidgetRadioData (optional)
-  }): Promise<{ status: string }>;
-
-  /**
-   * Schedule exact alarm for next prayer (Android 12+ requires SCHEDULE_EXACT_ALARM)
-   */
-  scheduleNextPrayerAlarm(options: {
-    nextPrayerTime: number;  // Unix timestamp in milliseconds
-  }): Promise<{ status: string }>;
-
-  /**
-   * Cancel all scheduled alarms
-   */
-  cancelAlarms(): Promise<{ status: string }>;
-
-  /**
-   * Get current widget data from SharedPreferences (for debugging)
-   */
-  getWidgetData(): Promise<{
-    prayerData: string;
-    ayahData: string;
-    radioData: string;
-  }>;
+export interface QuranProgressPayload {
+  currentSurah: number;            // 1-114
+  currentAyah: number;
+  currentJuz: number;              // 1-30
+  totalPagesRead: number;          // 0-604
+  totalPercent: number;            // 0.0 - 100.0
+  dailyStreak: number;
+  lastReadTimestamp: number;
+  lastReadLabel: string;           // "Al-Baqarah 2:255"
+  goalPercent: number;             // 0.0 - 100.0
 }
-
-// Type for plugin registration
-export const WIDGET_PLUGIN_NAME = 'WidgetPlugin';

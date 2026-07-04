@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n-new";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 import { isLowEndDevice } from "@/lib/device-performance";
+import { useWidgetSync } from "@/hooks/useWidgetSync";
 
 // Create QueryClient for React Query
 const queryClient = new QueryClient({
@@ -234,6 +235,8 @@ function AppContent() {
 function AppShell() {
   const [showSplash, setShowSplash] = useState(true);
   const { animationEnabled, splashGreetingEnabled, splashEnabled } = useSettings();
+  // Push Quran-progress + tasbeeh state to native widgets when they change
+  useWidgetSync();
 
   useEffect(() => {
     // If splash is disabled, hide it immediately

@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Progress ring foreground — emerald arc.
+  The ring is rotated programmatically in NextPrayerRenderer to indicate progress.
+  A 270-degree sweep leaves a gap at the top.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <stroke
-        android:width="5dp"
-        android:color="#10B981"/>
-    <solid android:color="#00000000"/>
+    android:shape="ring"
+    android:innerRadiusRatio="2.5"
+    android:thicknessRatio="14"
+    android:useLevel="true">
+
+    <solid android:color="@color/widget_accent_emerald" />
+    <corners android:radius="2dp" />
 </shape>

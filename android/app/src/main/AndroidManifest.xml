@@ -12,7 +12,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
@@ -41,6 +40,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Deep-link scheme for widget taps -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="noorconnect" android:host="app" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -53,81 +59,102 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- ══════════════ WIDGETS ══════════════ -->
+        <!-- ══════════════ WIDGET SUITE ══════════════ -->
 
-        <!-- Small Prayer Widget (2×2) -->
-        <receiver android:name=".PrayerWidgetSmall" android:exported="true">
+        <!-- Next Prayer Widget (4×2) -->
+        <receiver android:name=".widgets.nextprayer.NextPrayerWidget" android:exported="true"
+                  android:label="@string/widget_next_prayer_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.UPDATE_WIDGET" />
+                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                 <action android:name="android.intent.action.TIME_SET" />
             </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/prayer_widget_small_info" />
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_next_prayer_info" />
         </receiver>
 
-        <!-- Medium Prayer Widget (4×2) -->
-        <receiver android:name=".PrayerWidgetMedium" android:exported="true">
+        <!-- Daily Ayah Widget (4×2) -->
+        <receiver android:name=".widgets.dailyayah.DailyAyahWidget" android:exported="true"
+                  android:label="@string/widget_daily_ayah_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.UPDATE_WIDGET" />
-                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
-                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/prayer_widget_medium_info" />
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_daily_ayah_info" />
         </receiver>
 
-        <!-- Large Prayer Widget (4×4) — Full Timetable -->
-        <receiver android:name=".PrayerWidgetLarge" android:exported="true">
+        <!-- Daily Hadith Widget (4×2) -->
+        <receiver android:name=".widgets.dailyhadith.DailyHadithWidget" android:exported="true"
+                  android:label="@string/widget_daily_hadith_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.UPDATE_WIDGET" />
-                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
-                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/prayer_widget_large_info" />
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_daily_hadith_info" />
         </receiver>
 
-        <!-- Quran Verse Widget (4×2) -->
-        <receiver android:name=".QuranVerseWidget" android:exported="true">
+        <!-- Quran Progress Widget (4×2) -->
+        <receiver android:name=".widgets.quranprogress.QuranProgressWidget" android:exported="true"
+                  android:label="@string/widget_quran_progress_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.UPDATE_WIDGET" />
+                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
             </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/quran_verse_widget_info" />
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_quran_progress_info" />
         </receiver>
 
-        <!-- Boot receiver (reschedule alarms + refresh widgets) -->
-        <receiver android:name=".BootReceiver" android:exported="true">
+        <!-- Tasbeeh Counter Widget (2×2) -->
+        <receiver android:name=".widgets.tasbeeh.TasbeehWidget" android:exported="true"
+                  android:label="@string/widget_tasbeeh_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_tasbeeh_info" />
+        </receiver>
+
+        <!-- Tasbeeh tap-to-increment receiver -->
+        <receiver android:name=".widgets.tasbeeh.TasbeehReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.noorconnect.app.TASBEEH_INCREMENT" />
+                <action android:name="com.noorconnect.app.TASBEEH_RESET" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Prayer-time alarm receiver -->
+        <receiver android:name=".widgets.WidgetAlarmReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.noorconnect.app.PRAYER_ALARM" />
+                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Boot / time / timezone / locale receiver -->
+        <receiver android:name=".widgets.WidgetBootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
         </receiver>
 
-        <!-- Battery optimization change receiver -->
-        <receiver android:name=".BatteryOptimizationReceiver" android:exported="true">
-            <intent-filter>
-                <action android:name="android.os.action.POWER_SAVE_MODE_CHANGED" />
-            </intent-filter>
-        </receiver>
-
+        <!-- Adhan alarm receiver (existing — retained) -->
         <receiver
             android:name=".AdhanAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- Short-lived foreground service for adhan audio playback only -->
+        <!-- Short-lived foreground service for adhan audio playback only (existing — retained) -->
         <service
             android:name=".AdhanPlaybackService"
             android:enabled="true"
@@ -135,62 +162,13 @@
             android:foregroundServiceType="mediaPlayback"
             android:stopWithTask="false" />
 
-        <!-- ══════════════ NEW KOTLIN WIDGETS ══════════════ -->
-
-        <!-- Next Adhan countdown widget (2×2) -->
-        <receiver android:name=".widgets.NextAdhanWidget"
-                  android:exported="true">
+        <!-- Battery optimization change receiver (existing — retained) -->
+        <receiver android:name=".BatteryOptimizationReceiver" android:exported="true">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.os.action.POWER_SAVE_MODE_CHANGED" />
             </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/widget_next_adhan_info"/>
         </receiver>
 
-        <!-- Daily Schedule widget (4×2) -->
-        <receiver android:name=".widgets.DailyScheduleWidget"
-                  android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/widget_daily_schedule_info"/>
-        </receiver>
-
-        <!-- Daily Ayah widget (4×4) -->
-        <receiver android:name=".widgets.DailyAyahWidget"
-                  android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/widget_daily_ayah_info"/>
-        </receiver>
-
-        <!-- Widget alarm receiver for prayer-time-exact refresh -->
-        <receiver android:name=".widgets.WidgetAlarmReceiver"
-                  android:exported="false"/>
-
-        <!-- RemoteViewsService for DailyScheduleWidget's ListView -->
-        <service android:name=".widgets.PrayerListService"
-                 android:exported="false"
-                 android:permission="android.permission.BIND_REMOTEVIEWS"/>
-
-        <!-- ══════════════ RADIO WIDGET ══════════════ -->
-
-        <service android:name=".widgets.RadioPlaybackService"
-                 android:enabled="true"
-                 android:exported="false"
-                 android:foregroundServiceType="mediaPlayback" />
-
-        <receiver android:name=".widgets.RadioWidget"
-                  android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/widget_radio_info"/>
-        </receiver>
     </application>
 
 </manifest>

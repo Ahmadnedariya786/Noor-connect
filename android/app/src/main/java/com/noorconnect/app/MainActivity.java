@@ -7,11 +7,12 @@ import android.os.Bundle;
 import android.webkit.WebView;
 
 import com.getcapacitor.BridgeActivity;
+import com.noorconnect.app.widgets.WidgetBridge;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        registerPlugin(WidgetPlugin.class);
+        registerPlugin(WidgetBridge.class);
         registerPlugin(NativeAdhanPlugin.class);
         registerPlugin(BatteryOptimizationPlugin.class);
         super.onCreate(savedInstanceState);

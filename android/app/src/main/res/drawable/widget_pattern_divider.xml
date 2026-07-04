@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Repeating arabesque divider strip.
+  1dp tall, full width.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="4dp"
+    android:viewportWidth="240"
+    android:viewportHeight="4"
+    android:tint="@color/widget_accent_emerald">
+
+    <!-- Repeating 8-point star strip -->
+    <path
+        android:fillAlpha="0.35"
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,2 L4,0 L8,2 L4,4 Z M8,2 L12,0 L16,2 L12,4 Z M16,2 L20,0 L24,2 L20,4 Z M24,2 L28,0 L32,2 L28,4 Z M32,2 L36,0 L40,2 L36,4 Z M40,2 L44,0 L48,2 L44,4 Z M48,2 L52,0 L56,2 L52,4 Z M56,2 L60,0 L64,2 L60,4 Z M64,2 L68,0 L72,2 L68,4 Z M72,2 L76,0 L80,2 L76,4 Z M80,2 L84,0 L88,2 L84,4 Z M88,2 L92,0 L96,2 L92,4 Z M96,2 L100,0 L104,2 L100,4 Z M104,2 L108,0 L112,2 L108,4 Z M112,2 L116,0 L120,2 L116,4 Z M120,2 L124,0 L128,2 L124,4 Z M128,2 L132,0 L136,2 L132,4 Z M136,2 L140,0 L144,2 L140,4 Z M144,2 L148,0 L152,2 L148,4 Z M152,2 L156,0 L160,2 L156,4 Z M160,2 L164,0 L168,2 L164,4 Z M168,2 L172,0 L176,2 L172,4 Z M176,2 L180,0 L184,2 L180,4 Z M184,2 L188,0 L192,2 L188,4 Z M192,2 L196,0 L200,2 L196,4 Z M200,2 L204,0 L208,2 L204,4 Z M208,2 L212,0 L216,2 L212,4 Z M216,2 L220,0 L224,2 L220,4 Z M224,2 L228,0 L232,2 L228,4 Z M232,2 L236,0 L240,2 L236,4 Z" />
+</vector>

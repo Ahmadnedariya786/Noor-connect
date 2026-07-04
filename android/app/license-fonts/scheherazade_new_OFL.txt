@@ -1,0 +1,9 @@
+Scheherazade New — Copyright (c) 1994-2021 SIL International.
+Licensed under the SIL Open Font License, Version 1.1 (OFL).
+https://scripts.sil.org/OFL
+
+This font is included unmodified in the Noor Connect app for the purpose
+of rendering Arabic text in home-screen widgets. The full OFL text is at
+https://openfontlicense.org.
+
+Source: https://github.com/silnrsi/font-scheherazade/releases/tag/v3.300
