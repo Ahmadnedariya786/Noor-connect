@@ -18,7 +18,7 @@ import { LazyMotionWrapper } from "@/components/LazyMotionWrapper";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n-new";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
-import { isLowEndDevice } from "@/lib/device-performance";
+import { isLowEndDevice as checkLowEndDevice } from "@/lib/device-performance";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
 import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
@@ -72,7 +72,7 @@ function DeepLinkListener() {
 }
 
 // Create QueryClient for React Query with performance optimizations
-const isLowEndForQuery = isLowEndDevice();
+const isLowEndForQuery = checkLowEndDevice();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -148,12 +148,12 @@ const QisasReader = lazy(() => import("./pages/QisasReader"));
 // Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
 // Check for low-end device and disable animations if no user preference is set
 const storedAnimationPreference = localStorage.getItem("animations_enabled");
-const isLowEndDevice = isLowEndDevice();
+const isLowEndDeviceCheck = checkLowEndDevice();
 let isAnimationDisabled: boolean;
 
 if (storedAnimationPreference === null) {
   // No user preference set - use device detection
-  isAnimationDisabled = isLowEndDevice;
+  isAnimationDisabled = isLowEndDeviceCheck;
   // Store the initial preference so it persists
   localStorage.setItem("animations_enabled", isAnimationDisabled.toString());
 } else {
@@ -293,7 +293,7 @@ function AppShell() {
   // Push Quran-progress + tasbeeh state to native widgets when they change
   useWidgetSync();
   
-  const isLowEndForShell = isLowEndDevice();
+  const isLowEndForShell = checkLowEndDevice();
 
   useEffect(() => {
     // If splash is disabled, hide it immediately

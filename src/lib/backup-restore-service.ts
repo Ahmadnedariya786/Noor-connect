@@ -2,14 +2,14 @@
  * Backup and Restore Service
  * Handles automatic backup creation on first install and restoration on reinstall
  * Optimized for low CPU/RAM usage with background processing
+ * Uses localStorage for cross-platform compatibility
  */
 
 import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 
-const BACKUP_FOLDER_NAME = 'noor_connect_backup';
 const BACKUP_METADATA_KEY = 'backup_metadata';
+const BACKUP_DATA_KEY = 'backup_data';
 const BACKUP_VERSION = '1.0';
 const BACKUP_CHECK_DELAY = 2000; // 2 seconds delay to avoid blocking UI
 
@@ -81,7 +81,7 @@ class BackupRestoreService {
 
   private async performBackupCheck(): Promise<void> {
     try {
-      const backupExists = await this.backupFolderExists();
+      const backupExists = await this.backupExists();
       
       if (backupExists) {
         const metadata = await this.getBackupMetadata();
@@ -98,18 +98,10 @@ class BackupRestoreService {
     }
   }
 
-  private async backupFolderExists(): Promise<boolean> {
-    if (!this.isNative) return false;
-
+  private async backupExists(): Promise<boolean> {
     try {
-      const result = await Filesystem.readdir({
-        path: '',
-        directory: Directory.Documents
-      });
-
-      return result.files.some(file => 
-        file.name === BACKUP_FOLDER_NAME || file.type === 'directory'
-      );
+      const metadata = localStorage.getItem(BACKUP_METADATA_KEY);
+      return metadata !== null;
     } catch {
       return false;
     }
@@ -117,12 +109,10 @@ class BackupRestoreService {
 
   private async getBackupMetadata(): Promise<BackupMetadata | null> {
     try {
-      const result = await Filesystem.readFile({
-        path: `${BACKUP_FOLDER_NAME}/metadata.json`,
-        directory: Directory.Documents
-      });
-
-      const metadata = JSON.parse(result.data);
+      const metadataStr = localStorage.getItem(BACKUP_METADATA_KEY);
+      if (!metadataStr) return null;
+      
+      const metadata = JSON.parse(metadataStr);
       return metadata;
     } catch {
       return null;
@@ -147,16 +137,11 @@ class BackupRestoreService {
       // Use requestIdleCallback if available for background processing
       const createBackup = async () => {
         try {
-          await this.createBackupFolder();
-          
           // Collect data efficiently
           const backupData = await this.collectBackupData();
           
-          // Save backup data
+          // Save backup data to localStorage
           await this.saveBackupData(backupData);
-          
-          // Save metadata
-          await this.saveBackupMetadata(backupData.metadata);
           
           console.log('Backup created successfully');
           return true;
@@ -187,18 +172,6 @@ class BackupRestoreService {
     } catch (error) {
       console.error('Backup creation failed:', error);
       return false;
-    }
-  }
-
-  private async createBackupFolder(): Promise<void> {
-    try {
-      await Filesystem.mkdir({
-        path: BACKUP_FOLDER_NAME,
-        directory: Directory.Documents
-      });
-    } catch (error) {
-      // Folder might already exist, ignore error
-      console.warn('Backup folder creation (might already exist):', error);
     }
   }
 
@@ -244,27 +217,11 @@ class BackupRestoreService {
   }
 
   private async saveBackupData(backupData: BackupData): Promise<void> {
-    // Save localStorage data
-    await Filesystem.writeFile({
-      path: `${BACKUP_FOLDER_NAME}/localStorage.json`,
-      data: JSON.stringify(backupData.localStorage),
-      directory: Directory.Documents
-    });
-
-    // Save preferences data
-    await Filesystem.writeFile({
-      path: `${BACKUP_FOLDER_NAME}/preferences.json`,
-      data: JSON.stringify(backupData.preferences),
-      directory: Directory.Documents
-    });
-  }
-
-  private async saveBackupMetadata(metadata: BackupMetadata): Promise<void> {
-    await Filesystem.writeFile({
-      path: `${BACKUP_FOLDER_NAME}/metadata.json`,
-      data: JSON.stringify(metadata),
-      directory: Directory.Documents
-    });
+    // Save metadata
+    localStorage.setItem(BACKUP_METADATA_KEY, JSON.stringify(backupData.metadata));
+    
+    // Save full backup data
+    localStorage.setItem(BACKUP_DATA_KEY, JSON.stringify(backupData));
   }
 
   /**
@@ -274,20 +231,39 @@ class BackupRestoreService {
     if (!this.isNative) return false;
 
     try {
-      const backupData = await this.loadBackupData();
-      if (!backupData) return false;
+      const backupDataStr = localStorage.getItem(BACKUP_DATA_KEY);
+      if (!backupDataStr) {
+        console.error('No backup data found');
+        return false;
+      }
+
+      const backupData: BackupData = JSON.parse(backupDataStr);
+      
+      // Validate backup version
+      if (backupData.metadata.version !== BACKUP_VERSION) {
+        console.warn('Backup version mismatch, attempting restore anyway');
+      }
 
       // Restore localStorage data
-      await this.restoreLocalStorage(backupData.localStorage);
+      for (const [key, value] of Object.entries(backupData.localStorage)) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (error) {
+          console.warn(`Failed to restore localStorage key ${key}:`, error);
+        }
+      }
 
       // Restore preferences data
-      await this.restorePreferences(backupData.preferences);
+      for (const [key, value] of Object.entries(backupData.preferences)) {
+        try {
+          await Preferences.set({ key, value });
+        } catch (error) {
+          console.warn(`Failed to restore preference ${key}:`, error);
+        }
+      }
 
       // Mark backup as restored
-      await Preferences.set({
-        key: 'backup_restored',
-        value: new Date().toISOString()
-      });
+      await Preferences.set({ key: 'backup_checked_session', value: 'true' });
 
       console.log('Backup restored successfully');
       return true;
@@ -297,95 +273,14 @@ class BackupRestoreService {
     }
   }
 
-  private async loadBackupData(): Promise<BackupData | null> {
-    try {
-      // Load metadata
-      const metadataResult = await Filesystem.readFile({
-        path: `${BACKUP_FOLDER_NAME}/metadata.json`,
-        directory: Directory.Documents
-      });
-      const metadata = JSON.parse(metadataResult.data);
-
-      // Load localStorage
-      const localStorageResult = await Filesystem.readFile({
-        path: `${BACKUP_FOLDER_NAME}/localStorage.json`,
-        directory: Directory.Documents
-      });
-      const localStorageData = JSON.parse(localStorageResult.data);
-
-      // Load preferences
-      const preferencesResult = await Filesystem.readFile({
-        path: `${BACKUP_FOLDER_NAME}/preferences.json`,
-        directory: Directory.Documents
-      });
-      const preferencesData = JSON.parse(preferencesResult.data);
-
-      return {
-        metadata,
-        localStorage: localStorageData,
-        preferences: preferencesData
-      };
-    } catch (error) {
-      console.error('Failed to load backup data:', error);
-      return null;
-    }
-  }
-
-  private async restoreLocalStorage(data: Record<string, string>): Promise<void> {
-    // Clear existing localStorage
-    localStorage.clear();
-
-    // Restore data
-    for (const [key, value] of Object.entries(data)) {
-      try {
-        localStorage.setItem(key, value);
-      } catch (error) {
-        console.warn(`Failed to restore localStorage key ${key}:`, error);
-      }
-    }
-  }
-
-  private async restorePreferences(data: Record<string, string>): Promise<void> {
-    // Clear existing preferences
-    try {
-      const allPrefs = await Preferences.keys();
-      for (const key of allPrefs.keys) {
-        await Preferences.remove({ key });
-      }
-    } catch (error) {
-      console.warn('Failed to clear preferences:', error);
-    }
-
-    // Restore data
-    for (const [key, value] of Object.entries(data)) {
-      try {
-        await Preferences.set({ key, value });
-      } catch (error) {
-        console.warn(`Failed to restore preference ${key}:`, error);
-      }
-    }
-  }
-
   /**
-   * Delete backup folder
+   * Delete backup data
    */
   async deleteBackup(): Promise<boolean> {
-    if (!this.isNative) return false;
-
     try {
-      await Filesystem.rmdir({
-        path: BACKUP_FOLDER_NAME,
-        directory: Directory.Documents,
-        recursive: true
-      });
-
-      // Mark that we've checked for backup in this session
-      await Preferences.set({
-        key: 'backup_checked_session',
-        value: 'true'
-      });
-
-      console.log('Backup deleted successfully');
+      localStorage.removeItem(BACKUP_METADATA_KEY);
+      localStorage.removeItem(BACKUP_DATA_KEY);
+      await Preferences.set({ key: 'backup_checked_session', value: 'true' });
       return true;
     } catch (error) {
       console.error('Backup deletion failed:', error);
@@ -394,23 +289,32 @@ class BackupRestoreService {
   }
 
   /**
-   * Mark backup check as done for this session
+   * Get backup info without restoring
    */
-  async markBackupCheckDone(): Promise<void> {
-    await Preferences.set({
-      key: 'backup_checked_session',
-      value: 'true'
-    });
+  async getBackupInfo(): Promise<BackupMetadata | null> {
+    return this.getBackupMetadata();
   }
 
   /**
-   * Check if this is a fresh install (no backup found)
+   * Manually trigger backup (e.g., before app update)
    */
-  async isFreshInstall(): Promise<boolean> {
-    if (!this.isNative) return false;
+  async manualBackup(): Promise<boolean> {
+    return this.createBackup();
+  }
 
-    const backupExists = await this.backupFolderExists();
-    return !backupExists;
+  /**
+   * Check if backup is available
+   */
+  async hasBackup(): Promise<boolean> {
+    return this.backupExists();
+  }
+
+  /**
+   * Reset the backup check session flag
+   * Call this when user dismisses the restore dialog without restoring
+   */
+  async dismissBackup(): Promise<void> {
+    await Preferences.set({ key: 'backup_checked_session', value: 'true' });
   }
 }
 

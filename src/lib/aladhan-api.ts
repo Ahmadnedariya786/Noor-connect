@@ -302,22 +302,6 @@ export class AladhanAPI {
       console.error('Offline calculation failed:', error);
       throw new Error('Failed to get prayer times from API, cache, or offline calculation');
     }
-
-    return {
-      timings: {
-        Fajr: times.fajr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        Sunrise: times.sunrise.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        Dhuhr: times.dhuhr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        Asr: times.asr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        Maghrib: times.maghrib.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        Isha: times.isha.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        Imsak: times.fajr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        Midnight: '00:00',
-        Firstthird: '00:00',
-        Lastthird: '00:00'
-      },
-      timezone
-    };
   }
 
   /**
