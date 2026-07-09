@@ -30,6 +30,9 @@ class WidgetBootReceiver : BroadcastReceiver() {
         val action = intent.action ?: return
         Log.d(TAG, "onReceive: $action")
 
+        // goAsync() extends the receiver's lifetime to ~30 seconds so
+        // WorkManager + SharedPreferences I/O won't ANR on slow devices.
+        val pendingResult = goAsync()
         try {
             // Re-enqueue the periodic refresh (KEEP so we don't reset the timing)
             val periodicWork = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(
@@ -49,16 +52,11 @@ class WidgetBootReceiver : BroadcastReceiver() {
             }
 
             // Also trigger an immediate one-shot refresh (best-effort)
-            val oneShot = androidx.work.OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
-                .setExpedited(androidx.work.OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                .build()
-            WorkManager.getInstance(context).enqueueUniqueWork(
-                "widget_boot_refresh_${System.currentTimeMillis()}",
-                androidx.work.ExistingWorkPolicy.REPLACE,
-                oneShot
-            )
+            WidgetRefreshWorker.enqueueImmediate(context)
         } catch (e: Exception) {
             Log.e(TAG, "Error in onReceive", e)
+        } finally {
+            pendingResult.finish()
         }
     }
 }

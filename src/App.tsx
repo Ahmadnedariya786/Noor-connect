@@ -2,7 +2,7 @@ import { useState, useEffect, Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import BottomNav from "@/components/BottomNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -20,6 +20,49 @@ import i18n from "@/lib/i18n-new";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 import { isLowEndDevice } from "@/lib/device-performance";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
+import { App as CapacitorApp } from '@capacitor/app';
+
+/**
+ * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
+ * and routes them through React Router. Must live inside <BrowserRouter> so useNavigate works.
+ *
+ * Handles both cold start (Capacitor delivers the launch URL on appUrlOpen) and warm start
+ * (MainActivity.onNewIntent forwards the intent to the App plugin). No-op on web.
+ */
+function DeepLinkListener() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    let cancelled = false;
+    const routeFromUrl = (rawUrl: string) => {
+      if (!rawUrl) return;
+      // Accept "noorconnect://app/<path>" and bare "/<path>"
+      const path = rawUrl.replace(/^noorconnect:\/\/app/, '').replace(/^https?:\/\/[^/]+/, '');
+      if (!path || path === '/' || cancelled) return;
+      try {
+        navigate(path, { replace: true });
+      } catch (e) {
+        // ignore navigation errors (e.g. unknown route)
+        console.warn('DeepLinkListener: could not navigate to', path, e);
+      }
+    };
+
+    // Warm start: subsequent URL opens while app is running
+    const cleanupPromise = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      routeFromUrl(url);
+    });
+
+    // Cold start: if app was launched from a widget tap, get the launch URL
+    CapacitorApp.getLaunchUrl()
+      .then(({ url }) => routeFromUrl(url))
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      cleanupPromise.then(h => h?.remove?.()).catch(() => {});
+    };
+  }, [navigate]);
+  return null;
+}
 
 // Create QueryClient for React Query
 const queryClient = new QueryClient({
@@ -218,6 +261,7 @@ function AppContent() {
 
             <LayoutManager>
               <ErrorBoundary>
+                <DeepLinkListener />
                 <AppRoutes />
               </ErrorBoundary>
             </LayoutManager>

@@ -2,12 +2,6 @@
 # Noor Connect — ProGuard / R8 rules for release builds
 # ================================================================
 
-# ── CompassQibla Library ─────────────────────────────────────────
-# Prevents R8 from stripping the Qibla compass library classes
-# that are accessed via reflection or dynamically.
-
-# Keep the Builder pattern + listener interfaces
-
 # ── Noor Connect App Classes ────────────────────────────────────
 # BroadcastReceivers, Services, and Plugins referenced in Manifest
 -keep class com.noorconnect.app.AdhanAlarmReceiver { *; }
@@ -15,7 +9,6 @@
 -keep class com.noorconnect.app.NativeAdhanScheduler { *; }
 -keep class com.noorconnect.app.NativeAdhanScheduler$ScheduledAdhan { *; }
 -keep class com.noorconnect.app.BootReceiver { *; }
--keep class com.noorconnect.app.QiblaPlugin { *; }
 -keep class com.noorconnect.app.MainActivity { *; }
 
 # Widget providers (new unified widget suite)
@@ -57,5 +50,3 @@
 # Keep WorkManager (prevents minification issues with workers)
 -keep class androidx.work.** { *; }
 -keep interface androidx.work.** { *; }
-
-# Keep CompassQibla library (fixed from Github)

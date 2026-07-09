@@ -65,17 +65,27 @@ class WidgetRefreshWorker(
         /**
          * Enqueue an immediate expedited refresh.
          */
+        private const val IMMEDIATE_WORK_TAG = "widget_immediate"
+
         fun enqueueImmediate(context: Context) {
             val workRequest = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(
-                "widget_immediate_${System.currentTimeMillis()}",
+                IMMEDIATE_WORK_TAG,
                 ExistingWorkPolicy.REPLACE,
                 workRequest
             )
         }
     }
+
+    private val WIDGET_CLASSES = listOf(
+        NextPrayerWidget::class.java,
+        DailyAyahWidget::class.java,
+        DailyHadithWidget::class.java,
+        QuranProgressWidget::class.java,
+        TasbeehWidget::class.java
+    )
 
     override suspend fun doWork(): Result {
         return try {
@@ -83,11 +93,17 @@ class WidgetRefreshWorker(
             val mgr = AppWidgetManager.getInstance(ctx)
 
             // Refresh each widget class. Safe to call even when no instances exist.
-            refreshWidget(ctx, mgr, NextPrayerWidget::class.java)
-            refreshWidget(ctx, mgr, DailyAyahWidget::class.java)
-            refreshWidget(ctx, mgr, DailyHadithWidget::class.java)
-            refreshWidget(ctx, mgr, QuranProgressWidget::class.java)
-            refreshWidget(ctx, mgr, TasbeehWidget::class.java)
+            WIDGET_CLASSES.forEach { cls -> refreshWidget(ctx, mgr, cls) }
+
+            // Self-cancel the periodic worker when no widget instances remain.
+            // This prevents battery drain after the user removes all home-screen widgets.
+            val hasAnyInstances = WIDGET_CLASSES.any { cls ->
+                mgr.getAppWidgetIds(ComponentName(ctx, cls)).isNotEmpty()
+            }
+            if (!hasAnyInstances) {
+                Log.d(TAG, "No widget instances remain — cancelling periodic worker")
+                WorkManager.getInstance(ctx).cancelUniqueWork(WORK_TAG)
+            }
 
             Log.d(TAG, "All widgets refreshed")
             Result.success()
@@ -100,7 +116,7 @@ class WidgetRefreshWorker(
     override suspend fun getForegroundInfo(): ForegroundInfo {
         ensureChannel(applicationContext)
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(applicationContext.getString(R.string.notif_widget_sync_text))
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)

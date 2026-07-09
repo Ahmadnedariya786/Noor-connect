@@ -18,7 +18,7 @@ import {
   syncPrayerData,
   syncDailyContent,
 } from './widgetBridge';
-import { calculatePrayerTimes, formatPrayerTime, getNextPrayer } from './prayer-calculator';
+import { calculatePrayerTimes, formatPrayerTime, getCalculationMethod } from './prayer-calculator';
 import { getMadhab } from './storage';
 import { isNativePlatform } from './capacitor-utils';
 import type {
@@ -94,6 +94,9 @@ function buildPrayerPayload(
 
   if (entries.length === 0) return null;
 
+  // Find the next upcoming prayer. If all of today's prayers are in the past
+  // (e.g. after Isha), wrap to the first prayer of tomorrow and roll its time
+  // forward by 24h so the native widget's countdown shows a future target.
   let nextPrayerIndex = 0;
   for (let i = 0; i < entries.length; i++) {
     if (entries[i].time > now) {
@@ -101,14 +104,29 @@ function buildPrayerPayload(
       break;
     }
   }
+  // Loop completed without finding a future prayer -> all passed for today.
+  if (entries.length > 0 && entries[nextPrayerIndex].time <= now) {
+    nextPrayerIndex = 0;
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    for (const entry of entries) {
+      entry.time += oneDayMs;
+    }
+  }
 
   const madhab = (() => {
     try {
       const m = getMadhab?.();
-      if (m === 1 || m === '1' || m === 'shafi' || m === 'SHAFI') return 'SHAFI';
+      if (m === 'shafi') return 'SHAFI';
     } catch {}
     return 'HANAFI';
   })();
+
+  let calculationMethod: string;
+  try {
+    calculationMethod = getCalculationMethod?.() ?? 'MuslimWorldLeague';
+  } catch {
+    calculationMethod = 'MuslimWorldLeague';
+  }
 
   return {
     prayers: entries,
@@ -117,7 +135,7 @@ function buildPrayerPayload(
     gregorianDate: getGregorianDateString(),
     locationLabel,
     madhab: madhab as 'HANAFI' | 'SHAFI',
-    calculationMethod: 'MWL',
+    calculationMethod,
     currentTime24h: getCurrentTimeString(),
     lastUpdated: now,
   };

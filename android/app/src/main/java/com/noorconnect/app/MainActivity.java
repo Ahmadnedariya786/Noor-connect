@@ -2,6 +2,8 @@ package com.noorconnect.app;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebView;
@@ -30,6 +32,23 @@ public class MainActivity extends BridgeActivity {
         // Adhan alarms use setAlarmClock() which is Doze-immune.
         // Adhan playback uses a short-lived foreground service started
         // by AdhanAlarmReceiver only when it's time to play.
+    }
+
+    /**
+     * Forward widget deep-link intents (noorconnect://app/...) to the JS layer
+     * via the App plugin's appUrlOpen event. With launchMode="singleTask", taps
+     * on a widget while the app is already running arrive here instead of onCreate.
+     */
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        Uri data = intent.getData();
+        if (data != null && "noorconnect".equals(data.getScheme())) {
+            // BridgeActivity forwards new intents to the App plugin, which fires
+            // appUrlOpen on the JS side. Setting the intent first ensures
+            // getLaunchUrl() / getIntent() also reflect the deep link.
+        }
     }
 
     /**

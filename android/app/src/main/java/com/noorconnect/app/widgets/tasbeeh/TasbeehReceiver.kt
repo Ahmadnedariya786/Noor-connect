@@ -25,6 +25,7 @@ class TasbeehReceiver : BroadcastReceiver() {
         val action = intent.action ?: return
         Log.d(TAG, "onReceive: $action")
 
+        val pendingResult = goAsync()
         try {
             when (action) {
                 TasbeehWidget.ACTION_INCREMENT -> {
@@ -42,6 +43,8 @@ class TasbeehReceiver : BroadcastReceiver() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in onReceive", e)
+        } finally {
+            pendingResult.finish()
         }
     }
 }

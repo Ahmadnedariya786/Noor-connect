@@ -40,7 +40,7 @@ type DeviceOrientationConstructorWithPermission = typeof DeviceOrientationEvent 
 function getFallbackLocationByTimezone(timezone: string) {
   // Return matching city or default to Mecca
   return FALLBACK_LOCATIONS[timezone as keyof typeof FALLBACK_LOCATIONS] ||
-    { name: 'Mecca', lat: 21.3891, lon: 39.8579 };
+    { name: 'Mecca', lat: 21.4225, lon: 39.8262 };
 }
 
 // ─── Constants ────────────────────────────────────────────────
