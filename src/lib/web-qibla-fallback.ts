@@ -154,12 +154,26 @@ export class WebQibla {
 
     this.orientationListener = (event: DeviceOrientationEvent) => {
       // Log for debugging
-      console.log(`Compass Event (Fallback): alpha=${event.alpha}, beta=${event.beta}, gamma=${event.gamma}`);
+      console.log(`Compass Event (Fallback): alpha=${event.alpha}, beta=${event.beta}, gamma=${event.gamma}, absolute=${event.absolute}`);
 
-      // Get heading from device orientation
+      // Get heading from device orientation with better handling
       if (event.alpha !== null) {
-        // Convert to 0-360 degrees where 0 = North
-        this.heading = 360 - event.alpha;
+        let heading: number;
+        
+        // iOS requires webkitCompassHeading for accurate absolute heading
+        if ('webkitCompassHeading' in event && typeof (event as any).webkitCompassHeading === 'number') {
+          heading = (event as any).webkitCompassHeading;
+        }
+        // Android with absolute flag
+        else if (event.absolute === true) {
+          heading = 360 - event.alpha;
+        }
+        // Fallback - may not be accurate but better than simulation
+        else {
+          heading = 360 - event.alpha;
+        }
+        
+        this.heading = heading;
         this.updateQiblaData();
       }
     };

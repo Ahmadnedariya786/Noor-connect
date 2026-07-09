@@ -21,6 +21,8 @@
     <!-- Empty states -->
     <string name="widget_empty_title">Noor Connect</string>
     <string name="widget_empty_subtitle">Open the app to sync your data</string>
+    <string name="widget_empty_message">Tap to set up prayer times and start tracking your spiritual journey</string>
+    <string name="widget_empty_action">Open App</string>
 
     <!-- Next Prayer -->
     <string name="widget_next_prayer_section">NEXT PRAYER</string>

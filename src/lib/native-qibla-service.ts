@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { GeolocationService, type LocationCoordinates } from './geolocation-service';
-import { calculateQiblaBearing, normalizeDegrees } from './qibla';
+import { calculateQiblaBearing, calculateQiblaBearingMagneticSync, normalizeDegrees } from './qibla';
 
 export interface QiblaDirectionData {
   isFacingQibla: boolean;
@@ -10,6 +10,8 @@ export interface QiblaDirectionData {
   latitude?: number;
   longitude?: number;
   accuracy?: number;
+  isDeviceFlat?: boolean;
+  magneticInterference?: boolean;
 }
 
 export interface PermissionStatus {
@@ -34,6 +36,17 @@ export class NativeQiblaService {
   private lastCompassAngle: number | null = null;
   private smoothingFactor = 0.15;
   private _orientationHandler: ((event: DeviceOrientationEvent) => void) | null = null;
+
+  // Device orientation detection
+  private _motionHandler: ((event: DeviceMotionEvent) => void) | null = null;
+  private isDeviceFlat = false;
+  private deviceTolerance = 25; // degrees tolerance for "flat" position
+
+  // Magnetic interference detection
+  private _magneticFieldHandler: ((event: any) => void) | null = null;
+  private magneticFieldStrength: number | null = null;
+  private magneticInterferenceThreshold = 60; // microtesla threshold for interference
+  private hasMagneticInterference = false;
 
   static getInstance(): NativeQiblaService {
     if (!NativeQiblaService.instance) {
@@ -92,6 +105,56 @@ export class NativeQiblaService {
         this._orientationHandler = handleOrientation;
       }
 
+      // 4. Setup Motion Listener for device orientation detection
+      if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+        const handleMotion = (event: DeviceMotionEvent) => {
+          // Use accelerationIncludingGravity to detect device tilt
+          if (event.accelerationIncludingGravity) {
+            const x = event.accelerationIncludingGravity.x || 0;
+            const y = event.accelerationIncludingGravity.y || 0;
+            const z = event.accelerationIncludingGravity.z || 0;
+            
+            // Device is flat when gravity is mostly along Z axis
+            const totalGravity = Math.sqrt(x * x + y * y + z * z);
+            if (totalGravity > 0) {
+              const zRatio = Math.abs(z) / totalGravity;
+              // Device is flat if Z component is > 85% of total gravity
+              this.isDeviceFlat = zRatio > 0.85;
+            }
+          }
+          
+          this.updateQiblaData();
+        };
+
+        window.addEventListener('devicemotion', handleMotion, true);
+        this._motionHandler = handleMotion;
+      }
+
+      // 5. Setup Magnetic Field Listener for interference detection
+      if (typeof window !== 'undefined' && 'Magnetometer' in window) {
+        try {
+          const magnetometer = new (window as any).Magnetometer({ frequency: 10 });
+          magnetometer.addEventListener('reading', (event: any) => {
+            const x = event.x || 0;
+            const y = event.y || 0;
+            const z = event.z || 0;
+            
+            // Calculate magnetic field strength
+            this.magneticFieldStrength = Math.sqrt(x * x + y * y + z * z);
+            
+            // Check for interference (normal Earth field is 25-65 microtesla)
+            this.hasMagneticInterference = this.magneticFieldStrength > this.magneticInterferenceThreshold ||
+                                         this.magneticFieldStrength < 20;
+            
+            this.updateQiblaData();
+          });
+          
+          magnetometer.start();
+        } catch (error) {
+          console.warn('Magnetometer not available:', error);
+        }
+      }
+
       this.isListening = true;
       return { success: true, message: 'Compass started successfully' };
     } catch (error) {
@@ -113,6 +176,11 @@ export class NativeQiblaService {
         window.removeEventListener('deviceorientationabsolute', this._orientationHandler, true);
         window.removeEventListener('deviceorientation', this._orientationHandler, true);
         this._orientationHandler = null;
+      }
+
+      if (typeof window !== 'undefined' && this._motionHandler) {
+        window.removeEventListener('devicemotion', this._motionHandler, true);
+        this._motionHandler = null;
       }
 
       if (this.watchId) {
@@ -165,7 +233,8 @@ export class NativeQiblaService {
   private updateQiblaData(): void {
     if (!this.location || this.lastHeading === null || !this.isListening) return;
 
-    const qiblaBearing = calculateQiblaBearing(this.location.latitude, this.location.longitude);
+    // Use magnetic declination corrected bearing for compass accuracy
+    const qiblaBearing = calculateQiblaBearingMagneticSync(this.location.latitude, this.location.longitude);
     const rawCompass = this.lastHeading;
 
     // Apply low-pass filter to smooth out jitter
@@ -189,6 +258,8 @@ export class NativeQiblaService {
       latitude: this.location.latitude,
       longitude: this.location.longitude,
       accuracy: this.location.accuracy,
+      isDeviceFlat: this.isDeviceFlat,
+      magneticInterference: this.hasMagneticInterference,
     };
 
     this.listeners.forEach(listener => listener(data));

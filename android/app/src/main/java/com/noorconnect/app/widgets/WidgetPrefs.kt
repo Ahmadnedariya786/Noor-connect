@@ -91,11 +91,18 @@ object WidgetPrefs {
 
     /**
      * Atomically increment tasbeeh count and rotate dhikr when target reached.
-     * Uses a synchronized block to handle rapid taps.
+     * Uses a synchronized block to handle rapid taps with debouncing.
      */
     fun atomicIncrementTasbeeh(context: Context): TasbeehState {
         synchronized(TasbeehLock) {
+            val now = System.currentTimeMillis()
             val current = getTasbeehState(context)
+            
+            // Debounce: ignore rapid taps within 100ms
+            if (now - current.lastIncrementAt < 100) {
+                return current
+            }
+            
             val newSessionCount = current.sessionCount + 1
             val newTotal = current.totalCount + 1
 
@@ -108,13 +115,13 @@ object WidgetPrefs {
                     totalCount = newTotal,
                     sessionCount = 0,
                     currentDhikr = next,
-                    lastIncrementAt = System.currentTimeMillis()
+                    lastIncrementAt = now
                 )
             } else {
                 current.copy(
                     totalCount = newTotal,
                     sessionCount = newSessionCount,
-                    lastIncrementAt = System.currentTimeMillis()
+                    lastIncrementAt = now
                 )
             }
             saveTasbeehState(context, newState)
@@ -125,9 +132,10 @@ object WidgetPrefs {
     fun atomicResetTasbeeh(context: Context): TasbeehState {
         synchronized(TasbeehLock) {
             val current = getTasbeehState(context)
+            val now = System.currentTimeMillis()
             val newState = current.copy(
                 sessionCount = 0,
-                lastIncrementAt = System.currentTimeMillis()
+                lastIncrementAt = now
             )
             saveTasbeehState(context, newState)
             return newState
@@ -140,10 +148,11 @@ object WidgetPrefs {
      */
     fun addTasbeehTotal(context: Context, count: Long) {
         synchronized(TasbeehLock) {
+            val now = System.currentTimeMillis()
             val current = getTasbeehState(context)
             val newState = current.copy(
                 totalCount = current.totalCount + count,
-                lastIncrementAt = System.currentTimeMillis()
+                lastIncrementAt = now
             )
             saveTasbeehState(context, newState)
         }

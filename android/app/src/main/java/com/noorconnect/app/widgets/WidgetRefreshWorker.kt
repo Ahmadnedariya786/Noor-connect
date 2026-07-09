@@ -5,7 +5,13 @@ import android.app.NotificationManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -31,6 +37,7 @@ import java.util.concurrent.TimeUnit
  * Runs:
  *  - Periodic (every 30 minutes) via [enqueuePeriodic]
  *  - One-shot (expedited) via [enqueueImmediate]
+ *  - Motion-based (step detection) via [enqueueMotionBased]
  *
  * This is the ONLY refresh trigger besides the prayer-time alarm.
  * No broadcasts, no Capacitor callbacks. Single source of truth.
@@ -45,6 +52,15 @@ class WidgetRefreshWorker(
         private const val NOTIFICATION_ID = 9901
         private const val CHANNEL_ID = "widget_sync_channel"
         private const val WORK_TAG = "noor_widget_periodic"
+        private const val MOTION_WORK_TAG = "widget_motion"
+
+        // Step detection configuration
+        private const val STEP_REFRESH_DELAY_MS = 30000L // 30 seconds after steps
+        private var lastStepTime = 0L
+        private var stepHandler: Handler? = null
+        private var stepRunnable: Runnable? = null
+        private var sensorManager: SensorManager? = null
+        private var stepListener: StepListener? = null
 
         /**
          * Enqueue (or keep) the 30-minute periodic refresh.
@@ -76,6 +92,90 @@ class WidgetRefreshWorker(
                 ExistingWorkPolicy.REPLACE,
                 workRequest
             )
+        }
+
+        /**
+         * Start step detection for motion-based widget refresh.
+         * Refreshes widgets 30 seconds after detecting significant movement (steps).
+         */
+        fun startStepDetection(context: Context) {
+            try {
+                sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+                stepListener = StepListener(context)
+                
+                // Try to use step counter sensor first (more accurate)
+                val stepCounterSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+                if (stepCounterSensor != null) {
+                    sensorManager?.registerListener(
+                        stepListener,
+                        stepCounterSensor,
+                        SensorManager.SENSOR_DELAY_NORMAL
+                    )
+                    Log.d(TAG, "Step counter sensor registered")
+                } else {
+                    // Fallback to step detector
+                    val stepDetectorSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
+                    if (stepDetectorSensor != null) {
+                        sensorManager?.registerListener(
+                            stepListener,
+                            stepDetectorSensor,
+                            SensorManager.SENSOR_DELAY_NORMAL
+                        )
+                        Log.d(TAG, "Step detector sensor registered")
+                    } else {
+                        Log.w(TAG, "No step sensors available")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start step detection", e)
+            }
+        }
+
+        /**
+         * Stop step detection.
+         */
+        fun stopStepDetection(context: Context) {
+            try {
+                sensorManager?.unregisterListener(stepListener)
+                stepHandler?.removeCallbacks(stepRunnable)
+                sensorManager = null
+                stepListener = null
+                stepHandler = null
+                stepRunnable = null
+                Log.d(TAG, "Step detection stopped")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to stop step detection", e)
+            }
+        }
+    }
+
+    /**
+     * Step listener that triggers widget refresh after 30 seconds of step detection.
+     */
+    private class StepListener(private val context: Context) : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent?) {
+            event?.let {
+                if (it.sensor.type == Sensor.TYPE_STEP_COUNTER || it.sensor.type == Sensor.TYPE_STEP_DETECTOR) {
+                    val now = System.currentTimeMillis()
+                    
+                    // Only trigger if enough time has passed since last refresh
+                    if (now - lastStepTime > STEP_REFRESH_DELAY_MS) {
+                        lastStepTime = now
+                        
+                        // Schedule widget refresh after 30 seconds
+                        stepHandler = Handler(Looper.getMainLooper())
+                        stepRunnable = Runnable {
+                            Log.d(TAG, "Step-based widget refresh triggered")
+                            enqueueImmediate(context)
+                        }
+                        stepHandler?.postDelayed(stepRunnable!!, STEP_REFRESH_DELAY_MS)
+                    }
+                }
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+            // Not needed for step detection
         }
     }
 

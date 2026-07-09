@@ -126,6 +126,12 @@ const QiblaCompassModern = () => {
   const [compassState, setCompassState] = useState<CompassState>('idle');
   const [showCalibrationHint, setShowCalibrationHint] = useState(false);
   const [sensorError, setSensorError] = useState<string | null>(null);
+  const [alignmentState, setAlignment] = useState<{
+    isAligned: boolean;
+    instruction: { direction: 'left' | 'right'; degrees: number };
+    isDeviceFlat: boolean;
+    magneticInterference: boolean;
+  } | null>(null);
 
   // ── Refs ─────────────────────────────────────────────────────
   const locationRef = useRef<LocationCoordinates | null>(null);
@@ -150,14 +156,22 @@ const QiblaCompassModern = () => {
 
   // ── Stop Tracking ───────────────────────────────────────────
   const maybeShowCalibrationHint = useCallback(() => {
-    if (calibrationShownRef.current) return;
+    // Check if we should show calibration hint (periodically, not just once)
+    const lastShown = localStorage.getItem(LS_CALIBRATION_SHOWN);
+    const now = Date.now();
+    
+    // Show if never shown, or if last shown was more than 7 days ago
+    if (!lastShown || (now - parseInt(lastShown)) > 7 * 24 * 60 * 60 * 1000) {
+      calibrationShownRef.current = true;
+      setShowCalibrationHint(true);
+      localStorage.setItem(LS_CALIBRATION_SHOWN, now.toString());
+      window.setTimeout(() => setShowCalibrationHint(false), 5000);
+    }
+  }, []);
 
-    const alreadyShown = localStorage.getItem(LS_CALIBRATION_SHOWN) === 'true';
-    if (alreadyShown) return;
-
-    calibrationShownRef.current = true;
+  const requestManualCalibration = useCallback(() => {
+    // Force show calibration hint when user requests it
     setShowCalibrationHint(true);
-    localStorage.setItem(LS_CALIBRATION_SHOWN, 'true');
     window.setTimeout(() => setShowCalibrationHint(false), 5000);
   }, []);
 
@@ -370,6 +384,24 @@ const QiblaCompassModern = () => {
           setDeviceHeading(normalizeDegrees(data.compassAngle));
           setCompassState('active');
           maybeShowCalibrationHint();
+          
+          // Update alignment state with device orientation and magnetic interference
+          if (data.isDeviceFlat !== undefined || data.magneticInterference !== undefined) {
+            setAlignmentState(prev => {
+              const currentHeading = data.compassAngle;
+              const currentBearing = qiblaResult?.bearing || 0;
+              return prev ? {
+                ...prev,
+                isDeviceFlat: data.isDeviceFlat ?? prev.isDeviceFlat,
+                magneticInterference: data.magneticInterference ?? prev.magneticInterference,
+              } : {
+                isAligned: isFacingQibla(currentHeading, currentBearing, ALIGNMENT_THRESHOLD_DEG),
+                instruction: getRotationInstruction(currentHeading, currentBearing),
+                isDeviceFlat: data.isDeviceFlat ?? true,
+                magneticInterference: data.magneticInterference ?? false,
+              };
+            });
+          }
         } catch (err) {
           handleSensorError(err);
         }
@@ -514,8 +546,10 @@ const QiblaCompassModern = () => {
     return {
       isAligned: isFacingQibla(deviceHeading, qiblaResult.bearing, ALIGNMENT_THRESHOLD_DEG),
       instruction: getRotationInstruction(deviceHeading, qiblaResult.bearing),
+      isDeviceFlat: alignmentState?.isDeviceFlat ?? true,
+      magneticInterference: alignmentState?.magneticInterference ?? false,
     };
-  }, [deviceHeading, qiblaResult]);
+  }, [deviceHeading, qiblaResult, alignmentState]);
 
   const isLiveCompass = compassState === 'active' && deviceHeading !== null;
   const compassUnavailable = compassState === 'unsupported' || compassState === 'no-data';
@@ -639,6 +673,20 @@ const QiblaCompassModern = () => {
       {showCalibrationHint && (
         <div className="absolute top-28 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full text-xs font-medium bg-card border border-emerald-500/30 text-foreground/80 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg whitespace-nowrap">
           📱 Move in figure-8 pattern for accuracy
+        </div>
+      )}
+
+      {/* ── Device Orientation Warning ────────────────────────────── */}
+      {alignment && !alignment.isDeviceFlat && isLiveCompass && (
+        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full text-xs font-medium bg-amber-500/20 border border-amber-500/40 text-amber-200 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg whitespace-nowrap">
+          📱 Keep phone flat for accuracy
+        </div>
+      )}
+
+      {/* ── Magnetic Interference Warning ──────────────────────────── */}
+      {alignment && alignment.magneticInterference && isLiveCompass && (
+        <div className="absolute top-44 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full text-xs font-medium bg-red-500/20 border border-red-500/40 text-red-200 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg whitespace-nowrap">
+          ⚠️ Move away from metal objects
         </div>
       )}
 
@@ -934,7 +982,7 @@ const QiblaCompassModern = () => {
         </div>
 
         {/* Control Buttons */}
-        <div className="grid grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-3 gap-2 pt-2">
           <button
             onClick={() => {
               // Button press haptic
@@ -942,23 +990,46 @@ const QiblaCompassModern = () => {
               void enableCompass();
             }}
             disabled={compassState === 'activating'}
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 shadow-sm"
             style={{
               background: isLiveCompass ? `${THEME.primary}20` : `${THEME.accent}15`,
               border: `1px solid ${isLiveCompass ? `${THEME.primary}50` : `${THEME.accent}40`}`,
               color: isLiveCompass ? THEME.primary : THEME.accent,
             }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {compassState === 'activating' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Compass className="h-4 w-4" />
+                <Compass className="h-3.5 w-3.5" />
               )}
-              {isLiveCompass ? 'Recalibrate' : 'Enable Compass'}
+              {isLiveCompass ? 'Recalibrate' : 'Enable'}
             </div>
-            <span className="text-xs opacity-70 font-normal">
-              {isLiveCompass ? 'Reset compass sensor' : 'Activate device compass'}
+            <span className="text-[10px] opacity-70 font-normal">
+              {isLiveCompass ? 'Reset sensor' : 'Compass'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              // Button press haptic
+              if ('vibrate' in navigator) navigator.vibrate(50);
+              requestManualCalibration();
+            }}
+            disabled={!isLiveCompass}
+            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+            style={{
+              background: isLiveCompass ? `${THEME.accent}15` : `${THEME.surface}`,
+              border: `1px solid ${isLiveCompass ? `${THEME.accent}40` : `${THEME.border}`}`,
+              color: isLiveCompass ? THEME.accent : THEME.textMuted,
+            }}
+          >
+            <div className="flex items-center gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5" />
+              Calibrate
+            </div>
+            <span className="text-[10px] opacity-70 font-normal">
+              Improve accuracy
             </span>
           </button>
 
@@ -969,18 +1040,18 @@ const QiblaCompassModern = () => {
               void refreshLocation('manual');
             }}
             disabled={isRefreshingLocation}
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 bg-card hover:bg-accent border border-border text-foreground/80 shadow-sm"
+            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 bg-card hover:bg-accent border border-border text-foreground/80 shadow-sm"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {isRefreshingLocation ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <LocateFixed className="h-4 w-4" />
+                <LocateFixed className="h-3.5 w-3.5" />
               )}
-              Refresh Location
+              Location
             </div>
-            <span className="text-xs opacity-70 font-normal">
-              Update GPS coordinates
+            <span className="text-[10px] opacity-70 font-normal">
+              Update GPS
             </span>
           </button>
         </div>

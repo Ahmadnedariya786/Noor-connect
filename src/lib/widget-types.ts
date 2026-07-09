@@ -26,6 +26,7 @@ export interface PrayerPayload {
   calculationMethod: string;       // 'KARACHI' | 'MWL' | 'ISNA' | ...
   currentTime24h: string;          // "14:35"
   lastUpdated: number;             // epoch millis
+  dstOffset?: number;              // DST offset in hours (0 or usually 1)
 }
 
 export interface AyahContent {

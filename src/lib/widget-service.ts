@@ -76,12 +76,62 @@ function getCurrentLocale(): string {
     : 'en';
 }
 
+/**
+ * Check if DST (Daylight Saving Time) is currently in effect for the given location
+ */
+function isDSTInEffect(date: Date, latitude: number, longitude: number): boolean {
+  try {
+    // Simple DST detection using timezone offset
+    const jan = new Date(date.getFullYear(), 0, 1);
+    const jul = new Date(date.getFullYear(), 6, 1);
+    const stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+    const dstOffset = Math.min(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+    
+    // If current offset is different from standard offset, DST is in effect
+    const currentOffset = date.getTimezoneOffset();
+    return currentOffset !== stdOffset;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get DST offset in hours for the given location and date
+ */
+function getDSTOffset(date: Date, latitude: number, longitude: number): number {
+  if (!isDSTInEffect(date, latitude, longitude)) {
+    return 0;
+  }
+  
+  try {
+    // Most regions with DST use +1 hour offset
+    const jan = new Date(date.getFullYear(), 0, 1);
+    const jul = new Date(date.getFullYear(), 6, 1);
+    const stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+    const currentOffset = date.getTimezoneOffset();
+    
+    // DST offset is the difference in hours (negative because timezoneOffset is in minutes)
+    return (stdOffset - currentOffset) / 60;
+  } catch {
+    return 1; // Default to 1 hour if detection fails
+  }
+}
+
 function buildPrayerPayload(
   prayerTimes: any,
   locationLabel: string,
+  latitude?: number,
+  longitude?: number,
 ): PrayerPayload | null {
   if (!prayerTimes) return null;
   const now = Date.now();
+  const currentDate = new Date(now);
+
+  // Apply DST adjustment if location coordinates are provided
+  let dstOffset = 0;
+  if (latitude !== undefined && longitude !== undefined) {
+    dstOffset = getDSTOffset(currentDate, latitude, longitude);
+  }
 
   const entries: PrayerEntry[] = [
     { name: 'Fajr',    time: prayerTimes.fajr?.getTime()    ?? 0, formattedTime: formatPrayerTime(prayerTimes.fajr)    ?? '--:--' },
@@ -91,6 +141,21 @@ function buildPrayerPayload(
     { name: 'Maghrib', time: prayerTimes.maghrib?.getTime() ?? 0, formattedTime: formatPrayerTime(prayerTimes.maghrib) ?? '--:--' },
     { name: 'Isha',    time: prayerTimes.isha?.getTime()    ?? 0, formattedTime: formatPrayerTime(prayerTimes.isha)    ?? '--:--' },
   ].filter(e => e.time > 0);
+
+  // Apply DST offset to prayer times if needed
+  if (dstOffset !== 0) {
+    const dstOffsetMs = dstOffset * 60 * 60 * 1000; // Convert hours to milliseconds
+    entries.forEach(entry => {
+      entry.time += dstOffsetMs;
+      // Update formatted time to reflect DST adjustment
+      const adjustedDate = new Date(entry.time);
+      entry.formattedTime = adjustedDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    });
+  }
 
   if (entries.length === 0) return null;
 
@@ -139,6 +204,7 @@ function buildPrayerPayload(
     calculationMethod,
     currentTime24h: getCurrentTimeString(),
     lastUpdated: now,
+    dstOffset: dstOffset, // Include DST offset in payload
   };
 }
 
@@ -217,8 +283,8 @@ export class WidgetService {
 
       const locationLabel = locationName || 'Unknown location';
 
-      // 1. Push prayer data
-      const prayerPayload = buildPrayerPayload(times, locationLabel);
+      // 1. Push prayer data with DST handling
+      const prayerPayload = buildPrayerPayload(times, locationLabel, latitude, longitude);
       if (prayerPayload) {
         await syncPrayerData(prayerPayload);
       }

@@ -50,6 +50,22 @@ class NextPrayerWidget : AppWidgetProvider() {
                 // Empty state — app never opened
                 views.setViewVisibility(R.id.widget_root, View.GONE)
                 views.setViewVisibility(R.id.layout_empty, View.VISIBLE)
+                
+                // Set empty state message with call-to-action
+                views.setTextViewText(R.id.empty_message, context.getString(R.string.widget_empty_message))
+                views.setTextViewText(R.id.empty_action, context.getString(R.string.widget_empty_action))
+                
+                // Set click listener to open app
+                val deeplink = WidgetDeeplink.buildPrayers(focus = "setup")
+                val intent = WidgetDeeplink.toIntent(context, deeplink)
+                val pi = PendingIntent.getActivity(
+                    context,
+                    101,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.layout_empty, pi)
+                
                 mgr.updateAppWidget(appWidgetId, views)
                 return
             }
@@ -64,6 +80,22 @@ class NextPrayerWidget : AppWidgetProvider() {
             if (nextPrayer == null) {
                 views.setViewVisibility(R.id.widget_root, View.GONE)
                 views.setViewVisibility(R.id.layout_empty, View.VISIBLE)
+                
+                // Set empty state message with call-to-action
+                views.setTextViewText(R.id.empty_message, context.getString(R.string.widget_empty_message))
+                views.setTextViewText(R.id.empty_action, context.getString(R.string.widget_empty_action))
+                
+                // Set click listener to open app
+                val deeplink = WidgetDeeplink.buildPrayers(focus = "setup")
+                val intent = WidgetDeeplink.toIntent(context, deeplink)
+                val pi = PendingIntent.getActivity(
+                    context,
+                    101,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.layout_empty, pi)
+                
                 mgr.updateAppWidget(appWidgetId, views)
                 return
             }
@@ -145,11 +177,15 @@ class NextPrayerWidget : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         // Start the periodic 30-min refresh
         WidgetRefreshWorker.enqueuePeriodic(context)
+        // Start step detection for motion-based refresh
+        StepDetectionService.start(context)
+        // Start location change detection
+        LocationChangeService.start(context)
         // Schedule next prayer alarm if we have data
         WidgetPrefs.getPrayerPayload(context)?.let {
             WidgetAlarmScheduler.scheduleNextPrayerAlarm(context, it)
         }
-        Log.d(TAG, "Widget enabled — periodic work + alarm scheduled")
+        Log.d(TAG, "Widget enabled — periodic work + step detection + location detection + alarm scheduled")
     }
 
     override fun onDisabled(context: Context) {
@@ -161,6 +197,8 @@ class NextPrayerWidget : AppWidgetProvider() {
         val ids = mgr.getAppWidgetIds(android.content.ComponentName(context, NextPrayerWidget::class.java))
         if (ids.isEmpty()) {
             WidgetAlarmScheduler.cancelAllAlarms(context)
+            StepDetectionService.stop(context)
+            LocationChangeService.stop(context)
         }
         Log.d(TAG, "Widget disabled")
     }

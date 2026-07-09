@@ -12,6 +12,10 @@ export const KAABA_COORDINATES = {
 // Earth's radius in kilometers for distance calculations
 const EARTH_RADIUS_KM = 6371;
 
+// Magnetic declination cache
+let magneticDeclinationCache: Map<string, number> = new Map();
+const DECLINATION_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 /**
  * Normalize angle to 0-360 range
  */
@@ -185,4 +189,81 @@ export function calculateQibla(
     formattedBearing: formatBearing(bearing),
     formattedDistance: formatDistance(distanceKm),
   };
+}
+
+/**
+ * Get magnetic declination for a location
+ * Uses NOAA's magnetic declination API
+ * Returns declination in degrees (positive = east, negative = west)
+ */
+async function getMagneticDeclination(
+  latitude: number,
+  longitude: number
+): Promise<number> {
+  const cacheKey = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
+  const cached = magneticDeclinationCache.get(cacheKey);
+  
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  try {
+    // Using NOAA's World Magnetic Model API
+    const response = await fetch(
+      `https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?lat1=${latitude}&lon1=${longitude}&resultFormat=json`
+    );
+    
+    if (!response.ok) {
+      console.warn('Failed to fetch magnetic declination, using 0');
+      return 0;
+    }
+
+    const data = await response.json();
+    const declination = data.result?.[0]?.declination || 0;
+    
+    // Cache the result
+    magneticDeclinationCache.set(cacheKey, declination);
+    
+    // Clear cache after duration
+    setTimeout(() => {
+      magneticDeclinationCache.delete(cacheKey);
+    }, DECLINATION_CACHE_DURATION);
+    
+    return declination;
+  } catch (error) {
+    console.warn('Error fetching magnetic declination:', error);
+    return 0;
+  }
+}
+
+/**
+ * Calculate qibla bearing with magnetic declination correction
+ * This gives the magnetic bearing that should match device compass
+ */
+export async function calculateQiblaBearingMagnetic(
+  latitude: number,
+  longitude: number
+): Promise<number> {
+  const trueBearing = calculateQiblaBearing(latitude, longitude);
+  const magneticDeclination = await getMagneticDeclination(latitude, longitude);
+  
+  // Magnetic bearing = True bearing - Magnetic declination
+  // (subtract because declination is positive when magnetic north is east of true north)
+  const magneticBearing = normalizeDegrees(trueBearing - magneticDeclination);
+  
+  return magneticBearing;
+}
+
+/**
+ * Synchronous version that uses cached declination or defaults to 0
+ */
+export function calculateQiblaBearingMagneticSync(
+  latitude: number,
+  longitude: number
+): number {
+  const trueBearing = calculateQiblaBearing(latitude, longitude);
+  const cacheKey = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
+  const magneticDeclination = magneticDeclinationCache.get(cacheKey) || 0;
+  
+  return normalizeDegrees(trueBearing - magneticDeclination);
 }

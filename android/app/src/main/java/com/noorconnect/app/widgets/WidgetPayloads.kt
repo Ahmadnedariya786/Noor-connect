@@ -28,7 +28,8 @@ data class PrayerPayload(
     val madhab: String,                 // "HANAFI" | "SHAFI"
     val calculationMethod: String,      // "KARACHI" | "MWL" | "ISNA" | ...
     val currentTime24h: String,         // "14:35" — for initial clock render
-    val lastUpdated: Long               // epoch millis
+    val lastUpdated: Long,             // epoch millis
+    val dstOffset: Double = 0.0        // DST offset in hours (0 or usually 1)
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("prayers", JSONArray().also { arr ->
@@ -42,6 +43,7 @@ data class PrayerPayload(
         put("calculationMethod", calculationMethod)
         put("currentTime24h", currentTime24h)
         put("lastUpdated", lastUpdated)
+        put("dstOffset", dstOffset)
     }
 
     companion object {
@@ -49,21 +51,53 @@ data class PrayerPayload(
             val o = JSONObject(json)
             val prayers = mutableListOf<PrayerEntry>()
             val arr = o.getJSONArray("prayers")
-            for (i in 0 until arr.length()) {
-                prayers.add(PrayerEntry.fromJson(arr.getJSONObject(i)))
+            
+            // Validate prayers array
+            if (arr.length() != 6) {
+                Log.w(TAG, "Invalid prayer payload: expected 6 prayers, got ${arr.length()}")
+                return null
             }
+            
+            for (i in 0 until arr.length()) {
+                try {
+                    prayers.add(PrayerEntry.fromJson(arr.getJSONObject(i)))
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to parse prayer entry at index $i", e)
+                    return null
+                }
+            }
+            
+            // Validate next prayer index
+            val nextPrayerIndex = o.optInt("nextPrayerIndex", 0)
+            if (nextPrayerIndex < 0 || nextPrayerIndex >= prayers.size) {
+                Log.w(TAG, "Invalid nextPrayerIndex: $nextPrayerIndex")
+                return null
+            }
+            
+            // Validate prayer times are reasonable (not in far past/future)
+            val now = System.currentTimeMillis()
+            val oneYearMs = 365L * 24 * 60 * 60 * 1000
+            for (prayer in prayers) {
+                if (prayer.time < now - oneYearMs || prayer.time > now + oneYearMs) {
+                    Log.w(TAG, "Invalid prayer time: ${prayer.time}")
+                    return null
+                }
+            }
+            
             PrayerPayload(
                 prayers = prayers,
-                nextPrayerIndex = o.optInt("nextPrayerIndex", 0),
+                nextPrayerIndex = nextPrayerIndex,
                 hijriDate = o.optString("hijriDate", ""),
                 gregorianDate = o.optString("gregorianDate", ""),
                 locationLabel = o.optString("locationLabel", ""),
                 madhab = o.optString("madhab", "HANAFI"),
                 calculationMethod = o.optString("calculationMethod", "MWL"),
                 currentTime24h = o.optString("currentTime24h", ""),
-                lastUpdated = o.optLong("lastUpdated", System.currentTimeMillis())
+                lastUpdated = o.optLong("lastUpdated", System.currentTimeMillis()),
+                dstOffset = o.optDouble("dstOffset", 0.0)
             )
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse PrayerPayload", e)
             null
         }
     }
@@ -85,7 +119,15 @@ data class PrayerEntry(
             name = o.optString("name", "—"),
             time = o.optLong("time", 0L),
             formattedTime = o.optString("formattedTime", "--:--")
-        )
+        ).also {
+            // Validate prayer entry
+            if (it.name.isBlank()) {
+                Log.w(TAG, "Invalid prayer entry: blank name")
+            }
+            if (it.time <= 0) {
+                Log.w(TAG, "Invalid prayer entry: invalid time ${it.time}")
+            }
+        }
     }
 }
 
