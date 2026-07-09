@@ -149,7 +149,7 @@ export const generateId = (): string => {
 export const getOrCreateDefaultProfile = async (): Promise<DBProfile> => {
   const defaultProfile = await db.profiles
     .where('isDefault')
-    .equals(1 as any)
+    .equals(true)
     .first();
 
   if (defaultProfile) return defaultProfile;

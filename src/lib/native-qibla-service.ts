@@ -33,6 +33,7 @@ export class NativeQiblaService {
   // Smoothing state
   private lastCompassAngle: number | null = null;
   private smoothingFactor = 0.15;
+  private _orientationHandler: ((event: DeviceOrientationEvent) => void) | null = null;
 
   static getInstance(): NativeQiblaService {
     if (!NativeQiblaService.instance) {
@@ -88,7 +89,7 @@ export class NativeQiblaService {
 
         window.addEventListener('deviceorientationabsolute', handleOrientation, true);
         window.addEventListener('deviceorientation', handleOrientation, true);
-        (this as any)._orientationHandler = handleOrientation;
+        this._orientationHandler = handleOrientation;
       }
 
       this.isListening = true;
@@ -108,10 +109,10 @@ export class NativeQiblaService {
         return { success: true, message: 'Compass already stopped' };
       }
 
-      if (typeof window !== 'undefined' && (this as any)._orientationHandler) {
-        window.removeEventListener('deviceorientationabsolute', (this as any)._orientationHandler, true);
-        window.removeEventListener('deviceorientation', (this as any)._orientationHandler, true);
-        delete (this as any)._orientationHandler;
+      if (typeof window !== 'undefined' && this._orientationHandler) {
+        window.removeEventListener('deviceorientationabsolute', this._orientationHandler, true);
+        window.removeEventListener('deviceorientation', this._orientationHandler, true);
+        this._orientationHandler = null;
       }
 
       if (this.watchId) {

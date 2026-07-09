@@ -368,7 +368,7 @@ export class LocalNotificationManager {
 
       for (const prayer of prayerTimes) {
         // Only schedule future prayers for today if enabled in settings
-        const toggleKey = prayerToggleMap[prayer.name as any];
+        const toggleKey = prayerToggleMap[prayer.name];
         if (toggleKey && !adhanConfig[toggleKey]) continue;
 
         if (prayer.date > now) {
@@ -424,7 +424,7 @@ export class LocalNotificationManager {
         if (Capacitor.isNativePlatform()) {
           const nativeAlarms: NativeAdhanAlarm[] = [];
           for (const prayer of prayerTimes) {
-            const key = prayerToggleMap[prayer.name as any];
+            const key = prayerToggleMap[prayer.name];
             if (key && !adhanConfig[key]) continue;
 
             if (prayer.date > now) {
@@ -850,5 +850,5 @@ if (typeof window !== 'undefined' && !window.__noorConnectAdhanPrefsListenerAtta
   };
 
   window.addEventListener('adhan-preferences-changed', handleReschedule);
-  window.addEventListener('adhan-config-changed' as any, handleReschedule);
+  window.addEventListener('adhan-config-changed', handleReschedule);
 }

@@ -107,7 +107,7 @@ export function GlobalQuranPlayer() {
         };
 
         loadAudio();
-    }, [surahNumber, reciter?.id]); // Depend on ID to trigger change
+    }, [surahNumber, reciter?.id, isPlaying]); // Depend on ID to trigger change
 
     // Handle Play/Pause State
     useEffect(() => {

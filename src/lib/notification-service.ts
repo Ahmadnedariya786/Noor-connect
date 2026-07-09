@@ -160,7 +160,7 @@ class NotificationService {
     try {
       const pending = await db.notifications
         .where('sent')
-        .equals(0 as any)
+        .equals(false)
         .filter(n => new Date(n.scheduledAt) <= new Date())
         .toArray();
 

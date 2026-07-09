@@ -117,6 +117,7 @@ function buildPrayerPayload(
     try {
       const m = getMadhab?.();
       if (m === 'shafi') return 'SHAFI';
+      if (m === 'hanafi') return 'HANAFI';
     } catch {}
     return 'HANAFI';
   })();
@@ -229,6 +230,29 @@ export class WidgetService {
       }
     } catch (err) {
       console.warn('[WidgetService] updateWidget failed:', err);
+      // Handle storage quota errors
+      if (err instanceof Error && err.message.includes('quota')) {
+        console.warn('[WidgetService] Storage quota exceeded, attempting cleanup');
+        try {
+          const keys = Object.keys(localStorage);
+          const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+          keys.forEach(k => {
+            try {
+              const item = localStorage.getItem(k);
+              if (item) {
+                const parsed = JSON.parse(item);
+                if (parsed.timestamp && parsed.timestamp < thirtyDaysAgo) {
+                  localStorage.removeItem(k);
+                }
+              }
+            } catch {
+              localStorage.removeItem(k);
+            }
+          });
+        } catch (cleanupError) {
+          console.error('[WidgetService] Cleanup failed:', cleanupError);
+        }
+      }
     }
   }
 

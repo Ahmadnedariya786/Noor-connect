@@ -191,14 +191,15 @@ export const togglePrayer = (prayer: PrayerName, prayerTimes?: Record<string, { 
     }
   }
 
-  days[today][prayer] = !days[today][prayer];
-  saveAllDays(days);
+  const newDays = { ...days };
+  newDays[today] = { ...newDays[today], [prayer]: !newDays[today][prayer] };
+  saveAllDays(newDays);
   updateStreak();
 
   return {
     success: true,
-    message: days[today][prayer] ? `${prayer} marked as completed!` : `${prayer} unchecked`,
-    completed: days[today][prayer]
+    message: newDays[today][prayer] ? `${prayer} marked as completed!` : `${prayer} unchecked`,
+    completed: newDays[today][prayer]
   };
 };
 

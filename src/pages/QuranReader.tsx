@@ -45,8 +45,12 @@ export default function QuranReader() {
       setIsBookmarked(bookmarks.includes(surahNum));
     } catch {
       // Fallback to localStorage
-      const bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
-      setIsBookmarked(bookmarks.includes(surahNum));
+      try {
+        const bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
+        setIsBookmarked(bookmarks.includes(surahNum));
+      } catch {
+        setIsBookmarked(false);
+      }
     }
   };
 
@@ -65,14 +69,19 @@ export default function QuranReader() {
       setIsBookmarked(!isBookmarked);
     } catch {
       // Fallback to localStorage
-      let bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
-      if (bookmarks.includes(surahNum)) {
-        bookmarks = bookmarks.filter((b: number) => b !== surahNum);
-      } else {
-        bookmarks.push(surahNum);
+      try {
+        let bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
+        if (bookmarks.includes(surahNum)) {
+          bookmarks = bookmarks.filter((b: number) => b !== surahNum);
+        } else {
+          bookmarks.push(surahNum);
+        }
+        localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+        setIsBookmarked(!isBookmarked);
+      } catch {
+        // If both fail, just toggle the state without persistence
+        setIsBookmarked(!isBookmarked);
       }
-      localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-      setIsBookmarked(!isBookmarked);
     }
   };
 

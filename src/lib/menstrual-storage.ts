@@ -92,7 +92,7 @@ export const profileOps = {
 
   async setDefault(id: string): Promise<void> {
     await db.transaction('rw', db.profiles, async () => {
-      await db.profiles.where('isDefault').equals(1 as any).modify({ isDefault: false });
+      await db.profiles.where('isDefault').equals(true).modify({ isDefault: false });
       await db.profiles.update(id, { isDefault: true });
     });
   },
@@ -195,7 +195,7 @@ export const symptomOps = {
     const dateOnly = toDateOnly(date);
     const symptom = await db.dailySymptoms
       .where('[profileId+date]')
-      .equals([profileId, dateOnly] as any)
+      .equals([profileId, dateOnly])
       .first();
 
     return symptom ? dbSymptomToDaily(symptom) : null;
@@ -215,7 +215,7 @@ export const symptomOps = {
     const date = new Date(symptoms.date);
     const existing = await db.dailySymptoms
       .where('[profileId+date]')
-      .equals([profileId, toDateOnly(date)] as any)
+      .equals([profileId, toDateOnly(date)])
       .first();
 
     const record: Omit<DBDailySymptom, 'id'> = {
@@ -237,7 +237,7 @@ export const symptomOps = {
     if (existing && existing.id) {
       await db.dailySymptoms.update(existing.id, record);
     } else {
-      await db.dailySymptoms.add(record as DBDailySymptom);
+      await db.dailySymptoms.add(record);
     }
     emitEvent(MENSTRUAL_DATA_UPDATED);
   },

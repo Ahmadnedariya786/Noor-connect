@@ -148,7 +148,7 @@ export function GlobalRadioPlayer() {
         // Ignore cleanup errors
       }
     };
-  }, [globalRadio.currentStation, globalRadio.isPlaying]);
+  }, [globalRadio.currentStation, globalRadio.isPlaying, globalRadio]);
 
   // Handle audio element events
   useEffect(() => {

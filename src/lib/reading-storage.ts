@@ -31,6 +31,13 @@ export function setReadingProgress(
     localStorage.setItem(key, JSON.stringify(data));
   } catch (err) {
     console.warn(`Failed to save reading progress for ${feature}:`, err);
+    // Try to clear old data and retry
+    try {
+      localStorage.removeItem(key);
+      localStorage.setItem(key, JSON.stringify({ [id]: Math.min(100, Math.max(0, percentage)) }));
+    } catch (retryError) {
+      console.error(`Failed to save reading progress after cleanup for ${feature}:`, retryError);
+    }
   }
 }
 
@@ -59,7 +66,18 @@ export function toggleBookmark(
   }
 
   const key = `${STORAGE_PREFIX}-${feature}-bookmarks`;
-  localStorage.setItem(key, JSON.stringify([...bookmarks]));
+  try {
+    localStorage.setItem(key, JSON.stringify([...bookmarks]));
+  } catch (err) {
+    console.warn(`Failed to save bookmarks for ${feature}:`, err);
+    // Try to clear old data and retry
+    try {
+      localStorage.removeItem(key);
+      localStorage.setItem(key, JSON.stringify([...bookmarks]));
+    } catch (retryError) {
+      console.error(`Failed to save bookmarks after cleanup for ${feature}:`, retryError);
+    }
+  }
   return !isBookmarked;
 }
 

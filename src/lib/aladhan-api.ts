@@ -153,7 +153,7 @@ export class AladhanAPI {
       return monthlyData;
     } catch (error) {
       console.error('Failed to fetch monthly calendar:', error);
-      throw error;
+      throw new Error(`Failed to fetch prayer times: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -278,9 +278,30 @@ export class AladhanAPI {
     }
 
     // Fallback to offline calculation
-    const { calculatePrayerTimes } = await import('./prayer-calculator');
-    const times = calculatePrayerTimes(latitude, longitude, new Date());
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try {
+      const { calculatePrayerTimes } = await import('./prayer-calculator');
+      const times = calculatePrayerTimes(latitude, longitude, new Date());
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      return {
+        timings: {
+          Fajr: times.fajr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          Sunrise: times.sunrise.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          Dhuhr: times.dhuhr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          Asr: times.asr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          Maghrib: times.maghrib.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          Isha: times.isha.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          Imsak: times.fajr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          Midnight: '00:00',
+          Firstthird: '00:00',
+          Lastthird: '00:00'
+        },
+        timezone
+      };
+    } catch (error) {
+      console.error('Offline calculation failed:', error);
+      throw new Error('Failed to get prayer times from API, cache, or offline calculation');
+    }
 
     return {
       timings: {

@@ -77,7 +77,17 @@ export const GlobalPrayerAlarm = () => {
       if (!config.enabled) return false;
       if (!prayerName) return config.enabled;
       const key = PRAYER_TOGGLE_MAP[prayerName];
-      return key ? Boolean((config as any)[key]) : true;
+      if (!key) return true;
+      
+      switch (key) {
+        case 'fajrEnabled': return config.fajrEnabled;
+        case 'dhuhrEnabled': return config.dhuhrEnabled;
+        case 'asrEnabled': return config.asrEnabled;
+        case 'maghribEnabled': return config.maghribEnabled;
+        case 'ishaEnabled': return config.ishaEnabled;
+        case 'jummahEnabled': return config.jummahEnabled;
+        default: return true;
+      }
     },
     []
   );

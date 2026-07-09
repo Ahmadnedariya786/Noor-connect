@@ -24,7 +24,7 @@ function getIshaTimeFromCache(): string | null {
     const cached = JSON.parse(raw);
     if (!cached.times || !Array.isArray(cached.times)) return null;
     const isha = cached.times.find((t: { name: string; time: string }) => t.name === 'Isha');
-    return isha?.time ?? null;
+    return isha?.time || null;
   } catch {
     return null;
   }

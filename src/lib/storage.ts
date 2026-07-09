@@ -51,6 +51,42 @@ export const storage = {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
       console.error('Storage error:', error);
+      // Try to clear old data and retry
+      try {
+        const keys = Object.keys(localStorage);
+        // Clear data older than 30 days
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+        keys.forEach(k => {
+          try {
+            const item = localStorage.getItem(k);
+            if (item) {
+              const parsed = JSON.parse(item);
+              if (parsed.timestamp && parsed.timestamp < thirtyDaysAgo) {
+                localStorage.removeItem(k);
+              }
+            }
+          } catch {
+            // If parsing fails, remove the item
+            localStorage.removeItem(k);
+          }
+        });
+        // Retry after cleanup
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (retryError) {
+        console.error('Storage error after cleanup:', retryError);
+        // Last resort: clear all non-essential data
+        try {
+          const essentialKeys = ['theme', 'madhab', 'time-format', 'prayer-settings', 'location-storage'];
+          keys.forEach(k => {
+            if (!essentialKeys.includes(k)) {
+              localStorage.removeItem(k);
+            }
+          });
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (finalError) {
+          console.error('Storage error after clearing non-essential data:', finalError);
+        }
+      }
     }
   },
 
@@ -122,14 +158,15 @@ export const addTasbeehEntry = (label: string): void => {
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
   const existingIndex = history.findIndex(h => h.date === today && h.label === label);
 
+  const newHistory = [...history];
   if (existingIndex >= 0) {
-    history[existingIndex].count += 1;
+    newHistory[existingIndex] = { ...newHistory[existingIndex], count: newHistory[existingIndex].count + 1 };
   } else {
-    history.unshift({ date: today, count: 1, label });
+    newHistory.unshift({ date: today, count: 1, label });
   }
 
   // Keep only last 30 days
-  storage.set(STORAGE_KEYS.TASBEEH_HISTORY, history.slice(0, 100));
+  storage.set(STORAGE_KEYS.TASBEEH_HISTORY, newHistory.slice(0, 100));
   setTasbeehTotal(getTasbeehTotal() + 1);
 };
 
@@ -142,13 +179,14 @@ export const toggleFavorite = (id: string): boolean => {
   const favorites = getFavorites();
   const index = favorites.indexOf(id);
 
+  const newFavorites = [...favorites];
   if (index >= 0) {
-    favorites.splice(index, 1);
-    storage.set(STORAGE_KEYS.FAVORITES, favorites);
+    newFavorites.splice(index, 1);
+    storage.set(STORAGE_KEYS.FAVORITES, newFavorites);
     return false;
   } else {
-    favorites.push(id);
-    storage.set(STORAGE_KEYS.FAVORITES, favorites);
+    newFavorites.push(id);
+    storage.set(STORAGE_KEYS.FAVORITES, newFavorites);
     return true;
   }
 };

@@ -59,7 +59,7 @@ export const usePrayerAlarm = () => {
       window.removeEventListener(PRAYER_ALARM_TOGGLE_EVENT, handleToggle as EventListener);
       window.removeEventListener(PRAYER_ALARM_STATE_EVENT, handlePlaybackState as EventListener);
     };
-  }, []);
+  }, [handleStorageChange, handleToggle, handlePlaybackState]);
 
   const enableAlarm = useCallback(async () => {
     if ('Notification' in window && Notification.permission === 'default') {
