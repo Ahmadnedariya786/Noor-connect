@@ -53,10 +53,10 @@ export const storage = {
       console.error('Storage error:', error);
       // Try to clear old data and retry
       try {
-        const keys = Object.keys(localStorage);
+        const allKeys = Object.keys(localStorage);
         // Clear data older than 30 days
         const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-        keys.forEach(k => {
+        allKeys.forEach(k => {
           try {
             const item = localStorage.getItem(k);
             if (item) {
@@ -77,7 +77,8 @@ export const storage = {
         // Last resort: clear all non-essential data
         try {
           const essentialKeys = ['theme', 'madhab', 'time-format', 'prayer-settings', 'location-storage'];
-          keys.forEach(k => {
+          const allKeys = Object.keys(localStorage);
+          allKeys.forEach(k => {
             if (!essentialKeys.includes(k)) {
               localStorage.removeItem(k);
             }

@@ -21,6 +21,13 @@ import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 import { isLowEndDevice } from "@/lib/device-performance";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
+import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
+import { 
+  shouldReduceAnimations, 
+  optimizeScrollPerformance, 
+  preloadCriticalResources,
+  monitorFPS
+} from "@/lib/performance-optimizations";
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -64,17 +71,19 @@ function DeepLinkListener() {
   return null;
 }
 
-// Create QueryClient for React Query
+// Create QueryClient for React Query with performance optimizations
+const isLowEndForQuery = isLowEndDevice();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 60 * 1000, // 1 hour
-      gcTime: 5 * 60 * 1000, // 5 minutes (renamed from cacheTime in v5)
-      retry: 1,
+      staleTime: isLowEndForQuery ? 5 * 60 * 1000 : 60 * 60 * 1000, // 5 min for low-end, 1 hour for others
+      gcTime: isLowEndForQuery ? 2 * 60 * 1000 : 5 * 60 * 1000, // 2 min for low-end, 5 min for others
+      retry: isLowEndForQuery ? 0 : 1, // No retry for low-end devices
       refetchOnWindowFocus: false,
+      refetchOnReconnect: !isLowEndForQuery, // Disable reconnection refetch on low-end
     },
     mutations: {
-      retry: 1,
+      retry: isLowEndForQuery ? 0 : 1,
     },
   },
 });
@@ -139,12 +148,12 @@ const QisasReader = lazy(() => import("./pages/QisasReader"));
 // Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
 // Check for low-end device and disable animations if no user preference is set
 const storedAnimationPreference = localStorage.getItem("animations_enabled");
-const isLowEnd = isLowEndDevice();
+const isLowEndDevice = isLowEndDevice();
 let isAnimationDisabled: boolean;
 
 if (storedAnimationPreference === null) {
   // No user preference set - use device detection
-  isAnimationDisabled = isLowEnd;
+  isAnimationDisabled = isLowEndDevice;
   // Store the initial preference so it persists
   localStorage.setItem("animations_enabled", isAnimationDisabled.toString());
 } else {
@@ -242,9 +251,10 @@ function AppRoutes() {
 
 function AppContent() {
   const { animationEnabled, greetingEnabled } = useSettings();
+  const reduceMotion = shouldReduceAnimations();
   
   return (
-    <MotionConfig reducedMotion={animationEnabled ? "never" : "always"}>
+    <MotionConfig reducedMotion={reduceMotion ? "always" : (animationEnabled ? "never" : "user")}>
       <LazyMotionWrapper>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <div className="flex flex-col min-h-screen overflow-hidden">
@@ -256,6 +266,7 @@ function AppContent() {
                 <PWAInstallPrompt />
                 <EidChecklistNotification />
                 <FitranaCalculatorNotification />
+                <BackupRestoreDialog />
               </Suspense>
             </div>
 
@@ -281,6 +292,8 @@ function AppShell() {
   const { animationEnabled, splashGreetingEnabled, splashEnabled } = useSettings();
   // Push Quran-progress + tasbeeh state to native widgets when they change
   useWidgetSync();
+  
+  const isLowEndForShell = isLowEndDevice();
 
   useEffect(() => {
     // If splash is disabled, hide it immediately
@@ -288,6 +301,27 @@ function AppShell() {
       setShowSplash(false);
     }
   }, [splashEnabled]);
+
+  // Initialize performance optimizations
+  useEffect(() => {
+    // Preload critical resources
+    preloadCriticalResources();
+    
+    // Optimize scroll performance
+    optimizeScrollPerformance();
+    
+    // Monitor FPS for performance tracking (only on non-low-end devices)
+    if (!isLowEndForShell) {
+      const stopMonitoring = monitorFPS((fps) => {
+        if (fps < 20) {
+          console.warn('Low FPS detected:', fps);
+          // Could trigger additional optimizations here
+        }
+      });
+      
+      return () => stopMonitoring();
+    }
+  }, [isLowEndForShell]);
 
   useEffect(() => {
     const monitor = getPerformanceMonitor();

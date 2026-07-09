@@ -15,10 +15,16 @@ export default defineConfig(({ mode }) => ({
   build: {
     minify: 'terser',
     chunkSizeWarningLimit: 600,
+    target: 'es2015', // Target older browsers for better compatibility
+    cssCodeSplit: true, // Split CSS for better caching
     terserOptions: {
       compress: {
         drop_console: mode === 'production',
         drop_debugger: mode === 'production',
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+      },
+      mangle: {
+        safari10: true, // Better Safari 10+ compatibility
       },
     },
     rollupOptions: {

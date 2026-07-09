@@ -234,9 +234,9 @@ export class WidgetService {
       if (err instanceof Error && err.message.includes('quota')) {
         console.warn('[WidgetService] Storage quota exceeded, attempting cleanup');
         try {
-          const keys = Object.keys(localStorage);
+          const allKeys = Object.keys(localStorage);
           const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-          keys.forEach(k => {
+          allKeys.forEach(k => {
             try {
               const item = localStorage.getItem(k);
               if (item) {

@@ -59,7 +59,7 @@ export const usePrayerAlarm = () => {
       window.removeEventListener(PRAYER_ALARM_TOGGLE_EVENT, handleToggle as EventListener);
       window.removeEventListener(PRAYER_ALARM_STATE_EVENT, handlePlaybackState as EventListener);
     };
-  }, [handleStorageChange, handleToggle, handlePlaybackState]);
+  }, []);
 
   const enableAlarm = useCallback(async () => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -152,7 +152,7 @@ export const usePrayerAlarm = () => {
     });
   }, [stopAdhan]);
 
-  const stopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup stop timeout on unmount
   useEffect(() => {
@@ -183,7 +183,7 @@ export const usePrayerAlarm = () => {
     if (stopTimeoutRef.current) {
       clearTimeout(stopTimeoutRef.current);
     }
-    stopTimeoutRef.current = window.setTimeout(() => {
+    stopTimeoutRef.current = setTimeout(() => {
       dispatchControlEvent({ action: 'stop' });
       stopTimeoutRef.current = null;
     }, 8000); // Slightly longer for different adhan lengths

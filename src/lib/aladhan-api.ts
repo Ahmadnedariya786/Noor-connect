@@ -296,7 +296,7 @@ export class AladhanAPI {
           Firstthird: '00:00',
           Lastthird: '00:00'
         },
-        timezone
+        timezone: timezone
       };
     } catch (error) {
       console.error('Offline calculation failed:', error);
