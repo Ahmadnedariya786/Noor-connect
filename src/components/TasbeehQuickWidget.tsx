@@ -13,11 +13,11 @@ type TasbeehPreset = {
 };
 
 const PRESETS: TasbeehPreset[] = [
-  { label: "SubhanAllah", arabic: "سُبْحَانَ اللَّهِ", accent: "from-purple-500 to-fuchsia-600" },
-  { label: "Alhamdulillah", arabic: "ٱلْحَمْدُ لِلَّٰهِ", accent: "from-emerald-500 to-teal-600" },
-  { label: "Allahu Akbar", arabic: "اللَّٰهُ أَكْبَرُ", accent: "from-amber-500 to-orange-600" },
-  { label: "La ilaha illallah", arabic: "لَا إِلَٰهَ إِلَّا ٱللَّٰهِ", accent: "from-blue-500 to-cyan-600" },
-  { label: "Astagfirullah", arabic: "أَسْتَغْفُرُ ٱللَّٰهِ", accent: "from-rose-500 to-pink-600" },
+  { label: "SubhanAllah", arabic: "سُبْحَانَ اللَّهِ", accent: "from-[#C9860A] to-[#E8A020]" },
+  { label: "Alhamdulillah", arabic: "ٱلْحَمْدُ لِلَّٰهِ", accent: "from-[#C9860A] to-[#E8A020]" },
+  { label: "Allahu Akbar", arabic: "اللَّٰهُ أَكْبَرُ", accent: "from-[#C9860A] to-[#E8A020]" },
+  { label: "La ilaha", arabic: "لَا إِلَٰهَ إِلَّا", accent: "from-[#C9860A] to-[#E8A020]" },
+  { label: "Astagfirullah", arabic: "أَسْتَغْفُرُ ٱللَّٰهِ", accent: "from-[#C9860A] to-[#E8A020]" },
 ];
 
 const getTodayKey = () => new Date().toISOString().split('T')[0];
@@ -70,20 +70,20 @@ export function TasbeehQuickWidget() {
   }, [todayByLabel]);
 
   return (
-    <Card className="relative overflow-hidden border-purple-200/60 bg-gradient-to-br from-purple-50/70 via-card to-transparent dark:from-purple-950/20 dark:via-card dark:to-transparent">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+    <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
 
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-purple-700 dark:text-purple-400" />
+          <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+            <Sparkles className="w-4 h-4 text-[#C9860A]" />
             Tasbeeh
           </CardTitle>
 
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-3 rounded-xl"
+            className="h-8 px-3 rounded-xl text-[#C9860A] hover:text-[#E8A020] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
             onClick={() => navigate("/tasbeeh")}
           >
             Open
@@ -91,11 +91,11 @@ export function TasbeehQuickWidget() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
-          <Badge variant="secondary" className="rounded-full">
+        <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest">
+          <Badge variant="secondary" className="rounded-full bg-[#C9860A]/10 text-[#C9860A] border-none">
             Today {todayTotal.toLocaleString()}
           </Badge>
-          <Badge variant="outline" className="rounded-full">
+          <Badge variant="outline" className="rounded-full border-[#C9860A]/30 text-white/60">
             All‑time {allTimeTotal.toLocaleString()}
           </Badge>
         </div>
@@ -111,18 +111,18 @@ export function TasbeehQuickWidget() {
                 key={preset.label}
                 type="button"
                 onClick={() => add(preset.label)}
-                className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/70 hover:bg-muted/40 transition-colors active:scale-[0.98] p-2 text-start"
+                className="relative overflow-hidden rounded-2xl border border-[#C9860A]/20 bg-card hover:border-[#C9860A]/40 transition-colors active:scale-[0.98] p-2 text-start group"
                 aria-label={`Add ${preset.label}`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${preset.accent} opacity-[0.08]`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${preset.accent} opacity-[0.02] group-hover:opacity-[0.05]`} />
                 <div className="relative">
-                  <p className="text-[11px] font-arabic leading-snug text-foreground" dir="rtl">
+                  <p className="text-[14px] font-arabic leading-snug text-white font-bold" dir="rtl">
                     {preset.arabic}
                   </p>
-                  <p className="mt-1 text-[10px] font-semibold text-muted-foreground truncate">
+                  <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground truncate">
                     {preset.label}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-foreground tabular-nums">
+                  <p className="mt-1 text-sm font-bold font-serif italic text-[#C9860A] tabular-nums">
                     {count.toLocaleString()}
                   </p>
                 </div>
@@ -132,15 +132,15 @@ export function TasbeehQuickWidget() {
         </div>
 
         {todayTopLabel && (
-          <div className="text-[10px] text-muted-foreground">
-            Most repeated today: <span className="font-semibold text-foreground">{todayTopLabel}</span>
+          <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+            Most repeated today: <span className="font-bold text-[#C9860A]">{todayTopLabel}</span>
           </div>
         )}
 
         <Button
           variant="outline"
           size="sm"
-          className="w-full rounded-xl"
+          className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
           onClick={() => navigate("/tasbeeh")}
         >
           Open Full Counter

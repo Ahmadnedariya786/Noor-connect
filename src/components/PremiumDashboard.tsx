@@ -136,7 +136,7 @@ function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
     return () => globalTimerManager.removeCallback(timerId);
   }, [targetTime]);
 
-  return <span className="text-sm font-black text-emerald-500 font-mono tabular-nums">{timeRemaining}</span>;
+  return <span className="text-sm font-black font-mono tabular-nums" style={{ color: '#C9860A' }}>{timeRemaining}</span>;
 }
 
 function PremiumDashboardInner({
@@ -283,9 +283,10 @@ function PremiumDashboardInner({
           {/* Location pill */}
           <button
             onClick={onLocationClick}
-            className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full transition-all active:scale-95 bg-emerald-500/10 border border-emerald-500/20"
+            className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full transition-all active:scale-95 border"
+            style={{ background: 'rgba(201,134,10,0.08)', borderColor: 'rgba(201,134,10,0.22)' }}
           >
-            <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+            <MapPin className="w-3.5 h-3.5" style={{ color: '#C9860A' }} />
             <span className="text-xs font-semibold max-w-[130px] truncate text-foreground/85">
               {locationLabel}
             </span>
@@ -304,48 +305,40 @@ function PremiumDashboardInner({
         {/* ── Hero Time & Date ── */}
         <LiveClock animationEnabled={animationEnabled} hijriDate={hijriDate} timeFormat={timeFormat} />
 
-        {/* ── Next Prayer Card ── */}
+        {/* ── Next Prayer Card (Azimuth dark style) ── */}
         <m.div
           {...motionProps({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 } })}
-          className="relative overflow-hidden rounded-[28px] bg-card/40 border border-emerald-500/20 shadow-[inset_2px_0_0_rgba(16,185,129,0.6)] backdrop-blur-md"
+          className="relative overflow-hidden rounded-[24px]"
+          style={{ background: 'linear-gradient(145deg, #1A1E2E, #1E2438)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
         >
-          {/* Subtle emerald glow */}
-          <div
-            className="absolute top-0 left-0 w-32 h-full pointer-events-none bg-gradient-to-r from-emerald-500/10 to-transparent"
-          />
           <div className="relative z-10 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1 text-emerald-500/70">
-                  Next Prayer
-                </p>
-                <p className="text-2xl font-black text-foreground">{nextPrayer.name}</p>
-              </div>
-              <div
-                className="px-4 py-2 rounded-2xl text-xl font-black bg-muted/60 text-primary border border-primary/20"
-              >
-                {nextPrayer.time}
-              </div>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>
+                Next Prayer
+              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                {locationLabel}
+              </p>
             </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-medium text-foreground/45">
-                  Time remaining
-                </span>
+            <div className="flex items-end justify-between mb-4">
+              <p className="text-3xl font-bold text-white" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                {nextPrayer.name}
+              </p>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">In</p>
                 <LiveCountdown targetTime={nextPrayer.targetTime} />
               </div>
-
-              {/* Progress bar */}
-              <div
-                className="h-1.5 w-full rounded-full overflow-hidden bg-muted/60"
-              >
-                <m.div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                  {...motionProps({ initial: { width: 0 }, animate: { width: `${nextPrayer.progress}%` }, transition: { duration: 1, ease: 'easeOut', delay: 0.4 } })}
-                />
-              </div>
-
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs text-white/40">at {nextPrayer.time}</span>
+            </div>
+            {/* Amber progress bar */}
+            <div className="h-[3px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <m.div
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, #C9860A, #E8A020)' }}
+                {...motionProps({ initial: { width: 0 }, animate: { width: `${nextPrayer.progress}%` }, transition: { duration: 1, ease: 'easeOut', delay: 0.4 } })}
+              />
             </div>
           </div>
         </m.div>
@@ -369,10 +362,10 @@ function PremiumDashboardInner({
                       className="w-full"
                     >
                       <div className="flex items-center justify-between px-1 mb-4">
-                        <h2 className="text-lg font-black text-foreground">Prayer Times</h2>
+                        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Prayer Times</h2>
                         <button
                           onClick={onLocationClick}
-                          className="text-[10px] font-bold uppercase tracking-widest transition-all text-emerald-500/70 hover:text-emerald-500"
+                          className="text-[10px] font-semibold uppercase tracking-widest transition-all text-muted-foreground hover:text-foreground"
                         >
                           Change City
                         </button>
@@ -387,35 +380,36 @@ function PremiumDashboardInner({
                               animate: { opacity: 1, scale: 1 },
                               transition: { delay: i * 0.05, type: 'spring', stiffness: 220, damping: 20 },
                             })}
-                            className={`relative overflow-hidden p-4 rounded-[24px] border ${prayer.isActive ? 'bg-emerald-500/10 border-emerald-500/35 shadow-[0_0_24px_rgba(16,185,129,0.12),inset_0_0_0_1px_rgba(16,185,129,0.1)]' : 'bg-card/40 border-border/40'}`}
+                            className="relative overflow-hidden p-4 rounded-[20px] bg-card border border-border"
+                            style={prayer.isActive ? {
+                              borderColor: 'rgba(201,134,10,0.3)',
+                              boxShadow: '0 0 0 1px rgba(201,134,10,0.1)',
+                            } : {}}
                           >
-                            {/* Active glow layer */}
-                            {prayer.isActive && (
-                              <div
-                                className="absolute inset-0 pointer-events-none rounded-[24px] bg-[radial-gradient(circle_at_30%_50%,rgba(16,185,129,0.08)_0%,transparent_70%)]"
-                              />
-                            )}
-
                             <div className="relative z-10">
-                              <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center justify-between mb-3">
                                 <div
-                                  className={`w-8 h-8 flex items-center justify-center rounded-xl ${prayer.isActive ? 'bg-emerald-500/20 text-emerald-500' : 'bg-muted/40 text-muted-foreground'}`}
+                                  className="w-8 h-8 flex items-center justify-center rounded-xl"
+                                  style={prayer.isActive
+                                    ? { background: 'rgba(201,134,10,0.12)', color: '#C9860A' }
+                                    : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
                                 >
                                   {prayer.icon}
                                 </div>
                                 {prayer.isUpcoming && (
                                   <span
-                                    className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500"
+                                    className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                                    style={{ background: 'rgba(201,134,10,0.1)', color: '#C9860A' }}
                                   >
                                     NEXT
                                   </span>
                                 )}
                               </div>
 
-                              <p className={`font-black text-base leading-tight ${prayer.isActive ? 'text-foreground' : 'text-foreground/75'}`}>
+                              <p className="font-bold text-sm leading-tight text-foreground">
                                 {prayer.name}
                               </p>
-                              <p className={`font-bold text-sm mt-0.5 ${prayer.isActive ? 'text-primary' : 'text-primary/60'}`}>
+                              <p className="text-sm mt-0.5 font-semibold" style={{ color: prayer.isActive ? '#C9860A' : 'hsl(var(--muted-foreground))' }}>
                                 {prayer.time}
                               </p>
                             </div>
@@ -437,8 +431,8 @@ function PremiumDashboardInner({
                       className="p-5 rounded-[28px] bg-card/40 border border-border/40 backdrop-blur-md"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-black text-foreground uppercase tracking-wider">Daily Salah Tracker</h3>
-                        <div className="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Daily Salah</h3>
+                        <div className="px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(201,134,10,0.1)', color: '#C9860A' }}>
                           {prayers.filter(p => p.isCompleted).length} / 5
                         </div>
                       </div>
@@ -449,12 +443,11 @@ function PremiumDashboardInner({
                             onClick={() => prayer.onCheckIn?.()}
                             className="flex flex-col items-center gap-2 group"
                           >
-                            <div 
-                              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                                prayer.isCompleted 
-                                  ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-110' 
-                                  : 'bg-muted/50 text-muted-foreground border border-border/50 group-hover:bg-muted group-hover:scale-105'
-                              }`}
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+                              style={prayer.isCompleted
+                                ? { background: '#C9860A', color: 'white', boxShadow: '0 0 14px rgba(201,134,10,0.35)', transform: 'scale(1.1)' }
+                                : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(var(--border))' }}
                             >
                               {prayer.isCompleted ? (
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -464,7 +457,7 @@ function PremiumDashboardInner({
                                 prayer.icon
                               )}
                             </div>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${prayer.isCompleted ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                            <span className="text-[10px] font-semibold" style={{ color: prayer.isCompleted ? '#C9860A' : 'hsl(var(--muted-foreground))' }}>
                               {prayer.name.slice(0, 3)}
                             </span>
                           </button>

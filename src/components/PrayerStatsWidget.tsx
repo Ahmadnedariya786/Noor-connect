@@ -79,10 +79,10 @@ export function PrayerStatsWidget() {
   }, [loadStats]);
 
   const getStreakColor = (streak: number) => {
-    if (streak >= 30) return 'text-green-600 bg-green-50 border-green-200';
-    if (streak >= 14) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (streak >= 7) return 'text-purple-600 bg-purple-50 border-purple-200';
-    return 'text-gray-600 bg-gray-50 border-gray-200';
+    if (streak >= 30) return 'text-[#C9860A] bg-card border-[#C9860A]/50 shadow-[0_0_10px_rgba(201,134,10,0.2)]';
+    if (streak >= 14) return 'text-[#C9860A] bg-card border-[#C9860A]/40';
+    if (streak >= 7) return 'text-[#C9860A] bg-card border-[#C9860A]/30';
+    return 'text-[#C9860A] bg-card border-border/40';
   };
 
   const achievements = useMemo(() => {
@@ -135,22 +135,22 @@ export function PrayerStatsWidget() {
   const missed = Math.max(0, stats.totalPossible - stats.completed);
 
   return (
-    <Card className="relative overflow-hidden border-purple-200 bg-gradient-to-br from-purple-50/50 to-transparent transition-all duration-500 hover:shadow-lg hover:shadow-purple-100">
+    <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 transition-all duration-500 shadow-md">
       {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
-      <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-100/30 rounded-full blur-2xl" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-2xl" />
       
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 relative z-10">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-purple-600" />
+          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+            <TrendingUp className="w-4 h-4 text-[#C9860A]" />
             Prayer Statistics
           </CardTitle>
-          <div className="flex gap-1">
+          <div className="flex gap-1 relative z-10">
             <Button
               variant={timeRange === 'week' ? 'default' : 'ghost'}
               size="sm"
-              className="h-7 px-2 text-xs rounded-lg"
+              className={`h-7 px-2 text-[10px] uppercase font-bold tracking-wider rounded-lg ${timeRange === 'week' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setTimeRange('week')}
             >
               Week
@@ -158,7 +158,7 @@ export function PrayerStatsWidget() {
             <Button
               variant={timeRange === 'month' ? 'default' : 'ghost'}
               size="sm"
-              className="h-7 px-2 text-xs rounded-lg"
+              className={`h-7 px-2 text-[10px] uppercase font-bold tracking-wider rounded-lg ${timeRange === 'month' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setTimeRange('month')}
             >
               Month
@@ -167,50 +167,50 @@ export function PrayerStatsWidget() {
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 relative z-10">
         {/* Main Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-200/50">
+          <div className="p-3 rounded-xl bg-card/50 border border-border/40 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-xs font-medium text-muted-foreground">Completed</span>
+              <CheckCircle className="w-4 h-4 text-[#C9860A]" />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Completed</span>
             </div>
-            <p className="text-lg font-bold text-foreground">
+            <p className="text-2xl font-bold font-serif italic text-white">
               {stats.completed}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[9px] uppercase font-bold text-muted-foreground mt-1 tracking-wider">
               {stats.completionRate}% rate
             </p>
           </div>
           
-          <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-200/50">
+          <div className="p-3 rounded-xl bg-card/50 border border-border/40 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-purple-600" />
-              <span className="text-xs font-medium text-muted-foreground">Remaining</span>
+              <Target className="w-4 h-4 text-[#C9860A]" />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Remaining</span>
             </div>
-            <p className="text-lg font-bold text-foreground">
+            <p className="text-2xl font-bold font-serif italic text-white">
               {missed}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[9px] uppercase font-bold text-muted-foreground mt-1 tracking-wider">
               of {stats.totalPossible}
             </p>
           </div>
         </div>
 
         {/* Current Streak */}
-        <div className={`p-3 rounded-xl border ${getStreakColor(stats.currentStreak)}`}>
+        <div className={`p-3 rounded-xl border backdrop-blur-sm ${getStreakColor(stats.currentStreak)}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Award className="w-4 h-4" />
-              <span className="text-sm font-medium">Current Streak</span>
+              <Award className="w-4 h-4 text-[#C9860A]" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Current Streak</span>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">{stats.currentStreak}</p>
-              <p className="text-xs">days</p>
+              <p className="text-2xl font-bold font-serif italic text-white">{stats.currentStreak}</p>
+              <p className="text-[9px] font-bold uppercase text-muted-foreground">days</p>
             </div>
           </div>
           {stats.longestStreak > stats.currentStreak && (
-            <p className="text-xs mt-1">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-1">
               Longest: {stats.longestStreak} days
             </p>
           )}
@@ -218,25 +218,25 @@ export function PrayerStatsWidget() {
 
         {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">Completion Rate</span>
-            <span className="text-muted-foreground">
+          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span>Completion Rate</span>
+            <span className="text-[#C9860A]">
               {stats.completionRate}%
             </span>
           </div>
           <Progress 
             value={stats.completionRate} 
-            className="h-2"
+            className="h-2 bg-black/50"
           />
-          <p className="text-[10px] text-muted-foreground text-center">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground text-center pt-1">
             Avg {stats.averagePerDay}/5 per day • Today {stats.todayCompleted}/5
           </p>
         </div>
 
         {/* Achievements */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-yellow-600" />
+          <h4 className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 text-muted-foreground">
+            <Trophy className="w-4 h-4 text-[#C9860A]" />
             Recent Achievements
           </h4>
           <div className="space-y-2">
@@ -244,17 +244,17 @@ export function PrayerStatsWidget() {
               achievements.slice(0, 2).map((achievement) => (
                 <div
                   key={achievement.id}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-yellow-50/50 border border-yellow-200/50"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-card/50 border border-border/40 backdrop-blur-sm"
                 >
-                  <achievement.icon className="w-4 h-4 text-yellow-700" />
+                  <achievement.icon className="w-4 h-4 text-[#C9860A]" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{achievement.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{achievement.description}</p>
+                    <p className="text-xs font-bold text-white truncate">{achievement.title}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground truncate">{achievement.description}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-xs text-muted-foreground p-2 rounded-lg bg-muted/30 border border-border/50">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground p-3 rounded-lg bg-card/50 border border-border/40 text-center">
                 Keep checking in your prayers to unlock achievements.
               </div>
             )}
@@ -265,7 +265,7 @@ export function PrayerStatsWidget() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full gap-2 border-purple-300 hover:bg-purple-50"
+          className="w-full gap-2 border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
           onClick={() => navigate('/prayer-stats')}
         >
           <Calendar className="w-4 h-4" />

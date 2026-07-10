@@ -137,64 +137,64 @@ const Hadith = () => {
             variant="ghost"
             size="icon"
             onClick={() => navigate("/hadith/collections")}
-            className="rounded-full backdrop-blur-sm bg-card/50 hover:bg-card/80 border border-border/50"
+            className="rounded-full backdrop-blur-sm bg-card border border-border/40 shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 text-foreground/80" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground font-serif">حديث اليوم</h1>
-            <p className="text-sm text-muted-foreground">Daily Hadith</p>
+            <h1 className="text-2xl font-bold text-foreground font-serif italic tracking-tight">حديث اليوم</h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">Daily Hadith</p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-gradient-gold flex items-center justify-center shadow-glow">
-            <BookOpen className="w-6 h-6 text-primary-foreground" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C9860A]/20 to-[#E8A020]/5 flex items-center justify-center border border-[#C9860A]/10 shadow-sm">
+            <BookOpen className="w-5 h-5 text-[#C9860A]" />
           </div>
         </div>
 
         {loading ? (
-          <Card className="p-12 backdrop-blur-sm bg-card/80 border-border/50">
+          <Card className="p-12 backdrop-blur-sm bg-card border-border/40 shadow-sm">
             <div className="flex flex-col items-center justify-center space-y-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-gradient-gold animate-pulse" />
-                <Loader2 className="w-8 h-8 animate-spin text-primary absolute top-1/2 inset-inline-start-1/2 -translate-x-1/2 -translate-y-1/2" />
+                <div className="w-16 h-16 rounded-xl bg-[#C9860A]/10 animate-pulse border border-[#C9860A]/20" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#C9860A] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
-              <p className="text-sm text-muted-foreground">Loading Hadith...</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Loading Hadith...</p>
             </div>
           </Card>
         ) : hadith ? (
           <div className="space-y-4">
             {/* Main Hadith Card */}
-            <Card className="relative overflow-hidden border-0 shadow-elegant">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+            <Card className="relative overflow-hidden border-2 shadow-xl border-[#C9860A]/40 bg-[#1A1A1A] text-white">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9860A]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C9860A]/5 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
               
-              <div className="relative p-8 text-primary-foreground">
+              <div className="relative p-8 z-10">
                 <div className="space-y-6">
                   {/* Header icon */}
                   <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center border border-primary-foreground/30">
-                      <BookOpen className="w-8 h-8" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#C9860A]/10 flex items-center justify-center border border-[#C9860A]/20">
+                      <BookOpen className="w-6 h-6 text-[#C9860A]" />
                     </div>
-                    <h2 className="text-sm uppercase tracking-widest opacity-90 font-medium">
+                    <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#C9860A] font-bold">
                       Hadith of the Day
                     </h2>
                   </div>
 
                   {/* Hadith text */}
-                  <blockquote className="text-xl md:text-2xl leading-relaxed text-center font-serif italic">
+                  <blockquote className="text-xl md:text-3xl leading-relaxed text-center font-arabic font-bold mt-6 mb-2">
                     {hadith.hadith}
                   </blockquote>
 
                   {/* Translation */}
                   {hadith.translation && (
-                    <p className="text-base leading-relaxed text-center opacity-90 mt-4 px-2">
+                    <p className="text-base leading-relaxed text-center opacity-80 font-serif italic px-2">
                       {hadith.translation}
                     </p>
                   )}
 
                   {/* Source */}
                   {hadith.book && (
-                    <div className="pt-4 border-t border-primary-foreground/20 text-center">
-                      <p className="text-xs opacity-75 tracking-wide">
+                    <div className="pt-6 mt-4 border-t border-white/10 text-center">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/50">
                         {hadith.number ? `Reference: ${hadith.book} #${hadith.number}` : hadith.book}
                       </p>
                     </div>
@@ -207,50 +207,50 @@ const Hadith = () => {
             <div className="flex gap-3">
               <Button
                 onClick={handleShare}
-                className="flex-1 backdrop-blur-sm bg-card/80 text-foreground hover:bg-card border border-border/50"
+                className="flex-1 bg-card text-foreground hover:bg-muted/50 border border-border/40 shadow-sm font-bold text-xs rounded-xl h-12"
                 variant="outline"
               >
-                <Share2 className="w-4 h-4 me-2" />
-                Share Hadith
+                <Share2 className="w-4 h-4 me-2 text-[#C9860A]" />
+                Share
               </Button>
               <Button
                 onClick={() => navigate("/hadith/collections")}
-                className="flex-1 backdrop-blur-sm bg-card/80 text-foreground hover:bg-card border border-border/50"
+                className="flex-1 bg-card text-foreground hover:bg-muted/50 border border-border/40 shadow-sm font-bold text-xs rounded-xl h-12"
                 variant="outline"
               >
-                <Library className="w-4 h-4 me-2" />
-                Browse Collections
+                <Library className="w-4 h-4 me-2 text-[#C9860A]" />
+                Browse
               </Button>
               <Button
                 onClick={() => navigate("/hadith/bookmarks")}
-                className="backdrop-blur-sm bg-card/80 text-foreground hover:bg-card border border-border/50"
+                className="bg-card text-foreground hover:bg-muted/50 border border-border/40 shadow-sm rounded-xl h-12 w-12"
                 variant="outline"
                 size="icon"
                 title="Bookmarked Hadith"
               >
-                <Bookmark className="w-4 h-4" />
+                <Bookmark className="w-4 h-4 text-[#C9860A]" />
               </Button>
               <Button
                 onClick={() => fetchHadith(true)}
-                className="backdrop-blur-sm bg-card/80 text-foreground hover:bg-card border border-border/50"
+                className="bg-card text-foreground hover:bg-muted/50 border border-border/40 shadow-sm rounded-xl h-12 w-12"
                 variant="outline"
                 size="icon"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4 text-[#C9860A]" />
               </Button>
             </div>
 
             {/* Footer message */}
-            <Card className="p-4 backdrop-blur-sm bg-muted/30 border-border/50">
-              <p className="text-xs text-center text-muted-foreground italic">
+            <Card className="p-5 bg-muted/20 border-border/40 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-center text-muted-foreground">
                 May Allah (SWT) help us implement these teachings in our daily lives. Ameen.
               </p>
             </Card>
           </div>
         ) : (
-          <Card className="p-8 text-center space-y-4 backdrop-blur-sm bg-card/80 border-border/50">
-            <p className="text-muted-foreground">Unable to load hadith. Please try again later.</p>
-            <Button onClick={fetchHadith} variant="outline" className="bg-gradient-gold text-primary-foreground border-0">
+          <Card className="p-8 text-center space-y-4 bg-card border-border/40 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Unable to load hadith. Please try again later.</p>
+            <Button onClick={fetchHadith} variant="outline" className="bg-[#1A1A1A] text-white hover:bg-[#333333] border-border/40 font-bold rounded-xl px-6 h-12">
               Try Again
             </Button>
           </Card>

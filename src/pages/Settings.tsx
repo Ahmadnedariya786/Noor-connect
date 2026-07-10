@@ -51,17 +51,14 @@ const Settings = () => {
         >
           <ChevronLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-xl font-black text-foreground ml-4 tracking-tight uppercase">Settings</h1>
+        <h1 className="text-2xl font-bold font-serif italic text-foreground ml-4 tracking-tight">Settings</h1>
       </div>
 
       <div className="px-6 py-4 space-y-8 max-w-lg mx-auto w-full">
         {/* ── Theme Section ── */}
         <section className="space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-              <Sun className="w-4 h-4 text-emerald-400" />
-            </div>
-            <h2 className="text-sm font-black uppercase tracking-widest text-emerald-400">Appearance</h2>
+          <div className="flex items-center gap-3 mb-3">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Appearance</h2>
           </div>
           
           <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
@@ -88,18 +85,15 @@ const Settings = () => {
               );
             })}
           </div>
-          <p className="text-xs font-medium text-muted-foreground px-4">
-            Currently using <span className="text-foreground/70">{effectiveTheme}</span> theme based on preferences.
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
+            Currently using <span className="text-[#C9860A]">{effectiveTheme}</span> theme based on preferences.
           </p>
         </section>
 
         {/* ── Preferences Section ── */}
         <section className="space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-            </div>
-            <h2 className="text-sm font-black uppercase tracking-widest text-[#D4AF37]">Preferences</h2>
+          <div className="flex items-center gap-3 mb-3">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Preferences</h2>
           </div>
 
           <div className="bg-card border border-border rounded-[28px] overflow-hidden">
@@ -110,14 +104,14 @@ const Settings = () => {
                   <Zap className="w-5 h-5 text-foreground/70" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-base">Fluid Animations</h3>
-                  <p className="text-xs font-medium text-muted-foreground mt-0.5">Enable smooth UI transitions</p>
+                  <h3 className="font-bold text-foreground font-serif italic text-lg">Fluid Animations</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Enable smooth UI transitions</p>
                 </div>
               </div>
               <button 
                 onClick={toggleAnimation}
-                className={`w-12 h-7 rounded-full p-1 transition-colors duration-300 ${
-                  animationEnabled ? 'bg-emerald-500' : 'bg-muted'
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
+                  animationEnabled ? 'bg-[#C9860A]' : 'bg-muted'
                 }`}
               >
                 <motion.div 
@@ -135,14 +129,14 @@ const Settings = () => {
                   <Heart className="w-5 h-5 text-foreground/70" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-base">Splash Welcome</h3>
-                  <p className="text-xs font-medium text-muted-foreground mt-0.5">Show "Islamic Companion" on launch</p>
+                  <h3 className="font-bold text-foreground font-serif italic text-lg">Splash Welcome</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show "Islamic Companion" on launch</p>
                 </div>
               </div>
               <button 
                 onClick={toggleSplashGreeting}
-                className={`w-12 h-7 rounded-full p-1 transition-colors duration-300 ${
-                  splashGreetingEnabled ? 'bg-emerald-500' : 'bg-muted'
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
+                  splashGreetingEnabled ? 'bg-[#C9860A]' : 'bg-muted'
                 }`}
               >
                 <motion.div 
@@ -160,14 +154,14 @@ const Settings = () => {
                   <Sparkles className="w-5 h-5 text-foreground/70" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-base">Home Greeting</h3>
-                  <p className="text-xs font-medium text-muted-foreground mt-0.5">Show daily salam on home screen</p>
+                  <h3 className="font-bold text-foreground font-serif italic text-lg">Home Greeting</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show daily salam on home screen</p>
                 </div>
               </div>
               <button 
                 onClick={toggleGreeting}
-                className={`w-12 h-7 rounded-full p-1 transition-colors duration-300 ${
-                  greetingEnabled ? 'bg-emerald-500' : 'bg-white/10'
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
+                  greetingEnabled ? 'bg-[#C9860A]' : 'bg-muted'
                 }`}
               >
                 <motion.div 
@@ -182,11 +176,8 @@ const Settings = () => {
 
         {/* ── Prayer / Fiqh Section ── */}
         <section className="space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
-              <BookOpen className="w-4 h-4 text-sky-400" />
-            </div>
-            <h2 className="text-sm font-black uppercase tracking-widest text-sky-400">Prayer Times</h2>
+          <div className="flex items-center gap-3 mb-3">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Prayer Times</h2>
           </div>
 
           <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
@@ -216,18 +207,15 @@ const Settings = () => {
               );
             })}
           </div>
-          <p className="text-xs font-medium text-muted-foreground px-4">
-            Determines Asr calculation. Currently using <span className="text-foreground/70">{madhab === 'hanafi' ? 'Hanafi' : 'Maliki, Shafi, Hanbali'}</span> school.
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
+            Determines Asr calculation. Currently using <span className="text-[#C9860A]">{madhab === 'hanafi' ? 'Hanafi' : 'Maliki, Shafi, Hanbali'}</span> school.
           </p>
         </section>
 
         {/* ── Bedtime Section ── */}
         <section className="space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-              <MoonIcon className="w-4 h-4 text-indigo-400" />
-            </div>
-            <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400">Bedtime</h2>
+          <div className="flex items-center gap-3 mb-3">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Bedtime</h2>
           </div>
 
           <div className="bg-card border border-border rounded-[28px] overflow-hidden">
@@ -237,8 +225,8 @@ const Settings = () => {
                   <MoonIcon className="w-5 h-5 text-foreground/70" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-base">Bedtime Reminder</h3>
-                  <p className="text-xs font-medium text-muted-foreground mt-0.5">Get a gentle notification at bedtime</p>
+                  <h3 className="font-bold text-foreground font-serif italic text-lg">Bedtime Reminder</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Get a gentle notification at bedtime</p>
                 </div>
               </div>
               <button
@@ -249,8 +237,8 @@ const Settings = () => {
                   if (next) scheduleBedtimeNotification();
                   else cancelBedtimeNotification();
                 }}
-                className={`w-12 h-7 rounded-full p-1 transition-colors duration-300 ${
-                  bedtimeEnabled ? 'bg-emerald-500' : 'bg-muted'
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
+                  bedtimeEnabled ? 'bg-[#C9860A]' : 'bg-muted'
                 }`}
               >
                 <motion.div
@@ -265,11 +253,11 @@ const Settings = () => {
               <div className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-foreground/70" />
+                  <Sparkles className="w-5 h-5 text-foreground/70" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground text-base">Time</h3>
-                    <p className="text-xs font-medium text-muted-foreground mt-0.5">When to remind you</p>
+                    <h3 className="font-bold text-foreground font-serif italic text-lg">Time</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">When to remind you</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

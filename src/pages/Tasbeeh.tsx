@@ -138,8 +138,8 @@ const Tasbeeh = () => {
 
         {/* Next goal */}
         <div className="absolute bottom-12 left-0 right-0 text-center">
-          <p className="text-white/20 text-xs uppercase tracking-[0.3em] mb-1">Next Goal</p>
-          <p className="text-white/40 text-lg font-semibold">{nextMilestone}</p>
+          <p className="text-white/30 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">Next Goal</p>
+          <p className="text-[#C9860A] text-2xl font-bold font-serif italic">{nextMilestone}</p>
         </div>
 
         {/* Exit hint */}
@@ -170,14 +170,14 @@ const Tasbeeh = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={toggleZenMode}
-                    className="p-1.5 bg-primary/10 rounded-full text-primary hover:bg-primary/20 transition-colors"
+                    className="p-1.5 rounded-full text-[#C9860A] hover:bg-[#C9860A]/10 transition-colors"
                     title="Zen Mode"
                   >
                     <Moon className="w-3.5 h-3.5" />
                   </button>
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 rounded-full text-[10px] font-bold text-primary">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-[#C9860A]/10 rounded-full text-[10px] font-bold tracking-widest uppercase text-[#C9860A]">
                     <History className="w-3 h-3" />
-                    {t('total')}: {totalCount.toLocaleString()}
+                    {t('total')}: <span className="font-serif italic ml-1 text-sm tracking-normal">{totalCount.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -247,12 +247,12 @@ const Tasbeeh = () => {
                 {/* Background reflection */}
                 <div className="absolute inset-4 border border-white/5 rounded-full" />
 
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('count')}</span>
+                <span className="text-[10px] font-bold text-[#C9860A] uppercase tracking-[0.2em] mb-1">{t('count')}</span>
                 <motion.span
                   key={count}
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
-                  className="text-7xl font-black text-primary drop-shadow-sm font-mono"
+                  className="text-7xl font-bold text-foreground font-serif italic tracking-tight"
                 >
                   {count}
                 </motion.span>
@@ -275,9 +275,9 @@ const Tasbeeh = () => {
                 {t('resetCount')}
               </Button>
 
-              <div className="flex-1 h-14 bg-muted/20 border border-border/20 rounded-2xl flex flex-col items-center justify-center px-4">
-                <span className="text-[9px] font-black uppercase text-muted-foreground/50 tracking-widest">{t('nextGoal')}</span>
-                <span className="text-sm font-bold text-primary">{nextMilestone}</span>
+              <div className="flex-1 h-14 bg-muted/20 border border-border/40 rounded-2xl flex flex-col items-center justify-center px-4 shadow-sm">
+                <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-[0.2em]">{t('nextGoal')}</span>
+                <span className="text-base font-bold text-[#C9860A] font-serif italic">{nextMilestone}</span>
               </div>
             </div>
           </div>
@@ -294,23 +294,23 @@ const Tasbeeh = () => {
 
           {/* Today's History Tab */}
           <div className="space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ms-2">Today's Progress</h3>
-            <Card className="p-4 border-border/30 bg-card/30">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9860A] ms-2 mb-2">Today's Progress</h3>
+            <Card className="p-5 border-border/40 bg-card shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <History className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C9860A]/20 to-[#E8A020]/5 flex items-center justify-center border border-[#C9860A]/10">
+                    <History className="w-5 h-5 text-[#C9860A]" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold">Sessions Completed</p>
-                    <p className="text-[10px] text-muted-foreground">Based on your activity today</p>
+                    <p className="text-sm font-bold text-foreground">Sessions Completed</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-1">Based on your activity today</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-black text-primary">
+                  <p className="text-2xl font-bold text-[#C9860A] font-serif italic">
                     {dailyHistory.find(h => h.date === new Date().toLocaleDateString() && h.label === label)?.count || 0}
                   </p>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase">Dhikr</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Dhikr</p>
                 </div>
               </div>
             </Card>

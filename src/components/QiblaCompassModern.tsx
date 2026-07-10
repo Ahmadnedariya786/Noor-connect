@@ -8,6 +8,7 @@ import { nativeQiblaService } from '@/lib/native-qibla-service';
 import {
   calculateDistanceToKaabaKm,
   calculateQiblaBearing,
+  calculateQiblaBearingMagnetic,
   getCardinalDirection,
   normalizeDegrees,
   shortestSignedAngle,
@@ -51,12 +52,12 @@ const LS_CALIBRATION_SHOWN = 'qibla-calibration-shown-v2';
 
 // ─── Colors ───────────────────────────────────────────────────
 const THEME = {
-  primary: '#10B981',      // Emerald glow
-  primaryLight: '#34d399',
-  accent: '#D4AF37',       // Gold for needle
-  accentLight: '#fcd34d',
-  cream: '#0D0D0D',        // Dark background
-  creamDark: '#141414',
+  primary: '#C9860A',      // Amber glow
+  primaryLight: '#E8A020',
+  accent: '#C9860A',       // Amber for needle
+  accentLight: '#E8A020',
+  cream: '#F2EDE4',        // Warm cream background
+  creamDark: '#EDE6D8',
   white: '#ffffff',
   offWhite: '#1a1a1a',
   warmWhite: '#111111',
@@ -177,7 +178,7 @@ const QiblaCompassModern = () => {
 
   const applyLocationData = useCallback((nextLocation: LocationCoordinates, nextCityName?: string) => {
     const resolvedCityName = nextCityName ?? cityNameRef.current;
-    const bearing = calculateQiblaBearing(nextLocation.latitude, nextLocation.longitude);
+    const trueBearing = calculateQiblaBearing(nextLocation.latitude, nextLocation.longitude);
     const distanceKm = calculateDistanceToKaabaKm(nextLocation.latitude, nextLocation.longitude);
 
     locationRef.current = nextLocation;
@@ -186,12 +187,24 @@ const QiblaCompassModern = () => {
     setLocation(nextLocation);
     setCityName(resolvedCityName);
     setQiblaResult({
-      bearing,
+      bearing: trueBearing,
       distanceKm,
-      cardinalDirection: getCardinalDirection(bearing),
-      formattedBearing: formatBearing(bearing),
+      cardinalDirection: getCardinalDirection(trueBearing),
+      formattedBearing: formatBearing(trueBearing),
       formattedDistance: formatDistance(distanceKm),
     });
+
+    // Advanced Mechanics: Calculate and apply magnetic declination for high accuracy
+    calculateQiblaBearingMagnetic(nextLocation.latitude, nextLocation.longitude)
+      .then((magneticBearing) => {
+        setQiblaResult(prev => prev ? {
+          ...prev,
+          bearing: magneticBearing,
+          cardinalDirection: getCardinalDirection(magneticBearing),
+          formattedBearing: formatBearing(magneticBearing),
+        } : null);
+      })
+      .catch(console.warn);
   }, []);
 
   const applyFallbackLocation = useCallback((reason?: string) => {
@@ -589,10 +602,10 @@ const QiblaCompassModern = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-0 gap-6 bg-background">
         <div className="relative">
-          <div className="w-20 h-20 rounded-full border-4 border-muted border-t-[#10B981] animate-spin" />
-          <Compass className="absolute inset-0 m-auto h-8 w-8 text-[#D4AF37]" />
+          <div className="w-20 h-20 rounded-full border-4 border-muted border-t-[#C9860A] animate-spin" />
+          <Compass className="absolute inset-0 m-auto h-8 w-8 text-[#C9860A]" />
         </div>
-        <p className="text-muted-foreground text-sm tracking-widest uppercase font-medium">Locating...</p>
+        <p className="text-muted-foreground text-sm tracking-[0.2em] uppercase font-bold">Locating...</p>
       </div>
     );
   }
@@ -602,16 +615,17 @@ const QiblaCompassModern = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-0 gap-6 px-6 text-center bg-background">
         <div className="w-20 h-20 rounded-full bg-card border flex items-center justify-center border-border">
-          <Compass className="h-10 w-10 text-[#D4AF37]" />
+          <Compass className="h-10 w-10 text-[#C9860A]" />
         </div>
         <div>
-          <p className="text-foreground font-semibold text-lg mb-2">Location Unavailable</p>
-          <p className="text-muted-foreground text-sm">{locationError ?? 'Please allow location access and try again.'}</p>
+          <p className="text-foreground font-bold text-lg mb-2">Location Unavailable</p>
+          <p className="text-muted-foreground text-sm font-medium">{locationError ?? 'Please allow location access and try again.'}</p>
         </div>
         <button
           onClick={() => void refreshLocation('manual')}
           disabled={isRefreshingLocation}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 bg-gradient-to-r from-[#10B981] to-[#059669] hover:bg-[#10B981] text-white shadow-lg shadow-[#10B981]/20"
+          className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50 text-white shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #C9860A, #E8A020)', boxShadow: '0 8px 20px rgba(201,134,10,0.3)' }}
         >
           {isRefreshingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Try Again
@@ -643,14 +657,14 @@ const QiblaCompassModern = () => {
           <div className="flex justify-center mb-3">
             <IslamicOrnament />
           </div>
-          <p className="text-[#D4AF37] text-xs tracking-[0.3em] uppercase font-semibold">Qibla Direction</p>
+          <p className="text-[#C9860A] text-[10px] tracking-[0.25em] uppercase font-bold">Qibla Direction</p>
 
           {/* Large Bearing Display */}
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-6xl font-bold text-foreground tracking-tight">
+            <span className="text-6xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
               {Math.round(qiblaResult.bearing)}°
             </span>
-            <span className="text-2xl font-medium text-[#D4AF37]">
+            <span className="text-2xl font-bold text-[#C9860A]">
               {qiblaResult.cardinalDirection}
             </span>
           </div>
@@ -669,9 +683,9 @@ const QiblaCompassModern = () => {
         </div>
       </div>
 
-      {/* ── Calibration Hint ────────────────────────────────────── */}
+      {/* ── Calibration Hint ── */}
       {showCalibrationHint && (
-        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full text-xs font-medium bg-card border border-emerald-500/30 text-foreground/80 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg whitespace-nowrap">
+        <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full text-xs font-bold bg-card border border-border text-foreground/80 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg whitespace-nowrap">
           📱 Move in figure-8 pattern for accuracy
         </div>
       )}

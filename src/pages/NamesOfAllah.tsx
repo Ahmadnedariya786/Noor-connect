@@ -157,17 +157,17 @@ export default function NamesOfAllah() {
 
         <div className="max-w-lg mx-auto px-5 pt-4 space-y-6">
           {/* Premium Hero Card */}
-          <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#1a4a4a] via-[#2c6e6e] to-primary/80 p-8 text-white shadow-xl shadow-primary/10">
-            <div className="absolute top-0 end-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 start-0 w-24 h-24 bg-black/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+          <div className="relative overflow-hidden rounded-[32px] bg-[#1A1A1A] p-8 text-white border-2 border-[#C9860A]/40 shadow-xl">
+            <div className="absolute top-0 end-0 w-48 h-48 bg-[#C9860A]/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 start-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
             <div className="relative z-10 text-center space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10">
-                <Sparkles className="w-3 h-3 text-primary" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#C9860A]/10 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-[#C9860A]/20 text-[#C9860A]">
+                <Sparkles className="w-3 h-3" />
                 Asma'ul Husna
               </div>
-              <h1 className="text-4xl font-arabic leading-tight">أَسْمَاءُ اللهِ الْحُسْنَى</h1>
-              <p className="text-white/70 text-xs font-medium tracking-wide">
+              <h1 className="text-4xl font-arabic font-bold leading-tight mt-2 text-white drop-shadow-md">أَسْمَاءُ اللهِ الْحُسْنَى</h1>
+              <p className="text-[#C9860A]/80 font-serif italic text-sm tracking-wide">
                 Memorize and reflect upon the beautiful attributes of the Creator.
               </p>
             </div>
@@ -176,22 +176,22 @@ export default function NamesOfAllah() {
           {/* Search & Filter Bar */}
           <div className="flex gap-3 sticky top-[4.5rem] z-30 bg-background/80 backdrop-blur-xl py-2 -mx-5 px-5">
             <div className="relative flex-1 group">
-              <div className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+              <div className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-[#C9860A] transition-colors">
                 <Search className="w-4 h-4" />
               </div>
               <Input
                 placeholder="Search by name or meaning..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="ps-11 h-12 bg-card/50 border-border/40 rounded-2xl focus:ring-primary/20 transition-all"
+                className="ps-11 h-12 bg-card border-border/40 rounded-2xl focus-visible:ring-[#C9860A]/50 transition-all shadow-sm font-medium"
               />
             </div>
             <Button
               variant={showFavoritesOnly ? "default" : "outline"}
-              className={`h-12 w-12 rounded-2xl transition-all ${showFavoritesOnly ? 'bg-primary' : 'bg-card/50'}`}
+              className={`h-12 w-12 rounded-2xl transition-all shadow-sm ${showFavoritesOnly ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90 border-0' : 'bg-card border-border/40'}`}
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             >
-              <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-white' : ''}`} />
+              <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-white' : 'text-[#C9860A]'}`} />
             </Button>
           </div>
 
@@ -207,7 +207,7 @@ export default function NamesOfAllah() {
                   transition={{ duration: 0.2, delay: index % 10 * 0.03 }}
                 >
                   <Card
-                    className="overflow-hidden border-border/30 hover:shadow-lg transition-all duration-300 group cursor-pointer active:scale-[0.98]"
+                    className="overflow-hidden border-border/40 hover:border-[#C9860A]/40 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer active:scale-[0.98] bg-card"
                     onClick={() => setSelectedName(name)}
                   >
                     <CardContent className="p-0">
@@ -215,10 +215,10 @@ export default function NamesOfAllah() {
                         {/* Left Info Section */}
                         <div className="flex-1 p-5 flex flex-col justify-center">
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="text-[10px] font-black text-primary/50 bg-primary/10 w-6 h-6 rounded-lg flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-[#C9860A] bg-[#C9860A]/10 w-6 h-6 rounded-lg flex items-center justify-center font-serif italic">
                               {name.number}
                             </span>
-                            <h3 className="font-black text-lg group-hover:text-primary transition-colors">
+                            <h3 className="font-bold text-lg font-serif group-hover:text-[#C9860A] transition-colors">
                               {name.transliteration}
                             </h3>
                           </div>
@@ -228,7 +228,7 @@ export default function NamesOfAllah() {
                         </div>
 
                         {/* Right Arabic Section */}
-                        <div className="w-[120px] bg-muted/20 flex flex-col items-center justify-center p-4 relative overflow-hidden group-hover:bg-primary/5 transition-colors">
+                        <div className="w-[120px] bg-muted/30 flex flex-col items-center justify-center p-4 relative overflow-hidden group-hover:bg-[#C9860A]/5 transition-colors">
                           <div className="absolute top-2 end-2 z-20">
                             <Button
                               variant="ghost"
@@ -236,13 +236,13 @@ export default function NamesOfAllah() {
                               className="h-8 w-8 hover:bg-transparent"
                               onClick={(e) => toggleFavorite(e, name.number)}
                             >
-                              <Heart className={`w-4 h-4 transition-all ${favorites.includes(name.number) ? 'fill-primary text-primary scale-110' : 'text-muted-foreground'}`} />
+                              <Heart className={`w-4 h-4 transition-all ${favorites.includes(name.number) ? 'fill-[#C9860A] text-[#C9860A] scale-110' : 'text-muted-foreground'}`} />
                             </Button>
                           </div>
-                          <div className="absolute -start-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Sparkles className="w-16 h-16 text-primary" />
+                          <div className="absolute -start-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                            <Sparkles className="w-16 h-16 text-[#C9860A]" />
                           </div>
-                          <span className="text-3xl font-arabic text-primary drop-shadow-sm" dir="rtl">
+                          <span className="text-3xl font-arabic font-bold text-foreground group-hover:text-[#C9860A] transition-colors drop-shadow-sm" dir="rtl">
                             {name.arabic}
                           </span>
                         </div>
@@ -262,7 +262,7 @@ export default function NamesOfAllah() {
               <p className="text-muted-foreground font-medium">No matches found for your search.</p>
               <Button
                 variant="link"
-                className="mt-2 text-primary"
+                className="mt-2 text-[#C9860A] font-bold"
                 onClick={() => setSearchQuery("")}
               >
                 Clear all filters
@@ -287,26 +287,27 @@ export default function NamesOfAllah() {
                 initial={{ opacity: 0, y: 100, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                className="relative w-full max-w-sm bg-card rounded-[32px] overflow-hidden shadow-2xl z-[210] border border-border/50"
+                className="relative w-full max-w-sm bg-card rounded-[32px] overflow-hidden shadow-2xl z-[210] border-2 border-[#C9860A]/20"
               >
-                <div className="bg-primary/10 p-10 flex items-center justify-center text-center relative overflow-hidden">
+                <div className="bg-[#1A1A1A] p-10 flex items-center justify-center text-center relative overflow-hidden border-b border-[#C9860A]/20">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[60px] pointer-events-none" />
                   <div className="absolute inset-0 opacity-10 animate-spin-slow">
-                    <Sparkles className="w-full h-full text-primary" />
+                    <Sparkles className="w-full h-full text-[#C9860A]" />
                   </div>
-                  <h2 className="text-6xl font-arabic text-primary relative z-10" dir="rtl">
+                  <h2 className="text-6xl font-arabic font-bold text-[#C9860A] relative z-10 drop-shadow-sm" dir="rtl">
                     {selectedName.arabic}
                   </h2>
                 </div>
 
                 <div className="p-8 space-y-6">
                   <div className="text-center">
-                    <span className="text-[10px] font-black tracking-widest text-primary uppercase mb-2 block">Attribute {selectedName.number}</span>
-                    <h3 className="text-3xl font-black">{selectedName.transliteration}</h3>
-                    <p className="text-muted-foreground font-medium mt-1">{selectedName.meaning}</p>
+                    <span className="text-[10px] font-bold tracking-[0.2em] text-[#C9860A] uppercase mb-2 block">Attribute {selectedName.number}</span>
+                    <h3 className="text-4xl font-bold font-serif italic text-foreground">{selectedName.transliteration}</h3>
+                    <p className="text-muted-foreground font-bold text-sm tracking-wide mt-2">{selectedName.meaning}</p>
                   </div>
 
-                  <div className="bg-muted/30 p-5 rounded-2xl relative">
-                    <Info className="absolute top-4 right-4 w-4 h-4 text-primary opacity-30" />
+                  <div className="bg-muted/30 border border-border/50 p-5 rounded-2xl relative shadow-sm">
+                    <Info className="absolute top-4 right-4 w-4 h-4 text-[#C9860A] opacity-50" />
                     <p className="text-sm leading-relaxed text-foreground/80 font-medium">
                       {selectedName.description}
                     </p>
@@ -314,17 +315,18 @@ export default function NamesOfAllah() {
 
                   <div className="flex gap-3">
                     <Button
-                      className="flex-1 h-12 rounded-2xl gap-2 font-bold"
+                      className="flex-1 h-12 rounded-2xl gap-2 font-bold bg-card border border-border/50 hover:bg-muted text-foreground"
+                      variant="outline"
                       onClick={() => setSelectedName(null)}
                     >
                       Close
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-12 w-12 rounded-2xl"
+                      className="h-12 w-12 rounded-2xl border-border/50 hover:bg-muted bg-card"
                       onClick={(e) => toggleFavorite(e, selectedName.number)}
                     >
-                      <Heart className={`w-5 h-5 ${favorites.includes(selectedName.number) ? 'fill-primary text-primary' : ''}`} />
+                      <Heart className={`w-5 h-5 ${favorites.includes(selectedName.number) ? 'fill-[#C9860A] text-[#C9860A]' : 'text-muted-foreground'}`} />
                     </Button>
                   </div>
                 </div>

@@ -15,49 +15,49 @@
 
   :root {
 
-    /* Spotify-Inspired Modern Theme - Light Mode */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3%;
+    /* Azimuth-Inspired Warm Islamic Theme - Light Mode */
+    --background: 38 30% 95%; /* Warm cream #F2EDE4 */
+    --foreground: 30 15% 12%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 3%;
+    --card: 0 0% 100%; /* Pure white cards pop off cream bg */
+    --card-foreground: 30 15% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3%;
+    --popover-foreground: 30 15% 12%;
 
-    /* Gold + Green Accent Combo */
-    --primary: 45 85% 50%; /* Gold */
+    /* Amber accent — Azimuth's #C9860A */
+    --primary: 36 90% 40%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 45 85% 60%;
+    --primary-glow: 36 90% 52%;
 
-    --secondary: 150 70% 40%; /* Green */
+    --secondary: 214 80% 50%; /* Blue for icon containers */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 38 20% 91%;
+    --muted-foreground: 38 10% 50%;
 
-    --accent: 45 85% 50%;
+    --accent: 36 90% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 45 85% 50%;
+    --border: 38 15% 85%;
+    --input: 38 15% 85%;
+    --ring: 36 90% 40%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
-    /* Modern Gradients - Gold + Green Combo */
-    --gradient-primary: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520); /* Gold */
-    --gradient-secondary: linear-gradient(135deg, #10B981, #059669, #047857); /* Green */
-    --gradient-gold: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520);
+    /* Azimuth-Inspired Warm Gradients */
+    --gradient-primary: linear-gradient(135deg, #C9860A, #E8A020, #C9860A); /* Amber */
+    --gradient-secondary: linear-gradient(135deg, #3B82F6, #2563EB, #1D4ED8); /* Blue */
+    --gradient-gold: linear-gradient(135deg, #C9860A, #E8A020, #C9860A);
     --gradient-green: linear-gradient(135deg, #10B981, #059669, #047857);
-    --gradient-premium: linear-gradient(135deg, #D4AF37, #10B981); /* Gold-Green Blend */
-    --gradient-card: linear-gradient(145deg, #ffffff, #f8f8f8);
-    --gradient-gold-shimmer: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520, #D4AF37);
-    --gradient-elegant: linear-gradient(135deg, #D4AF37, #10B981, #D4AF37);
-    --gradient-hero-light: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+    --gradient-premium: linear-gradient(135deg, #C9860A, #E8A020); /* Amber blend */
+    --gradient-card: linear-gradient(145deg, #ffffff, #fafafa);
+    --gradient-gold-shimmer: linear-gradient(135deg, #C9860A, #E8A020, #F0B030, #C9860A);
+    --gradient-elegant: linear-gradient(135deg, #C9860A, #E8A020, #C9860A);
+    --gradient-hero-light: linear-gradient(135deg, #F2EDE4 0%, #EDE6D8 50%, #E5DBC8 100%);
 
     /* Enhanced Material Design Elevation Shadows with Gold Tint */
     --elevation-0: none;
@@ -133,15 +133,21 @@
     --tracking-normal: 0em;
     --spacing: 0.25rem;
 
-    /* Enhanced Islamic Theme Colors */
-    --islamic-gold: 45 100% 50%;
+    /* Azimuth Islamic Theme Colors */
+    --islamic-gold: 36 90% 40%; /* Amber #C9860A */
     --islamic-green: 120 100% 25%;
     --islamic-emerald: 140 100% 30%;
     --islamic-deep-green: 140 100% 15%;
-    --islamic-gold-gradient: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 100% 65%), hsl(32 90% 60%));
-    --islamic-gold-border: 1px solid hsl(45 100% 50% / 0.3);
-    --islamic-gold-glow: 0 0 30px hsl(45 100% 50% / 0.3);
-    --islamic-gold-shimmer: 0 0 20px hsl(45 100% 50% / 0.2);
+    --islamic-gold-gradient: linear-gradient(135deg, hsl(36 90% 40%), hsl(36 90% 52%), hsl(36 85% 48%));
+    --islamic-gold-border: 1px solid hsl(36 90% 40% / 0.3);
+    --islamic-gold-glow: 0 0 30px hsl(36 90% 40% / 0.25);
+    --islamic-gold-shimmer: 0 0 20px hsl(36 90% 40% / 0.18);
+    /* Warm cream helpers */
+    --warm-cream: #F2EDE4;
+    --warm-cream-dark: #EDE6D8;
+    --amber: #C9860A;
+    --amber-light: #E8A020;
+    --amber-muted: rgba(201,134,10,0.12);
 
     /* Enhanced Animation Timings */
     --animation-fast: 0.15s;
@@ -156,47 +162,47 @@
   }
 
   .dark {
-    /* Spotify-Inspired Modern Theme - Dark Mode */
-    --background: 0 0% 5%; /* Deep black #121212 */
-    --foreground: 0 0% 100%;
+    /* Azimuth-Inspired Warm Islamic Theme - Dark Mode */
+    --background: 222 15% 9%; /* Deep dark navy #0F1117 */
+    --foreground: 0 0% 96%;
 
-    --card: 0 0% 10%; /* #181818 */
-    --card-foreground: 0 0% 100%;
+    --card: 222 12% 14%; /* Dark card #1C2030 */
+    --card-foreground: 0 0% 96%;
 
-    --popover: 0 0% 15%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 222 12% 14%;
+    --popover-foreground: 0 0% 96%;
 
-    /* Gold + Green Accent Combo */
-    --primary: 45 85% 55%; /* Brighter Gold for dark mode */
+    /* Amber accent brighter for dark */
+    --primary: 36 90% 52%; /* Brighter amber for dark mode */
     --primary-foreground: 0 0% 0%;
-    --primary-glow: 45 85% 65%;
+    --primary-glow: 36 90% 62%;
 
-    --secondary: 150 70% 50%; /* Brighter Green for dark mode */
+    --secondary: 214 80% 60%; /* Blue for dark mode */
     --secondary-foreground: 0 0% 0%;
 
-    --muted: 0 0% 15%; /* #282828 */
-    --muted-foreground: 0 0% 70%; /* #B3B3B3 */
+    --muted: 222 12% 18%;
+    --muted-foreground: 220 8% 62%;
 
-    --accent: 45 85% 55%;
+    --accent: 36 90% 52%;
     --accent-foreground: 0 0% 0%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%; /* #282828 */
-    --input: 0 0% 20%;
-    --ring: 45 85% 55%;
+    --border: 222 10% 22%;
+    --input: 222 10% 22%;
+    --ring: 36 90% 52%;
 
-    /* Modern Gradients - Dark Mode */
-    --gradient-primary: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520); /* Gold */
-    --gradient-secondary: linear-gradient(135deg, #10B981, #059669, #047857); /* Green */
-    --gradient-gold: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520);
+    /* Dark Mode Gradients */
+    --gradient-primary: linear-gradient(135deg, #C9860A, #E8A020, #C9860A);
+    --gradient-secondary: linear-gradient(135deg, #3B82F6, #2563EB, #1D4ED8);
+    --gradient-gold: linear-gradient(135deg, #C9860A, #E8A020, #C9860A);
     --gradient-green: linear-gradient(135deg, #10B981, #059669, #047857);
-    --gradient-premium: linear-gradient(135deg, #D4AF37, #10B981); /* Gold-Green Blend */
-    --gradient-card: linear-gradient(145deg, #1e1e1e, #252525);
-    --gradient-gold-shimmer: linear-gradient(135deg, #D4AF37, #F4C430, #DAA520, #D4AF37);
-    --gradient-elegant: linear-gradient(135deg, #D4AF37, #10B981, #D4AF37);
-    --gradient-hero-dark: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    --gradient-premium: linear-gradient(135deg, #C9860A, #E8A020);
+    --gradient-card: linear-gradient(145deg, #1C2030, #222840);
+    --gradient-gold-shimmer: linear-gradient(135deg, #C9860A, #E8A020, #F0B030, #C9860A);
+    --gradient-elegant: linear-gradient(135deg, #C9860A, #E8A020, #C9860A);
+    --gradient-hero-dark: linear-gradient(135deg, #0F1117 0%, #141824 50%, #1C2030 100%);
 
     /* Enhanced Material Design Elevation Shadows for Dark Mode with Gold */
     --elevation-0: none;
@@ -249,15 +255,20 @@
     --card-gold-border: 1px solid hsl(45 100% 55% / 0.3);
     --card-gold-highlight: inset 0 1px 0 hsl(45 100% 55% / 0.2);
 
-    /* Enhanced Islamic Theme Colors */
-    --islamic-gold: 45 100% 55%;
+    /* Dark Mode Islamic Theme Colors */
+    --islamic-gold: 36 90% 52%;
     --islamic-green: 120 100% 25%;
     --islamic-emerald: 140 100% 30%;
     --islamic-deep-green: 140 100% 15%;
-    --islamic-gold-gradient: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 100% 65%), hsl(32 90% 60%));
-    --islamic-gold-border: 1px solid hsl(45 100% 55% / 0.3);
-    --islamic-gold-glow: 0 0 30px hsl(45 100% 55% / 0.3);
-    --islamic-gold-shimmer: 0 0 20px hsl(45 100% 55% / 0.2);
+    --islamic-gold-gradient: linear-gradient(135deg, hsl(36 90% 52%), hsl(36 90% 62%), hsl(36 85% 55%));
+    --islamic-gold-border: 1px solid hsl(36 90% 52% / 0.3);
+    --islamic-gold-glow: 0 0 30px hsl(36 90% 52% / 0.25);
+    --islamic-gold-shimmer: 0 0 20px hsl(36 90% 52% / 0.18);
+    --warm-cream: #1C2030;
+    --warm-cream-dark: #222840;
+    --amber: #E8A020;
+    --amber-light: #F0B030;
+    --amber-muted: rgba(232,160,32,0.12);
   }
 }
 

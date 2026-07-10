@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const PRAYER_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
-const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+const CHART_COLORS = ['#C9860A', '#E8A020', '#F3B140', '#FCD570', '#FDE7A6'];
 
 export default function PrayerStats() {
   const [history, setHistory] = useState<DailyPrayers[]>([]);
@@ -122,57 +122,58 @@ export default function PrayerStats() {
       
       <div className="max-w-lg mx-auto p-4 space-y-4">
         {/* Overview Card */}
-        <Card className="overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">30-Day Completion Rate</p>
-              <p className="text-5xl font-bold text-primary mb-2">{completionRate}%</p>
-              <p className="text-sm text-muted-foreground">
+        <Card className="overflow-hidden bg-[#1A1A1A] text-white border border-[#C9860A]/30 shadow-xl">
+          <div className="bg-gradient-to-br from-[#C9860A]/20 via-[#C9860A]/5 to-transparent p-6 relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[60px] pointer-events-none" />
+            <div className="text-center relative z-10">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9860A] mb-2">30-Day Completion Rate</p>
+              <p className="text-6xl font-bold text-white font-serif italic mb-2 drop-shadow-md">{completionRate}%</p>
+              <p className="text-xs font-medium text-white/60">
                 {stats.completedPrayers} of {stats.totalPrayers} prayers
               </p>
             </div>
           </div>
-          <CardContent className="p-4">
-            <Progress value={completionRate} className="h-3" />
+          <CardContent className="p-5 border-t border-[#C9860A]/10">
+            <Progress value={completionRate} className="h-2 bg-black/50" />
           </CardContent>
         </Card>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-primary mb-2">
+          <Card className="p-5 bg-card border-border/40 shadow-sm">
+            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-xs font-medium">Current Streak</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Current Streak</span>
             </div>
-            <p className="text-2xl font-bold">{stats.currentStreak} days</p>
+            <p className="text-3xl font-bold font-serif italic text-foreground">{stats.currentStreak} <span className="text-sm not-italic text-muted-foreground">days</span></p>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-primary mb-2">
+          <Card className="p-5 bg-card border-border/40 shadow-sm">
+            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <Award className="w-4 h-4" />
-              <span className="text-xs font-medium">Best Streak</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Best Streak</span>
             </div>
-            <p className="text-2xl font-bold">{stats.longestStreak} days</p>
+            <p className="text-3xl font-bold font-serif italic text-foreground">{stats.longestStreak} <span className="text-sm not-italic text-muted-foreground">days</span></p>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-primary mb-2">
+          <Card className="p-5 bg-card border-border/40 shadow-sm">
+            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <Target className="w-4 h-4" />
-              <span className="text-xs font-medium">Weekly Average</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Weekly Average</span>
             </div>
-            <p className="text-2xl font-bold">{stats.weeklyAverage}/5</p>
+            <p className="text-3xl font-bold font-serif italic text-foreground">{stats.weeklyAverage}<span className="text-sm not-italic text-muted-foreground">/5</span></p>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-primary mb-2">
+          <Card className="p-5 bg-card border-border/40 shadow-sm">
+            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <Calendar className="w-4 h-4" />
-              <span className="text-xs font-medium">Days Tracked</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Days Tracked</span>
             </div>
-            <p className="text-2xl font-bold">{history.length}</p>
+            <p className="text-3xl font-bold font-serif italic text-foreground">{history.length}</p>
           </Card>
         </div>
 
         {/* Weekly Chart */}
-        <Card>
+        <Card className="bg-card border-border/40 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Weekly Progress</CardTitle>
+            <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Weekly Progress</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-48">
@@ -188,7 +189,7 @@ export default function PrayerStats() {
                       borderRadius: '8px',
                     }}
                   />
-                  <Bar dataKey="completed" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completed" fill="#C9860A" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -196,9 +197,9 @@ export default function PrayerStats() {
         </Card>
 
         {/* Prayer Breakdown */}
-        <Card>
+        <Card className="bg-card border-border/40 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Prayer Breakdown</CardTitle>
+            <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Prayer Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">
@@ -229,8 +230,8 @@ export default function PrayerStats() {
                         className="w-3 h-3 rounded-full" 
                         style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                       />
-                      <span className="text-sm flex-1">{prayer.name}</span>
-                      <span className="text-sm font-medium">{rate}%</span>
+                      <span className="text-sm font-medium flex-1 tracking-wide">{prayer.name}</span>
+                      <span className="text-lg font-bold font-serif italic text-[#C9860A]">{rate}%</span>
                     </div>
                   );
                 })}
@@ -240,9 +241,9 @@ export default function PrayerStats() {
         </Card>
 
         {/* Recent History */}
-        <Card>
+        <Card className="bg-card border-border/40 shadow-sm pb-8">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Recent History</CardTitle>
+            <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Recent History</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {history.slice(0, 7).map(day => (
@@ -262,7 +263,7 @@ export default function PrayerStats() {
                       className="w-6 h-6 rounded-full flex items-center justify-center"
                     >
                       {day[key] ? (
-                        <CheckCircle className="w-4 h-4 text-primary" />
+                        <CheckCircle className="w-4 h-4 text-[#C9860A]" />
                       ) : (
                         <Circle className="w-4 h-4 text-muted-foreground/30" />
                       )}

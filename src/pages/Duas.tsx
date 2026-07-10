@@ -43,20 +43,20 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
 
   return (
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className={`p-4 relative overflow-hidden ${isDuaOfDay ? 'ring-2 ring-primary/30 bg-gradient-to-br from-primary/5 to-transparent' : ''}`}>
+      <Card className={`p-5 relative overflow-hidden border-border/40 shadow-sm ${isDuaOfDay ? 'border-[#C9860A]/30 bg-gradient-to-br from-[#C9860A]/5 to-transparent' : 'bg-card'}`}>
         {isDuaOfDay && (
-          <div className="absolute top-2 right-2">
-            <Badge className="bg-primary text-primary-foreground text-[9px] gap-1">
+          <div className="absolute top-3 right-3">
+            <Badge className="bg-[#C9860A] text-white text-[9px] font-bold uppercase tracking-[0.2em] gap-1 px-2 py-0.5">
               <Sparkles className="w-3 h-3" />
               Dua of the Day
             </Badge>
           </div>
         )}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              {isDuaOfDay && <Star className="w-3 h-3 text-primary fill-primary" />}
-              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium">
+              {isDuaOfDay && <Star className="w-3 h-3 text-[#C9860A] fill-[#C9860A]" />}
+              <span className="px-2 py-0.5 bg-[#C9860A]/10 text-[#C9860A] text-[9px] font-bold uppercase tracking-[0.2em] rounded-full">
                 {dua.category}
               </span>
               {dua.repeatCount && (
@@ -67,40 +67,40 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
               )}
             </div>
             <div className="flex gap-0.5">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => playAudio(dua.arabic)}>
-                <Volume2 className={`w-4 h-4 ${isPlaying ? 'text-primary' : ''}`} />
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-[#C9860A]/10" onClick={() => playAudio(dua.arabic)}>
+                <Volume2 className={`w-4 h-4 ${isPlaying ? 'text-[#C9860A]' : 'text-muted-foreground'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onToggleFavorite(dua.id)}>
-                <Heart className={`w-4 h-4 ${isFavorite ? "fill-destructive text-destructive" : ""}`} />
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10" onClick={() => onToggleFavorite(dua.id)}>
+                <Heart className={`w-4 h-4 ${isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShare(dua)}>
                 <Share2 className="w-4 h-4" />
               </Button>
             </div>
           </div>
-          <p className="text-xl font-arabic text-right leading-loose tracking-wide">{dua.arabic}</p>
-          <p className="text-sm italic text-primary/80 leading-relaxed">{dua.transliteration}</p>
-          <p className="text-sm text-muted-foreground leading-relaxed">{dua.translation}</p>
+          <p className="text-2xl font-arabic font-bold text-foreground text-right leading-[2] tracking-wide mt-2">{dua.arabic}</p>
+          <p className="text-base font-serif italic text-[#C9860A] leading-relaxed">{dua.transliteration}</p>
+          <p className="text-sm text-foreground/80 leading-relaxed font-medium">{dua.translation}</p>
           {dua.reference && (
-            <p className="text-xs text-muted-foreground/60 font-medium">{dua.reference}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{dua.reference}</p>
           )}
           {dua.repeatCount && (
             <div className="pt-2 border-t border-border/30">
               {playCounter ? (
                 <div className="flex items-center gap-3">
-                  <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => { setCounter(c => Math.max(0, c - 1)); }}>
+                  <Button size="sm" variant="outline" className="h-8 px-3 text-xs border-border/50" onClick={() => { setCounter(c => Math.max(0, c - 1)); }}>
                     <Minus className="w-3 h-3 mr-1" />1
                   </Button>
                   <div className="flex-1 text-center">
-                    <p className="text-2xl font-bold text-primary font-mono">{counter}</p>
-                    <p className="text-[9px] text-muted-foreground uppercase tracking-wider">/ {dua.repeatCount}</p>
+                    <p className="text-2xl font-bold text-[#C9860A] font-serif italic">{counter}</p>
+                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">/ {dua.repeatCount}</p>
                   </div>
-                  <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => { setCounter(c => Math.min(dua.repeatCount!, c + 1)); }}>
+                  <Button size="sm" variant="outline" className="h-8 px-3 text-xs border-border/50" onClick={() => { setCounter(c => Math.min(dua.repeatCount!, c + 1)); }}>
                     <Plus className="w-3 h-3 mr-1" />1
                   </Button>
                 </div>
               ) : (
-                <Button size="sm" variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => setPlayCounter(true)}>
+                <Button size="sm" variant="ghost" className="w-full text-xs text-muted-foreground hover:text-foreground" onClick={() => setPlayCounter(true)}>
                   <Plus className="w-3 h-3 mr-1" />
                   Track Repetition ({dua.repeatCount}x)
                 </Button>
@@ -176,15 +176,15 @@ const Duas = memo(function Duas() {
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full hover:bg-muted/50">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-foreground">Duas</h1>
-            <p className="text-xs text-muted-foreground">{duasData.length} Supplications</p>
+            <h1 className="text-2xl font-bold text-foreground font-serif italic tracking-tight">Duas</h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">{duasData.length} Supplications</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-            <BookHeart className="w-5 h-5 text-primary-foreground" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C9860A]/20 to-[#E8A020]/5 flex items-center justify-center border border-[#C9860A]/10 shadow-sm">
+            <BookHeart className="w-5 h-5 text-[#C9860A]" />
           </div>
         </div>
 
@@ -195,7 +195,7 @@ const Duas = memo(function Duas() {
             placeholder="Search duas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 rounded-2xl bg-card border-border/40"
+            className="pl-10 h-12 rounded-xl bg-card border-border/40 shadow-sm focus-visible:ring-[#C9860A]/50"
           />
         </div>
 
@@ -219,7 +219,7 @@ const Duas = memo(function Duas() {
                 variant={selectedCategory === cat ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(cat)}
-                className="whitespace-nowrap text-xs rounded-full"
+                className={`whitespace-nowrap text-xs rounded-full font-bold shadow-sm ${selectedCategory === cat ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'bg-card text-muted-foreground hover:text-foreground border-border/40'}`}
               >
                 {cat}
               </Button>
@@ -229,7 +229,7 @@ const Duas = memo(function Duas() {
 
         {/* Results count */}
         <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             {filteredDuas.length} {filteredDuas.length === 1 ? 'dua' : 'duas'}
             {searchQuery && ` matching "${searchQuery}"`}
           </p>
@@ -242,12 +242,12 @@ const Duas = memo(function Duas() {
         </div>
 
         {/* Duas List */}
-        <div className="space-y-3 pb-20">
+        <div className="space-y-4 pb-20">
           {filteredDuas.length === 0 ? (
-            <Card className="p-8 text-center">
+            <Card className="p-8 text-center bg-card border-border/40 shadow-sm">
               <BookHeart className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground">No duas found</p>
-              <Button variant="link" size="sm" onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">No duas found</p>
+              <Button variant="outline" size="sm" className="font-bold border-border/40 hover:bg-muted/50" onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}>
                 Clear filters
               </Button>
             </Card>

@@ -104,41 +104,41 @@ export function RamadanWidget({
 
   if (!isRamadan) {
     return (
-      <Card className="relative overflow-hidden border-emerald-200/60 bg-gradient-to-br from-emerald-50/70 via-card to-transparent dark:from-emerald-950/20 dark:via-card dark:to-transparent">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
+      <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Moon className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 text-white">
+              <Moon className="w-4 h-4 text-[#C9860A]" />
               Ramadan
             </CardTitle>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-3 rounded-xl"
+              className="h-8 px-3 rounded-xl text-[#C9860A] hover:text-[#E8A020] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
               onClick={() => navigate("/ramadan")}
             >
               Open
               <ArrowUpRight className="w-4 h-4 ms-1" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-2">
             Set goals, track fasting, and get Suhoor/Iftar times.
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <Badge variant="secondary" className="rounded-full">
+          <div className="flex items-center justify-between gap-2 text-[10px] uppercase font-bold tracking-widest">
+            <Badge variant="secondary" className="rounded-full bg-[#C9860A]/10 text-[#C9860A] border-none">
               Not in Ramadan
             </Badge>
-            <Badge variant="outline" className="rounded-full">
+            <Badge variant="outline" className="rounded-full border-[#C9860A]/30 text-white/60">
               Plan ahead
             </Badge>
           </div>
           <Button
             variant="default"
             size="sm"
-            className="w-full rounded-xl"
+            className="w-full rounded-xl bg-[#C9860A] text-white hover:bg-[#C9860A]/90 font-bold uppercase tracking-wider text-[10px]"
             onClick={() => navigate("/ramadan")}
           >
             Open Ramadan Mode
@@ -151,15 +151,15 @@ export function RamadanWidget({
   const hasTimes = Boolean(fajrStart && maghribStart);
 
   return (
-    <Card className="relative overflow-hidden border-emerald-200/60 bg-gradient-to-br from-emerald-50/70 via-card to-transparent dark:from-emerald-950/20 dark:via-card dark:to-transparent">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
+    <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Moon className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+          <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 text-white">
+            <Moon className="w-4 h-4 text-[#C9860A]" />
             Ramadan
           </CardTitle>
-          <Badge variant="secondary" className="rounded-full">
+          <Badge variant="secondary" className="rounded-full bg-[#C9860A]/10 text-[#C9860A] border-none uppercase tracking-widest font-bold text-[10px]">
             Day {ramadanDay || "—"}
           </Badge>
         </div>
@@ -167,52 +167,52 @@ export function RamadanWidget({
 
       <CardContent className="space-y-4">
         {!hasTimes ? (
-          <div className="text-sm text-muted-foreground">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">
             Loading Suhoor and Iftar times…
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-2xl border border-border/60 bg-card/70">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Sunrise className="w-3.5 h-3.5" />
+              <div className="p-3 rounded-2xl bg-card/50 border border-border/40 backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-[9px] uppercase tracking-wider font-bold text-muted-foreground mb-1">
+                  <Sunrise className="w-3.5 h-3.5 text-[#C9860A]" />
                   Suhoor ends
                 </div>
-                <div className="text-lg font-bold tabular-nums text-foreground">
+                <div className="text-xl font-bold font-serif italic tabular-nums text-white">
                   {suhoorTimeText}
                 </div>
               </div>
-              <div className="p-3 rounded-2xl border border-border/60 bg-card/70">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Sunset className="w-3.5 h-3.5" />
+              <div className="p-3 rounded-2xl bg-card/50 border border-border/40 backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-[9px] uppercase tracking-wider font-bold text-muted-foreground mb-1">
+                  <Sunset className="w-3.5 h-3.5 text-[#C9860A]" />
                   Iftar
                 </div>
-                <div className="text-lg font-bold tabular-nums text-foreground">
+                <div className="text-xl font-bold font-serif italic tabular-nums text-white">
                   {iftarTimeText}
                 </div>
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-200/60">
+            <div className="p-3 rounded-2xl bg-[#C9860A]/10 border border-[#C9860A]/30">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Timer className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-                  <span className="text-sm font-semibold text-foreground">{nextLabel || "Next"}</span>
+                  <Timer className="w-4 h-4 text-[#C9860A]" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white">{nextLabel || "Next"}</span>
                 </div>
-                <span className="text-sm font-bold tabular-nums text-emerald-800 dark:text-emerald-300">
+                <span className="text-sm font-bold tabular-nums text-[#C9860A]">
                   {countdown || "—"}
                 </span>
               </div>
 
               {typeof fastingProgress === "number" && (
                 <div className="mt-3">
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     <span>Fasting progress</span>
-                    <span className="font-semibold">{fastingProgress}%</span>
+                    <span className="font-bold text-[#C9860A]">{fastingProgress}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-emerald-900/10 overflow-hidden">
+                  <div className="h-2 rounded-full bg-black/50 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 transition-all duration-500"
+                      className="h-full rounded-full bg-[#C9860A] transition-all duration-500"
                       style={{ width: `${fastingProgress}%` }}
                     />
                   </div>
@@ -223,7 +223,7 @@ export function RamadanWidget({
             <Button
               variant="outline"
               size="sm"
-              className="w-full rounded-xl"
+              className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
               onClick={() => navigate("/ramadan")}
             >
               Open Ramadan Mode

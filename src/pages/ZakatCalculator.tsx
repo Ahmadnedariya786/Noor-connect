@@ -387,8 +387,9 @@ export default function ZakatCalculator() {
 
         <div className="max-w-lg mx-auto p-4 space-y-4">
           {/* Info Card */}
-          <Card className="bg-primary/10 border-primary/20">
-            <CardContent className="p-4">
+          <Card className="relative overflow-hidden border-[#C9860A]/20 bg-card shadow-sm">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-2xl pointer-events-none" />
+            <CardContent className="p-5 relative z-10">
               <div className="flex items-start gap-3">
                 <Info className="w-5 h-5 text-primary mt-0.5" />
                 <div className="space-y-1">
@@ -408,10 +409,10 @@ export default function ZakatCalculator() {
           </Card>
 
           {/* Currency */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-primary" />
+          <Card className="border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b border-border/40 bg-muted/20">
+              <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 text-muted-foreground">
+                <DollarSign className="w-3.5 h-3.5 text-[#C9860A]" />
                 Currency & Standard
               </CardTitle>
             </CardHeader>
@@ -461,10 +462,10 @@ export default function ZakatCalculator() {
           </Card>
 
           {/* Metal Prices */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Coins className="w-4 h-4 text-primary" />
+          <Card className="border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b border-border/40 bg-muted/20">
+              <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 text-muted-foreground">
+                <Coins className="w-3.5 h-3.5 text-[#C9860A]" />
                 Metal Prices (per gram)
                 <Button
                   variant="ghost"
@@ -585,12 +586,12 @@ export default function ZakatCalculator() {
           </Card>
 
           {/* Assets */}
-          <Accordion type="single" collapsible defaultValue="assets">
-            <AccordionItem value="assets">
-              <AccordionTrigger className="text-base font-semibold">
-                <div className="flex items-center gap-2">
-                  <Banknote className="w-4 h-4 text-primary" />
-                  Assets ({formatMoney(totalAssets)})
+          <Accordion type="single" collapsible defaultValue="assets" className="bg-card border border-border/40 rounded-xl shadow-sm px-4">
+            <AccordionItem value="assets" className="border-none">
+              <AccordionTrigger className="text-[10px] uppercase tracking-[0.2em] font-bold hover:no-underline py-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Banknote className="w-4 h-4 text-[#C9860A]" />
+                  Assets <span className="font-serif italic text-sm tracking-normal text-foreground ml-2">{formatMoney(totalAssets)}</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
@@ -678,10 +679,10 @@ export default function ZakatCalculator() {
                       </div>
 
                       {/* Calculated Value */}
-                      <div className="bg-primary/10 p-3 rounded-lg">
+                      <div className="bg-[#C9860A]/5 border border-[#C9860A]/20 p-3 rounded-lg mt-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Total Gold Value:</span>
-                          <span className="text-lg font-bold text-primary">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-[#C9860A]">Total Gold Value</span>
+                          <span className="text-lg font-bold text-foreground font-serif italic">
                             {formatMoney(calculateGoldValue)}
                           </span>
                         </div>
@@ -753,10 +754,10 @@ export default function ZakatCalculator() {
                       </div>
 
                       {/* Calculated Value */}
-                      <div className="bg-primary/10 p-3 rounded-lg">
+                      <div className="bg-[#C9860A]/5 border border-[#C9860A]/20 p-3 rounded-lg mt-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Total Silver Value:</span>
-                          <span className="text-lg font-bold text-primary">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-[#C9860A]">Total Silver Value</span>
+                          <span className="text-lg font-bold text-foreground font-serif italic">
                             {formatMoney(calculateSilverValue)}
                           </span>
                         </div>
@@ -805,12 +806,12 @@ export default function ZakatCalculator() {
           </Accordion>
 
           {/* Liabilities */}
-          <Accordion type="single" collapsible>
-            <AccordionItem value="liabilities">
-              <AccordionTrigger className="text-base font-semibold">
-                <div className="flex items-center gap-2">
+          <Accordion type="single" collapsible className="bg-card border border-border/40 rounded-xl shadow-sm px-4">
+            <AccordionItem value="liabilities" className="border-none">
+              <AccordionTrigger className="text-[10px] uppercase tracking-[0.2em] font-bold hover:no-underline py-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Building className="w-4 h-4 text-destructive" />
-                  Liabilities ({formatMoney(totalLiabilities)})
+                  Liabilities <span className="font-serif italic text-sm tracking-normal text-destructive ml-2">{formatMoney(totalLiabilities)}</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
@@ -848,10 +849,11 @@ export default function ZakatCalculator() {
           </Accordion>
 
           {/* Results */}
-          <Card className={`border-2 ${isZakatDue ? 'border-primary bg-primary/5' : 'border-muted'}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calculator className="w-5 h-5" />
+          <Card className={`relative overflow-hidden border-2 shadow-xl ${isZakatDue ? 'border-[#C9860A]/40 bg-[#1A1A1A] text-white' : 'border-border/40'}`}>
+            {isZakatDue && <div className="absolute inset-0 bg-gradient-to-br from-[#C9860A]/10 to-transparent pointer-events-none" />}
+            <CardHeader className="pb-3 border-b border-white/5 relative z-10">
+              <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 text-[#C9860A]">
+                <Calculator className="w-3.5 h-3.5" />
                 Zakat Calculation
               </CardTitle>
             </CardHeader>
@@ -875,19 +877,20 @@ export default function ZakatCalculator() {
                 </div>
               </div>
 
-              <div className={`p-4 rounded-lg ${isZakatDue ? 'bg-primary/20' : 'bg-muted'}`}>
-                <div className="text-center">
+              <div className={`p-6 rounded-xl border relative overflow-hidden ${isZakatDue ? 'bg-black/20 border-[#C9860A]/20' : 'bg-muted/30 border-transparent'}`}>
+                {isZakatDue && <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-3xl pointer-events-none" />}
+                <div className="text-center relative z-10">
                   {isZakatDue ? (
                     <>
-                      <p className="text-sm text-muted-foreground mb-1">Your Zakat Due (2.5%)</p>
-                      <p className="text-3xl font-bold text-primary">{formatMoney(zakatAmount)}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
+                      <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#C9860A] mb-2">Your Zakat Due (2.5%)</p>
+                      <p className="text-4xl font-bold text-white font-serif italic tracking-tight">{formatMoney(zakatAmount)}</p>
+                      <p className="text-xs text-white/50 mt-3 font-medium">
                         May Allah accept your Zakat and bless your wealth
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-sm font-medium">Zakat Not Due</p>
+                      <p className="text-sm font-semibold">Zakat Not Due</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Your net worth is below the Nisab threshold
                       </p>
@@ -903,9 +906,9 @@ export default function ZakatCalculator() {
           </Card>
 
           {/* Zakat Info */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Who Can Receive Zakat?</CardTitle>
+          <Card className="border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b border-border/40 bg-muted/20">
+              <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">Who Can Receive Zakat?</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="text-xs text-muted-foreground space-y-1">

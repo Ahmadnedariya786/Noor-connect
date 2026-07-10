@@ -23,7 +23,7 @@ export const FeatureCards = memo(function FeatureCards({ onNavigate }: FeatureCa
       title: 'Quran',
       description: 'Read & Listen',
       icon: BookOpen,
-      gradient: 'from-[#10b981] via-[#059669] to-[#047857]',
+      gradient: 'from-[#1A1A1A] to-[#1A1A1A]',
       route: '/quran',
       stats: '114 Surahs'
     },
@@ -32,7 +32,7 @@ export const FeatureCards = memo(function FeatureCards({ onNavigate }: FeatureCa
       title: 'Prayer',
       description: 'Times',
       icon: Building,
-      gradient: 'from-[#3b82f6] via-[#2563eb] to-[#1d4ed8]',
+      gradient: 'from-[#1A1A1A] to-[#1A1A1A]',
       route: '/prayer-times',
       stats: '5 Daily'
     },
@@ -41,7 +41,7 @@ export const FeatureCards = memo(function FeatureCards({ onNavigate }: FeatureCa
       title: 'Services',
       description: 'All Features',
       icon: Grid3X3,
-      gradient: 'from-[#f59e0b] via-[#d97706] to-[#b45309]',
+      gradient: 'from-[#1A1A1A] to-[#1A1A1A]',
       route: '/services',
       stats: '15+ Features'
     }
@@ -55,15 +55,15 @@ export const FeatureCards = memo(function FeatureCards({ onNavigate }: FeatureCa
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onNavigate(card.route)}
-          className="relative overflow-hidden rounded-2xl p-4 text-left group active:scale-[0.98] transition-transform"
+          className="relative overflow-hidden rounded-2xl p-4 text-left group active:scale-[0.98] transition-transform border border-[#C9860A]/30 shadow-md"
         >
           <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient}`} />
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-10">
-            <card.icon className="w-6 h-6 text-white mb-2" />
-            <h3 className="text-white font-black text-sm mb-1">{card.title}</h3>
-            <p className="text-white/80 text-[10px] font-medium">{card.description}</p>
-            <p className="text-white/60 text-[9px] mt-2 font-bold uppercase tracking-wider">{card.stats}</p>
+            <card.icon className="w-6 h-6 text-[#C9860A] mb-2" />
+            <h3 className="text-white font-bold font-serif italic text-base mb-1">{card.title}</h3>
+            <p className="text-white/60 text-[10px] font-medium">{card.description}</p>
+            <p className="text-[#C9860A] text-[9px] mt-2 font-bold uppercase tracking-widest">{card.stats}</p>
           </div>
         </m.button>
       ))}

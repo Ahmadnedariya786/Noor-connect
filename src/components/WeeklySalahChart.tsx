@@ -71,29 +71,29 @@ export function WeeklySalahChart() {
   }, [refreshData]);
 
   const getBarColor = (completed: number): string => {
-    if (completed === 5) return "hsl(var(--primary))";
-    if (completed >= 3) return "hsl(var(--primary) / 0.7)";
-    if (completed >= 1) return "hsl(var(--primary) / 0.4)";
-    return "hsl(var(--muted))";
+    if (completed === 5) return "#C9860A";
+    if (completed >= 3) return "rgba(201,134,10,0.65)";
+    if (completed >= 1) return "rgba(201,134,10,0.35)";
+    return "rgba(255,255,255,0.08)";
   };
 
   return (
-    <Card className="bg-card border-border overflow-hidden min-h-[200px]">
+    <Card className="bg-[#1A1A1A] border border-[#C9860A]/30 overflow-hidden min-h-[200px] shadow-md">
       <CardHeader className="pb-2 pt-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
+          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-[#C9860A]" />
             {ti18n('weeklyProgress')}
           </CardTitle>
-          <div className="flex items-center gap-1.5 text-xs">
-            <TrendingUp className="w-3 h-3 text-primary" />
-            <span className="font-semibold text-primary">{weeklyStats.percentage}%</span>
+          <div className="flex items-center gap-1.5 text-[10px]">
+            <TrendingUp className="w-3 h-3 text-[#C9860A]" />
+            <span className="font-bold font-serif italic text-[#C9860A]">{weeklyStats.percentage}%</span>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pb-4">
         {/* Stats Summary */}
-        <div className="flex items-center justify-between mb-3 text-xs">
+        <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-widest">
           <span className="text-muted-foreground">
             {weeklyStats.completed} / {weeklyStats.total} {ti18n('prayersThisWeek')}
           </span>
@@ -132,17 +132,17 @@ export function WeeklySalahChart() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-3 text-[10px] text-muted-foreground">
+        <div className="flex items-center justify-center gap-4 mt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-primary" />
+            <div className="w-2 h-2 rounded-full bg-[#C9860A]" />
             <span>5/5</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-primary/70" />
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(201,134,10,0.65)' }} />
             <span>3-4</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-primary/40" />
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(201,134,10,0.35)' }} />
             <span>1-2</span>
           </div>
           <div className="flex items-center gap-1">
