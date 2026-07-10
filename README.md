@@ -39,6 +39,18 @@
 - Background processing for heavy ops
 - Smart backup detection without CPU/RAM load
 
+### 📚 Hadith Collection Overhaul — 87K Hadith
+- **16 Collections, 87,018 Hadith**: Complete authenticated collections including Bukhari (7,563), Muslim (5,366), Tirmidhi (5,345), Abu Dawud (10,547), Nasai (7,084), Ibn Majah (8,685), plus 10 more (Ahmad, Mishkat, Riyad us-Saliheen, Muwatta Malik, Darimi, Bulugh, Adab, Shamail, Forty Hadith, Hisnul Muslim)
+- **Bookmarks System**: Save/unsave hadith with localStorage persistence, dedicated bookmarks page at `/hadith/bookmarks` with clear-all and per-item remove
+- **Premium Viewer**: Full-screen detail view with grade-colored badges, smooth navigation between hadith, Arabic text at optimal sizes
+- **Daily Hadith** with Arabic + English + source, refreshable, in both dashboard widget and dedicated page
+- **Performance**: All data loaded lazily via fetch (not bundled), cached after first load
+
+### ⚡ Performance Optimization — RAF Loop Cleanup
+- Removed `monitorFPS()` continuous RAF loop from App.tsx (was running forever, doing nothing but console.warn)
+- Converted `useAnimationTier` FPS monitor from per-instance to module-level singleton (was starting 1 RAF loop per component — stopped at 4+ concurrent loops)
+- Removed empty scroll RAF handler that fired on every scroll event doing no work
+
 ### 🐛 Critical Fixes
 - JSON.parse safety (try-catch everywhere)
 - TypeScript strictness (no `as any`, proper types)
@@ -87,7 +99,7 @@
 - **Eid & Festive Checklist**: Special event mode with checklists and celebratory popups to prepare for Eid and other significant Islamic events.
 
 ### 📻 Rich Media & Islamic Library
-- **Optimized E-books & Hadith**: Effortlessly read through massive PDF libraries and Hadith encyclopedias using an optimized, lag-free UI design.
+- **Hadith Encyclopedia (87K)**: 16 complete collections with Arabic + English, grade badges, bookmarks, daily hadith widget, and full-text navigation.
 - **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via Akamai CDN (hls_roku) for reliable HLS streaming. CSP-compliant HTTP support included.
 - **Radio Statistics & Achievements**: Track your listening habits with detailed statistics per station, total listening time, streak tracking, and unlockable achievements for consistent listening.
 - **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication and reduce APK size (168MB → 84MB). F-Droid compatible.
@@ -122,10 +134,10 @@ Noor Connect is built from the ground up for performance and ethical transparenc
 - **Low-End Device Optimizations** (2016+ devices, 30+ FPS target):
   - Adaptive device detection (`device-performance.ts`) — CPU cores, device memory, connection type, save-data mode
   - Automatic animation reduction (`shouldReduceAnimations`) respecting `prefers-reduced-motion`
-  - Debounced/throttled event handlers, RAF-based scroll optimization
+  - Debounced/throttled event handlers
   - IntersectionObserver lazy loading, critical resource preloading
-  - Memory pressure monitoring with GC trigger (devtools)
   - Performance mode presets: low/medium/high based on hardware
+  - **Singleton FPS monitor**: Module-level RAF loop with ref counting — only 1 loop total, auto-stops when no listeners remain
 - **React Query Tuning**: Stale times, cache times, and retry policies adapted for constrained devices
 
 ---
