@@ -18,16 +18,12 @@ import { LazyMotionWrapper } from "@/components/LazyMotionWrapper";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n-new";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
-import { isLowEndDevice as checkLowEndDevice } from "@/lib/device-performance";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
 import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
-import { 
-  shouldReduceAnimations, 
-  optimizeScrollPerformance, 
-  preloadCriticalResources,
-  monitorFPS
-} from "@/lib/performance-optimizations";
+import { useAnimationTier } from "@/hooks/useAnimationTier";
+import { preloadCriticalResources, optimizeScrollPerformance, shouldReduceAnimations } from "@/lib/performance-optimizations";
+import { checkLowEndDevice } from "@/lib/device-performance";
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -251,8 +247,9 @@ function AppRoutes() {
 
 function AppContent() {
   const { animationEnabled, greetingEnabled } = useSettings();
-  const reduceMotion = shouldReduceAnimations();
-  
+  const tier = useAnimationTier();
+  const reduceMotion = tier.shouldReduceAnimations;
+
   return (
     <MotionConfig reducedMotion={reduceMotion ? "always" : (animationEnabled ? "never" : "user")}>
       <LazyMotionWrapper>
@@ -312,7 +309,7 @@ function AppShell() {
     
     // Monitor FPS for performance tracking (only on non-low-end devices)
     if (!isLowEndForShell) {
-      const stopMonitoring = monitorFPS((fps) => {
+      const stopMonitoring = getPerformanceMonitor().startMonitoring((fps) => {
         if (fps < 20) {
           console.warn('Low FPS detected:', fps);
           // Could trigger additional optimizations here

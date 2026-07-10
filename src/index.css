@@ -1012,6 +1012,171 @@
     transform: scale(1.1);
   }
 
+  /* ============================================
+     PERFORMANCE OPTIMIZATIONS - GPU ACCELERATION
+     ============================================ */
+
+  /* Force GPU compositing for animated elements */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+    will-change: transform, opacity;
+  }
+
+  /* Reduced motion - disable heavy effects */
+  @media (prefers-reduced-motion: reduce) {
+    .gpu-accelerated {
+      will-change: auto;
+      transform: none;
+    }
+    
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Contain paint/layout for scroll performance */
+  .contain-paint {
+    contain: paint;
+  }
+  
+  .contain-layout {
+    contain: layout;
+  }
+  
+  .contain-strict {
+    contain: strict;
+  }
+
+  /* Content-visibility for offscreen elements */
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+  }
+
+  /* Virtualization helpers */
+  .virtual-list {
+    contain: layout paint;
+    overflow-anchor: none;
+  }
+
+  .virtual-item {
+    contain: layout paint style;
+  }
+
+  /* Optimized scroll container */
+  .optimized-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    will-change: scroll-position;
+  }
+
+  /* Reduce paint area for animations */
+  .reduce-paint {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    perspective: 1000;
+  }
+
+  /* Image optimization */
+  .optimized-image {
+    content-visibility: auto;
+    contain-intrinsic-size: 200px 200px;
+  }
+
+  /* Disable backdrop-filter on low-end by default */
+  .blur-light {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  .blur-medium {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blur-light,
+    .blur-medium,
+    .blur-heavy {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+  }
+
+  /* Animation tier utilities */
+  .animate-tier-high {
+    animation: none;
+  }
+  
+  .animate-tier-medium {
+    animation-duration: 0.3s;
+  }
+  
+  .animate-tier-low {
+    animation-duration: 0.15s;
+  }
+  
+  .animate-tier-minimal {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Stagger animation utilities */
+  .stagger-1 { animation-delay: 0ms; }
+  .stagger-2 { animation-delay: 50ms; }
+  .stagger-3 { animation-delay: 100ms; }
+  .stagger-4 { animation-delay: 150ms; }
+  .stagger-5 { animation-delay: 200ms; }
+  .stagger-6 { animation-delay: 250ms; }
+  .stagger-7 { animation-delay: 300ms; }
+  .stagger-8 { animation-delay: 350ms; }
+  .stagger-9 { animation-delay: 400ms; }
+  .stagger-10 { animation-delay: 450ms; }
+
+  /* CSS-only micro-interactions (GPU accelerated) */
+  .micro-tap {
+    transition: transform 100ms ease-out;
+  }
+  .micro-tap:active {
+    transform: scale(0.96);
+  }
+  
+  .micro-hover-lift {
+    transition: transform 150ms ease-out;
+  }
+  .micro-hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .micro-hover-scale {
+    transition: transform 100ms ease-out;
+  }
+  .micro-hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  /* FPS monitoring */
+  .fps-monitor {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.8);
+    color: #0f0;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 12px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
   /* Enhanced Premium Islamic Scrollbar */
   .scrollbar-premium-islamic::-webkit-scrollbar-thumb {
     background: hsl(var(--islamic-gold) / 0.5);

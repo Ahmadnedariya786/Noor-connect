@@ -1,6 +1,7 @@
 /**
  * Device Performance Detection Utility
- * Detects low-end devices based on hardware capabilities
+ * Real FPS benchmarking + hardware detection for progressive enhancement
+ * Targets 30+ FPS on 2016+ devices (1.5GB RAM, 4 cores, budget GPU)
  */
 
 export interface DeviceCapabilities {
@@ -9,6 +10,12 @@ export interface DeviceCapabilities {
   connectionType: string | null;
   effectiveConnectionType: string | null;
   saveDataMode: boolean;
+  isMobile: boolean;
+  gpuRenderer: string | null;
+  webglSupport: 'webgl2' | 'webgl1' | 'none';
+  maxTextureSize: number;
+  screenRefreshRate: number;
+  devicePixelRatio: number;
 }
 
 export interface LowEndDeviceThresholds {
@@ -16,13 +23,62 @@ export interface LowEndDeviceThresholds {
   minDeviceMemory: number;
   slowConnectionTypes: string[];
   slowEffectiveConnectionTypes: string[];
+  maxTextureSize: number;
 }
 
 const DEFAULT_THRESHOLDS: LowEndDeviceThresholds = {
-  minCpuCores: 4, // Devices with less than 4 CPU cores are considered low-end
-  minDeviceMemory: 4, // Devices with less than 4GB RAM are considered low-end
+  minCpuCores: 4,
+  minDeviceMemory: 2,
   slowConnectionTypes: ['slow-2g', '2g', '3g'],
   slowEffectiveConnectionTypes: ['slow-2g', '2g', '3g'],
+  maxTextureSize: 4096,
+};
+
+export interface AnimationTier {
+  tier: 'high' | 'medium' | 'low' | 'minimal';
+  fps: number;
+  shouldReduceAnimations: boolean;
+  shouldDisableLayoutAnimations: boolean;
+  shouldDisableStagger: boolean;
+  maxConcurrentAnimations: number;
+  staggerLimit: number;
+  particleCount: number;
+  reasons: string[];
+}
+
+const TIER_DEFAULTS: Record<AnimationTier['tier'], Omit<AnimationTier, 'tier' | 'fps' | 'reasons'>> = {
+  high: {
+    shouldReduceAnimations: false,
+    shouldDisableLayoutAnimations: false,
+    shouldDisableStagger: false,
+    maxConcurrentAnimations: 20,
+    staggerLimit: 50,
+    particleCount: 100,
+  },
+  medium: {
+    shouldReduceAnimations: true,
+    shouldDisableLayoutAnimations: true,
+    shouldDisableStagger: false,
+    maxConcurrentAnimations: 10,
+    staggerLimit: 20,
+    particleCount: 30,
+  },
+  low: {
+    shouldReduceAnimations: true,
+    shouldDisableLayoutAnimations: true,
+    shouldDisableStagger: true,
+    maxConcurrentAnimations: 5,
+    staggerLimit: 10,
+    particleCount: 10,
+  },
+  minimal: {
+    shouldReduceAnimations: true,
+    shouldDisableLayoutAnimations: true,
+    shouldDisableStagger: true,
+    maxConcurrentAnimations: 0,
+    staggerLimit: 0,
+    particleCount: 0,
+  },
 };
 
 /**
@@ -30,19 +86,23 @@ const DEFAULT_THRESHOLDS: LowEndDeviceThresholds = {
  */
 export function getDeviceCapabilities(): DeviceCapabilities {
   const capabilities: DeviceCapabilities = {
-    cpuCores: navigator.hardwareConcurrency || 4, // Default to 4 if not available
+    cpuCores: navigator.hardwareConcurrency || 4,
     deviceMemory: null,
     connectionType: null,
     effectiveConnectionType: null,
     saveDataMode: false,
+    isMobile: /Mobi|Android/i.test(navigator.userAgent),
+    gpuRenderer: null,
+    webglSupport: 'none',
+    maxTextureSize: 0,
+    screenRefreshRate: 60,
+    devicePixelRatio: window.devicePixelRatio || 1,
   };
 
-  // navigator.deviceMemory is not available in all browsers
   if ('deviceMemory' in navigator) {
     capabilities.deviceMemory = (navigator as any).deviceMemory;
   }
 
-  // navigator.connection is not available in all browsers
   if ('connection' in navigator) {
     const connection = (navigator as any).connection;
     capabilities.connectionType = connection.type || null;
@@ -50,83 +110,309 @@ export function getDeviceCapabilities(): DeviceCapabilities {
     capabilities.saveDataMode = connection.saveData || false;
   }
 
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    if (gl) {
+      capabilities.webglSupport = gl instanceof WebGL2RenderingContext ? 'webgl2' : 'webgl1';
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        capabilities.gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || null;
+      }
+      capabilities.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    }
+  } catch {
+    // WebGL not available
+  }
+
   return capabilities;
 }
 
 /**
- * Check if the current device is considered low-end based on hardware capabilities
+ * Run real FPS benchmark (CSS transforms + Canvas 2D + WebGL)
+ * Returns average FPS across 3 tests weighted by importance
  */
-export function isLowEndDevice(
-  thresholds: LowEndDeviceThresholds = DEFAULT_THRESHOLDS
-): boolean {
-  const capabilities = getDeviceCapabilities();
-  let lowEndScore = 0;
+export async function runFPSBenchmark(): Promise<{
+  css: { fps: number; jankScore: number };
+  canvas: { fps: number; jankScore: number };
+  webgl: { fps: number; jankScore: number };
+  composite: { fps: number; tier: AnimationTier['tier'] };
+}> {
+  const results = { css: { fps: 60, jankScore: 0 }, canvas: { fps: 60, jankScore: 0 }, webgl: { fps: 60, jankScore: 0 } };
 
-  // Check CPU cores
-  if (capabilities.cpuCores < thresholds.minCpuCores) {
-    lowEndScore++;
-  }
+  await Promise.all([
+    runCSSTest().then(r => { results.css = r; }),
+    runCanvasTest().then(r => { results.canvas = r; }),
+    runWebGLTest().then(r => { results.webgl = r; }),
+  ]);
 
-  // Check device memory (if available)
-  if (capabilities.deviceMemory !== null && capabilities.deviceMemory < thresholds.minDeviceMemory) {
-    lowEndScore++;
-  }
+  const compositeFPS = Math.round(results.css.fps * 0.4 + results.canvas.fps * 0.3 + results.webgl.fps * 0.3);
+  const tier = compositeFPS >= 55 ? 'high' : compositeFPS >= 40 ? 'medium' : compositeFPS >= 25 ? 'low' : 'minimal';
 
-  // Check connection type (if available)
-  if (capabilities.connectionType && thresholds.slowConnectionTypes.includes(capabilities.connectionType)) {
-    lowEndScore++;
-  }
+  return { ...results, composite: { fps: compositeFPS, tier } };
+}
 
-  // Check effective connection type (if available)
-  if (capabilities.effectiveConnectionType && thresholds.slowEffectiveConnectionTypes.includes(capabilities.effectiveConnectionType)) {
-    lowEndScore++;
-  }
+function runCSSTest(): Promise<{ fps: number; jankScore: number }> {
+  return new Promise(resolve => {
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:200px;height:200px;';
+    const box = document.createElement('div');
+    box.style.cssText = 'width:100%;height:100%;background:linear-gradient(45deg,red,blue);will-change:transform;';
+    container.appendChild(box);
+    document.body.appendChild(container);
 
-  // Check save data mode
-  if (capabilities.saveDataMode) {
-    lowEndScore++;
-  }
+    let frames = 0;
+    let lastTime = performance.now();
+    let jankFrames = 0;
+    const startTime = performance.now();
 
-  // Device is considered low-end if it meets 2 or more low-end criteria
-  // This ensures we don't disable animations for devices that are only slightly underperforming in one area
-  return lowEndScore >= 2;
+    function tick(now: number) {
+      frames++;
+      const delta = now - lastTime;
+      if (delta > 20) jankFrames++;
+      lastTime = now;
+
+      const elapsed = now - startTime;
+      box.style.transform = `translate3d(${Math.sin(elapsed * 0.001) * 50}px, ${Math.cos(elapsed * 0.001) * 50}px, 0) scale(${1 + Math.sin(elapsed * 0.002) * 0.1})`;
+
+      if (elapsed < 1500) {
+        requestAnimationFrame(tick);
+      } else {
+        document.body.removeChild(container);
+        const fps = Math.round((frames / elapsed) * 1000);
+        const jankScore = jankFrames / frames;
+        resolve({ fps: Math.min(60, fps), jankScore });
+      }
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+function runCanvasTest(): Promise<{ fps: number; jankScore: number }> {
+  return new Promise(resolve => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 300;
+    canvas.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d')!;
+
+    const particles = Array.from({ length: 50 }, () => ({
+      x: Math.random() * 300,
+      y: Math.random() * 300,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      r: 2 + Math.random() * 3,
+      color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+    }));
+
+    let frames = 0;
+    let lastTime = performance.now();
+    let jankFrames = 0;
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      frames++;
+      const delta = now - lastTime;
+      if (delta > 20) jankFrames++;
+      lastTime = now;
+
+      ctx.clearRect(0, 0, 300, 300);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > 300) p.vx *= -1;
+        if (p.y < 0 || p.y > 300) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      }
+
+      if (now - startTime < 1500) {
+        requestAnimationFrame(tick);
+      } else {
+        document.body.removeChild(canvas);
+        const fps = Math.round((frames / (now - startTime)) * 1000);
+        const jankScore = jankFrames / frames;
+        resolve({ fps: Math.min(60, fps), jankScore });
+      }
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+function runWebGLTest(): Promise<{ fps: number; jankScore: number }> {
+  return new Promise(resolve => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    canvas.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+    document.body.appendChild(canvas);
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+
+    if (!gl) {
+      document.body.removeChild(canvas);
+      resolve({ fps: 60, jankScore: 0 });
+      return;
+    }
+
+    const vsSource = `
+      attribute vec2 a_position;
+      uniform vec2 u_resolution;
+      void main() {
+        vec2 zeroToOne = a_position / u_resolution;
+        vec2 zeroToTwo = zeroToOne * 2.0;
+        vec2 clipSpace = zeroToTwo - 1.0;
+        gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+      }
+    `;
+    const fsSource = `
+      precision mediump float;
+      uniform float u_time;
+      void main() {
+        vec2 uv = gl_FragCoord.xy / 200.0;
+        float color = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.5 + 0.5;
+        gl_FragColor = vec4(color, color * 0.5, 1.0 - color, 1.0);
+      }
+    `;
+
+    function createShader(gl: WebGLRenderingContext, type: number, source: string) {
+      const shader = gl.createShader(type)!;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
+
+    const program = gl.createProgram()!;
+    gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    const positionBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 200, 0, 0, 200, 200, 200]), gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, 'a_position');
+    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+    const timeLocation = gl.getUniformLocation(program, 'u_time');
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform2f(resolutionLocation, 200, 200);
+
+    let frames = 0;
+    let lastTime = performance.now();
+    let jankFrames = 0;
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      frames++;
+      const delta = now - lastTime;
+      if (delta > 20) jankFrames++;
+      lastTime = now;
+
+      gl.uniform1f(timeLocation, now * 0.001);
+      gl.viewport(0, 0, 200, 200);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      if (now - startTime < 1500) {
+        requestAnimationFrame(tick);
+      } else {
+        document.body.removeChild(canvas);
+        const fps = Math.round((frames / (now - startTime)) * 1000);
+        const jankScore = jankFrames / frames;
+        resolve({ fps: Math.min(60, fps), jankScore });
+      }
+    }
+    requestAnimationFrame(tick);
+  });
 }
 
 /**
- * Get a detailed report of device capabilities and low-end status
+ * Determine animation tier from benchmark + hardware + user preference
  */
-export function getDevicePerformanceReport(): {
-  capabilities: DeviceCapabilities;
-  isLowEnd: boolean;
-  reasons: string[];
-} {
-  const capabilities = getDeviceCapabilities();
-  const thresholds = DEFAULT_THRESHOLDS;
+export function determineAnimationTier(
+  benchmark: { composite: { fps: number; tier: AnimationTier['tier'] } } | null,
+  capabilities: DeviceCapabilities,
+  prefersReducedMotion: boolean
+): AnimationTier {
+  if (prefersReducedMotion) {
+    return { ...TIER_DEFAULTS.minimal, tier: 'minimal', fps: 60, reasons: ['User prefers reduced motion'] };
+  }
+
   const reasons: string[] = [];
+  let score = 0;
 
-  if (capabilities.cpuCores < thresholds.minCpuCores) {
-    reasons.push(`Low CPU cores: ${capabilities.cpuCores} < ${thresholds.minCpuCores}`);
+  if (benchmark) {
+    if (benchmark.composite.fps < 25) {
+      score += 3;
+      reasons.push(`Benchmark FPS: ${benchmark.composite.fps}`);
+    } else if (benchmark.composite.fps < 40) {
+      score += 2;
+      reasons.push(`Benchmark FPS: ${benchmark.composite.fps}`);
+    } else if (benchmark.composite.fps < 55) {
+      score += 1;
+      reasons.push(`Benchmark FPS: ${benchmark.composite.fps}`);
+    }
   }
 
-  if (capabilities.deviceMemory !== null && capabilities.deviceMemory < thresholds.minDeviceMemory) {
-    reasons.push(`Low device memory: ${capabilities.deviceMemory}GB < ${thresholds.minDeviceMemory}GB`);
+  if (capabilities.cpuCores < DEFAULT_THRESHOLDS.minCpuCores) {
+    score += 1;
+    reasons.push(`CPU cores: ${capabilities.cpuCores}`);
   }
 
-  if (capabilities.connectionType && thresholds.slowConnectionTypes.includes(capabilities.connectionType)) {
-    reasons.push(`Slow connection type: ${capabilities.connectionType}`);
+  if (capabilities.deviceMemory !== null && capabilities.deviceMemory < DEFAULT_THRESHOLDS.minDeviceMemory) {
+    score += 1;
+    reasons.push(`Device memory: ${capabilities.deviceMemory}GB`);
   }
 
-  if (capabilities.effectiveConnectionType && thresholds.slowEffectiveConnectionTypes.includes(capabilities.effectiveConnectionType)) {
-    reasons.push(`Slow effective connection: ${capabilities.effectiveConnectionType}`);
+  if (capabilities.effectiveConnectionType && DEFAULT_THRESHOLDS.slowEffectiveConnectionTypes.includes(capabilities.effectiveConnectionType)) {
+    score += 1;
+    reasons.push(`Connection: ${capabilities.effectiveConnectionType}`);
   }
 
-  if (capabilities.saveDataMode) {
-    reasons.push('Save data mode enabled');
+  if (capabilities.maxTextureSize > 0 && capabilities.maxTextureSize < DEFAULT_THRESHOLDS.maxTextureSize) {
+    score += 1;
+    reasons.push(`Max texture: ${capabilities.maxTextureSize}`);
   }
 
-  return {
-    capabilities,
-    isLowEnd: isLowEndDevice(thresholds),
-    reasons,
-  };
+  let tier: AnimationTier['tier'];
+  if (score >= 4) tier = 'minimal';
+  else if (score >= 3) tier = 'low';
+  else if (score >= 2) tier = 'medium';
+  else tier = 'high';
+
+  const base = TIER_DEFAULTS[tier];
+  return { ...base, tier, fps: benchmark?.composite.fps ?? 60, reasons };
+}
+
+/**
+ * Hook for components to get current animation tier
+ */
+export function getAnimationTier(): AnimationTier {
+  if (typeof window === 'undefined') {
+    return { ...TIER_DEFAULTS.high, tier: 'high', fps: 60, reasons: ['SSR'] };
+  }
+
+  const capabilities = getDeviceCapabilities();
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const cached = sessionStorage.getItem('animation-tier');
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch {}
+  }
+
+  // Run benchmark async, return high tier immediately for first paint
+  runFPSBenchmark().then(benchmark => {
+    const tier = determineAnimationTier(benchmark, capabilities, prefersReducedMotion);
+    sessionStorage.setItem('animation-tier', JSON.stringify(tier));
+    window.dispatchEvent(new CustomEvent('animation-tier-changed', { detail: tier }));
+  });
+
+  return { ...TIER_DEFAULTS.high, tier: 'high', fps: 60, reasons: ['Initial (benchmark pending)'] };
 }

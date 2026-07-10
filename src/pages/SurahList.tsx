@@ -6,9 +6,10 @@ import { PageTransition } from "@/components/PageTransition";
 import { useSettings } from "@/contexts/SettingsContext";
 import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
 import { goBackOrFallback } from "@/lib/navigation";
 import { List } from 'react-window';
+import { useReducedMotion } from '@/hooks/useAnimationTier';
+import { CSSOnlyTransition } from '@/components/AdaptiveMotion';
 
 interface SurahCardProps {
   surah: SurahInfo;
@@ -18,49 +19,53 @@ interface SurahCardProps {
 }
 
 const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: SurahCardProps) {
+  const prefersReduced = useReducedMotion();
+  
   return (
-    <button
-      onClick={() => onClick(surah.number)}
-      className="w-full text-left group outline-none"
-    >
-      <div className={`rounded-[24px] p-5 border transition-all duration-300 ${
-        isDark
-          ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
-          : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
-      }`}>
-        <div className="flex items-center gap-4">
-          {/* Surah Number - Premium Octagonal Style */}
-          <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
-            <div className="absolute inset-0 bg-primary/10 rotate-45 rounded-xl group-hover:rotate-[135deg] transition-transform duration-700" />
-            <div className="absolute inset-1 bg-primary/5 rotate-12 rounded-lg" />
-            <span className="relative z-10 font-black text-primary text-xs tracking-tighter">{surah.number}</span>
-          </div>
+    <CSSOnlyTransition hoverScale={1.02} tapScale={0.98} duration={150}>
+      <button
+        onClick={() => onClick(surah.number)}
+        className="w-full text-left group outline-none"
+      >
+        <div className={`rounded-[24px] p-5 border transition-all duration-300 ${
+          isDark
+            ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
+            : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
+        }`}>
+          <div className="flex items-center gap-4">
+            {/* Surah Number - Premium Octagonal Style */}
+            <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+              <div className="absolute inset-0 bg-primary/10 rotate-45 rounded-xl group-hover:rotate-[135deg] transition-transform duration-700" />
+              <div className="absolute inset-1 bg-primary/5 rotate-12 rounded-lg" />
+              <span className="relative z-10 font-black text-primary text-xs tracking-tighter">{surah.number}</span>
+            </div>
 
-          {/* Center: Arabic + English */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <h3 className="font-arabic text-2xl text-primary drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">
-                  {surah.name}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full bg-muted text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                    {surah.revelationType}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
-                    {surah.numberOfAyahs} Ayahs
-                  </span>
+            {/* Center: Arabic + English */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="font-arabic text-2xl text-primary drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">
+                    {surah.name}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-muted text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                      {surah.revelationType}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                      {surah.numberOfAyahs} Ayahs
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">{surah.englishName}</p>
-                <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-tighter mt-1">{surah.englishNameTranslation}</p>
+                <div className="text-right">
+                  <p className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">{surah.englishName}</p>
+                  <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-tighter mt-1">{surah.englishNameTranslation}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </CSSOnlyTransition>
   );
 }, (prevProps, nextProps) => {
   return (
@@ -216,64 +221,62 @@ export default function SurahList() {
         {/* Last Read Card */}
         {lastRead && (
           <div className="max-w-2xl mx-auto px-4 mb-6">
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.05 }}
-              onClick={() => navigate(`/quran/surah-${lastRead.number}`)}
-              className="w-full flex items-center p-4 bg-primary/10 border border-primary/20 rounded-2xl gap-4 hover:bg-primary/15 transition-all group active:scale-[0.98]"
-            >
-              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                <History className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Continue Reading</p>
-                <h3 className="text-lg font-black">{lastRead.name}</h3>
-                <p className="text-xs text-primary/60">{lastRead.englishName}</p>
-              </div>
-            </motion.button>
+            <CSSOnlyTransition hoverScale={1.02} tapScale={0.98} duration={150}>
+              <button
+                onClick={() => navigate(`/quran/surah-${lastRead.number}`)}
+                className="w-full flex items-center p-4 bg-primary/10 border border-primary/20 rounded-2xl gap-4 hover:bg-primary/15 transition-all group active:scale-[0.98]"
+              >
+                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                  <History className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Continue Reading</p>
+                  <h3 className="text-lg font-black">{lastRead.name}</h3>
+                  <p className="text-xs text-primary/60">{lastRead.englishName}</p>
+                </div>
+              </button>
+            </CSSOnlyTransition>
           </div>
         )}
 
         {/* Daily Ayah Card */}
         <div className="max-w-2xl mx-auto px-4 py-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 cursor-pointer active:scale-[0.98] transition-transform"
-            onClick={() => navigate('/quran')}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
-            <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
+          <CSSOnlyTransition hoverScale={0.98} tapScale={0.96} duration={150}>
+            <div
+              className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 cursor-pointer active:scale-[0.98] transition-transform"
+              onClick={() => navigate('/quran')}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
+              <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
 
-            <div className="relative z-10 p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-4 h-4 text-[#e0c097]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
-                  {dailyAyah?.title || 'Verse of the Day'}
-                </span>
-              </div>
-
-              <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/5 mb-4">
-                <p className="text-white/90 text-base font-medium leading-relaxed mb-4">
-                  {dailyAyah?.content || 'Loading...'}
-                </p>
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-white/10 text-white/80 border-white/10 text-xs">
-                    {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
-                  </Badge>
-                  <span className="text-white/50 text-xs font-medium">{dailyAyah?.reference || ''}</span>
+              <div className="relative z-10 p-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-4 h-4 text-[#e0c097]" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
+                    {dailyAyah?.title || 'Verse of the Day'}
+                  </span>
                 </div>
-              </div>
 
-              <p className="text-white/60 text-sm italic">
-                {dailyAyah?.reflection || ''}
-              </p>
+                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/5 mb-4">
+                  <p className="text-white/90 text-base font-medium leading-relaxed mb-4">
+                    {dailyAyah?.content || 'Loading...'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-white/10 text-white/80 border-white/10 text-xs">
+                      {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
+                    </Badge>
+                    <span className="text-white/50 text-xs font-medium">{dailyAyah?.reference || ''}</span>
+                  </div>
+                </div>
+
+                <p className="text-white/60 text-sm italic">
+                  {dailyAyah?.reflection || ''}
+                </p>
+              </div>
             </div>
-          </motion.div>
+          </CSSOnlyTransition>
         </div>
 
         {/* Surah List */}
@@ -298,16 +301,12 @@ export default function SurahList() {
               )}
             </List>
           ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-20"
-            >
+            <div className="text-center py-20">
               <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 text-muted-foreground" />
               </div>
               <p className="text-muted-foreground">No surahs found</p>
-            </motion.div>
+            </div>
           )}
         </div>
       </div>
