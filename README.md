@@ -5,6 +5,53 @@
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
 
+---
+
+## 🆕 What's New in v2.0.0
+
+### 🌿 Islamic Remedies (Tibb-e-Nabawi) — Complete Redesign
+- **Two-phase experience**: Mood grid (12 moods, responsive 2/3 col) → Full-screen remedy viewer with smooth Framer Motion animations
+- **Rich visual design**: Warm gradient backgrounds, 3xl/4xl Arabic typography, type badges, Play/Copy/Next actions
+- **Daily Remedy Card** with visible gradient background and interactive check animation
+- **Gamified stats bar**: Streak, views, favorites, XP in clean single-line layout
+- **Search + type filters** (pills above input), **Favorites page** linked from main view
+
+### 📱 Widget System v2 — Native Kotlin Rebuild
+- **5 widgets**: Next Prayer (live countdown + progress ring), Daily Ayah, Daily Hadith (grade-colored), Quran Progress (ring + streak + Ramadan goal), Tasbeeh Counter (tap-to-increment, haptic, dhikr cycle)
+- **Unified refresh**: Single WorkManager (30min periodic + expedited + motion-based step detection)
+- **Prayer alarms**: Exact alarms at each prayer time with graceful fallback
+- **Boot/Time/Locale survival**: Centralized via WidgetBootReceiver → WidgetRefreshWorker
+- **Capacitor bridge**: 4-method plugin (syncPrayerData, syncDailyContent, syncQuranProgress, pushTasbeehIncrement)
+- **Strict validation**: Prayer payload requires exactly 6 prayers, valid nextPrayerIndex
+
+### 🏠 Dashboard Integration
+- **MoodSelector widget** revived: daily remedy, gamification stats, favorites toggle, next/copy/play actions
+- Registered `remedy` widget in dashboard config (visible by default)
+
+### 💾 Backup & Restore (Cross-Platform)
+- localStorage-based (no native filesystem dependency)
+- Auto-backup on first install, auto-restore on reinstall
+- Background processing for performance
+
+### ⚡ Low-End Device Optimizations
+- Adaptive device detection (30+ FPS target on 2016+ devices)
+- React Query tuned for constrained hardware
+- Background processing for heavy ops
+- Smart backup detection without CPU/RAM load
+
+### 🐛 Critical Fixes
+- JSON.parse safety (try-catch everywhere)
+- TypeScript strictness (no `as any`, proper types)
+- React hooks dependency arrays, functional state updates
+- localStorage quota handling with cleanup
+- Memory leak prevention (event listener cleanup)
+- Widget: unknown hadith grades use neutral color, localized countdown strings, minute-precision countdown, fixed 1-hour boundary, Arabic RTL fix, countdown overlay, format-string preview defaults, Tasbeeh content descriptions
+- Android: FOREGROUND_SERVICE_MEDIA_PLAYBACK permission, duplicate flatDir removed, ProGuard cleaned
+- Thread safety: @Volatile on HadithBundle cache
+- All payload parsing failures now logged with context
+
+---
+
 ## ✨ The Complete Feature Set
 
 ### 📖 Enhanced Quran & Tafsir Explorer
@@ -47,12 +94,16 @@
 
 
 ### 📱 Enhanced Widget System & Dashboard
-- **Native Android Widgets Suite**: Beautiful, lightning-fast native Kotlin widgets including Next Adhan, Daily Ayah, and Daily Schedule arrays.
-- **Live Background Radio Widget**: Experience 24/7 Quran Radio streams with direct play/pause/skip controls right from your home screen notification center.
-- **Live Interactive Previews**: Complete visual grid customizer in the web dashboard allows you to instantly preview the color schemes and layouts of widgets before enabling them.
-- **Robust Platform Abstraction**: All Android native widget background updates are wrapped with robust Capacitor checks (`capacitor-utils.ts`) to completely eliminate cross-platform console errors when running in the browser. 
-- **Dual Update Modes**: Support for both basic (next-prayer only) and full (prayer schedule, Quran data, Hijri date) widget updates straight to the Android home-screen.
-- **Automatic Background Sync**: Configurable auto-update timer (every 30 minutes) perfectly syncs the app to your home screen using native Android widgets and services.
+- **Native Android Widgets Suite v2**: 5 beautiful, lightning-fast native Kotlin widgets — Next Prayer (live countdown + progress ring), Daily Ayah, Daily Hadith (grade-colored), Quran Progress (ring + streak + Ramadan goal), Tasbeeh Counter (tap-to-increment, haptic, dhikr cycle)
+- **Unified Background Refresh**: Single WorkManager (30min periodic + expedited one-shot + motion-based step detection)
+- **Exact Prayer Alarms**: Native alarms at each prayer time with graceful inexact fallback
+- **System Event Survival**: Boot/Time/Locale changes handled via WidgetBootReceiver → WidgetRefreshWorker
+- **Capacitor Bridge (WidgetBridge)**: 4-method plugin (syncPrayerData, syncDailyContent, syncQuranProgress, pushTasbeehIncrement)
+- **Strict Payload Validation**: Prayer payload requires exactly 6 prayers, valid nextPrayerIndex
+- **Live Interactive Previews**: Complete visual grid customizer in the web dashboard allows you to instantly preview the color schemes and layouts of widgets before enabling them
+- **Robust Platform Abstraction**: All Android native widget background updates wrapped with robust Capacitor checks (`capacitor-utils.ts`) to completely eliminate cross-platform console errors when running in the browser
+- **Dual Update Modes**: Support for both basic (next-prayer only) and full (prayer schedule, Quran data, Hijri date) widget updates straight to the Android home-screen
+- **Automatic Background Sync**: Configurable auto-update timer (every 30 minutes) perfectly syncs the app to your home screen using native Android widgets and services
 
 ---
 
@@ -66,7 +117,16 @@ Noor Connect is built from the ground up for performance and ethical transparenc
   - Strictly **Zero Analytics**, **Zero Trackers**. 
   - Pre-configured `foss` Gradle flavor specifically built to strip `play-services` for pure open-source distribution. 
   - Fastlane F-Droid metadata integration ready.
-- **Data Portability**: Full App Backup & Restore capabilities directly to internal storage. All data stays strictly local.
+- **Data Portability**: Full App Backup & Restore capabilities directly to internal storage (localStorage + Capacitor Preferences). Auto-backup on first install, auto-restore on reinstall. All data stays strictly local.
+- **Cross-Platform Backup**: `backup-restore-service.ts` uses localStorage (no native filesystem dependency) with background processing via `requestIdleCallback`/`setTimeout` to avoid UI blocking.
+- **Low-End Device Optimizations** (2016+ devices, 30+ FPS target):
+  - Adaptive device detection (`device-performance.ts`) — CPU cores, device memory, connection type, save-data mode
+  - Automatic animation reduction (`shouldReduceAnimations`) respecting `prefers-reduced-motion`
+  - Debounced/throttled event handlers, RAF-based scroll optimization
+  - IntersectionObserver lazy loading, critical resource preloading
+  - Memory pressure monitoring with GC trigger (devtools)
+  - Performance mode presets: low/medium/high based on hardware
+- **React Query Tuning**: Stale times, cache times, and retry policies adapted for constrained devices
 
 ---
 
