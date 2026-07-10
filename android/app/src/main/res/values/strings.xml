@@ -51,10 +51,15 @@
     <!-- Quran Progress -->
     <string name="widget_quran_progress_section">QURAN READING</string>
     <string name="widget_quran_progress_streak_format">%1$d day streak</string>
+    <string name="widget_quran_progress_streak_default">— day streak</string>
     <string name="widget_quran_progress_last_read_format">Last read: %1$s</string>
+    <string name="widget_quran_progress_last_read_default">Last read: —</string>
     <string name="widget_quran_progress_juz_format">Juz %1$d of 30</string>
+    <string name="widget_quran_progress_juz_default">Juz — of 30</string>
     <string name="widget_quran_progress_pages_format">%1$d / 604 pages</string>
+    <string name="widget_quran_progress_pages_default">— / 604 pages</string>
     <string name="widget_quran_progress_goal_format">Ramadan goal: %1$d%%</string>
+    <string name="widget_quran_progress_goal_default">Ramadan goal: —%</string>
     <string name="widget_quran_progress_percent_format">%1$d%%</string>
 
     <!-- Tasbeeh -->
@@ -63,7 +68,11 @@
     <string name="widget_tasbeeh_allahuakbar">Allahu Akbar</string>
     <string name="widget_tasbeeh_lailaha">La ilaha illa Allah</string>
     <string name="widget_tasbeeh_target_format">/ %1$d</string>
+    <string name="widget_tasbeeh_target_default">/ 33</string>
     <string name="widget_tasbeeh_total_today_format">Total today: %1$d</string>
+    <string name="widget_tasbeeh_total_today_default">Total today: 0</string>
+    <string name="widget_tasbeeh_reset_desc">Reset tasbeeh counter</string>
+    <string name="widget_tasbeeh_open_app_desc">Open Noor Connect app</string>
 
     <!-- Deep-link paths (must match React Router) -->
     <string name="deeplink_prayers">/prayers</string>

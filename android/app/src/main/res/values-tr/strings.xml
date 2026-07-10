@@ -45,7 +45,7 @@
     <string name="widget_quran_progress_juz_format">Cüz %1$d / 30</string>
     <string name="widget_quran_progress_pages_format">%1$d / 604 sayfa</string>
     <string name="widget_quran_progress_goal_format">Ramazan hedefi: %1$d%%</string>
-    <string name="widget_quran_progress_percent_format">%%1$d</string>
+    <string name="widget_quran_progress_percent_format">%1$d%%</string>
 
     <string name="widget_tasbeeh_subhanallah">Süphanallah</string>
     <string name="widget_tasbeeh_alhamdulillah">Elhamdülillah</string>
@@ -53,15 +53,6 @@
     <string name="widget_tasbeeh_lailaha">La ilahe illallah</string>
     <string name="widget_tasbeeh_target_format">/ %1$d</string>
     <string name="widget_tasbeeh_total_today_format">Bugün toplam: %1$d</string>
-
-    <string name="deeplink_prayers">/prayers</string>
-    <string name="deeplink_quran">/quran</string>
-    <string name="deeplink_hadith">/hadith</string>
-    <string name="deeplink_quran_reading">/quran/reading</string>
-    <string name="deeplink_tasbeeh">/tasbeeh</string>
-
-    <string name="app_uri_scheme">noorconnect</string>
-    <string name="app_uri_host">app</string>
 
     <string name="notif_channel_widget_sync">Widget Senkronizasyonu</string>
     <string name="notif_channel_widget_sync_desc">Ana ekran widget\'ları için sessiz güncellemeler.</string>

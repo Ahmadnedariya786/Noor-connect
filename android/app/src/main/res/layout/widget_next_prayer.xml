@@ -162,19 +162,20 @@
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
         </LinearLayout>
-    </FrameLayout>
 
-    <!-- ══════ Countdown label ══════ -->
-    <TextView
-        android:id="@+id/widget_countdown"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginTop="6dp"
-        android:text="@string/widget_countdown_default"
-        android:textColor="@color/widget_accent_emerald"
-        android:textSize="11sp"
-        android:textStyle="bold" />
+        <!-- Countdown label positioned inside the FrameLayout so it overlays the ring -->
+        <TextView
+            android:id="@+id/widget_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/widget_countdown_default"
+            android:textColor="@color/widget_accent_emerald"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </FrameLayout>
 
     <!-- ══════ Empty state (hidden by default) ══════ -->
     <LinearLayout

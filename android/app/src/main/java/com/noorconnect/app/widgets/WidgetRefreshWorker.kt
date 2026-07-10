@@ -136,8 +136,12 @@ class WidgetRefreshWorker(
          */
         fun stopStepDetection(context: Context) {
             try {
-                sensorManager?.unregisterListener(stepListener)
-                stepHandler?.removeCallbacks(stepRunnable)
+                stepListener?.let { listener ->
+                    sensorManager?.unregisterListener(listener)
+                }
+                stepRunnable?.let { runnable ->
+                    stepHandler?.removeCallbacks(runnable)
+                }
                 sensorManager = null
                 stepListener = null
                 stepHandler = null
@@ -164,11 +168,12 @@ class WidgetRefreshWorker(
                         
                         // Schedule widget refresh after 30 seconds
                         stepHandler = Handler(Looper.getMainLooper())
-                        stepRunnable = Runnable {
+                        val runnable = Runnable {
                             Log.d(TAG, "Step-based widget refresh triggered")
                             enqueueImmediate(context)
                         }
-                        stepHandler?.postDelayed(stepRunnable!!, STEP_REFRESH_DELAY_MS)
+                        stepRunnable = runnable
+                        stepHandler?.postDelayed(runnable, STEP_REFRESH_DELAY_MS)
                     }
                 }
             }
@@ -179,12 +184,12 @@ class WidgetRefreshWorker(
         }
     }
 
-    private val WIDGET_CLASSES = listOf(
-        NextPrayerWidget::class.java,
-        DailyAyahWidget::class.java,
-        DailyHadithWidget::class.java,
-        QuranProgressWidget::class.java,
-        TasbeehWidget::class.java
+    private val WIDGET_PROVIDERS = listOf(
+        NextPrayerWidget(),
+        DailyAyahWidget(),
+        DailyHadithWidget(),
+        QuranProgressWidget(),
+        TasbeehWidget()
     )
 
     override suspend fun doWork(): Result {
@@ -192,12 +197,13 @@ class WidgetRefreshWorker(
             val ctx = applicationContext
             val mgr = AppWidgetManager.getInstance(ctx)
 
-            // Refresh each widget class. Safe to call even when no instances exist.
-            WIDGET_CLASSES.forEach { cls -> refreshWidget(ctx, mgr, cls) }
+            // Refresh each widget. Safe to call even when no instances exist.
+            WIDGET_PROVIDERS.forEach { provider -> refreshWidget(ctx, mgr, provider) }
 
             // Self-cancel the periodic worker when no widget instances remain.
             // This prevents battery drain after the user removes all home-screen widgets.
-            val hasAnyInstances = WIDGET_CLASSES.any { cls ->
+            val hasAnyInstances = WIDGET_PROVIDERS.any { provider ->
+                val cls = provider::class.java
                 mgr.getAppWidgetIds(ComponentName(ctx, cls)).isNotEmpty()
             }
             if (!hasAnyInstances) {
@@ -246,18 +252,17 @@ class WidgetRefreshWorker(
     private fun refreshWidget(
         context: Context,
         mgr: AppWidgetManager,
-        widgetClass: Class<out android.appwidget.AppWidgetProvider>
+        provider: android.appwidget.AppWidgetProvider
     ) {
         try {
-            val ids = mgr.getAppWidgetIds(ComponentName(context, widgetClass))
+            val ids = mgr.getAppWidgetIds(ComponentName(context, provider::class.java))
             if (ids.isEmpty()) return
 
-            val provider = widgetClass.getDeclaredConstructor().newInstance()
             // Dispatch to onUpdate via the standard AppWidgetProvider mechanism.
             // We call onUpdate directly so we don't need to broadcast an intent.
             provider.onUpdate(context, mgr, ids)
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to refresh ${widgetClass.simpleName}", e)
+            Log.w(TAG, "Failed to refresh ${provider::class.java.simpleName}", e)
         }
     }
 }

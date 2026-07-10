@@ -62,7 +62,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="@string/widget_tasbeeh_target_format"
+            android:text="@string/widget_tasbeeh_target_default"
             android:textColor="@color/widget_text_secondary"
             android:textSize="13sp" />
 
@@ -72,7 +72,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/widget_tasbeeh_total_today_format"
+            android:text="@string/widget_tasbeeh_total_today_default"
             android:textColor="@color/widget_text_secondary"
             android:textSize="11sp" />
     </LinearLayout>
@@ -85,7 +85,7 @@
         android:layout_gravity="bottom|start"
         android:alpha="0.5"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Reset"
+        android:contentDescription="@string/widget_tasbeeh_reset_desc"
         android:padding="6dp"
         android:src="@drawable/widget_ornament_corner"
         android:tint="@color/widget_text_secondary" />
@@ -98,7 +98,7 @@
         android:layout_gravity="bottom|end"
         android:alpha="0.5"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Open app"
+        android:contentDescription="@string/widget_tasbeeh_open_app_desc"
         android:padding="6dp"
         android:rotation="180"
         android:src="@drawable/widget_ornament_corner"

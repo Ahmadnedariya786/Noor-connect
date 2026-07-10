@@ -74,10 +74,13 @@ object LocationChangeService {
         }
 
         try {
-            locationManager?.removeUpdates(locationListener)
+            locationListener?.let { listener ->
+                locationManager?.removeUpdates(listener)
+            }
             locationManager = null
             locationListener = null
             lastLocation = null
+            lastUpdateTime = 0L
             isRunning = false
             Log.d(TAG, "Location change detection stopped")
         } catch (e: Exception) {
@@ -103,8 +106,9 @@ object LocationChangeService {
             }
             
             // Check if this is a significant location change
-            if (lastLocation != null) {
-                val distance = location.distanceTo(lastLocation)
+            val prevLocation = lastLocation
+            if (prevLocation != null) {
+                val distance = location.distanceTo(prevLocation)
                 if (distance < LOCATION_CHANGE_THRESHOLD_METERS) {
                     Log.d(TAG, "Location change below threshold: ${distance}m")
                     return

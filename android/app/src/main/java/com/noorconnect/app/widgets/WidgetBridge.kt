@@ -47,8 +47,26 @@ class WidgetBridge : Plugin() {
             }
 
             val payload = PrayerPayload.fromJson(prayerDataStr)
-            if (payload == null || payload.prayers.isEmpty()) {
+            if (payload == null) {
                 call.reject("invalid prayer payload")
+                return
+            }
+
+            // Validate exactly 6 prayers (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha)
+            if (payload.prayers.size != 6) {
+                call.reject("invalid prayer payload: expected 6 prayers, got ${payload.prayers.size}")
+                return
+            }
+
+            // Validate nextPrayerIndex is in valid range
+            if (payload.nextPrayerIndex < 0 || payload.nextPrayerIndex >= 6) {
+                call.reject("invalid prayer payload: nextPrayerIndex out of range")
+                return
+            }
+
+            // Validate nextPrayerIndex matches an existing prayer entry
+            if (payload.prayers.getOrNull(payload.nextPrayerIndex) == null) {
+                call.reject("invalid prayer payload: nextPrayerIndex has no matching prayer")
                 return
             }
 

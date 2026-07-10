@@ -29,6 +29,27 @@ function parseQuranProgress(raw: string | null): QuranProgressPayload | null {
   if (!raw) return null;
   try {
     const p = JSON.parse(raw);
+    
+    // lastReadTimestamp: prefer explicit timestamp field, fall back to numeric lastRead
+    let lastReadTimestamp: number;
+    if (typeof p.lastReadTimestamp === 'number') {
+      lastReadTimestamp = p.lastReadTimestamp;
+    } else if (typeof p.lastRead === 'number') {
+      lastReadTimestamp = p.lastRead;
+    } else {
+      lastReadTimestamp = Date.now();
+    }
+
+    // lastReadLabel: prefer explicit label field, fall back to string lastRead
+    let lastReadLabel: string;
+    if (typeof p.lastReadLabel === 'string') {
+      lastReadLabel = p.lastReadLabel;
+    } else if (typeof p.lastRead === 'string') {
+      lastReadLabel = p.lastRead;
+    } else {
+      lastReadLabel = '';
+    }
+
     return {
       currentSurah: Number(p.currentSurah ?? p.surahNumber ?? 1),
       currentAyah: Number(p.currentAyah ?? p.ayahNumber ?? 1),
@@ -36,8 +57,8 @@ function parseQuranProgress(raw: string | null): QuranProgressPayload | null {
       totalPagesRead: Number(p.totalPagesRead ?? p.pagesRead ?? 0),
       totalPercent: Number(p.totalPercent ?? p.percent ?? 0),
       dailyStreak: Number(p.dailyStreak ?? p.streak ?? 0),
-      lastReadTimestamp: Number(p.lastReadTimestamp ?? p.lastRead ?? Date.now()),
-      lastReadLabel: String(p.lastReadLabel ?? p.lastRead ?? ''),
+      lastReadTimestamp,
+      lastReadLabel,
       goalPercent: Number(p.goalPercent ?? p.goal ?? 0),
     };
   } catch {

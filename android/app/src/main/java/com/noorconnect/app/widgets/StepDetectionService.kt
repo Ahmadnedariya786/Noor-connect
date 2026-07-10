@@ -83,8 +83,12 @@ object StepDetectionService {
         }
 
         try {
-            sensorManager?.unregisterListener(stepListener)
-            stepHandler?.removeCallbacks(stepRunnable)
+            stepListener?.let { listener ->
+                sensorManager?.unregisterListener(listener)
+            }
+            stepRunnable?.let { runnable ->
+                stepHandler?.removeCallbacks(runnable)
+            }
             sensorManager = null
             stepListener = null
             stepHandler = null
@@ -115,15 +119,18 @@ object StepDetectionService {
                         lastStepTime = now
                         
                         // Cancel any pending refresh
-                        stepHandler?.removeCallbacks(stepRunnable)
+                        stepRunnable?.let { runnable ->
+                            stepHandler?.removeCallbacks(runnable)
+                        }
                         
                         // Schedule widget refresh after 30 seconds
                         stepHandler = Handler(Looper.getMainLooper())
-                        stepRunnable = Runnable {
+                        val runnable = Runnable {
                             Log.d(TAG, "Step-based widget refresh triggered")
                             WidgetRefreshWorker.enqueueImmediate(context)
                         }
-                        stepHandler?.postDelayed(stepRunnable!!, STEP_REFRESH_DELAY_MS)
+                        stepRunnable = runnable
+                        stepHandler?.postDelayed(runnable, STEP_REFRESH_DELAY_MS)
                         
                         Log.d(TAG, "Step detected, scheduling widget refresh in ${STEP_REFRESH_DELAY_MS}ms")
                     }

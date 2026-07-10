@@ -21,6 +21,7 @@ object HadithBundle {
 
     private const val ASSET_NAME = "widget_hadiths.json"
 
+    @Volatile
     private var cachedHadiths: List<HadithContent>? = null
 
     fun getFallbackHadith(context: Context): HadithContent {
