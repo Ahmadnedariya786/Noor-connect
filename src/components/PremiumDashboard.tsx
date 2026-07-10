@@ -24,7 +24,7 @@ import PrayerStatsWidget from "@/components/PrayerStatsWidget";
 import QazaTracker from "@/components/QazaTracker";
 import DhikrReminder from "@/components/DhikrReminder";
 import { QuranRadio } from "@/components/QuranRadio";
-import { MoodSelector } from "@/components/MoodSelector";
+
 
 interface PrayerTime {
   name: string;
@@ -80,10 +80,10 @@ function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabl
   const motionProps = (props: any) => animationEnabled ? props : {};
 
   return (
-    <div className="text-center pt-2 pb-2 min-h-[120px] flex flex-col justify-center items-center">
+    <div className="text-center pt-3 pb-4 flex flex-col justify-center items-center gap-1">
       <m.h1
         className="font-black leading-none tracking-tighter text-foreground"
-        style={{ fontSize: 'clamp(72px, 22vw, 96px)' }}
+        style={{ fontSize: 'clamp(52px, 18vw, 96px)' }}
         {...motionProps({ 
           initial: { opacity: 0 }, 
           animate: { opacity: 1 }, 
@@ -93,7 +93,7 @@ function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabl
         {timeStr}
       </m.h1>
       <m.p
-        className="text-sm font-semibold mt-2 tracking-wide text-primary"
+        className="text-sm md:text-base font-semibold tracking-wide text-primary px-4 text-center leading-tight"
         {...motionProps({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: 0.15, duration: 0.4 } })}
       >
         {hijriDate}
@@ -643,20 +643,6 @@ function PremiumDashboardInner({
                       })}
                     >
                       <QuranRadio />
-                    </m.div>
-                  );
-
-                case 'remedy':
-                  return (
-                    <m.div
-                      key={widget.id}
-                      {...motionProps({
-                        initial: { opacity: 0, y: 12 },
-                        animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
-                      })}
-                    >
-                      <MoodSelector />
                     </m.div>
                   );
 

@@ -129,7 +129,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     id: 'remedy',
     name: 'Quick Remedy',
     description: 'Mood-based Islamic remedies from Quran and Sunnah',
-    visible: true,
+    visible: false,
     order: 15,
     category: 'optional',
   },

@@ -8,7 +8,7 @@ import BottomNav from "@/components/BottomNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { notificationManager } from "@/lib/notification-manager";
 import { serviceWorkerManager } from "@/lib/service-worker-registration";
-import { getPerformanceMonitor } from "@/lib/performance-monitor";
+
 import { islamicEventsService } from "@/lib/islamic-events-service";
 import { LayoutManager } from "@/components/LayoutManager";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -22,8 +22,7 @@ import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
 import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
-import { preloadCriticalResources, optimizeScrollPerformance, shouldReduceAnimations } from "@/lib/performance-optimizations";
-import { checkLowEndDevice } from "@/lib/device-performance";
+import { preloadCriticalResources, optimizeScrollPerformance, shouldReduceAnimations, isLowEndDevice as checkLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -309,10 +308,9 @@ function AppShell() {
     
     // Monitor FPS for performance tracking (only on non-low-end devices)
     if (!isLowEndForShell) {
-      const stopMonitoring = getPerformanceMonitor().startMonitoring((fps) => {
+      const stopMonitoring = monitorFPS((fps) => {
         if (fps < 20) {
           console.warn('Low FPS detected:', fps);
-          // Could trigger additional optimizations here
         }
       });
       
@@ -321,7 +319,6 @@ function AppShell() {
   }, [isLowEndForShell]);
 
   useEffect(() => {
-    const monitor = getPerformanceMonitor();
     notificationManager.start();
     
     islamicEventsService.scheduleUpcomingEvents().catch(error => {
@@ -345,7 +342,6 @@ function AppShell() {
     }
 
     return () => {
-      monitor.destroy();
       notificationManager.stop();
     };
   }, []);
