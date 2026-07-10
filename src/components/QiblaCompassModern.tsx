@@ -7,17 +7,15 @@ import { Capacitor } from '@capacitor/core';
 import { nativeQiblaService } from '@/lib/native-qibla-service';
 import {
   calculateDistanceToKaabaKm,
-  calculateQiblaBearing,
   calculateQiblaBearingMagnetic,
+  calculateQibla,
   getCardinalDirection,
   normalizeDegrees,
   shortestSignedAngle,
   isFacingQibla,
   getRotationInstruction,
-  formatDistance,
-  formatBearing,
+  detectOrientationSensor,
   type QiblaResult,
-  KAABA_COORDINATES,
 } from '@/lib/qibla';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from "@/lib/utils";
@@ -52,16 +50,16 @@ const LS_CALIBRATION_SHOWN = 'qibla-calibration-shown-v2';
 
 // ─── Colors ───────────────────────────────────────────────────
 const THEME = {
-  primary: '#C9860A',      // Amber glow
+  primary: '#C9860A',
   primaryLight: '#E8A020',
-  accent: '#C9860A',       // Amber for needle
+  accent: '#C9860A',
   accentLight: '#E8A020',
-  cream: '#F2EDE4',        // Warm cream background
+  cream: '#F2EDE4',
   creamDark: '#EDE6D8',
   white: '#ffffff',
   offWhite: '#1a1a1a',
   warmWhite: '#111111',
-  text: '#ffffff',         // White text
+  text: '#ffffff',
   textLight: '#e5e5e5',
   textMuted: '#a3a3a3',
   success: '#10B981',
@@ -69,6 +67,7 @@ const THEME = {
   darker: '#000000',
   surface: '#141414',
   surfaceLight: '#1f1f1f',
+  border: '#2a2a2a',        // ← was missing, caused `undefined` in border styles
 };
 
 // Tick marks every 5 degrees
@@ -178,30 +177,24 @@ const QiblaCompassModern = () => {
 
   const applyLocationData = useCallback((nextLocation: LocationCoordinates, nextCityName?: string) => {
     const resolvedCityName = nextCityName ?? cityNameRef.current;
-    const trueBearing = calculateQiblaBearing(nextLocation.latitude, nextLocation.longitude);
-    const distanceKm = calculateDistanceToKaabaKm(nextLocation.latitude, nextLocation.longitude);
-
+    
     locationRef.current = nextLocation;
     cityNameRef.current = resolvedCityName;
 
     setLocation(nextLocation);
     setCityName(resolvedCityName);
-    setQiblaResult({
-      bearing: trueBearing,
-      distanceKm,
-      cardinalDirection: getCardinalDirection(trueBearing),
-      formattedBearing: formatBearing(trueBearing),
-      formattedDistance: formatDistance(distanceKm),
-    });
+    
+    // Set synchronous first (uses cached or WMM-lite declination)
+    setQiblaResult(calculateQibla(nextLocation.latitude, nextLocation.longitude));
 
-    // Advanced Mechanics: Calculate and apply magnetic declination for high accuracy
+    // Advanced Mechanics: Calculate and apply precise magnetic declination via BGS API for high accuracy
     calculateQiblaBearingMagnetic(nextLocation.latitude, nextLocation.longitude)
       .then((magneticBearing) => {
         setQiblaResult(prev => prev ? {
           ...prev,
           bearing: magneticBearing,
           cardinalDirection: getCardinalDirection(magneticBearing),
-          formattedBearing: formatBearing(magneticBearing),
+          formattedBearing: `${Math.round(magneticBearing)}°`,
         } : null);
       })
       .catch(console.warn);
@@ -317,8 +310,15 @@ const QiblaCompassModern = () => {
       setCompassState('activating');
       setSensorError(null);
 
+      // FIX: Track whether absolute orientation has fired to avoid double-processing
+      let absoluteFired = false;
+
       const listener = (event: DeviceOrientationEvent) => {
         try {
+          // Skip deviceorientation if deviceorientationabsolute already provides data
+          if (event.type === 'deviceorientation' && absoluteFired) return;
+          if (event.type === 'deviceorientationabsolute') absoluteFired = true;
+
           const rawHeading = readHeadingFromEvent(event);
           if (rawHeading === null) return;
 
@@ -399,8 +399,9 @@ const QiblaCompassModern = () => {
           maybeShowCalibrationHint();
           
           // Update alignment state with device orientation and magnetic interference
+          // FIX: was `setAlignmentState` (ReferenceError) — correct name is `setAlignment`
           if (data.isDeviceFlat !== undefined || data.magneticInterference !== undefined) {
-            setAlignmentState(prev => {
+            setAlignment(prev => {
               const currentHeading = data.compassAngle;
               const currentBearing = qiblaResult?.bearing || 0;
               return prev ? {
@@ -543,10 +544,21 @@ const QiblaCompassModern = () => {
     }
   }, [applyFallbackLocation, applyLocationData, startDistanceTracking, stopDistanceTracking]);
 
-  // ── Initialize ───────────────────────────────────────────────
+  // ── Initialize: sniff sensor BEFORE the 8-second timeout ──────
   useEffect(() => {
     void refreshLocation('initial');
-    detectCompassAvailability();
+
+    // Fast sensor sniff (~300ms) — sets state immediately instead of waiting 8s
+    detectOrientationSensor().then((result) => {
+      if (result === 'unsupported') {
+        setCompassState('unsupported');
+      } else if (result === 'permission-required') {
+        setCompassState('permission-required');
+      } else {
+        detectCompassAvailability();
+      }
+    });
+
     return () => {
       stopCompassTracking();
       stopDistanceTracking();
@@ -743,7 +755,8 @@ const QiblaCompassModern = () => {
               className="absolute inset-6 rounded-full"
               style={{
                 transform: `rotate(${dialRotation}deg)`,
-                transition: isLiveCompass ? 'transform 0.12s ease-out' : 'none',
+                // FIX: 0.12s was too fast on 30Hz Android sensors causing jitter
+                transition: isLiveCompass ? 'transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
               }}
             >
               {/* Degree Numbers */}
@@ -862,20 +875,67 @@ const QiblaCompassModern = () => {
             <div className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm",
               isDark 
-                ? "bg-[#141414]/60 border-white/10 text-white/80"
+                ? "bg-card/60 border-border/40 text-foreground/80"
                 : "bg-card border-border text-foreground/80"
             )}>
-              <Compass className="h-4 w-4 text-[#D4AF37]" />
+              <Compass className="h-4 w-4" style={{ color: THEME.accent }} />
               <span className="text-sm">
-                Turn <span className="font-semibold text-[#D4AF37]">{alignment.instruction.degrees}°</span> {alignment.instruction.direction}
+                Turn <span className="font-semibold" style={{ color: THEME.accent }}>{alignment.instruction.degrees}°</span> {alignment.instruction.direction}
               </span>
+            </div>
+          ) : compassUnavailable && qiblaResult ? (
+            // ── Rich no-sensor fallback UI ──────────────────────────
+            <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-center gap-3 px-4 py-3 rounded-2xl border"
+                style={{ background: 'rgba(201,134,10,0.06)', borderColor: 'rgba(201,134,10,0.25)' }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-600">
+                  <Compass className="w-4 h-4" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold" style={{ color: THEME.accent }}>No Sensor Detected</p>
+                  <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">Your device doesn't have a digital compass, but you can still find the Qibla!</p>
+                </div>
+              </div>
+              
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-4">
+                <div className="text-center pb-4 border-b border-border/50">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
+                  <div className="flex items-baseline justify-center gap-1.5">
+                    <p className="text-4xl font-black" style={{ color: THEME.accent, fontFamily: 'Georgia, serif' }}>{Math.round(qiblaResult.bearing)}°</p>
+                    <p className="text-sm font-bold text-foreground/80">{qiblaResult.cardinalDirection}</p>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground/70 mt-2 mx-auto max-w-[240px] leading-relaxed">
+                    This angle is a fixed geographic line from your city to Mecca. It will not change when you move your device.
+                  </p>
+                </div>
+                
+                <div className="space-y-3.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">How to use this number:</p>
+                  
+                  <div className="flex gap-3 text-left items-start">
+                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">1</div>
+                    <p className="text-xs text-foreground/90 leading-relaxed">
+                      <strong className="text-foreground block mb-0.5">Using a real compass:</strong>
+                      Hold a plastic compass flat. Turn your body until you face the <strong>{Math.round(qiblaResult.bearing)}°</strong> mark.
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-3 text-left items-start">
+                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">2</div>
+                    <p className="text-xs text-foreground/90 leading-relaxed">
+                      <strong className="text-foreground block mb-0.5">Using Google Maps:</strong>
+                      Open Maps. The top of your screen is always North (0°). Turn to face <strong>{qiblaResult.cardinalDirection}</strong>.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-muted-foreground text-sm">
-              {compassState === 'permission-required' ? 'Tap Enable Compass' :
+              {compassState === 'permission-required' ? 'Tap Enable Compass below' :
                 compassState === 'denied' ? 'Compass permission denied' :
                   compassState === 'activating' ? 'Starting compass...' :
-                    compassUnavailable ? 'No compass sensor available' : 'Enable compass for live guidance'}
+                    'Enable compass for live guidance'}
             </div>
           )}
         </div>
@@ -996,77 +1056,42 @@ const QiblaCompassModern = () => {
         </div>
 
         {/* Control Buttons */}
-        <div className="grid grid-cols-3 gap-2 pt-2">
+        {/* Control Buttons */}
+        <div className="pt-2">
           <button
             onClick={() => {
-              // Button press haptic
               if ('vibrate' in navigator) navigator.vibrate(50);
-              void enableCompass();
+              if (compassState === 'permission-required' || compassState === 'denied') {
+                void enableCompass();
+              } else {
+                void refreshLocation('manual');
+                if (isLiveCompass) {
+                  requestManualCalibration();
+                }
+              }
             }}
-            disabled={compassState === 'activating'}
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+            disabled={compassState === 'activating' || isRefreshingLocation}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 shadow-sm"
             style={{
-              background: isLiveCompass ? `${THEME.primary}20` : `${THEME.accent}15`,
-              border: `1px solid ${isLiveCompass ? `${THEME.primary}50` : `${THEME.accent}40`}`,
-              color: isLiveCompass ? THEME.primary : THEME.accent,
+              background: compassState === 'permission-required' ? `${THEME.primary}20` : 'transparent',
+              border: `1px solid ${compassState === 'permission-required' ? THEME.primary : THEME.border}`,
+              color: compassState === 'permission-required' ? THEME.primary : THEME.textMuted,
             }}
           >
-            <div className="flex items-center gap-1.5">
-              {compassState === 'activating' ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Compass className="h-3.5 w-3.5" />
-              )}
-              {isLiveCompass ? 'Recalibrate' : 'Enable'}
-            </div>
-            <span className="text-[10px] opacity-70 font-normal">
-              {isLiveCompass ? 'Reset sensor' : 'Compass'}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              // Button press haptic
-              if ('vibrate' in navigator) navigator.vibrate(50);
-              requestManualCalibration();
-            }}
-            disabled={!isLiveCompass}
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 shadow-sm"
-            style={{
-              background: isLiveCompass ? `${THEME.accent}15` : `${THEME.surface}`,
-              border: `1px solid ${isLiveCompass ? `${THEME.accent}40` : `${THEME.border}`}`,
-              color: isLiveCompass ? THEME.accent : THEME.textMuted,
-            }}
-          >
-            <div className="flex items-center gap-1.5">
-              <RefreshCw className="h-3.5 w-3.5" />
-              Calibrate
-            </div>
-            <span className="text-[10px] opacity-70 font-normal">
-              Improve accuracy
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              // Button press haptic
-              if ('vibrate' in navigator) navigator.vibrate(50);
-              void refreshLocation('manual');
-            }}
-            disabled={isRefreshingLocation}
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 bg-card hover:bg-accent border border-border text-foreground/80 shadow-sm"
-          >
-            <div className="flex items-center gap-1.5">
-              {isRefreshingLocation ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <LocateFixed className="h-3.5 w-3.5" />
-              )}
-              Location
-            </div>
-            <span className="text-[10px] opacity-70 font-normal">
-              Update GPS
-            </span>
+            {compassState === 'activating' || isRefreshingLocation ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : compassState === 'permission-required' || compassState === 'denied' ? (
+              <Compass className="h-4 w-4" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            
+            {compassState === 'activating' ? 'Starting...' :
+             compassState === 'permission-required' ? 'Enable Compass' :
+             compassState === 'denied' ? 'Permission Denied (Retry)' :
+             isRefreshingLocation ? 'Updating GPS...' :
+             isLiveCompass ? 'Refresh GPS & Calibrate' :
+             'Update Location'}
           </button>
         </div>
 

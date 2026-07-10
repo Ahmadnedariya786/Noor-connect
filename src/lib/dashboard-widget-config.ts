@@ -211,12 +211,7 @@ export function loadDashboardWidgetConfig(): DashboardWidgetConfig[] {
         category: (w.category as DashboardWidgetCategory) ?? 'optional',
       }));
 
-    // Migration: Force hide qibla-quick and tasbeeh-quick widgets
-    const migratedWidgets = parsedWidgets.map(w => 
-      (w.id === 'qibla-quick' || w.id === 'tasbeeh-quick') ? { ...w, visible: false } : w
-    );
-
-    const merged = normalizeDashboardWidgetConfig(migratedWidgets);
+    const merged = normalizeDashboardWidgetConfig(parsedWidgets);
 
     // If defaults changed (new widgets added), persist silently so the customizer can show them.
     const mergedString = JSON.stringify(merged);

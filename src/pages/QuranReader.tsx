@@ -7,6 +7,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { Preferences } from '@capacitor/preferences';
 import { useSettings } from '@/contexts/SettingsContext';
 import { goBackOrFallback } from '@/lib/navigation';
+import { quranFeaturesService } from '@/lib/quran-features';
 
 const LS_LAST_SURAH = 'quran-reader-last-surah';
 const BOOKMARKS_KEY = 'quran-bookmarks';
@@ -35,8 +36,23 @@ export default function QuranReader() {
 
   useEffect(() => {
     localStorage.setItem(LS_LAST_SURAH, String(surahNum));
+    if (surahInfo) {
+      localStorage.setItem('quran-last-read', JSON.stringify({ number: surahNum, name: surahInfo.englishName }));
+      
+      // Fix: Record reading streak and progress since we use images now
+      quranFeaturesService.updateReadingStreak().catch(console.error);
+      quranFeaturesService.updateRecitationProgress(
+        surahNum,
+        surahInfo.englishName,
+        surahInfo.numberOfAyahs,
+        surahInfo.numberOfAyahs, // mark as completed since pages are fully loaded
+        surahInfo.numberOfAyahs
+      )
+      .then(() => quranFeaturesService.checkAndUnlockAchievements())
+      .catch(console.error);
+    }
     loadBookmark();
-  }, [surahNum]);
+  }, [surahNum, surahInfo]);
 
   const loadBookmark = async () => {
     try {

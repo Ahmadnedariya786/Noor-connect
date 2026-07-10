@@ -456,7 +456,17 @@ export default function Dashboard() {
     name: nextPrayerName || "Loading...",
     time: nextPrayerTime || "--:--",
     targetTime: targetTime,
-    progress: 70, // This should be calculated based on current time vs start/end of prayer
+    progress: (() => {
+      const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
+      const prevPrayer = nextIdx > 0 ? prayers[nextIdx - 1] : null;
+      const prevDate = prevPrayer?.date;
+      if (!prevDate || !targetTime) return 0;
+      const start = prevDate.getTime();
+      const end = targetTime.getTime();
+      const now = currentTime.getTime();
+      if (end <= start) return 0;
+      return Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+    })(),
   };
 
   return (

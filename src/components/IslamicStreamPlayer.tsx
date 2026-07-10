@@ -23,6 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { fetchSaudiPlaylist, FALLBACK_STREAMS, type Channel } from '@/lib/m3u-parser';
 import { isLowEndDevice } from '@/lib/performance-optimizations';
+import { recordListeningTime } from '@/lib/radio-stats';
 
 type StreamLocation = 'makkah' | 'madinah';
 
@@ -47,6 +48,7 @@ export default function IslamicStreamPlayer() {
   const retryCountRef = useRef<Record<StreamLocation, number>>({ makkah: 0, madinah: 0 });
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const playStartRef = useRef<number>(0);
   const streamUrlsRef = useRef<Record<StreamLocation, string | null>>({
     makkah: FALLBACK_STREAMS.makkah?.url || null,
     madinah: FALLBACK_STREAMS.madinah?.url || null,
@@ -91,8 +93,21 @@ export default function IslamicStreamPlayer() {
     scheduleHide();
   }, [scheduleHide]);
 
+  /* ─── Track watch time ─── */
+  const flushListenTime = useCallback(() => {
+    if (playStartRef.current > 0) {
+      const elapsed = Math.floor((Date.now() - playStartRef.current) / 1000);
+      if (elapsed > 10) {
+        const tab = activeTabRef.current;
+        recordListeningTime(`live_${tab}`, `Live ${LOCATION_META[tab].label}`, elapsed);
+      }
+      playStartRef.current = 0;
+    }
+  }, []);
+
   /* ─── Destroy HLS ─── */
   const destroyHLS = useCallback(() => {
+    flushListenTime();
     const video = videoRef.current;
     if (video) { video.pause(); video.src = ''; video.load(); }
     if (hlsRef.current) {
@@ -168,8 +183,10 @@ export default function IslamicStreamPlayer() {
           ...prev,
           [tab]: { ...prev[tab], isLoading: false, isBuffering: false, isPlaying: true },
         }));
+        playStartRef.current = Date.now();
         video.play().catch(() => {
           setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], isPlaying: false } }));
+          playStartRef.current = 0;
         });
       });
 
@@ -195,11 +212,13 @@ export default function IslamicStreamPlayer() {
             }
             break;
           case Hls.ErrorTypes.NETWORK_ERROR:
+            flushListenTime();
             setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Network error — check your connection.', isLoading: false, isBuffering: false } }));
             destroyHLS();
             scheduleRetry(tab);
             break;
           default:
+            flushListenTime();
             setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Stream unavailable. Try again shortly.', isLoading: false, isBuffering: false } }));
             destroyHLS();
             scheduleRetry(tab);
@@ -221,7 +240,10 @@ export default function IslamicStreamPlayer() {
       video.src = url;
       video.addEventListener('loadedmetadata', () => {
         setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], isLoading: false, isPlaying: true } }));
-        video.play().catch(() => {});
+        playStartRef.current = Date.now();
+        video.play().catch(() => {
+          playStartRef.current = 0;
+        });
       }, { once: true });
     } else {
       setStreams(prev => ({
@@ -252,9 +274,10 @@ export default function IslamicStreamPlayer() {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      flushListenTime();
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
-  }, []);
+  }, [flushListenTime]);
 
   /* ─── Fetch remote playlist once ─── */
   useEffect(() => {
@@ -308,11 +331,13 @@ export default function IslamicStreamPlayer() {
     if (v.paused) {
       v.play();
       setStreams(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], isPlaying: true } }));
+      playStartRef.current = Date.now();
     } else {
       v.pause();
+      flushListenTime();
       setStreams(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], isPlaying: false } }));
     }
-  }, [activeTab]);
+  }, [activeTab, flushListenTime]);
 
   const toggleMute = useCallback(() => {
     const v = videoRef.current;

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, memo, useRef, type CSSProperties } from "react";
+import { useState, useMemo, useEffect, memo, useRef, startTransition, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, ChevronLeft, Sparkles, BookOpen, History, Filter, MapPin, Moon } from "lucide-react";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
@@ -117,7 +117,10 @@ export default function SurahList() {
   }, [allSurahs, filter, searchQuery]);
 
   const handleSurahClick = (surahNumber: number) => {
-    navigate(`/quran/surah-${surahNumber}`);
+    if ('vibrate' in navigator) navigator.vibrate(15);
+    startTransition(() => {
+      navigate(`/quran/surah-${surahNumber}`);
+    });
   };
 
   return (
@@ -222,7 +225,12 @@ export default function SurahList() {
           <div className="max-w-2xl mx-auto px-4 mb-6">
             <CSSOnlyTransition hoverScale={1.02} tapScale={0.98} duration={150}>
               <button
-                onClick={() => navigate(`/quran/surah-${lastRead.number}`)}
+                onClick={() => {
+                  if ('vibrate' in navigator) navigator.vibrate(15);
+                  startTransition(() => {
+                    navigate(`/quran/surah-${lastRead.number}`);
+                  });
+                }}
                 className="w-full flex items-center p-4 bg-primary/10 border border-primary/20 rounded-2xl gap-4 hover:bg-primary/15 transition-all group active:scale-[0.98]"
               >
                 <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
@@ -243,7 +251,12 @@ export default function SurahList() {
           <CSSOnlyTransition hoverScale={0.98} tapScale={0.96} duration={150}>
             <div
               className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 cursor-pointer active:scale-[0.98] transition-transform"
-              onClick={() => navigate('/quran')}
+              onClick={() => {
+                if ('vibrate' in navigator) navigator.vibrate(15);
+                startTransition(() => {
+                  navigate('/quran');
+                });
+              }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse" />

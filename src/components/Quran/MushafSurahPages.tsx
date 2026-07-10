@@ -75,26 +75,28 @@ function MushafPageImage({
         isDark ? 'border-[#C9A84C]/10 bg-[#111111]' : 'border-amber-200/40 bg-white/60'
       } transition-colors duration-300`}
     >
-      <div className="relative w-full min-h-[150px] flex items-center justify-center">
+      <div 
+        className="relative w-full flex items-center justify-center overflow-hidden"
+        style={{ aspectRatio: '212 / 325' }}
+      >
         {/* Shimmer skeleton behind/instead of image while loading */}
         {status === 'loading' && (
-          <div className="absolute inset-0 z-10">
-            <div className={`w-full aspect-[3/4] relative overflow-hidden ${isDark ? 'bg-[#111111]' : 'bg-amber-50/60'}`}>
-              <div
-                className={`absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(201,168,76,0.15),transparent)] animate-[shimmer_1.5s_infinite]`}
-              />
-            </div>
+          <div className={`absolute inset-0 w-full h-full z-10 ${isDark ? 'bg-[#111111]' : 'bg-amber-50/60'}`}>
+            <div
+              className={`absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(201,168,76,0.15),transparent)] animate-[shimmer_1.5s_infinite]`}
+            />
           </div>
         )}
         <img
           src={imageUrl}
           alt={`Mushaf page ${page}`}
           loading="lazy"
-          className="w-full h-auto block relative z-20"
+          className="absolute inset-0 w-full h-full object-fill z-20"
           style={{
             touchAction: 'pan-y',
             opacity: status === 'loaded' ? 1 : 0,
-            transition: 'opacity 0.3s ease',
+            transition: 'opacity 0.4s ease-out',
+            willChange: 'opacity'
           }}
           draggable={false}
           onLoad={handleLoad}
@@ -102,7 +104,7 @@ function MushafPageImage({
         />
         {status === 'error' && (
           <div
-            className={`w-full aspect-[3/4] flex flex-col items-center justify-center gap-2 ${
+            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-2 ${
               isDark ? 'bg-[#111111] text-white/30' : 'bg-amber-50 text-gray-400'
             }`}
           >
@@ -129,11 +131,47 @@ export function MushafSurahPages({ surahNumber, onSwipe }: MushafSurahPagesProps
   const isDark = effectiveTheme === 'dark';
 
   const { start, end } = useMemo(() => getSurahPageRange(surahNumber), [surahNumber]);
-  const pages = useMemo(() => {
+  
+  const allPages = useMemo(() => {
     const arr: number[] = [];
     for (let p = start; p <= end; p++) arr.push(p);
     return arr;
   }, [start, end]);
+
+  // Progressive rendering state
+  const [renderedPages, setRenderedPages] = useState<number[]>([]);
+
+  useEffect(() => {
+    // Instantly render first 2 pages so UI is responsive
+    setRenderedPages(allPages.slice(0, 2));
+
+    if (allPages.length <= 2) return;
+
+    let timeoutId: number;
+    let currentIndex = 2;
+    const CHUNK_SIZE = 2; // Mount 2 pages per tick to avoid freezing main thread
+
+    const renderNextChunk = () => {
+      const nextEnd = Math.min(currentIndex + CHUNK_SIZE, allPages.length);
+      const currentChunk = allPages.slice(0, nextEnd);
+      
+      setRenderedPages(currentChunk);
+      currentIndex = nextEnd;
+
+      if (currentIndex < allPages.length) {
+        // Yield to browser for 50ms before mounting next chunk
+        timeoutId = window.setTimeout(() => {
+          requestAnimationFrame(renderNextChunk);
+        }, 50);
+      }
+    };
+
+    timeoutId = window.setTimeout(() => {
+      requestAnimationFrame(renderNextChunk);
+    }, 150); // Initial delay to let the page transition animation finish smoothly
+
+    return () => clearTimeout(timeoutId);
+  }, [allPages]);
 
   const { scale, onTouchStart, onTouchMove, onTouchEnd, reset } = usePinchZoom();
 
@@ -190,7 +228,7 @@ export function MushafSurahPages({ surahNumber, onSwipe }: MushafSurahPagesProps
           touchAction: 'pan-y',
         }}
       >
-        {pages.map((p) => (
+        {renderedPages.map((p) => (
           <div key={p}>
             <MushafPageImage
               page={p}
@@ -198,6 +236,13 @@ export function MushafSurahPages({ surahNumber, onSwipe }: MushafSurahPagesProps
             />
           </div>
         ))}
+        
+        {/* Loading skeleton for remaining pages */}
+        {renderedPages.length < allPages.length && (
+          <div className="flex justify-center p-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50" />
+          </div>
+        )}
       </div>
     </div>
   );

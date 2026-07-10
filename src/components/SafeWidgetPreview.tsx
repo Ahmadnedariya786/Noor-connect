@@ -227,7 +227,7 @@ const WeeklyChartPreview = () => {
               className="w-full rounded-t-sm bg-sky-500"
               style={{ height: `${(scores[i] / max) * 100}%` }}
             />
-            <p className="text-[8px] text-muted-foreground">{d[0]}</p>
+            <p className="text-[10px] text-muted-foreground">{d[0]}</p>
           </div>
         ))}
       </div>
@@ -365,7 +365,7 @@ const QuranRadioPreview = () => (
     </div>
     <div className="flex justify-between items-center bg-emerald-100/50 dark:bg-emerald-900/30 rounded-lg px-2 py-1">
       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-      <span className="text-[9px] font-medium text-emerald-700 dark:text-emerald-300">BUFFERSING STREAM...</span>
+      <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300">BUFFERING STREAM...</span>
       <div className="flex gap-1">
         <div className="w-0.5 h-2 bg-emerald-400" />
         <div className="w-0.5 h-3 bg-emerald-500" />
@@ -374,6 +374,31 @@ const QuranRadioPreview = () => (
     </div>
   </div>
 );
+
+// ── Islamic Remedy (Mood-based) ─────────────────────────────
+const RemedyPreview = () => {
+  const moods = ['😔 Sad', '😰 Anxious', '😡 Angry', '😴 Tired', '🙏 Grateful'];
+  return (
+    <div className="rounded-xl border border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-amber-50/20 dark:from-amber-950/30 dark:to-amber-950/10 p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Quick Remedy</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-semibold">How do you feel?</span>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {moods.slice(0, 3).map(m => (
+          <div key={m} className="rounded-lg bg-amber-100/60 dark:bg-amber-900/30 px-1.5 py-1.5 text-center">
+            <p className="text-base leading-none">{m.split(' ')[0]}</p>
+            <p className="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5 font-medium truncate">{m.split(' ')[1]}</p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-lg bg-amber-500/10 border border-amber-300/40 p-2 text-center">
+        <p className="text-[10px] text-amber-800 dark:text-amber-200 font-arabic leading-relaxed">رَبَّنَا لَا تُزِغْ قُلُوبَنَا</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">Quran 3:8 · Tap mood for remedy</p>
+      </div>
+    </div>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────
 // Master map
@@ -393,6 +418,7 @@ const PREVIEW_MAP: Record<string, React.FC> = {
   'qaza-tracker':   QazaTrackerPreview,
   'dhikr-reminder': DhikrReminderPreview,
   'quran-radio':    QuranRadioPreview,
+  'remedy':         RemedyPreview,
 };
 
 // ─────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, Clock, Radio, Trash2, Trophy, Flame, Target, TrendingUp, ArrowLeft } from 'lucide-react';
+import { BarChart3, Clock, Radio, Trash2, Trophy, Flame, Target, TrendingUp, ArrowLeft, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getSortedStationStats, getTotalListeningTime, resetRadioStats, formatDuration, type StationStats } from '@/lib/radio-stats';
@@ -91,8 +91,8 @@ export default function RadioStats() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-black text-foreground tracking-tight">Radio Statistics</h1>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Listening Habits</p>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Media Statistics</h1>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Listen & Watch Habits</p>
           </div>
           {streak > 0 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
@@ -146,10 +146,14 @@ export default function RadioStats() {
           <Card className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Radio className="w-5 h-5 text-primary" />
+                {mostListened.stationId.startsWith('live_') ? (
+                  <MonitorPlay className="w-5 h-5 text-primary" />
+                ) : (
+                  <Radio className="w-5 h-5 text-primary" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-muted-foreground">Most Listened Station</p>
+                <p className="text-xs font-medium text-muted-foreground">Top Station / Stream</p>
                 <p className="text-sm font-bold text-foreground truncate">{mostListened.stationName}</p>
               </div>
               <div className="text-right">
@@ -204,12 +208,12 @@ export default function RadioStats() {
 
         {/* Station List */}
         <div>
-          <h2 className="text-lg font-bold text-foreground mb-3">Station Breakdown</h2>
+          <h2 className="text-lg font-bold text-foreground mb-3">Media Breakdown</h2>
           {stats.length === 0 ? (
             <Card className="p-8 text-center">
-              <Radio className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-              <p className="text-sm font-medium text-muted-foreground">No listening data yet</p>
-              <p className="text-xs text-muted-foreground/50 mt-1">Start listening to radio stations to see statistics</p>
+              <MonitorPlay className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-sm font-medium text-muted-foreground">No media data yet</p>
+              <p className="text-xs text-muted-foreground/50 mt-1">Start listening to radio or watching streams to see statistics</p>
             </Card>
           ) : (
             <div className="space-y-3">
@@ -221,7 +225,11 @@ export default function RadioStats() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Radio className="w-4 h-4 text-primary" />
+                          {station.stationId.startsWith('live_') ? (
+                            <MonitorPlay className="w-4 h-4 text-primary" />
+                          ) : (
+                            <Radio className="w-4 h-4 text-primary" />
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-foreground">{station.stationName}</p>

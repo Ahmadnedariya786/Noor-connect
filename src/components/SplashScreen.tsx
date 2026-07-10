@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from "react";
-import { m, AnimatePresence } from "framer-motion";
 import { Smartphone } from "lucide-react";
 
 interface NavigatorWithStandalone extends Navigator {
@@ -30,22 +29,15 @@ function FloatingStars({ enabled }: { enabled: boolean }) {
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {!enabled ? null : stars.map((star) => (
-                <m.div
+                <div
                     key={star.id}
-                    initial={{ opacity: 0.2, scale: 0.8 }}
-                    animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
-                    transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        delay: star.delay,
-                        ease: "easeInOut"
-                    }}
-                    className="absolute rounded-full bg-white/60"
+                    className="absolute rounded-full bg-white/60 animate-[pulse_3s_ease-in-out_infinite]"
                     style={{
                         left: `${star.x}%`,
                         top: `${star.y}%`,
                         width: star.size,
                         height: star.size,
+                        animationDelay: `${star.delay}s`,
                     }}
                 />
             ))}
@@ -56,12 +48,7 @@ function FloatingStars({ enabled }: { enabled: boolean }) {
 // App Icon Component
 function AppIcon({ animationsEnabled }: { animationsEnabled: boolean }) {
     return (
-        <m.div
-            initial={animationsEnabled ? { scale: 0.8, opacity: 0, rotate: -180 } : false}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            transition={animationsEnabled ? { duration: 1, ease: "easeOut" } : { duration: 0 }}
-            className="relative"
-        >
+        <div className={`relative ${animationsEnabled ? 'animate-in zoom-in-75 fade-in duration-1000' : ''}`}>
             {/* Icon Container with Premium Styling */}
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#1a4a4a] via-[#2c6e6e] to-[#b38b5d] p-1 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
                 <div className="w-full h-full rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
@@ -104,18 +91,16 @@ function AppIcon({ animationsEnabled }: { animationsEnabled: boolean }) {
             </div>
 
             {/* Glow Effect */}
-            <m.div
-                className="absolute inset-0 rounded-2xl"
-                initial={animationsEnabled ? { opacity: 0 } : { opacity: 0.35 }}
-                animate={{ opacity: animationsEnabled ? 0.6 : 0.35 }}
-                transition={animationsEnabled ? { delay: 0.5, duration: 1 } : { duration: 0 }}
+            <div
+                className={`absolute inset-0 rounded-2xl ${animationsEnabled ? 'animate-in fade-in duration-1000 delay-500 fill-mode-both' : ''}`}
                 style={{
                     background: "radial-gradient(circle, rgba(212, 175, 55, 0.4) 0%, transparent 70%)",
                     filter: "blur(20px)",
                     transform: "scale(1.2)",
+                    opacity: animationsEnabled ? 0.6 : 0.35,
                 }}
             />
-        </m.div>
+        </div>
     );
 }
 
@@ -126,115 +111,99 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: SplashScreenProps) {
-    const [isVisible, setIsVisible] = useState(true);
+    const [isFading, setIsFading] = useState(false);
+    const [isMounted, setIsMounted] = useState(true);
 
     useEffect(() => {
-        // Non-blocking adaptive timing — uses hardwareConcurrency (instant, no main-thread loop)
-        // Old code ran a 1M-iteration Math.sqrt loop on mount, freezing the UI.
+        // Non-blocking adaptive timing — uses hardwareConcurrency
         const cores = navigator.hardwareConcurrency || 4;
-        let baseDuration: number;
-        if (cores >= 8) {
-            baseDuration = 900;   // Fast device
-        } else if (cores >= 4) {
-            baseDuration = 1200;  // Medium device
-        } else {
-            baseDuration = 1500;  // Low-end device
-        }
+        let baseDuration = cores >= 8 ? 600 : cores >= 4 ? 900 : 1200;
 
         // Animations add a little time; disabled = snappier exit
         const duration = animationsEnabled ? baseDuration : baseDuration * 0.7;
-        const exitDuration = animationsEnabled ? 300 : 0;
 
-        const timer = setTimeout(() => {
-            setIsVisible(false);
-            setTimeout(onComplete, exitDuration);
+        const fadeTimer = setTimeout(() => {
+            setIsFading(true);
+            setTimeout(() => {
+                setIsMounted(false);
+                onComplete();
+            }, 300); // Wait for CSS opacity transition (300ms)
         }, duration);
 
-        return () => clearTimeout(timer);
+        return () => clearTimeout(fadeTimer);
     }, [animationsEnabled, onComplete]);
 
+    if (!isMounted) return null;
+
     return (
-        <AnimatePresence>
-            {isVisible && (
-                <m.div
-                    initial={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={animationsEnabled ? { duration: 0.4, ease: "easeInOut" } : { duration: 0.08 }}
-                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a1128] overflow-hidden"
-                    style={{
-                        background: "linear-gradient(135deg, #0a1128 0%, #1a237e 50%, #0d1b2a 100%)",
-                    }}
-                >
-                    {/* Stars Background */}
-                    <FloatingStars enabled={animationsEnabled} />
+        <div
+            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a1128] overflow-hidden transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}
+            style={{
+                background: "linear-gradient(135deg, #0a1128 0%, #1a237e 50%, #0d1b2a 100%)",
+            }}
+        >
+            {/* Stars Background */}
+            <FloatingStars enabled={animationsEnabled} />
 
-                    {/* Main Content */}
-                    <div className="relative z-10 flex flex-col items-center justify-center space-y-6 px-4">
-                        {/* App Icon */}
-                        <AppIcon animationsEnabled={animationsEnabled} />
+            {/* Main Content */}
+            <div className="relative z-10 flex flex-col items-center justify-center space-y-6 px-4">
+                {/* App Icon */}
+                <AppIcon animationsEnabled={animationsEnabled} />
 
-                        {/* App Title with Premium Glass Card */}
-                        <div className="glass-card px-8 py-4">
-                            <h1
-                                className="text-4xl md:text-5xl font-bold text-center tracking-tight"
-                                style={{
-                                    background: "linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #B8860B 100%)",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                    backgroundClip: "text",
-                                    fontFamily: "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif"
-                                }}
-                            >
-                                Noor Connect
-                            </h1>
-                        </div>
-
-                        {showGreeting && (
-                            <p className="text-sm text-[#D4AF37]/80 uppercase tracking-[0.3em] font-semibold">
-                                Islamic Companion
-                            </p>
-                        )}
-
-                        {/* Reserve vertical space to prevent CLS when switching splash content */}
-                        <div className="w-full max-w-sm min-h-[50px] flex items-center justify-center mt-8">
-                            <m.div className="flex space-x-2">
-                                {[0, 1, 2].map((i) => (
-                                    <m.div
-                                        key={i}
-                                        className="w-2 h-2 rounded-full bg-[#D4AF37]"
-                                        animate={animationsEnabled ? { y: [0, -6, 0] } : { y: 0 }}
-                                        transition={animationsEnabled ? {
-                                            duration: 0.6,
-                                            repeat: Infinity,
-                                            delay: i * 0.15,
-                                            ease: "easeInOut"
-                                        } : { duration: 0 }}
-                                        style={{
-                                            boxShadow: "0 0 8px rgba(212, 175, 55, 0.6)",
-                                        }}
-                                    />
-                                ))}
-                            </m.div>
-                        </div>
-                    </div>
-
-                    {/* Bottom Golden Haze */}
-                    <div
-                        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+                {/* App Title with Premium Glass Card */}
+                <div className="glass-card px-8 py-4">
+                    <h1
+                        className="text-4xl md:text-5xl font-bold text-center tracking-tight"
                         style={{
-                            background: "linear-gradient(to top, rgba(212, 175, 55, 0.1), transparent)",
+                            background: "linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #B8860B 100%)",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            backgroundClip: "text",
+                            fontFamily: "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif"
                         }}
-                    />
+                    >
+                        Noor Connect
+                    </h1>
+                </div>
 
-                    {/* APK Indicator */}
-                    {isStandaloneMode() && (
-                        <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-                            <Smartphone className="w-3 h-3 text-white/60" />
-                            <span className="text-xs text-white/60">App Mode</span>
-                        </div>
-                    )}
-                </m.div>
+                {showGreeting && (
+                    <p className="text-sm text-[#D4AF37]/80 uppercase tracking-[0.3em] font-semibold">
+                        Islamic Companion
+                    </p>
+                )}
+
+                {/* Reserve vertical space to prevent CLS when switching splash content */}
+                <div className="w-full max-w-sm min-h-[50px] flex items-center justify-center mt-8">
+                    <div className="flex space-x-2">
+                        {[0, 1, 2].map((i) => (
+                            <div
+                                key={i}
+                                className={`w-2 h-2 rounded-full bg-[#D4AF37] ${animationsEnabled ? 'animate-bounce' : ''}`}
+                                style={{
+                                    boxShadow: "0 0 8px rgba(212, 175, 55, 0.6)",
+                                    animationDelay: `${i * 0.15}s`
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Golden Haze */}
+            <div
+                className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+                style={{
+                    background: "linear-gradient(to top, rgba(212, 175, 55, 0.1), transparent)",
+                }}
+            />
+
+            {/* APK Indicator */}
+            {isStandaloneMode() && (
+                <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                    <Smartphone className="w-3 h-3 text-white/60" />
+                    <span className="text-xs text-white/60">App Mode</span>
+                </div>
             )}
-        </AnimatePresence>
+        </div>
     );
 }

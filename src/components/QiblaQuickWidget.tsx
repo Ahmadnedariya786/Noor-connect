@@ -10,6 +10,8 @@ export function QiblaQuickWidget() {
   const navigate = useNavigate();
   const location = useLocationState();
 
+  // calculateQibla now uses getCachedDeclinationSync internally —
+  // so this always returns a magnetic-corrected bearing (or WMM-lite approximation).
   const qibla = useMemo(() => {
     return calculateQibla(location.latitude, location.longitude);
   }, [location.latitude, location.longitude]);
@@ -57,6 +59,11 @@ export function QiblaQuickWidget() {
               Distance{" "}
               <span className="font-bold text-white/90">{qibla.formattedDistance}</span>
             </p>
+            {qibla.declinationDeg !== 0 && (
+              <p className="text-[10px] text-white/30 mt-0.5">
+                Declination: {qibla.declinationDeg > 0 ? '+' : ''}{qibla.declinationDeg.toFixed(1)}°
+              </p>
+            )}
           </div>
 
           <div className="relative w-20 h-20 rounded-2xl flex items-center justify-center border border-white/5" style={{ background: 'rgba(201,134,10,0.05)' }}>
@@ -77,7 +84,7 @@ export function QiblaQuickWidget() {
           onClick={() => navigate("/qibla")}
         >
           <Navigation className="w-4 h-4" />
-          Calibrate Compass
+          Open Full Compass
         </Button>
       </CardContent>
     </Card>
@@ -85,4 +92,3 @@ export function QiblaQuickWidget() {
 }
 
 export default QiblaQuickWidget;
-
