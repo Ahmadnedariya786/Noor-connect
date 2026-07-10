@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchSaudiPlaylist, FALLBACK_STREAMS, type Channel } from '@/lib/m3u-parser';
-import { isLowEndDevice } from '@/lib/device-performance';
+import { isLowEndDevice } from '@/lib/performance-optimizations';
 
 type StreamLocation = 'makkah' | 'madinah';
 

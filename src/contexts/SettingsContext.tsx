@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { Preferences } from '@capacitor/preferences';
-import { isLowEndDevice } from '@/lib/device-performance';
+import { isLowEndDevice } from '@/lib/performance-optimizations';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 

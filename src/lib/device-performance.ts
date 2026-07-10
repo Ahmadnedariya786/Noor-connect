@@ -416,3 +416,6 @@ export function getAnimationTier(): AnimationTier {
 
   return { ...TIER_DEFAULTS.high, tier: 'high', fps: 60, reasons: ['Initial (benchmark pending)'] };
 }
+
+// Re-export animation tier utilities from performance-optimizations for backward compatibility
+export { useAnimationTier, AdaptiveMotion, AdaptiveMotionList, useReducedMotion, useStaggerConfig } from './performance-optimizations';

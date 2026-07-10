@@ -6,7 +6,7 @@
 
 import { importantIslamicDates, IslamicDate, isRamadanCountdownPeriod, getDaysUntilRamadan } from '@/data/islamic-dates';
 import { getRandomContent, getContentByType, getContentByCategory, IslamicContent } from '@/data/expanded-islamic-content';
-import { isLowEndDevice } from '@/lib/device-performance';
+import { isLowEndDevice } from '@/lib/performance-optimizations';
 
 export interface NotificationPreferences {
   ramadanCountdowns: boolean;
