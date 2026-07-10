@@ -168,10 +168,20 @@ function runWebGLBenchmark(): Promise<{ fps: number; jankScore: number }> {
     
     const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
     const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+    if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS) || !gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+      document.body.removeChild(canvas);
+      resolve({ fps: 0, jankScore: 1 });
+      return;
+    }
     const program = gl.createProgram()!;
     gl.attachShader(program, vs);
     gl.attachShader(program, fs);
     gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      document.body.removeChild(canvas);
+      resolve({ fps: 0, jankScore: 1 });
+      return;
+    }
     gl.useProgram(program);
     
     const positions = new Float32Array(1000 * 2);

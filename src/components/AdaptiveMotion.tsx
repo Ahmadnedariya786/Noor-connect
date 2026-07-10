@@ -1,6 +1,6 @@
+import React, { forwardRef } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { useAnimationTier } from '@/hooks/useAnimationTier';
-import { forwardRef } from 'react';
 
 interface AdaptiveMotionProps extends HTMLMotionProps<'div'> {
   disableOn?: ('minimal' | 'low' | 'medium')[];

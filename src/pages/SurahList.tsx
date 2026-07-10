@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, memo, useRef } from "react";
+import { useState, useMemo, useEffect, memo, useRef, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, ChevronLeft, Sparkles, BookOpen, History, Filter, MapPin, Moon } from "lucide-react";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
@@ -8,7 +8,7 @@ import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { goBackOrFallback } from "@/lib/navigation";
 import { List } from 'react-window';
-import { useReducedMotion } from '@/hooks/useAnimationTier';
+import { useReducedMotion } from '@/components/AdaptiveMotion';
 import { CSSOnlyTransition } from '@/components/AdaptiveMotion';
 
 interface SurahCardProps {
@@ -75,6 +75,18 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
     prevProps.isDark === nextProps.isDark
   );
 });
+
+const SurahRow = memo(({ index, style, surahs, isDark, onClick }: {
+  index: number;
+  style: CSSProperties;
+  surahs: SurahInfo[];
+  isDark: boolean;
+  onClick: (number: number) => void;
+}) => (
+  <div style={style} className="py-1">
+    <SurahCard surah={surahs[index]} index={index} isDark={isDark} onClick={onClick} />
+  </div>
+));
 
 export default function SurahList() {
   const { theme, effectiveTheme } = useSettings();
@@ -283,23 +295,15 @@ export default function SurahList() {
         <div className="max-w-2xl mx-auto px-4 py-6" ref={listRef}>
           {filteredSurahs.length > 0 ? (
             <List
-              height={Math.min(filteredSurahs.length * 130, (listRef.current?.clientHeight || window.innerHeight) - 200)}
-              itemCount={filteredSurahs.length}
-              itemSize={130}
-              width="100%"
-              itemData={{ surahs: filteredSurahs, isDark, onClick: handleSurahClick }}
-            >
-              {({ index, style, data }) => (
-                <div style={style} className="py-1">
-                  <SurahCard
-                    surah={data.surahs[index]}
-                    index={index}
-                    isDark={data.isDark}
-                    onClick={data.onClick}
-                  />
-                </div>
-              )}
-            </List>
+              style={{
+                height: Math.min(filteredSurahs.length * 130, (listRef.current?.clientHeight || window.innerHeight) - 200),
+                width: '100%',
+              }}
+              rowCount={filteredSurahs.length}
+              rowHeight={130}
+              rowProps={{ surahs: filteredSurahs, isDark, onClick: handleSurahClick }}
+              rowComponent={SurahRow}
+            />
           ) : (
             <div className="text-center py-20">
               <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -1,88 +1,47 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Download, Smartphone } from 'lucide-react';
+import { ExternalLink, X, Smartphone } from 'lucide-react';
 
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
+const FDROID_URL = 'https://f-droid.org/en/packages/com.noorconnect.app/';
 
 export function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isNativeApp, setIsNativeApp] = useState(false);
 
   useEffect(() => {
-    // Check if app is already installed
-    const checkInstalled = () => {
+    const checkPlatform = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isInWebAppiOS = (window.navigator as any).standalone === true;
-      setIsInstalled(isStandalone || isInWebAppiOS);
+      const isCapacitor = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform?.();
+      setIsInstalled(isStandalone || isInWebAppiOS || isCapacitor);
+      setIsNativeApp(!!isCapacitor);
     };
 
-    checkInstalled();
+    checkPlatform();
 
-    // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      
-      // Show prompt after a delay (don't annoy users immediately)
-      setTimeout(() => {
-        if (!isInstalled) {
-          setShowPrompt(true);
-        }
-      }, 5000);
-    };
-
-    // Listen for app installed event
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setShowPrompt(false);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, [isInstalled]);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
-    try {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
+    const timer = setTimeout(() => {
+      checkPlatform();
+      if (!isInstalled) {
+        setShowPrompt(true);
       }
-      
-      setDeferredPrompt(null);
-      setShowPrompt(false);
-    } catch (error) {
-      console.error('Error during PWA installation:', error);
-    }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleInstallClick = () => {
+    window.open(FDROID_URL, '_blank', 'noopener,noreferrer');
+    setShowPrompt(false);
+    sessionStorage.setItem('pwa-install-dismissed', 'true');
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    // Don't show again for this session
     sessionStorage.setItem('pwa-install-dismissed', 'true');
   };
 
-  // Don't show if already installed or dismissed
-  if (isInstalled || !showPrompt || sessionStorage.getItem('pwa-install-dismissed')) {
+  if (isNativeApp || isInstalled || !showPrompt || sessionStorage.getItem('pwa-install-dismissed')) {
     return null;
   }
 
@@ -98,10 +57,10 @@ export function PWAInstallPrompt() {
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm text-foreground mb-1">
-              Install Noor Connect
+              Get the Android App
             </h3>
             <p className="text-xs text-muted-foreground mb-3">
-              Get instant access, offline support, and a better experience on your device.
+              Download Noor Connect from F-Droid for the full experience — offline, faster, with native widgets and prayer alarms.
             </p>
             
             <div className="flex gap-2">
@@ -110,8 +69,8 @@ export function PWAInstallPrompt() {
                 onClick={handleInstallClick}
                 className="flex items-center gap-1 text-xs"
               >
-                <Download className="w-3 h-3" />
-                Install
+                <ExternalLink className="w-3 h-3" />
+                Get on F-Droid
               </Button>
               <Button 
                 size="sm" 
