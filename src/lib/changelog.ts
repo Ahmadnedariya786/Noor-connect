@@ -32,14 +32,53 @@ const STORAGE_KEYS = {
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
     version: '2.0.0',
-    date: '2026-07-04',
+    date: '2026-07-10',
     title: 'Noor Connect 2.0 — Major Release',
     changes: [
-      { type: 'feature', description: 'Major 2.0 release with rebuilt widget system and expanded feature set.' },
-      { type: 'feature', description: 'Noor Cycle: ovulation day tracking, cycle insights, fertile window, and PDF report export.' },
-      { type: 'feature', description: 'New Analytics tab and Education FAQ across Haidh/Nifas trackers.' },
-      { type: 'fix', description: 'Critical Haidh Tracker fixes — prayer pause, backup, and gender filter.' },
-      { type: 'improvement', description: 'Route consolidation and overall stability improvements.' },
+      { type: 'feature', description: 'Widget System v2: 5 native Kotlin widgets (Next Prayer, Daily Ayah, Daily Hadith, Quran Progress, Tasbeeh Counter) rebuilt from scratch with Material You dynamic color.' },
+      { type: 'feature', description: 'Noor Cycle: ovulation day tracking, cycle insights, fertile window, analytics tab with recharts, and PDF doctor report export.' },
+      { type: 'feature', description: 'Seerah chapters and Qisas (Stories of Prophets) reader with offline tafsir support and progress tracking.' },
+      { type: 'feature', description: 'Zakat Calculator: silver asset calculation, exchange rate fallback service, and preferred currency persistence.' },
+      { type: 'feature', description: 'Hadith expansion: 10 new collections (adab, ahmad, bulugh, darimi, forty, hisn, malik, mishkat, riyadussalihin, shamail), HadithDetail page, and HadithBookmarks.' },
+      { type: 'feature', description: 'Backup & Restore: cross-platform localStorage-based backup with auto-restore on reinstall and smart background processing.' },
+      { type: 'feature', description: 'Low-end device optimizations: device detection, adaptive performance settings, React Query tuning, and 30+ FPS target on 2016+ devices.' },
+      { type: 'feature', description: 'Islamic Remedies: mood grid redesign, full-screen remedy viewer with framer-motion entrance animations, gamification, and Dashboard widget.' },
+      { type: 'feature', description: 'Radio Statistics & Achievements: per-station listening stats, total watch time, streak tracking, and unlockable achievements.' },
+      { type: 'feature', description: 'Quran reading progress (X/Y) on all book cards, uploads, and detail modal; PDF reader with local worker and blob: CSP fix.' },
+      { type: 'feature', description: 'LiveStreams: aggressive HLS buffering (120s), quality switcher UI (Auto/320p/480p), and hardcapped recovery loop to prevent OS freezing on weak networks.' },
+      { type: 'feature', description: 'Qibla enhancements: single smart button with geo-anchor note, magnetic declination correction via NOAA API, device orientation and metal-interference warnings with calibration UX.' },
+      { type: 'fix', description: 'Critical Haidh Tracker fixes: prayer pause/resume on cycle start/end, backup inclusion, gender filter, and route consolidation.' },
+      { type: 'fix', description: 'TypeScript strictness: removed unsafe JSON.parse and as any casts, fixed dependency arrays, race conditions, and memory leaks.' },
+      { type: 'fix', description: 'Widget stability: WidgetBootReceiver refactor, payload validation logging, thread-safe HadithBundle.cachedHadiths, and Arabic RTL fixes.' },
+      { type: 'fix', description: 'Quran Reader: chunked progressive rendering to fix massive FPS drop and CLS; surah-to-page mapping corrected with proper +2 image offset.' },
+      { type: 'fix', description: 'SurahList: wrapped navigation in startTransition to fix poor INP; replaced react-window v1 List with standard mapped list.' },
+      { type: 'fix', description: 'Splash screen: removed framer-motion and rewrote in pure CSS, cutting LCP from 5s to under 1s.' },
+      { type: 'fix', description: 'Hadith: singleton FPS monitor, fixed double API calls, back navigation, loading states, and collection metadata (totalHadith/totalBooks).' },
+      { type: 'fix', description: 'Hadith bookmarks: new HadithBookmarks page, useHadithBookmarks hook, and bookmark buttons on all hadith pages.' },
+      { type: 'improvement', description: 'RadioStats consolidated into unified MediaStats tracking Live Makkah/Madinah watch time.' },
+      { type: 'improvement', description: 'Spotify-inspired PremiumDashboard with gold/green accents, dynamic greetings, and backdrop blurs.' },
+      { type: 'improvement', description: 'Device performance imports fixed for backward compatibility (performance-optimizations instead of device-performance.ts).' },
+      { type: 'improvement', description: 'Removed vestigial Quran Display Settings from Profile page (font size slider, script style dropdown, and clear cache button) since Quran now uses Mushaf image pages.' },
+      { type: 'improvement', description: 'Deleted orphaned components MushafPage.tsx and MushafWord.tsx which were no longer imported anywhere in the app.' },
+    ],
+  },
+  {
+    version: '1.3.0',
+    date: '2026-07-03',
+    title: 'Expanded Features — Zen Mode, Hadith, Widgets, Noor Cycle',
+    changes: [
+      { type: 'feature', description: 'Zen Mode (Tasbeeh) with dhikr counter, categories, and review mode.' },
+      { type: 'feature', description: 'Quiz expansion: categories, review mode, and gamification streaks.' },
+      { type: 'feature', description: 'Duas expansion: search, DuaOfDay, audio playback, and counter.' },
+      { type: 'feature', description: 'Hadith/Seerah/Qisas UI/UX overhaul: skeleton loading, Continue Reading cards, share buttons, and copy-with-toast.' },
+      { type: 'feature', description: 'Noor Cycle (Haidh Tracker) foundation with 6 tabs (Calendar, Ghusl, Islamic, Log, Settings, Today).' },
+      { type: 'feature', description: 'Islamic Remedies mood grid redesign, full-screen viewer, gamification stats, and Dashboard widget.' },
+      { type: 'feature', description: 'Widget system rebuilt from scratch with native Kotlin implementation and Material You design.' },
+      { type: 'feature', description: 'Comprehensive performance optimization for low-end devices: React.memo, virtualization, code-splitting, and lazy loading.' },
+      { type: 'feature', description: 'Notification overhaul: fixed hadith randomization, low-end device throttling, dynamic SW dates, dedup scheduling, and caching.' },
+      { type: 'fix', description: 'Qibla: compass heading accuracy, layout overflow fixes, and F-Droid compliance with custom FOSS sensor implementation.' },
+      { type: 'fix', description: 'Profile page: madhab labels updated, Islamic sleep reminder toggle added, SurahList react-window import fixed.' },
+      { type: 'fix', description: 'Calendar: wired daysUntilRamadan, replaced offline fallback with tabular Islamic calendar, and dynamic Eid date lookup.' },
     ],
   },
   {
@@ -51,7 +90,11 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
       { type: 'feature', description: 'Complete rebuild of Next Adhan, Daily Ayah, and Daily Schedule Widgets in native Kotlin for perfect Doze mode performance.' },
       { type: 'fix', description: 'Fixed Quiz streak logic and Daily check-in errors during Menstrual Mode overrides.' },
       { type: 'improvement', description: 'Added premium Android 14 notification center integration with large icon display support.' },
-      { type: 'fix', description: 'Corrected premature Eid Mubarak popups from triggering before Shawwal.' }
+      { type: 'fix', description: 'Corrected premature Eid Mubarak popups from triggering before Shawwal.' },
+      { type: 'fix', description: 'Replaced non-free qibla library with custom FOSS sensor implementation for F-Droid compliance.' },
+      { type: 'fix', description: 'Refactored geolocation to use Web API and consolidated Permission Manager for cross-platform stability.' },
+      { type: 'fix', description: 'Fixed qibla compass heading, layout overflow, and widget data flow bugs.' },
+      { type: 'fix', description: 'Critical security fixes: TypeScript strict mode enabled, XSS vulnerability patched, ErrorBoundary added, and console.log stripped from production.' },
     ],
   },
   {
@@ -110,21 +153,17 @@ export function hasUnseenChangelog(): boolean {
   const state = getChangelogState();
   const currentVersion = CURRENT_APP_VERSION;
   
-  // Check if current version has been seen
   if (state.lastSeenVersion === currentVersion) {
     return false;
   }
   
-  // Check if there are any changelogs for versions newer than last seen
   const lastSeenIndex = CHANGELOG_DATA.findIndex(c => c.version === state.lastSeenVersion);
   const currentIndex = CHANGELOG_DATA.findIndex(c => c.version === currentVersion);
   
-  // If we haven't seen anything, show changelog for current version
   if (state.lastSeenVersion === '') {
     return currentIndex !== -1;
   }
   
-  // Show if current version is different from last seen
   return currentIndex !== -1 && currentIndex < lastSeenIndex;
 }
 
@@ -133,12 +172,10 @@ export function getUnseenChangelogs(): VersionChangelog[] {
   const lastSeenIndex = CHANGELOG_DATA.findIndex(c => c.version === state.lastSeenVersion);
   
   if (lastSeenIndex === -1) {
-    // Show all if nothing seen, or just current version
     const currentIndex = CHANGELOG_DATA.findIndex(c => c.version === CURRENT_APP_VERSION);
     return currentIndex !== -1 ? [CHANGELOG_DATA[currentIndex]] : [];
   }
   
-  // Return all changelogs since last seen
   return CHANGELOG_DATA.slice(0, lastSeenIndex);
 }
 

@@ -96,6 +96,17 @@ const Profile = () => {
   
   const [showChangelog, setShowChangelog] = useState(false);
 
+  useEffect(() => {
+    if (showChangelog) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showChangelog]);
+
   // Prayer alarm state
   const {
     isEnabled: isAlarmEnabled,
@@ -664,7 +675,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">{t('darkMode')}</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">App Theme</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">App Theme</p>
                     </div>
                   </div>
                   <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} className="data-[state=checked]:bg-primary" />
@@ -677,7 +688,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Animations</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Turn off motion-heavy effects</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">Turn off motion-heavy effects</p>
                     </div>
                   </div>
                   <Switch checked={animationEnabled} onCheckedChange={handleAnimationToggle} className="data-[state=checked]:bg-primary" />
@@ -690,7 +701,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Salam Greeting</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Play once after launch</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">Play once after launch</p>
                     </div>
                   </div>
                   <Switch checked={greetingEnabled} onCheckedChange={handleSalamGreetingToggle} className="data-[state=checked]:bg-primary" />
@@ -703,7 +714,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Splash Text</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Show the launch subtitle</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">Show the launch subtitle</p>
                     </div>
                   </div>
                   <Switch checked={splashGreetingEnabled} onCheckedChange={handleSplashGreetingToggle} className="data-[state=checked]:bg-primary" />
@@ -716,7 +727,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Splash Screen</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Show launch animation</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">Show launch animation</p>
                     </div>
                   </div>
                   <Switch checked={splashEnabled} onCheckedChange={handleSplashToggle} className="data-[state=checked]:bg-primary" />
@@ -725,65 +736,7 @@ const Profile = () => {
             </Card>
           </div>
 
-          {/* Quran Display Section */}
-          <div className="space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
-              {t('quranDisplaySettings')}
-            </h3>
-            <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5 space-y-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <Label className="text-[11px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                    <Type className="w-3.5 h-3.5" />
-                    {t('quranFontSize')}
-                  </Label>
-                  <span className="text-xs font-black text-primary font-mono bg-primary/10 px-2 py-1 rounded">{quranFontSize}px</span>
-                </div>
-                <Slider
-                  value={[quranFontSize]}
-                  onValueChange={handleFontSizeChange}
-                  min={16}
-                  max={42}
-                  step={2}
-                  className="w-full data-[orientation=horizontal]:h-2"
-                />
-              </div>
 
-              <div className="space-y-3">
-                <Label className="text-[11px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  {t('arabicScriptStyle')}
-                </Label>
-                <Select value={quranFont} onValueChange={handleQuranFontChange}>
-                  <SelectTrigger className="w-full h-12 rounded-xl bg-muted/30 border-none ring-0 focus:ring-primary/20">
-                    <SelectValue placeholder="Select Quran font" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border/40 shadow-xl">
-                    {quranFontManager.getAvailableFonts().map((font) => (
-                      <SelectItem key={font.id} value={font.id}>
-                        <div className="flex flex-col py-1">
-                          <span className="font-bold text-sm">{font.name}</span>
-                          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">{font.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="pt-4 border-t border-border/40">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearQuranCache}
-                  className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Clear Quran cache
-                </Button>
-              </div>
-            </Card>
-          </div>
 
           {/* Personal Section */}
           <div className="space-y-3">
@@ -953,9 +906,9 @@ const Profile = () => {
                 </div>
                 <div>
                   <Label className="text-sm font-bold">Sleep Reminder</Label>
-                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                    Reminds you of Islamic adhkar before sleep
-                  </p>
+                   <p className="text-[10px] text-muted-foreground font-medium">
+                     Reminds you of Islamic adhkar before sleep
+                   </p>
                 </div>
               </div>
               <Switch
@@ -1004,8 +957,8 @@ const Profile = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-bold">{t('prayerAlarmAdhan')}</Label>
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{t('prayerAlarmDescription')}</p>
-                    <p className="text-[9px] text-primary/60 font-medium italic mt-1 leading-tight">{t('prayerAlarmNote')}</p>
+                     <p className="text-[10px] text-muted-foreground font-medium">{t('prayerAlarmDescription')}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">{t('prayerAlarmNote')}</p>
                   </div>
                 </div>
                 <Switch
@@ -1047,7 +1000,7 @@ const Profile = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-bold">{t('prePrayerReminder')}</Label>
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{t('prePrayerReminderDescription')}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">{t('prePrayerReminderDescription')}</p>
                   </div>
                 </div>
                 <Select value={reminderMinutes} onValueChange={handleReminderChange}>

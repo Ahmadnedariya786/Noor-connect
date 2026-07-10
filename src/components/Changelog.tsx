@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { 
   Sparkles, 
@@ -129,8 +128,8 @@ export function Changelog({ onClose, showCloseButton = true, maxHeight = '60vh' 
   const changelogs = getAllChangelogs();
 
   return (
-    <Card className="w-full max-w-2xl mx-auto border-border/60 shadow-lg">
-      <CardHeader className="pb-3">
+    <Card className="w-full max-w-2xl mx-auto border-border/60 shadow-lg h-[70vh] flex flex-col">
+      <CardHeader className="pb-3 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 border border-amber-200">
@@ -168,8 +167,8 @@ export function Changelog({ onClose, showCloseButton = true, maxHeight = '60vh' 
 
       <Separator />
 
-      <CardContent className="p-0">
-        <ScrollArea className={`px-6 py-4`} style={{ maxHeight }}>
+      <CardContent className="flex-1 overflow-y-auto p-0">
+        <div className="px-6 py-4">
           <div className="space-y-6">
             {changelogs.map((changelog, index) => (
               <div key={changelog.version}>
@@ -187,7 +186,7 @@ export function Changelog({ onClose, showCloseButton = true, maxHeight = '60vh' 
               You're on version <span className="font-semibold text-foreground">{CURRENT_APP_VERSION}</span>
             </p>
           </div>
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
