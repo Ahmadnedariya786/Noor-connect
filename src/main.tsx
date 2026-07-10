@@ -9,6 +9,12 @@ import './lib/i18n-new'; // Initialize new offline-first i18n
 void localNotifications.initialize();
 
 import { LanguageProvider } from "@/contexts/LanguageContext-new";
+import { isLowEndDevice } from "@/lib/performance-optimizations";
+
+// Immediately apply hardware degradation class for low-end devices
+if (isLowEndDevice()) {
+  document.documentElement.classList.add("low-end-device");
+}
 
 const rootElement = document.getElementById("root");
 if (rootElement) {

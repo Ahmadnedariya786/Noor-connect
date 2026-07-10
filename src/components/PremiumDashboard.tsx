@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, lazy, Suspense } from "react";
 import { m } from "framer-motion";
 import { Bell, MapPin, ChevronRight, Activity, Compass, Grid3X3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,19 +11,21 @@ import {
 } from "@/lib/dashboard-widget-config";
 import { globalTimerManager } from "@/lib/timer-manager";
 
-// Widget component imports
-import EnhancedDailyAyah from "@/components/EnhancedDailyAyah";
-import EnhancedDailyHadith from "@/components/EnhancedDailyHadith";
-import QiblaQuickWidget from "@/components/QiblaQuickWidget";
-import TasbeehQuickWidget from "@/components/TasbeehQuickWidget";
-import RamadanWidget from "@/components/RamadanWidget";
-import WeeklySalahChart from "@/components/WeeklySalahChart";
-import QuranProgressWidget from "@/components/QuranProgressWidget";
-import IslamicEventsWidget from "@/components/IslamicEventsWidget";
-import PrayerStatsWidget from "@/components/PrayerStatsWidget";
-import QazaTracker from "@/components/QazaTracker";
-import DhikrReminder from "@/components/DhikrReminder";
-import { QuranRadio } from "@/components/QuranRadio";
+// Lazy load widget components to reduce initial bundle size
+const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
+const EnhancedDailyHadith = lazy(() => import("@/components/EnhancedDailyHadith"));
+const QiblaQuickWidget = lazy(() => import("@/components/QiblaQuickWidget"));
+const TasbeehQuickWidget = lazy(() => import("@/components/TasbeehQuickWidget"));
+const RamadanWidget = lazy(() => import("@/components/RamadanWidget"));
+const WeeklySalahChart = lazy(() => import("@/components/WeeklySalahChart"));
+const QuranProgressWidget = lazy(() => import("@/components/QuranProgressWidget"));
+const IslamicEventsWidget = lazy(() => import("@/components/IslamicEventsWidget"));
+const PrayerStatsWidget = lazy(() => import("@/components/PrayerStatsWidget"));
+const QazaTracker = lazy(() => import("@/components/QazaTracker"));
+const DhikrReminder = lazy(() => import("@/components/DhikrReminder"));
+const QuranRadio = lazy(() => import("@/components/QuranRadio").then(m => ({ default: m.QuranRadio })));
+
+const WidgetFallback = () => <div className="h-40 w-full rounded-2xl bg-card/40 animate-pulse border border-border/40 backdrop-blur-sm" />;
 
 
 interface PrayerTime {
@@ -476,7 +478,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <EnhancedDailyAyah />
+                      <Suspense fallback={<WidgetFallback />}><EnhancedDailyAyah /></Suspense>
                     </m.div>
                   );
 
@@ -490,7 +492,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <EnhancedDailyHadith />
+                      <Suspense fallback={<WidgetFallback />}><EnhancedDailyHadith /></Suspense>
                     </m.div>
                   );
 
@@ -504,7 +506,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <QiblaQuickWidget />
+                      <Suspense fallback={<WidgetFallback />}><QiblaQuickWidget /></Suspense>
                     </m.div>
                   );
 
@@ -518,7 +520,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <TasbeehQuickWidget />
+                      <Suspense fallback={<WidgetFallback />}><TasbeehQuickWidget /></Suspense>
                     </m.div>
                   );
 
@@ -532,12 +534,14 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <RamadanWidget
-                        isRamadan={isRamadan}
-                        ramadanDay={ramadanDay}
-                        prayerTimesWithEnd={prayerTimesHook?.prayerTimesWithEnd || null}
-                        timeFormat={timeFormat}
-                      />
+                      <Suspense fallback={<WidgetFallback />}>
+                        <RamadanWidget
+                          isRamadan={isRamadan}
+                          ramadanDay={ramadanDay}
+                          prayerTimesWithEnd={prayerTimesHook?.prayerTimesWithEnd || null}
+                          timeFormat={timeFormat}
+                        />
+                      </Suspense>
                     </m.div>
                   );
 
@@ -551,7 +555,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <WeeklySalahChart />
+                      <Suspense fallback={<WidgetFallback />}><WeeklySalahChart /></Suspense>
                     </m.div>
                   );
 
@@ -565,7 +569,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <QuranProgressWidget />
+                      <Suspense fallback={<WidgetFallback />}><QuranProgressWidget /></Suspense>
                     </m.div>
                   );
 
@@ -579,7 +583,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <IslamicEventsWidget />
+                      <Suspense fallback={<WidgetFallback />}><IslamicEventsWidget /></Suspense>
                     </m.div>
                   );
 
@@ -593,7 +597,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <PrayerStatsWidget />
+                      <Suspense fallback={<WidgetFallback />}><PrayerStatsWidget /></Suspense>
                     </m.div>
                   );
 
@@ -607,7 +611,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <QazaTracker compact={true} />
+                      <Suspense fallback={<WidgetFallback />}><QazaTracker compact={true} /></Suspense>
                     </m.div>
                   );
 
@@ -621,7 +625,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <DhikrReminder />
+                      <Suspense fallback={<WidgetFallback />}><DhikrReminder /></Suspense>
                     </m.div>
                   );
 
@@ -635,7 +639,7 @@ function PremiumDashboardInner({
                         transition: { duration: 0.4 }
                       })}
                     >
-                      <QuranRadio />
+                      <Suspense fallback={<WidgetFallback />}><QuranRadio /></Suspense>
                     </m.div>
                   );
 

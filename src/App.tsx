@@ -83,9 +83,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Global Players
-import { GlobalRadioPlayer } from "@/components/GlobalRadioPlayer";
-import { GlobalQuranPlayer } from "@/components/GlobalQuranPlayer";
+// Global Players - Lazy loaded
+const GlobalRadioPlayer = lazy(() => import("@/components/GlobalRadioPlayer").then(m => ({ default: m.GlobalRadioPlayer })));
+const GlobalQuranPlayer = lazy(() => import("@/components/GlobalQuranPlayer").then(m => ({ default: m.GlobalQuranPlayer })));
 import { EidChecklistNotification } from "@/components/EidChecklistNotification";
 import { FitranaCalculatorNotification } from "@/components/FitranaCalculatorNotification";
 

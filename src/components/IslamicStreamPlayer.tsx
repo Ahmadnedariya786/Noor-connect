@@ -59,6 +59,11 @@ export default function IslamicStreamPlayer() {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  // Quality state
+  const [levels, setLevels] = useState<{ id: number, height: number, bitrate: number }[]>([]);
+  const [currentLevel, setCurrentLevel] = useState<number>(-1); // -1 is auto
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
 
   const [streams, setStreams] = useState<Record<StreamLocation, StreamState>>({
     makkah: {
@@ -90,13 +95,10 @@ export default function IslamicStreamPlayer() {
   const destroyHLS = useCallback(() => {
     const video = videoRef.current;
     if (video) { video.pause(); video.src = ''; video.load(); }
-     if (hlsRef.current) {
-       const h = hlsRef.current;
-       hlsRef.current = null;
-       setTimeout(() => {
-         h.destroy();
-       }, 100);
-     }
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
   }, []);
 
   /* ─── Auto-retry with backoff ─── */
@@ -128,20 +130,40 @@ export default function IslamicStreamPlayer() {
       const hls = new Hls({
         enableWorker: !lowEnd,
         lowLatencyMode: !lowEnd,
-        backBufferLength: lowEnd ? 30 : 90,
-        maxBufferLength: lowEnd ? 15 : 30,
-        manifestLoadingTimeOut: lowEnd ? 20000 : 12000,
-        manifestLoadingMaxRetry: lowEnd ? 5 : 3,
-        levelLoadingTimeOut: lowEnd ? 20000 : 12000,
-        levelLoadingMaxRetry: lowEnd ? 5 : 3,
-        startLevel: lowEnd ? 0 : -1,
+        capLevelToPlayerSize: false, // Let user or Auto handle it
+        backBufferLength: 30, // Keep some history
+        maxBufferLength: 60, // aggressive buffer for stability
+        maxMaxBufferLength: 120,
+        manifestLoadingTimeOut: 30000,
+        manifestLoadingMaxRetry: 5,
+        levelLoadingTimeOut: 30000,
+        levelLoadingMaxRetry: 5,
+        fragLoadingTimeOut: 30000,
+        fragLoadingMaxRetry: 5,
+        startLevel: -1, // Auto by default
       });
       hlsRef.current = hls;
 
+      let mediaRecoveryAttempts = 0;
+
       hls.on(Hls.Events.MEDIA_ATTACHED, () => hls.loadSource(url));
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
         retryCountRef.current[tab] = 0;
+        
+        // Extract available quality levels
+        if (data.levels && data.levels.length > 0) {
+          const formattedLevels = data.levels.map((l, i) => ({
+            id: i,
+            height: l.height || 0,
+            bitrate: l.bitrate || 0
+          }));
+          setLevels(formattedLevels);
+          setCurrentLevel(hls.currentLevel); // usually -1 (auto)
+        } else {
+          setLevels([]);
+        }
+
         setStreams(prev => ({
           ...prev,
           [tab]: { ...prev[tab], isLoading: false, isBuffering: false, isPlaying: true },
@@ -153,18 +175,46 @@ export default function IslamicStreamPlayer() {
 
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (!data.fatal) return;
-        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) { hls.recoverMediaError(); return; }
-        const msg = data.type === Hls.ErrorTypes.NETWORK_ERROR
-          ? 'Network error — check your connection.'
-          : 'Stream unavailable. Try again shortly.';
-        setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: msg, isLoading: false, isBuffering: false } }));
-        scheduleRetry(tab);
+        
+        switch (data.type) {
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            // Fix catastrophic infinite loop on weak WiFi
+            if (mediaRecoveryAttempts < 3) {
+              mediaRecoveryAttempts++;
+              console.warn('Recovering media error...');
+              hls.recoverMediaError();
+            } else if (mediaRecoveryAttempts < 6) {
+              mediaRecoveryAttempts++;
+              console.warn('Swapping audio codec and recovering...');
+              hls.swapAudioCodec();
+              hls.recoverMediaError();
+            } else {
+              setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Stream interrupted due to weak connection.', isLoading: false, isBuffering: false } }));
+              destroyHLS();
+              scheduleRetry(tab);
+            }
+            break;
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Network error — check your connection.', isLoading: false, isBuffering: false } }));
+            destroyHLS();
+            scheduleRetry(tab);
+            break;
+          default:
+            setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Stream unavailable. Try again shortly.', isLoading: false, isBuffering: false } }));
+            destroyHLS();
+            scheduleRetry(tab);
+            break;
+        }
       });
 
       hls.on(Hls.Events.BUFFER_APPENDING, () =>
         setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], isBuffering: true } })));
       hls.on(Hls.Events.BUFFER_APPENDED, () =>
         setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], isBuffering: false } })));
+
+      hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
+        setCurrentLevel(data.level);
+      });
 
       hls.attachMedia(video);
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -289,10 +339,18 @@ export default function IslamicStreamPlayer() {
      }
    }, [isFullscreen]);
 
+   const handleQualityChange = useCallback((levelId: number) => {
+     if (hlsRef.current) {
+       hlsRef.current.currentLevel = levelId;
+       setCurrentLevel(levelId);
+     }
+     setShowQualityMenu(false);
+   }, []);
+
   return (
     <div
       ref={containerRef}
-      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-white/8 ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}`}
+      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-white/8 ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'relative'}`}
       onMouseMove={showAndScheduleHide}
       onTouchStart={showAndScheduleHide}
     >
@@ -462,13 +520,47 @@ export default function IslamicStreamPlayer() {
                 </div>
               </div>
 
-              {/* Right: Fullscreen */}
-              <button
-                onClick={e => { e.stopPropagation(); toggleFullscreen(); }}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-              >
-                {isFullscreen ? <Minimize className="w-4 h-4 text-white/70" /> : <Maximize className="w-4 h-4 text-white/70" />}
-              </button>
+              {/* Right: Quality + Fullscreen */}
+              <div className="flex items-center gap-3">
+                {levels.length > 0 && (
+                  <div className="relative">
+                    {showQualityMenu && (
+                      <div className="absolute bottom-full right-0 mb-2 w-32 bg-black/90 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden flex flex-col z-50 py-1 shadow-2xl">
+                        <button
+                          onClick={e => { e.stopPropagation(); handleQualityChange(-1); }}
+                          className={`px-3 py-2 text-xs font-semibold text-left hover:bg-white/10 transition-colors ${currentLevel === -1 ? 'text-emerald-400' : 'text-white'}`}
+                        >
+                          Auto
+                        </button>
+                        {levels.map(l => (
+                          <button
+                            key={l.id}
+                            onClick={e => { e.stopPropagation(); handleQualityChange(l.id); }}
+                            className={`px-3 py-2 text-xs font-semibold text-left hover:bg-white/10 transition-colors ${currentLevel === l.id ? 'text-emerald-400' : 'text-white'}`}
+                          >
+                            {l.height ? `${l.height}p` : `${Math.round(l.bitrate / 1024)}kbps`}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); setShowQualityMenu(p => !p); showAndScheduleHide(); }}
+                      className="h-8 px-3 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-[10px] font-bold tracking-wide"
+                    >
+                      {currentLevel === -1 
+                        ? 'AUTO' 
+                        : (levels.find(l => l.id === currentLevel)?.height ? `${levels.find(l => l.id === currentLevel)?.height}P` : 'HQ')}
+                    </button>
+                  </div>
+                )}
+                
+                <button
+                  onClick={e => { e.stopPropagation(); toggleFullscreen(); }}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                >
+                  {isFullscreen ? <Minimize className="w-4 h-4 text-white/70" /> : <Maximize className="w-4 h-4 text-white/70" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>

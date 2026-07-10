@@ -1738,3 +1738,27 @@
     }
   }
 }
+
+/* =========================================
+   HARDWARE DEGRADATION FOR LOW-END DEVICES
+   Disables GPU-heavy effects to ensure 30+ FPS
+   ========================================= */
+.low-end-device *, 
+.low-end-device ::before, 
+.low-end-device ::after {
+  backdrop-filter: none !important;
+}
+
+.low-end-device {
+  --glass-shadow: 0 2px 8px hsl(0 0% 0% / 0.1);
+  --glass-shadow-lg: 0 4px 12px hsl(0 0% 0% / 0.15);
+  --shadow-glow: none;
+  --shadow-gold: none;
+  --shadow-elegant: none;
+  --shadow-gold-lux: none;
+  --shadow-gold-premium: none;
+  --islamic-gold-glow: none;
+  --islamic-gold-shimmer: none;
+  --card-premium-shadow: 0 2px 8px hsl(0 0% 0% / 0.1);
+  --card-premium-shadow-hover: 0 4px 12px hsl(0 0% 0% / 0.1);
+}
