@@ -1,7 +1,10 @@
 import { Capacitor } from '@capacitor/core';
 
 function getPageUrl(page: number): string {
-  const padded = String(page).padStart(3, '0');
+  // Offset by +2 because 001.webp and 002.webp are intro/credits in this dataset.
+  // Standard Mushaf page 1 corresponds to 003.webp.
+  const offsetPage = page + 2;
+  const padded = String(offsetPage).padStart(3, '0');
   
   // Capacitor automatically serves public folder assets on both web and native
   // Use the same path for both platforms

@@ -7,7 +7,6 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { goBackOrFallback } from "@/lib/navigation";
-import { List } from 'react-window';
 import { useReducedMotion } from '@/components/AdaptiveMotion';
 import { CSSOnlyTransition } from '@/components/AdaptiveMotion';
 
@@ -75,18 +74,6 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
     prevProps.isDark === nextProps.isDark
   );
 });
-
-const SurahRow = memo(({ index, style, surahs, isDark, onClick }: {
-  index: number;
-  style: CSSProperties;
-  surahs: SurahInfo[];
-  isDark: boolean;
-  onClick: (number: number) => void;
-}) => (
-  <div style={style} className="py-1">
-    <SurahCard surah={surahs[index]} index={index} isDark={isDark} onClick={onClick} />
-  </div>
-));
 
 export default function SurahList() {
   const { theme, effectiveTheme } = useSettings();
@@ -294,16 +281,17 @@ export default function SurahList() {
         {/* Surah List */}
         <div className="max-w-2xl mx-auto px-4 py-6" ref={listRef}>
           {filteredSurahs.length > 0 ? (
-            <List
-              style={{
-                height: Math.min(filteredSurahs.length * 130, (listRef.current?.clientHeight || window.innerHeight) - 200),
-                width: '100%',
-              }}
-              rowCount={filteredSurahs.length}
-              rowHeight={130}
-              rowProps={{ surahs: filteredSurahs, isDark, onClick: handleSurahClick }}
-              rowComponent={SurahRow}
-            />
+            <div className="flex flex-col gap-2 pb-8">
+              {filteredSurahs.map((surah, index) => (
+                <SurahCard 
+                  key={surah.number} 
+                  surah={surah} 
+                  index={index} 
+                  isDark={isDark} 
+                  onClick={handleSurahClick} 
+                />
+              ))}
+            </div>
           ) : (
             <div className="text-center py-20">
               <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">

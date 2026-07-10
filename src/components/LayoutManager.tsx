@@ -9,7 +9,8 @@ export function LayoutManager({ children }: LayoutManagerProps) {
   const globalRadio = useGlobalRadio();
   // Fixed padding for bottom nav to prevent CLS
   // The radio player will float over content
-  const fixedPadding = 'pb-24';
+  // Increased padding to pb-32 to account for BottomNav AND mini players
+  const fixedPadding = 'pb-32';
 
   return (
     <main className={`flex-1 min-h-0 overflow-y-auto pt-safe-top ${fixedPadding} interactive-layer`} id="main-content" role="main">
