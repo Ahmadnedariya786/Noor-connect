@@ -22,7 +22,7 @@ import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
 import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
-import { preloadCriticalResources, optimizeScrollPerformance, shouldReduceAnimations, isLowEndDevice as checkLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
+import { preloadCriticalResources, isLowEndDevice } from "@/lib/performance-optimizations";
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -67,7 +67,7 @@ function DeepLinkListener() {
 }
 
 // Create QueryClient for React Query with performance optimizations
-const isLowEndForQuery = checkLowEndDevice();
+const isLowEndForQuery = isLowEndDevice();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -110,6 +110,7 @@ const HadithCollections = lazy(() => import("./pages/HadithCollections"));
 const HadithBook = lazy(() => import("./pages/HadithBook"));
 const HadithBookContent = lazy(() => import("./pages/HadithBookContent"));
 const HadithDetail = lazy(() => import("./pages/HadithDetail"));
+const HadithBookmarksPage = lazy(() => import("./pages/HadithBookmarks"));
 const Profile = lazy(() => import("./pages/Profile"));
 const IslamicCalendar = lazy(() => import("./pages/IslamicCalendar"));
 const Ebooks = lazy(() => import("./pages/EbooksModern"));
@@ -143,7 +144,7 @@ const QisasReader = lazy(() => import("./pages/QisasReader"));
 // Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
 // Check for low-end device and disable animations if no user preference is set
 const storedAnimationPreference = localStorage.getItem("animations_enabled");
-const isLowEndDeviceCheck = checkLowEndDevice();
+const isLowEndDeviceCheck = isLowEndDevice();
 let isAnimationDisabled: boolean;
 
 if (storedAnimationPreference === null) {
@@ -209,6 +210,7 @@ function AppRoutes() {
         <Route path="/hadith/collections/:collection" element={<HadithBook />} />
         <Route path="/hadith/collections/:collection/:book" element={<HadithBookContent />} />
         <Route path="/hadith/collections/:collection/:book/:hadithNumber" element={<HadithDetail />} />
+        <Route path="/hadith/bookmarks" element={<HadithBookmarksPage />} />
         <Route path="/seerah" element={<SeerahHome />} />
         <Route path="/seerah/:chapterId" element={<SeerahReader />} />
         <Route path="/qisas" element={<QisasHome />} />
@@ -289,8 +291,6 @@ function AppShell() {
   // Push Quran-progress + tasbeeh state to native widgets when they change
   useWidgetSync();
   
-  const isLowEndForShell = checkLowEndDevice();
-
   useEffect(() => {
     // If splash is disabled, hide it immediately
     if (!splashEnabled) {
@@ -300,23 +300,8 @@ function AppShell() {
 
   // Initialize performance optimizations
   useEffect(() => {
-    // Preload critical resources
     preloadCriticalResources();
-    
-    // Optimize scroll performance
-    optimizeScrollPerformance();
-    
-    // Monitor FPS for performance tracking (only on non-low-end devices)
-    if (!isLowEndForShell) {
-      const stopMonitoring = monitorFPS((fps) => {
-        if (fps < 20) {
-          console.warn('Low FPS detected:', fps);
-        }
-      });
-      
-      return () => stopMonitoring();
-    }
-  }, [isLowEndForShell]);
+  }, []);
 
   useEffect(() => {
     notificationManager.start();

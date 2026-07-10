@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface AnimationTier {
   tier: 'high' | 'medium' | 'low' | 'minimal';
@@ -255,6 +255,52 @@ function getInitialTier(): AnimationTier['tier'] {
 let currentTier: AnimationTier['tier'] = getInitialTier();
 const listeners = new Set<(tier: AnimationTier) => void>();
 
+let monitorRafId: number | null = null;
+let monitorFrameCount = 0;
+let monitorLastTime = performance.now();
+let monitorRefCount = 0;
+const fpsCallbacks = new Set<(fps: number) => void>();
+
+function startMonitor() {
+  if (monitorRafId !== null) return;
+
+  const tick = () => {
+    monitorFrameCount++;
+    const now = performance.now();
+    if (now - monitorLastTime >= 1000) {
+      const fps = monitorFrameCount;
+      monitorFrameCount = 0;
+      monitorLastTime = now;
+
+      fpsCallbacks.forEach(fn => fn(fps));
+
+      if (fps < 20 && currentTier !== 'minimal') {
+        currentTier = 'minimal';
+        const tierObj = createTierObject('minimal', fps, [`Runtime FPS dropped to ${fps}`]);
+        notifyListeners(tierObj);
+      } else if (fps < 35 && currentTier === 'high') {
+        currentTier = 'low';
+        const tierObj = createTierObject('low', fps, [`Runtime FPS dropped to ${fps}`]);
+        notifyListeners(tierObj);
+      } else if (fps < 50 && currentTier === 'high') {
+        currentTier = 'medium';
+        const tierObj = createTierObject('medium', fps, [`Runtime FPS dropped to ${fps}`]);
+        notifyListeners(tierObj);
+      }
+    }
+    monitorRafId = requestAnimationFrame(tick);
+  };
+
+  monitorRafId = requestAnimationFrame(tick);
+}
+
+function stopMonitor() {
+  if (monitorRafId !== null) {
+    cancelAnimationFrame(monitorRafId);
+    monitorRafId = null;
+  }
+}
+
 function notifyListeners(tier: AnimationTier) {
   listeners.forEach(fn => fn(tier));
 }
@@ -271,10 +317,6 @@ function createTierObject(tier: AnimationTier['tier'], fps: number, reasons: str
 export function useAnimationTier(): AnimationTier {
   const [tier, setTier] = useState<AnimationTier>(() => createTierObject(currentTier, 60, ['Initial']));
   const [benchmarkDone, setBenchmarkDone] = useState(false);
-  const frameCount = useRef(0);
-  const lastTime = useRef(performance.now());
-  const rafId = useRef<number>();
-  const fpsCallbackRef = useRef<((fps: number) => void) | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -334,52 +376,25 @@ export function useAnimationTier(): AnimationTier {
 
     runBenchmark();
 
-    // Runtime FPS monitoring
-    const monitorFPS = () => {
-      frameCount.current++;
-      const now = performance.now();
-      if (now - lastTime.current >= 1000) {
-        const fps = frameCount.current;
-        frameCount.current = 0;
-        lastTime.current = now;
-        
-        if (fpsCallbackRef.current) {
-          fpsCallbackRef.current(fps);
-        }
-        
-        if (fps < 20 && currentTier !== 'minimal') {
-          currentTier = 'minimal';
-          const tierObj = createTierObject('minimal', fps, [`Runtime FPS dropped to ${fps}`]);
-          setTier(tierObj);
-          notifyListeners(tierObj);
-        } else if (fps < 35 && currentTier === 'high') {
-          currentTier = 'low';
-          const tierObj = createTierObject('low', fps, [`Runtime FPS dropped to ${fps}`]);
-          setTier(tierObj);
-          notifyListeners(tierObj);
-        } else if (fps < 50 && currentTier === 'high') {
-          currentTier = 'medium';
-          const tierObj = createTierObject('medium', fps, [`Runtime FPS dropped to ${fps}`]);
-          setTier(tierObj);
-          notifyListeners(tierObj);
-        }
-      }
-      rafId.current = requestAnimationFrame(monitorFPS);
-    };
-
-    rafId.current = requestAnimationFrame(monitorFPS);
+    monitorRefCount++;
+    if (monitorRefCount === 1) {
+      startMonitor();
+    }
 
     return () => {
       cancelled = true;
       listeners.delete(handleTierChange);
-      if (rafId.current) cancelAnimationFrame(rafId.current);
+      monitorRefCount--;
+      if (monitorRefCount === 0) {
+        stopMonitor();
+      }
     };
   }, [benchmarkDone]);
 
   // Allow components to subscribe to FPS changes
   const onFPSChange = useCallback((callback: (fps: number) => void) => {
-    fpsCallbackRef.current = callback;
-    return () => { fpsCallbackRef.current = null; };
+    fpsCallbacks.add(callback);
+    return () => { fpsCallbacks.delete(callback); };
   }, []);
 
   return { ...tier, onFPSChange };

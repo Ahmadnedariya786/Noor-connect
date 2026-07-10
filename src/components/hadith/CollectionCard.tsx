@@ -62,7 +62,7 @@ export function CollectionCard({ collection, onClick }: CollectionCardProps) {
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <div>
               <p className="text-xs font-semibold text-foreground">{collection.death}</p>
-              <p className="text-xs text-muted-foreground">Compiler</p>
+              <p className="text-xs text-muted-foreground">Died</p>
             </div>
           </div>
         </div>

@@ -73,8 +73,8 @@ export function HadithBookView() {
     navigate(`/hadith/collections/${collection}/${book.number}`);
   };
 
-  // Show loading while fetching metadata (even with fallback data)
-  if (metadataLoading) {
+  // Show loading only if no static fallback data
+  if (metadataLoading && !staticCollectionData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-muted-foreground">

@@ -79,7 +79,7 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     author: "Imam Muhammad ibn Ismail al-Bukhari",
     death: "256 AH / 870 CE",
     description: "The most authentic collection of Hadith after the Quran.",
-    totalHadith: 7277,
+    totalHadith: 14769,
     totalBooks: 97,
     authenticity: "Sahih (Authentic)",
     compilerPeriod: "194-256 AH",
@@ -90,7 +90,7 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     author: "Imam Muslim ibn al-Hajjaj",
     death: "261 AH / 875 CE",
     description: "Second most authentic collection of Hadith.",
-    totalHadith: 7459,
+    totalHadith: 14966,
     totalBooks: 57,
     authenticity: "Sahih (Authentic)",
     compilerPeriod: "204-261 AH",
@@ -100,9 +100,8 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     arabicTitle: "سنن الترمذي",
     author: "Imam Abu Isa al-Tirmidhi",
     death: "279 AH / 892 CE",
-    description:
-      "Collection containing authentic, good, and weak hadith with scholarly commentary.",
-    totalHadith: 4053,
+    description: "Collection containing authentic, good, and weak hadith with scholarly commentary.",
+    totalHadith: 8002,
     totalBooks: 49,
     authenticity: "Hasan (Good)",
     compilerPeriod: "209-279 AH",
@@ -112,10 +111,9 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     arabicTitle: "سنن أبي داود",
     author: "Imam Abu Dawud al-Sijistani",
     death: "275 AH / 889 CE",
-    description:
-      "One of the six major Hadith collections focusing on Islamic jurisprudence.",
-    totalHadith: 5274,
-    totalBooks: 43,
+    description: "One of the six major Hadith collections focusing on Islamic jurisprudence.",
+    totalHadith: 10547,
+    totalBooks: 1,
     authenticity: "Hasan (Good)",
     compilerPeriod: "202-275 AH",
   },
@@ -124,9 +122,8 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     arabicTitle: "سنن النسائي",
     author: "Imam al-Nasa'i",
     death: "303 AH / 915 CE",
-    description:
-      "Collection known for detailed chains of narration and strong authenticity standards.",
-    totalHadith: 5685,
+    description: "Collection known for detailed chains of narration and strong authenticity standards.",
+    totalHadith: 11399,
     totalBooks: 52,
     authenticity: "Hasan (Good)",
     compilerPeriod: "215-303 AH",
@@ -137,8 +134,8 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     author: "Imam Ibn Majah",
     death: "273 AH / 887 CE",
     description: "One of the six canonical Hadith collections.",
-    totalHadith: 4343,
-    totalBooks: 37,
+    totalHadith: 8685,
+    totalBooks: 1,
     authenticity: "Hasan (Good)",
     compilerPeriod: "209-273 AH",
   },
@@ -147,10 +144,9 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     arabicTitle: "موطأ مالك",
     author: "Imam Malik ibn Anas",
     death: "179 AH / 795 CE",
-    description:
-      "Early collection of Hadith and legal rulings compiled in Medina.",
-    totalHadith: 1858,
-    totalBooks: 61,
+    description: "Early collection of Hadith and legal rulings compiled in Medina.",
+    totalHadith: 3715,
+    totalBooks: 1,
     authenticity: "Sahih (Authentic)",
     compilerPeriod: "93-179 AH",
   },
@@ -159,10 +155,9 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     arabicTitle: "رياض الصالحين",
     author: "Imam al-Nawawi",
     death: "676 AH / 1277 CE",
-    description:
-      "Collection focusing on spirituality, character, and daily Islamic practice.",
-    totalHadith: 1896,
-    totalBooks: 18,
+    description: "Collection focusing on spirituality, character, and daily Islamic practice.",
+    totalHadith: 1217,
+    totalBooks: 19,
     authenticity: "Sahih (Authentic)",
     compilerPeriod: "631-676 AH",
   },
@@ -172,10 +167,87 @@ const COLLECTION_PROFILES: Record<string, Omit<HadithCollection, "name" | "books
     author: "Imam al-Nawawi",
     death: "676 AH / 1277 CE",
     description: "Forty essential hadith covering the foundations of Islam.",
-    totalHadith: 42,
+    totalHadith: 122,
     totalBooks: 1,
     authenticity: "Sahih (Authentic)",
     compilerPeriod: "631-676 AH",
+  },
+  adab: {
+    title: "Al-Adab al-Mufrad",
+    arabicTitle: "الأدب المفرد",
+    author: "Imam al-Bukhari",
+    death: "256 AH / 870 CE",
+    description: "Collection of hadith focusing on Islamic manners, ethics, and character.",
+    totalHadith: 1326,
+    totalBooks: 57,
+    authenticity: "Varied",
+    compilerPeriod: "194-256 AH",
+  },
+  ahmad: {
+    title: "Musnad Ahmad",
+    arabicTitle: "مسند أحمد",
+    author: "Imam Ahmad ibn Hanbal",
+    death: "241 AH / 855 CE",
+    description: "One of the largest Hadith collections, organized by narrator rather than topic.",
+    totalHadith: 1374,
+    totalBooks: 8,
+    authenticity: "Varied",
+    compilerPeriod: "164-241 AH",
+  },
+  bulugh: {
+    title: "Bulugh al-Maram",
+    arabicTitle: "بلوغ المرام",
+    author: "Imam Ibn Hajar al-Asqalani",
+    death: "852 AH / 1449 CE",
+    description: "Concise collection of hadith used as evidence in Islamic jurisprudence.",
+    totalHadith: 1767,
+    totalBooks: 16,
+    authenticity: "Varied",
+    compilerPeriod: "773-852 AH",
+  },
+  darimi: {
+    title: "Sunan al-Darimi",
+    arabicTitle: "سنن الدارمي",
+    author: "Imam Abdullah ibn Abd al-Rahman al-Darimi",
+    death: "255 AH / 869 CE",
+    description: "Early Hadith collection with strong chains of narration.",
+    totalHadith: 3406,
+    totalBooks: 24,
+    authenticity: "Varied",
+    compilerPeriod: "181-255 AH",
+  },
+  hisn: {
+    title: "Hisnul Muslim",
+    arabicTitle: "حصن المسلم",
+    author: "Sa'id bin Ali bin Wahf Al-Qahtani",
+    death: "",
+    description: "Comprehensive collection of authentic supplications and remembrances from the Quran and Sunnah.",
+    totalHadith: 2,
+    totalBooks: 2,
+    authenticity: "Sahih (Authentic)",
+    compilerPeriod: "",
+  },
+  mishkat: {
+    title: "Mishkat al-Masabih",
+    arabicTitle: "مشكاة المصابيح",
+    author: "Imam al-Khatib al-Tabrizi",
+    death: "741 AH",
+    description: "Enhanced version of Masabih al-Sunnah, arranging hadith by theme with grade classifications.",
+    totalHadith: 5319,
+    totalBooks: 29,
+    authenticity: "Varied",
+    compilerPeriod: "",
+  },
+  shamail: {
+    title: "Shamail Muhammadiyah",
+    arabicTitle: "الشمائل المحمدية",
+    author: "Imam al-Tirmidhi",
+    death: "279 AH / 892 CE",
+    description: "Collection describing the physical appearance, character, and habits of Prophet Muhammad.",
+    totalHadith: 402,
+    totalBooks: 57,
+    authenticity: "Hasan (Good)",
+    compilerPeriod: "209-279 AH",
   },
 };
 
@@ -340,37 +412,26 @@ export async function loadBookHadiths(
 
 /** Async: get a random daily hadith based on date seed */
 export async function getDailyHadith(
-  seedDate: Date = new Date()
+  seed: Date | number = new Date()
 ): Promise<EnhancedHadith | null> {
   // Pick from major collections with English translations
   const preferredSlugs = ["bukhari", "muslim", "tirmidhi", "abudawud", "nasai", "ibnmajah"];
 
+  const dayIndex = typeof seed === "number"
+    ? seed
+    : Math.floor(Date.UTC(seed.getFullYear(), seed.getMonth(), seed.getDate()) / 86400000);
+
   for (const slug of preferredSlugs) {
     const all = await loadCollectionHadiths(slug);
-    // Filter to hadiths with English translations for better UX
     const withTranslation = all.filter(
       (h) => h.englishTranslation && h.englishTranslation.trim().length > 0
     );
 
     if (withTranslation.length > 0) {
-      const dayIndex = Math.floor(
-        Date.UTC(
-          seedDate.getFullYear(),
-          seedDate.getMonth(),
-          seedDate.getDate()
-        ) / 86400000
-      );
       return withTranslation[dayIndex % withTranslation.length];
     }
 
     if (all.length > 0) {
-      const dayIndex = Math.floor(
-        Date.UTC(
-          seedDate.getFullYear(),
-          seedDate.getMonth(),
-          seedDate.getDate()
-        ) / 86400000
-      );
       return all[dayIndex % all.length];
     }
   }

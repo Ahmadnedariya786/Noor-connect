@@ -4,13 +4,16 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, RefreshCw, Share2, Copy, BookOpen } from "lucide-react";
+import { MessageCircle, RefreshCw, Share2, Copy, BookOpen, Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
 import type { EnhancedHadith } from "@/data/hadith-collections";
+import { getGradeBadgeClass } from "@/lib/hadith-utils";
+import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
 
 interface Hadith {
   id: string;
@@ -21,6 +24,9 @@ interface Hadith {
   grade: string;
   category: string;
   reflection?: string;
+  _collection?: string;
+  _bookNumber?: string;
+  _hadithNumber?: string;
 }
 
 function formatCollectionName(collection: string): string {
@@ -38,6 +44,9 @@ function mapEnhancedHadithToWidget(entry: EnhancedHadith): Hadith {
     source: `${formatCollectionName(entry.collection)} ${entry.bookNumber}:${entry.hadithNumber}`,
     grade: entry.grade || "Unspecified",
     category: entry.category || "Hadith",
+    _collection: entry.collection,
+    _bookNumber: entry.bookNumber,
+    _hadithNumber: entry.hadithNumber,
   };
 }
 
@@ -108,10 +117,12 @@ const HADITH_STORAGE_KEY = "enhanced-daily-hadith";
 const LAST_UPDATE_KEY = "hadith-last-update";
 
 export function EnhancedDailyHadith() {
+  const navigate = useNavigate();
   const [hadith, setHadith] = useState<Hadith | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const { toast } = useToast();
+  const { isBookmarked, toggleBookmark } = useHadithBookmarks();
 
   const loadHadith = useCallback(async () => {
     setLoading(true);
@@ -173,13 +184,22 @@ export function EnhancedDailyHadith() {
     };
   }, [loadHadith]);
 
-  const refreshHadith = () => {
+  const refreshHadith = async () => {
     setIsAnimating(true);
-    setTimeout(() => {
+    try {
+      const randomSeed = Math.floor(Math.random() * 100000) + 1;
+      const importedHadith = await getDailyHadithFromCollections(randomSeed);
+      if (importedHadith) {
+        setHadith(mapEnhancedHadithToWidget(importedHadith));
+      } else {
+        const randomIndex = Math.floor(Math.random() * hadithCollection.length);
+        setHadith(hadithCollection[randomIndex]);
+      }
+    } catch {
       const randomIndex = Math.floor(Math.random() * hadithCollection.length);
       setHadith(hadithCollection[randomIndex]);
-      setIsAnimating(false);
-    }, 300);
+    }
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
   const shareHadith = async () => {
@@ -213,15 +233,6 @@ export function EnhancedDailyHadith() {
       });
     } catch (error) {
       console.error('Error copying:', error);
-    }
-  };
-
-  const getGradeColor = (grade: string) => {
-    switch (grade.toLowerCase()) {
-      case 'sahih': return 'bg-green-100 text-green-800 border-green-200';
-      case 'hasan': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'daif': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -264,10 +275,32 @@ export function EnhancedDailyHadith() {
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge className={`text-xs ${getGradeColor(hadith.grade)}`}>
+            <Badge variant="outline" className={`text-xs ${getGradeBadgeClass(hadith.grade)}`}>
               {hadith.grade}
             </Badge>
             <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 rounded-xl hover:bg-accent/10 transition-colors ${hadith._collection && isBookmarked(hadith._collection, hadith._hadithNumber!) ? "text-primary" : ""}`}
+                onClick={() => {
+                  if (hadith._collection && hadith._hadithNumber) {
+                    toggleBookmark({
+                      collection: hadith._collection,
+                      bookNumber: hadith._bookNumber || hadith._hadithNumber,
+                      hadithNumber: hadith._hadithNumber,
+                      arabic: hadith.arabic,
+                      englishTranslation: hadith.englishTranslation,
+                    });
+                    toast({
+                      title: isBookmarked(hadith._collection, hadith._hadithNumber) ? "Bookmark removed" : "Bookmarked!",
+                    });
+                  }
+                }}
+                aria-label="Bookmark hadith"
+              >
+                <Bookmark className={`w-4 h-4 ${hadith._collection && isBookmarked(hadith._collection, hadith._hadithNumber!) ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -301,7 +334,7 @@ export function EnhancedDailyHadith() {
 
         {/* Arabic Text */}
         <div className={`text-right space-y-2 transition-all duration-500 ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
-          <p className="text-xl font-arabic leading-relaxed text-accent-foreground drop-shadow-sm">
+          <p className="text-2xl font-arabic leading-relaxed text-accent-foreground drop-shadow-sm">
             {hadith.arabic}
           </p>
         </div>
@@ -317,7 +350,7 @@ export function EnhancedDailyHadith() {
         {hadith.reflection && (
           <div className={`p-3 rounded-xl bg-accent/5 border border-accent/10 transition-all duration-500 delay-200 ${isAnimating ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
             <p className="text-sm text-muted-foreground italic">
-              💭 {hadith.reflection}
+              {hadith.reflection}
             </p>
           </div>
         )}
@@ -336,15 +369,26 @@ export function EnhancedDailyHadith() {
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 rounded-xl border-accent/30 hover:bg-accent/10"
-            onClick={() => window.location.href = '/hadith/collections'}
-          >
-            <BookOpen className="w-4 h-4" />
-            More Hadith
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-xl border-accent/30 hover:bg-accent/10"
+              onClick={() => navigate('/hadith/bookmarks')}
+            >
+              <Bookmark className="w-4 h-4" />
+              Bookmarks
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-xl border-accent/30 hover:bg-accent/10"
+              onClick={() => navigate('/hadith/collections')}
+            >
+              <BookOpen className="w-4 h-4" />
+              More Hadith
+            </Button>
+          </div>
           
           <div className="text-xs text-muted-foreground">
             Updated daily

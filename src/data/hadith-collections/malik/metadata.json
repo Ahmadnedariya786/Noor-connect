@@ -12,10 +12,10 @@
   "books": [
     {
       "number": "1",
-      "name": "Book 1",
-      "arabicName": "",
+      "name": "All Hadith",
+      "arabicName": "جميع الأحاديث",
       "hadithCount": 3715,
-      "description": "A section containing authenticated traditions on this unique subject, compiled by the author."
+      "description": "Complete collection of Muwatta Malik hadiths."
     }
   ]
 }

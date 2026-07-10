@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Share2, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, BookOpen, Share2, Loader2, RefreshCw, Library, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import hadithData from "../data/hadith.json";
 import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
+import { getAllCollections } from "@/data/hadith-collections";
 import { PageTransition } from "@/components/PageTransition";
 
 interface HadithData {
@@ -15,41 +16,28 @@ interface HadithData {
   number: string;
 }
 
+const REFRESH_SEED_KEY = "hadith-refresh-seed";
+
+function getDailySeed(refreshSeed?: number | null): number {
+  if (refreshSeed != null) return refreshSeed;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now.getTime() - start.getTime()) / 86400000);
+}
+
 const Hadith = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [hadith, setHadith] = useState<HadithData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Emergency fallback array
-  const fallbackHadiths = [
-    { 
-      hadith: "خيركم من تعلم القرآن وعلمه", 
-      translation: "The best among you are those who learn the Quran and teach it.",
-      book: "Sahih Bukhari", 
-      number: "5027" 
-    },
-    { 
-      hadith: "إنما الأعمال بالنيات", 
-      translation: "Actions are but by intentions.",
-      book: "Sahih Bukhari", 
-      number: "1" 
-    },
-    { 
-      hadith: "الدين النصيحة", 
-      translation: "Religion is sincerity.",
-      book: "Sahih Muslim", 
-      number: "55" 
-    }
-  ];
-
-  const fetchHadith = async () => {
+  const fetchHadith = useCallback(async (isRefresh = false) => {
     const today = new Date().toISOString().slice(0, 10);
     const cachedDate = localStorage.getItem("lastHadithDate");
     const cachedData = localStorage.getItem("lastHadithData");
 
-    // If we have today's hadith cached, use it
-    if (cachedDate === today && cachedData) {
+    // Use cache unless refreshing
+    if (!isRefresh && cachedDate === today && cachedData) {
       try {
         setHadith(JSON.parse(cachedData));
         setLoading(false);
@@ -59,11 +47,21 @@ const Hadith = () => {
       }
     }
 
-    // Otherwise, pick a random hadith from local data
     setLoading(true);
     
     try {
-      const importedHadith = await getDailyHadithFromCollections();
+      // Set or clear refresh seed
+      let refreshSeed: number | null = null;
+      if (isRefresh) {
+        const collectionCount = getAllCollections().length;
+        refreshSeed = Math.floor(Math.random() * 100000) + 1;
+        localStorage.setItem(REFRESH_SEED_KEY, String(refreshSeed));
+      } else {
+        const stored = localStorage.getItem(REFRESH_SEED_KEY);
+        if (stored) refreshSeed = parseInt(stored, 10);
+      }
+
+      const importedHadith = await getDailyHadithFromCollections(getDailySeed(refreshSeed));
       let finalData: HadithData;
 
       if (importedHadith) {
@@ -90,25 +88,13 @@ const Hadith = () => {
       setLoading(false);
     } catch (e) {
       console.error('Hadith Selection Error:', e);
-      // Emergency fallback
-      const fallback = fallbackHadiths[Math.floor(Math.random() * fallbackHadiths.length)];
-      const finalData = {
-        hadith: fallback.hadith,
-        translation: fallback.translation,
-        book: fallback.book,
-        number: fallback.number,
-      };
-            
-      setHadith(finalData);
-      localStorage.setItem("lastHadithDate", today);
-      localStorage.setItem("lastHadithData", JSON.stringify(finalData));
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchHadith();
-  }, []);
+  }, [fetchHadith]);
 
   const handleShare = async () => {
     if (hadith) {
@@ -150,7 +136,7 @@ const Hadith = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/hadith/collections")}
             className="rounded-full backdrop-blur-sm bg-card/50 hover:bg-card/80 border border-border/50"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -177,8 +163,8 @@ const Hadith = () => {
         ) : hadith ? (
           <div className="space-y-4">
             {/* Main Hadith Card */}
-            <Card className="relative overflow-hidden border-0 shadow-elegant max-h-[500px] overflow-y-auto">
-              <div className="absolute inset-0 bg-gradient-primary" />
+            <Card className="relative overflow-hidden border-0 shadow-elegant">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
               
               <div className="relative p-8 text-primary-foreground">
@@ -194,8 +180,8 @@ const Hadith = () => {
                   </div>
 
                   {/* Hadith text */}
-                  <blockquote className="text-lg leading-relaxed text-center font-serif italic">
-                    "{hadith.hadith}"
+                  <blockquote className="text-xl md:text-2xl leading-relaxed text-center font-serif italic">
+                    {hadith.hadith}
                   </blockquote>
 
                   {/* Translation */}
@@ -228,10 +214,24 @@ const Hadith = () => {
                 Share Hadith
               </Button>
               <Button
-                onClick={() => {
-                  localStorage.removeItem("lastHadithDate");
-                  fetchHadith();
-                }}
+                onClick={() => navigate("/hadith/collections")}
+                className="flex-1 backdrop-blur-sm bg-card/80 text-foreground hover:bg-card border border-border/50"
+                variant="outline"
+              >
+                <Library className="w-4 h-4 me-2" />
+                Browse Collections
+              </Button>
+              <Button
+                onClick={() => navigate("/hadith/bookmarks")}
+                className="backdrop-blur-sm bg-card/80 text-foreground hover:bg-card border border-border/50"
+                variant="outline"
+                size="icon"
+                title="Bookmarked Hadith"
+              >
+                <Bookmark className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => fetchHadith(true)}
                 className="backdrop-blur-sm bg-card/80 text-foreground hover:bg-card border border-border/50"
                 variant="outline"
                 size="icon"

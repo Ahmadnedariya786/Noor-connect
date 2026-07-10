@@ -126,18 +126,7 @@ export const preloadCriticalResources = (): void => {
 
 // Optimize scroll performance
 export const optimizeScrollPerformance = (): void => {
-  if (typeof window === 'undefined') return;
-  
-  let ticking = false;
-  
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }, { passive: true }); // Passive event listener for better scroll performance
+  // no-op — previously added a scroll listener that did nothing useful
 };
 
 // Reduce memory usage by cleaning up unused objects

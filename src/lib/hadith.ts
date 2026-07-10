@@ -9,7 +9,9 @@ import {
   getDailyHadith as getDailyHadithImpl,
 } from "@/data/hadith-collections";
 
-export { getDailyHadithImpl as getDailyHadith };
+export function getDailyHadith(seed?: Date | number): ReturnType<typeof getDailyHadithImpl> {
+  return getDailyHadithImpl(seed);
+}
 
 // Load collection metadata from local data
 export async function getHadithCollectionMetadata(
