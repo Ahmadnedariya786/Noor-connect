@@ -115,20 +115,19 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const [isMounted, setIsMounted] = useState(true);
 
     useEffect(() => {
-        // Non-blocking adaptive timing — uses hardwareConcurrency
+        // Aggressively reduced splash duration to improve LCP
         const cores = navigator.hardwareConcurrency || 4;
-        let baseDuration = cores >= 8 ? 600 : cores >= 4 ? 900 : 1200;
+        let baseDuration = cores >= 8 ? 150 : cores >= 4 ? 300 : 500;
 
-        // Animations add a little time; disabled = snappier exit
-        const duration = animationsEnabled ? baseDuration : baseDuration * 0.7;
+        if (!animationsEnabled) baseDuration = 100;
 
         const fadeTimer = setTimeout(() => {
             setIsFading(true);
             setTimeout(() => {
                 setIsMounted(false);
                 onComplete();
-            }, 300); // Wait for CSS opacity transition (300ms)
-        }, duration);
+            }, 150);
+        }, baseDuration);
 
         return () => clearTimeout(fadeTimer);
     }, [animationsEnabled, onComplete]);

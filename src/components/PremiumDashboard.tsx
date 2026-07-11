@@ -80,27 +80,19 @@ function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabl
     hour12: timeFormat === '12',
   });
 
-  const motionProps = (props: any) => animationEnabled ? props : {};
-
   return (
     <div className="text-center pt-3 pb-4 flex flex-col justify-center items-center gap-1">
-      <m.h1
+      <h1
         className="font-black leading-none tracking-tighter text-foreground"
         style={{ fontSize: 'clamp(52px, 18vw, 96px)' }}
-        {...motionProps({ 
-          initial: { opacity: 0 }, 
-          animate: { opacity: 1 }, 
-          transition: { duration: 0.4 } 
-        })}
       >
         {timeStr}
-      </m.h1>
-      <m.p
+      </h1>
+      <p
         className="text-sm md:text-base font-semibold tracking-wide text-primary px-4 text-center leading-tight"
-        {...motionProps({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: 0.15, duration: 0.4 } })}
       >
         {hijriDate}
-      </m.p>
+      </p>
     </div>
   );
 }
