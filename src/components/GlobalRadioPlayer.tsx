@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Volume2, VolumeX, Radio, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -556,7 +556,7 @@ export function GlobalRadioPlayer() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold truncate text-foreground">{globalRadio?.currentTrackInfo || 'Unknown Station'}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
                       <Clock className="w-3 h-3" />
                       <span className="font-mono">{formatDuration(displayDuration)}</span>
                       <span className="text-primary/50">•</span>
@@ -609,7 +609,7 @@ export function GlobalRadioPlayer() {
                   step={1}
                   className="flex-1 cursor-pointer"
                 />
-                <span className="text-[10px] font-bold text-muted-foreground w-8 text-right font-mono">{globalRadio?.volume || 0}%</span>
+                <span className="text-xs font-bold text-muted-foreground w-8 text-right font-mono">{globalRadio?.volume || 0}%</span>
               </div>
             </div>
           </Card>

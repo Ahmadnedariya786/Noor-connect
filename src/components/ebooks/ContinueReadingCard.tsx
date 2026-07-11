@@ -1,4 +1,4 @@
-
+﻿
 import { memo } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export const ContinueReadingCard = memo(({
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-0">
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
                 <Play className="w-3 h-3 mr-1" /> Continue Reading
               </Badge>
             </div>

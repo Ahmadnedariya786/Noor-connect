@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Weekly Salah History Chart
  * Shows prayer completion over the past 7 days
  */
@@ -81,11 +81,11 @@ export function WeeklySalahChart() {
     <Card className="bg-[#1A1A1A] border border-[#C9860A]/30 overflow-hidden min-h-[200px] shadow-md">
       <CardHeader className="pb-2 pt-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
             <Calendar className="w-4 h-4 text-[#C9860A]" />
             {ti18n('weeklyProgress')}
           </CardTitle>
-          <div className="flex items-center gap-1.5 text-[10px]">
+          <div className="flex items-center gap-1.5 text-xs">
             <TrendingUp className="w-3 h-3 text-[#C9860A]" />
             <span className="font-bold font-serif italic text-[#C9860A]">{weeklyStats.percentage}%</span>
           </div>
@@ -93,7 +93,7 @@ export function WeeklySalahChart() {
       </CardHeader>
       <CardContent className="pb-4">
         {/* Stats Summary */}
-        <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-widest">
+        <div className="flex items-center justify-between mb-3 text-xs font-bold uppercase tracking-widest">
           <span className="text-muted-foreground">
             {weeklyStats.completed} / {weeklyStats.total} {ti18n('prayersThisWeek')}
           </span>
@@ -126,13 +126,13 @@ export function WeeklySalahChart() {
             <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground text-xs">
               <Calendar className="w-8 h-8 mb-2 opacity-50" />
               <p>{ti18n('noPrayerDataYet')}</p>
-              <p className="text-[10px] mt-1">{ti18n('checkInPrayersToSeeProgress')}</p>
+              <p className="text-xs mt-1">{ti18n('checkInPrayersToSeeProgress')}</p>
             </div>
           )}
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <div className="flex items-center justify-center gap-4 mt-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-[#C9860A]" />
             <span>5/5</span>

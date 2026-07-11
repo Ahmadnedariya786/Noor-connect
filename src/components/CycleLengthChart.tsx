@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cycle Length Chart Component
  * Displays cycle length history and symptom correlation heatmap
  */
@@ -196,7 +196,7 @@ export function CycleLengthChart({ cycles }: CycleLengthChartProps) {
               <div className="grid gap-0.5" style={{ gridTemplateColumns: `80px repeat(${keys.length}, 1fr)` }}>
                 <div />
                 {keys.map(key => (
-                  <div key={key} className="text-[10px] text-center text-muted-foreground p-1 truncate">
+                  <div key={key} className="text-xs text-center text-muted-foreground p-1 truncate">
                     {formatSymptomLabel(key)}
                   </div>
                 ))}
@@ -209,7 +209,7 @@ export function CycleLengthChart({ cycles }: CycleLengthChartProps) {
                   className="grid gap-0.5"
                   style={{ gridTemplateColumns: `80px repeat(${keys.length}, 1fr)` }}
                 >
-                  <div className="text-[10px] text-right text-muted-foreground p-1 pr-2 truncate">
+                  <div className="text-xs text-right text-muted-foreground p-1 pr-2 truncate">
                     {formatSymptomLabel(rowKey)}
                   </div>
                   {keys.map(colKey => {
@@ -217,7 +217,7 @@ export function CycleLengthChart({ cycles }: CycleLengthChartProps) {
                     return (
                       <div
                         key={colKey}
-                        className={`aspect-square rounded-sm flex items-center justify-center text-[10px] font-medium ${getHeatmapColor(value)}`}
+                        className={`aspect-square rounded-sm flex items-center justify-center text-xs font-medium ${getHeatmapColor(value)}`}
                         title={`${rowKey} vs ${colKey}: ${value.toFixed(2)}`}
                       >
                         {rowKey === colKey ? '-' : value.toFixed(1)}

@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+﻿import { memo, useMemo } from "react";
 import { Clock, Moon, Sun, Sunset, Cloud, CloudMoon, AlertTriangle, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { LocationSearch } from "@/components/LocationSearch";
@@ -242,7 +242,7 @@ const PrayerCardsComponent = function PrayerCards({
 
                     <div className="text-right">
                       <p className="text-lg font-bold font-mono leading-none">{prayer.time}</p>
-                      <p className="text-[10px] text-muted-foreground leading-none mt-1">
+                      <p className="text-xs text-muted-foreground leading-none mt-1">
                         until {prayer.endTimeFormatted}
                       </p>
                     </div>

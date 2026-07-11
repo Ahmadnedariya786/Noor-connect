@@ -1,4 +1,4 @@
-import IslamicStreamPlayer from '@/components/IslamicStreamPlayer';
+﻿import IslamicStreamPlayer from '@/components/IslamicStreamPlayer';
 import { Radio, Wifi, Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +31,7 @@ export default function LiveStreams() {
               <Wifi className="w-4 h-4 text-emerald-600" />
             </div>
             <p className="text-xs font-bold text-foreground">HLS Stream</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Official Saudi streams via Akamai CDN (hls_roku). Direct HLS streaming for reliability.
             </p>
           </div>
@@ -41,13 +41,13 @@ export default function LiveStreams() {
               <Shield className="w-4 h-4 text-indigo-600" />
             </div>
             <p className="text-xs font-bold text-foreground">Privacy First</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               No tracking, no YouTube. Streams play directly via open-source HLS.js (MIT).
             </p>
           </div>
         </div>
 
-        <p className="text-center text-[11px] text-muted-foreground/50 leading-relaxed">
+        <p className="text-center text-xs text-muted-foreground/50 leading-relaxed">
           If a stream fails, tap Retry. Switch locations using the Makkah / Madinah tabs.
         </p>
 

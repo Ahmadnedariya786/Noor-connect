@@ -1,4 +1,4 @@
-import { Download, Upload, AlertTriangle, Lock, Trash2, Settings, BookOpen, BellRing } from "lucide-react";
+﻿import { Download, Upload, AlertTriangle, Lock, Trash2, Settings, BookOpen, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -30,7 +30,7 @@ function Card({ icon: Icon, title, children }: {
   return (
     <div className="bg-card border border-border rounded-[32px] overflow-hidden">
       <div className="p-5 border-b border-border bg-muted/40">
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Icon className="w-3 h-3" /> {title}
         </h3>
       </div>
@@ -120,7 +120,7 @@ export function HaidhSettingsTab({ data, onUpdate }: Props) {
               )}
             >
               <div className="font-bold">{m.label}</div>
-              <div className="text-[10px] uppercase tracking-widest opacity-70 mt-1">{m.desc}</div>
+              <div className="text-xs uppercase tracking-widest opacity-70 mt-1">{m.desc}</div>
             </button>
           ))}
         </div>
@@ -142,7 +142,7 @@ export function HaidhSettingsTab({ data, onUpdate }: Props) {
               min={3} max={15} step={1}
               onValueChange={v => onUpdate({ averagePeriodLength: v[0] })}
             />
-            <div className="flex justify-between mt-1 text-[9px] uppercase tracking-widest text-muted-foreground">
+            <div className="flex justify-between mt-1 text-xs uppercase tracking-widest text-muted-foreground">
               <span>3d</span><span>15d</span>
             </div>
           </div>
@@ -156,7 +156,7 @@ export function HaidhSettingsTab({ data, onUpdate }: Props) {
               min={21} max={40} step={1}
               onValueChange={v => onUpdate({ averageCycleLength: v[0] })}
             />
-            <div className="flex justify-between mt-1 text-[9px] uppercase tracking-widest text-muted-foreground">
+            <div className="flex justify-between mt-1 text-xs uppercase tracking-widest text-muted-foreground">
               <span>21d</span><span>40d</span>
             </div>
           </div>

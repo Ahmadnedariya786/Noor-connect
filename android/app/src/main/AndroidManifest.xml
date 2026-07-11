@@ -29,7 +29,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:largeHeap="true"
+        android:hardwareAccelerated="true">
 
         <!-- Required on API 34+ to justify FOREGROUND_SERVICE_SPECIAL_USE -->
         <property

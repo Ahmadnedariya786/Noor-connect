@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { Upload, Play, Pause, Trash2, Check, Music } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -245,12 +245,12 @@ export function CustomAdhanUpload() {
                   <p className="font-medium text-sm truncate">{adhan.name}</p>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {getAssignedPrayers(adhan.id).map(p => (
-                      <span key={p} className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">
+                      <span key={p} className="px-1.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded uppercase">
                         {p}
                       </span>
                     ))}
                     {getAssignedPrayers(adhan.id).length === 0 && (
-                      <span className="text-[10px] text-muted-foreground italic">
+                      <span className="text-xs text-muted-foreground italic">
                         Not assigned to any prayer
                       </span>
                     )}
@@ -268,14 +268,14 @@ export function CustomAdhanUpload() {
               </div>
 
               <div className="pt-2 border-t border-border/50">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2">Assign to Prayer:</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2">Assign to Prayer:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {PRAYERS.map(prayer => (
                     <Button
                       key={prayer}
                       variant={isAssignedTo(adhan.id, prayer) ? "default" : "outline"}
                       size="sm"
-                      className="h-7 text-[10px] px-2"
+                      className="h-7 text-xs px-2"
                       onClick={() => handleAssignToPrayer(adhan.id, prayer)}
                     >
                       {prayer}
@@ -289,7 +289,7 @@ export function CustomAdhanUpload() {
         </div>
       )}
 
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Assign custom audio to specific prayers. They will automatically play at prayer times.
       </p>
     </Card>

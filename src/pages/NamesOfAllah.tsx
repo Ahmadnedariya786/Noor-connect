@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { AppBar } from "@/components/AppBar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -158,11 +158,11 @@ export default function NamesOfAllah() {
         <div className="max-w-lg mx-auto px-5 pt-4 space-y-6">
           {/* Premium Hero Card */}
           <div className="relative overflow-hidden rounded-[32px] bg-[#1A1A1A] p-8 text-white border-2 border-[#C9860A]/40 shadow-xl">
-            <div className="absolute top-0 end-0 w-48 h-48 bg-[#C9860A]/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            <div className="absolute bottom-0 start-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+            <div className="absolute top-0 end-0 w-48 h-48 bg-[#C9860A]/20 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 start-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
             <div className="relative z-10 text-center space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#C9860A]/10 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-[#C9860A]/20 text-[#C9860A]">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#C9860A]/10 rounded-full text-xs font-bold uppercase tracking-[0.2em] border border-[#C9860A]/20 text-[#C9860A]">
                 <Sparkles className="w-3 h-3" />
                 Asma'ul Husna
               </div>
@@ -215,7 +215,7 @@ export default function NamesOfAllah() {
                         {/* Left Info Section */}
                         <div className="flex-1 p-5 flex flex-col justify-center">
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="text-[10px] font-bold text-[#C9860A] bg-[#C9860A]/10 w-6 h-6 rounded-lg flex items-center justify-center font-serif italic">
+                            <span className="text-xs font-bold text-[#C9860A] bg-[#C9860A]/10 w-6 h-6 rounded-lg flex items-center justify-center font-serif italic">
                               {name.number}
                             </span>
                             <h3 className="font-bold text-lg font-serif group-hover:text-[#C9860A] transition-colors">
@@ -290,7 +290,7 @@ export default function NamesOfAllah() {
                 className="relative w-full max-w-sm bg-card rounded-[32px] overflow-hidden shadow-2xl z-[210] border-2 border-[#C9860A]/20"
               >
                 <div className="bg-[#1A1A1A] p-10 flex items-center justify-center text-center relative overflow-hidden border-b border-[#C9860A]/20">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[60px] pointer-events-none" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[20px] pointer-events-none" />
                   <div className="absolute inset-0 opacity-10 animate-spin-slow">
                     <Sparkles className="w-full h-full text-[#C9860A]" />
                   </div>
@@ -301,7 +301,7 @@ export default function NamesOfAllah() {
 
                 <div className="p-8 space-y-6">
                   <div className="text-center">
-                    <span className="text-[10px] font-bold tracking-[0.2em] text-[#C9860A] uppercase mb-2 block">Attribute {selectedName.number}</span>
+                    <span className="text-xs font-bold tracking-[0.2em] text-[#C9860A] uppercase mb-2 block">Attribute {selectedName.number}</span>
                     <h3 className="text-4xl font-bold font-serif italic text-foreground">{selectedName.transliteration}</h3>
                     <p className="text-muted-foreground font-bold text-sm tracking-wide mt-2">{selectedName.meaning}</p>
                   </div>

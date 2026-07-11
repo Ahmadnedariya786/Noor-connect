@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, RotateCcw, Sparkles, History, ChevronRight, Volume2, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -138,13 +138,13 @@ const Tasbeeh = () => {
 
         {/* Next goal */}
         <div className="absolute bottom-12 left-0 right-0 text-center">
-          <p className="text-white/30 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">Next Goal</p>
+          <p className="text-white/30 text-xs font-bold uppercase tracking-[0.3em] mb-2">Next Goal</p>
           <p className="text-[#C9860A] text-2xl font-bold font-serif italic">{nextMilestone}</p>
         </div>
 
         {/* Exit hint */}
         <div className="absolute top-4 left-4">
-          <p className="text-white/15 text-[10px] tracking-wide">Hold to exit</p>
+          <p className="text-white/15 text-xs tracking-wide">Hold to exit</p>
         </div>
       </div>
     );
@@ -165,7 +165,7 @@ const Tasbeeh = () => {
                   <div className="p-1.5 bg-primary/10 rounded-lg">
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('selectDhikr')}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('selectDhikr')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -175,7 +175,7 @@ const Tasbeeh = () => {
                   >
                     <Moon className="w-3.5 h-3.5" />
                   </button>
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-[#C9860A]/10 rounded-full text-[10px] font-bold tracking-widest uppercase text-[#C9860A]">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-[#C9860A]/10 rounded-full text-xs font-bold tracking-widest uppercase text-[#C9860A]">
                     <History className="w-3 h-3" />
                     {t('total')}: <span className="font-serif italic ml-1 text-sm tracking-normal">{totalCount.toLocaleString()}</span>
                   </div>
@@ -247,7 +247,7 @@ const Tasbeeh = () => {
                 {/* Background reflection */}
                 <div className="absolute inset-4 border border-white/5 rounded-full" />
 
-                <span className="text-[10px] font-bold text-[#C9860A] uppercase tracking-[0.2em] mb-1">{t('count')}</span>
+                <span className="text-xs font-bold text-[#C9860A] uppercase tracking-[0.2em] mb-1">{t('count')}</span>
                 <motion.span
                   key={count}
                   initial={{ scale: 0.8 }}
@@ -259,7 +259,7 @@ const Tasbeeh = () => {
 
                 <div className="absolute bottom-10 flex items-center gap-1">
                   <Volume2 className="w-3 h-3 text-muted-foreground opacity-50" />
-                  <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">{t('tapToDhikr')}</span>
+                  <span className="text-xs font-bold text-muted-foreground/60 uppercase tracking-tighter">{t('tapToDhikr')}</span>
                 </div>
               </button>
             </div>
@@ -276,7 +276,7 @@ const Tasbeeh = () => {
               </Button>
 
               <div className="flex-1 h-14 bg-muted/20 border border-border/40 rounded-2xl flex flex-col items-center justify-center px-4 shadow-sm">
-                <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-[0.2em]">{t('nextGoal')}</span>
+                <span className="text-xs font-bold uppercase text-muted-foreground tracking-[0.2em]">{t('nextGoal')}</span>
                 <span className="text-base font-bold text-[#C9860A] font-serif italic">{nextMilestone}</span>
               </div>
             </div>
@@ -294,7 +294,7 @@ const Tasbeeh = () => {
 
           {/* Today's History Tab */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9860A] ms-2 mb-2">Today's Progress</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A] ms-2 mb-2">Today's Progress</h3>
             <Card className="p-5 border-border/40 bg-card shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -303,14 +303,14 @@ const Tasbeeh = () => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">Sessions Completed</p>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-1">Based on your activity today</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">Based on your activity today</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-[#C9860A] font-serif italic">
                     {dailyHistory.find(h => h.date === new Date().toLocaleDateString() && h.label === label)?.count || 0}
                   </p>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Dhikr</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Dhikr</p>
                 </div>
               </div>
             </Card>

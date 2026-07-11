@@ -1,4 +1,4 @@
-
+﻿
 import { memo } from "react";
 import { 
   BookOpen, Download, CheckCircle, 
@@ -141,9 +141,9 @@ export const BookCard = memo(({
           {clean}
         </h4>
         <div className="flex items-center justify-between mt-1">
-          <span className="text-[10px] text-muted-foreground">{category}</span>
+          <span className="text-xs text-muted-foreground">{category}</span>
           {readProgress > 0 && (
-            <span className="text-[10px] text-emerald-500 font-medium" title={`Page ${readProgressData?.currentPage ?? '?'} of ${readProgressData?.totalPages ?? '?'}`}>
+            <span className="text-xs text-emerald-500 font-medium" title={`Page ${readProgressData?.currentPage ?? '?'} of ${readProgressData?.totalPages ?? '?'}`}>
               {readProgressData?.currentPage && readProgressData?.totalPages
                 ? `${readProgressData.currentPage}/${readProgressData.totalPages}`
                 : `${readProgress}%`}

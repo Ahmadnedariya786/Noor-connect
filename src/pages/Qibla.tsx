@@ -1,4 +1,4 @@
-import { AppBar } from "@/components/AppBar";
+﻿import { AppBar } from "@/components/AppBar";
 import QiblaCompassModern from "@/components/QiblaCompassModern";
 import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -14,7 +14,7 @@ const Qibla = () => {
           <div className="flex-grow">
             <QiblaCompassModern />
           </div>
-          <p className="text-center text-[10px] text-muted-foreground/60 px-6 pb-8 italic">
+          <p className="text-center text-xs text-muted-foreground/60 px-6 pb-8 italic">
             {t(
               "qiblaDisclaimerLine1",
               "The qibla feature is currently in development and may not be 100% accurate."

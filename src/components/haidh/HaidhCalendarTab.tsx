@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Droplets } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -102,7 +102,7 @@ export function HaidhCalendarTab({ data }: Props) {
       <div className="bg-card border border-border rounded-[32px] p-5 shadow-lg">
         <div className="grid grid-cols-7 gap-2 mb-3">
           {DOW.map(d => (
-            <div key={d} className="text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            <div key={d} className="text-center text-xs font-black uppercase tracking-widest text-muted-foreground">
               {d}
             </div>
           ))}
@@ -151,7 +151,7 @@ export function HaidhCalendarTab({ data }: Props) {
       {/* Legend */}
       <div className="flex flex-wrap gap-4 justify-center">
         {legend.map(l => (
-          <div key={l.label} className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
+          <div key={l.label} className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-muted-foreground">
             <div className={cn("w-3.5 h-3.5 rounded-md", l.cls)} />
             {l.label}
           </div>
@@ -161,7 +161,7 @@ export function HaidhCalendarTab({ data }: Props) {
       {/* Past cycles */}
       {data.cycles.filter(c => c.endDate).length > 0 && (
         <div className="bg-card border border-border rounded-[32px] p-6 space-y-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Past Cycles</p>
+          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Past Cycles</p>
           {data.cycles.filter(c => c.endDate).slice(0, 5).map(c => (
             <div key={c.id} className="flex items-center justify-between text-sm bg-background p-3 rounded-[20px] border border-border">
               <div>

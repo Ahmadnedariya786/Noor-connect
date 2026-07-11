@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   AlertCircle, 
@@ -205,12 +205,12 @@ export default function EnhancedMenstrualModePage() {
             </Button>
             <div className="flex-1">
               <h1 className="text-xl font-bold">Enhanced Menstrual Mode</h1>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-tight">
                 Comprehensive cycle tracking & wellness support
               </p>
             </div>
             <div
-              className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
                 modeData.isActive 
                   ? "bg-rose-500/10 text-rose-600" 
                   : "bg-emerald-500/10 text-emerald-600"
@@ -242,7 +242,7 @@ export default function EnhancedMenstrualModePage() {
                         <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
                           Menstrual Mode Active
                         </p>
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-tight">
                           Started: {formatDateTime(modeData.startedAt)}
                         </p>
                       </div>
@@ -250,7 +250,7 @@ export default function EnhancedMenstrualModePage() {
                         <p className="text-2xl font-black text-rose-600 dark:text-rose-400">
                           {activeDays}
                         </p>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
                           Day Count
                         </p>
                       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { AppBar } from '@/components/AppBar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -635,7 +635,7 @@ export default function EnhancedIslamicQuiz() {
                           >
                             <span>{item.icon}</span>
                             <span>{item.name}</span>
-                            <Badge variant="secondary" className="ml-1 h-4 text-[10px]">
+                            <Badge variant="secondary" className="ml-1 h-4 text-xs">
                               {count}
                             </Badge>
                           </Button>
@@ -1046,7 +1046,7 @@ function QuizResults({
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-muted-foreground">Q{idx + 1}</span>
-                  <Badge variant={isCorrect ? 'default' : 'destructive'} className="text-[10px]">
+                  <Badge variant={isCorrect ? 'default' : 'destructive'} className="text-xs">
                     {isCorrect ? '+ Correct' : 'Wrong'}
                   </Badge>
                 </div>

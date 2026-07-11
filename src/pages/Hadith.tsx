@@ -143,7 +143,7 @@ const Hadith = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-foreground font-serif italic tracking-tight">حديث اليوم</h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">Daily Hadith</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">Daily Hadith</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C9860A]/20 to-[#E8A020]/5 flex items-center justify-center border border-[#C9860A]/10 shadow-sm">
             <BookOpen className="w-5 h-5 text-[#C9860A]" />
@@ -157,15 +157,15 @@ const Hadith = () => {
                 <div className="w-16 h-16 rounded-xl bg-[#C9860A]/10 animate-pulse border border-[#C9860A]/20" />
                 <Loader2 className="w-8 h-8 animate-spin text-[#C9860A] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Loading Hadith...</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Loading Hadith...</p>
             </div>
           </Card>
         ) : hadith ? (
           <div className="space-y-4">
             {/* Main Hadith Card */}
             <Card className="relative overflow-hidden border-2 shadow-xl border-[#C9860A]/40 bg-[#1A1A1A] text-white">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9860A]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C9860A]/5 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9860A]/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C9860A]/5 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
               
               <div className="relative p-8 z-10">
                 <div className="space-y-6">
@@ -174,27 +174,27 @@ const Hadith = () => {
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#C9860A]/10 flex items-center justify-center border border-[#C9860A]/20">
                       <BookOpen className="w-6 h-6 text-[#C9860A]" />
                     </div>
-                    <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#C9860A] font-bold">
+                    <h2 className="text-xs uppercase tracking-[0.2em] text-[#C9860A] font-bold">
                       Hadith of the Day
                     </h2>
                   </div>
-
+ 
                   {/* Hadith text */}
                   <blockquote className="text-xl md:text-3xl leading-relaxed text-center font-arabic font-bold mt-6 mb-2">
                     {hadith.hadith}
                   </blockquote>
-
+ 
                   {/* Translation */}
                   {hadith.translation && (
                     <p className="text-base leading-relaxed text-center opacity-80 font-serif italic px-2">
                       {hadith.translation}
                     </p>
                   )}
-
+ 
                   {/* Source */}
                   {hadith.book && (
                     <div className="pt-6 mt-4 border-t border-white/10 text-center">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/50">
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
                         {hadith.number ? `Reference: ${hadith.book} #${hadith.number}` : hadith.book}
                       </p>
                     </div>
@@ -242,14 +242,14 @@ const Hadith = () => {
 
             {/* Footer message */}
             <Card className="p-5 bg-muted/20 border-border/40 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-center text-muted-foreground">
+              <p className="text-xs font-bold uppercase tracking-wider text-center text-muted-foreground">
                 May Allah (SWT) help us implement these teachings in our daily lives. Ameen.
               </p>
             </Card>
           </div>
         ) : (
           <Card className="p-8 text-center space-y-4 bg-card border-border/40 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Unable to load hadith. Please try again later.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Unable to load hadith. Please try again later.</p>
             <Button onClick={fetchHadith} variant="outline" className="bg-[#1A1A1A] text-white hover:bg-[#333333] border-border/40 font-bold rounded-xl px-6 h-12">
               Try Again
             </Button>

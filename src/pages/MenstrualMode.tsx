@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowLeft, BellOff, Calendar, CheckCircle, Clock, Minus, Plus } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
@@ -165,10 +165,10 @@ export default function MenstrualMode() {
             </Button>
             <div className="flex-1">
               <h1 className="text-xl font-bold">{t("menstrualMode")}</h1>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">{t("menstrualModeDescription")}</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-tight">{t("menstrualModeDescription")}</p>
             </div>
             <div
-              className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${modeData.isActive ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"
+              className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${modeData.isActive ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"
                 }`}
             >
               {modeData.isActive ? t("active") : t("inactive")}
@@ -186,11 +186,11 @@ export default function MenstrualMode() {
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
                     <p className="text-lg font-bold text-rose-600 dark:text-rose-400">{t("menstrualMode")} {t("active")}</p>
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">Started: {formatDateTime(modeData.startedAt)}</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-tight">Started: {formatDateTime(modeData.startedAt)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-black text-rose-600 dark:text-rose-400">{activeDays}</p>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("dayCount")}</p>
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("dayCount")}</p>
                   </div>
                 </div>
 
@@ -260,7 +260,7 @@ export default function MenstrualMode() {
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-1">
                 <Label className="text-sm font-bold">{t("pausePrayerReminders")}</Label>
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">{t("pausePrayerRemindersDescription")}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-tight">{t("pausePrayerRemindersDescription")}</p>
               </div>
               <Switch
                 checked={modeData.pausePrayerNotifications}
@@ -271,14 +271,14 @@ export default function MenstrualMode() {
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-1">
                 <Label className="text-sm font-bold">{t("pauseAutoQazaSync")}</Label>
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">{t("pauseAutoQazaSyncDescription")}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-tight">{t("pauseAutoQazaSyncDescription")}</p>
               </div>
               <Switch checked={modeData.pauseQazaAutoSync} onCheckedChange={handlePauseQazaChange} />
             </div>
           </Card>
 
           <Card className="p-5 space-y-3 bg-muted/20 border-none rounded-[24px]">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
               <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
               <span>{t("notes")}</span>
             </div>

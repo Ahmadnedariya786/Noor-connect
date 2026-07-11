@@ -225,7 +225,7 @@ export default function HaidhTracker() {
               )}
               <Icon className={cn("w-5 h-5 z-10 transition-transform", isActive && "scale-110")} />
               <span className={cn(
-                "text-[8px] font-black uppercase tracking-wider mt-1 z-10 transition-opacity leading-none",
+                "text-xs font-black uppercase tracking-wider mt-1 z-10 transition-opacity leading-none",
                 isActive ? "opacity-100" : "opacity-0"
               )}>
                 {tab.label}
@@ -236,8 +236,8 @@ export default function HaidhTracker() {
       </aside>
 
       {/* ── Ambient background glow ───────────────────────── */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-500/5 dark:bg-rose-700/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-500/5 dark:bg-rose-700/10 rounded-full blur-[20px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[20px] pointer-events-none" />
 
       {/* ── Header ───────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-2xl border-b border-border ml-[72px]">

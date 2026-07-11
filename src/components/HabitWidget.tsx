@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,14 +50,14 @@ export function HabitWidget({ className }: HabitWidgetProps) {
               <h4 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
                 <Clock className="w-3 h-3" /> Salah
               </h4>
-              <span className="text-[10px] font-medium text-muted-foreground">{prayersDone}/5</span>
+              <span className="text-xs font-medium text-muted-foreground">{prayersDone}/5</span>
             </div>
             <div className="flex gap-1">
               {prayers.map(p => (
                 <div
                   key={p.name}
                   className={cn(
-                    "w-6 h-6 rounded text-[9px] font-bold flex items-center justify-center",
+                    "w-6 h-6 rounded text-xs font-bold flex items-center justify-center",
                     p.completed ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
                   )}
                   title={p.label}
@@ -76,7 +76,7 @@ export function HabitWidget({ className }: HabitWidgetProps) {
               <h4 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
                 <Target className="w-3 h-3" /> Habits
               </h4>
-              <span className="text-[10px] font-medium text-muted-foreground">{completedCount}/{habits.length}</span>
+              <span className="text-xs font-medium text-muted-foreground">{completedCount}/{habits.length}</span>
             </div>
             <div className="space-y-1">
               {habits.slice(0, 4).map(h => {
@@ -88,14 +88,14 @@ export function HabitWidget({ className }: HabitWidgetProps) {
                     ) : (
                       <Circle className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
                     )}
-                    <span className="text-[11px]">{h.icon}</span>
-                    <span className={`text-[11px] flex-1 truncate ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{h.name}</span>
+                    <span className="text-xs">{h.icon}</span>
+                    <span className={`text-xs flex-1 truncate ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{h.name}</span>
                   </button>
                 );
               })}
             </div>
             {habits.length > 4 && (
-              <p className="text-[9px] text-muted-foreground text-center mt-1">+{habits.length - 4} more</p>
+              <p className="text-xs text-muted-foreground text-center mt-1">+{habits.length - 4} more</p>
             )}
           </div>
         )}

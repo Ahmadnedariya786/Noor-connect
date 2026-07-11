@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Islamic Events Widget
  * Displays upcoming Islamic events and today's special events
  */
@@ -127,11 +127,11 @@ export function IslamicEventsWidget() {
   return (
     <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
-      <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9860A]/10 rounded-full blur-[50px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9860A]/10 rounded-full blur-[20px] pointer-events-none" />
 
       <CardHeader className="pb-3 relative z-10">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
             <Calendar className="w-4 h-4 text-[#C9860A]" />
             Islamic Events
           </CardTitle>
@@ -140,13 +140,13 @@ export function IslamicEventsWidget() {
             variant="ghost"
             size="sm"
             onClick={scheduleNotifications}
-            className="h-8 px-3 rounded-xl gap-2 text-[#C9860A] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
+            className="h-8 px-3 rounded-xl gap-2 text-[#C9860A] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
           >
             <Bell className="w-4 h-4" />
             Notify
           </Button>
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Upcoming holidays &amp; special days</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">Upcoming holidays &amp; special days</p>
       </CardHeader>
 
       <CardContent className="space-y-4 relative z-10">
@@ -163,16 +163,16 @@ export function IslamicEventsWidget() {
                   {todayEvent.arabicName}
                 </p>
               </div>
-              <Badge className="rounded-full text-[10px] uppercase tracking-widest font-bold bg-[#C9860A]/10 text-[#C9860A] border-none">
+              <Badge className="rounded-full text-xs uppercase tracking-widest font-bold bg-[#C9860A]/10 text-[#C9860A] border-none">
                 Today
               </Badge>
             </div>
-            <p className="text-[10px] font-medium text-muted-foreground mt-2">
+            <p className="text-xs font-medium text-muted-foreground mt-2">
               {todayEvent.description}
             </p>
           </div>
         ) : (
-          <div className="p-3 rounded-2xl bg-card/50 border border-border/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">
+          <div className="p-3 rounded-2xl bg-card/50 border border-border/40 text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">
             No special events today.
           </div>
         )}
@@ -180,7 +180,7 @@ export function IslamicEventsWidget() {
         {/* Upcoming */}
         {upcomingEvents.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               Next up
             </p>
             <div className="space-y-2">
@@ -195,11 +195,11 @@ export function IslamicEventsWidget() {
                         <span className="text-[#C9860A]">{getEventIcon(event.type)}</span>
                         <p className="text-xs font-bold text-white truncate">{event.name}</p>
                       </div>
-                      <p className="font-arabic text-[11px] text-[#C9860A]/70 mt-1 truncate" dir="rtl">
+                      <p className="font-arabic text-xs text-[#C9860A]/70 mt-1 truncate" dir="rtl">
                         {event.arabicName}
                       </p>
                     </div>
-                    <Badge className="rounded-full text-[10px] uppercase tracking-widest font-bold bg-[#C9860A]/10 text-[#C9860A] border-none">
+                    <Badge className="rounded-full text-xs uppercase tracking-widest font-bold bg-[#C9860A]/10 text-[#C9860A] border-none">
                       {event.daysUntil === 1 ? "Tomorrow" : `${event.daysUntil}d`}
                     </Badge>
                   </div>
@@ -208,7 +208,7 @@ export function IslamicEventsWidget() {
             </div>
           </div>
         ) : (
-          <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">
+          <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">
             No upcoming events in the next 7 days.
           </div>
         )}
@@ -216,7 +216,7 @@ export function IslamicEventsWidget() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
+          className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
           onClick={() => navigate("/calendar")}
         >
           View Calendar

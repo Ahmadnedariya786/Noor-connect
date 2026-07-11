@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+﻿import { useEffect, useRef, useState, useMemo } from "react";
 import { useReciters } from "@/hooks/useReciters";
 import { AlertCircle, Pause, Play, User, Volume2, X, ChevronUp, ChevronDown, Repeat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -223,7 +223,7 @@ export function GlobalQuranPlayer() {
 
                             <div className="min-w-0 pr-2">
                                 <p className="font-bold text-sm truncate leading-none mb-1 text-white">{surahName}</p>
-                                <p className="text-[10px] text-zinc-400 truncate leading-none uppercase tracking-wider font-medium">{reciter?.name}</p>
+                                <p className="text-xs text-zinc-400 truncate leading-none uppercase tracking-wider font-medium">{reciter?.name}</p>
                             </div>
                         </div>
 

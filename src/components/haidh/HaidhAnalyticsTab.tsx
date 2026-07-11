@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell
@@ -188,7 +188,7 @@ export function HaidhAnalyticsTab({ data }: Props) {
             return (
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-card border border-border rounded-3xl p-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Regularity</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Regularity</span>
                   <p className={cn(
                     "text-lg font-black mt-1",
                     r.score === "regular" && "text-emerald-500",
@@ -197,16 +197,16 @@ export function HaidhAnalyticsTab({ data }: Props) {
                   )}>
                     {r.score === "regular" ? "Regular" : r.score === "slightly-irrigular" ? "Slighty Irregular" : "Irregular"}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">±{r.variation}d · {r.trend}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">±{r.variation}d · {r.trend}</p>
                 </div>
                 <div className="bg-card border border-border rounded-3xl p-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Avg Cycle</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Avg Cycle</span>
                   <p className="text-lg font-black mt-1 text-foreground">{r.averageCycle} <span className="text-xs font-medium text-muted-foreground">days</span></p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Range {r.minCycle}–{r.maxCycle}d · {completedCycles.length} cycles</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Range {r.minCycle}–{r.maxCycle}d · {completedCycles.length} cycles</p>
                 </div>
                 {ovDay && (
                   <div className="bg-card border border-border rounded-3xl p-4 col-span-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-yellow-500">Predicted Ovulation</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-yellow-500">Predicted Ovulation</span>
                     <p className="text-base font-black mt-1 text-foreground">
                       {new Date(ovDay).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                     </p>

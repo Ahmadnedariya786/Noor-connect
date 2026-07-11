@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Music, Volume2, SkipForward, X, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,8 +66,8 @@ export function TakbiratPlayer() {
     <div className="relative overflow-hidden rounded-[32px] p-[2px] bg-gradient-to-r from-[#e0c097]/30 via-[#d4af37]/20 to-[#e0c097]/30 shadow-2xl">
       <div className="bg-[#12141d]/90 backdrop-blur-xl rounded-[30px] p-6 relative overflow-hidden">
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#e0c097]/5 rounded-full blur-[40px] pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[40px] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#e0c097]/5 rounded-full blur-[20px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[20px] pointer-events-none"></div>
 
         <div className="flex flex-col gap-6 relative z-10">
           <div className="flex items-center justify-between">
@@ -99,7 +99,7 @@ export function TakbiratPlayer() {
                   <p className="text-white text-xl font-bold font-arabic text-center">
                     اللَّهُ أَكْبَرُ، اللَّهُ أَكْبَرُ، لَا إِلَهَ إِلَّا اللَّهُ
                   </p>
-                  <p className="text-white/40 text-[10px] uppercase tracking-tighter">Reciting along...</p>
+                  <p className="text-white/40 text-xs uppercase tracking-tighter">Reciting along...</p>
                 </motion.div>
               ) : (
                 <motion.div

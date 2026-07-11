@@ -88,7 +88,7 @@ export function DhikrReminder() {
     <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
       {/* Decorative top accent */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
-      <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9860A]/10 rounded-full blur-[50px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9860A]/10 rounded-full blur-[20px] pointer-events-none" />
       
       <CardContent className="p-4 space-y-3 relative z-10">
         <div className="flex items-center justify-between">
@@ -96,7 +96,7 @@ export function DhikrReminder() {
             <div className="p-1.5 rounded-lg bg-[#C9860A]/20">
               <Bell className="w-4 h-4 text-[#C9860A]" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">Dhikr Reminder</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-white">Dhikr Reminder</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -111,7 +111,7 @@ export function DhikrReminder() {
               variant={enabled ? "default" : "outline"}
               size="sm"
               onClick={toggleReminder}
-              className={`gap-1 rounded-xl font-bold uppercase tracking-wider text-[10px] ${
+              className={`gap-1 rounded-xl font-bold uppercase tracking-wider text-xs ${
                 enabled
                   ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90 border-none'
                   : 'border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10'
@@ -126,7 +126,7 @@ export function DhikrReminder() {
         {enabled && (
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-[#C9860A]" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Remind every</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Remind every</span>
             <Select value={interval} onValueChange={setInterval}>
               <SelectTrigger className="w-24 h-8 rounded-lg bg-card/50 border-border/40 text-white text-xs font-bold">
                 <SelectValue />
@@ -150,7 +150,7 @@ export function DhikrReminder() {
           <p className="text-xs text-muted-foreground italic leading-relaxed mt-1">"{currentDhikr.translation}"</p>
           {currentDhikr.virtue && (
             <div className="mt-3 pt-2 border-t border-[#C9860A]/20">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9860A] flex items-center justify-center gap-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#C9860A] flex items-center justify-center gap-1">
                 <span className="text-base">✨</span> {currentDhikr.virtue}
               </p>
             </div>

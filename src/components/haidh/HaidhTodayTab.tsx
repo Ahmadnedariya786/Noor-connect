@@ -85,11 +85,11 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
       >
         {/* Glow effects — phase-tinted, theme-safe */}
         {data.isActive ? (
-          <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 dark:bg-rose-700/20 rounded-full blur-[60px] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 dark:bg-rose-700/20 rounded-full blur-[20px] pointer-events-none" />
         ) : (
-          <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-[20px] pointer-events-none" />
         )}
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-[50px] pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-[20px] pointer-events-none" />
 
         {data.isActive && cycle ? (
           <div className="relative z-10 flex flex-col items-center">
@@ -124,9 +124,9 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
                 </defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-500 mb-1">Day</span>
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-rose-500 mb-1">Day</span>
                 <span className="text-[5rem] font-bold text-foreground font-serif italic tracking-tight leading-none">{activeDays}</span>
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground mt-2">of {cycle.expectedDuration}</span>
+                <span className="text-xs uppercase tracking-widest text-muted-foreground mt-2">of {cycle.expectedDuration}</span>
               </div>
             </div>
 
@@ -181,7 +181,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
             </div>
 
             <h2 className="text-4xl font-bold font-serif italic tracking-tight mb-2 text-foreground">Ṭuhr</h2>
-            <p className="text-emerald-600 dark:text-emerald-400 font-bold text-[10px] tracking-[0.2em] uppercase mb-6">Purity Phase</p>
+            <p className="text-emerald-600 dark:text-emerald-400 font-bold text-xs tracking-[0.2em] uppercase mb-6">Purity Phase</p>
 
             <div className="bg-card border border-border rounded-2xl p-4 w-full mb-6 shadow-sm">
               {nextPredicted ? (
@@ -198,7 +198,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
                 </p>
               )}
               {nextPredicted && (
-                <p className="text-center text-[10px] uppercase tracking-widest text-muted-foreground mt-2">
+                <p className="text-center text-xs uppercase tracking-widest text-muted-foreground mt-2">
                   {getPredictionConfidence(data)}
                 </p>
               )}
@@ -234,7 +234,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-4">
             <Star className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Fiqh Exemption Status</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Fiqh Exemption Status</span>
           </div>
           <div className="grid grid-cols-2 gap-y-4 gap-x-2">
             {[
@@ -267,7 +267,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🌱</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
               Fertile Window
             </span>
           </div>
@@ -285,7 +285,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
         <div className="bg-card border border-border rounded-3xl p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">📊</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Cycle Insights</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Cycle Insights</span>
           </div>
           <div className="flex items-center gap-2 mb-2">
             <span className={cn(
@@ -303,7 +303,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
               {regularity.trend === "increasing" ? "📈" : regularity.trend === "decreasing" ? "📉" : "➡️"} {regularity.trend}
             </span>
           </div>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Avg {regularity.averageCycle}d · Range {regularity.minCycle}–{regularity.maxCycle}d · Based on last {data.cycles.filter(c => c.endDate).length} cycles
           </p>
         </div>
@@ -322,7 +322,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
           )}>
             <div className="text-xl mb-1">{s.icon}</div>
             <p className={cn("text-2xl font-bold font-serif italic", s.highlight ? "text-amber-500" : "text-foreground")}>{s.value}</p>
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-2">{s.label}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mt-2">{s.label}</p>
           </div>
         ))}
       </div>

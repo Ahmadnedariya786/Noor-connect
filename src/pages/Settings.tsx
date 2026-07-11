@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
@@ -58,7 +58,7 @@ const Settings = () => {
         {/* ── Theme Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Appearance</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Appearance</h2>
           </div>
           
           <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
@@ -85,7 +85,7 @@ const Settings = () => {
               );
             })}
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
             Currently using <span className="text-[#C9860A]">{effectiveTheme}</span> theme based on preferences.
           </p>
         </section>
@@ -93,7 +93,7 @@ const Settings = () => {
         {/* ── Preferences Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Preferences</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Preferences</h2>
           </div>
 
           <div className="bg-card border border-border rounded-[28px] overflow-hidden">
@@ -105,7 +105,7 @@ const Settings = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground font-serif italic text-lg">Fluid Animations</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Enable smooth UI transitions</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Enable smooth UI transitions</p>
                 </div>
               </div>
               <button 
@@ -130,7 +130,7 @@ const Settings = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground font-serif italic text-lg">Splash Welcome</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show "Islamic Companion" on launch</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show "Islamic Companion" on launch</p>
                 </div>
               </div>
               <button 
@@ -155,7 +155,7 @@ const Settings = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground font-serif italic text-lg">Home Greeting</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show daily salam on home screen</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show daily salam on home screen</p>
                 </div>
               </div>
               <button 
@@ -177,7 +177,7 @@ const Settings = () => {
         {/* ── Prayer / Fiqh Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Prayer Times</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Prayer Times</h2>
           </div>
 
           <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
@@ -207,7 +207,7 @@ const Settings = () => {
               );
             })}
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
             Determines Asr calculation. Currently using <span className="text-[#C9860A]">{madhab === 'hanafi' ? 'Hanafi' : 'Maliki, Shafi, Hanbali'}</span> school.
           </p>
         </section>
@@ -215,7 +215,7 @@ const Settings = () => {
         {/* ── Bedtime Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Bedtime</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Bedtime</h2>
           </div>
 
           <div className="bg-card border border-border rounded-[28px] overflow-hidden">
@@ -226,7 +226,7 @@ const Settings = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground font-serif italic text-lg">Bedtime Reminder</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Get a gentle notification at bedtime</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Get a gentle notification at bedtime</p>
                 </div>
               </div>
               <button
@@ -257,7 +257,7 @@ const Settings = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground font-serif italic text-lg">Time</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">When to remind you</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">When to remind you</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

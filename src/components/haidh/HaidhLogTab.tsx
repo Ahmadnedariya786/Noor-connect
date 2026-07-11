@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Droplets, BookOpen, BookHeart, Zap } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,7 +154,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
 
       {/* Flow */}
       <section className="space-y-3">
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Flow</h3>
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Flow</h3>
         <div className="flex flex-wrap gap-2">
           {FLOWS.map(f => (
             <button
@@ -186,7 +186,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
 
       {/* Symptoms */}
       <section className="space-y-3">
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Symptoms</h3>
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Symptoms</h3>
         <div className="flex flex-wrap gap-2">
           {SYMPTOMS.map(s => (
             <button
@@ -207,7 +207,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
 
       {/* Mood */}
       <section className="space-y-3">
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Mood</h3>
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Mood</h3>
         <div className="grid grid-cols-6 gap-2">
           {MOODS.map(m => (
             <button
@@ -231,7 +231,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
       {/* Energy */}
       <section className="space-y-3">
         <div className="flex items-center justify-between ml-1">
-          <h3 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
             <Zap className="w-3 h-3" /> Energy
           </h3>
           <span className="text-xs font-black text-foreground">{energy}/5</span>
@@ -244,7 +244,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
             step={1}
             onValueChange={handleEnergy}
           />
-          <div className="flex justify-between mt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+          <div className="flex justify-between mt-2 text-xs uppercase tracking-widest text-muted-foreground">
             <span>Low</span><span>High</span>
           </div>
         </div>
@@ -252,7 +252,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
 
       {/* Notes */}
       <section className="space-y-3">
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Notes</h3>
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Notes</h3>
         <Textarea
           value={notes}
           onChange={e => handleNotes(e.target.value)}
@@ -263,7 +263,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
 
       {/* Islamic actions */}
       <section className="space-y-3 pt-4 border-t border-border">
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
+        <h3 className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
           <BookOpen className="w-3 h-3" /> Islamic Actions
         </h3>
         <div className="space-y-2">

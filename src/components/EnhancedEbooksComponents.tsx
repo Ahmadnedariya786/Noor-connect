@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
+﻿import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import {
   Search, Book, Download, Plus, X, Trash2, CheckCircle, Clock,
   BookOpen, Bookmark, BookmarkCheck, ArrowUpDown, HardDrive,
@@ -85,7 +85,7 @@ const EnhancedBookCover = memo(({
               </div>
               <Badge 
                 variant="secondary" 
-                className="bg-white/10 backdrop-blur-sm border-0 text-[8px] text-white/90 font-medium px-1.5 py-0.5"
+                className="bg-white/10 backdrop-blur-sm border-0 text-xs text-white/90 font-medium px-1.5 py-0.5"
               >
                 {category}
               </Badge>
@@ -93,18 +93,18 @@ const EnhancedBookCover = memo(({
             
             {/* Center: Title */}
             <div className="text-center">
-              <h3 className="text-[10px] font-semibold leading-tight line-clamp-2 drop-shadow-sm">
+              <h3 className="text-xs font-semibold leading-tight line-clamp-2 drop-shadow-sm">
                 {clean}
               </h3>
               {author && (
-                <p className="text-[8px] text-white/70 mt-1">{author}</p>
+                <p className="text-xs text-white/70 mt-1">{author}</p>
               )}
             </div>
             
             {/* Bottom: Progress */}
             {showProgress && progress > 0 && (
               <div className="space-y-1">
-                <div className="flex justify-between text-[8px] text-white/70">
+                <div className="flex justify-between text-xs text-white/70">
                   <span>Progress</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
@@ -152,13 +152,13 @@ const EnhancedBookCover = memo(({
           <div className="flex items-start justify-between">
             <Badge 
               variant="secondary" 
-              className="bg-white/10 backdrop-blur-sm border-0 text-[10px] text-white/90 font-medium px-2 py-1"
+              className="bg-white/10 backdrop-blur-sm border-0 text-xs text-white/90 font-medium px-2 py-1"
             >
               <span className="mr-1">{theme.icon}</span>
               {category}
             </Badge>
             {size && (
-              <span className="text-[9px] text-white/60 bg-black/20 px-2 py-1 rounded-full">
+              <span className="text-xs text-white/60 bg-black/20 px-2 py-1 rounded-full">
                 {formatFileSize(parseInt(size))}
               </span>
             )}
@@ -173,18 +173,18 @@ const EnhancedBookCover = memo(({
               {clean}
             </h3>
             {author && (
-              <p className="text-[10px] text-white/70 mt-2 line-clamp-1">{author}</p>
+              <p className="text-xs text-white/70 mt-2 line-clamp-1">{author}</p>
             )}
           </div>
           
           {/* Bottom: Subtitle and progress */}
           <div className="space-y-2">
-            <p className="text-[10px] text-white/60 text-center line-clamp-1">
+            <p className="text-xs text-white/60 text-center line-clamp-1">
               {subtitle}
             </p>
             {showProgress && progress > 0 && (
               <div className="space-y-1">
-                <div className="flex justify-between text-[9px] text-white/70">
+                <div className="flex justify-between text-xs text-white/70">
                   <span>Reading Progress</span>
                   <span>{Math.round(progress)}%</span>
                 </div>

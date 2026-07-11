@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { AppBar } from "@/components/AppBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -124,9 +124,9 @@ export default function PrayerStats() {
         {/* Overview Card */}
         <Card className="overflow-hidden bg-[#1A1A1A] text-white border border-[#C9860A]/30 shadow-xl">
           <div className="bg-gradient-to-br from-[#C9860A]/20 via-[#C9860A]/5 to-transparent p-6 relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[20px] pointer-events-none" />
             <div className="text-center relative z-10">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9860A] mb-2">30-Day Completion Rate</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A] mb-2">30-Day Completion Rate</p>
               <p className="text-6xl font-bold text-white font-serif italic mb-2 drop-shadow-md">{completionRate}%</p>
               <p className="text-xs font-medium text-white/60">
                 {stats.completedPrayers} of {stats.totalPrayers} prayers
@@ -143,28 +143,28 @@ export default function PrayerStats() {
           <Card className="p-5 bg-card border-border/40 shadow-sm">
             <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Current Streak</span>
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">Current Streak</span>
             </div>
             <p className="text-3xl font-bold font-serif italic text-foreground">{stats.currentStreak} <span className="text-sm not-italic text-muted-foreground">days</span></p>
           </Card>
           <Card className="p-5 bg-card border-border/40 shadow-sm">
             <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <Award className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Best Streak</span>
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">Best Streak</span>
             </div>
             <p className="text-3xl font-bold font-serif italic text-foreground">{stats.longestStreak} <span className="text-sm not-italic text-muted-foreground">days</span></p>
           </Card>
           <Card className="p-5 bg-card border-border/40 shadow-sm">
             <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <Target className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Weekly Average</span>
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">Weekly Average</span>
             </div>
             <p className="text-3xl font-bold font-serif italic text-foreground">{stats.weeklyAverage}<span className="text-sm not-italic text-muted-foreground">/5</span></p>
           </Card>
           <Card className="p-5 bg-card border-border/40 shadow-sm">
             <div className="flex items-center gap-2 text-[#C9860A] mb-3">
               <Calendar className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Days Tracked</span>
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">Days Tracked</span>
             </div>
             <p className="text-3xl font-bold font-serif italic text-foreground">{history.length}</p>
           </Card>

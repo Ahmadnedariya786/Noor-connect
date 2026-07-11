@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -80,7 +80,7 @@ function PreviewModal({ widget, onClose, onToggle }: PreviewModalProps) {
               {getWidgetIcon(widget.id, "w-5 h-5 text-primary")}
             </div>
             {widget.name}
-            <Badge variant="outline" className={`text-[10px] ml-1 ${getCategoryColor(widget.category)}`}>
+            <Badge variant="outline" className={`text-xs ml-1 ${getCategoryColor(widget.category)}`}>
               {widget.category}
             </Badge>
           </DialogTitle>
@@ -143,7 +143,7 @@ function ActiveWidgetCard({ widget, onToggle, onPreview }: ActiveCardProps) {
             </div>
             <div className="min-w-0">
               <h4 className="font-bold text-sm text-foreground truncate leading-tight">{widget.name}</h4>
-              <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full border mt-0.5 ${getCategoryColor(widget.category)}`}>
+              <span className={`inline-block text-xs font-bold px-1.5 py-0.5 rounded-full border mt-0.5 ${getCategoryColor(widget.category)}`}>
                 {widget.category}
               </span>
             </div>
@@ -208,7 +208,7 @@ function HiddenWidgetCard({ widget, onToggle, onPreview }: HiddenCardProps) {
             </div>
             <div className="min-w-0">
               <h4 className="font-bold text-sm text-foreground truncate leading-tight">{widget.name}</h4>
-              <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full border mt-0.5 ${getCategoryColor(widget.category)}`}>
+              <span className={`inline-block text-xs font-bold px-1.5 py-0.5 rounded-full border mt-0.5 ${getCategoryColor(widget.category)}`}>
                 {widget.category}
               </span>
             </div>

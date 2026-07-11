@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -644,13 +644,13 @@ const Profile = () => {
         <div className="grid gap-6">
           {/* Appearance Section */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
               {t('appearance')}
             </h3>
             <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] divide-y divide-border/40">
               <div className="p-5 space-y-4">
                 <div className="space-y-3">
-                  <Label className="text-[11px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                  <Label className="text-xs font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                     <Globe className="w-3.5 h-3.5" />
                     {t('language')}
                   </Label>
@@ -675,7 +675,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">{t('darkMode')}</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium">App Theme</p>
+                      <p className="text-xs text-muted-foreground font-medium">App Theme</p>
                     </div>
                   </div>
                   <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} className="data-[state=checked]:bg-primary" />
@@ -688,7 +688,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Animations</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium">Turn off motion-heavy effects</p>
+                      <p className="text-xs text-muted-foreground font-medium">Turn off motion-heavy effects</p>
                     </div>
                   </div>
                   <Switch checked={animationEnabled} onCheckedChange={handleAnimationToggle} className="data-[state=checked]:bg-primary" />
@@ -701,7 +701,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Salam Greeting</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium">Play once after launch</p>
+                      <p className="text-xs text-muted-foreground font-medium">Play once after launch</p>
                     </div>
                   </div>
                   <Switch checked={greetingEnabled} onCheckedChange={handleSalamGreetingToggle} className="data-[state=checked]:bg-primary" />
@@ -714,7 +714,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Splash Text</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium">Show the launch subtitle</p>
+                      <p className="text-xs text-muted-foreground font-medium">Show the launch subtitle</p>
                     </div>
                   </div>
                   <Switch checked={splashGreetingEnabled} onCheckedChange={handleSplashGreetingToggle} className="data-[state=checked]:bg-primary" />
@@ -727,7 +727,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <Label className="text-sm font-bold">Splash Screen</Label>
-                      <p className="text-[10px] text-muted-foreground font-medium">Show launch animation</p>
+                      <p className="text-xs text-muted-foreground font-medium">Show launch animation</p>
                     </div>
                   </div>
                   <Switch checked={splashEnabled} onCheckedChange={handleSplashToggle} className="data-[state=checked]:bg-primary" />
@@ -740,12 +740,12 @@ const Profile = () => {
 
           {/* Personal Section */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
               {t('personalInformation')}
             </h3>
             <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
               <div className="space-y-3">
-                <Label className="text-[11px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <Label className="text-xs font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                   <User className="w-3.5 h-3.5" />
                   {t('gender')}
                 </Label>
@@ -776,7 +776,7 @@ const Profile = () => {
                 </Select>
                 <div className="flex items-start gap-2 pt-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 mt-0.5" />
-                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                     {genderSettings.gender === "female"
                       ? t('menstrualModeAvailable')
                       : t('thisHelpsPersonalizeExperience')}
@@ -788,12 +788,12 @@ const Profile = () => {
 
           {/* Currency Settings Section */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
               Currency Settings
             </h3>
             <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
               <div className="space-y-3">
-                <Label className="text-[11px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <Label className="text-xs font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                   <DollarSign className="w-3.5 h-3.5" />
                   Preferred Currency
                 </Label>
@@ -818,7 +818,7 @@ const Profile = () => {
                 </Select>
                 <div className="flex items-start gap-2 pt-1">
                   <Globe className="w-3.5 h-3.5 text-primary mt-0.5" />
-                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                     Used for Zakat calculator and exchange rate calculations
                   </p>
                 </div>
@@ -828,7 +828,7 @@ const Profile = () => {
 
           {/* Haptic Settings Section */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
               Haptic Feedback
             </h3>
             <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
@@ -838,7 +838,7 @@ const Profile = () => {
 
           {/* Prayer Calculation Section */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
               {t('prayerSettings')}
             </h3>
             <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5 space-y-5">
@@ -846,7 +846,7 @@ const Profile = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t('madhab')}</Label>
+                  <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t('madhab')}</Label>
                   <Select value={madhab} onValueChange={(v) => handleMadhabChange(v as MadhabType)}>
                     <SelectTrigger className="rounded-xl bg-muted/30 border-none h-11">
                       <SelectValue />
@@ -858,7 +858,7 @@ const Profile = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t('timeFormat')}</Label>
+                  <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t('timeFormat')}</Label>
                   <Select value={timeFormat} onValueChange={(v) => handleTimeFormatChange(v as "12" | "24")}>
                     <SelectTrigger className="rounded-xl bg-muted/30 border-none h-11">
                       <SelectValue />
@@ -872,7 +872,7 @@ const Profile = () => {
               </div>
 
               <div className="pt-4 border-t border-border/40 space-y-3">
-                <Label className="text-[11px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <Label className="text-xs font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                   <Calendar className="w-3.5 h-3.5" />
                   {t('hijriAdjustment')}
                 </Label>
@@ -895,7 +895,7 @@ const Profile = () => {
 
         {/* Islamic Sleep Reminder */}
         <div className="space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
             Islamic Sleep Reminder
           </h3>
           <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
@@ -906,7 +906,7 @@ const Profile = () => {
                 </div>
                 <div>
                   <Label className="text-sm font-bold">Sleep Reminder</Label>
-                   <p className="text-[10px] text-muted-foreground font-medium">
+                   <p className="text-xs text-muted-foreground font-medium">
                      Reminds you of Islamic adhkar before sleep
                    </p>
                 </div>
@@ -925,14 +925,14 @@ const Profile = () => {
                       <Clock className="w-3.5 h-3.5 text-indigo-500" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-foreground">Next reminder: {nextSleepReminderTime}</p>
-                      <p className="text-[9px] text-muted-foreground">Based on Isha prayer time</p>
+                      <p className="text-xs font-bold text-foreground">Next reminder: {nextSleepReminderTime}</p>
+                      <p className="text-xs text-muted-foreground">Based on Isha prayer time</p>
                     </div>
                   </div>
                 )}
                 {sleepContentPreview && (
                   <div className="p-3 bg-muted/30 rounded-2xl">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Tonight's Reminder</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Tonight's Reminder</p>
                     <p className="text-xs text-foreground/80 leading-relaxed">{sleepContentPreview}</p>
                   </div>
                 )}
@@ -943,7 +943,7 @@ const Profile = () => {
 
         {/* Adhan & Prayer Notifications */}
         <div className="space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
             {t('prayerNotifications')}
           </h3>
           <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5 space-y-6">
@@ -957,8 +957,8 @@ const Profile = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-bold">{t('prayerAlarmAdhan')}</Label>
-                     <p className="text-[10px] text-muted-foreground font-medium">{t('prayerAlarmDescription')}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">{t('prayerAlarmNote')}</p>
+                     <p className="text-xs text-muted-foreground font-medium">{t('prayerAlarmDescription')}</p>
+                    <p className="text-xs text-muted-foreground font-medium">{t('prayerAlarmNote')}</p>
                   </div>
                 </div>
                 <Switch
@@ -975,7 +975,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-primary">{currentPrayer} {t('time')}!</p>
-                      <p className="text-[10px] uppercase font-bold text-muted-foreground/70">{t('adhanIsPlaying')}</p>
+                      <p className="text-xs uppercase font-bold text-muted-foreground/70">{t('adhanIsPlaying')}</p>
                     </div>
                   </div>
                   <Button variant="destructive" size="sm" onClick={stopAdhan} className="rounded-xl font-bold">
@@ -1000,7 +1000,7 @@ const Profile = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-bold">{t('prePrayerReminder')}</Label>
-                    <p className="text-[10px] text-muted-foreground font-medium">{t('prePrayerReminderDescription')}</p>
+                    <p className="text-xs text-muted-foreground font-medium">{t('prePrayerReminderDescription')}</p>
                   </div>
                 </div>
                 <Select value={reminderMinutes} onValueChange={handleReminderChange}>
@@ -1021,7 +1021,7 @@ const Profile = () => {
 
         {/* Custom Adhan Upload */}
         <div className="space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
             {t('customAdhan')}
           </h3>
           <CustomAdhanUpload />
@@ -1090,7 +1090,7 @@ const Profile = () => {
                 <h3 className="font-semibold text-sm text-foreground">
                   {isCapacitorApp ? t('appNotifications') : t('browserNotifications')}
                 </h3>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {notifPermStatus === 'denied'
                     ? isCapacitorApp
                       ? t('permissionWasDeniedApp')
@@ -1110,7 +1110,7 @@ const Profile = () => {
 
             {/* What you'll get */}
             <div className="mx-4 mb-3 p-2.5 rounded-lg bg-background/60 border border-border/50">
-              <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1.5">{t('youWillReceive')}</p>
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1.5">{t('youWillReceive')}</p>
               <div className="grid grid-cols-2 gap-1">
                 {[
                   { emoji: '🕌', label: t('prayerTimesFajrIsha') },
@@ -1118,7 +1118,7 @@ const Profile = () => {
                   { emoji: '📖', label: t('fridayKahfAlert') },
                   { emoji: '✨', label: t('dailyHadithReminders') },
                 ].map(item => (
-                  <div key={item.label} className="flex items-center gap-1.5 text-[10px] text-foreground">
+                  <div key={item.label} className="flex items-center gap-1.5 text-xs text-foreground">
                     <span>{item.emoji}</span>
                     <span>{item.label}</span>
                   </div>
@@ -1236,7 +1236,7 @@ const Profile = () => {
               )}
 
               <div className="border-t border-border/50 my-2 pt-2">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2 block">{t('islamicEvents')}</Label>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">{t('islamicEvents')}</Label>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -1275,7 +1275,7 @@ const Profile = () => {
               </div>
 
               <div className="border-t border-border/50 my-2 pt-2">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2 block">{t('dailyReminders')}</Label>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">{t('dailyReminders')}</Label>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -1443,7 +1443,7 @@ const Profile = () => {
 
         {/* Version Info */}
         <div className="flex justify-center pt-4 pb-8">
-          <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground/40">
+          <p className="text-xs font-bold tracking-widest uppercase text-muted-foreground/40">
             {t('version')} {CURRENT_APP_VERSION}
           </p>
         </div>

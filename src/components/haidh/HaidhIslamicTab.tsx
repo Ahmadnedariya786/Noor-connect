@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Heart, BookOpen, AlertTriangle, CheckCircle, Moon, Wind, BookHeart, Droplets, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -118,7 +118,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
           "p-6 border-b border-border relative overflow-hidden",
           fiqh.phase === "haidh" ? "bg-rose-500/10" : "bg-emerald-500/10"
         )}>
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Current Status</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">Current Status</h3>
           <div className="flex justify-between items-center relative z-10">
             <p className={cn(
               "text-2xl font-black",
@@ -161,7 +161,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
 
       {/* Madhab info (selector lives in Settings) */}
       <div className="bg-card border border-border rounded-[32px] p-5">
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
+        <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
           <BookOpen className="w-3 h-3" /> Your Madhab
         </h3>
         <p className="font-bold text-foreground">{MADHAB_LABEL[data.madhab]}</p>
@@ -180,7 +180,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
       <div className="bg-card border border-border rounded-[32px] p-5">
         <div className="flex items-center gap-2 mb-4">
           <BookHeart className="w-4 h-4 text-primary" />
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Missed Ramadan Fasts</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-primary">Missed Ramadan Fasts</h3>
         </div>
         <div className="flex items-center justify-between">
           <div>
@@ -248,7 +248,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
       <div className="bg-card border border-border rounded-[32px] p-6">
         <div className="flex items-center gap-2 mb-4">
           <Droplets className="w-4 h-4 text-emerald-500" />
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Wellness Tips</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Wellness Tips</h3>
         </div>
         <ul className="space-y-3">
           {content.wellness.map((tip, i) => (
@@ -264,7 +264,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
       <div className="bg-card border border-border rounded-[32px] p-6">
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="w-4 h-4 text-primary" />
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Islamic Knowledge</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Islamic Knowledge</h3>
         </div>
         <div className="space-y-2">
           {HAIDH_EDUCATION.map((item, i) => (
@@ -282,7 +282,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
                     <p key={j}>{line}</p>
                   ))}
                   {item.source && (
-                    <p className="text-[10px] text-muted-foreground mt-2 italic">{item.source}</p>
+                    <p className="text-xs text-muted-foreground mt-2 italic">{item.source}</p>
                   )}
                 </div>
               )}
@@ -295,7 +295,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
       <div className="bg-card border border-border rounded-[32px] p-6">
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="w-4 h-4 text-emerald-500" />
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Verified Islamic Resources</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Verified Islamic Resources</h3>
         </div>
         <p className="text-sm text-foreground/80 mb-4 leading-relaxed">
           For detailed Fiqh questions regarding your specific situation, please refer to these verified resources or consult a local scholar.

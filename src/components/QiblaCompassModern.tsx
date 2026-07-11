@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FALLBACK_LOCATIONS } from '@/lib/location-state';
 import { Compass, Loader2, LocateFixed, RefreshCw, Navigation, MapPin } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
@@ -669,7 +669,7 @@ const QiblaCompassModern = () => {
           <div className="flex justify-center mb-3">
             <IslamicOrnament />
           </div>
-          <p className="text-[#C9860A] text-[10px] tracking-[0.25em] uppercase font-bold">Qibla Direction</p>
+          <p className="text-[#C9860A] text-xs tracking-[0.25em] uppercase font-bold">Qibla Direction</p>
 
           {/* Large Bearing Display */}
           <div className="flex items-baseline justify-center gap-2">
@@ -893,27 +893,27 @@ const QiblaCompassModern = () => {
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-bold" style={{ color: THEME.accent }}>No Sensor Detected</p>
-                  <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">Your device doesn't have a digital compass, but you can still find the Qibla!</p>
+                  <p className="text-xs text-muted-foreground leading-snug mt-0.5">Your device doesn't have a digital compass, but you can still find the Qibla!</p>
                 </div>
               </div>
               
               <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-4">
                 <div className="text-center pb-4 border-b border-border/50">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
                   <div className="flex items-baseline justify-center gap-1.5">
                     <p className="text-4xl font-black" style={{ color: THEME.accent, fontFamily: 'Georgia, serif' }}>{Math.round(qiblaResult.bearing)}°</p>
                     <p className="text-sm font-bold text-foreground/80">{qiblaResult.cardinalDirection}</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground/70 mt-2 mx-auto max-w-[240px] leading-relaxed">
+                  <p className="text-xs text-muted-foreground/70 mt-2 mx-auto max-w-[240px] leading-relaxed">
                     This angle is a fixed geographic line from your city to Mecca. It will not change when you move your device.
                   </p>
                 </div>
                 
                 <div className="space-y-3.5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">How to use this number:</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">How to use this number:</p>
                   
                   <div className="flex gap-3 text-left items-start">
-                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">1</div>
+                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">1</div>
                     <p className="text-xs text-foreground/90 leading-relaxed">
                       <strong className="text-foreground block mb-0.5">Using a real compass:</strong>
                       Hold a plastic compass flat. Turn your body until you face the <strong>{Math.round(qiblaResult.bearing)}°</strong> mark.
@@ -921,7 +921,7 @@ const QiblaCompassModern = () => {
                   </div>
                   
                   <div className="flex gap-3 text-left items-start">
-                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">2</div>
+                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">2</div>
                     <p className="text-xs text-foreground/90 leading-relaxed">
                       <strong className="text-foreground block mb-0.5">Using Google Maps:</strong>
                       Open Maps. The top of your screen is always North (0°). Turn to face <strong>{qiblaResult.cardinalDirection}</strong>.
@@ -947,7 +947,7 @@ const QiblaCompassModern = () => {
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-6">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] flex items-center gap-1.5">
+                  <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.2em] flex items-center gap-1.5">
                     <span className="p-1 rounded-md bg-muted">🕋</span>
                     Distance to Baitullah
                   </p>
@@ -962,7 +962,7 @@ const QiblaCompassModern = () => {
                 </div>
 
                 <div className="text-right space-y-1">
-                  <p className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest">
+                  <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest">
                     Travel Mode
                   </p>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted text-muted-foreground font-bold text-xs border border-border">
@@ -991,7 +991,7 @@ const QiblaCompassModern = () => {
                       {/* Subtle pulse effect for the emoji */}
                       <div className="absolute inset-0 bg-amber-200/40 rounded-full scale-0 group-hover:scale-100 transition-transform duration-500" />
                     </div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">You</span>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">You</span>
                   </div>
 
                   {/* Connective Line */}
@@ -1010,7 +1010,7 @@ const QiblaCompassModern = () => {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#b48608] flex items-center justify-center shadow-md shadow-[#10B981]/20 border-2 border-white/50">
                       <span className="text-sm">🕋</span>
                     </div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Kaaba</span>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">Kaaba</span>
                   </div>
                 </div>
 
@@ -1025,7 +1025,7 @@ const QiblaCompassModern = () => {
                     The Journey Estimate
                   </p>
 
-                  <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                     {qiblaResult.distanceKm < 100
                       ? `Subhanallah, you are extremely close! Just ${Math.round(qiblaResult.distanceKm * 1000)}m to the Holy Kaaba.`
                       : qiblaResult.distanceKm < 5000

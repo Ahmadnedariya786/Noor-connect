@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Profile Switcher Component
  * Quick dropdown for switching between profiles
  */
@@ -63,7 +63,7 @@ export function ProfileSwitcher({ onManageProfiles }: ProfileSwitcherProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{profile.name}</p>
                   {profile.isDefault && (
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                    <Badge variant="secondary" className="text-xs h-4 px-1">
                       Active
                     </Badge>
                   )}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Menstrual Widget Component
  * PWA-compatible quick-access widget for home screen and in-app dashboard
  */
@@ -136,7 +136,7 @@ export function MenstrualWidget({
                 })()}
                 <div>
                   <p className="text-sm font-bold">{PHASE_LABELS[phaseInfo.phase]}</p>
-                  <p className="text-[10px] text-muted-foreground">Day {phaseInfo.cycleDay}</p>
+                  <p className="text-xs text-muted-foreground">Day {phaseInfo.cycleDay}</p>
                 </div>
               </>
             ) : (
@@ -152,13 +152,13 @@ export function MenstrualWidget({
         <div className="space-y-3">
           {/* Flow */}
           <div>
-            <p className="text-[10px] text-muted-foreground mb-1">Flow</p>
+            <p className="text-xs text-muted-foreground mb-1">Flow</p>
             <div className="flex gap-1">
               {FLOW_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setQuickFlow(opt.value)}
-                  className={`flex-1 py-1.5 rounded text-[10px] font-medium transition-colors ${
+                  className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors ${
                     quickFlow === opt.value
                       ? `${opt.color} text-foreground`
                       : 'bg-muted/30 text-muted-foreground'
@@ -172,7 +172,7 @@ export function MenstrualWidget({
 
           {/* Quick mood */}
           <div>
-            <p className="text-[10px] text-muted-foreground mb-1">Mood</p>
+            <p className="text-xs text-muted-foreground mb-1">Mood</p>
             <div className="flex gap-1">
               {MOOD_EMOJIS.map((emoji, i) => (
                 <button
@@ -190,7 +190,7 @@ export function MenstrualWidget({
 
           {/* Quick cramps */}
           <div className="flex items-center gap-2">
-            <p className="text-[10px] text-muted-foreground w-12">Cramps</p>
+            <p className="text-xs text-muted-foreground w-12">Cramps</p>
             <Slider
               value={[quickCramps]}
               onValueChange={([v]) => setQuickCramps(v)}
@@ -198,7 +198,7 @@ export function MenstrualWidget({
               step={1}
               className="flex-1"
             />
-            <span className="text-[10px] font-medium w-6 text-right">{quickCramps}/5</span>
+            <span className="text-xs font-medium w-6 text-right">{quickCramps}/5</span>
           </div>
 
           <Button size="sm" onClick={handleQuickLog} className="w-full h-8 text-xs">

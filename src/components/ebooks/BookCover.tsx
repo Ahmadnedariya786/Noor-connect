@@ -1,4 +1,4 @@
-
+﻿
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -60,13 +60,13 @@ export const BookCover = memo(({
           <div className="flex items-start justify-between">
             <Badge 
               variant="secondary" 
-              className="bg-white/10 backdrop-blur-sm border-0 text-[10px] text-white/90 font-medium px-1.5 py-0.5"
+              className="bg-white/10 backdrop-blur-sm border-0 text-xs text-white/90 font-medium px-1.5 py-0.5"
             >
               <span className="mr-1">{theme.icon}</span>
               {category}
             </Badge>
             {size && (
-              <span className="text-[9px] text-white/60 bg-black/20 px-1.5 py-0.5 rounded">
+              <span className="text-xs text-white/60 bg-black/20 px-1.5 py-0.5 rounded">
                 {formatFileSize(parseInt(size))}
               </span>
             )}
@@ -77,16 +77,16 @@ export const BookCover = memo(({
             <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-2">
               <span className="text-2xl">{theme.icon}</span>
             </div>
-            <h3 className="text-[11px] font-semibold leading-tight line-clamp-3 drop-shadow-sm">
+            <h3 className="text-xs font-semibold leading-tight line-clamp-3 drop-shadow-sm">
               {clean}
             </h3>
             {author && (
-              <p className="text-[9px] text-white/70 mt-1 line-clamp-1">{author}</p>
+              <p className="text-xs text-white/70 mt-1 line-clamp-1">{author}</p>
             )}
           </div>
           
           {/* Bottom: Subtitle */}
-          <p className="text-[9px] text-white/60 text-center line-clamp-1">
+          <p className="text-xs text-white/60 text-center line-clamp-1">
             {subtitle}
           </p>
         </div>

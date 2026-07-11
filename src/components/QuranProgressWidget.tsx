@@ -80,7 +80,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
     return (
       <Card className={`bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md ${className || ''}`}>
         <CardHeader>
-          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
             <BookOpen className="w-5 h-5 text-[#C9860A]" />
             Quran Progress
           </CardTitle>
@@ -100,18 +100,18 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
     return (
       <Card className={`bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md ${className || ''}`}>
         <CardHeader>
-          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
             <BookOpen className="w-5 h-5 text-[#C9860A]" />
             Quran Progress
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">No progress data available</p>
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">No progress data available</p>
             <Button
               variant="outline"
               size="sm"
-              className="mt-4 border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
+              className="mt-4 border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
               onClick={() => window.location.href = '/quran'}
             >
               Start Reading
@@ -128,10 +128,10 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   return (
     <Card className={`relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md ${className || ''}`}>
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-[60px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-[20px] pointer-events-none" />
 
       <CardHeader className="relative z-10">
-        <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+        <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
           <BookOpen className="w-5 h-5 text-[#C9860A]" />
           Quran Progress
         </CardTitle>
@@ -158,21 +158,21 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             <p className="text-3xl font-bold font-serif italic text-[#C9860A]">
               {progress.completedSurahs} / {progress.totalSurahs}
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Surahs Completed</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Surahs Completed</p>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-2">
           <Progress value={progress.percentage} className="h-2 bg-black/50" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">
             {progress.completedAyahs.toLocaleString()} / {progress.totalAyahs.toLocaleString()} Ayahs Read
           </p>
         </div>
 
         {/* Achievement Badge */}
         <div className="flex items-center justify-center">
-          <Badge className="bg-[#C9860A]/10 text-[#C9860A] border border-[#C9860A]/30 flex items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">
+          <Badge className="bg-[#C9860A]/10 text-[#C9860A] border border-[#C9860A]/30 flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-widest">
             <achievement.icon className="w-4 h-4" />
             {achievement.text}
           </Badge>
@@ -189,7 +189,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             variant="default"
             size="sm"
             onClick={() => window.location.href = '/quran'}
-            className="gap-2 bg-[#C9860A] text-white hover:bg-[#C9860A]/90 font-bold uppercase tracking-wider text-[10px] w-full"
+            className="gap-2 bg-[#C9860A] text-white hover:bg-[#C9860A]/90 font-bold uppercase tracking-wider text-xs w-full"
           >
             <BookOpen className="w-4 h-4" />
             Continue Reading
@@ -198,7 +198,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             variant="outline"
             size="sm"
             onClick={() => window.location.href = '/quran-progress'}
-            className="gap-2 w-full border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
+            className="gap-2 w-full border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
           >
             <TrendingUp className="w-4 h-4" />
             View Details

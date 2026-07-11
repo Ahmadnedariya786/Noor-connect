@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, memo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Clock, Moon, Sun, Cloud, Sunset, Sunrise, CloudMoon, AlertTriangle, Loader2, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -270,7 +270,7 @@ const PrayerCountdownComponent = function PrayerCountdown(props: PrayerCountdown
             </div>
 
             <div className="space-y-0.5">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">
                 {isCurrentPrayer ? t('nowPraying') : t('upcoming')}
               </p>
               <h2 className="text-3xl font-black text-foreground tracking-tight">
@@ -283,7 +283,7 @@ const PrayerCountdownComponent = function PrayerCountdown(props: PrayerCountdown
             <div className={`text-4xl sm:text-5xl font-mono font-black tracking-tighter tabular-nums ${isEndingSoon ? 'text-orange-500' : 'text-primary'}`}>
               <TimeDisplay targetTime={targetTime} className="" />
             </div>
-            <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">
+            <p className="text-xs font-bold text-muted-foreground/80 uppercase tracking-widest">
               {isCurrentPrayer ? t('endsAt') : t('startsAt')} {isCurrentPrayer ? displayPrayer.endTimeFormatted : formatPrayerTime(nextPrayer?.datetime || new Date(), timeFormat, props.timeZone)}
             </p>
           </div>
@@ -293,7 +293,7 @@ const PrayerCountdownComponent = function PrayerCountdown(props: PrayerCountdown
         {isCurrentPrayer && (
           <div className="space-y-3">
             <div className="flex justify-between items-end">
-              <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <span className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
                 {t('prayerProgress')}
               </span>
               <span className={`text-xs font-black font-mono ${isEndingSoon ? 'text-orange-500' : 'text-primary'}`}>
@@ -311,7 +311,7 @@ const PrayerCountdownComponent = function PrayerCountdown(props: PrayerCountdown
                 <div className="absolute top-0 right-0 h-full w-8 bg-white/20 blur-md animate-pulse"></div>
               </div>
             </div>
-            <div className="flex justify-between text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.1em]">
+            <div className="flex justify-between text-xs font-bold text-muted-foreground/40 uppercase tracking-[0.1em]">
               <span>{formatPrayerTime(displayPrayer.datetime, timeFormat, props.timeZone)}</span>
               <span>{displayPrayer.endTimeFormatted}</span>
             </div>
@@ -320,7 +320,7 @@ const PrayerCountdownComponent = function PrayerCountdown(props: PrayerCountdown
 
         {/* Dynamic Footer with Extra Info */}
         <div className="pt-2 flex items-center justify-between border-t border-border/40">
-          <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+          <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
             <div className="flex items-center gap-1.5">
               <MapPin className="w-3 h-3" />
               {location?.city || 'Detecting...'}
@@ -334,7 +334,7 @@ const PrayerCountdownComponent = function PrayerCountdown(props: PrayerCountdown
           </div>
           
           <div className="flex items-center gap-2">
-             <div className="px-3 py-1 rounded-full bg-accent/30 text-accent-foreground text-[9px] font-black uppercase tracking-tighter">
+             <div className="px-3 py-1 rounded-full bg-accent/30 text-accent-foreground text-xs font-black uppercase tracking-tighter">
                 {timeFormat}H Format
              </div>
           </div>

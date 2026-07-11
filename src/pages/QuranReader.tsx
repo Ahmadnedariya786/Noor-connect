@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { quranService } from '@/lib/quran-service';
@@ -32,27 +32,33 @@ export default function QuranReader() {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const surahInfo = quranService.getSurahInfo(surahNum);
-  const allSurahs = quranService.getAllSurahs();
+  const allSurahs = useMemo(() => quranService.getAllSurahs(), []);
 
   useEffect(() => {
     localStorage.setItem(LS_LAST_SURAH, String(surahNum));
     if (surahInfo) {
       localStorage.setItem('quran-last-read', JSON.stringify({ number: surahNum, name: surahInfo.englishName }));
-      
-      // Fix: Record reading streak and progress since we use images now
+    }
+    loadBookmark();
+
+    // Defer streak/achievement writes by 1 second — let image decode finish first
+    const syncId = setTimeout(() => {
+      if (!surahInfo) return;
       quranFeaturesService.updateReadingStreak().catch(console.error);
       quranFeaturesService.updateRecitationProgress(
         surahNum,
         surahInfo.englishName,
         surahInfo.numberOfAyahs,
-        surahInfo.numberOfAyahs, // mark as completed since pages are fully loaded
+        surahInfo.numberOfAyahs,
         surahInfo.numberOfAyahs
       )
       .then(() => quranFeaturesService.checkAndUnlockAchievements())
       .catch(console.error);
-    }
-    loadBookmark();
+    }, 1000);
+
+    return () => clearTimeout(syncId);
   }, [surahNum, surahInfo]);
+
 
   const loadBookmark = async () => {
     try {

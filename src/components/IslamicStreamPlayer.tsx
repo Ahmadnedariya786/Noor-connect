@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Islamic Stream Player — Premium Redesign
  * HLS streaming for Makkah & Madinah.
  * Uses hls.js (MIT License) + iptv-org open playlist.
@@ -397,7 +397,7 @@ export default function IslamicStreamPlayer() {
                 style={active ? { background: `linear-gradient(135deg, ${m.color}cc, ${m.color}88)` } : {}}
               >
                 <span className="text-xs font-black tracking-wide uppercase">{m.label}</span>
-                <span className="text-[10px] font-normal opacity-80 font-arabic">{m.arabic}</span>
+                <span className="text-xs font-normal opacity-80 font-arabic">{m.arabic}</span>
               </button>
             );
           })}
@@ -570,7 +570,7 @@ export default function IslamicStreamPlayer() {
                     )}
                     <button
                       onClick={e => { e.stopPropagation(); setShowQualityMenu(p => !p); showAndScheduleHide(); }}
-                      className="h-8 px-3 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-[10px] font-bold tracking-wide"
+                      className="h-8 px-3 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-xs font-bold tracking-wide"
                     >
                       {currentLevel === -1 
                         ? 'AUTO' 

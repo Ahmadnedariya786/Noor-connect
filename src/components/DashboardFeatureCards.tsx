@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 import { BookOpen, Grid3X3, Building } from "lucide-react";
 import { m } from "framer-motion";
 
@@ -62,8 +62,8 @@ export const FeatureCards = memo(function FeatureCards({ onNavigate }: FeatureCa
           <div className="relative z-10">
             <card.icon className="w-6 h-6 text-[#C9860A] mb-2" />
             <h3 className="text-white font-bold font-serif italic text-base mb-1">{card.title}</h3>
-            <p className="text-white/60 text-[10px] font-medium">{card.description}</p>
-            <p className="text-[#C9860A] text-[9px] mt-2 font-bold uppercase tracking-widest">{card.stats}</p>
+            <p className="text-white/60 text-xs font-medium">{card.description}</p>
+            <p className="text-[#C9860A] text-xs mt-2 font-bold uppercase tracking-widest">{card.stats}</p>
           </div>
         </m.button>
       ))}

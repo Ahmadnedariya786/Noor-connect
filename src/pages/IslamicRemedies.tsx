@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
@@ -185,12 +185,12 @@ export default function IslamicRemedies() {
                   {currentItem.text}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className={cn("rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white flex items-center gap-1", getTypeStyle(currentItem.type).bg)}>
+                  <div className={cn("rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1", getTypeStyle(currentItem.type).bg)}>
                     {getTypeStyle(currentItem.type).icon}
                     {currentItem.type}
                   </div>
                   {currentItem.category && (
-                    <Badge variant="outline" className="text-[11px] px-2">{currentItem.category}</Badge>
+                    <Badge variant="outline" className="text-xs px-2">{currentItem.category}</Badge>
                   )}
                   <span className="text-xs text-muted-foreground ml-auto">{currentItem.reference}</span>
                 </div>
@@ -233,7 +233,7 @@ export default function IslamicRemedies() {
             <button onClick={() => navigate("/remedy-favorites")} className="relative">
               <Heart className="w-5 h-5 text-foreground/80" />
               {favorites.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center">
                   {favorites.length > 9 ? "9+" : favorites.length}
                 </span>
               )}
@@ -280,7 +280,7 @@ export default function IslamicRemedies() {
                     key={t}
                     onClick={() => setTypeFilter(t)}
                     className={cn(
-                      "shrink-0 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors",
+                      "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors",
                       typeFilter === t ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"
                     )}
                   >

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -100,13 +100,13 @@ export default function Services() {
                         style={{ background: 'linear-gradient(145deg, #1A1E2E, #1E2438)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
                     >
                         {/* Elegant Light Gradients */}
-                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] pointer-events-none" style={{ background: 'rgba(201,134,10,0.15)' }} />
-                        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style={{ background: 'rgba(59,130,246,0.15)' }} />
+                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[20px] pointer-events-none" style={{ background: 'rgba(201,134,10,0.15)' }} />
+                        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-[20px] pointer-events-none" style={{ background: 'rgba(59,130,246,0.15)' }} />
                         
                         <div className="relative z-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-4">
                                 <Sparkles className="w-4 h-4" style={{ color: '#C9860A' }} />
-                                <span className="text-white/90 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>Islamic Hub</span>
+                                <span className="text-white/90 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>Islamic Hub</span>
                             </div>
                             <h2 className="text-4xl font-bold text-white leading-tight tracking-tight mb-2" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
                                 Discover<br/>Resources
@@ -153,7 +153,7 @@ export default function Services() {
                 </div>
 
                 <div className="px-8 mt-12 text-center opacity-40 pb-8">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-foreground">
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground">
                         Noor Connect
                     </p>
                 </div>

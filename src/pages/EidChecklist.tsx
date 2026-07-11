@@ -421,8 +421,8 @@ export default function EidChecklist() {
             className="relative overflow-hidden rounded-[40px] shadow-lg p-8 group bg-white border border-slate-100"
           >
             {/* Soft decorative elements for light theme */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-[80px] opacity-60"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-50 rounded-full blur-[80px] opacity-40"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-[20px] opacity-60"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-50 rounded-full blur-[20px] opacity-40"></div>
 
             {/* Content */}
             <div className="relative z-10 text-center space-y-4">
@@ -467,7 +467,7 @@ export default function EidChecklist() {
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-2xl font-black text-slate-900">{completionPercentage}%</span>
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Complete</span>
+                    <span className="text-xs uppercase tracking-widest font-bold text-slate-400">Complete</span>
                   </div>
                 </div>
 

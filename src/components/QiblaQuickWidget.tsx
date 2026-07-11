@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Compass, MapPin, Navigation, ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,11 +20,11 @@ export function QiblaQuickWidget() {
 
   return (
     <Card className="relative overflow-hidden border-[#333333] shadow-lg" style={{ background: 'linear-gradient(145deg, #1A1A1A, #141414)' }}>
-      <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] pointer-events-none" style={{ background: 'rgba(201,134,10,0.1)' }} />
+      <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[20px] pointer-events-none" style={{ background: 'rgba(201,134,10,0.1)' }} />
 
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-bold flex items-center gap-2" style={{ color: '#C9860A' }}>
+          <CardTitle className="text-xs uppercase tracking-[0.2em] font-bold flex items-center gap-2" style={{ color: '#C9860A' }}>
             <Compass className="w-4 h-4" />
             Qibla
           </CardTitle>
@@ -40,7 +40,7 @@ export function QiblaQuickWidget() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[10px] text-white/40 uppercase tracking-widest mt-2">
+        <div className="flex items-center gap-1.5 text-xs text-white/40 uppercase tracking-widest mt-2">
           <MapPin className="w-3.5 h-3.5" />
           <span className="truncate">{location.locationName}</span>
         </div>
@@ -55,12 +55,12 @@ export function QiblaQuickWidget() {
                 {qibla.cardinalDirection}
               </span>
             </p>
-            <p className="text-[11px] text-white/50 uppercase tracking-widest mt-1">
+            <p className="text-xs text-white/50 uppercase tracking-widest mt-1">
               Distance{" "}
               <span className="font-bold text-white/90">{qibla.formattedDistance}</span>
             </p>
             {qibla.declinationDeg !== 0 && (
-              <p className="text-[10px] text-white/30 mt-0.5">
+              <p className="text-xs text-white/30 mt-0.5">
                 Declination: {qibla.declinationDeg > 0 ? '+' : ''}{qibla.declinationDeg.toFixed(1)}°
               </p>
             )}

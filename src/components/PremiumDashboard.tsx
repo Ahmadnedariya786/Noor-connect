@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, lazy, Suspense } from "react";
+﻿import React, { useState, useEffect, memo, lazy, Suspense } from "react";
 import { m } from "framer-motion";
 import { Bell, MapPin, ChevronRight, Activity, Compass, Grid3X3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -241,7 +241,7 @@ function PremiumDashboardInner({
 
                 <div className="flex items-center gap-3 py-2">
                   <div className="flex-1 h-px bg-border" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">or search</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">or search</span>
                   <div className="flex-1 h-px bg-border" />
                 </div>
 
@@ -308,10 +308,10 @@ function PremiumDashboardInner({
         >
           <div className="relative z-10 p-5">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>
+              <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>
                 Next Prayer
               </p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
                 {locationLabel}
               </p>
             </div>
@@ -320,7 +320,7 @@ function PremiumDashboardInner({
                 {nextPrayer.name}
               </p>
               <div className="text-right">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">In</p>
+                <p className="text-xs uppercase tracking-widest text-white/40 mb-0.5">In</p>
                 <LiveCountdown targetTime={nextPrayer.targetTime} />
               </div>
             </div>
@@ -360,7 +360,7 @@ function PremiumDashboardInner({
                         <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Prayer Times</h2>
                         <button
                           onClick={onLocationClick}
-                          className="text-[10px] font-semibold uppercase tracking-widest transition-all text-muted-foreground hover:text-foreground"
+                          className="text-xs font-semibold uppercase tracking-widest transition-all text-muted-foreground hover:text-foreground"
                         >
                           Change City
                         </button>
@@ -393,7 +393,7 @@ function PremiumDashboardInner({
                                 </div>
                                 {prayer.isUpcoming && (
                                   <span
-                                    className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                                    className="text-xs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
                                     style={{ background: 'rgba(201,134,10,0.1)', color: '#C9860A' }}
                                   >
                                     NEXT
@@ -427,7 +427,7 @@ function PremiumDashboardInner({
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Daily Salah</h3>
-                        <div className="px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(201,134,10,0.1)', color: '#C9860A' }}>
+                        <div className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: 'rgba(201,134,10,0.1)', color: '#C9860A' }}>
                           {prayers.filter(p => p.isCompleted).length} / 5
                         </div>
                       </div>
@@ -452,7 +452,7 @@ function PremiumDashboardInner({
                                 prayer.icon
                               )}
                             </div>
-                            <span className="text-[10px] font-semibold" style={{ color: prayer.isCompleted ? '#C9860A' : 'hsl(var(--muted-foreground))' }}>
+                            <span className="text-xs font-semibold" style={{ color: prayer.isCompleted ? '#C9860A' : 'hsl(var(--muted-foreground))' }}>
                               {prayer.name.slice(0, 3)}
                             </span>
                           </button>

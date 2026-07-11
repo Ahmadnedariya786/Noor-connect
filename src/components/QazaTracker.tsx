@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Qaza (Missed Prayer) Tracker Component
  * Track and complete missed prayers
  */
@@ -116,7 +116,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                   >
                     {prayers[prayer.id]}
                   </button>
-                  <span className="text-[10px] text-muted-foreground mt-1 block">
+                  <span className="text-xs text-muted-foreground mt-1 block">
                     {prayer.label}
                   </span>
                 </div>
@@ -160,7 +160,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
               </div>
               <div>
                 <p className="font-semibold text-sm">{t(prayer.id)}</p>
-                <p className="text-[10px] text-muted-foreground font-arabic">{prayer.arabicLabel}</p>
+                <p className="text-xs text-muted-foreground font-arabic">{prayer.arabicLabel}</p>
               </div>
             </div>
 
@@ -216,12 +216,12 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
 
         <div className="pt-2 border-t border-border mt-4">
           <div className="flex flex-col gap-2">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Quick Actions</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Quick Actions</p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 text-[10px] h-8 hover:bg-primary/5"
+                className="flex-1 text-xs h-8 hover:bg-primary/5"
                 onClick={() => {
                   prayerLabels.forEach(p => addQazaPrayer(p.id, 30));
                   refresh();
@@ -233,7 +233,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 text-[10px] h-8 hover:bg-primary/5"
+                className="flex-1 text-xs h-8 hover:bg-primary/5"
                 onClick={() => {
                   prayerLabels.forEach(p => addQazaPrayer(p.id, 365));
                   refresh();

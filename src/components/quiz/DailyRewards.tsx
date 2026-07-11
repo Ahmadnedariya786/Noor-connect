@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Daily Rewards Component
  * 7-day login reward system with streak tracking
  */
@@ -294,14 +294,14 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
 
                     {/* XP Amount */}
                     {!isClaimed && (
-                      <span className="text-[10px] text-muted-foreground mt-1">
+                      <span className="text-xs text-muted-foreground mt-1">
                         {reward.xp} XP
                       </span>
                     )}
 
                     {/* Day 7 Special Badge */}
                     {reward.day === 7 && (
-                      <Badge className="absolute -top-2 -right-2 bg-purple-500 text-[8px] px-1">
+                      <Badge className="absolute -top-2 -right-2 bg-purple-500 text-xs px-1">
                         BONUS
                       </Badge>
                     )}

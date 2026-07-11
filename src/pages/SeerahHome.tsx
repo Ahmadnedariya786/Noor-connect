@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search, Bookmark } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -134,14 +134,14 @@ export default function SeerahHome() {
             className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-blue-900/20 mb-8"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#D4AF37]/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#D4AF37]/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
             <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
 
             <div className="relative z-10 p-8">
               <div className="flex items-center gap-2 mb-4">
                 <BookOpen className="w-4 h-4 text-[#e0c097]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">
                   {t("seerah")}
                 </span>
               </div>

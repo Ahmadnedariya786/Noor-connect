@@ -131,27 +131,32 @@ export function EnhancedDailyHadith() {
       const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY);
       const storedHadith = localStorage.getItem(HADITH_STORAGE_KEY);
 
+      // Use cached hadith if available
       if (lastUpdate === today && storedHadith) {
         setHadith(JSON.parse(storedHadith));
         return;
       }
 
-      const importedHadith = await getDailyHadithFromCollections();
-      let selectedHadith: Hadith;
-
-      if (importedHadith) {
-        selectedHadith = mapEnhancedHadithToWidget(importedHadith);
-      } else {
-        const dayOfYear = Math.floor(
-          (new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
-        );
-        const index = dayOfYear % hadithCollection.length;
-        selectedHadith = hadithCollection[index];
-      }
+      // Pick from the hardcoded array first (instant, no network fetch)
+      const dayOfYear = Math.floor(
+        (new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+      );
+      const index = dayOfYear % hadithCollection.length;
+      const selectedHadith = hadithCollection[index];
 
       localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(selectedHadith));
       localStorage.setItem(LAST_UPDATE_KEY, today);
       setHadith(selectedHadith);
+
+      // In the background, try to get a richer hadith from collections
+      // (never blocks the UI — if it fails, the cached hardcoded one stays)
+      getDailyHadithFromCollections().then((importedHadith) => {
+        if (importedHadith) {
+          const enhanced = mapEnhancedHadithToWidget(importedHadith);
+          localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(enhanced));
+          setHadith(enhanced);
+        }
+      }).catch(() => {});
     } catch (error) {
       console.error('Error loading hadith:', error);
       setHadith(hadithCollection[0]); // Fallback

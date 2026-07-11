@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Sparkles, History, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -106,8 +106,8 @@ const Quran = () => {
           {/* Premium Hero Section */}
           <div className="relative overflow-hidden rounded-[24px] bg-[#1A1A1A] shadow-xl border border-[#333333]" style={{ background: 'linear-gradient(145deg, #1A1A1A, #141414)' }}>
             {/* Decorative Patterns */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9860A]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C9860A]/5 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9860A]/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C9860A]/5 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
             {/* Glassmorphism Overlay */}
             <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-sm pointer-events-none" />
@@ -115,7 +115,7 @@ const Quran = () => {
             <div className="relative z-10 p-8 flex flex-col items-center text-center">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
                 <Sparkles className="w-3.5 h-3.5 text-[#C9860A]" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9860A]">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A]">
                   {ti18n('alQuranAlKareem')}
                 </span>
               </div>
@@ -136,7 +136,7 @@ const Quran = () => {
                 ].map((stat, idx) => (
                   <div key={idx} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5 transition-colors">
                     <p className="text-[#C9860A] text-lg font-bold font-serif italic tracking-tighter">{stat.value}</p>
-                    <p className="text-white/40 text-[9px] uppercase font-bold tracking-widest mt-1">{stat.label}</p>
+                    <p className="text-white/40 text-xs uppercase font-bold tracking-widest mt-1">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -153,12 +153,12 @@ const Quran = () => {
             className="relative overflow-hidden rounded-[24px] cursor-pointer transition-transform bg-card border border-border shadow-md group"
             onClick={() => navigate('/quran')}
           >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9860A]/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-[#C9860A]/10 transition-colors duration-700" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9860A]/5 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-[#C9860A]/10 transition-colors duration-700" />
             
             <div className="relative z-10 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-4 h-4 text-[#C9860A]" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9860A]">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A]">
                   {dailyAyah?.title || 'Verse of the Day'}
                 </span>
               </div>
@@ -168,10 +168,10 @@ const Quran = () => {
                   {dailyAyah?.content || 'Loading...'}
                 </p>
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-background text-foreground border-border text-[10px] tracking-wider uppercase font-bold px-2 py-1">
+                  <Badge className="bg-background text-foreground border-border text-xs tracking-wider uppercase font-bold px-2 py-1">
                     {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
                   </Badge>
-                  <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">{dailyAyah?.reference || ''}</span>
+                  <span className="text-muted-foreground text-xs font-bold uppercase tracking-widest">{dailyAyah?.reference || ''}</span>
                 </div>
               </div>
 
@@ -192,7 +192,7 @@ const Quran = () => {
                 <History className="w-5 h-5 text-[#C9860A]" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-1">{ti18n('continueReading')}</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-1">{ti18n('continueReading')}</p>
                 <h3 className="text-base font-bold text-foreground">{lastRead.name}</h3>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground opacity-50" />
@@ -239,7 +239,7 @@ const Quran = () => {
                       <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <div className="absolute inset-0 bg-[#C9860A]/10 rotate-45 rounded-lg group-hover:rotate-[135deg] transition-transform duration-700" />
                         <div className="absolute inset-1 bg-[#C9860A]/15 rotate-12 rounded-md" />
-                        <span className="relative z-10 font-bold text-[#C9860A] text-[10px] tracking-tighter">{surah.number}</span>
+                        <span className="relative z-10 font-bold text-[#C9860A] text-xs tracking-tighter">{surah.number}</span>
                       </div>
 
                       <div className="ms-4 flex-1">
@@ -247,17 +247,17 @@ const Quran = () => {
                           <div className="space-y-1">
                             <h3 className="font-bold text-sm tracking-tight text-foreground">{surah.englishName}</h3>
                             <div className="flex items-center gap-2">
-                              <span className="px-1.5 py-0.5 rounded-full bg-muted text-[8px] font-bold uppercase tracking-widest text-muted-foreground">
+                              <span className="px-1.5 py-0.5 rounded-full bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground">
                                 {surah.revelationType}
                               </span>
-                              <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-[0.2em]">
+                              <span className="text-xs text-muted-foreground font-bold uppercase tracking-[0.2em]">
                                 {surah.numberOfAyahs} Ayahs
                               </span>
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="font-arabic text-xl text-[#C9860A] drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">{surah.name}</p>
-                            <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider mt-1">{surah.englishNameTranslation}</p>
+                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">{surah.englishNameTranslation}</p>
                           </div>
                         </div>
                       </div>

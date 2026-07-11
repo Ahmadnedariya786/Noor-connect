@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from "react";
+﻿import { useState, useEffect, memo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
 import { Clock, Moon, Sun, Cloud, Sunset, CloudMoon, AlertTriangle, Loader2 } from "lucide-react";
@@ -83,18 +83,18 @@ const PrayerTimeCard = memo(function PrayerTimeCard({ prayer, isCurrent, isNext,
               {isCurrent && (
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/20 border border-primary/20">
                   <span className={`h-1.5 w-1.5 rounded-full ${isEndingSoon ? 'bg-red-500 animate-pulse' : 'bg-green-500 animate-bounce'}`} />
-                  <span className="text-[9px] font-black uppercase tracking-tighter text-primary">{t('active')}</span>
+                  <span className="text-xs font-black uppercase tracking-tighter text-primary">{t('active')}</span>
                 </div>
               )}
             </div>
             {isNext && !isCurrent && (
               <div className="flex items-center gap-2 mt-1 px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/20 w-fit">
                 <span className="flex h-2 w-2 rounded-full bg-cyan-500 animate-ping" />
-                <span className="text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-[0.2em]">{t('upcoming')}</span>
+                <span className="text-xs font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-[0.2em]">{t('upcoming')}</span>
               </div>
             )}
             {!isCurrent && !isNext && (
-              <span className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-widest mt-0.5">
+              <span className="text-xs text-muted-foreground/60 font-medium uppercase tracking-widest mt-0.5">
                 {prayer.name === 'Sunrise' ? t('nature') : t('prayer')}
               </span>
             )}
@@ -109,7 +109,7 @@ const PrayerTimeCard = memo(function PrayerTimeCard({ prayer, isCurrent, isNext,
           {/* Countdown or End Time */}
           {isCurrent && countdown ? (
             <div className={`flex flex-col items-end`}>
-              <div className={`text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 ${isEndingSoon ? 'text-red-500 animate-pulse' : 'text-primary/70'}`}>
+              <div className={`text-xs font-black uppercase tracking-[0.2em] mb-0.5 ${isEndingSoon ? 'text-red-500 animate-pulse' : 'text-primary/70'}`}>
                 {t('endsIn') || 'Ends In'}
               </div>
               <div className={`font-mono text-xl sm:text-2xl font-black tabular-nums tracking-tighter ${isEndingSoon ? 'text-red-500 animate-pulse' : 'text-primary'}`}>
@@ -118,7 +118,7 @@ const PrayerTimeCard = memo(function PrayerTimeCard({ prayer, isCurrent, isNext,
             </div>
           ) : (
             <div className={`text-right ${isNext ? 'text-cyan-600 dark:text-cyan-400' : 'text-muted-foreground/50'} font-bold uppercase tracking-widest`}>
-              <div className="text-[10px] opacity-60 mb-0.5">{t('end')}</div>
+              <div className="text-xs opacity-60 mb-0.5">{t('end')}</div>
               <div className="text-xs font-mono">{formatPrayerTime(prayer.endTime, timeFormat, timeZone)}</div>
             </div>
           )}
@@ -414,7 +414,7 @@ const PrayerTimesListComponent = memo(function PrayerTimesList(props: PrayerTime
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">{t('todaysPrayers')}</h2>
           {location && (
-            <div className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+            <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
               📍 {location.city || location.latitude.toFixed(2)}
             </div>
           )}
@@ -425,7 +425,7 @@ const PrayerTimesListComponent = memo(function PrayerTimesList(props: PrayerTime
             <Label htmlFor="extra-prayers" className="text-sm font-bold cursor-pointer group-hover:text-primary transition-colors">
               {t('showExtraPrayers')}
             </Label>
-            <span className="text-[11px] text-muted-foreground/80 font-medium">{ti18n('ishraqDuhaTahajjud')}</span>
+            <span className="text-xs text-muted-foreground/80 font-medium">{ti18n('ishraqDuhaTahajjud')}</span>
           </div>
           <Switch
             id="extra-prayers"

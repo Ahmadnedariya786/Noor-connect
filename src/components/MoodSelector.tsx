@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { moods, type Mood, type MoodContent } from "@/data/mood-data";
 import { Card } from "./ui/card";
 import { Play, Copy, Check, Sparkles, BookOpen, Quote, Heart, Target, ArrowRight } from "lucide-react";
@@ -122,12 +122,12 @@ export function MoodSelector() {
         </div>
         <div className="flex items-center gap-2">
           {stats.totalRemediesViewed > 0 && (
-            <span className="text-[11px] text-muted-foreground font-semibold tabular-nums">{stats.totalRemediesViewed} viewed</span>
+            <span className="text-xs text-muted-foreground font-semibold tabular-nums">{stats.totalRemediesViewed} viewed</span>
           )}
           <button onClick={() => navigate("/remedy-favorites")} className="relative rounded-full p-1.5 hover:bg-muted transition-colors">
             <Heart className="h-4 w-4 text-muted-foreground" />
             {favorites.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-[7px] font-bold text-white flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center">
                 {favorites.length > 9 ? "9+" : favorites.length}
               </span>
             )}
@@ -189,7 +189,7 @@ export function MoodSelector() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <div className="rounded-full border border-primary/20 bg-primary/5 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1">
+              <div className="rounded-full border border-primary/20 bg-primary/5 px-2 py-1 text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1">
                 {getTypeIcon(currentItem.type)}
                 {currentItem.type}
               </div>
@@ -214,15 +214,15 @@ export function MoodSelector() {
 
           <div className="flex flex-wrap gap-2">
             {currentItem.type === "surah" && currentItem.surahNumber && (
-              <button onClick={handlePlaySurah} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold transition-colors">
+              <button onClick={handlePlaySurah} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition-colors">
                 <Play className="h-3 w-3" /> Play
               </button>
             )}
-            <button onClick={handleCopy} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 border border-border/60 bg-card hover:bg-muted text-[11px] font-bold text-foreground transition-colors">
+            <button onClick={handleCopy} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 border border-border/60 bg-card hover:bg-muted text-xs font-bold text-foreground transition-colors">
               {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
               {copied ? "Copied" : "Copy"}
             </button>
-            <button onClick={handleAnotherRemedy} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold transition-colors ml-auto">
+            <button onClick={handleAnotherRemedy} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors ml-auto">
               Next <ArrowRight className="h-3 w-3" />
             </button>
           </div>

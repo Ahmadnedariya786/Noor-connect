@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -194,7 +194,7 @@ export default function RemedyFavorites() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white ${getTypeColor(favorite.type)}`}>
+                        <div className={`rounded-full px-2 py-1 text-xs font-bold uppercase tracking-wider text-white ${getTypeColor(favorite.type)}`}>
                           {getTypeIcon(favorite.type)}
                           <span className="ml-1">{favorite.type}</span>
                         </div>

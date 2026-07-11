@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Salah Tracker Component - 5 prayer checkboxes with streak
  * All data stored locally in localStorage
  */
@@ -168,7 +168,7 @@ export function SalahTracker() {
                   {isChecked && <Check className="w-5 h-5" />}
                   {!isChecked && isDisabled && <Clock className="w-4 h-4" />}
                 </div>
-                <span className={`text-[10px] font-medium ${isChecked
+                <span className={`text-xs font-medium ${isChecked
                   ? "text-primary"
                   : isDisabled
                     ? "text-muted-foreground/40"

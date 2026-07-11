@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Mushaf Viewer – Full-screen Madinah Mushaf image reader
  *
  * Features:
@@ -12,7 +12,7 @@
  *  • Dark / light theme aware
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -34,6 +34,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getMushafPageUrl } from '@/lib/quran-mushaf-image-cache';
+
+/** Prefetch surrounding pages using browser image cache */
+function prefetchPages(current: number) {
+  [current - 1, current + 1, current + 2].forEach(p => {
+    if (p >= 1 && p <= 604) {
+      const img = new Image();
+      img.src = getMushafPageUrl(p);
+    }
+  });
+}
 import { SURAH_START_PAGES } from '@/lib/mushaf-service';
 import { quranService } from '@/lib/quran-service';
 import { goBackOrFallback } from '@/lib/navigation';
@@ -94,8 +104,12 @@ export default function MushafViewer() {
   const [showNav, setShowNav] = useState(true);
   const [showJump, setShowJump] = useState(false);
   const [jumpValue, setJumpValue] = useState('');
+  // Zoom/pan state — only committed on gesture END to avoid re-renders during move
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  // Refs for live DOM updates during gesture (zero React re-renders mid-gesture)
+  const scaleRef = useRef(1);
+  const translateRef = useRef({ x: 0, y: 0 });
 
   // Refs for touch handling
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -109,37 +123,41 @@ export default function MushafViewer() {
   const isPanningRef = useRef(false);
   const lastPanRef = useRef({ x: 0, y: 0 });
 
-  // ── Derived ──
-  const surahNumber = getSurahForPage(currentPage);
-  const surahInfo = quranService.getSurahInfo(surahNumber);
+  // ── Derived — memoized to avoid O(n log n) sort on every render ──
+  const surahNumber = useMemo(() => getSurahForPage(currentPage), [currentPage]);
+  const surahInfo = useMemo(() => quranService.getSurahInfo(surahNumber), [surahNumber]);
   const isBookmarked = bookmarks.includes(currentPage);
-  const allSurahs = quranService.getAllSurahs();
+  const allSurahs = useMemo(() => quranService.getAllSurahs(), []);
 
   // ── Persist last-read ──
   useEffect(() => {
     localStorage.setItem(LS_LAST_PAGE, String(currentPage));
   }, [currentPage]);
 
-  // ── Load image ──
-  const loadPage = useCallback(async (page: number) => {
+  // ── Load image + prefetch surrounding pages ──
+  const loadPage = useCallback((page: number) => {
     setLoading(true);
     setImgSrc(null);
+    // Reset zoom via refs AND state
+    scaleRef.current = 1;
+    translateRef.current = { x: 0, y: 0 };
     setScale(1);
     setTranslate({ x: 0, y: 0 });
-
-    try {
-      const url = getMushafPageUrl(page);
-      setImgSrc(url);
-      setIsCached(true);
-    } catch (e) {
-      console.error('Failed to load mushaf page', e);
-    } finally {
-      setLoading(false);
+    // Apply to img immediately (no waiting for React paint)
+    if (imgRef.current) {
+      imgRef.current.style.transform = 'scale(1) translate(0px, 0px)';
     }
+    const url = getMushafPageUrl(page);
+    setImgSrc(url);
+    setIsCached(true);
+    // Prefetch prev/next pages after a brief idle moment
+    const prefetchId = setTimeout(() => prefetchPages(page), 400);
+    return () => clearTimeout(prefetchId);
   }, []);
 
   useEffect(() => {
-    loadPage(currentPage);
+    const cleanup = loadPage(currentPage);
+    return cleanup;
   }, [currentPage, loadPage]);
 
   // ── Navigation ──
@@ -211,7 +229,12 @@ export default function MushafViewer() {
         const dy = e.touches[0].clientY - e.touches[1].clientY;
         const dist = Math.hypot(dx, dy);
         const newScale = Math.min(3, Math.max(0.5, (dist / pinchStartDistRef.current) * pinchStartScaleRef.current));
-        setScale(newScale);
+        // Write directly to DOM — zero React re-renders during pinch
+        scaleRef.current = newScale;
+        if (imgRef.current) {
+          imgRef.current.style.transform =
+            `scale(${newScale}) translate(${translateRef.current.x / newScale}px, ${translateRef.current.y / newScale}px)`;
+        }
         return;
       }
       if (isPanningRef.current && e.touches.length === 1) {
@@ -219,7 +242,15 @@ export default function MushafViewer() {
         const dx = t.clientX - lastPanRef.current.x;
         const dy = t.clientY - lastPanRef.current.y;
         lastPanRef.current = { x: t.clientX, y: t.clientY };
-        setTranslate((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+        translateRef.current = {
+          x: translateRef.current.x + dx,
+          y: translateRef.current.y + dy,
+        };
+        // Write directly to DOM — zero React re-renders during pan
+        if (imgRef.current) {
+          imgRef.current.style.transform =
+            `scale(${scaleRef.current}) translate(${translateRef.current.x / scaleRef.current}px, ${translateRef.current.y / scaleRef.current}px)`;
+        }
       }
     },
     []
@@ -230,7 +261,11 @@ export default function MushafViewer() {
       pinchStartDistRef.current = null;
       isPanningRef.current = false;
 
-      if (touchStartRef.current && scale <= 1) {
+      // Commit final ref values to React state (one update after gesture)
+      setScale(scaleRef.current);
+      setTranslate({ ...translateRef.current });
+
+      if (touchStartRef.current && scaleRef.current <= 1) {
         const endX = e.changedTouches[0]?.clientX ?? touchStartRef.current.x;
         const diffX = endX - touchStartRef.current.x;
         const elapsed = Date.now() - touchStartRef.current.time;
@@ -242,7 +277,7 @@ export default function MushafViewer() {
       }
       touchStartRef.current = null;
     },
-    [scale, goPrev, goNext]
+    [goPrev, goNext]
   );
 
   // ── Bookmark ──
@@ -266,12 +301,25 @@ export default function MushafViewer() {
     }
   }, [jumpValue, goToPage]);
 
-  // ── Zoom helpers ──
-  const zoomIn = () => setScale((s) => Math.min(3, s + 0.25));
-  const zoomOut = () => setScale((s) => Math.max(0.5, s - 0.25));
+  // ── Zoom helpers — update both ref and state ──
+  const zoomIn = () => {
+    const next = Math.min(3, scaleRef.current + 0.25);
+    scaleRef.current = next;
+    setScale(next);
+    if (imgRef.current) imgRef.current.style.transform = `scale(${next}) translate(${translateRef.current.x / next}px, ${translateRef.current.y / next}px)`;
+  };
+  const zoomOut = () => {
+    const next = Math.max(0.5, scaleRef.current - 0.25);
+    scaleRef.current = next;
+    setScale(next);
+    if (imgRef.current) imgRef.current.style.transform = `scale(${next}) translate(${translateRef.current.x / next}px, ${translateRef.current.y / next}px)`;
+  };
   const resetZoom = () => {
+    scaleRef.current = 1;
+    translateRef.current = { x: 0, y: 0 };
     setScale(1);
     setTranslate({ x: 0, y: 0 });
+    if (imgRef.current) imgRef.current.style.transform = 'scale(1) translate(0px, 0px)';
   };
 
   // ▸▸▸ RENDER ◂◂◂
@@ -283,6 +331,7 @@ export default function MushafViewer() {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onClick={resetNavTimer}
+      style={{ overscrollBehavior: 'contain' }}
     >
       {/* ── Top Bar ─────────────────────────────────────── */}
       <div
@@ -318,7 +367,7 @@ export default function MushafViewer() {
           {/* Cache indicator */}
           <div className="shrink-0 flex items-center gap-1 mr-1">
             {isCached ? (
-              <span className="flex items-center gap-1 text-[10px] text-emerald-300 font-medium" title="Available offline">
+              <span className="flex items-center gap-1 text-xs text-emerald-300 font-medium" title="Available offline">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <Wifi className="w-3 h-3" />
               </span>
@@ -356,18 +405,18 @@ export default function MushafViewer() {
           </div>
         )}
 
-        {/* Page image */}
+        {/* Page image — no willChange (avoids GPU layer explosion) */}
         {imgSrc && (
           <img
             ref={imgRef}
             src={imgSrc}
             alt={`Mushaf page ${currentPage}`}
-            loading="lazy"
-            className="max-h-full max-w-full object-contain transition-transform duration-150 will-change-transform"
+            className="max-h-full max-w-full object-contain"
             style={{
               transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
               touchAction: scale > 1 ? 'none' : 'pan-y',
               opacity: loading ? 0 : 1,
+              transition: loading ? 'none' : 'opacity 0.3s ease-out',
             }}
             onLoad={() => setLoading(false)}
             draggable={false}
@@ -449,7 +498,7 @@ export default function MushafViewer() {
                           <p className={`text-sm font-semibold truncate ${isActive ? 'text-teal-800 dark:text-teal-200' : 'text-gray-800 dark:text-gray-200'}`}>
                             {s.englishName}
                           </p>
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {s.englishNameTranslation}
                           </p>
                         </div>
@@ -457,7 +506,7 @@ export default function MushafViewer() {
                           <p className="text-base font-arabic text-amber-800 dark:text-amber-200 leading-tight">
                             {s.name}
                           </p>
-                          <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
                             p. {startPage}
                           </p>
                         </div>
@@ -517,7 +566,7 @@ export default function MushafViewer() {
             </Button>
             <button
               onClick={resetZoom}
-              className="text-[10px] text-white/50 font-mono px-1 min-w-[2.5rem] text-center hover:text-white/80 transition-colors"
+              className="text-xs text-white/50 font-mono px-1 min-w-[2.5rem] text-center hover:text-white/80 transition-colors"
             >
               {Math.round(scale * 100)}%
             </button>

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+﻿import { NavLink } from "react-router-dom";
 import { BookOpen, Settings as SettingsIcon, Compass, LayoutGrid, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { memo } from "react";
@@ -82,7 +82,7 @@ const BottomNav = memo(function BottomNav() {
                   />
                 </div>
                 <span
-                  className="text-[10px] font-semibold leading-none"
+                  className="text-xs font-semibold leading-none"
                   style={{
                     color: isActive ? activeColor : (isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.38)'),
                     transition: 'color 0.2s',

@@ -17,7 +17,7 @@
     "test-optimization": "node scripts/test-optimization.js",
     "analyze-assets": "node scripts/analyze-assets.js",
     "simple-optimize": "node scripts/simple-optimize.js",
-    "android:build": "npm run build && cap sync android && cd android && ./gradlew assembleRelease"
+    "android:build": "npm run build && node scripts/clean-dist-mushaf.js && cap sync android && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
@@ -71,10 +71,6 @@
     "hls.js": "^1.6.15",
     "i18next": "^25.8.13",
     "i18next-browser-languagedetector": "^8.2.1",
-    "i18next-chained-backend": "^5.0.2",
-    "i18next-http-backend": "^3.0.2",
-    "i18next-localstorage-backend": "^4.3.1",
-    "i18next-resources-to-backend": "^1.2.1",
     "input-otp": "^1.4.2",
     "jspdf": "^2.5.2",
     "localforage": "^1.10.0",

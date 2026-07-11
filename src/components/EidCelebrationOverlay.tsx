@@ -96,8 +96,8 @@ export function EidCelebrationOverlay() {
           className="relative w-full max-w-sm bg-gradient-to-br from-[#1a237e] via-[#0d1b40] to-black rounded-[40px] p-8 border border-white/10 shadow-2xl text-center overflow-hidden"
         >
           {/* Animated background glow */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#e0c097]/20 rounded-full blur-[60px] animate-pulse"></div>
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[60px] animate-pulse delay-700"></div>
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#e0c097]/20 rounded-full blur-[20px]"></div>
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[20px] delay-700"></div>
 
           <button 
             onClick={() => setIsVisible(false)}

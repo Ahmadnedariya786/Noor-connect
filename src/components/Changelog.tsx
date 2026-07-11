@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Changelog Component
  * Displays version history with beautiful UI
  */
@@ -100,7 +100,7 @@ const ChangelogItem = ({ change }: { change: VersionChangelog }) => {
             <div className="flex-1 min-w-0 pt-0.5">
               <Badge 
                 variant="outline" 
-                className={`text-[10px] px-1.5 py-0 h-4 mb-1 ${getChangeTypeColor(item.type)}`}
+                className={`text-xs px-1.5 py-0 h-4 mb-1 ${getChangeTypeColor(item.type)}`}
               >
                 {getChangeTypeLabel(item.type)}
               </Badge>
@@ -210,7 +210,7 @@ export function ChangelogCompact({ onViewFull }: { onViewFull?: () => void }) {
             <div className="flex items-center gap-2 mb-1">
               <h4 className="font-semibold text-sm">Latest Update</h4>
               {hasUnread && (
-                <Badge variant="default" className="bg-emerald-500 text-white text-[10px] px-1.5 py-0 h-4">
+                <Badge variant="default" className="bg-emerald-500 text-white text-xs px-1.5 py-0 h-4">
                   New
                 </Badge>
               )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Minus, Target, TrendingUp, Calendar, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -301,7 +301,7 @@ export default function QazaPage() {
                   >
                     {count}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {date.toLocaleDateString('en', { weekday: 'short' }).charAt(0)}
                   </p>
                 </div>

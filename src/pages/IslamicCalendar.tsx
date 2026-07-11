@@ -1,4 +1,4 @@
-// v2.0.3 - Fixed Missing useMemo import
+﻿// v2.0.3 - Fixed Missing useMemo import
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -383,7 +383,7 @@ export default function IslamicCalendar() {
                                   <Badge
                                     key={idx}
                                     variant="secondary"
-                                    className="text-[6px] sm:text-[8px] w-full mb-1 justify-center px-1 min-w-0"
+                                    className="text-xs sm:text-xs w-full mb-1 justify-center px-1 min-w-0"
                                   >
                                     {holiday.length > 10 ? `${holiday.substring(0, 10)}...` : holiday}
                                   </Badge>

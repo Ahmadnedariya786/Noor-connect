@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,7 +83,7 @@ export function TasbeehQuickWidget() {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-3 rounded-xl text-[#C9860A] hover:text-[#E8A020] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
+            className="h-8 px-3 rounded-xl text-[#C9860A] hover:text-[#E8A020] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
             onClick={() => navigate("/tasbeeh")}
           >
             Open
@@ -91,7 +91,7 @@ export function TasbeehQuickWidget() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest">
+        <div className="flex items-center gap-2 text-xs uppercase font-bold tracking-widest">
           <Badge variant="secondary" className="rounded-full bg-[#C9860A]/10 text-[#C9860A] border-none">
             Today {todayTotal.toLocaleString()}
           </Badge>
@@ -119,7 +119,7 @@ export function TasbeehQuickWidget() {
                   <p className="text-[14px] font-arabic leading-snug text-white font-bold" dir="rtl">
                     {preset.arabic}
                   </p>
-                  <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground truncate">
+                  <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">
                     {preset.label}
                   </p>
                   <p className="mt-1 text-sm font-bold font-serif italic text-[#C9860A] tabular-nums">
@@ -132,7 +132,7 @@ export function TasbeehQuickWidget() {
         </div>
 
         {todayTopLabel && (
-          <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+          <div className="text-xs text-muted-foreground uppercase font-bold tracking-widest">
             Most repeated today: <span className="font-bold text-[#C9860A]">{todayTopLabel}</span>
           </div>
         )}
@@ -140,7 +140,7 @@ export function TasbeehQuickWidget() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
+          className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
           onClick={() => navigate("/tasbeeh")}
         >
           Open Full Counter

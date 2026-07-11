@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Search, Book, Download, Plus, X, Trash2,
   BookOpen, Bookmark, HardDrive, BookmarkCheck, CheckCircle,
@@ -448,7 +448,7 @@ export default function EbooksModern() {
               </div>
               <div>
                 <h1 className="text-lg font-bold">Library</h1>
-                <p className="text-[10px] text-muted-foreground -mt-0.5">Islamic Literature</p>
+                <p className="text-xs text-muted-foreground -mt-0.5">Islamic Literature</p>
               </div>
             </div>
             
@@ -520,12 +520,12 @@ export default function EbooksModern() {
               <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
               {tab.id === 'saved' && bookmarks.length > 0 && (
-                <span className="ml-0.5 w-4 h-4 rounded-full bg-primary-foreground/20 text-[9px] flex items-center justify-center">
+                <span className="ml-0.5 w-4 h-4 rounded-full bg-primary-foreground/20 text-xs flex items-center justify-center">
                   {bookmarks.length}
                 </span>
               )}
               {tab.id === 'downloads' && (downloadedBooks.length + userBooks.length) > 0 && (
-                <span className="ml-0.5 w-4 h-4 rounded-full bg-primary-foreground/20 text-[9px] flex items-center justify-center">
+                <span className="ml-0.5 w-4 h-4 rounded-full bg-primary-foreground/20 text-xs flex items-center justify-center">
                   {downloadedBooks.length + userBooks.length}
                 </span>
               )}
@@ -560,17 +560,17 @@ export default function EbooksModern() {
                   <Card className="p-3 text-center">
                     <BookOpen className="w-5 h-5 text-blue-500 mx-auto mb-1" />
                     <p className="text-xl font-bold">{readingStats.totalBooks}</p>
-                    <p className="text-[10px] text-muted-foreground">Started</p>
+                    <p className="text-xs text-muted-foreground">Started</p>
                   </Card>
                   <Card className="p-3 text-center">
                     <TrendingUp className="w-5 h-5 text-amber-500 mx-auto mb-1" />
                     <p className="text-xl font-bold">{readingStats.inProgress}</p>
-                    <p className="text-[10px] text-muted-foreground">In Progress</p>
+                    <p className="text-xs text-muted-foreground">In Progress</p>
                   </Card>
                   <Card className="p-3 text-center">
                     <Star className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
                     <p className="text-xl font-bold">{readingStats.completedBooks}</p>
-                    <p className="text-[10px] text-muted-foreground">Completed</p>
+                    <p className="text-xs text-muted-foreground">Completed</p>
                   </Card>
                 </section>
               )}
@@ -736,7 +736,7 @@ export default function EbooksModern() {
                           {progress > 0 && (
                             <div className="flex items-center gap-2 mt-1">
                               <Progress value={progress} className="h-1 flex-1 max-w-[100px]" />
-                              <span className="text-[10px] text-emerald-500">{progress}%</span>
+                              <span className="text-xs text-emerald-500">{progress}%</span>
                             </div>
                           )}
                         </div>
@@ -865,7 +865,7 @@ export default function EbooksModern() {
                                 <h4 className="font-medium text-sm truncate">{book.title}</h4>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <span>{formatFileSize(book.fileSize)}</span>
-                                  {progress > 0 && <Badge variant="secondary" className="text-[10px]">{progress}% read</Badge>}
+                                  {progress > 0 && <Badge variant="secondary" className="text-xs">{progress}% read</Badge>}
                                 </div>
                               </div>
                               <div className="flex items-center gap-1">
@@ -897,7 +897,7 @@ export default function EbooksModern() {
                                   <div className="w-20 h-1 rounded-full bg-muted overflow-hidden">
                                     <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${userProgressPct}%` }} />
                                   </div>
-                                  <span className="text-[10px] text-emerald-500 font-medium">
+                                  <span className="text-xs text-emerald-500 font-medium">
                                     {userProgress?.currentPage && userProgress?.totalPages
                                       ? `${userProgress.currentPage}/${userProgress.totalPages}`
                                       : `${userProgressPct}%`}

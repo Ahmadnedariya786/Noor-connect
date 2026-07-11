@@ -1,4 +1,4 @@
-import { useState, useEffect, memo, useMemo } from "react";
+﻿import { useState, useEffect, memo, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, Share2, BookHeart, Search, Volume2, Plus, Minus, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
       <Card className={`p-5 relative overflow-hidden border-border/40 shadow-sm ${isDuaOfDay ? 'border-[#C9860A]/30 bg-gradient-to-br from-[#C9860A]/5 to-transparent' : 'bg-card'}`}>
         {isDuaOfDay && (
           <div className="absolute top-3 right-3">
-            <Badge className="bg-[#C9860A] text-white text-[9px] font-bold uppercase tracking-[0.2em] gap-1 px-2 py-0.5">
+            <Badge className="bg-[#C9860A] text-white text-xs font-bold uppercase tracking-[0.2em] gap-1 px-2 py-0.5">
               <Sparkles className="w-3 h-3" />
               Dua of the Day
             </Badge>
@@ -56,11 +56,11 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
               {isDuaOfDay && <Star className="w-3 h-3 text-[#C9860A] fill-[#C9860A]" />}
-              <span className="px-2 py-0.5 bg-[#C9860A]/10 text-[#C9860A] text-[9px] font-bold uppercase tracking-[0.2em] rounded-full">
+              <span className="px-2 py-0.5 bg-[#C9860A]/10 text-[#C9860A] text-xs font-bold uppercase tracking-[0.2em] rounded-full">
                 {dua.category}
               </span>
               {dua.repeatCount && (
-                <Badge variant="outline" className="text-[9px] gap-1">
+                <Badge variant="outline" className="text-xs gap-1">
                   <Plus className="w-2.5 h-2.5" />
                   {dua.repeatCount}x
                 </Badge>
@@ -82,7 +82,7 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
           <p className="text-base font-serif italic text-[#C9860A] leading-relaxed">{dua.transliteration}</p>
           <p className="text-sm text-foreground/80 leading-relaxed font-medium">{dua.translation}</p>
           {dua.reference && (
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{dua.reference}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{dua.reference}</p>
           )}
           {dua.repeatCount && (
             <div className="pt-2 border-t border-border/30">
@@ -93,7 +93,7 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
                   </Button>
                   <div className="flex-1 text-center">
                     <p className="text-2xl font-bold text-[#C9860A] font-serif italic">{counter}</p>
-                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">/ {dua.repeatCount}</p>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">/ {dua.repeatCount}</p>
                   </div>
                   <Button size="sm" variant="outline" className="h-8 px-3 text-xs border-border/50" onClick={() => { setCounter(c => Math.min(dua.repeatCount!, c + 1)); }}>
                     <Plus className="w-3 h-3 mr-1" />1
@@ -181,7 +181,7 @@ const Duas = memo(function Duas() {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-foreground font-serif italic tracking-tight">Duas</h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">{duasData.length} Supplications</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">{duasData.length} Supplications</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C9860A]/20 to-[#E8A020]/5 flex items-center justify-center border border-[#C9860A]/10 shadow-sm">
             <BookHeart className="w-5 h-5 text-[#C9860A]" />
@@ -229,7 +229,7 @@ const Duas = memo(function Duas() {
 
         {/* Results count */}
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             {filteredDuas.length} {filteredDuas.length === 1 ? 'dua' : 'duas'}
             {searchQuery && ` matching "${searchQuery}"`}
           </p>
@@ -246,7 +246,7 @@ const Duas = memo(function Duas() {
           {filteredDuas.length === 0 ? (
             <Card className="p-8 text-center bg-card border-border/40 shadow-sm">
               <BookHeart className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">No duas found</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">No duas found</p>
               <Button variant="outline" size="sm" className="font-bold border-border/40 hover:bg-muted/50" onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}>
                 Clear filters
               </Button>

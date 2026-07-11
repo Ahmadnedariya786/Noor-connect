@@ -66,6 +66,8 @@ export default defineConfig(({ mode }) => ({
           // react-i18next from React causes createContext timing issues.
           // React Query
           'react-query': ['@tanstack/react-query'],
+          // Carousel vendor chunk
+          'carousel': ['embla-carousel-react'],
         },
       },
     },

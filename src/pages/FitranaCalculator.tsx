@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -327,7 +327,7 @@ export default function FitranaCalculator() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[11px] uppercase tracking-wider font-bold text-slate-500">Calculation Method</Label>
+                <Label className="text-xs uppercase tracking-wider font-bold text-slate-500">Calculation Method</Label>
                 <Select 
                   value={fitranaData.calculationMethod} 
                   onValueChange={(value: 'weight' | 'saa' | 'amount') => 
@@ -352,7 +352,7 @@ export default function FitranaCalculator() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-[11px] uppercase tracking-wider font-bold text-slate-500">Currency</Label>
+                  <Label className="text-xs uppercase tracking-wider font-bold text-slate-500">Currency</Label>
                   <Select 
                     value={fitranaData.currency} 
                     onValueChange={(value) => setFitranaData(prev => ({ ...prev, currency: value }))}
@@ -370,7 +370,7 @@ export default function FitranaCalculator() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-[11px] uppercase tracking-wider font-bold text-slate-500">Price per kg ({fitranaData.currency})</Label>
+                  <Label className="text-xs uppercase tracking-wider font-bold text-slate-500">Price per kg ({fitranaData.currency})</Label>
                   <Input
                     type="number"
                     value={fitranaData.pricePerKg}
@@ -417,7 +417,7 @@ export default function FitranaCalculator() {
                     <div className="flex-1 w-full space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Name</Label>
+                          <Label className="text-xs uppercase tracking-wider font-bold text-slate-500">Name</Label>
                           <Input
                             value={member.name}
                             onChange={(e) => updateFamilyMember(member.id, 'name', e.target.value)}
@@ -426,7 +426,7 @@ export default function FitranaCalculator() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Age Type</Label>
+                          <Label className="text-xs uppercase tracking-wider font-bold text-slate-500">Age Type</Label>
                           <Select 
                             value={member.age}
                             onValueChange={(value: 'adult' | 'child') => 
@@ -446,7 +446,7 @@ export default function FitranaCalculator() {
                       
                       {fitranaData.calculationMethod === 'amount' && (
                         <div className="space-y-1.5 pt-1">
-                          <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Fitrana Amount ({fitranaData.currency})</Label>
+                          <Label className="text-xs uppercase tracking-wider font-bold text-slate-500">Fitrana Amount ({fitranaData.currency})</Label>
                           <Input
                             type="number"
                             value={member.fitranaAmount || ''}
@@ -596,7 +596,7 @@ export default function FitranaCalculator() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-black text-slate-900 dark:text-white">{record.year}</span>
-                        <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                        <div className={`px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ${
                           record.paid ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-yellow-100 text-yellow-800'
                         }`}>
                           {record.paid ? 'Paid' : 'Pending'}

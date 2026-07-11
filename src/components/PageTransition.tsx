@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ReactNode } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -30,7 +30,7 @@ export const PageTransition = ({ children, className = "" }: PageTransitionProps
     }
 
     return (
-        <motion.div
+        <m.div
             initial="initial"
             animate="in"
             variants={pageVariants}
@@ -38,6 +38,7 @@ export const PageTransition = ({ children, className = "" }: PageTransitionProps
             className={`w-full h-full ${className}`}
         >
             {children}
-        </motion.div>
+        </m.div>
     );
 };
+

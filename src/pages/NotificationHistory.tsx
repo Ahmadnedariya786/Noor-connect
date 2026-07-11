@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Notification History Page
  * Displays all past notifications with filtering and management options
  */
@@ -323,7 +323,7 @@ const NotificationHistory = () => {
             </div>
           </div>
           {unifiedNotifications.isRunningAsNativeApp() && (
-            <p className="text-[10px] text-muted-foreground mt-3 italic">
+            <p className="text-xs text-muted-foreground mt-3 italic">
               Running as Native Android App. Service Worker is replaced by Capacitor Native Bridge for better reliability.
             </p>
           )}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Prayer Stats Widget
  * Shows prayer tracking statistics and achievements
  */
@@ -142,7 +142,7 @@ export function PrayerStatsWidget() {
       
       <CardHeader className="pb-3 relative z-10">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
             <TrendingUp className="w-4 h-4 text-[#C9860A]" />
             Prayer Statistics
           </CardTitle>
@@ -150,7 +150,7 @@ export function PrayerStatsWidget() {
             <Button
               variant={timeRange === 'week' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-7 px-2 text-[10px] uppercase font-bold tracking-wider rounded-lg ${timeRange === 'week' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-7 px-2 text-xs uppercase font-bold tracking-wider rounded-lg ${timeRange === 'week' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setTimeRange('week')}
             >
               Week
@@ -158,7 +158,7 @@ export function PrayerStatsWidget() {
             <Button
               variant={timeRange === 'month' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-7 px-2 text-[10px] uppercase font-bold tracking-wider rounded-lg ${timeRange === 'month' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-7 px-2 text-xs uppercase font-bold tracking-wider rounded-lg ${timeRange === 'month' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setTimeRange('month')}
             >
               Month
@@ -173,12 +173,12 @@ export function PrayerStatsWidget() {
           <div className="p-3 rounded-xl bg-card/50 border border-border/40 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle className="w-4 h-4 text-[#C9860A]" />
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Completed</span>
+              <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Completed</span>
             </div>
             <p className="text-2xl font-bold font-serif italic text-white">
               {stats.completed}
             </p>
-            <p className="text-[9px] uppercase font-bold text-muted-foreground mt-1 tracking-wider">
+            <p className="text-xs uppercase font-bold text-muted-foreground mt-1 tracking-wider">
               {stats.completionRate}% rate
             </p>
           </div>
@@ -186,12 +186,12 @@ export function PrayerStatsWidget() {
           <div className="p-3 rounded-xl bg-card/50 border border-border/40 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-[#C9860A]" />
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Remaining</span>
+              <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Remaining</span>
             </div>
             <p className="text-2xl font-bold font-serif italic text-white">
               {missed}
             </p>
-            <p className="text-[9px] uppercase font-bold text-muted-foreground mt-1 tracking-wider">
+            <p className="text-xs uppercase font-bold text-muted-foreground mt-1 tracking-wider">
               of {stats.totalPossible}
             </p>
           </div>
@@ -202,15 +202,15 @@ export function PrayerStatsWidget() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-[#C9860A]" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Current Streak</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Current Streak</span>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold font-serif italic text-white">{stats.currentStreak}</p>
-              <p className="text-[9px] font-bold uppercase text-muted-foreground">days</p>
+              <p className="text-xs font-bold uppercase text-muted-foreground">days</p>
             </div>
           </div>
           {stats.longestStreak > stats.currentStreak && (
-            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-1">
               Longest: {stats.longestStreak} days
             </p>
           )}
@@ -218,7 +218,7 @@ export function PrayerStatsWidget() {
 
         {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <span>Completion Rate</span>
             <span className="text-[#C9860A]">
               {stats.completionRate}%
@@ -228,14 +228,14 @@ export function PrayerStatsWidget() {
             value={stats.completionRate} 
             className="h-2 bg-black/50"
           />
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground text-center pt-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center pt-1">
             Avg {stats.averagePerDay}/5 per day • Today {stats.todayCompleted}/5
           </p>
         </div>
 
         {/* Achievements */}
         <div className="space-y-2">
-          <h4 className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 text-muted-foreground">
+          <h4 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-muted-foreground">
             <Trophy className="w-4 h-4 text-[#C9860A]" />
             Recent Achievements
           </h4>
@@ -249,12 +249,12 @@ export function PrayerStatsWidget() {
                   <achievement.icon className="w-4 h-4 text-[#C9860A]" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-white truncate">{achievement.title}</p>
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground truncate">{achievement.description}</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">{achievement.description}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground p-3 rounded-lg bg-card/50 border border-border/40 text-center">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground p-3 rounded-lg bg-card/50 border border-border/40 text-center">
                 Keep checking in your prayers to unlock achievements.
               </div>
             )}
@@ -265,7 +265,7 @@ export function PrayerStatsWidget() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full gap-2 border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-[10px]"
+          className="w-full gap-2 border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
           onClick={() => navigate('/prayer-stats')}
         >
           <Calendar className="w-4 h-4" />

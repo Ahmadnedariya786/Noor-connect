@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, Clock, Radio, Trash2, Trophy, Flame, Target, TrendingUp, ArrowLeft, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -191,7 +191,7 @@ export default function RadioStats() {
                 <p className="text-xs font-bold text-foreground leading-tight mb-0.5">
                   {achievement.title}
                 </p>
-                <p className="text-[10px] text-muted-foreground leading-tight">
+                <p className="text-xs text-muted-foreground leading-tight">
                   {achievement.description}
                 </p>
                 {achievement.unlocked && (

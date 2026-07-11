@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+﻿import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -423,17 +423,17 @@ const Tafsir = () => {
                           <div className="flex items-center gap-2">
                             <span>{edition.name}</span>
                             {OFFLINE_EDITIONS.includes(edition.id) && (
-                              <Badge className="text-[8px] bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                              <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
                                 <Download className="w-2.5 h-2.5" />
                                 Offline
                               </Badge>
                             )}
                           </div>
                           {edition.author && (
-                            <span className="text-[10px] opacity-70">by {edition.author}</span>
+                            <span className="text-xs opacity-70">by {edition.author}</span>
                           )}
                         </div>
-                        <span className="text-[10px] opacity-50">{edition.language}</span>
+                        <span className="text-xs opacity-50">{edition.language}</span>
                       </DropdownMenuItem>
                     ))}
                   </div>
@@ -532,18 +532,18 @@ const Tafsir = () => {
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-slate-800">{edition.name}</span>
                               {OFFLINE_EDITIONS.includes(edition.id) && (
-                                <Badge className="text-[9px] bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                                <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
                                   <Download className="w-3 h-3" />
                                   Offline
                                 </Badge>
                               )}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-100">
+                              <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-100">
                                 {edition.language}
                               </Badge>
                               {edition.author && (
-                                <span className="text-[10px] text-slate-400">by {edition.author}</span>
+                                <span className="text-xs text-slate-400">by {edition.author}</span>
                               )}
                             </div>
                           </div>
@@ -594,7 +594,7 @@ const Tafsir = () => {
                           </div>
                           <div className="text-right flex flex-col items-end">
                             <span className="font-arabic text-xl text-emerald-600 font-bold">{surah.name}</span>
-                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">{surah.revelationType}</span>
+                            <span className="text-xs text-slate-400 uppercase font-bold tracking-tighter">{surah.revelationType}</span>
                           </div>
                         </button>
                       ))
@@ -733,17 +733,17 @@ const Tafsir = () => {
                             <div className="flex items-center gap-2">
                               <span className="font-bold">{edition.name}</span>
                               {OFFLINE_EDITIONS.includes(edition.id) && (
-                                <Badge className="text-[8px] bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                                <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
                                   <Download className="w-2.5 h-2.5" />
                                   Offline
                                 </Badge>
                               )}
                             </div>
                             {edition.author && (
-                              <span className="text-[10px] opacity-70">by {edition.author}</span>
+                              <span className="text-xs opacity-70">by {edition.author}</span>
                             )}
                           </div>
-                          <Badge variant="outline" className="text-[9px]">{edition.language}</Badge>
+                          <Badge variant="outline" className="text-xs">{edition.language}</Badge>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -839,7 +839,7 @@ const Tafsir = () => {
                           <div className="space-y-6">
                             <div className="flex items-center gap-2">
                               <Separator className="flex-1" />
-                              <Badge variant="outline" className="text-[10px] uppercase tracking-widest text-slate-400 font-bold border-slate-200">
+                              <Badge variant="outline" className="text-xs uppercase tracking-widest text-slate-400 font-bold border-slate-200">
                                 {t('tafsirCommentary')}
                               </Badge>
                               <Separator className="flex-1" />
@@ -897,7 +897,7 @@ const Tafsir = () => {
               </DialogHeader>
               <div className="py-4 space-y-4">
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Source Verse</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Source Verse</p>
                   <p className="text-sm text-slate-600 font-medium line-clamp-2">
                     {currentAyahForNote && currentSurahTafsir?.tafsirs.find(t => t.ayah === currentAyahForNote.ayah)?.text}
                   </p>

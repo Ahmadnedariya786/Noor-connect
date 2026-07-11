@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Profile Settings Component
  * CRUD operations for managing profiles
  */
@@ -178,11 +178,11 @@ export function ProfileSettings() {
                     <p className="text-sm font-medium truncate">{profile.name}</p>
                     <div className="flex items-center gap-2">
                       {profile.isDefault && (
-                        <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                        <Badge variant="secondary" className="text-xs h-4 px-1">
                           Active
                         </Badge>
                       )}
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         Created {new Date(profile.createdAt).toLocaleDateString()}
                       </span>
                     </div>

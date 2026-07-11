@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Droplets, Hand, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { markGhusulComplete, getTodayLog, type HaidhTrackerData } from "@/lib/haidh-tracker";
@@ -50,7 +50,7 @@ export function HaidhGhuslChecklist({ data }: { data: HaidhTrackerData }) {
       <div className="flex items-center gap-2 mb-4">
         <Droplets className={cn("w-4 h-4", allDone ? "text-emerald-500" : "text-rose-500")} />
         <h3 className={cn(
-          "text-[10px] font-black uppercase tracking-widest",
+          "text-xs font-black uppercase tracking-widest",
           allDone ? "text-emerald-500" : "text-muted-foreground"
         )}>
           {allDone ? "Purification Complete" : "Complete Your Ghusl"}
