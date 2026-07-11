@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FALLBACK_LOCATIONS } from '@/lib/location-state';
 import { Compass, Loader2, LocateFixed, RefreshCw, Navigation, MapPin } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
@@ -755,8 +755,10 @@ const QiblaCompassModern = () => {
               className="absolute inset-6 rounded-full"
               style={{
                 transform: `rotate(${dialRotation}deg)`,
-                // FIX: 0.12s was too fast on 30Hz Android sensors causing jitter
-                transition: isLiveCompass ? 'transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+                willChange: 'transform',
+                // JS smoothing (HEADING_SMOOTHING / smoothingFactor) already handles jitter.
+                // CSS transitions here cause rubber-banding/lag on legacy Android devices.
+                transition: 'none',
               }}
             >
               {/* Degree Numbers */}
