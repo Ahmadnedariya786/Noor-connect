@@ -263,11 +263,11 @@ export function EnhancedDailyHadith() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-accent/30 shadow-sm">
-              <MessageCircle className="w-5 h-5 text-accent-foreground" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-accent-foreground">Daily Hadith</h3>
+              <div className="p-2 rounded-xl bg-accent/30 shadow-sm">
+                <MessageCircle className="w-5 h-5 text-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Daily Hadith</h3>
               <p className="text-xs text-muted-foreground">
                 {hadith.category}
               </p>
@@ -334,7 +334,7 @@ export function EnhancedDailyHadith() {
 
         {/* Arabic Text */}
         <div className={`text-right space-y-2 transition-all duration-500 ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
-          <p className="text-2xl font-arabic leading-relaxed text-accent-foreground drop-shadow-sm">
+          <p className="text-2xl font-arabic leading-relaxed text-foreground drop-shadow-sm">
             {hadith.arabic}
           </p>
         </div>
@@ -357,7 +357,7 @@ export function EnhancedDailyHadith() {
 
         {/* Source and Narrator */}
         <div className={`space-y-2 transition-all duration-500 delay-300 ${isAnimating ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-xs text-foreground">
             <span>
               <strong>Narrated by:</strong> {hadith.narrator}
             </span>

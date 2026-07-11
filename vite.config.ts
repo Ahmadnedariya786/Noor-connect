@@ -61,8 +61,9 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-toggle',
             '@radix-ui/react-tooltip',
           ],
-          // Core vendor — React + ReactDOM + i18n together so createContext is never undefined
-          'vendor': ['react', 'react-dom', 'i18next', 'react-i18next', 'i18next-browser-languagedetector', 'i18next-http-backend', 'i18next-localstorage-backend'],
+          // React + i18n stay in the main chunk — manual chunks can't extract
+          // React when @vitejs/plugin-react-swc handles resolution, and separating
+          // react-i18next from React causes createContext timing issues.
           // React Query
           'react-query': ['@tanstack/react-query'],
         },
