@@ -51,6 +51,7 @@ Builds:
     prebuild:
       - npm install
       - npm run build
+      - node scripts/clean-dist-data.js
       - npx cap sync android
     ndk: r21e
 
