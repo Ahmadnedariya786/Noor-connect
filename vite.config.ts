@@ -61,8 +61,6 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-toggle',
             '@radix-ui/react-tooltip',
           ],
-          // i18n vendor chunk
-          'i18n': ['i18next', 'i18next-browser-languagedetector', 'i18next-http-backend', 'i18next-localstorage-backend'],
           // React Query
           'react-query': ['@tanstack/react-query'],
         },
