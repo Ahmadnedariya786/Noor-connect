@@ -62,6 +62,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### LiveStreams & Qibla Improvements
 - **LiveStreams**: Aggressive HLS buffering (120s), quality switcher UI (Auto/320p/480p), and hardcapped recovery loop to prevent OS freezing on weak networks
 - **Qibla**: Single smart button with geo-anchor note; magnetic declination correction via NOAA API; device orientation and metal-interference warnings with calibration UX
+- **Qibla Performance**: Eliminated sensor jitter and UI lag on legacy Android devices by removing conflicting CSS transitions on the compass dial, falling back to pure 60fps hardware-accelerated JS interpolation
+
+#### F-Droid & Build Optimizations
+- **APK Size Reduction**: Implemented a comprehensive F-Droid prebuild script (`clean-dist-data.js`) to strip >300MB of offline Tafsir, Hadith, and Mushaf JSON data from the bundled APK, relying purely on CDNs to achieve an 84MB target size.
+- **Chunk Optimization**: Removed massive vendor chunks and separated i18n manual chunks to resolve Vercel deployment circular dependency and Context errors.
 
 ### 🐛 Critical Bug Fixes
 

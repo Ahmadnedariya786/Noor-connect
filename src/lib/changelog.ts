@@ -60,6 +60,10 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
       { type: 'improvement', description: 'Device performance imports fixed for backward compatibility (performance-optimizations instead of device-performance.ts).' },
       { type: 'improvement', description: 'Removed vestigial Quran Display Settings from Profile page (font size slider, script style dropdown, and clear cache button) since Quran now uses Mushaf image pages.' },
       { type: 'improvement', description: 'Deleted orphaned components MushafPage.tsx and MushafWord.tsx which were no longer imported anywhere in the app.' },
+      { type: 'improvement', description: 'F-Droid APK size reduction: stripped >300MB of offline JSON data via clean-dist-data.js, allowing the F-Droid build to heavily rely on remote CDNs for an 84MB footprint.' },
+      { type: 'fix', description: 'Qibla performance: removed conflicting CSS transitions on the compass dial, eliminating sensor jitter and rubber-banding lag on legacy Android devices.' },
+      { type: 'improvement', description: 'App UI polish: applied the Azimuth premium dark/amber aesthetic to all dashboard widgets, standardizing colors and blurs.' },
+      { type: 'fix', description: 'Removed chunking errors to resolve Vercel deployment circular dependency and React Context rendering issues.' },
     ],
   },
   {

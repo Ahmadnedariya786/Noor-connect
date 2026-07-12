@@ -74,7 +74,7 @@
 - **Recitation Playback**: Immersive background audio from multiple reciters with progress tracking.
 
 ### 🕋 Premium Qibla Compass
-- **High-Precision Native Sensors**: Completely overhauled native compass utilization tapping into device magnetometers for raw, smooth orientation.
+- **High-Precision Native Sensors**: Completely overhauled native compass utilization tapping into device magnetometers for raw, smooth orientation. 60fps hardware-accelerated JS interpolation eliminates sensor jitter and UI lag on legacy Android devices.
 - **Muslim Pro Grade UI**: Exquisite SVG-based compass dial with Kaaba alignment glow effects, jitter-reducing low-pass filters, and haptic feedback upon true Qibla lock.
 - **Web & Manual Fallback**: If sensors fail, the app gracefully falls back to GPS/Web-oriented calculation paths.
 
@@ -129,6 +129,7 @@ Noor Connect is built from the ground up for performance and ethical transparenc
   - Strictly **Zero Analytics**, **Zero Trackers**. 
   - Pre-configured `foss` Gradle flavor specifically built to strip `play-services` for pure open-source distribution. 
   - Fastlane F-Droid metadata integration ready.
+  - **APK Size Reduction**: Implemented a comprehensive F-Droid prebuild script (`clean-dist-data.js`) to strip >300MB of offline JSON data (Tafsir, Hadith, Mushaf) from the bundled APK, relying purely on CDNs to achieve a tiny 84MB footprint.
 - **Data Portability**: Full App Backup & Restore capabilities directly to internal storage (localStorage + Capacitor Preferences). Auto-backup on first install, auto-restore on reinstall. All data stays strictly local.
 - **Cross-Platform Backup**: `backup-restore-service.ts` uses localStorage (no native filesystem dependency) with background processing via `requestIdleCallback`/`setTimeout` to avoid UI blocking.
 - **Low-End Device Optimizations** (2016+ devices, 30+ FPS target):
