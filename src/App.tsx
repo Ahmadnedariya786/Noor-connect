@@ -252,7 +252,7 @@ function AppContent() {
   const reduceMotion = tier.shouldReduceAnimations;
 
   return (
-    <MotionConfig reducedMotion={reduceMotion ? "always" : (animationEnabled ? "never" : "user")}>
+    <MotionConfig reducedMotion={(!animationEnabled || reduceMotion) ? "always" : "never"}>
       <LazyMotionWrapper>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <div className="flex flex-col min-h-screen overflow-hidden">

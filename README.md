@@ -1,7 +1,7 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml)
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
 
@@ -58,6 +58,11 @@
 - localStorage quota handling with cleanup
 - Memory leak prevention (event listener cleanup)
 - Widget: unknown hadith grades use neutral color, localized countdown strings, minute-precision countdown, fixed 1-hour boundary, Arabic RTL fix, countdown overlay, format-string preview defaults, Tasbeeh content descriptions
+- Settings: The "Animations" toggle now correctly persists to Preferences and forcibly disables heavy Framer Motion animations across the app.
+- Quran Reader: Fixed English Surah names text overflow on smaller screens.
+- Quran Reader: Implemented an instant golden loading spinner via `useTransition` to mask navigation delays.
+- App Icon: Removed `android:roundIcon` property to fix rendering corruption on legacy OEM Android skins.
+- F-Droid Publication: Standardized metadata, feature lists, and verified the GPL-3.0-or-later license string.
 - Android: FOREGROUND_SERVICE_MEDIA_PLAYBACK permission, duplicate flatDir removed, ProGuard cleaned
 - Thread safety: @Volatile on HadithBundle cache
 - All payload parsing failures now logged with context

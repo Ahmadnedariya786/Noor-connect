@@ -78,10 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **localStorage quota**: Cleanup strategies with user-friendly errors
 - **Memory leaks**: Event listener cleanup
 - **Null checks**: Consistent patterns across codebase
+- **Settings Sync**: "Animations" toggle correctly persists to `Preferences` and forcibly disables heavy Framer Motion animations across all routes for reduced layout shifts.
 
 #### Quran & Hadith Fixes
 - **Quran Reader**: Chunked progressive rendering to fix massive FPS drop and CLS; surah-to-page mapping corrected with proper +2 image offset
-- **SurahList**: Wrapped navigation in `startTransition` to fix poor INP; replaced `react-window` v1 List with standard mapped list
+- **SurahList**: Wrapped navigation in `startTransition` and added instant golden loading spinner to eliminate perceived delay; replaced `react-window` v1 List with standard mapped list
+- **Text Overflow**: Overhauled the Surah card layout using strict `min-w-0` constraints and truncation to stop English translations from breaking the grid on 4-inch screens
 - **Splash Screen**: Removed `framer-motion` and rewrote in pure CSS, cutting LCP from ~5s to under 1s
 - **Hadith**: Converted `monitorFPS()` RAF loop to module-level singleton (was starting 1 loop per component); fixed double API call, back navigation, and loading states
 - **Hadith Bookmark Navigation**: New `HadithBookmarks` page, `useHadithBookmarks` hook, and bookmark buttons on all hadith pages
@@ -98,6 +100,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Android Manifest & Build
 - Added `FOREGROUND_SERVICE_MEDIA_PLAYBACK` permission for AdhanPlaybackService
 - Removed duplicate flatDir entry in build.gradle
+- **App Icon Rendering**: Removed deprecated `android:roundIcon` property to fix critical launch icon corruption on legacy OEM skins (Xiaomi, Vivo)
+- **F-Droid Store Metadata**: Updated `com.noorconnect.app.yml` with GPL-3.0-or-later license, and synchronized feature descriptions (including Menstrual Tracker, Zakat, Widgets) to the `en-US` manifest.
 - Cleaned proguard-rules.pro (single wildcard keep for widgets)
 
 #### Technical Improvements

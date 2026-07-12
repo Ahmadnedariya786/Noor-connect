@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Sparkles, History, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
 import { PageTransition } from "@/components/PageTransition";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
 import { getDailyAyah } from "@/lib/daily-content";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -41,6 +41,8 @@ const Quran = () => {
   const [loading, setLoading] = useState(surahs.length === 0);
   const [searchQuery, setSearchQuery] = useState("");
   const [lastRead, setLastRead] = useState<{ number: number; name: string } | null>(null);
+  const [navigatingTo, setNavigatingTo] = useState<number | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const saved = localStorage.getItem('quran-last-read');
@@ -221,20 +223,34 @@ const Quran = () => {
                 <div key={i} className="h-20 bg-card animate-pulse rounded-2xl border border-border" />
               ))
             ) : (
-              <AnimatePresence>
+              <div className="space-y-3">
                 {filteredSurahs.map((surah) => (
-                  <motion.div
+                  <div
                     key={surah.number}
-                    {...motionProps({
-                      initial: { opacity: 0, y: 10 },
-                      animate: { opacity: 1, y: 0 },
-                      transition: { duration: 0.2 },
-                    })}
+                    className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
+                    style={{ animationDelay: `${Math.min(surah.number * 20, 300)}ms` }}
                   >
                     <button
-                      onClick={() => navigate(`/quran/surah-${surah.number}`)}
-                      className="w-full flex items-center p-4 bg-card border border-border rounded-2xl hover:bg-muted/20 transition-all duration-300 group active:scale-[0.98] text-left shadow-sm"
+                      onClick={() => {
+                        setNavigatingTo(surah.number);
+                        // Force a small delay so the loading spinner paints immediately before the heavy transition
+                        setTimeout(() => {
+                          startTransition(() => {
+                            navigate(`/quran/surah-${surah.number}`);
+                          });
+                        }, 50);
+                      }}
+                      disabled={navigatingTo !== null}
+                      className="w-full flex items-center p-4 bg-card border border-border rounded-2xl hover:bg-muted/20 transition-all duration-300 group active:scale-[0.98] text-left shadow-sm relative overflow-hidden"
                     >
+                      {/* Loading State Overlay */}
+                      {navigatingTo === surah.number && (
+                        <div className="absolute inset-0 bg-background/70 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-2">
+                          <div className="w-8 h-8 border-4 border-[#C9860A] border-t-transparent rounded-full animate-spin shadow-lg" />
+                          <span className="text-xs font-bold text-[#C9860A] tracking-widest uppercase animate-pulse">{ti18n('loading') || 'Loading...'}</span>
+                        </div>
+                      )}
+
                       {/* Number Plate - Premium Style */}
                       <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <div className="absolute inset-0 bg-[#C9860A]/10 rotate-45 rounded-lg group-hover:rotate-[135deg] transition-transform duration-700" />
@@ -242,29 +258,36 @@ const Quran = () => {
                         <span className="relative z-10 font-bold text-[#C9860A] text-xs tracking-tighter">{surah.number}</span>
                       </div>
 
-                      <div className="ms-4 flex-1">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="space-y-1">
-                            <h3 className="font-bold text-sm tracking-tight text-foreground">{surah.englishName}</h3>
-                            <div className="flex items-center gap-2">
-                              <span className="px-1.5 py-0.5 rounded-full bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                {surah.revelationType}
-                              </span>
-                              <span className="text-xs text-muted-foreground font-bold uppercase tracking-[0.2em]">
-                                {surah.numberOfAyahs} Ayahs
-                              </span>
-                            </div>
+                      <div className="ms-4 flex-1 flex items-center justify-between gap-3 min-w-0">
+                        {/* Start Side: English Name & Info */}
+                        <div className="flex flex-col items-start gap-1 min-w-0 flex-1">
+                          <h3 className="font-bold text-base tracking-tight text-foreground truncate w-full text-left">
+                            {surah.englishName}
+                          </h3>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider truncate w-full text-left">
+                            {surah.englishNameTranslation}
+                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                            <span className="px-1.5 py-0.5 rounded-full bg-muted text-[9px] font-bold uppercase tracking-widest text-muted-foreground shrink-0">
+                              {surah.revelationType}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-[0.2em] shrink-0">
+                              {surah.numberOfAyahs} Ayahs
+                            </span>
                           </div>
-                          <div className="text-right">
-                            <p className="font-arabic text-xl text-[#C9860A] drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">{surah.name}</p>
-                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">{surah.englishNameTranslation}</p>
-                          </div>
+                        </div>
+                        
+                        {/* End Side: Arabic Name */}
+                        <div className="flex flex-col items-end text-right shrink-0 ms-2">
+                          <p className="font-arabic text-3xl text-[#C9860A] drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">
+                            {surah.name}
+                          </p>
                         </div>
                       </div>
                     </button>
-                  </motion.div>
+                  </div>
                 ))}
-              </AnimatePresence>
+              </div>
             )}
           </div>
 
