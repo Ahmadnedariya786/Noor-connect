@@ -34,7 +34,7 @@ AntiFeatures:
 Builds:
   - versionName: 2.0.0
     versionCode: 5
-    commit: 1af17fdf91d4143ee6b56977811f1f796d0f5137
+    commit: a89901dbbe2cb6a405ec51ad7a7078c49d16f555
     subdir: android/app
     sudo:
       - apt-get update
