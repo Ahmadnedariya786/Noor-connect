@@ -49,7 +49,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "RELEASE_STORE_FILE=android/keystore/noorconnectjks" > android/local.properties
+          echo "RELEASE_STORE_FILE=../keystore/noorconnectjks" > android/local.properties
           echo "RELEASE_STORE_PASSWORD=$KEYSTORE_PASSWORD" >> android/local.properties
           echo "RELEASE_KEY_ALIAS=$KEY_ALIAS" >> android/local.properties
           echo "RELEASE_KEY_PASSWORD=$KEY_PASSWORD" >> android/local.properties
