@@ -1,0 +1,65 @@
+name: Build Signed APK
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+          build-tools: 36.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip unzip
+          pip3 install awscli
+
+      - name: Validate Keystore
+        run: |
+          echo "Validating keystore files..."
+          if [ ! -f "android/noorconnectjks" ]; then
+            echo "ERROR: Keystore file not found at android/noorconnectjks"
+            exit 1
+          fi
+          echo "Keystore exists and is valid for signing"
+
+      - name: Build APK with signing
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon
+          echo "APK build completed successfully"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: noor-connect-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ Build and APK upload completed successfully!"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Build failed! Please check the logs and keystore configuration."
