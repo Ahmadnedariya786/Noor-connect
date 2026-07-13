@@ -1,9 +1,6 @@
 name: Build Signed APKs
 
 on:
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
 
 jobs:
@@ -62,23 +59,14 @@ jobs:
           echo "RELEASE_KEY_ALIAS=${KEY_ALIAS}" >> android/local.properties
           echo "RELEASE_KEY_PASSWORD=${KEY_PASSWORD}" >> android/local.properties
 
-      - name: Build Standard APK
+      - name: Build APK
         run: |
           cd android
           ./gradlew assembleRelease --no-daemon
-          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/noor-connect-standard.apk
 
-      - name: Build F-Droid APK
-        run: |
-          cd android
-          ./gradlew assembleRelease -Pfoss=true --no-daemon
-          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/noor-connect-fdroid.apk
-
-      - name: Upload Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: noor-connect-apks
-          path: |
-            android/app/build/outputs/apk/release/noor-connect-standard.apk
-            android/app/build/outputs/apk/release/noor-connect-fdroid.apk
+          name: noor-connect-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
