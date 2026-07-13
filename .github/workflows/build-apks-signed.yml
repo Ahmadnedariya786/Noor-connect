@@ -43,7 +43,6 @@ jobs:
         run: |
           echo "Creating local.properties with keystore secrets..."
           cat > android/local.properties << EOF
-sdk.dir=C:\\Users\\urooj\\AppData\\Local\\Android\\Sdk
 RELEASE_STORE_FILE=android/keystore/noorconnectjks
 RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
 RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
