@@ -26,6 +26,15 @@ jobs:
           api-level: 36
           build-tools: 36.0
 
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
       - name: Decode keystore from secret
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
