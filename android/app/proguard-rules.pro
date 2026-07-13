@@ -19,7 +19,7 @@
 -keep class com.getcapacitor.annotation.** { *; }
 -keepclassmembers class * {
     @com.getcapacitor.PluginMethod public *;
-    @com.getcapacitor.annotation.CapacitorPlugin public *
+    @com.getcapacitor.annotation.CapacitorPlugin public *;
 }
 
 # Keep all Capacitor plugin classes
