@@ -43,7 +43,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           mkdir -p android/keystore
-          echo "$KEYSTORE_BASE64" | base64 -d > android/keystore/noorconnectjks
+          echo "$KEYSTORE_BASE64" | tr -d '\r\n' | base64 --decode > android/keystore/noorconnectjks
           chmod 600 android/keystore/noorconnectjks
           echo "Keystore file size:"
           ls -la android/keystore/noorconnectjks
@@ -56,6 +56,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           keytool -list -keystore android/keystore/noorconnectjks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" || echo "Verification failed"
+          keytool -list -keystore android/keystore/noorconnectjks -storepass "$KEYSTORE_PASSWORD" || echo "Listing all aliases failed"
 
       - name: Write local.properties
         env:
