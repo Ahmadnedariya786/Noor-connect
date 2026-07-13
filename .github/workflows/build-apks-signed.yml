@@ -26,6 +26,9 @@ jobs:
           api-level: 36
           build-tools: 36.0
 
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
       - name: Install npm dependencies
         run: npm ci
 
@@ -50,8 +53,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           KEYSTORE_PATH="${{ github.workspace }}/android/keystore/noorconnectjks"
-          echo "sdk.dir=${{ github.workspace }}/android" > android/local.properties
-          echo "RELEASE_STORE_FILE=${KEYSTORE_PATH}" >> android/local.properties
+          echo "RELEASE_STORE_FILE=${KEYSTORE_PATH}" > android/local.properties
           echo "RELEASE_STORE_PASSWORD=${KEYSTORE_PASSWORD}" >> android/local.properties
           echo "RELEASE_KEY_ALIAS=${KEY_ALIAS}" >> android/local.properties
           echo "RELEASE_KEY_PASSWORD=${KEY_PASSWORD}" >> android/local.properties
