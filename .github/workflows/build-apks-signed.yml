@@ -43,16 +43,19 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > android/keystore/noorconnectjks
           chmod 600 android/keystore/noorconnectjks
 
-      - name: Create local.properties
+      - name: Write local.properties
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "RELEASE_STORE_FILE=../keystore/noorconnectjks" > android/local.properties
-          echo "RELEASE_STORE_PASSWORD=$KEYSTORE_PASSWORD" >> android/local.properties
-          echo "RELEASE_KEY_ALIAS=$KEY_ALIAS" >> android/local.properties
-          echo "RELEASE_KEY_PASSWORD=$KEY_PASSWORD" >> android/local.properties
+          KEYSTORE_PATH="${{ github.workspace }}/android/keystore/noorconnectjks"
+          echo "sdk.dir=${{ github.workspace }}/android" > android/local.properties
+          echo "RELEASE_STORE_FILE=${KEYSTORE_PATH}" >> android/local.properties
+          echo "RELEASE_STORE_PASSWORD=${KEYSTORE_PASSWORD}" >> android/local.properties
+          echo "RELEASE_KEY_ALIAS=${KEY_ALIAS}" >> android/local.properties
+          echo "RELEASE_KEY_PASSWORD=${KEY_PASSWORD}" >> android/local.properties
+          cat android/local.properties
 
       - name: Build Standard Release APK
         run: |
