@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,11 +23,8 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 36
-          build-tools: 36.0
-
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
+          packages: 'platforms;android-36 build-tools;36.0.0'
+          accept-android-sdk-licenses: true
 
       - name: Install npm dependencies
         run: npm ci
@@ -45,18 +42,13 @@ jobs:
           mkdir -p android/keystore
           printf '%s\n' "$KEYSTORE_BASE64" | tr -d '\r\n' | base64 --decode > android/keystore/noorconnectjks
           chmod 600 android/keystore/noorconnectjks
-          echo "Keystore file size:"
-          ls -la android/keystore/noorconnectjks
-          echo "Keystore type check:"
-          file android/keystore/noorconnectjks
 
       - name: Verify keystore
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          keytool -list -keystore android/keystore/noorconnectjks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" || echo "Verification failed"
-          keytool -list -keystore android/keystore/noorconnectjks -storepass "$KEYSTORE_PASSWORD" || echo "Listing all aliases failed"
+          keytool -list -keystore android/keystore/noorconnectjks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS"
 
       - name: Write local.properties
         env:
@@ -69,23 +61,24 @@ jobs:
           echo "RELEASE_STORE_PASSWORD=${KEYSTORE_PASSWORD}" >> android/local.properties
           echo "RELEASE_KEY_ALIAS=${KEY_ALIAS}" >> android/local.properties
           echo "RELEASE_KEY_PASSWORD=${KEY_PASSWORD}" >> android/local.properties
-          cat android/local.properties
 
-      - name: Build Standard Release APK
+      - name: Build Standard APK
         run: |
           cd android
           ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/noor-connect-standard.apk
 
-      - name: Build F-Droid Release APK
+      - name: Build F-Droid APK
         run: |
           cd android
           ./gradlew assembleRelease -Pfoss=true --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/noor-connect-fdroid.apk
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: noor-connect-apks
           path: |
-            android/app/build/outputs/apk/release/app-release.apk
-            android/app/build/outputs/apk/fossRelease/app-fossRelease.apk
+            android/app/build/outputs/apk/release/noor-connect-standard.apk
+            android/app/build/outputs/apk/release/noor-connect-fdroid.apk
           retention-days: 30

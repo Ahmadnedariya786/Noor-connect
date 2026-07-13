@@ -1,0 +1,51 @@
+name: Translation Key Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/locales/**
+  pull_request:
+    branches: [main]
+    paths:
+      - src/locales/**
+
+jobs:
+  check-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check translation keys are in sync
+        run: |
+          cd src/locales
+          REF_FILE="en.json"
+          echo "Checking all locales against $REF_FILE..."
+          REF_KEYS=$(node -e "console.log(JSON.stringify(Object.keys(require('./$REF_FILE')).sort()))")
+          for file in *.json; do
+            KEYS=$(node -e "console.log(JSON.stringify(Object.keys(require('./$file')).sort()))")
+            if [ "$KEYS" != "$REF_KEYS" ]; then
+              echo "❌ $file has different keys than $REF_FILE"
+              node -e "
+                const ref = Object.keys(require('./$REF_FILE'));
+                const cur = Object.keys(require('./$file'));
+                const missing = ref.filter(k => !cur.includes(k));
+                const extra = cur.filter(k => !ref.includes(k));
+                if (missing.length) console.log('  Missing:', missing.join(', '));
+                if (extra.length) console.log('  Extra:', extra.join(', '));
+              "
+              exit 1
+            fi
+            echo "✅ $file is in sync"
+          done
