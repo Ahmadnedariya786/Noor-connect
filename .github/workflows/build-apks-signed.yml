@@ -45,6 +45,17 @@ jobs:
           mkdir -p android/keystore
           echo "$KEYSTORE_BASE64" | base64 -d > android/keystore/noorconnectjks
           chmod 600 android/keystore/noorconnectjks
+          echo "Keystore file size:"
+          ls -la android/keystore/noorconnectjks
+          echo "Keystore type check:"
+          file android/keystore/noorconnectjks
+
+      - name: Verify keystore
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          keytool -list -keystore android/keystore/noorconnectjks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" || echo "Verification failed"
 
       - name: Write local.properties
         env:
