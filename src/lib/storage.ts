@@ -321,3 +321,14 @@ export const isIslamicSleepReminderEnabled = (): boolean => {
 export const setIslamicSleepReminderEnabled = (enabled: boolean): void => {
   localStorage.setItem(ISLAMIC_SLEEP_ENABLED, enabled ? 'true' : 'false');
 };
+
+const ISLAMIC_SLEEP_OFFSET = 'islamic-sleep-offset';
+
+export const getIslamicSleepOffset = (): number => {
+  const saved = localStorage.getItem(ISLAMIC_SLEEP_OFFSET);
+  return saved ? parseInt(saved, 10) : 30;
+};
+
+export const setIslamicSleepOffset = (minutes: number): void => {
+  localStorage.setItem(ISLAMIC_SLEEP_OFFSET, minutes.toString());
+};

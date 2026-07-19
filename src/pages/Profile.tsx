@@ -11,13 +11,14 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { getMadhab, setMadhab, getTimeFormat, setTimeFormat as saveTimeFormat, isIslamicSleepReminderEnabled, setIslamicSleepReminderEnabled, type MadhabType } from "@/lib/storage";
+import { useAutoBackup } from "@/hooks/useAutoBackup";
+import { getMadhab, setMadhab, getTimeFormat, setTimeFormat as saveTimeFormat, isIslamicSleepReminderEnabled, setIslamicSleepReminderEnabled, getIslamicSleepOffset, setIslamicSleepOffset, type MadhabType } from "@/lib/storage";
 import { AdhanSelector } from "@/components/AdhanSelector";
 import { CustomAdhanUpload } from "@/components/CustomAdhanUpload";
 import { getCalculationMethod, setCalculationMethod, type CalculationMethodName } from "@/lib/prayer-calculator";
 import { AladhanAPI } from "@/lib/aladhan-api";
 import { getStorageStats, clearAllBooks, formatFileSize, downloadBook, isBookDownloaded } from "@/lib/ebooks-storage";
-import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize } from "@/lib/backup";
+import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize, getLastAutoBackupTime } from "@/lib/backup";
 import { clearQuranMushafImageCache } from "@/lib/quran-mushaf-image-cache";
 import { notificationManager, type NotificationPreferences } from "@/lib/notification-manager";
 import { localNotifications } from "@/lib/local-notifications";
@@ -74,6 +75,7 @@ const Profile = () => {
   const [quranFontSize, setQuranFontSizeState] = useState(24);
   const [quranFont, setQuranFontState] = useState<QuranFont>("uthmani");
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
+  const [lastAutoBackupTime, setLastAutoBackupTime] = useState<string | null>(null);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     ramadanCountdowns: true,
     eidGreetings: true,
@@ -118,6 +120,25 @@ const Profile = () => {
     testAdhan,
   } = usePrayerAlarm();
 
+  const [autoBackupOn, setAutoBackupOn] = useState(() =>
+    localStorage.getItem('auto-backup-enabled') === 'true'
+  );
+
+  const updateBackupTime = useCallback(() => {
+    setLastAutoBackupTime(getLastAutoBackupTime());
+  }, [getLastAutoBackupTime]);
+
+  const { enable: enableAutoBackup, disable: disableAutoBackup } = useAutoBackup(updateBackupTime);
+
+  useEffect(() => {
+    if (autoBackupOn) {
+      enableAutoBackup();
+    } else {
+      disableAutoBackup();
+    }
+    localStorage.setItem('auto-backup-enabled', autoBackupOn ? 'true' : 'false');
+  }, [autoBackupOn, enableAutoBackup, disableAutoBackup]);
+
   const [reminderMinutes, setReminderMinutes] = useState('0');
   const [hijriOffset, setHijriOffset] = useState('0');
   // Prayer notification states
@@ -127,6 +148,7 @@ const Profile = () => {
   const [islamicSleepEnabled, setIslamicSleepEnabled] = useState(false);
   const [nextSleepReminderTime, setNextSleepReminderTime] = useState<string | null>(null);
   const [sleepContentPreview, setSleepContentPreview] = useState('');
+  const [sleepOffset, setSleepOffset] = useState(30);
 
   const refreshPermissionStatus = useCallback(async () => {
     const status = await unifiedNotifications.getPermissionStatus();
@@ -143,6 +165,8 @@ const Profile = () => {
     setGenderSettingsState(getGenderSettings());
     const sleepEnabled = isIslamicSleepReminderEnabled();
     setIslamicSleepEnabled(sleepEnabled);
+    const offset = getIslamicSleepOffset();
+    setSleepOffset(offset);
     if (sleepEnabled) {
       const previews = [
         'Recite Ayatul Kursi before sleeping.',
@@ -174,6 +198,9 @@ const Profile = () => {
     // Load storage stats
     getStorageStats().then(setStorageStats);
 
+    // Load last auto backup time
+    setLastAutoBackupTime(getLastAutoBackupTime());
+
     // Listen for gender settings changes
     const handleGenderSettingsUpdate = () => {
       setGenderSettingsState(getGenderSettings());
@@ -181,8 +208,19 @@ const Profile = () => {
 
     window.addEventListener('gender-settings-updated', handleGenderSettingsUpdate);
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshPermissionStatus();
+        checkPrayerNotificationStatus();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', refreshPermissionStatus);
+
     return () => {
       window.removeEventListener('gender-settings-updated', handleGenderSettingsUpdate);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', refreshPermissionStatus);
     };
   }, []);
 
@@ -430,6 +468,21 @@ const Profile = () => {
       setNextSleepReminderTime(null);
       setSleepContentPreview('');
       toast({ title: 'Islamic Sleep Reminder disabled' });
+    }
+  };
+
+  const handleSleepOffsetChange = (value: string) => {
+    const minutes = parseInt(value, 10);
+    setSleepOffset(minutes);
+    setIslamicSleepOffset(minutes);
+    if (islamicSleepEnabled) {
+      cancelIslamicSleepReminder();
+      scheduleIslamicSleepReminder();
+      const next = getNextIslamicSleepReminderTime();
+      if (next) {
+        setNextSleepReminderTime(next.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }));
+      }
+      toast({ title: `Sleep reminder set to ${minutes} min after Isha` });
     }
   };
 
@@ -930,6 +983,21 @@ const Profile = () => {
                     </div>
                   </div>
                 )}
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-muted-foreground">Remind me after Isha</p>
+                  <Select value={sleepOffset.toString()} onValueChange={handleSleepOffsetChange}>
+                    <SelectTrigger className="w-20 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 min</SelectItem>
+                      <SelectItem value="30">30 min</SelectItem>
+                      <SelectItem value="45">45 min</SelectItem>
+                      <SelectItem value="60">60 min</SelectItem>
+                      <SelectItem value="90">90 min</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 {sleepContentPreview && (
                   <div className="p-3 bg-muted/30 rounded-2xl">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Tonight's Reminder</p>
@@ -1028,6 +1096,63 @@ const Profile = () => {
         </div>
 
 
+
+
+        {/* Auto Backup */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
+            {t('autoBackup') || 'Auto Backup'}
+          </h3>
+          <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Label className="text-sm font-bold">{t('autoBackup') || 'Auto Backup'}</Label>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {t('autoBackupDescription') || 'Automatically saves your data every 20 minutes and prompts restore on reinstall.'}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={autoBackupOn}
+                onCheckedChange={setAutoBackupOn}
+                className="shrink-0 data-[state=checked]:bg-emerald-500"
+              />
+            </div>
+
+            {autoBackupOn && (
+              <div className="space-y-3 pt-4 border-t border-border/40">
+                <div className="flex items-center gap-2 p-3 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10">
+                    <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-foreground">
+                      {lastAutoBackupTime
+                        ? `${t('lastBackup') || 'Last backup'}: ${new Date(lastAutoBackupTime).toLocaleDateString()} ${new Date(lastAutoBackupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                        : t('noBackupYet') || 'No backup yet'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('autoBackupStatus') || 'Auto-backup runs every 20 minutes while you use the app.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted/30 rounded-2xl">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                    {t('howItWorks') || 'How it works'}
+                  </p>
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    {t('autoBackupHowItWorks') || 'Your data is saved locally on this device every 20 minutes. If you uninstall and reinstall the app, you will be prompted to restore your previous backup — no file picker needed. All your settings, prayer data, qaza records, bookmarks, and Quran progress are included.'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
 
 
         {/* Storage & Backup */}
@@ -1132,11 +1257,16 @@ const Profile = () => {
                   <Button
                     className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
                     size="sm"
-                    onClick={() => {
-                      toast({
-                        title: t('openAndroidSettings'),
-                        description: t('openAndroidSettingsDescription'),
-                      });
+                    onClick={async () => {
+                      try {
+                        const { App } = await import('@capacitor/app');
+                        await App.openSettings();
+                      } catch {
+                        toast({
+                          title: t('openAndroidSettings'),
+                          description: t('openAndroidSettingsDescription'),
+                        });
+                      }
                     }}
                   >
                     <ShieldCheck className="w-4 h-4 ms-2" />

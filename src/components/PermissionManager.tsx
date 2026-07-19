@@ -29,7 +29,19 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
       loadPermissions();
     });
 
-    return () => unsubscribe();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadPermissions();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', loadPermissions);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', loadPermissions);
+    };
   }, []);
 
   const loadPermissions = async () => {
@@ -357,23 +369,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if ((window as any).chrome) {
-                        window.open('chrome://settings/content/notifications');
-                      } else if ((window as any).mozInnerScreenX !== undefined) {
-                        window.open('about:preferences#privacy');
-                      } else if ((window as any).safari) {
-                        toast({
-                          title: 'Safari Settings',
-                          description: 'Go to Safari > Preferences > Websites > Notifications',
-                        });
-                      } else {
-                        toast({
-                          title: 'Browser Settings',
-                          description: 'Click lock icon in your browser address bar and allow notifications',
-                        });
-                      }
-                    }}
+                    onClick={() => permissionManager.openSettings('notifications')}
                     className="w-full"
                   >
                     <SettingsIcon className="w-4 h-4 me-2" />

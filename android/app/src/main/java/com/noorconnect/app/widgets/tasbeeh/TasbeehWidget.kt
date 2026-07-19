@@ -14,6 +14,7 @@ import android.util.Log
 import android.widget.RemoteViews
 import com.noorconnect.app.R
 import com.noorconnect.app.widgets.WidgetDeeplink
+import com.noorconnect.app.widgets.WidgetForegroundService
 import com.noorconnect.app.widgets.WidgetPrefs
 import com.noorconnect.app.widgets.WidgetRefreshWorker
 import com.noorconnect.app.widgets.TasbeehState
@@ -152,8 +153,33 @@ class TasbeehWidget : AppWidgetProvider() {
         appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+        val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+        val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+        val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+        
+        Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
+        
+        updateWidget(context, appWidgetManager, appWidgetId)
+    }
+
     override fun onEnabled(context: Context) {
-        WidgetRefreshWorker.enqueuePeriodic(context)
-        Log.d(TAG, "Widget enabled")
+        WidgetForegroundService.start(context)
+        Log.d(TAG, "Widget enabled — foreground service started")
+    }
+
+    override fun onDisabled(context: Context) {
+        val mgr = AppWidgetManager.getInstance(context)
+        val ids = mgr.getAppWidgetIds(ComponentName(context, TasbeehWidget::class.java))
+        if (ids.isEmpty()) {
+            WidgetForegroundService.stop(context)
+        }
+        Log.d(TAG, "Widget disabled")
     }
 }

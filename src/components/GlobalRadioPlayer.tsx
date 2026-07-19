@@ -47,7 +47,9 @@ export function GlobalRadioPlayer() {
            message.includes('sdk.script.js') ||
            message.includes('net::ERR_FAILED') ||
            message.includes('GeolocationPositionError') ||
-           message.includes('google-services.json not found'))) {
+           message.includes('google-services.json not found') ||
+           message.includes('content.js') ||
+           message.includes('no ad'))) {
         return; // Suppress chrome extension and harmless build/telemetry errors
       }
       originalConsoleError.apply(console, args);

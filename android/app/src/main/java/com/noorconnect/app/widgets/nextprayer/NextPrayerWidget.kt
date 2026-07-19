@@ -10,15 +10,11 @@ import android.view.View
 import android.widget.RemoteViews
 import com.noorconnect.app.MainActivity
 import com.noorconnect.app.R
-import com.noorconnect.app.widgets.LocationChangeService
-import com.noorconnect.app.widgets.StepDetectionService
 import com.noorconnect.app.widgets.WidgetAlarmScheduler
 import com.noorconnect.app.widgets.WidgetDeeplink
+import com.noorconnect.app.widgets.WidgetForegroundService
 import com.noorconnect.app.widgets.WidgetPrefs
 import com.noorconnect.app.widgets.WidgetRefreshWorker
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -52,11 +48,11 @@ class NextPrayerWidget : AppWidgetProvider() {
                 // Empty state — app never opened
                 views.setViewVisibility(R.id.widget_root, View.GONE)
                 views.setViewVisibility(R.id.layout_empty, View.VISIBLE)
-                
+
                 // Set empty state message with call-to-action
                 views.setTextViewText(R.id.empty_message, context.getString(R.string.widget_empty_message))
                 views.setTextViewText(R.id.empty_action, context.getString(R.string.widget_empty_action))
-                
+
                 // Set click listener to open app
                 val deeplink = WidgetDeeplink.buildPrayers(focus = "setup")
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
@@ -67,7 +63,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
                 views.setOnClickPendingIntent(R.id.layout_empty, pi)
-                
+
                 mgr.updateAppWidget(appWidgetId, views)
                 return
             }
@@ -82,11 +78,11 @@ class NextPrayerWidget : AppWidgetProvider() {
             if (nextPrayer == null) {
                 views.setViewVisibility(R.id.widget_root, View.GONE)
                 views.setViewVisibility(R.id.layout_empty, View.VISIBLE)
-                
+
                 // Set empty state message with call-to-action
                 views.setTextViewText(R.id.empty_message, context.getString(R.string.widget_empty_message))
                 views.setTextViewText(R.id.empty_action, context.getString(R.string.widget_empty_action))
-                
+
                 // Set click listener to open app
                 val deeplink = WidgetDeeplink.buildPrayers(focus = "setup")
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
@@ -97,7 +93,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
                 views.setOnClickPendingIntent(R.id.layout_empty, pi)
-                
+
                 mgr.updateAppWidget(appWidgetId, views)
                 return
             }
@@ -141,6 +137,15 @@ class NextPrayerWidget : AppWidgetProvider() {
             // Progress 0-10000 to support 270° arc via drawable level
             views.setInt(R.id.widget_ring_progress, "setImageLevel", (progress * 10000).toInt())
 
+            // ─── Stale data badge (if data is older than 2 hours) ───
+            val staleThreshold = 2 * 60 * 60 * 1000L // 2 hours
+            val isStale = (now - payload.lastUpdated) > staleThreshold
+            views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
+
+            // ─── Accessibility content description ───
+            val contentDesc = context.getString(R.string.widget_a11y_next_prayer, nextPrayer.name, countdownStr)
+            views.setContentDescription(R.id.widget_root, contentDesc)
+
             // ─── Tap → deep-link /prayers?focus=next ───
             val deeplink = WidgetDeeplink.buildPrayers(focus = "next")
             val intent = WidgetDeeplink.toIntent(context, deeplink)
@@ -176,31 +181,43 @@ class NextPrayerWidget : AppWidgetProvider() {
         appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        // Handle widget resize - update layout based on new size
+        val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+        val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+        val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+        val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+        
+        Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
+        
+        // Trigger update with new dimensions
+        updateWidget(context, appWidgetManager, appWidgetId)
+    }
+
     override fun onEnabled(context: Context) {
-        // Start the periodic 30-min refresh
-        WidgetRefreshWorker.enqueuePeriodic(context)
-        // Start step detection for motion-based refresh
-        StepDetectionService.start(context)
-        // Start location change detection
-        LocationChangeService.start(context)
+        // Start the foreground service for step detection + location monitoring
+        WidgetForegroundService.start(context)
         // Schedule next prayer alarm if we have data
         WidgetPrefs.getPrayerPayload(context)?.let {
             WidgetAlarmScheduler.scheduleNextPrayerAlarm(context, it)
         }
-        Log.d(TAG, "Widget enabled — periodic work + step detection + location detection + alarm scheduled")
+        Log.d(TAG, "Widget enabled — foreground service + alarm scheduled")
     }
 
     override fun onDisabled(context: Context) {
-        // Note: we deliberately DON'T cancel the periodic worker here,
-        // because other widget types may still need it. The worker self-cancels
-        // when no widgets are present (handled in doWork).
+        // Note: we deliberately DON'T cancel the foreground service here,
+        // because other widget types may still need it. The service self-stops
+        // when no widgets are present (handled in WidgetRefreshWorker).
         // However, we DO cancel the prayer alarm if no NextPrayer widgets exist.
         val mgr = AppWidgetManager.getInstance(context)
         val ids = mgr.getAppWidgetIds(android.content.ComponentName(context, NextPrayerWidget::class.java))
         if (ids.isEmpty()) {
             WidgetAlarmScheduler.cancelAllAlarms(context)
-            StepDetectionService.stop(context)
-            LocationChangeService.stop(context)
         }
         Log.d(TAG, "Widget disabled")
     }

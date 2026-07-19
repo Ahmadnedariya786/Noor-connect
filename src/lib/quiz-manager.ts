@@ -60,7 +60,8 @@ export class QuizManager {
     score: number, 
     totalQuestions: number, 
     categoryAnswers: Record<string, { correct: number; total: number }>,
-    streak: number
+    streak: number,
+    xpOverride?: number
   ): QuizStats {
     const stats = this.getStats();
     
@@ -72,8 +73,8 @@ export class QuizManager {
     stats.bestStreak = Math.max(stats.bestStreak, streak);
     stats.lastPlayed = new Date().toISOString();
     
-    // Calculate XP earned
-    const xpEarned = this.calculateXPEarned(score, totalQuestions, streak);
+    // Calculate XP earned (use override if provided, e.g. from quizStore.addXP with boosters)
+    const xpEarned = xpOverride !== undefined ? xpOverride : this.calculateXPEarned(score, totalQuestions, streak);
     stats.xp += xpEarned;
     
     // Update level

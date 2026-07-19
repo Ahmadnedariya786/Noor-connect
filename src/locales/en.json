@@ -290,5 +290,12 @@
   "quranFontSizeUpdatedDesc": "Font size set to",
   "manual": "Manual",
   "prayerNotifications": "Prayer Notifications",
-  "storageBackup": "Storage & Backup"
+  "storageBackup": "Storage & Backup",
+  "autoBackup": "Auto Backup",
+  "autoBackupDescription": "Automatically saves your data every 20 minutes of app use. On reinstall, you'll be prompted to restore your backup.",
+  "lastBackup": "Last backup",
+  "noBackupYet": "No backup yet",
+  "autoBackupStatus": "Auto-backup runs every 20 minutes while you use the app.",
+  "howItWorks": "How it works",
+  "autoBackupHowItWorks": "Your data is saved locally on this device every 20 minutes. If you uninstall and reinstall the app, you will be prompted to restore your previous backup — no file picker needed. All your settings, prayer data, qaza records, bookmarks, and Quran progress are included."
 }

@@ -74,6 +74,16 @@
     <string name="widget_tasbeeh_reset_desc">Reset tasbeeh counter</string>
     <string name="widget_tasbeeh_open_app_desc">Open Noor Connect app</string>
 
+    <!-- Stale data badge -->
+    <string name="widget_stale_badge_text">Stale</string>
+
+    <!-- Accessibility content descriptions -->
+    <string name="widget_a11y_next_prayer">Next prayer is %1$s, %2$s</string>
+    <string name="widget_a11y_daily_ayah">Daily ayah: %1$s</string>
+    <string name="widget_a11y_daily_ayah_default">Daily ayah not loaded</string>
+    <string name="widget_a11y_quran_progress">Quran progress: %1$d percent complete</string>
+    <string name="widget_a11y_quran_progress_empty">Quran progress not synced</string>
+
     <!-- Deep-link paths (must match React Router) -->
     <string name="deeplink_prayers">/prayers</string>
     <string name="deeplink_quran">/quran</string>
@@ -89,6 +99,37 @@
     <string name="notif_channel_widget_sync">Widget Sync</string>
     <string name="notif_channel_widget_sync_desc">Silent updates for the home-screen widgets.</string>
     <string name="notif_widget_sync_text">Updating widgets…</string>
+
+    <!-- Widget Foreground Service -->
+    <string name="widget_monitor_channel_name">Widget Monitor</string>
+    <string name="widget_monitor_channel_desc">Monitors steps and location for accurate widget updates.</string>
+    <string name="widget_monitor_notif_title">Widget monitor active</string>
+    <string name="widget_monitor_notif_text">Tracking movement for prayer time accuracy</string>
+
+    <!-- Widget Configuration Activity -->
+    <string name="widget_configure_title">Widget Settings</string>
+    <string name="widget_configure_size_label">Widget Size</string>
+    <string name="widget_configure_theme_label">Theme</string>
+    <string name="widget_theme_system">System</string>
+    <string name="widget_theme_light">Light</string>
+    <string name="widget_theme_dark">Dark</string>
+    <string name="widget_configure_density_label">Data Density: Medium</string>
+    <string name="widget_configure_accent_label">Accent Color</string>
+    <string name="widget_configure_cancel">Cancel</string>
+    <string name="widget_configure_save">Save</string>
+
+    <!-- Stale data badge -->
+    <string name="widget_stale_badge_text">Stale</string>
+
+    <!-- Accessibility content descriptions -->
+    <string name="widget_a11y_next_prayer">Next prayer %1$s in %2$s</string>
+    <string name="widget_a11y_daily_ayah">Daily verse: %1$s</string>
+    <string name="widget_a11y_daily_ayah_default">Daily verse not available</string>
+    <string name="widget_a11y_daily_hadith">Daily hadith from %1$s</string>
+    <string name="widget_a11y_daily_hadith_default">Daily hadith not available</string>
+    <string name="widget_a11y_quran_progress">Quran progress %1$d percent complete</string>
+    <string name="widget_a11y_quran_progress_empty">Quran progress not synced</string>
+    <string name="widget_a11y_tasbeeh">Tasbeeh counter, %1$s, count %2$d</string>
 
     <!-- Prayer names (kept for legacy compat, will be removed in future cleanup) -->
     <string name="prayer_fajr">Fajr</string>

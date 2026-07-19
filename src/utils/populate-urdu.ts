@@ -22,7 +22,7 @@ const urduTranslations = {
   "dailyHadith": "روزانہ حدیث",
   "readMore": "مزید پڑھیں",
   "share": "بانٹیں",
-  "qazaTracker": "قازا ٹریکر",
+  "qazaTracker": "قضا ٹریکر",
   "ramadanMode": "رمضان موڈ",
   "menstrualMode": "ماہواری موڈ",
   "zakatCalculator": "زکوٰہ کیلکولیٹر",

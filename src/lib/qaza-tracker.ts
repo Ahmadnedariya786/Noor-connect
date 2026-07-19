@@ -1,4 +1,5 @@
 import { getMenstrualModeData } from './menstrual-mode';
+import { getMenstrualModeData as getHaidhModeData } from './haidh-tracker';
 
 /**
  * Qaza (Missed Prayer) Tracker
@@ -101,11 +102,14 @@ export const syncMissedPrayersToQaza = (
   const todayKey = now.toISOString().split('T')[0];
   const processed = getProcessedQaza();
   const prayers: PrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-  const menstrualMode = getMenstrualModeData();
+  const oldMenstrualMode = getMenstrualModeData();
+  const haidhMode = getHaidhModeData();
+  const isPaused = (oldMenstrualMode.isActive && oldMenstrualMode.pauseQazaAutoSync) ||
+                   (haidhMode.isActive && haidhMode.pauseQazaAutoSync);
 
   // If Menstrual Mode is active, skip auto-Qaza and mark already-ended prayers as processed
   // so they are not added later when mode is turned off.
-  if (menstrualMode.isActive && menstrualMode.pauseQazaAutoSync) {
+  if (isPaused) {
     let processedChanged = false;
 
     prayers.forEach(prayer => {
@@ -155,7 +159,7 @@ export const syncMissedPrayersToQaza = (
     const thirtyDaysAgoKey = thirtyDaysAgo.toISOString().split('T')[0];
 
     Array.from(processed).forEach(k => {
-      if (k.split('-')[0] < thirtyDaysAgoKey) {
+      if (k.substring(0, 10) < thirtyDaysAgoKey) {
         processed.delete(k);
       }
     });

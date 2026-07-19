@@ -14,6 +14,7 @@
  * the browser preview.
  *
  * The bridge is lazy-initialized on first use to avoid top-level await.
+ * Includes cold-start guard to prevent plugin registration race conditions.
  */
 
 import { Capacitor } from '@capacitor/core';
@@ -50,6 +51,45 @@ const noopBridge: WidgetBridge = {
 
 let nativeInstance: NativeWidgetBridge | null = null;
 let resolvedBridge: WidgetBridge | null = null;
+let registrationPromise: Promise<NativeWidgetBridge | null> | null = null;
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const BASE_RETRY_DELAY_MS = 500;
+const REGISTRATION_TIMEOUT_MS = 5000;
+
+/**
+ * Cold-start guard: ensures plugin registration happens only once
+ * and times out if Capacitor isn't ready (e.g., web view not initialized).
+ */
+async function registerPlugin(): Promise<NativeWidgetBridge | null> {
+  if (nativeInstance) return nativeInstance;
+
+  if (registrationPromise) return registrationPromise;
+
+  registrationPromise = (async () => {
+    try {
+      // Timeout guard for slow webview initialization
+      const timeoutPromise = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error('Plugin registration timeout')), REGISTRATION_TIMEOUT_MS)
+      );
+
+      nativeInstance = await Promise.race([
+        Capacitor.registerPlugin<NativeWidgetBridge>('WidgetBridge'),
+        timeoutPromise,
+      ]);
+      return nativeInstance;
+    } catch (err) {
+      console.warn('[WidgetBridge] Native plugin registration failed:', err);
+      nativeInstance = null;
+      return null;
+    } finally {
+      registrationPromise = null;
+    }
+  })();
+
+  return registrationPromise;
+}
 
 async function resolveBridge(): Promise<WidgetBridge> {
   if (resolvedBridge) return resolvedBridge;
@@ -59,13 +99,7 @@ async function resolveBridge(): Promise<WidgetBridge> {
     return resolvedBridge;
   }
 
-  try {
-    nativeInstance = Capacitor.registerPlugin<NativeWidgetBridge>('WidgetBridge');
-  } catch (err) {
-    console.warn('[WidgetBridge] Failed to register native plugin, using noop:', err);
-    resolvedBridge = noopBridge;
-    return resolvedBridge;
-  }
+  await registerPlugin();
 
   if (!nativeInstance) {
     resolvedBridge = noopBridge;
@@ -74,36 +108,73 @@ async function resolveBridge(): Promise<WidgetBridge> {
 
   resolvedBridge = {
     syncPrayerData: async (payload) => {
-      try {
-        await nativeInstance!.syncPrayerData({ payload: JSON.stringify(payload) });
-      } catch (err) {
-        console.warn('[WidgetBridge] syncPrayerData failed:', err);
-      }
+      await withRetry(() => nativeInstance!.syncPrayerData({ payload: JSON.stringify(payload) }));
     },
     syncDailyContent: async (payload) => {
-      try {
-        await nativeInstance!.syncDailyContent({ payload: JSON.stringify(payload) });
-      } catch (err) {
-        console.warn('[WidgetBridge] syncDailyContent failed:', err);
-      }
+      await withRetry(() => nativeInstance!.syncDailyContent({ payload: JSON.stringify(payload) }));
     },
     syncQuranProgress: async (payload) => {
-      try {
-        await nativeInstance!.syncQuranProgress({ payload: JSON.stringify(payload) });
-      } catch (err) {
-        console.warn('[WidgetBridge] syncQuranProgress failed:', err);
-      }
+      await withRetry(() => nativeInstance!.syncQuranProgress({ payload: JSON.stringify(payload) }));
     },
     pushTasbeehIncrement: async (count) => {
-      try {
-        await nativeInstance!.pushTasbeehIncrement({ count });
-      } catch (err) {
-        console.warn('[WidgetBridge] pushTasbeehIncrement failed:', err);
-      }
+      await withRetry(() => nativeInstance!.pushTasbeehIncrement({ count }));
     },
   };
 
   return resolvedBridge;
+}
+
+// Validation helpers
+function validatePrayerPayload(payload: PrayerPayload): string | null {
+  if (!payload.prayers || payload.prayers.length !== 6) {
+    return 'Prayer payload must contain exactly 6 prayers';
+  }
+  if (payload.nextPrayerIndex < 0 || payload.nextPrayerIndex >= 6) {
+    return 'nextPrayerIndex out of range (0-5)';
+  }
+  if (!payload.prayers[payload.nextPrayerIndex]) {
+    return 'nextPrayerIndex does not match a valid prayer';
+  }
+  if (!payload.lastUpdated || payload.lastUpdated > Date.now() + 86400000) {
+    return 'lastUpdated timestamp is invalid';
+  }
+  return null;
+}
+
+function validateDailyContentPayload(payload: DailyContentPayload): string | null {
+  if (!payload.ayah || !payload.ayah.arabic) {
+    return 'Daily content missing ayah arabic';
+  }
+  if (!payload.hadith || !payload.hadith.source) {
+    return 'Daily content missing hadith source';
+  }
+  return null;
+}
+
+function validateQuranProgressPayload(payload: QuranProgressPayload): string | null {
+  if (payload.currentSurah < 1 || payload.currentSurah > 114) {
+    return 'currentSurah out of range (1-114)';
+  }
+  if (payload.totalPercent < 0 || payload.totalPercent > 100) {
+    return 'totalPercent out of range (0-100)';
+  }
+  if (!payload.lastUpdated || payload.lastUpdated > Date.now() + 86400000) {
+    return 'lastUpdated timestamp is invalid';
+  }
+  return null;
+}
+
+// Retry wrapper with exponential backoff
+async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (retries <= 0) throw err;
+    const delay = BASE_RETRY_DELAY_MS * (MAX_RETRIES - retries + 1);
+    console.warn(`[WidgetBridge] Call failed, retrying in ${delay}ms (${retries} retries left):`, err);
+    await new Promise(r => setTimeout(r, delay));
+    return withRetry(fn, retries - 1);
+  }
 }
 
 /**
@@ -111,6 +182,11 @@ async function resolveBridge(): Promise<WidgetBridge> {
  * Safe to call on web — no-op there.
  */
 export async function syncPrayerData(payload: PrayerPayload): Promise<void> {
+  const err = validatePrayerPayload(payload);
+  if (err) {
+    console.warn('[WidgetBridge] syncPrayerData validation failed:', err);
+    return;
+  }
   const b = await resolveBridge();
   return b.syncPrayerData(payload);
 }
@@ -120,6 +196,11 @@ export async function syncPrayerData(payload: PrayerPayload): Promise<void> {
  * Safe to call on web — no-op there.
  */
 export async function syncDailyContent(payload: DailyContentPayload): Promise<void> {
+  const err = validateDailyContentPayload(payload);
+  if (err) {
+    console.warn('[WidgetBridge] syncDailyContent validation failed:', err);
+    return;
+  }
   const b = await resolveBridge();
   return b.syncDailyContent(payload);
 }
@@ -129,6 +210,11 @@ export async function syncDailyContent(payload: DailyContentPayload): Promise<vo
  * Safe to call on web — no-op there.
  */
 export async function syncQuranProgress(payload: QuranProgressPayload): Promise<void> {
+  const err = validateQuranProgressPayload(payload);
+  if (err) {
+    console.warn('[WidgetBridge] syncQuranProgress validation failed:', err);
+    return;
+  }
   const b = await resolveBridge();
   return b.syncQuranProgress(payload);
 }
@@ -138,6 +224,7 @@ export async function syncQuranProgress(payload: QuranProgressPayload): Promise<
  * session in-app). The widget reads from SharedPreferences on the native side.
  */
 export async function pushTasbeehIncrement(count: number): Promise<void> {
+  if (count <= 0) return;
   const b = await resolveBridge();
   return b.pushTasbeehIncrement(count);
 }

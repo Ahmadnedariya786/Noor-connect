@@ -21,6 +21,7 @@ import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
 import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
+import { AutoBackupRestoreDialog } from "@/components/AutoBackupRestoreDialog";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { preloadCriticalResources, isLowEndDevice } from "@/lib/performance-optimizations";
 
@@ -265,6 +266,7 @@ function AppContent() {
                 <EidChecklistNotification />
                 <FitranaCalculatorNotification />
                 <BackupRestoreDialog />
+                <AutoBackupRestoreDialog />
               </Suspense>
             </div>
 

@@ -1,9 +1,33 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.1.0-orange.svg)](CHANGELOG.md)
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
+
+---
+
+## 🆕 What's New in v2.1.0
+
+### 🔒 Widget System Hardening — Production-Ready Reliability
+
+**This is a pure stability release with zero new user-facing features — every change makes the existing widget suite work reliably across all Android OEMs (Samsung, Xiaomi, Pixel, OnePlus, etc.) and OS versions (Android 8–14+).**
+
+| Area | Improvement |
+|------|-------------|
+| **Boot/Doze Survival** | `directBootAware=true` on all 7 receivers; `LOCKED_BOOT_COMPLETED` intent filter; foreground service `SPECIAL_USE` type for API 34+ |
+| **Dynamic Resize** | `onAppWidgetOptionsChanged()` in all 5 widgets; 2×2 → 4×3 size range support for all launcher grids |
+| **Battery Optimization** | `IGNORE_BATTERY_OPTIMIZATIONS` prompt + re-check on resume; critical for step/location foreground service |
+| **RTL/Locale** | `layoutDirection="locale"` + `textDirection="locale"` on all widget roots; Arabic/Persian/Urdu render correctly |
+| **Sensor/Permission Degradation** | `WidgetForegroundService.checkCapabilities()` — logs warnings, disables only missing features, never crashes |
+| **Update Throttling** | 500ms minimum between RemoteViews updates per widget (prevents 30/sec system ANR limit) |
+| **Backup/Restore** | `WidgetBackupAgent` saves config (size, theme, density, accent); volatile payloads re-sync from app |
+| **Cold-Start Bridge Guard** | 5s registration timeout + caching; exponential backoff retry (3×) on Capacitor bridge calls |
+| **Exact Alarm Safety Net** | 15-min fallback alarm alongside every prayer exact alarm |
+| **Worker Isolation** | `WidgetRefreshWorker` continues on partial failures; self-cancels when no widgets exist |
+| **Health Monitoring** | `HealthCheckWorker` every 6h — validates data freshness, alarm schedule, service health, auto-heals |
+
+**Android Version Bump:** `versionCode: 6` / `versionName: "2.1.0"`
 
 ---
 
@@ -32,6 +56,12 @@
 - localStorage-based (no native filesystem dependency)
 - Auto-backup on first install, auto-restore on reinstall
 - Background processing for performance
+
+### 🔄 Auto Backup (v2.3+)
+- **Automatic every 20 minutes**: While you use the app, your data is silently saved to local storage every 20 minutes of activity.
+- **Reinstall recovery**: After reinstalling the app, you'll see a prompt asking if you want to restore your previous auto-backup — no file picker needed.
+- **Toggle on/off**: Enable or disable auto-backup from Profile → Storage & Backup → Auto Backup toggle.
+- **Full data coverage**: Captures all settings, prayer data, qaza records, bookmarks, Quran progress, and more.
 
 ### ⚡ Low-End Device Optimizations
 - Adaptive device detection (30+ FPS target on 2016+ devices)

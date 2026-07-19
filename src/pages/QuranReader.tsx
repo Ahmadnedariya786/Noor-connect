@@ -15,7 +15,7 @@ const BOOKMARKS_KEY = 'quran-bookmarks';
 export default function QuranReader() {
   const { theme, effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
-  
+
   const { surahName } = useParams<{ surahName: string }>();
   const navigate = useNavigate();
 
@@ -30,6 +30,9 @@ export default function QuranReader() {
 
   const [surahNum, setSurahNum] = useState(initialSurah);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalSurahPages, setTotalSurahPages] = useState(1);
+  const [maxPageViewed, setMaxPageViewed] = useState(1);
 
   const surahInfo = quranService.getSurahInfo(surahNum);
   const allSurahs = useMemo(() => quranService.getAllSurahs(), []);
@@ -41,24 +44,26 @@ export default function QuranReader() {
     }
     loadBookmark();
 
-    // Defer streak/achievement writes by 1 second — let image decode finish first
     const syncId = setTimeout(() => {
       if (!surahInfo) return;
       quranFeaturesService.updateReadingStreak().catch(console.error);
+      const completedAyahs = Math.round((maxPageViewed / totalSurahPages) * surahInfo.numberOfAyahs);
       quranFeaturesService.updateRecitationProgress(
         surahNum,
         surahInfo.englishName,
         surahInfo.numberOfAyahs,
-        surahInfo.numberOfAyahs,
-        surahInfo.numberOfAyahs
+        completedAyahs,
+        completedAyahs
       )
       .then(() => quranFeaturesService.checkAndUnlockAchievements())
+      .then(() => {
+        window.dispatchEvent(new CustomEvent('noorconnect:quran-progress-changed'));
+      })
       .catch(console.error);
     }, 1000);
 
     return () => clearTimeout(syncId);
-  }, [surahNum, surahInfo]);
-
+  }, [surahNum, surahInfo, maxPageViewed, totalSurahPages]);
 
   const loadBookmark = async () => {
     try {
@@ -66,7 +71,6 @@ export default function QuranReader() {
       const bookmarks = value ? JSON.parse(value) : [];
       setIsBookmarked(bookmarks.includes(surahNum));
     } catch {
-      // Fallback to localStorage
       try {
         const bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
         setIsBookmarked(bookmarks.includes(surahNum));
@@ -80,17 +84,16 @@ export default function QuranReader() {
     try {
       const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
       let bookmarks = value ? JSON.parse(value) : [];
-      
+
       if (bookmarks.includes(surahNum)) {
         bookmarks = bookmarks.filter((b: number) => b !== surahNum);
       } else {
         bookmarks.push(surahNum);
       }
-      
+
       await Preferences.set({ key: BOOKMARKS_KEY, value: JSON.stringify(bookmarks) });
       setIsBookmarked(!isBookmarked);
     } catch {
-      // Fallback to localStorage
       try {
         let bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
         if (bookmarks.includes(surahNum)) {
@@ -101,7 +104,6 @@ export default function QuranReader() {
         localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
         setIsBookmarked(!isBookmarked);
       } catch {
-        // If both fail, just toggle the state without persistence
         setIsBookmarked(!isBookmarked);
       }
     }
@@ -119,12 +121,10 @@ export default function QuranReader() {
     }
   };
 
-  const handleSwipe = (direction: 'left' | 'right') => {
-    if (direction === 'left') {
-      goToNextSurah();
-    } else {
-      goToPreviousSurah();
-    }
+  const handlePageChange = (page: number, total: number, maxViewed: number) => {
+    setCurrentPage(page);
+    setTotalSurahPages(total);
+    setMaxPageViewed(maxViewed);
   };
 
   return (
@@ -140,9 +140,31 @@ export default function QuranReader() {
               <ChevronLeft className="w-6 h-6" />
             </button>
 
-            <div className="text-center">
-              <h1 className="text-lg font-bold text-[#C9A84C]">{surahInfo?.name}</h1>
-              <p className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-500'}`}>{surahInfo?.englishName}</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={goToPreviousSurah}
+                disabled={surahNum <= 1}
+                className={`p-1.5 rounded-full transition-colors disabled:opacity-20 disabled:cursor-default ${
+                  isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="text-center cursor-pointer" onClick={() => navigate('/quran')}>
+                <h1 className="text-lg font-bold text-[#C9A84C]">{surahInfo?.name}</h1>
+                <p className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-500'}`}>{surahInfo?.englishName} — Page {currentPage} of {totalSurahPages}</p>
+              </div>
+
+              <button
+                onClick={goToNextSurah}
+                disabled={surahNum >= 114}
+                className={`p-1.5 rounded-full transition-colors disabled:opacity-20 disabled:cursor-default ${
+                  isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                }`}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
 
             <button
@@ -158,45 +180,9 @@ export default function QuranReader() {
           </div>
         </div>
 
-        {/* Mushaf Pages */}
+        {/* Mushaf Pages — vertical scroll */}
         <div className="max-w-2xl mx-auto px-4 py-6">
-          <MushafSurahPages surahNumber={surahNum} onSwipe={handleSwipe} />
-        </div>
-
-        {/* Floating Navigation Buttons */}
-        <div className="fixed bottom-6 left-4 right-4 max-w-2xl mx-auto flex justify-between z-30">
-          <button
-            onClick={goToPreviousSurah}
-            disabled={surahNum <= 1}
-            className={`w-12 h-12 rounded-full border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors ${
-              isDark 
-                ? 'bg-[#111111] border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10' 
-                : 'bg-white border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 shadow-sm'
-            }`}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          {/* Page Indicator */}
-          <div className={`px-4 py-2 rounded-full border text-xs font-medium ${
-            isDark 
-              ? 'bg-[#111111] border-[#C9A84C]/20 text-white/60' 
-              : 'bg-white border-[#C9A84C]/20 text-gray-600 shadow-sm'
-          }`}>
-            Surah {surahNum} of 114
-          </div>
-
-          <button
-            onClick={goToNextSurah}
-            disabled={surahNum >= 114}
-            className={`w-12 h-12 rounded-full border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors ${
-              isDark 
-                ? 'bg-[#111111] border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10' 
-                : 'bg-white border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 shadow-sm'
-            }`}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          <MushafSurahPages surahNumber={surahNum} onPageChange={handlePageChange} />
         </div>
       </div>
     </PageTransition>

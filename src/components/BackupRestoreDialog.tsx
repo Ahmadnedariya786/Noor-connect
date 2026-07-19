@@ -81,7 +81,7 @@ export function BackupRestoreDialog() {
 
   const handleSkip = async () => {
     // Skip restoration but mark as checked
-    await backupRestoreService.markBackupCheckDone();
+    await backupRestoreService.dismissBackup();
     setIsOpen(false);
     // Create new backup for fresh install
     await backupRestoreService.createBackup();

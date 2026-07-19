@@ -18,7 +18,7 @@ import {
   ActiveBooster
 } from '@/data/quiz-store-data';
 import { ALL_STORE_ITEMS, getStoreItemById, meetsRequirements } from '@/data/store-catalog';
-import { QuizStats } from '@/data/enhanced-quiz-data';
+import { QuizStats, LEVEL_THRESHOLDS } from '@/data/enhanced-quiz-data';
 import { quizManager } from './quiz-manager';
 
 export class QuizStore {
@@ -260,29 +260,11 @@ export class QuizStore {
 
   // Calculate level based on XP
   private calculateLevel(xp: number): { level: number; title: string } {
-    const thresholds = [
-      { level: 1, xp: 0, title: 'Beginner' },
-      { level: 2, xp: 100, title: 'Student' },
-      { level: 3, xp: 250, title: 'Learner' },
-      { level: 4, xp: 500, title: 'Scholar' },
-      { level: 5, xp: 1000, title: 'Knowledge Seeker' },
-      { level: 6, xp: 2000, title: 'Islamic Scholar' },
-      { level: 7, xp: 3500, title: 'Expert' },
-      { level: 8, xp: 5000, title: 'Master' },
-      { level: 9, xp: 7500, title: 'Grand Master' },
-      { level: 10, xp: 10000, title: 'Enlightened One' },
-      { level: 11, xp: 15000, title: 'Mufti' },
-      { level: 12, xp: 20000, title: 'Hafiz' },
-      { level: 13, xp: 30000, title: 'Sheikh' },
-      { level: 14, xp: 50000, title: 'Grand Sheikh' },
-      { level: 15, xp: 75000, title: 'Guardian of Knowledge' }
-    ];
-
-    for (let i = thresholds.length - 1; i >= 0; i--) {
-      if (xp >= thresholds[i].xp) {
+    for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (xp >= LEVEL_THRESHOLDS[i].xp) {
         return {
-          level: thresholds[i].level,
-          title: thresholds[i].title
+          level: LEVEL_THRESHOLDS[i].level,
+          title: LEVEL_THRESHOLDS[i].title
         };
       }
     }

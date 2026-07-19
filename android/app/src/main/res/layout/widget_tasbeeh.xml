@@ -13,7 +13,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg_shape"
-    android:padding="12dp">
+    android:padding="12dp"
+    android:layoutDirection="locale"
+    android:textDirection="locale">
 
     <!-- Faint target ring background -->
     <ImageView
@@ -31,17 +33,41 @@
         android:orientation="vertical"
         android:gravity="center">
 
-        <!-- Current dhikr name -->
-        <TextView
-            android:id="@+id/widget_dhikr_name"
+        <!-- Top row: dhikr name + stale badge -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:letterSpacing="0.1"
-            android:text="@string/widget_tasbeeh_subhanallah"
-            android:textAllCaps="true"
-            android:textColor="@color/widget_accent_gold"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/widget_dhikr_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.1"
+                android:text="@string/widget_tasbeeh_subhanallah"
+                android:textAllCaps="true"
+                android:textColor="@color/widget_accent_gold"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <!-- Stale data badge -->
+            <TextView
+                android:id="@+id/widget_stale_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/widget_stale_badge"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="@string/widget_stale_badge_text"
+                android:textColor="@android:color/white"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <!-- Huge count -->
         <TextView

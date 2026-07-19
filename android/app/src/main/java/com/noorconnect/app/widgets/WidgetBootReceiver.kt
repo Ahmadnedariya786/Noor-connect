@@ -4,6 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.work.WorkManager
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import java.util.concurrent.TimeUnit
 
 /**
  * Re-schedules widget periodic work and prayer alarms after:
@@ -31,14 +35,17 @@ class WidgetBootReceiver : BroadcastReceiver() {
         // WorkManager + SharedPreferences I/O won't ANR on slow devices.
         val pendingResult = goAsync()
         try {
-            // Re-enqueue the periodic refresh (KEEP so we don't reset the timing)
-            WidgetRefreshWorker.enqueuePeriodic(context)
+            // Start widget foreground service for step/location monitoring
+            WidgetForegroundService.start(context)
 
             // Reschedule next prayer alarm if we have data
             val prayerPayload = WidgetPrefs.getPrayerPayload(context)
             if (prayerPayload != null) {
                 WidgetAlarmScheduler.scheduleNextPrayerAlarm(context, prayerPayload)
             }
+
+            // Enqueue periodic health check (runs every 6 hours)
+            HealthCheckWorker.enqueuePeriodic(context)
 
             // Also trigger an immediate one-shot refresh (best-effort)
             WidgetRefreshWorker.enqueueImmediate(context)

@@ -236,7 +236,7 @@ export class IslamicRamadanAPI {
         code: 200,
         status: 'success',
         range: 'ramadan',
-        ramadan_year: parseInt(monthlyData.data[0]?.date.hijri.year || '1447'),
+        ramadan_year: parseInt(monthlyData.data[0]?.date.hijri.year || (new Date().getFullYear() - 579).toString()),
         data: {
           fasting: fastingTimes,
           white_days: {
@@ -265,8 +265,8 @@ export class IslamicRamadanAPI {
         return {
           date: currentDate.toISOString().split('T')[0],
           day: currentDate.toLocaleDateString('en-US', { weekday: 'long' }),
-          hijri: `${i + 1}-09-1447`,
-          hijri_readable: `${i + 1} Ramadan 1447 AH`,
+          hijri: `${i + 1}-09-${new Date().getFullYear() - 579}`,
+          hijri_readable: `${i + 1} Ramadan ${new Date().getFullYear() - 579} AH`,
           time: {
             sahur: times.fajr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
             iftar: times.maghrib.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
@@ -279,7 +279,7 @@ export class IslamicRamadanAPI {
         code: 200,
         status: 'success',
         range: 'ramadan',
-        ramadan_year: 1447,
+        ramadan_year: new Date().getFullYear() - 579,
         data: {
           fasting: fastingTimes,
           white_days: {
