@@ -7,7 +7,6 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { goBackOrFallback } from "@/lib/navigation";
-import { useReducedMotion } from '@/components/AdaptiveMotion';
 import { CSSOnlyTransition } from '@/components/AdaptiveMotion';
 
 interface SurahCardProps {
@@ -18,19 +17,16 @@ interface SurahCardProps {
 }
 
 const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: SurahCardProps) {
-  const prefersReduced = useReducedMotion();
-  
   return (
-    <CSSOnlyTransition hoverScale={1.02} tapScale={0.98} duration={150}>
-      <button
-        onClick={() => onClick(surah.number)}
-        className="w-full text-left group outline-none"
-      >
-        <div className={`rounded-[24px] p-5 border transition-all duration-300 ${
-          isDark
-            ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
-            : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
-        }`}>
+    <button
+      onClick={() => onClick(surah.number)}
+      className="w-full text-left group outline-none active:scale-[0.98] transition-transform duration-150"
+    >
+      <div className={`rounded-[24px] p-5 border transition-all duration-300 hover:scale-[1.02] ${
+        isDark
+          ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
+          : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
+      }`}>
           <div className="flex items-center gap-4">
             {/* Surah Number - Premium Octagonal Style */}
             <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
@@ -64,7 +60,6 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
           </div>
         </div>
       </button>
-    </CSSOnlyTransition>
   );
 }, (prevProps, nextProps) => {
   return (

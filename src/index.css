@@ -318,14 +318,7 @@
     }
   }
 
-  /* Enhanced Smooth Transitions */
-  *, *::before, *::after {
-    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-    transition-timing-function: var(--spring-smooth);
-    transition-duration: var(--animation-normal);
-  }
-
-  /* Enhanced Focus States */
+  /* Enhanced Reduced Motion Support */
   :focus-visible {
     outline: none;
     box-shadow: var(--micro-focus-glow);

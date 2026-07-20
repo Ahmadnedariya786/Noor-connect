@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.noorconnect.app.R
 import com.noorconnect.app.widgets.WidgetDeeplink
+import com.noorconnect.app.widgets.WidgetForegroundService
 import com.noorconnect.app.widgets.WidgetPrefs
 import com.noorconnect.app.widgets.WidgetRefreshWorker
 
@@ -74,6 +75,19 @@ class QuranProgressWidget : AppWidgetProvider() {
                 views.setInt(R.id.widget_ring_progress, "setImageLevel", (progressFraction * 10000).toInt())
             }
 
+            // Stale data badge
+            val now = System.currentTimeMillis()
+            val isStale = payload?.let { (now - it.lastUpdated) > 2 * 60 * 60 * 1000L } ?: false
+            views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
+
+            // Accessibility content description
+            val contentDesc = if (payload != null) {
+                context.getString(R.string.widget_a11y_quran_progress, payload.totalPercent.toInt())
+            } else {
+                context.getString(R.string.widget_a11y_quran_progress_empty)
+            }
+            views.setContentDescription(R.id.widget_root, contentDesc)
+
             // Tap → deep-link /quran/reading
             val deeplink = WidgetDeeplink.buildQuranReading()
             val intent = WidgetDeeplink.toIntent(context, deeplink)
@@ -93,8 +107,33 @@ class QuranProgressWidget : AppWidgetProvider() {
         appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+        val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+        val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+        val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+        
+        Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
+        
+        updateWidget(context, appWidgetManager, appWidgetId)
+    }
+
     override fun onEnabled(context: Context) {
-        WidgetRefreshWorker.enqueuePeriodic(context)
-        Log.d(TAG, "Widget enabled")
+        WidgetForegroundService.start(context)
+        Log.d(TAG, "Widget enabled — foreground service started")
+    }
+
+    override fun onDisabled(context: Context) {
+        val mgr = AppWidgetManager.getInstance(context)
+        val ids = mgr.getAppWidgetIds(android.content.ComponentName(context, QuranProgressWidget::class.java))
+        if (ids.isEmpty()) {
+            WidgetForegroundService.stop(context)
+        }
+        Log.d(TAG, "Widget disabled")
     }
 }

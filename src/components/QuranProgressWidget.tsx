@@ -54,9 +54,11 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
     };
 
     window.addEventListener('widget-refresh', handleRefresh);
+    window.addEventListener('noorconnect:quran-progress-changed', handleRefresh);
 
     return () => {
       window.removeEventListener('widget-refresh', handleRefresh);
+      window.removeEventListener('noorconnect:quran-progress-changed', handleRefresh);
     };
   }, []);
 

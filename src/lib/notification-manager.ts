@@ -4,7 +4,7 @@
  * Features: varied content, smart frequency, time-based themes, and rich Islamic content
  */
 
-import { importantIslamicDates, IslamicDate, isRamadanCountdownPeriod, getDaysUntilRamadan } from '@/data/islamic-dates';
+import { importantIslamicDates, IslamicDate, isRamadanCountdownPeriod, getDaysUntilRamadan, getRamadanStartDate } from '@/data/islamic-dates';
 import { getRandomContent, getContentByType, getContentByCategory, IslamicContent } from '@/data/expanded-islamic-content';
 import { isLowEndDevice } from '@/lib/performance-optimizations';
 
@@ -420,7 +420,11 @@ export class NotificationManager {
           title = 'Ramadan Preparation';
           body = `${daysUntil} days until Ramadan. Start planning your spiritual goals.`;
         } else {
-          body = `${daysUntil} day${daysUntil > 1 ? 's' : ''} until Ramadan ${today.getFullYear() + (today.getMonth() < 6 ? 1447 : 1446)} AH`;
+          const currentYear = today.getFullYear();
+          const ramadanStart = getRamadanStartDate(currentYear);
+          const ramadanYear = today > ramadanStart ? currentYear + 1 : currentYear;
+          const hijriYear = ramadanYear - 579;
+          body = `${daysUntil} day${daysUntil > 1 ? 's' : ''} until Ramadan ${hijriYear} AH`;
         }
 
         const event: NotificationEvent = {

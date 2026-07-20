@@ -32,6 +32,8 @@ const STORAGE_KEYS = [
   'salah-streak',
   'qaza-prayers',
   'processed-salah-qaza',
+  'qaza-history',
+  'qaza-daily-goal',
   'menstrual-mode-data',
   'haidh-tracker-v2',
 
@@ -85,6 +87,7 @@ const STORAGE_KEYS = [
   'ramadan-activity',
   'duas-favorites',
   'zakat-calc-history',
+  'preferred-currency',
 
   // Notifications & System
   'notification-preferences',
@@ -221,4 +224,80 @@ export const getQuranFontSize = (): number => {
 
 export const setQuranFontSize = (size: number): void => {
   localStorage.setItem('quran-font-size', size.toString());
+};
+
+// ─── Auto Backup ──────────────────────────────────────────────────────────────
+
+const AUTO_BACKUP_KEY = 'auto-backup-data';
+const AUTO_BACKUP_META_KEY = 'auto-backup-metadata';
+
+interface AutoBackupMetadata {
+  timestamp: string;
+  version: string;
+}
+
+export const autoBackup = async (): Promise<string> => {
+  const backup = await exportBackup();
+  localStorage.setItem(AUTO_BACKUP_KEY, backup);
+
+  const meta: AutoBackupMetadata = {
+    timestamp: new Date().toISOString(),
+    version: BACKUP_VERSION,
+  };
+  localStorage.setItem(AUTO_BACKUP_META_KEY, JSON.stringify(meta));
+
+  return backup;
+};
+
+export const getLastAutoBackupTime = (): string | null => {
+  try {
+    const raw = localStorage.getItem(AUTO_BACKUP_META_KEY);
+    if (!raw) return null;
+    const meta: AutoBackupMetadata = JSON.parse(raw);
+    return meta.timestamp;
+  } catch {
+    return null;
+  }
+};
+
+export const hasAutoBackup = (): boolean => {
+  return !!localStorage.getItem(AUTO_BACKUP_KEY);
+};
+
+export const restoreFromAutoBackup = async (): Promise<{ success: boolean; message: string; booksToDownload?: import('./ebooks-storage').DownloadedBook[] }> => {
+  try {
+    const raw = localStorage.getItem(AUTO_BACKUP_KEY);
+    if (!raw) {
+      return { success: false, message: 'No auto-backup found' };
+    }
+
+    const backup: BackupData = JSON.parse(raw);
+    if (!backup.version || !backup.storage) {
+      return { success: false, message: 'Invalid auto-backup data' };
+    }
+
+    Object.entries(backup.storage).forEach(([key, value]) => {
+      if (value !== null) {
+        localStorage.setItem(key, value);
+      }
+    });
+
+    if (backup.storage['theme']) {
+      document.documentElement.classList.toggle('dark', backup.storage['theme'] === 'dark');
+    }
+
+    return {
+      success: true,
+      message: 'Auto-backup restored successfully!',
+      booksToDownload: backup.downloadedBooks || []
+    };
+  } catch (error) {
+    console.error('Auto-backup restore error:', error);
+    return { success: false, message: 'Failed to restore auto-backup' };
+  }
+};
+
+export const clearAutoBackup = (): void => {
+  localStorage.removeItem(AUTO_BACKUP_KEY);
+  localStorage.removeItem(AUTO_BACKUP_META_KEY);
 };

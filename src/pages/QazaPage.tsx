@@ -46,6 +46,17 @@ export default function QazaPage() {
   const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
+    loadQazaData();
+
+    const handleQazaUpdate = () => {
+      setQazaCounts(getQazaPrayers());
+    };
+    window.addEventListener('qaza-updated', handleQazaUpdate);
+    return () => window.removeEventListener('qaza-updated', handleQazaUpdate);
+  }, []);
+
+  const loadQazaData = () => {
+    setQazaCounts(getQazaPrayers());
     // Load goal
     const savedGoal = localStorage.getItem(GOAL_KEY);
     if (savedGoal) setDailyGoal(parseInt(savedGoal));
@@ -55,13 +66,13 @@ export default function QazaPage() {
     if (savedHistory) {
       const parsed = JSON.parse(savedHistory) as QazaHistory[];
       setHistory(parsed);
-      
+
       // Calculate today's completed
       const today = new Date().toDateString();
       const todayHistory = parsed.filter(h => h.date === today);
       setTodayCompleted(todayHistory.reduce((sum, h) => sum + h.completed, 0));
     }
-  }, []);
+  };
 
   const totalQaza = Object.values(qazaCounts).reduce((a, b) => a + b, 0);
   const goalProgress = Math.min((todayCompleted / dailyGoal) * 100, 100);

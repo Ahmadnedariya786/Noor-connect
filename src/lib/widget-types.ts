@@ -36,6 +36,7 @@ export interface AyahContent {
   reference: string;               // "Al-Baqarah 2:255"
   surahNumber: number;
   ayahNumber: number;
+  lastUpdated: number;             // epoch millis
 }
 
 export interface HadithContent {
@@ -47,12 +48,14 @@ export interface HadithContent {
   collection: string;              // "bukhari" | "muslim" | ...
   bookNumber: number;
   hadithNumber: number;
+  lastUpdated: number;             // epoch millis
 }
 
 export interface DailyContentPayload {
   ayah: AyahContent;
   hadith: HadithContent;
   locale: string;                  // "en" | "ar" | "ur" | "tr" | "id"
+  lastUpdated: number;             // epoch millis
 }
 
 export interface QuranProgressPayload {
@@ -65,4 +68,5 @@ export interface QuranProgressPayload {
   lastReadTimestamp: number;
   lastReadLabel: string;           // "Al-Baqarah 2:255"
   goalPercent: number;             // 0.0 - 100.0
+  lastUpdated: number;             // epoch millis
 }

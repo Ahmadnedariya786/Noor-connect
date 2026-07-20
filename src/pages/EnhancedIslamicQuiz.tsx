@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppBar } from '@/components/AppBar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,6 +113,7 @@ export default function EnhancedIslamicQuiz() {
   const [variableReward, setVariableReward] = useState<VariableReward | null>(null);
   const [canClaimMysteryBox, setCanClaimMysteryBox] = useState(false);
   const [activeEvent, setActiveEvent] = useState<ReturnType<typeof timeEventsSystem.getActiveEvent>>(null);
+  const finishQuizRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     setStats(quizManager.getStats());
@@ -164,7 +165,8 @@ export default function EnhancedIslamicQuiz() {
       usedPowerUps: [],
       categoryAnswers: {},
       quizMode: mode,
-      gameModeConfig: config
+      gameModeConfig: config,
+      userAnswers: []
     });
     setQuizComplete(false);
     setNewAchievements([]);
@@ -208,7 +210,16 @@ export default function EnhancedIslamicQuiz() {
     
     session.xpEarned = totalXP;
     
-    // Add XP through store system
+    // Update game stats (totalGames, streaks, categoryMastery, etc.)
+    quizManager.updateStats(
+      gameState.score,
+      gameState.questions.length,
+      gameState.categoryAnswers,
+      gameState.streak,
+      0  // Don't add XP here — quizStore.addXP handles it with booster multipliers
+    );
+    
+    // Add XP through store system (with booster multipliers)
     const actualXP = quizStore.addXP(totalXP, `${gameState.quizMode} Quiz Complete`);
     
     // Check for variable rewards
@@ -258,6 +269,11 @@ export default function EnhancedIslamicQuiz() {
       feedbackSystem.feedbackLevelUp();
     }
   }, [gameState, combo, comboMultiplier, quizStartTime, stats, toast]);
+
+  // Keep finishQuizRef in sync with latest finishQuiz
+  useEffect(() => {
+    finishQuizRef.current = finishQuiz;
+  }, [finishQuiz]);
 
   // Update combo when answering
   const handleAnswer = useCallback((answerIndex: number) => {
@@ -328,10 +344,10 @@ export default function EnhancedIslamicQuiz() {
     if (!isCorrect && gameState.quizMode === 'survival') {
       feedbackSystem.feedbackStreakBreak();
       setTimeout(() => {
-        finishQuiz();
+        finishQuizRef.current();
       }, 2000);
     }
-  }, [gameState.showResult, gameState.questions, gameState.currentQuestion, gameState.quizMode, finishQuiz, toast]);
+  }, [gameState.showResult, gameState.questions, gameState.currentQuestion, gameState.quizMode, toast]);
 
   const handleTimeUp = useCallback(() => {
     setGameState(prev => {
@@ -349,7 +365,7 @@ export default function EnhancedIslamicQuiz() {
     // In survival mode, time up also ends the quiz
     if (gameState.quizMode === 'survival') {
       setTimeout(() => {
-        finishQuiz();
+        finishQuizRef.current();
       }, 2000);
     }
   }, [gameState.quizMode]);

@@ -11,6 +11,7 @@ import android.util.Log
  * On receive:
  *  1. Enqueues an expedited [WidgetRefreshWorker] to refresh all widgets.
  *  2. Re-reads [WidgetPrefs.getPrayerPayload] and reschedules the next prayer alarm.
+ *  3. Also handles ACTION_FALLBACK_ALARM as a safety net if exact alarm missed.
  *
  * Also listens for ACTION_BOOT_COMPLETED, ACTION_TIME_SET, ACTION_TIMEZONE_CHANGED,
  * ACTION_LOCALE_CHANGED so widgets survive system events.
@@ -36,6 +37,8 @@ class WidgetAlarmReceiver : BroadcastReceiver() {
             if (prayerPayload != null) {
                 WidgetAlarmScheduler.scheduleNextPrayerAlarm(context, prayerPayload)
             }
+
+            // Also handle fallback alarm (15 min after prayer) - same logic
         } catch (e: Exception) {
             Log.e(TAG, "Error in onReceive", e)
         } finally {

@@ -31,6 +31,26 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
+    version: '2.1.0',
+    date: '2026-07-20',
+    title: 'Widget System Hardening — Production-Ready Reliability',
+    changes: [
+      { type: 'improvement', description: 'Boot/Doze survival: directBootAware=true on all 7 receivers; LOCKED_BOOT_COMPLETED for alarm rescheduling before unlock; foreground service SPECIAL_USE type for API 34+.' },
+      { type: 'improvement', description: 'Dynamic resize: onAppWidgetOptionsChanged in all 5 widgets; 2×2 → 4×3 size range support for all launcher grids.' },
+      { type: 'improvement', description: 'Battery optimization: IGNORE_BATTERY_OPTIMIZATIONS prompt + re-check on resume; critical for step/location foreground service.' },
+      { type: 'improvement', description: 'RTL/Locale: layoutDirection="locale" + textDirection="locale" on all widget roots; Arabic/Persian/Urdu render correctly.' },
+      { type: 'improvement', description: 'Sensor/permission degradation: WidgetForegroundService.checkCapabilities() detects missing step sensors / denied location perms — logs warnings, disables only affected features, never crashes.' },
+      { type: 'improvement', description: 'Update throttling: 500ms minimum between RemoteViews updates per widget (prevents 30/sec system ANR limit).' },
+      { type: 'improvement', description: 'Backup/Restore: WidgetBackupAgent + backup_rules.xml — saves config (size, theme, density, accent); volatile payloads re-sync from app.' },
+      { type: 'improvement', description: 'Cold-start bridge guard: 5s registration timeout + caching; exponential backoff retry (3×) on Capacitor bridge calls.' },
+      { type: 'improvement', description: 'Exact alarm safety net: 15-min fallback alarm scheduled alongside every prayer exact alarm.' },
+      { type: 'improvement', description: 'Worker isolation: WidgetRefreshWorker continues on partial failures; self-cancels when zero widgets remain.' },
+      { type: 'improvement', description: 'Health monitoring: HealthCheckWorker every 6h — validates data freshness, alarm schedule, service health, auto-heals.' },
+      { type: 'improvement', description: 'Concurrency: TasbeehLock for rapid taps; SharedPreferences atomic edits; 500ms update throttling per widget ID.' },
+      { type: 'fix', description: 'Version bump: 2.0.0 → 2.1.0 (versionCode 6).' },
+    ],
+  },
+  {
     version: '2.0.0',
     date: '2026-07-10',
     title: 'Noor Connect 2.0 — Major Release',

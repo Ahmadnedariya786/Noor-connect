@@ -134,18 +134,34 @@ export function CSSOnlyTransition({
 }: CSSOnlyTransitionProps) {
   return (
     <div
-      className={`transition-transform duration-${duration} ease-out will-change-transform backface-visibility:hidden perspective-1000 ${className}`}
+      className={`transition-transform ease-out will-change-transform ${className}`}
       style={{
         willChange: 'transform',
         backfaceVisibility: 'hidden',
         perspective: 1000,
-        transform: undefined,
+        transitionDuration: `${duration}ms`,
       }}
     >
       {React.Children.map(children, child => {
         if (!React.isValidElement(child)) return child;
         return React.cloneElement(child as React.ReactElement, {
-          className: `${child.props.className || ''} hover:scale-[${hoverScale}] active:scale-[${tapScale}] transition-transform duration-${duration} ease-out`,
+          className: `${child.props.className || ''} transition-transform ease-out`,
+          style: {
+            ...((child.props as any).style || {}),
+            transitionDuration: `${duration}ms`,
+          },
+          onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+            (e.currentTarget as HTMLElement).style.transform = `scale(${hoverScale})`;
+          },
+          onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+            (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+          },
+          onMouseDown: (e: React.MouseEvent<HTMLElement>) => {
+            (e.currentTarget as HTMLElement).style.transform = `scale(${tapScale})`;
+          },
+          onMouseUp: (e: React.MouseEvent<HTMLElement>) => {
+            (e.currentTarget as HTMLElement).style.transform = `scale(${hoverScale})`;
+          },
         });
       })}
     </div>

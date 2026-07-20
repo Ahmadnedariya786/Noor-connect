@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { getTheme, setTheme } from "@/lib/storage";
 import { GeolocationService } from "@/lib/geolocation-service";
+import { unifiedNotifications } from '@/lib/unified-notifications';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -56,6 +57,22 @@ const Index = () => {
     };
 
     fetchPrayerTimes();
+
+    // Prompt for notification permission on first open (not just location)
+    const checkNotificationPermission = async () => {
+      if (!unifiedNotifications.isNotificationSupported()) return;
+      const status = await unifiedNotifications.getPermissionStatus();
+      if (status === 'granted' || status === 'denied') return;
+      // Only prompt on first visit (tracked via localStorage)
+      const notifiedKey = 'notif-permission-prompted';
+      if (localStorage.getItem(notifiedKey)) return;
+      localStorage.setItem(notifiedKey, 'true');
+      // Delay slightly so the page loads first
+      setTimeout(() => {
+        unifiedNotifications.requestPermission();
+      }, 3000);
+    };
+    checkNotificationPermission();
   }, []);
 
   const toggleTheme = () => {

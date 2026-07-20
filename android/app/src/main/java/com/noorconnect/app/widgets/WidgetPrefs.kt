@@ -28,6 +28,10 @@ object WidgetPrefs {
     private const val KEY_LAST_CONTENT_SYNC = "last_content_sync_ms"
     private const val KEY_LAST_PROGRESS_SYNC = "last_progress_sync_ms"
 
+    // Throttling: prevent excessive RemoteViews updates (system limit ~30/sec per widget)
+    private const val KEY_LAST_WIDGET_UPDATE = "last_widget_update_ms_"
+    private const val MIN_UPDATE_INTERVAL_MS = 500L // 500ms minimum between updates per widget
+
     fun privatePrefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -87,6 +91,25 @@ object WidgetPrefs {
     fun getTasbeehState(context: Context): TasbeehState {
         val json = privatePrefs(context).getString(KEY_TASBEEH_STATE, null) ?: return TasbeehState.DEFAULT
         return TasbeehState.fromJson(json) ?: TasbeehState.DEFAULT
+    }
+
+    // ─────────── Throttling ───────────
+
+    /**
+     * Check if enough time has passed since last widget update.
+     * Prevents RemoteViews updates faster than system allows (~30/sec).
+     */
+    fun canUpdateWidget(context: Context, widgetId: Int): Boolean {
+        val prefs = privatePrefs(context)
+        val lastUpdate = prefs.getLong("$KEY_LAST_WIDGET_UPDATE$widgetId", 0L)
+        val now = System.currentTimeMillis()
+        return (now - lastUpdate) >= MIN_UPDATE_INTERVAL_MS
+    }
+
+    fun recordWidgetUpdate(context: Context, widgetId: Int) {
+        privatePrefs(context).edit {
+            putLong("$KEY_LAST_WIDGET_UPDATE$widgetId", System.currentTimeMillis())
+        }
     }
 
     /**

@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-07-20
+
+### 🔒 Stability & Reliability — "Widget Hardening Release"
+
+This release focuses entirely on making the widget system production-ready across all Android OEMs and OS versions (Android 8–14+). No new user-facing features — pure engineering hardening.
+
+#### Android Native (Kotlin)
+
+**Boot/Doze Resilience**
+- `android:directBootAware="true"` on all 7 widget receivers + `WidgetBootReceiver` + `WidgetAlarmReceiver` for credential-encrypted storage access on locked boot
+- `LOCKED_BOOT_COMPLETED` intent filter for immediate alarm rescheduling before user unlock
+- Foreground service type `SPECIAL_USE` with manifest property justification for API 34+
+
+**Dynamic Resize Handling**
+- `onAppWidgetOptionsChanged()` implemented in all 5 widget providers
+- `minWidth`/`maxResizeWidth` attributes in widget XML for 2×2 → 4×3 range
+- Layout recalculates on launcher grid changes (4×4, 5×5, 5×6)
+
+**Battery Optimization Awareness**
+- `ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` prompt on first launch + re-check on resume
+- Critical for step detection & location monitoring foreground service survival
+
+**RTL/Locale Support**
+- `android:layoutDirection="locale"` + `android:textDirection="locale"` on all widget root layouts
+- Arabic/Persian/Urdu text renders correctly without manual RTL overrides
+
+**Sensor/Permission Graceful Degradation**
+- `WidgetForegroundService.checkCapabilities()` detects missing step sensors / denied location permission at startup
+- Logs warnings, disables only affected features — never crashes
+- HealthCheckWorker verifies service health every 6 hours, auto-restarts if dead
+
+**Update Throttling**
+- 500ms minimum interval between RemoteViews updates per widget ID (prevents system ANR at 30/sec limit)
+- `WidgetPrefs.canUpdateWidget()` / `recordWidgetUpdate()` enforce client-side
+
+**Backup/Restore**
+- `WidgetBackupAgent` + `backup_rules.xml` — saves widget config (size, theme, density, accent) but excludes volatile payloads (prayer times, daily content, quran progress, tasbeeh)
+- Payloads re-sync from app on restore
+
+**Cold-Start Bridge Guard**
+- `registerPlugin()` with 5s timeout + promise caching in `widgetBridge.ts`
+- Exponential backoff retry (3×, 500ms base) on all Capacitor bridge calls
+- Payload validation before native send (prayer count, index ranges, timestamps, percentage bounds)
+
+**Exact Alarm Safety Net**
+- 15-minute fallback alarm scheduled alongside every exact prayer alarm
+- Catches missed exact alarms on OEMs that throttle them
+
+**Worker Isolation**
+- `WidgetRefreshWorker` continues on partial failures — logs per-widget errors, reports success if any widget updated
+- Self-cancels periodic work when zero widget instances remain
+
+#### Web/TypeScript
+
+- `widgetBridge.ts`: Cold-start registration guard, retry wrapper, strict payload validation
+- `widget-service.ts`: `lastUpdated` timestamps on all payloads (prayer, daily content, quran progress)
+- `widget-types.ts`: Extended all interfaces with `lastUpdated` fields
+- TypeScript compiles clean (`npx tsc --noEmit`)
+
+**Android Version Bump**
+- `versionCode: 6` → `6` (incremented)
+- `versionName: "2.0.0"` → `"2.1.0"`
+
+---
+
 ## [2.0.0] - 2026-07-10
 
 ### 🚀 Major Features

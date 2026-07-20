@@ -12,14 +12,17 @@ import android.util.Log
  * widget refresh via [WidgetAlarmReceiver].
  *
  * On API 31+ where `SCHEDULE_EXACT_ALARM` is denied, falls back to
- * inexact alarms (~15 min accuracy). WorkManager's 30-min periodic
- * refresh covers the gap.
+ * inexact alarms (~15 min accuracy). A 15-min fallback alarm is also
+ * scheduled as a safety net.
  */
 object WidgetAlarmScheduler {
 
     private const val TAG = "WidgetAlarmScheduler"
     const val ACTION_PRAYER_ALARM = "com.noorconnect.app.PRAYER_ALARM"
+    const val ACTION_FALLBACK_ALARM = "com.noorconnect.app.PRAYER_FALLBACK"
     private const val REQUEST_CODE = 9001
+    private const val FALLBACK_REQUEST_CODE = 9002
+    private const val FALLBACK_DELAY_MS = 15 * 60 * 1000L // 15 minutes
 
     fun scheduleNextPrayerAlarm(context: Context, payload: PrayerPayload) {
         try {
@@ -48,8 +51,11 @@ object WidgetAlarmScheduler {
 
             val pendingIntent = buildPendingIntent(context)
 
-            // Cancel any existing alarm first
+            // Cancel any existing exact alarm first
             alarmManager.cancel(pendingIntent)
+
+            // Also schedule a 15-minute fallback alarm as safety net
+            scheduleFallbackAlarm(context, alarmManager, triggerAtMs)
 
             val canExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 alarmManager.canScheduleExactAlarms()
@@ -63,10 +69,10 @@ object WidgetAlarmScheduler {
                     triggerAtMs,
                     pendingIntent
                 )
-                Log.d(TAG, "Exact alarm scheduled at $triggerAtMs")
+                Log.d(TAG, "Exact alarm scheduled at $triggerAtMs (${formatTime(triggerAtMs)})")
             } else {
                 // Degraded mode — inexact alarm with ~15 min accuracy.
-                // WorkManager's 30-min periodic refresh will catch up.
+                // WorkManager's periodic refresh will catch up.
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     triggerAtMs,
@@ -79,11 +85,32 @@ object WidgetAlarmScheduler {
         }
     }
 
+    private fun scheduleFallbackAlarm(context: Context, alarmManager: AlarmManager, prayerTimeMs: Long) {
+        val fallbackTime = prayerTimeMs + FALLBACK_DELAY_MS
+        val fallbackIntent = Intent(context, WidgetAlarmReceiver::class.java).apply {
+            action = ACTION_FALLBACK_ALARM
+        }
+        val fallbackPendingIntent = PendingIntent.getBroadcast(
+            context,
+            FALLBACK_REQUEST_CODE,
+            fallbackIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        alarmManager.cancel(fallbackPendingIntent)
+        alarmManager.setAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            fallbackTime,
+            fallbackPendingIntent
+        )
+        Log.d(TAG, "Fallback alarm scheduled at $fallbackTime (15 min after prayer)")
+    }
+
     fun cancelAllAlarms(context: Context) {
         try {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
                 ?: return
             alarmManager.cancel(buildPendingIntent(context))
+            alarmManager.cancel(buildFallbackPendingIntent(context))
             Log.d(TAG, "All prayer alarms cancelled")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to cancel alarms", e)
@@ -101,4 +128,18 @@ object WidgetAlarmScheduler {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
+
+    private fun buildFallbackPendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, WidgetAlarmReceiver::class.java).apply {
+            action = ACTION_FALLBACK_ALARM
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            FALLBACK_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+    }
+
+    private fun formatTime(ms: Long): String = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(ms))
 }

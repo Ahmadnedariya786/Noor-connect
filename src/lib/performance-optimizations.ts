@@ -106,22 +106,9 @@ export const lazyLoadImage = (img: HTMLImageElement, src: string): void => {
   }
 };
 
-// Preload critical resources
+// Preload critical resources (images consumed on-page, not manifest-only assets)
 export const preloadCriticalResources = (): void => {
   if (typeof window === 'undefined') return;
-  
-  const criticalResources = [
-    '/icon-192x192.png',
-    '/android_asset/mushaf/page1.webp',
-  ];
-  
-  criticalResources.forEach(resource => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = resource.endsWith('.png') ? 'image' : 'image';
-    link.href = resource;
-    document.head.appendChild(link);
-  });
 };
 
 // Optimize scroll performance

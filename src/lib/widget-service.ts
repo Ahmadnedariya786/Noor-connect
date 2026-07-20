@@ -220,7 +220,7 @@ function getStoredQuranVerse(): AyahContent | null {
     const surahNumber = parsed.surahNumber || parsed.surah_number || 1;
     const ayahNumber = parsed.ayahNumber || parsed.ayah_number || 1;
     if (!arabic && !translation) return null;
-    return { arabic, translation, transliteration, reference, surahNumber, ayahNumber };
+    return { arabic, translation, transliteration, reference, surahNumber, ayahNumber, lastUpdated: parsed.lastUpdated || Date.now() };
   } catch {
     return null;
   }
@@ -240,6 +240,7 @@ function getStoredHadith(): HadithContent | null {
       collection:  parsed.collection ?? 'bukhari',
       bookNumber:  Number(parsed.bookNumber ?? 0),
       hadithNumber: Number(parsed.hadithNumber ?? 0),
+      lastUpdated: parsed.lastUpdated || Date.now(),
     };
   } catch {
     return null;
@@ -258,8 +259,9 @@ function buildDailyContentPayload(): DailyContentPayload | null {
     collection: 'bukhari',
     bookNumber: 0,
     hadithNumber: 0,
+    lastUpdated: Date.now(),
   };
-  return { ayah, hadith, locale: getCurrentLocale() };
+  return { ayah, hadith, locale: getCurrentLocale(), lastUpdated: Date.now() };
 }
 
 // ─────────────────────────────────────────────────────────

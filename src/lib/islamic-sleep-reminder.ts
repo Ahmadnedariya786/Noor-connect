@@ -1,6 +1,4 @@
-import { isIslamicSleepReminderEnabled } from './storage';
-
-const SCHEDULE_KEY = 'islamic-sleep-reminder-id';
+import { isIslamicSleepReminderEnabled, getIslamicSleepOffset } from './storage';
 
 const SLEEP_CONTENT = [
   { title: 'Islamic Sleep Reminder', body: 'Recite Ayatul Kursi before sleeping — it will protect you until morning.' },
@@ -32,7 +30,6 @@ function getIshaTimeFromCache(): string | null {
 
 const FALLBACK_HOUR = 21;
 const FALLBACK_MINUTE = 0;
-const OFFSET_MINUTES = 30;
 
 export function getNextIslamicSleepReminderTime(): Date | null {
   if (!isIslamicSleepReminderEnabled()) return null;
@@ -44,8 +41,9 @@ export function getNextIslamicSleepReminderTime(): Date | null {
 
   if (ishaTime) {
     const [hours, minutes] = ishaTime.split(':').map(Number);
+    const offset = getIslamicSleepOffset();
     target = new Date(now);
-    target.setHours(hours, minutes + OFFSET_MINUTES, 0, 0);
+    target.setHours(hours, minutes + offset, 0, 0);
   } else {
     target = new Date(now);
     target.setHours(FALLBACK_HOUR, FALLBACK_MINUTE, 0, 0);
@@ -60,40 +58,66 @@ export function getNextIslamicSleepReminderTime(): Date | null {
 
 export function scheduleIslamicSleepReminder() {
   if (!isIslamicSleepReminderEnabled()) return;
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
   const target = getNextIslamicSleepReminderTime();
   if (!target) return;
 
   const now = new Date();
-  const existingId = localStorage.getItem(SCHEDULE_KEY);
-  if (existingId) {
-    clearTimeout(parseInt(existingId, 10));
-  }
+  const delay = target.getTime() - now.getTime();
+  if (delay <= 0) return;
 
-  const timeoutId = window.setTimeout(() => {
-    if (!isIslamicSleepReminderEnabled()) return;
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const content = pickContent();
 
-    const content = pickContent();
-    const n = new Notification(content.title, {
-      body: content.body,
-      icon: '/icon-192x192.png',
-      tag: 'islamic-sleep',
-      requireInteraction: false,
+  // Use Capacitor LocalNotifications if available, fall back to Web API
+  const isCapacitor = !!(window as unknown as { Capacitor?: unknown }).Capacitor;
+  if (isCapacitor) {
+    import('@capacitor/local-notifications').then(({ LocalNotifications }) => {
+      LocalNotifications.schedule({
+        notifications: [{
+          id: 7777,
+          title: content.title,
+          body: content.body,
+          schedule: { at: target, allowWhileIdle: true, repeats: false },
+          sound: 'default',
+          smallIcon: 'ic_notification',
+          iconColor: '#1a4a4a',
+          extra: { type: 'islamic_sleep' }
+        }]
+      }).catch((e: Error) => console.warn('Failed to schedule sleep reminder:', e));
     });
-    n.onclick = () => window.focus();
+  } else {
+    // Web fallback using setTimeout
+    const existingId = localStorage.getItem('islamic-sleep-reminder-timeout');
+    if (existingId) clearTimeout(parseInt(existingId, 10));
 
-    scheduleIslamicSleepReminder();
-  }, target.getTime() - now.getTime());
+    const timeoutId = window.setTimeout(() => {
+      if (!isIslamicSleepReminderEnabled()) return;
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-  localStorage.setItem(SCHEDULE_KEY, timeoutId.toString());
+      const n = new Notification(content.title, {
+        body: content.body,
+        icon: '/icon-192x192.png',
+        tag: 'islamic-sleep',
+        requireInteraction: false,
+      });
+      n.onclick = () => window.focus();
+    }, delay);
+
+    localStorage.setItem('islamic-sleep-reminder-timeout', timeoutId.toString());
+  }
 }
 
 export function cancelIslamicSleepReminder() {
-  const existingId = localStorage.getItem(SCHEDULE_KEY);
-  if (existingId) {
-    clearTimeout(parseInt(existingId, 10));
-    localStorage.removeItem(SCHEDULE_KEY);
+  const isCapacitor = !!(window as unknown as { Capacitor?: unknown }).Capacitor;
+  if (isCapacitor) {
+    import('@capacitor/local-notifications').then(({ LocalNotifications }) => {
+      LocalNotifications.cancel({ notifications: [{ id: 7777 }] }).catch(() => {});
+    }).catch(() => {});
+  } else {
+    const existingId = localStorage.getItem('islamic-sleep-reminder-timeout');
+    if (existingId) {
+      clearTimeout(parseInt(existingId, 10));
+      localStorage.removeItem('islamic-sleep-reminder-timeout');
+    }
   }
 }

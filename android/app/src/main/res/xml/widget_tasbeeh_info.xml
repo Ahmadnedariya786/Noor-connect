@@ -4,9 +4,12 @@
     android:minHeight="@dimen/widget_min_height_2x2"
     android:targetCellWidth="2"
     android:targetCellHeight="2"
+    android:maxResizeWidth="@dimen/widget_max_width_4x3"
+    android:maxResizeHeight="@dimen/widget_max_height_4x3"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
     android:previewLayout="@layout/widget_tasbeeh"
     android:initialLayout="@layout/widget_tasbeeh"
     android:description="@string/widget_tasbeeh_desc"
-    android:resizeMode="horizontal|vertical" />
+    android:resizeMode="horizontal|vertical"
+    android:configure=".widgets.WidgetConfigureActivity" />

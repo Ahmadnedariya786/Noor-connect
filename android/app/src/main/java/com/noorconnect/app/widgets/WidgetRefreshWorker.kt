@@ -197,11 +197,18 @@ class WidgetRefreshWorker(
             val ctx = applicationContext
             val mgr = AppWidgetManager.getInstance(ctx)
 
-            // Refresh each widget. Safe to call even when no instances exist.
-            WIDGET_PROVIDERS.forEach { provider -> refreshWidget(ctx, mgr, provider) }
+            // Refresh each widget with individual error isolation
+            var anySuccess = false
+            WIDGET_PROVIDERS.forEach { provider ->
+                try {
+                    refreshWidget(ctx, mgr, provider)
+                    anySuccess = true
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to refresh ${provider::class.java.simpleName}, continuing with others", e)
+                }
+            }
 
             // Self-cancel the periodic worker when no widget instances remain.
-            // This prevents battery drain after the user removes all home-screen widgets.
             val hasAnyInstances = WIDGET_PROVIDERS.any { provider ->
                 val cls = provider::class.java
                 mgr.getAppWidgetIds(ComponentName(ctx, cls)).isNotEmpty()
@@ -211,10 +218,16 @@ class WidgetRefreshWorker(
                 WorkManager.getInstance(ctx).cancelUniqueWork(WORK_TAG)
             }
 
-            Log.d(TAG, "All widgets refreshed")
-            Result.success()
+            // If ALL widgets failed, retry. If some succeeded, consider it a partial success.
+            if (!anySuccess) {
+                Log.e(TAG, "All widget refreshes failed")
+                Result.retry()
+            } else {
+                Log.d(TAG, "Widget refresh completed (partial success ok)")
+                Result.success()
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Worker failed", e)
+            Log.e(TAG, "Worker failed unexpectedly", e)
             Result.retry()
         }
     }

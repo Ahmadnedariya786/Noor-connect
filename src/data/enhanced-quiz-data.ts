@@ -2294,7 +2294,12 @@ export const LEVEL_THRESHOLDS = [
   { level: 7, xp: 3500, title: 'Expert' },
   { level: 8, xp: 5000, title: 'Master' },
   { level: 9, xp: 7500, title: 'Grand Master' },
-  { level: 10, xp: 10000, title: 'Enlightened One' }
+  { level: 10, xp: 10000, title: 'Enlightened One' },
+  { level: 11, xp: 15000, title: 'Mufti' },
+  { level: 12, xp: 20000, title: 'Hafiz' },
+  { level: 13, xp: 30000, title: 'Sheikh' },
+  { level: 14, xp: 50000, title: 'Grand Sheikh' },
+  { level: 15, xp: 75000, title: 'Guardian of Knowledge' }
 ];
 
 // Power-ups
