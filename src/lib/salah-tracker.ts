@@ -6,6 +6,7 @@
 import { calculatePrayerTimes, getCalculationMethod } from "./prayer-calculator";
 import { AladhanAPI, ALADHAN_METHODS } from "./aladhan-api";
 import { getFallbackLocationByTimezone } from "./location-config";
+import { getHaidhData, detectIstihadhah, type CycleEntry, type HaidhTrackerData } from "./haidh-tracker";
 
 const STORAGE_KEY = 'salah-tracker';
 const STREAK_KEY = 'salah-streak';
@@ -260,6 +261,36 @@ const saveStreakData = (data: StreakData): void => {
   localStorage.setItem(STREAK_KEY, JSON.stringify(data));
 };
 
+/**
+ * Check if a given date falls within a ḥaidh/nifās cycle (not istiḥāḍah).
+ * During such days the user is exempt from ṣalāh — their streak must NOT reset.
+ */
+const isDateSalahExempt = (dateStr: string): boolean => {
+  try {
+    const data: HaidhTrackerData = getHaidhData();
+    if (!data.cycles.length) return false;
+
+    const today = getTodayKey();
+
+    for (const cycle of data.cycles) {
+      const start = cycle.startDate;
+      const end = cycle.endDate ?? today; // active cycle ends "today" for range checks
+
+      if (dateStr >= start && dateStr <= end) {
+        // Istiḥāḍah is NOT exempt — user must still pray
+        if (detectIstihadhah(cycle, data.madhab)) return false;
+        // Ḥaidh and Nifās are exempt from ṣalāh
+        if (cycle.bleedingType === 'haidh' || cycle.bleedingType === 'nifas') return true;
+      }
+    }
+
+    return false;
+  } catch {
+    // If haidh tracker is unavailable, don't block streak reset
+    return false;
+  }
+};
+
 // Check and reset streak if day missed
 export const checkStreakReset = (): void => {
   const streakData = getStreakData();
@@ -267,6 +298,9 @@ export const checkStreakReset = (): void => {
   const days = getAllDays();
 
   if (streakData.lastCompleteDay && streakData.lastCompleteDay < yesterday) {
+    // If yesterday was a ḥaidh/nifās exempt day, preserve the streak
+    if (isDateSalahExempt(yesterday)) return;
+
     const yesterdayComplete = days[yesterday] && isDayComplete(days[yesterday]);
     if (!yesterdayComplete) {
       streakData.currentStreak = 0;
