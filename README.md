@@ -7,7 +7,7 @@
 
 ---
 
-## 🆕 What's New in v2.1.0
+## 🔮 What's Coming in v2.1.0
 
 ### 🔒 Widget System Hardening — Production-Ready Reliability
 
