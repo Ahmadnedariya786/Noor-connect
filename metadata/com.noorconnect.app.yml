@@ -2,9 +2,9 @@
 Categories:
   - Religion
 License: GPL-3.0-or-later
-SourceCode: https://github.com/darkmaster0345/Noor-connect
-IssueTracker: https://github.com/darkmaster0345/Noor-connect/issues
-Repo: https://github.com/darkmaster0345/Noor-connect.git
+SourceCode: https://gitlab.com/theredhacker0345/Noor-connect
+IssueTracker: https://gitlab.com/theredhacker0345/Noor-connect/issues
+Repo: https://gitlab.com/theredhacker0345/Noor-connect.git
 RepoType: git
 
 AutoName: Noor Connect
@@ -34,28 +34,37 @@ AntiFeatures:
 Builds:
   - versionName: 2.0.1
     versionCode: 6
-    commit: a89901dbbe2cb6a405ec51ad7a7078c49d16f555
+    commit: 162a505d6283e8731c6b9535ea8810e54be9996b
     subdir: android/app
     sudo:
       - apt-get update
-      - apt-get install -y npm
+      - apt-get install -y golang-go make npm
     gradle:
       - foss
+    srclibs:
+      - esbuild@v0.21.5
     prebuild:
-      - cd ../../..
-      - sed -i '/@capacitor\/background-runner/d' package.json
-      - npm install
+      - cd ../..
+      - npm ci
+    scanignore:
+      - node_modules/@capacitor/cli/assets/capacitor-cordova-android-plugins.tar.gz
+    scandelete:
+      - node_modules
+    build:
+      - pushd $$esbuild$$
+      - make esbuild
+      - popd
+      - cd ../..
+      - cp $$esbuild$$/esbuild node_modules/@esbuild/linux-x64/bin/
+      - cp $$esbuild$$/esbuild node_modules/esbuild/bin/
       - npm run build
-      - node scripts/clean-dist-data.js
-      - cd android && npx cap sync android && cd ..
+      - npx cap sync android
 
 MaintainerNotes: >
-  Uses Capacitor. background-runner is removed to avoid prebuilt .so files.
-  The foss flavor disables play-services dependency.
-  Build requires Node.js 18+ and npm.
-  clean-dist-data.js removes ~358MB of bundled data (mushaf pages, tafsir
-  and hadith JSON) from dist/ before cap sync — these all have CDN/network
-  fallbacks so the app still works fully online.
+  Uses Capacitor with foss flavor (no play-services). esbuild is built from source
+  via srclibs to satisfy F-Droid scanner. clean-dist-data.js removes ~358MB of
+  bundled data (mushaf pages, tafsir and hadith JSON) from dist/ before cap sync
+  — these all have CDN/network fallbacks so the app still works fully online.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
