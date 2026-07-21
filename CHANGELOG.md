@@ -5,7 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] - 2026-07-20
+## [2.0.1] - 2026-07-21
+
+### 📖 Quran Progress Tracking Fixes
+
+**Fixed critical issues with Quran reading progress tracking and display:**
+
+#### Bug Fixes
+- **Incorrect surah count**: Progress now only counts fully completed surahs (when all ayahs are read), not partially read ones
+- **Misleading UI text**: Updated "Surahs Completed" to "Surahs fully Completed" for clarity
+- **Wrong progress calculation**: Changed from ayah-based estimation to accurate page-based tracking (604 total pages)
+- **Position tracking bug**: Fixed progress to track current page position instead of maximum page ever visited
+- **Widget sync mismatch**: Added widget-compatible localStorage key sync for native Android widgets
+
+#### Technical Changes
+- Updated `QuranProgressWidget` to display pages read (X/604) instead of ayahs
+- Modified `quran-features` service to track pages read and calculate percentage based on pages
+- Fixed `QuranReader` to use current page instead of maxPageViewed for progress
+- Added widget progress synchronization with proper payload formatting
+- Added `WIDGET_PROGRESS_KEY` to match widget sync expectations
+- Created `syncWidgetProgress()` method for widget data synchronization
+- Updated `saveRecitationProgress()` to automatically sync widget data
+
+---
+
+## [2.0.0] - 2026-07-10
 
 ### 🔒 Stability & Reliability — "Widget Hardening Release"
 

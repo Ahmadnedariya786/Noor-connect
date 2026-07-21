@@ -1,101 +1,42 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.1.0-orange.svg)](CHANGELOG.md)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.0.1-orange.svg)](CHANGELOG.md)
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
 
 ---
 
-## 🔮 What's Coming in v2.1.0
+## 🆕 What's New in v2.0.1
 
-### 🔒 Widget System Hardening — Production-Ready Reliability
+### 📖 Quran Progress Tracking Fixes — Complete Overhaul
 
-**This is a pure stability release with zero new user-facing features — every change makes the existing widget suite work reliably across all Android OEMs (Samsung, Xiaomi, Pixel, OnePlus, etc.) and OS versions (Android 8–14+).**
+**Fixed critical issues with Quran reading progress tracking and display to provide accurate reading statistics:**
 
-| Area | Improvement |
-|------|-------------|
-| **Boot/Doze Survival** | `directBootAware=true` on all 7 receivers; `LOCKED_BOOT_COMPLETED` intent filter; foreground service `SPECIAL_USE` type for API 34+ |
-| **Dynamic Resize** | `onAppWidgetOptionsChanged()` in all 5 widgets; 2×2 → 4×3 size range support for all launcher grids |
-| **Battery Optimization** | `IGNORE_BATTERY_OPTIMIZATIONS` prompt + re-check on resume; critical for step/location foreground service |
-| **RTL/Locale** | `layoutDirection="locale"` + `textDirection="locale"` on all widget roots; Arabic/Persian/Urdu render correctly |
-| **Sensor/Permission Degradation** | `WidgetForegroundService.checkCapabilities()` — logs warnings, disables only missing features, never crashes |
-| **Update Throttling** | 500ms minimum between RemoteViews updates per widget (prevents 30/sec system ANR limit) |
-| **Backup/Restore** | `WidgetBackupAgent` saves config (size, theme, density, accent); volatile payloads re-sync from app |
-| **Cold-Start Bridge Guard** | 5s registration timeout + caching; exponential backoff retry (3×) on Capacitor bridge calls |
-| **Exact Alarm Safety Net** | 15-min fallback alarm alongside every prayer exact alarm |
-| **Worker Isolation** | `WidgetRefreshWorker` continues on partial failures; self-cancels when no widgets exist |
-| **Health Monitoring** | `HealthCheckWorker` every 6h — validates data freshness, alarm schedule, service health, auto-heals |
+| Issue | Fix |
+|-------|-----|
+| **Incorrect surah count** | Progress now only counts fully completed surahs (when all ayahs are read), not partially read ones |
+| **Misleading UI text** | Updated "Surahs Completed" to "Surahs fully Completed" for clarity |
+| **Wrong progress calculation** | Changed from ayah-based estimation to accurate page-based tracking (604 total pages) |
+| **Position tracking bug** | Fixed progress to track current page position instead of maximum page ever visited |
+| **Widget sync mismatch** | Added widget-compatible localStorage key sync for native Android widgets |
 
-**Android Version Bump:** `versionCode: 6` / `versionName: "2.1.0"`
+**Technical Changes:**
+- Updated `QuranProgressWidget` to display pages read (X/604) instead of ayahs
+- Modified `quran-features` service to track pages read and calculate percentage based on pages
+- Fixed `QuranReader` to use current page instead of maxPageViewed for progress
+- Added widget progress synchronization with proper payload formatting
+- Added `WIDGET_PROGRESS_KEY` to match widget sync expectations
+- Created `syncWidgetProgress()` method for widget data synchronization
+- Updated `saveRecitationProgress()` to automatically sync widget data
+- Added `getReadingStreakSync()` for synchronous streak data access
 
----
-
-## 🆕 What's New in v2.0.0
-
-### 🌿 Islamic Remedies (Tibb-e-Nabawi) — Complete Redesign
-- **Two-phase experience**: Mood grid (12 moods, responsive 2/3 col) → Full-screen remedy viewer with smooth Framer Motion animations
-- **Rich visual design**: Warm gradient backgrounds, 3xl/4xl Arabic typography, type badges, Play/Copy/Next actions
-- **Daily Remedy Card** with visible gradient background and interactive check animation
-- **Gamified stats bar**: Streak, views, favorites, XP in clean single-line layout
-- **Search + type filters** (pills above input), **Favorites page** linked from main view
-
-### 📱 Widget System v2 — Native Kotlin Rebuild
-- **5 widgets**: Next Prayer (live countdown + progress ring), Daily Ayah, Daily Hadith (grade-colored), Quran Progress (ring + streak + Ramadan goal), Tasbeeh Counter (tap-to-increment, haptic, dhikr cycle)
-- **Unified refresh**: Single WorkManager (30min periodic + expedited + motion-based step detection)
-- **Prayer alarms**: Exact alarms at each prayer time with graceful fallback
-- **Boot/Time/Locale survival**: Centralized via WidgetBootReceiver → WidgetRefreshWorker
-- **Capacitor bridge**: 4-method plugin (syncPrayerData, syncDailyContent, syncQuranProgress, pushTasbeehIncrement)
-- **Strict validation**: Prayer payload requires exactly 6 prayers, valid nextPrayerIndex
-
-### 🏠 Dashboard Integration
-- **MoodSelector widget** revived: daily remedy, gamification stats, favorites toggle, next/copy/play actions
-- Registered `remedy` widget in dashboard config (visible by default)
-
-### 💾 Backup & Restore (Cross-Platform)
-- localStorage-based (no native filesystem dependency)
-- Auto-backup on first install, auto-restore on reinstall
-- Background processing for performance
-
-### 🔄 Auto Backup (v2.3+)
-- **Automatic every 20 minutes**: While you use the app, your data is silently saved to local storage every 20 minutes of activity.
-- **Reinstall recovery**: After reinstalling the app, you'll see a prompt asking if you want to restore your previous auto-backup — no file picker needed.
-- **Toggle on/off**: Enable or disable auto-backup from Profile → Storage & Backup → Auto Backup toggle.
-- **Full data coverage**: Captures all settings, prayer data, qaza records, bookmarks, Quran progress, and more.
-
-### ⚡ Low-End Device Optimizations
-- Adaptive device detection (30+ FPS target on 2016+ devices)
-- React Query tuned for constrained hardware
-- Background processing for heavy ops
-- Smart backup detection without CPU/RAM load
-
-### 📚 Hadith Collection Overhaul — 87K Hadith
-- **16 Collections, 87,018 Hadith**: Complete authenticated collections including Bukhari (7,563), Muslim (5,366), Tirmidhi (5,345), Abu Dawud (10,547), Nasai (7,084), Ibn Majah (8,685), plus 10 more (Ahmad, Mishkat, Riyad us-Saliheen, Muwatta Malik, Darimi, Bulugh, Adab, Shamail, Forty Hadith, Hisnul Muslim)
-- **Bookmarks System**: Save/unsave hadith with localStorage persistence, dedicated bookmarks page at `/hadith/bookmarks` with clear-all and per-item remove
-- **Premium Viewer**: Full-screen detail view with grade-colored badges, smooth navigation between hadith, Arabic text at optimal sizes
-- **Daily Hadith** with Arabic + English + source, refreshable, in both dashboard widget and dedicated page
-- **Performance**: All data loaded lazily via fetch (not bundled), cached after first load
-
-### ⚡ Performance Optimization — RAF Loop Cleanup
-- Removed `monitorFPS()` continuous RAF loop from App.tsx (was running forever, doing nothing but console.warn)
-- Converted `useAnimationTier` FPS monitor from per-instance to module-level singleton (was starting 1 RAF loop per component — stopped at 4+ concurrent loops)
-- Removed empty scroll RAF handler that fired on every scroll event doing no work
-
-### 🐛 Critical Fixes
-- JSON.parse safety (try-catch everywhere)
-- TypeScript strictness (no `as any`, proper types)
-- React hooks dependency arrays, functional state updates
-- localStorage quota handling with cleanup
-- Memory leak prevention (event listener cleanup)
-- Widget: unknown hadith grades use neutral color, localized countdown strings, minute-precision countdown, fixed 1-hour boundary, Arabic RTL fix, countdown overlay, format-string preview defaults, Tasbeeh content descriptions
-- Settings: The "Animations" toggle now correctly persists to Preferences and forcibly disables heavy Framer Motion animations across the app.
-- Quran Reader: Fixed English Surah names text overflow on smaller screens.
-- Quran Reader: Implemented an instant golden loading spinner via `useTransition` to mask navigation delays.
-- App Icon: Removed `android:roundIcon` property to fix rendering corruption on legacy OEM Android skins.
-- F-Droid Publication: Standardized metadata, feature lists, and verified the GPL-3.0-or-later license string.
-- Android: FOREGROUND_SERVICE_MEDIA_PLAYBACK permission, duplicate flatDir removed, ProGuard cleaned
-- Thread safety: @Volatile on HadithBundle cache
-- All payload parsing failures now logged with context
+**User Impact:**
+- Progress now accurately reflects your actual reading position
+- Surah completion count only shows fully read surahs
+- Page-based tracking provides more precise progress percentage
+- Native Android widgets now sync correctly with reading progress
+- No more misleading progress statistics when navigating between pages
 
 ---
 

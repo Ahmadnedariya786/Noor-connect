@@ -32,8 +32,8 @@ AntiFeatures:
     en-US: App connects to external Islamic APIs (prayer times, Quran data) hosted on third-party servers. Full API list documented at API_MANIFEST.md.
 
 Builds:
-  - versionName: 2.0.0
-    versionCode: 5
+  - versionName: 2.0.1
+    versionCode: 6
     commit: a89901dbbe2cb6a405ec51ad7a7078c49d16f555
     subdir: android/app
     sudo:
@@ -59,5 +59,5 @@ MaintainerNotes: >
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 2.0.0
-CurrentVersionCode: 5
+CurrentVersion: 2.0.1
+CurrentVersionCode: 6

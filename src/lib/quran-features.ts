@@ -31,6 +31,8 @@ export interface RecitationProgress {
   totalAyahs: number;
   completedAyahs: number;
   lastReadAyah: number;
+  pagesRead: number;
+  totalPages: number;
   startDate?: string;
   lastReadDate: string;
   isCompleted: boolean;
@@ -57,6 +59,7 @@ class QuranFeaturesService {
   private readonly BOOKMARKS_KEY = 'quran-bookmarks';
   private readonly NOTES_KEY = 'quran-notes';
   private readonly PROGRESS_KEY = 'quran-recitation-progress';
+  private readonly WIDGET_PROGRESS_KEY = 'quran-reading-progress';
   private readonly STREAK_KEY = 'quran-reading-streak';
   private readonly ACHIEVEMENTS_KEY = 'quran-achievements';
 
@@ -169,7 +172,7 @@ class QuranFeaturesService {
   }
 
   // Recitation Progress Methods
-  async updateRecitationProgress(surahNumber: number, surahName: string, totalAyahs: number, completedAyahs: number, lastReadAyah: number): Promise<RecitationProgress> {
+  async updateRecitationProgress(surahNumber: number, surahName: string, totalAyahs: number, completedAyahs: number, lastReadAyah: number, pagesRead: number = 0, totalPages: number = 0): Promise<RecitationProgress> {
     const progress = await this.getRecitationProgress();
     const existingIndex = progress.findIndex(p => p.surahNumber === surahNumber);
     
@@ -180,6 +183,8 @@ class QuranFeaturesService {
       totalAyahs,
       completedAyahs,
       lastReadAyah,
+      pagesRead,
+      totalPages,
       lastReadDate: new Date().toISOString(),
       isCompleted: completedAyahs >= totalAyahs,
       startDate: existingIndex >= 0 ? progress[existingIndex].startDate : new Date().toISOString()
@@ -215,6 +220,8 @@ class QuranFeaturesService {
     completedSurahs: number;
     totalAyahs: number;
     completedAyahs: number;
+    totalPages: number;
+    pagesRead: number;
     percentage: number;
   }> {
     const progress = await this.getRecitationProgress();
@@ -222,19 +229,67 @@ class QuranFeaturesService {
     const completedSurahs = progress.filter(p => p.isCompleted).length;
     const totalAyahs = 6236; // Total ayahs in Quran
     const completedAyahs = progress.reduce((sum, p) => sum + p.completedAyahs, 0);
-    const percentage = totalAyahs > 0 ? (completedAyahs / totalAyahs) * 100 : 0;
+    const totalPages = 604; // Total pages in standard Quran
+    const pagesRead = progress.reduce((sum, p) => sum + (p.pagesRead || 0), 0);
+    const percentage = totalPages > 0 ? (pagesRead / totalPages) * 100 : 0;
 
     return {
       totalSurahs,
       completedSurahs,
       totalAyahs,
       completedAyahs,
+      totalPages,
+      pagesRead,
       percentage
     };
   }
 
   private saveRecitationProgress(progress: RecitationProgress[]): void {
     localStorage.setItem(this.PROGRESS_KEY, JSON.stringify(progress));
+    this.syncWidgetProgress(progress);
+  }
+
+  private syncWidgetProgress(progress: RecitationProgress[]): void {
+    try {
+      const overall = this.calculateOverallProgress(progress);
+      const streak = this.getReadingStreakSync();
+      
+      // Find the most recently read surah
+      const lastReadEntry = progress
+        .filter(p => p.pagesRead > 0)
+        .sort((a, b) => new Date(b.lastReadDate).getTime() - new Date(a.lastReadDate).getTime())[0];
+      
+      const widgetPayload = {
+        currentSurah: lastReadEntry?.surahNumber || 1,
+        currentAyah: lastReadEntry?.lastReadAyah || 1,
+        currentJuz: Math.ceil(overall.pagesRead / 20), // Approximate juz
+        totalPagesRead: overall.pagesRead,
+        totalPercent: overall.percentage,
+        dailyStreak: streak?.currentStreak || 0,
+        lastReadTimestamp: lastReadEntry ? new Date(lastReadEntry.lastReadDate).getTime() : Date.now(),
+        lastReadLabel: lastReadEntry ? `${lastReadEntry.surahName} ${lastReadEntry.surahNumber}:${lastReadEntry.lastReadAyah}` : '',
+        goalPercent: 100,
+        lastUpdated: Date.now()
+      };
+      localStorage.setItem(this.WIDGET_PROGRESS_KEY, JSON.stringify(widgetPayload));
+    } catch (error) {
+      console.error('Error syncing widget progress:', error);
+    }
+  }
+
+  private calculateOverallProgress(progress: RecitationProgress[]): {
+    completedSurahs: number;
+    completedAyahs: number;
+    pagesRead: number;
+    percentage: number;
+  } {
+    const completedSurahs = progress.filter(p => p.isCompleted).length;
+    const completedAyahs = progress.reduce((sum, p) => sum + p.completedAyahs, 0);
+    const pagesRead = progress.reduce((sum, p) => sum + (p.pagesRead || 0), 0);
+    const totalPages = 604;
+    const percentage = totalPages > 0 ? (pagesRead / totalPages) * 100 : 0;
+
+    return { completedSurahs, completedAyahs, pagesRead, percentage };
   }
 
   // Streak Tracking Methods
@@ -278,6 +333,16 @@ class QuranFeaturesService {
   }
   
   async getReadingStreak(): Promise<QuranStreak | null> {
+    try {
+      const stored = localStorage.getItem(this.STREAK_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error('Error loading reading streak:', error);
+      return null;
+    }
+  }
+
+  private getReadingStreakSync(): QuranStreak | null {
     try {
       const stored = localStorage.getItem(this.STREAK_KEY);
       return stored ? JSON.parse(stored) : null;
@@ -446,6 +511,7 @@ class QuranFeaturesService {
     localStorage.removeItem(this.BOOKMARKS_KEY);
     localStorage.removeItem(this.NOTES_KEY);
     localStorage.removeItem(this.PROGRESS_KEY);
+    localStorage.removeItem(this.WIDGET_PROGRESS_KEY);
     localStorage.removeItem(this.STREAK_KEY);
     localStorage.removeItem(this.ACHIEVEMENTS_KEY);
   }

@@ -17,6 +17,8 @@ interface OverallProgress {
   completedSurahs: number;
   totalAyahs: number;
   completedAyahs: number;
+  totalPages: number;
+  pagesRead: number;
   percentage: number;
 }
 
@@ -160,7 +162,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             <p className="text-3xl font-bold font-serif italic text-[#C9860A]">
               {progress.completedSurahs} / {progress.totalSurahs}
             </p>
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Surahs Completed</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Surahs fully Completed</p>
           </div>
         </div>
 
@@ -168,7 +170,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         <div className="space-y-2">
           <Progress value={progress.percentage} className="h-2 bg-black/50" />
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">
-            {progress.completedAyahs.toLocaleString()} / {progress.totalAyahs.toLocaleString()} Ayahs Read
+            {progress.pagesRead} / {progress.totalPages} Pages Read
           </p>
         </div>
 

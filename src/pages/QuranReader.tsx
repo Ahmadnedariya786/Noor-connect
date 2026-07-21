@@ -47,13 +47,15 @@ export default function QuranReader() {
     const syncId = setTimeout(() => {
       if (!surahInfo) return;
       quranFeaturesService.updateReadingStreak().catch(console.error);
-      const completedAyahs = Math.round((maxPageViewed / totalSurahPages) * surahInfo.numberOfAyahs);
+      const completedAyahs = Math.round((currentPage / totalSurahPages) * surahInfo.numberOfAyahs);
       quranFeaturesService.updateRecitationProgress(
         surahNum,
         surahInfo.englishName,
         surahInfo.numberOfAyahs,
         completedAyahs,
-        completedAyahs
+        completedAyahs,
+        currentPage,
+        totalSurahPages
       )
       .then(() => quranFeaturesService.checkAndUnlockAchievements())
       .then(() => {
@@ -63,7 +65,7 @@ export default function QuranReader() {
     }, 1000);
 
     return () => clearTimeout(syncId);
-  }, [surahNum, surahInfo, maxPageViewed, totalSurahPages]);
+  }, [surahNum, surahInfo, currentPage, totalSurahPages]);
 
   const loadBookmark = async () => {
     try {
