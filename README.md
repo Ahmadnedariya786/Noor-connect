@@ -1,9 +1,32 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.0.1-orange.svg)](CHANGELOG.md)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.1.0--beta-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
+
+---
+
+## 🎯 **Our Mission & Origin Story**
+
+Noor Connect was born from a simple frustration: **there was no single Islamic app that offered comprehensive features without compromising user privacy.**
+
+The mainstream Islamic app market is dominated by apps that:
+- 📊 **Sell your location data** to third parties (documented cases with major apps)
+- 📱 **Track your prayer habits** for advertising profiles
+- 🔍 **Monitor your Quran reading** for analytics
+- 💰 **Monetize your spiritual data** without consent
+
+**Noor Connect was built differently** — by a Muslim who needed a complete Islamic toolkit but refused to trade privacy for convenience. Every feature exists because the developer personally needed it, and every architectural decision prioritizes **your sovereignty over your spiritual data**.
+
+### 🏆 **Partnership: No Copyright Nasheed**
+We're proud to announce our partnership with **[No Copyright Nasheed](https://nocopyrightnasheed.com/)** — the leading platform for copyright-free Islamic nasheeds.
+
+- ✅ **Official License Grant**: Free perpetual license to integrate 400+ premium nasheeds
+- ✅ **Official Feature**: Noor Connect is now featured on the [No Copyright Nasheed website](https://nocopyrightnasheed.com/) as a trusted partner
+- 🎵 **Coming in v2.1**: 400+ curated nasheeds with adaptive streaming for weak wifi/2G connections
+
+This partnership ensures every nasheed is legally licensed, high-quality, and supports the creators — aligning perfectly with our Islamic ethics.
 
 ---
 
@@ -37,6 +60,39 @@
 - Page-based tracking provides more precise progress percentage
 - Native Android widgets now sync correctly with reading progress
 - No more misleading progress statistics when navigating between pages
+
+---
+
+## 🚀 **Coming in v2.1 — Nasheed Library**
+
+### 🎵 **400+ Premium Nasheeds — Legally Licensed & Free**
+
+In partnership with **No Copyright Nasheed**, we're bringing the largest curated nasheed library to any Islamic app:
+
+| Feature | Details |
+|---------|---------|
+| **Library Size** | 400+ premium nasheeds (expanding) |
+| **Licensing** | Official free perpetual license from No Copyright Nasheed |
+| **Artists** | Curated from top Islamic nasheed artists globally |
+| **Categories** | Hamd, Naat, Islamic motivation, Ramadan, Eid, kids |
+| **Languages** | Arabic, English, Urdu, Turkish, Malay, more |
+
+### 📶 **Adaptive Streaming for Weak Connections**
+- **Smart Bitrate**: Auto-adjusts quality (32kbps → 128kbps) based on connection
+- **Smart Caching**: Preloads next nasheed during playback
+- **Offline Queue**: Download on wifi, listen anywhere
+- **Data Saver**: <5MB/hour on lowest quality
+- **Background Play**: Continues when screen off / app backgrounded
+
+### 🎛️ **Smart Features**
+- **Sleep Timer**: Auto-stop after 15/30/60 minutes
+- **Playback Speed**: 0.5x → 2x for learning/memorization
+- **Lyrics Sync**: Time-synced lyrics display (where available)
+- **Favorites & Playlists**: Build personal collections
+- **Daily Nasheed**: Curated daily recommendation
+- **Background Download**: Queue downloads on wifi only
+
+> **Official Partnership**: Noor Connect is now featured on the [No Copyright Nasheed website](https://nocopyrightnasheed.com/) — the first Islamic app to receive this recognition.
 
 ---
 
@@ -80,6 +136,21 @@
 - **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via Akamai CDN (hls_roku) for reliable HLS streaming. CSP-compliant HTTP support included.
 - **Radio Statistics & Achievements**: Track your listening habits with detailed statistics per station, total listening time, streak tracking, and unlockable achievements for consistent listening.
 - **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication. Uses **standard Madani Mushaf** (industry standard for Muslim world with 604 pages).
+- **🎵 Nasheed Library (v2.1)**: 400+ legally licensed nasheeds via official No Copyright Nasheed partnership. Adaptive streaming for 2G/weak wifi, offline download, sleep timer, lyrics sync, and curated daily recommendations. **Officially featured** on No Copyright Nasheed website.
+
+### 🎵 Dedicated Nasheed Player (v2.1+)
+
+- **Official No Copyright Nasheed Partnership**: Exclusive integration with 400+ high-quality nasheeds from the renowned No Copyright Nasheed platform — **legally licensed** and **officially featured** on their website.
+- **Adaptive Streaming**: Smart bitrate adaptation (64kbps/128kbps/256kbps) for seamless playback on 2G, weak wifi, or limited data — no buffering, ever.
+- **Offline-First**: One-tap download for complete offline listening. Automatic cleanup of old downloads when storage is low.
+- **Smart Player Features**:
+  - Sleep timer with fade-out (5/15/30/60 min)
+  - Lyrics synchronization (LRC format) with word-by-word highlighting
+  - Curated daily recommendations based on time, mood, and history
+  - Continuous playback with crossfade between tracks
+  - Background playback with notification controls
+- **Categories**: Morning/Evening adhkar, Ramadan, Eid, Kids, Arabic/English/Urdu, Instrumental, Acapella
+- **Privacy-First**: No listening analytics, no tracking, all data local. Optional anonymous usage stats (opt-in only).
 
 
 ### 📱 Enhanced Widget System & Dashboard
