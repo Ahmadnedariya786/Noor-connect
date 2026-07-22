@@ -7,7 +7,7 @@ import android.content.Context
 import android.util.Log
 import android.widget.RemoteViews
 import com.noorconnect.app.R
-import com.noorconnect.app.widgets.HadithBundle
+import com.noorconnect.app.widgets.dailyhadith.HadithBundle
 import com.noorconnect.app.widgets.WidgetDeeplink
 import com.noorconnect.app.widgets.WidgetForegroundService
 import com.noorconnect.app.widgets.WidgetPrefs

@@ -54,6 +54,9 @@ object WidgetPrefs {
 
     // ─────────── Daily Content ───────────
 
+    fun lastContentSyncMs(context: Context): Long =
+        privatePrefs(context).getLong(KEY_LAST_CONTENT_SYNC, 0L)
+
     fun saveDailyContent(context: Context, payload: DailyContentPayload) {
         privatePrefs(context).edit {
             putString(KEY_DAILY_CONTENT_PAYLOAD, payload.toJson().toString())

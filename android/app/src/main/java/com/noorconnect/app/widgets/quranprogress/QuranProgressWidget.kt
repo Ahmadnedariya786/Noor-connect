@@ -77,7 +77,7 @@ class QuranProgressWidget : AppWidgetProvider() {
 
             // Stale data badge
             val now = System.currentTimeMillis()
-            val isStale = payload?.let { (now - it.lastUpdated) > 2 * 60 * 60 * 1000L } ?: false
+            val isStale = payload?.let { (now - it.lastReadTimestamp) > 2 * 60 * 60 * 1000L } ?: false
             views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
 
             // Accessibility content description

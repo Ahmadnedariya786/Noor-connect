@@ -52,7 +52,8 @@ class DailyAyahWidget : AppWidgetProvider() {
 
             // Stale data badge
             val now = System.currentTimeMillis()
-            val isStale = payload?.let { (now - it.ayah.lastUpdated) > 2 * 60 * 60 * 1000L } ?: false
+            val lastSync = WidgetPrefs.lastContentSyncMs(context)
+            val isStale = lastSync > 0 && (now - lastSync) > 2 * 60 * 60 * 1000L
             views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
 
             // Accessibility content description

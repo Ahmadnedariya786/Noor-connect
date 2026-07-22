@@ -62,6 +62,14 @@ class WidgetRefreshWorker(
         private var sensorManager: SensorManager? = null
         private var stepListener: StepListener? = null
 
+        val WIDGET_PROVIDERS = listOf(
+            NextPrayerWidget(),
+            DailyAyahWidget(),
+            DailyHadithWidget(),
+            QuranProgressWidget(),
+            TasbeehWidget()
+        )
+
         /**
          * Enqueue (or keep) the 30-minute periodic refresh.
          * Safe to call multiple times — KEEP policy preserves existing schedule.
@@ -183,14 +191,6 @@ class WidgetRefreshWorker(
             // Not needed for step detection
         }
     }
-
-    private val WIDGET_PROVIDERS = listOf(
-        NextPrayerWidget(),
-        DailyAyahWidget(),
-        DailyHadithWidget(),
-        QuranProgressWidget(),
-        TasbeehWidget()
-    )
 
     override suspend fun doWork(): Result {
         return try {

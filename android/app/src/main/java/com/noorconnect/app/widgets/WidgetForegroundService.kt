@@ -21,10 +21,9 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import com.noorconnect.app.R
 
 /**
  * Foreground service for continuous widget monitoring:
@@ -112,8 +111,12 @@ class WidgetForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = buildNotification()
-        startForeground(NOTIFICATION_ID, notification, ServiceCompat.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        companion.setRunning(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
+        setRunning(true)
         return START_STICKY
     }
 
@@ -122,7 +125,7 @@ class WidgetForegroundService : Service() {
     override fun onDestroy() {
         stopStepDetection()
         stopLocationMonitoring()
-        companion.setRunning(false)
+        setRunning(false)
         super.onDestroy()
     }
 
@@ -197,7 +200,7 @@ class WidgetForegroundService : Service() {
                 LocationManager.NETWORK_PROVIDER,
                 MIN_TIME_BETWEEN_LOCATION_UPDATES_MS,
                 LOCATION_CHANGE_THRESHOLD_METERS,
-                locationListener
+                locationListener!!
             )
 
             // GPS if available
@@ -206,7 +209,7 @@ class WidgetForegroundService : Service() {
                     LocationManager.GPS_PROVIDER,
                     MIN_TIME_BETWEEN_LOCATION_UPDATES_MS,
                     LOCATION_CHANGE_THRESHOLD_METERS,
-                    locationListener
+                    locationListener!!
                 )
             }
             Log.d(TAG, "Location monitoring started")
@@ -261,7 +264,7 @@ class WidgetForegroundService : Service() {
                 description = getString(R.string.widget_monitor_channel_desc)
                 setShowBadge(false)
                 enableVibration(false)
-                sound = null
+                setSound(null, null)
             }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)

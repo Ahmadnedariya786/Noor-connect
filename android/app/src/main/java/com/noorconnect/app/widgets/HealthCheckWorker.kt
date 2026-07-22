@@ -30,7 +30,7 @@ class HealthCheckWorker(
 
         fun enqueuePeriodic(context: Context) {
             val work = PeriodicWorkRequestBuilder<HealthCheckWorker>(
-                INTERVAL_HOURS, TimeUnit.HOURS
+                INTERVAL_HOURS.toLong(), TimeUnit.HOURS
             ).build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_TAG,

@@ -11,7 +11,6 @@ import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceManager
 import com.noorconnect.app.R
 
 /**
