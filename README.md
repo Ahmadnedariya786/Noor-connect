@@ -44,10 +44,12 @@
 
 ### 📖 Enhanced Quran & Tafsir Explorer
 
-- **Complete Holy Quran**: Clean, beautifully styled Uthmani and Indo-Pak reading interfaces.
+- **Complete Holy Quran**: Beautifully styled Uthmani and Indo-Pak reading interfaces with **local Madani Mushaf WebP images** (604 pages). Advanced caching system prefetches pages for instant display.
+- **Adaptive Quran View**: Smart interface that switches between **Reading Mushaf** (Arabic-only) and **Translated Mushaf** (Arabic + translations) modes with seamless switching.
+- **Word-by-Word Tajweed Support**: Select from multiple Mushaf styles including **Madani, Naskh (Indo-Pak), Classic Madani, Warsh, and Qaloon scripts** with color-coded Tajweed rules.
 - **Advanced Tafsir System**: 25+ global Quranic commentary editions instantly accessible via high-speed spaCy API integration, eliminating heavy database overhead.
-- **Multilingual Support**: Read meanings and Tafsir in English, Arabic, Bengali, Urdu, and Russian.
-- **Recitation Playback**: Immersive background audio from multiple reciters with progress tracking.
+- **Multilingual Support**: Read meanings and Tafsir in English, Arabic, Bengali, Urdu, and Russian with word-by-word translations.
+- **Recitation Playback**: Immersive background audio from multiple reciters with progress tracking, synchronized with Mushaf page turns and highlighted verses.
 
 ### 🕋 Premium Qibla Compass
 - **High-Precision Native Sensors**: Completely overhauled native compass utilization tapping into device magnetometers for raw, smooth orientation. 60fps hardware-accelerated JS interpolation eliminates sensor jitter and UI lag on legacy Android devices.
@@ -78,7 +80,7 @@
 - **Hadith Encyclopedia (87K)**: 16 complete collections with Arabic + English, grade badges, bookmarks, daily hadith widget, and full-text navigation.
 - **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via Akamai CDN (hls_roku) for reliable HLS streaming. CSP-compliant HTTP support included.
 - **Radio Statistics & Achievements**: Track your listening habits with detailed statistics per station, total listening time, streak tracking, and unlockable achievements for consistent listening.
-- **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication and reduce APK size (168MB → 84MB). F-Droid compatible.
+- **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication. Uses **standard Madani Mushaf** (industry standard for Muslim world with 604 pages).
 
 
 ### 📱 Enhanced Widget System & Dashboard
@@ -105,7 +107,7 @@ Noor Connect is built from the ground up for performance and ethical transparenc
   - Strictly **Zero Analytics**, **Zero Trackers**. 
   - Pre-configured `foss` Gradle flavor specifically built to strip `play-services` for pure open-source distribution. 
   - Fastlane F-Droid metadata integration ready.
-  - **APK Size Reduction**: Implemented a comprehensive F-Droid prebuild script (`clean-dist-data.js`) to strip >300MB of offline JSON data (Tafsir, Hadith, Mushaf) from the bundled APK, relying purely on CDNs to achieve a tiny 84MB footprint.
+  - **APK Size Optimization**: Implemented a comprehensive F-Droid prebuild script (`clean-dist-data.js`) to strip >300MB of redundant JSON data from bundled assets. Uses **local Mushaf WebP storage** and CDN fallback to maintain feature completeness while keeping footprint manageable.
 - **Data Portability**: Full App Backup & Restore capabilities directly to internal storage (localStorage + Capacitor Preferences). Auto-backup on first install, auto-restore on reinstall. All data stays strictly local.
 - **Cross-Platform Backup**: `backup-restore-service.ts` uses localStorage (no native filesystem dependency) with background processing via `requestIdleCallback`/`setTimeout` to avoid UI blocking.
 - **Low-End Device Optimizations** (2016+ devices, 30+ FPS target):
