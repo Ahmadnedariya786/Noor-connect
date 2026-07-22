@@ -84,7 +84,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         val prefs = getWidgetPrefs()
 
         // Load saved size
-        val savedSize = prefs.getString("widget_size_$widgetId", "default")
+        val savedSize = prefs.getString("widget_size_$widgetId", "default") ?: "default"
         val sizeOptions = sizeSpinner.adapter as ArrayAdapter<*>
         for (i in 0 until sizeOptions.count) {
             if (sizeOptions.getItem(i).toString().startsWith(savedSize)) {
@@ -106,7 +106,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         densitySeekBar.progress = savedDensity
 
         // Load accent color
-        val savedColor = prefs.getString("widget_accent_$widgetId", "emerald")
+        val savedColor = prefs.getString("widget_accent_$widgetId", "emerald") ?: "emerald"
         val colorOptions = accentColorSpinner.adapter as ArrayAdapter<*>
         for (i in 0 until colorOptions.count) {
             if (colorOptions.getItem(i).toString().lowercase().startsWith(savedColor.lowercase())) {
