@@ -158,11 +158,25 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 <p align="center">
   <i>"Indeed, in the remembrance of Allah do hearts find rest." (Ar-Ra'd 13:28)</i>
+</p>
+
+## 📱 Screenshots
+
 <table>
   <tr>
-    <td><img width="400" alt="ao2r6ooztsbzqzs0gyot" src="https://github.com/user-attachments/assets/9d5f585c-c981-4ec3-b76b-98db58e326ed" /></td>
-    <td><img width="400" alt="kz29bm528tqdlrkdllka" src="https://github.com/user-attachments/assets/68ff891a-99b1-4906-8e5e-7ae040d501a9" /></td>
-    <td><img width="400" alt="p2nplsqzwlfgltgpwcyv" src="https://github.com/user-attachments/assets/ba728807-a52c-4178-ad78-ad0350edbf88" /></td>
+    <td align="center"><img width="280" alt="Home Dashboard" src="assets/screenshots/1_home.png" /><br/><b>Home Dashboard</b></td>
+    <td align="center"><img width="280" alt="Services" src="assets/screenshots/2_services.png" /><br/><b>Services</b></td>
+    <td align="center"><img width="280" alt="Qibla Compass" src="assets/screenshots/3_qibla.png" /><br/><b>Qibla Compass</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img width="280" alt="Live Streams" src="assets/screenshots/4_live.png" /><br/><b>Live Streams</b></td>
+    <td align="center"><img width="280" alt="Quran Radio" src="assets/screenshots/5_radio.png" /><br/><b>Quran Radio</b></td>
+    <td align="center"><img width="280" alt="Islamic Quiz" src="assets/screenshots/6_quiz.png" /><br/><b>Islamic Quiz</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img width="280" alt="Islamic Remedies" src="assets/screenshots/7_islamic_remedies.png" /><br/><b>Islamic Remedies</b></td>
+    <td align="center"><img width="280" alt="Hadith Encyclopedia" src="assets/screenshots/8_hadith.png" /><br/><b>Hadith Encyclopedia</b></td>
+    <td align="center"><img width="280" alt="Settings" src="assets/screenshots/9_settings.png" /><br/><b>Settings</b></td>
   </tr>
 </table>
 
