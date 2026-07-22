@@ -166,19 +166,21 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 <table>
   <tr>
-    <td align="center"><img width="280" alt="Home Dashboard" src="assets/screenshots/1_home.png" /><br/><b>Home Dashboard</b></td>
-    <td align="center"><img width="280" alt="Services" src="assets/screenshots/2_services.png" /><br/><b>Services</b></td>
-    <td align="center"><img width="280" alt="Qibla Compass" src="assets/screenshots/3_qibla.png" /><br/><b>Qibla Compass</b></td>
+    <td align="center"><img width="280" alt="Home Dashboard with Islamic features" src="assets/screenshots/1_home.png" /><br/><b>Home Dashboard</b></td>
+    <td align="center"><img width="280" alt="Enhanced Services Overview" src="assets/screenshots/2_services.png" /><br/><b>Services</b></td>
+    <td align="center"><img width="280" alt="Premium Qibla Compass UI" src="assets/screenshots/3_qibla.png" /><br/><b>Qibla Compass</b></td>
   </tr>
   <tr>
-    <td align="center"><img width="280" alt="Live Streams" src="assets/screenshots/4_live.png" /><br/><b>Live Streams</b></td>
-    <td align="center"><img width="280" alt="Quran Radio" src="assets/screenshots/5_radio.png" /><br/><b>Quran Radio</b></td>
-    <td align="center"><img width="280" alt="Islamic Quiz" src="assets/screenshots/6_quiz.png" /><br/><b>Islamic Quiz</b></td>
+    <td align="center"><img width="280" alt="Live Makkah/Madinah Streams" src="assets/screenshots/4_live.png" /><br/><b>Live Streams</b></td>
+    <td align="center"><img width="280" alt="Quran Radio with Progress" src="assets/screenshots/5_radio.png" /><br/><b>Quran Radio</b></td>
+    <td align="center"><img width="280" alt="Advanced Islamic Quiz Interface" src="assets/screenshots/6_quiz.png" /><br/><b>Islamic Quiz</b></td>
   </tr>
   <tr>
-    <td align="center"><img width="280" alt="Islamic Remedies" src="assets/screenshots/7_islamic_remedies.png" /><br/><b>Islamic Remedies</b></td>
-    <td align="center"><img width="280" alt="Hadith Encyclopedia" src="assets/screenshots/8_hadith.png" /><br/><b>Hadith Encyclopedia</b></td>
-    <td align="center"><img width="280" alt="Settings" src="assets/screenshots/9_settings.png" /><br/><b>Settings</b></td>
+    <td align="center"><img width="280" alt="Islamic Remedies (Tibb-e-Nabawi)" src="assets/screenshots/7_islamic_remedies.png" /><br/><b>Islamic Remedies</b></td>
+    <td align="center"><img width="280" alt="Complete Hadith Encyclopedia" src="assets/screenshots/8_hadith.png" /><br/><b>Hadith Encyclopedia</b></td>
+    <td align="center"><img width="280" alt="Advanced Settings & Configuration" src="assets/screenshots/9_settings.png" /><br/><b>Settings</b></td>
   </tr>
 </table>
+
+**Note**: Screenshots showcase Noor's comprehensive Islamic companion features, including advanced Quran reading, native widgets, gamified learning, and privacy-first interface design.
 
