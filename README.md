@@ -44,12 +44,11 @@
 
 ### 📖 Enhanced Quran & Tafsir Explorer
 
-- **Complete Holy Quran**: Beautifully styled Uthmani and Indo-Pak reading interfaces with **local Madani Mushaf WebP images** (604 pages). Advanced caching system prefetches pages for instant display.
-- **Adaptive Quran View**: Smart interface that switches between **Reading Mushaf** (Arabic-only) and **Translated Mushaf** (Arabic + translations) modes with seamless switching.
-- **Word-by-Word Tajweed Support**: Select from multiple Mushaf styles including **Madani, Naskh (Indo-Pak), Classic Madani, Warsh, and Qaloon scripts** with color-coded Tajweed rules.
+- **Complete Holy Quran**: Clean, beautifully styled Uthmani and Indo-Pak reading interfaces with **local Madani Mushaf WebP images** (604 pages). Advanced caching system prefetches pages for instant display.
+- **Standard Mushaf Implementation**: Industry-standard **Madani Mushaf layout** with optimized WebP storage for privacy-first offline Quran reading.
 - **Advanced Tafsir System**: 25+ global Quranic commentary editions instantly accessible via high-speed spaCy API integration, eliminating heavy database overhead.
-- **Multilingual Support**: Read meanings and Tafsir in English, Arabic, Bengali, Urdu, and Russian with word-by-word translations.
-- **Recitation Playback**: Immersive background audio from multiple reciters with progress tracking, synchronized with Mushaf page turns and highlighted verses.
+- **Multilingual Support**: Read meanings and Tafsir in English, Arabic, Bengali, Urdu, and Russian.
+- **Recitation Playback**: Immersive background audio from multiple reciters with progress tracking.
 
 ### 🕋 Premium Qibla Compass
 - **High-Precision Native Sensors**: Completely overhauled native compass utilization tapping into device magnetometers for raw, smooth orientation. 60fps hardware-accelerated JS interpolation eliminates sensor jitter and UI lag on legacy Android devices.
