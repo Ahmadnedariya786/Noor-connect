@@ -39,3 +39,7 @@ bun.lockb
 
 # Android
 android/app/noorconnectjks
+
+# Build artifacts
+dist/
+android/app/src/main/assets/public/
