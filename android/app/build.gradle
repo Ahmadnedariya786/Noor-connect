@@ -182,6 +182,9 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
 
+    // Material Components for Material3 styles (Widget.Material3.Button, etc.)
+    implementation "com.google.android.material:material:1.12.0"
+
     // WorkManager for periodic widget refresh
     implementation "androidx.work:work-runtime-ktx:2.9.0"
 
