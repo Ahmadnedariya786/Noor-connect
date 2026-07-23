@@ -1,12 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
-def keystorePropertiesFile = rootProject.file("local.properties")
-def keystoreProperties = new Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
-
 android {
     namespace = "com.noorconnect.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -32,19 +26,8 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    signingConfigs {
-        release {
-            if (keystorePropertiesFile.exists() && keystoreProperties.containsKey('RELEASE_STORE_FILE')) {
-                storeFile file(keystoreProperties['RELEASE_STORE_FILE'])
-                storePassword keystoreProperties['RELEASE_STORE_PASSWORD']
-                keyAlias keystoreProperties['RELEASE_KEY_ALIAS']
-                keyPassword keystoreProperties['RELEASE_KEY_PASSWORD']
-            }
-        }
-    }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -55,10 +38,13 @@ android {
     productFlavors {
         foss {
             dimension "default"
-            // F-Droid requires unsigned APKs — null out signingConfig so Gradle
-            // produces app-foss-release-unsigned.apk instead of a "signed" one.
-            // Without this, F-Droid's scanner can't find the output APK.
-            signingConfig null
+        }
+    }
+
+    // Ensure foss release variant is unsigned for F-Droid to sign with its own key
+    applicationVariants.configureEach { variant ->
+        if (variant.flavorName == "foss" && variant.buildType.name == "release") {
+            variant.signingConfig = null
         }
     }
 }
