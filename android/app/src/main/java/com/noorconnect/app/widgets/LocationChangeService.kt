@@ -130,6 +130,7 @@ object LocationChangeService {
             Log.d(TAG, "Location provider enabled: $provider")
         }
 
+        @Suppress("DEPRECATION")
         override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
             // Not needed for our use case
         }

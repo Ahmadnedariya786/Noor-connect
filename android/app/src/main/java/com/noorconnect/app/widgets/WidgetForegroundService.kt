@@ -247,6 +247,7 @@ class WidgetForegroundService : Service() {
 
         override fun onProviderDisabled(provider: String) {}
         override fun onProviderEnabled(provider: String) {}
+        @Suppress("DEPRECATION")
         override fun onStatusChanged(provider: String, status: Int, extras: Bundle?) {}
     }
 

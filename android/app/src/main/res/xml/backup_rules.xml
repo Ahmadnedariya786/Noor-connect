@@ -2,8 +2,4 @@
 <full-backup-content>
     <include domain="sharedpref" path="NoorConnectWidgetPrefs.xml"/>
     <include domain="sharedpref" path="WidgetConfigPrefs.xml"/>
-    <exclude domain="sharedpref" path="NoorConnectWidgetPrefs.xml" key="prayer_payload"/>
-    <exclude domain="sharedpref" path="NoorConnectWidgetPrefs.xml" key="daily_content_payload"/>
-    <exclude domain="sharedpref" path="NoorConnectWidgetPrefs.xml" key="quran_progress_payload"/>
-    <exclude domain="sharedpref" path="NoorConnectWidgetPrefs.xml" key="tasbeeh_state"/>
 </full-backup-content>
