@@ -1,7 +1,9 @@
 package com.noorconnect.app;
 
+import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -82,6 +84,14 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private boolean canScheduleExactAlarms() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            return am != null && am.canScheduleExactAlarms();
+        }
+        return true;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -96,7 +106,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         // Re-check permissions on resume in case user granted them from settings
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

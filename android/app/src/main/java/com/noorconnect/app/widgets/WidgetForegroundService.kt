@@ -44,7 +44,7 @@ class WidgetForegroundService : Service() {
         private const val LOCATION_CHANGE_THRESHOLD_METERS = 10000f // 10km
         private const val MIN_TIME_BETWEEN_LOCATION_UPDATES_MS = 300000L // 5 min
 
-        fun start(context: Context) {
+        @JvmStatic fun start(context: Context) {
             val intent = Intent(context, WidgetForegroundService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -53,7 +53,7 @@ class WidgetForegroundService : Service() {
             }
         }
 
-        fun stop(context: Context) {
+        @JvmStatic fun stop(context: Context) {
             val intent = Intent(context, WidgetForegroundService::class.java)
             context.stopService(intent)
         }
@@ -61,9 +61,9 @@ class WidgetForegroundService : Service() {
         // Track running state for health checks
         private var isServiceRunning = false
 
-        fun isRunning(): Boolean = isServiceRunning
+        @JvmStatic fun isRunning(): Boolean = isServiceRunning
 
-        fun setRunning(running: Boolean) {
+        @JvmStatic fun setRunning(running: Boolean) {
             isServiceRunning = running
         }
     }
