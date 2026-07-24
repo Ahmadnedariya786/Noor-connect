@@ -40,13 +40,6 @@ android {
             dimension "default"
         }
     }
-
-    // Ensure foss release variant is unsigned for F-Droid to sign with its own key
-    applicationVariants.configureEach { variant ->
-        if (variant.flavorName == "foss" && variant.buildType.name == "release") {
-            variant.signingConfig = null
-        }
-    }
 }
 
 // Task to move mushaf images from public to android assets and remove from dist to avoid duplication
