@@ -96,6 +96,7 @@ const queryClient = new QueryClient({
 // Global Players - Lazy loaded
 const GlobalRadioPlayer = lazy(() => import("@/components/GlobalRadioPlayer").then(m => ({ default: m.GlobalRadioPlayer })));
 const GlobalQuranPlayer = lazy(() => import("@/components/GlobalQuranPlayer").then(m => ({ default: m.GlobalQuranPlayer })));
+const GlobalNasheedPlayer = lazy(() => import("@/components/GlobalNasheedPlayer").then(m => ({ default: m.GlobalNasheedPlayer })));
 import { EidChecklistNotification } from "@/components/EidChecklistNotification";
 import { FitranaCalculatorNotification } from "@/components/FitranaCalculatorNotification";
 
@@ -137,6 +138,7 @@ const PrayerStats = lazy(() => import("./pages/PrayerStats"));
 const HabitTracker = lazy(() => import("./pages/HabitTracker"));
 const QuranRadio = lazy(() => import("./pages/QuranRadio"));
 const QuranAudio = lazy(() => import("./pages/QuranAudio"));
+const NasheedPlayer = lazy(() => import("./pages/NasheedPlayer"));
 const LiveStreams = lazy(() => import("./pages/LiveStreams"));
 const RadioStats = lazy(() => import("./pages/RadioStats"));
 const Services = lazy(() => import("./pages/Services"));
@@ -243,6 +245,7 @@ function AppRoutes() {
         <Route path="/habit-tracker" element={<HabitTracker />} />
         <Route path="/quran-radio" element={<QuranRadio />} />
         <Route path="/quran-audio" element={<QuranAudio />} />
+        <Route path="/nasheeds" element={<NasheedPlayer />} />
         <Route path="/live" element={<LiveStreams />} />
         <Route path="/radio-stats" element={<RadioStats />} />
         <Route path="/services" element={<Services />} />
@@ -290,8 +293,11 @@ function AppContent() {
           </div>
 
           <BottomNav />
-          <GlobalRadioPlayer />
-          <GlobalQuranPlayer />
+          <Suspense fallback={null}>
+            <GlobalRadioPlayer />
+            <GlobalQuranPlayer />
+            <GlobalNasheedPlayer />
+          </Suspense>
         </BrowserRouter>
       </LazyMotionWrapper>
     </MotionConfig>

@@ -1560,6 +1560,13 @@ const Profile = () => {
               <MessageCircle className="w-4 h-4 mr-3 text-emerald-600" />
               <span className="font-medium">Issues & Feedback (WhatsApp)</span>
             </Button>
+            
+            <div className="mt-2 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 flex flex-col gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">License Attribution</span>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Audio Nasheeds in this application are non-commercially licensed from <a href="https://nocopyrightnasheeds.com" target="_blank" className="font-bold text-emerald-600 hover:underline">NoCopyrightNasheeds</a> under the NCN Community License Agreement.
+              </p>
+            </div>
           </div>
         </Card>
 

@@ -37,6 +37,8 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
     changes: [
       { type: 'feature', description: 'Advanced Notification System: Deep native integration for high-priority Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".' },
       { type: 'feature', description: 'Context-Aware Prayer Quotes: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g., Fajr-specific Hadith for Fajr reminders).' },
+      { type: 'feature', description: 'Islamic Nasheeds Library: High-performance audio player with 400+ vocals-only, copyright-free nasheeds powered by a custom Cloudflare CDN.' },
+      { type: 'feature', description: 'Advanced Media Player: Persistent background audio playback, queue management, favorites system, offline resilience, and weak-WiFi auto-buffering.' },
       { type: 'improvement', description: 'Modern Notification History: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.' },
       { type: 'improvement', description: 'Profile Polish: "Open Source & Support" card redesigned with full-width buttons, and added direct WhatsApp feedback integration.' },
       { type: 'fix', description: 'Widget Data Sync: Fixed QuranProgressWidget badge behavior and corrected RTL text alignment in DailyHadith widget.' }

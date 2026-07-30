@@ -24,7 +24,7 @@ We're proud to announce our partnership with **[No Copyright Nasheed](https://no
 
 - ✅ **Official License Grant**: Free perpetual license to integrate 400+ premium nasheeds
 - ✅ **Official Feature**: Noor Connect is now featured on the [No Copyright Nasheed website](https://nocopyrightnasheed.com/) as a trusted partner
-- 🎵 **Coming in v2.2**: 400+ curated nasheeds with adaptive streaming for weak wifi/2G connections
+- 🎵 **Released in v2.2**: 400+ curated nasheeds with a highly optimized audio player.
 
 This partnership ensures every nasheed is legally licensed, high-quality, and supports the creators — aligning perfectly with our Islamic ethics.
 

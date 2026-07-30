@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g. Fajr-specific Hadith for Fajr reminders).
 - **Modern Notification History**: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.
 
+#### Islamic Nasheeds (New Library)
+- **400+ Copyright-Free Nasheeds**: High-performance audio player with 400+ vocals-only nasheeds powered by a custom Cloudflare CDN.
+- **Advanced Media Player**: Persistent background audio playback, queue management, favorites system, offline resilience, and weak-WiFi auto-buffering.
+
 #### UI/UX & Quality of Life
 - **Profile Redesign**: Revamped the "Open Source & Support" card in settings to use a clean, stacked layout for better mobile responsiveness.
 - **WhatsApp Support**: Replaced GitHub link with official GitLab repository and added a direct "Issues and Feedback" button that opens WhatsApp support.
