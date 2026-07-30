@@ -40,6 +40,13 @@ export interface AnimationTier {
   shouldReduceAnimations: boolean;
   shouldDisableLayoutAnimations: boolean;
   shouldDisableStagger: boolean;
+  /**
+   * When true, `backdrop-filter: blur(...)` should be replaced with solid
+   * backgrounds.  Multiple simultaneous backdrop-blurs on Mali-400/450 GPUs
+   * (40% of 2016–2019 budget Android devices) consume 30+ ms per frame in
+   * shader readback alone, which eats the ENTIRE 30 FPS (33.3ms) frame budget.
+   */
+  shouldDisableBackdropBlur: boolean;
   maxConcurrentAnimations: number;
   staggerLimit: number;
   particleCount: number;
@@ -51,6 +58,7 @@ const TIER_DEFAULTS: Record<AnimationTier['tier'], Omit<AnimationTier, 'tier' | 
     shouldReduceAnimations: false,
     shouldDisableLayoutAnimations: false,
     shouldDisableStagger: false,
+    shouldDisableBackdropBlur: false,
     maxConcurrentAnimations: 20,
     staggerLimit: 50,
     particleCount: 100,
@@ -59,6 +67,7 @@ const TIER_DEFAULTS: Record<AnimationTier['tier'], Omit<AnimationTier, 'tier' | 
     shouldReduceAnimations: true,
     shouldDisableLayoutAnimations: true,
     shouldDisableStagger: false,
+    shouldDisableBackdropBlur: false,
     maxConcurrentAnimations: 10,
     staggerLimit: 20,
     particleCount: 30,
@@ -67,6 +76,7 @@ const TIER_DEFAULTS: Record<AnimationTier['tier'], Omit<AnimationTier, 'tier' | 
     shouldReduceAnimations: true,
     shouldDisableLayoutAnimations: true,
     shouldDisableStagger: true,
+    shouldDisableBackdropBlur: true,
     maxConcurrentAnimations: 5,
     staggerLimit: 10,
     particleCount: 10,
@@ -75,6 +85,7 @@ const TIER_DEFAULTS: Record<AnimationTier['tier'], Omit<AnimationTier, 'tier' | 
     shouldReduceAnimations: true,
     shouldDisableLayoutAnimations: true,
     shouldDisableStagger: true,
+    shouldDisableBackdropBlur: true,
     maxConcurrentAnimations: 0,
     staggerLimit: 0,
     particleCount: 0,
@@ -390,8 +401,16 @@ export function determineAnimationTier(
 }
 
 /**
- * Hook for components to get current animation tier
+ * Hook for components to get current animation tier.
+ *
+ * Storage: localStorage with a 7-day TTL (instead of sessionStorage).
+ * Previously every cold boot re-ran the 4.5s FPS benchmark and stole frames
+ * during the splash animation; now the cached tier is reused for a week.
  */
+const TIER_STORAGE_KEY = 'animation-tier';
+const TIER_STORAGE_META_KEY = 'animation-tier-meta';
+const TIER_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 export function getAnimationTier(): AnimationTier {
   if (typeof window === 'undefined') {
     return { ...TIER_DEFAULTS.high, tier: 'high', fps: 60, reasons: ['SSR'] };
@@ -400,20 +419,67 @@ export function getAnimationTier(): AnimationTier {
   const capabilities = getDeviceCapabilities();
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const cached = sessionStorage.getItem('animation-tier');
-  if (cached) {
-    try {
-      return JSON.parse(cached);
-    } catch {}
+  // Check localStorage cache with TTL — avoids re-running the 4.5s FPS
+  // benchmark on every cold boot.
+  try {
+    const cached = localStorage.getItem(TIER_STORAGE_KEY);
+    const cachedMeta = localStorage.getItem(TIER_STORAGE_META_KEY);
+    if (cached && cachedMeta) {
+      const meta = JSON.parse(cachedMeta) as { savedAt: number };
+      if (Date.now() - meta.savedAt < TIER_TTL_MS) {
+        const parsed = JSON.parse(cached) as AnimationTier;
+        // If user changed system-wide reduced-motion preference since we
+        // cached, honor it immediately rather than waiting 7 days.
+        if (prefersReducedMotion === parsed.shouldReduceAnimations) {
+          applyTieredVisualOverrides(parsed);
+          return parsed;
+        }
+      }
+    }
+  } catch {
+    /* storage disabled / corrupt — fall through to benchmark */
   }
 
-  // Run benchmark async, return high tier immediately for first paint
-  runFPSBenchmark().then(benchmark => {
-    const tier = determineAnimationTier(benchmark, capabilities, prefersReducedMotion);
-    sessionStorage.setItem('animation-tier', JSON.stringify(tier));
-    window.dispatchEvent(new CustomEvent('animation-tier-changed', { detail: tier }));
-  });
+  // Run benchmark async, return high tier immediately for first paint.
+  Promise.resolve()
+    .then(() => runFPSBenchmark())
+    .then((benchmark) => {
+      const tier = determineAnimationTier(benchmark, capabilities, prefersReducedMotion);
+      try {
+        localStorage.setItem(TIER_STORAGE_KEY, JSON.stringify(tier));
+        localStorage.setItem(
+          TIER_STORAGE_META_KEY,
+          JSON.stringify({ savedAt: Date.now() }),
+        );
+      } catch {
+        /* quota exceeded or private mode — don't crash */
+      }
+      applyTieredVisualOverrides(tier);
+      window.dispatchEvent(new CustomEvent('animation-tier-changed', { detail: tier }));
+    });
 
-  return { ...TIER_DEFAULTS.high, tier: 'high', fps: 60, reasons: ['Initial (benchmark pending)'] };
+  const initial: AnimationTier = {
+    ...TIER_DEFAULTS.high,
+    tier: 'high',
+    fps: 60,
+    reasons: ['Initial (benchmark pending)'],
+  };
+  applyTieredVisualOverrides(initial);
+  return initial;
+}
+
+/**
+ * Applies global CSS classes to `document.documentElement` based on the tier.
+ * Stylesheet rules in index.css can then target:
+ *   html.reduce-blur .backdrop-blur-sm,
+ *   html.reduce-blur [class*="backdrop-blur"] { ... }
+ * — this zeroes out backdrop-filter for low/minimal tiers WITHOUT touching
+ * every component (avoids a 20-file sweep and keeps diffs minimal).
+ */
+export function applyTieredVisualOverrides(tier: Pick<AnimationTier, 'shouldDisableBackdropBlur' | 'tier'>): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.classList.toggle('reduce-blur', !!tier.shouldDisableBackdropBlur);
+  root.dataset.animationTier = tier.tier;
 }
 

@@ -1,14 +1,13 @@
-﻿import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
-import { Moon, Sun, Download, Upload, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, Type, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings as SettingsIcon, Clock, Package, Vibrate, ArrowLeft, DollarSign } from "lucide-react";
+import { Moon, Sun, Download, Upload, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings as SettingsIcon, Clock, Package, Vibrate, ArrowLeft, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoBackup } from "@/hooks/useAutoBackup";
@@ -19,7 +18,6 @@ import { getCalculationMethod, setCalculationMethod, type CalculationMethodName 
 import { AladhanAPI } from "@/lib/aladhan-api";
 import { getStorageStats, clearAllBooks, formatFileSize, downloadBook, isBookDownloaded } from "@/lib/ebooks-storage";
 import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize, getLastAutoBackupTime } from "@/lib/backup";
-import { clearQuranMushafImageCache } from "@/lib/quran-mushaf-image-cache";
 import { notificationManager, type NotificationPreferences } from "@/lib/notification-manager";
 import { localNotifications } from "@/lib/local-notifications";
 import { PrayerMethodSelector } from "@/components/PrayerMethodSelector";
@@ -124,9 +122,10 @@ const Profile = () => {
     localStorage.getItem('auto-backup-enabled') === 'true'
   );
 
-  const updateBackupTime = useCallback(() => {
-    setLastAutoBackupTime(getLastAutoBackupTime());
-  }, [getLastAutoBackupTime]);
+  const updateBackupTime = useCallback(async () => {
+    const time = await getLastAutoBackupTime();
+    setLastAutoBackupTime(time);
+  }, []);
 
   const { enable: enableAutoBackup, disable: disableAutoBackup } = useAutoBackup(updateBackupTime);
 
@@ -157,56 +156,94 @@ const Profile = () => {
   }, []);
 
   useEffect(() => {
-    setMadhabState(getMadhab());
-    setTimeFormatState(getTimeFormat());
-    setCalculationMethodState(getCalculationMethod());
-    setQuranFontSizeState(getQuranFontSize());
-    setQuranFontState(quranFontManager.getCurrentFont());
-    setGenderSettingsState(getGenderSettings());
-    const sleepEnabled = isIslamicSleepReminderEnabled();
-    setIslamicSleepEnabled(sleepEnabled);
-    const offset = getIslamicSleepOffset();
-    setSleepOffset(offset);
-    if (sleepEnabled) {
-      const previews = [
-        'Recite Ayatul Kursi before sleeping.',
-        'Recite Surah Al-Ikhlas, Al-Falaq, An-Nas (3x).',
-        'Sleep on your right side facing the Qibla.',
-      ];
-      setSleepContentPreview(previews[new Date().getDate() % previews.length]);
+    // ────────────────────────────────────────────────────────────────────
+    // 3-Phase Staged Mount — prevents the 2.4s "Davey" UI-thread block
+    // that Logcat was measuring on Settings (Profile) open.
+    //
+    // The previous implementation ran ~22 sequential synchronous
+    // operations (sync storage reads, JSON.parse, CSS DOM mutation,
+    // Capacitor native bridge calls, IndexedDB queries, window event
+    // listener attachment) ALL inside one synchronous tick, right
+    // inside React's commit phase.  That plus the singleton
+    // constructors' eager work = 92 skipped frames.
+    //
+    // Phasing spreads work so the first paint is fast, native bridge
+    // calls happen AFTER the transition animation (shared-element
+    // layoutId in BottomNav) completes, and heavy IndexedDB reads
+    // don't block any user-visible work.
+    //
+    // NOTE: We deliberately use setTimeout(0) for PHASE 1 instead of
+    // requestAnimationFrame.  RAF callbacks fire inside the *next
+    // vsync window, so any slow synchronous work there still delays the
+    // first paint frame.  setTimeout(0) fires as soon as the current
+    // React commit + browser layout + paint complete — AFTER the user can
+    // already see the skeleton.  This avoids the 18ms of 9× JSON.parse
+    // calls from stealing a frame budget.
+    // ────────────────────────────────────────────────────────────────────
+
+    // PHASE 1 — as soon as the current task queue drains (≈0ms, AFTER first paint).
+    // Reads persisted settings and writes them into local component state.
+    // setState calls batch together into a single re-render.
+    let phase1Timer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      setMadhabState(getMadhab());
+      setTimeFormatState(getTimeFormat());
+      setCalculationMethodState(getCalculationMethod());
+      setQuranFontSizeState(getQuranFontSize());
+      setQuranFontState(quranFontManager.getCurrentFont());
+      setGenderSettingsState(getGenderSettings());
+      const sleepEnabled = isIslamicSleepReminderEnabled();
+      setIslamicSleepEnabled(sleepEnabled);
+      setSleepOffset(getIslamicSleepOffset());
+      if (sleepEnabled) {
+        const previews = [
+          'Recite Ayatul Kursi before sleeping.',
+          'Recite Surah Al-Ikhlas, Al-Falaq, An-Nas (3x).',
+          'Sleep on your right side facing the Qibla.',
+        ];
+        setSleepContentPreview(previews[new Date().getDate() % previews.length]);
+      }
+      phase1Timer = null;
+    }, 0);
+
+    // PHASE 2 — +200ms.  Settings/UI values that don't block paint.
+    //           By now the Framer Motion page transition has finished.
+    let t1: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      quranFontManager.initialize();
+      setNotificationPrefs(notificationManager.getPreferences());
+
+      const saved = localStorage.getItem('prayer-reminder-minutes');
+      if (saved) setReminderMinutes(saved);
+
+      const savedHijriOffset = localStorage.getItem('hijri-date-offset');
+      if (savedHijriOffset) setHijriOffset(savedHijriOffset);
+      t1 = null;
+    }, 200);
+
+    // PHASE 3 — Fire during next browser IDLE period (NOT a wall-clock timeout).
+    // requestIdleCallback runs when the main thread has capacity (after paint,
+    // after event queue is drained).  Falls back to setTimeout(..., 200) on
+    // Safari/Capacitor WebViews that lack the API — still faster than 1000ms on
+    // flagship, bounded to 200ms worst case via `timeout` option.
+    let idleId: number | null = null;
+    let fallbackT3: ReturnType<typeof setTimeout> | null = null;
+    const phase3 = () => {
+      refreshPermissionStatus();
+      checkPrayerNotificationStatus();
+      getStorageStats().then(setStorageStats);
+      getLastAutoBackupTime().then(setLastAutoBackupTime);
+    };
+    const ric = (window as any).requestIdleCallback;
+    if (typeof ric === 'function') {
+      idleId = ric(phase3, { timeout: 500 });
+    } else {
+      // Capacitor WebView / Safari fallback — run after current event loop drains
+      fallbackT3 = setTimeout(phase3, 200);
     }
 
-    // Initialize Quran font manager
-    quranFontManager.initialize();
-
-    // Load notification preferences
-    setNotificationPrefs(notificationManager.getPreferences());
-
-    // Load reminder minutes
-    const saved = localStorage.getItem('prayer-reminder-minutes');
-    if (saved) setReminderMinutes(saved);
-
-    const savedHijriOffset = localStorage.getItem('hijri-date-offset');
-    if (savedHijriOffset) setHijriOffset(savedHijriOffset);
-
-    // Improved notification support check for mobile
-    refreshPermissionStatus();
-
-    // Load prayer notification status
-    checkPrayerNotificationStatus();
-
-    // Load storage stats
-    getStorageStats().then(setStorageStats);
-
-    // Load last auto backup time
-    setLastAutoBackupTime(getLastAutoBackupTime());
-
-    // Listen for gender settings changes
+    // Event listeners — attach synchronously (cheap), just registering.
     const handleGenderSettingsUpdate = () => {
       setGenderSettingsState(getGenderSettings());
     };
-
-    window.addEventListener('gender-settings-updated', handleGenderSettingsUpdate);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -214,10 +251,18 @@ const Profile = () => {
         checkPrayerNotificationStatus();
       }
     };
+
+    window.addEventListener('gender-settings-updated', handleGenderSettingsUpdate);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', refreshPermissionStatus);
 
     return () => {
+      if (phase1Timer !== null) clearTimeout(phase1Timer);
+      if (t1 !== null) clearTimeout(t1);
+      if (idleId !== null && typeof (window as any).cancelIdleCallback === 'function') {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (fallbackT3 !== null) clearTimeout(fallbackT3);
       window.removeEventListener('gender-settings-updated', handleGenderSettingsUpdate);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', refreshPermissionStatus);
@@ -486,38 +531,6 @@ const Profile = () => {
     }
   };
 
-  const handleMethodChange = (value: string) => {
-    setCalculationMethodState(value as CalculationMethodName);
-    setCalculationMethod(value as CalculationMethodName);
-    toast({ title: "Calculation method updated" });
-  };
-
-  const handleFontSizeChange = (value: number[]) => {
-    if (!value || value.length === 0) return;
-
-    const size = value[0];
-    if (typeof size !== 'number' || size < 16 || size > 42) return;
-
-    setQuranFontSizeState(size);
-    setQuranFontSize(size);
-
-    toast({
-      title: t('quranFontSizeUpdated'),
-      description: `${t('fontSize')} set to ${size}px`,
-    });
-  };
-
-  const handleQuranFontChange = async (font: QuranFont) => {
-    setQuranFontState(font);
-    quranFontManager.setFont(font);
-
-    const fontOption = quranFontManager.getFontOption(font);
-    toast({
-      title: "Quran Font Changed",
-      description: `Now Using ${fontOption.name}`
-    });
-  };
-
   const handleBackup = async () => {
     const { id: toastId, update } = toast({
       title: "Creating Backup...",
@@ -622,13 +635,6 @@ const Profile = () => {
       await clearCache();
       setStorageStats({ totalBooks: 0, totalSize: 0 });
       toast({ title: "Cache cleared" });
-    }
-  };
-
-  const handleClearQuranCache = async () => {
-    if (confirm("This will delete all cached Mushaf page images. Continue?")) {
-      await clearQuranMushafImageCache();
-      toast({ title: "Quran cache cleared" });
     }
   };
 
@@ -1259,8 +1265,18 @@ const Profile = () => {
                     size="sm"
                     onClick={async () => {
                       try {
+                        // @capacitor/app v6 removed openSettings().  Use Android
+                        // intent API via the same plugin's bridge fallback — or
+                        // on newer Capacitor installs, the method is still
+                        // available on some WebView implementations through the
+                        // native bridge.  Try both paths, fall back to toast.
                         const { App } = await import('@capacitor/app');
-                        await App.openSettings();
+                        const appAny = App as unknown as { openSettings?: () => Promise<void> };
+                        if (typeof appAny.openSettings === 'function') {
+                          await appAny.openSettings();
+                        } else {
+                          throw new Error('openSettings unavailable in @capacitor/app v6');
+                        }
                       } catch {
                         toast({
                           title: t('openAndroidSettings'),
@@ -1514,28 +1530,36 @@ const Profile = () => {
           </div>
         </Card>
 
-        {/* Source Code */}
-        <Card className="p-4 bg-gradient-to-br from-emerald-50/50 to-blue-50/50 border-emerald-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <Globe className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-emerald-700">Source Code</h3>
-                <p className="text-xs text-emerald-600">Open-source Islamic companion</p>
-              </div>
+        {/* Source Code & Support */}
+        <Card className="p-5 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border-emerald-500/10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
+              <Globe className="w-6 h-6 text-emerald-600" />
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700"
-                onClick={() => window.open('https://github.com/darkmaster0345/Noor-connect', '_blank')}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                View on GitHub
-              </Button>
+            <div>
+              <h3 className="font-bold text-base text-foreground">Open Source & Support</h3>
+              <p className="text-xs text-muted-foreground">Join the community or get help</p>
             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3">
+            <Button
+              variant="outline"
+              className="w-full h-12 justify-start bg-background hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500/30 transition-all"
+              onClick={() => window.open('https://gitlab.com/theredhacker0345/Noor-connect', '_blank')}
+            >
+              <Globe className="w-4 h-4 mr-3 text-emerald-600" />
+              <span className="font-medium">View Source on GitLab</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="w-full h-12 justify-start bg-background hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500/30 transition-all"
+              onClick={() => window.open('https://wa.me/923352706540', '_blank')}
+            >
+              <MessageCircle className="w-4 h-4 mr-3 text-emerald-600" />
+              <span className="font-medium">Issues & Feedback (WhatsApp)</span>
+            </Button>
           </div>
         </Card>
 

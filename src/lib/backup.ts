@@ -1,4 +1,5 @@
 import { clearAllBooks, getDownloadedBooks, type DownloadedBook } from './ebooks-storage';
+import { Preferences } from '@capacitor/preferences';
 const BACKUP_VERSION = '2.0';
 
 /**
@@ -111,20 +112,34 @@ export const exportBackup = async (): Promise<string> => {
   const downloadedBooks = await getDownloadedBooks();
   const storage: Record<string, string | null> = {};
 
-  // Capture all defined keys
+  // 1. Capture all defined keys from localStorage
   STORAGE_KEYS.forEach(key => {
     storage[key] = localStorage.getItem(key);
   });
 
-  // Also capture any keys that follow common patterns but aren't explicitly listed
+  // 2. Capture any keys that follow common patterns but aren't explicitly listed (localStorage)
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && !STORAGE_KEYS.includes(key)) {
-      // Include keys that seem relevant to the app's features
-      if (key.startsWith('quran-') || key.startsWith('hadith-') || key.startsWith('tafsir-') || key.startsWith('prayer-')) {
+      if (key.startsWith('quran-') || key.startsWith('hadith-') || key.startsWith('tafsir-') || key.startsWith('prayer-') || key.startsWith('radio-')) {
         storage[key] = localStorage.getItem(key);
       }
     }
+  }
+
+  // 3. Capture all keys from Capacitor Preferences
+  try {
+    const { keys: prefKeys } = await Preferences.keys();
+    for (const key of prefKeys) {
+      // Exclude the auto-backup keys to prevent recursive bloat
+      if (key !== 'auto-backup-data' && key !== 'auto-backup-metadata') {
+        const { value } = await Preferences.get({ key });
+        // Prefix preference keys to distinguish them, or just overwrite localStorage if they share names
+        storage[`pref::${key}`] = value;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to read Preferences during backup', error);
   }
 
   const backup: BackupData = {
@@ -181,14 +196,21 @@ export const importBackup = async (file: File): Promise<{ success: boolean; mess
 
     // Version 2.0+ support (Direct storage mapping)
     if (backup.storage) {
-      Object.entries(backup.storage).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(backup.storage)) {
         if (value !== null) {
-          localStorage.setItem(key, value);
+          if (key.startsWith('pref::')) {
+            const prefKey = key.replace('pref::', '');
+            await Preferences.set({ key: prefKey, value });
+          } else {
+            localStorage.setItem(key, value);
+          }
         }
-      });
+      }
 
       // Apply theme immediately if present
-      if (backup.storage['theme']) {
+      if (backup.storage['pref::theme']) {
+        document.documentElement.classList.toggle('dark', backup.storage['pref::theme'] === 'dark');
+      } else if (backup.storage['theme']) {
         document.documentElement.classList.toggle('dark', backup.storage['theme'] === 'dark');
       }
 
@@ -238,20 +260,20 @@ interface AutoBackupMetadata {
 
 export const autoBackup = async (): Promise<string> => {
   const backup = await exportBackup();
-  localStorage.setItem(AUTO_BACKUP_KEY, backup);
+  await Preferences.set({ key: AUTO_BACKUP_KEY, value: backup });
 
   const meta: AutoBackupMetadata = {
     timestamp: new Date().toISOString(),
     version: BACKUP_VERSION,
   };
-  localStorage.setItem(AUTO_BACKUP_META_KEY, JSON.stringify(meta));
+  await Preferences.set({ key: AUTO_BACKUP_META_KEY, value: JSON.stringify(meta) });
 
   return backup;
 };
 
-export const getLastAutoBackupTime = (): string | null => {
+export const getLastAutoBackupTime = async (): Promise<string | null> => {
   try {
-    const raw = localStorage.getItem(AUTO_BACKUP_META_KEY);
+    const { value: raw } = await Preferences.get({ key: AUTO_BACKUP_META_KEY });
     if (!raw) return null;
     const meta: AutoBackupMetadata = JSON.parse(raw);
     return meta.timestamp;
@@ -260,13 +282,14 @@ export const getLastAutoBackupTime = (): string | null => {
   }
 };
 
-export const hasAutoBackup = (): boolean => {
-  return !!localStorage.getItem(AUTO_BACKUP_KEY);
+export const hasAutoBackup = async (): Promise<boolean> => {
+  const { value } = await Preferences.get({ key: AUTO_BACKUP_KEY });
+  return !!value;
 };
 
 export const restoreFromAutoBackup = async (): Promise<{ success: boolean; message: string; booksToDownload?: import('./ebooks-storage').DownloadedBook[] }> => {
   try {
-    const raw = localStorage.getItem(AUTO_BACKUP_KEY);
+    const { value: raw } = await Preferences.get({ key: AUTO_BACKUP_KEY });
     if (!raw) {
       return { success: false, message: 'No auto-backup found' };
     }
@@ -276,13 +299,20 @@ export const restoreFromAutoBackup = async (): Promise<{ success: boolean; messa
       return { success: false, message: 'Invalid auto-backup data' };
     }
 
-    Object.entries(backup.storage).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(backup.storage)) {
       if (value !== null) {
-        localStorage.setItem(key, value);
+        if (key.startsWith('pref::')) {
+          const prefKey = key.replace('pref::', '');
+          await Preferences.set({ key: prefKey, value });
+        } else {
+          localStorage.setItem(key, value);
+        }
       }
-    });
+    }
 
-    if (backup.storage['theme']) {
+    if (backup.storage['pref::theme']) {
+      document.documentElement.classList.toggle('dark', backup.storage['pref::theme'] === 'dark');
+    } else if (backup.storage['theme']) {
       document.documentElement.classList.toggle('dark', backup.storage['theme'] === 'dark');
     }
 
@@ -297,7 +327,7 @@ export const restoreFromAutoBackup = async (): Promise<{ success: boolean; messa
   }
 };
 
-export const clearAutoBackup = (): void => {
-  localStorage.removeItem(AUTO_BACKUP_KEY);
-  localStorage.removeItem(AUTO_BACKUP_META_KEY);
+export const clearAutoBackup = async (): Promise<void> => {
+  await Preferences.remove({ key: AUTO_BACKUP_KEY });
+  await Preferences.remove({ key: AUTO_BACKUP_META_KEY });
 };

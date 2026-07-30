@@ -388,9 +388,10 @@ public class AdhanPlaybackService extends Service {
                 .setColor(0xFF22C55E) // Green accent
                 .setColorized(true)
                 .setContentIntent(contentIntent)
+                .setFullScreenIntent(contentIntent, true)
                 .setOngoing(true)
                 .setAutoCancel(false)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .addAction(R.drawable.ic_notification, "⏹ Stop Adhan", stopPendingIntent)

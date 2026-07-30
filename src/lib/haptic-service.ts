@@ -77,12 +77,44 @@ const saveSettingsToPreferences = async (settings: HapticSettings): Promise<void
   }
 };
 
+/**
+ * Best-effort synchronous read of haptic settings from localStorage.
+ * localStorage.getItem is ~0.03ms on modern Android WebView (well under a
+ * frame budget of 16ms), so it's safe to call from the constructor and
+ * avoids a one-frame flicker in the Profile UI where `getSettings()`
+ * returns DEFAULT_SETTINGS (intensity: medium) then snaps to the user's
+ * saved preference (e.g. light) once the async Capacitor bridge returns.
+ *
+ * Returns DEFAULT_SETTINGS if no value is stored or anything throws.
+ */
+const syncReadSettingsFromLocalStorage = (): HapticSettings => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+    }
+  } catch {
+    // Storage disabled, corrupt payload, or cross-origin restriction.
+    // Gracefully degrade to defaults.
+  }
+  return DEFAULT_SETTINGS;
+};
+
 class HapticService {
   private settings: HapticSettings = DEFAULT_SETTINGS;
   private initialized: boolean = false;
 
   constructor() {
-    this.initialize();
+    // DO NOT eagerly call Preferences.get() here — that crosses the
+    // JS↔Java native bridge synchronously on Android and blocks UI.
+    //
+    // Instead, seed `this.settings` from localStorage (cheap sync read,
+    // ~0.03ms) so getSettings() returns the user's saved value on the
+    // very first Profile render, avoiding the flash-of-default-state.
+    // The Preferences-backed load still happens lazily in initialize()
+    // and will overwrite with any fresher value from the Capacitor store
+    // (which is the source of truth after migration).
+    this.settings = syncReadSettingsFromLocalStorage();
   }
 
   /**
@@ -104,6 +136,7 @@ class HapticService {
    * Update haptic settings
    */
   async updateSettings(newSettings: Partial<HapticSettings>): Promise<void> {
+    if (!this.initialized) await this.initialize();
     this.settings = { ...this.settings, ...newSettings };
     await saveSettingsToPreferences(this.settings);
   }

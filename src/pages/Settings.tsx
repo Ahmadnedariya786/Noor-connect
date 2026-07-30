@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
@@ -22,10 +22,10 @@ const Settings = () => {
   } = useSettings();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [madhab, setMadhabState] = useState<MadhabType>(getMadhab());
-  const [bedtimeEnabled, setBedtimeEnabledState] = useState(isBeforeSleepEnabled());
-  const [bedtimeHour, setBedtimeHourState] = useState(getBedtimeHour());
-  const [bedtimeMinute, setBedtimeMinuteState] = useState(getBedtimeMinute());
+  const [madhab, setMadhabState] = useState<MadhabType>(() => getMadhab());
+  const [bedtimeEnabled, setBedtimeEnabledState] = useState<boolean>(() => isBeforeSleepEnabled());
+  const [bedtimeHour, setBedtimeHourState] = useState<number>(() => getBedtimeHour());
+  const [bedtimeMinute, setBedtimeMinuteState] = useState<number>(() => getBedtimeMinute());
 
   const handleMadhabChange = (value: MadhabType) => {
     setMadhab(value);
@@ -35,9 +35,18 @@ const Settings = () => {
   };
 
   useEffect(() => {
-    if (bedtimeEnabled) scheduleBedtimeNotification();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Defer the bedtime (re)scheduling until after the Settings page finishes
+    // painting.  scheduleBedtimeNotification() does 4 sync localStorage reads
+    // + JSON.parse + a setTimeout; running it eagerly during mount added
+    // measurable jank to the Settings navigation transition.
+    let t: ReturnType<typeof setTimeout> | null = null;
+    if (bedtimeEnabled) {
+      t = setTimeout(() => scheduleBedtimeNotification(), 500);
+    } else {
+      cancelBedtimeNotification();
+    }
+    return () => { if (t !== null) clearTimeout(t); };
+  }, [bedtimeEnabled, bedtimeHour, bedtimeMinute]);
 
   const motionProps = (props: any) => animationEnabled ? props : {};
 

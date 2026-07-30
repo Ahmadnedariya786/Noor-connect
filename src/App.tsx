@@ -23,7 +23,16 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
 import { AutoBackupRestoreDialog } from "@/components/AutoBackupRestoreDialog";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
-import { preloadCriticalResources, isLowEndDevice } from "@/lib/performance-optimizations";
+import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
+import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
+
+// ─── Early bootstrap: apply tiered visual overrides before first paint ──────
+// getAnimationTier() returns a cached/heuristic tier synchronously and kicks
+// off the async FPS benchmark in the background (see device-performance.ts).
+// Calling applyTieredVisualOverrides here ensures CSS classes like
+// html.reduce-blur and data-animation-tier are present on the very first render
+// frame — preventing a flash of unreduced-blur on low/minimal-tier devices.
+applyTieredVisualOverrides(getAnimationTier());
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -96,8 +105,10 @@ const SalamGreeting = lazy(() => import("@/components/SalamGreeting").then(modul
 const FestivePopup = lazy(() => import("@/components/FestivePopup").then(module => ({ default: module.FestivePopup })));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt").then(module => ({ default: module.PWAInstallPrompt })));
 
+// Synchronous import for the homepage to fix high LCP (no network waterfall)
+import Dashboard from "./pages/Dashboard";
+
 // Lazy load route components
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 const DashboardWidgets = lazy(() => import("./pages/DashboardWidgets"));
 const SurahList = lazy(() => import("./pages/SurahList"));
 const QuranReader = lazy(() => import("./pages/QuranReader"));
@@ -303,11 +314,45 @@ function AppShell() {
   // Initialize performance optimizations
   useEffect(() => {
     preloadCriticalResources();
+
+    // ── FPS monitor: DEV only ─────────────────────────────────────────────
+    // monitorFPS runs a lightweight rAF loop and fires its callback once per
+    // second with the current frame rate.  We only enable this in development
+    // so there is zero overhead in production APK builds.
+    if (import.meta.env.DEV) {
+      const stopFPS = monitorFPS((fps: number) => {
+        // Colour-code: green ≥ 55, yellow 30–54, red < 30
+        const style =
+          fps >= 55
+            ? 'color:#4ade80;font-weight:bold'
+            : fps >= 30
+            ? 'color:#facc15;font-weight:bold'
+            : 'color:#f87171;font-weight:bold';
+        console.debug(`%c[FPS] ${fps}`, style);
+      });
+      return () => {
+        stopFPS();
+      };
+    }
   }, []);
 
   useEffect(() => {
     notificationManager.start();
     
+    // Safety clear for Ramadan notifications if it's not Ramadan
+    import('@/lib/islamic-calendar-service').then(async ({ islamicCalendarService }) => {
+      try {
+        const info = await islamicCalendarService.getIslamicCalendarInfo();
+        if (info.hijriMonth !== 9) {
+          const { RamadanNotifications } = await import('@/lib/ramadan-notifications');
+          const instance = RamadanNotifications.getInstance();
+          await instance.clearRamadanNotifications();
+        }
+      } catch (e) {
+        console.error('Failed to safety clear Ramadan notifications', e);
+      }
+    });
+
     islamicEventsService.scheduleUpcomingEvents().catch(error => {
       console.error('Failed to schedule Islamic events:', error);
     });

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { goBackOrFallback } from "@/lib/navigation";
 import { AppBar } from "@/components/AppBar";
@@ -28,6 +28,82 @@ interface RamadanData {
   eidCountdown: number; // Days until Eid
   waterRemindersEnabled: boolean; // Water reminders after Iftar
 }
+
+interface NextEventCountdownProps {
+  enabled: boolean;
+  suhoorTime: string;
+  iftarTime: string;
+  onEventChange: (evt: { name: string; time: string; countdown: string } | null) => void;
+}
+
+/**
+ * Self-contained countdown ticker.
+ *
+ * Owns its own 1/sec setInterval and only mutates `nextEvent`.  Previously
+ * `RamadanMode` itself was re-rendering its ENTIRE body (cards, progress
+ * bars, framer-motion variants, etc.) every second just because a 4-digit
+ * number changed.  Memoizing this component isolates the 1/sec state
+ * updates to just the countdown text — not the entire 12-card page.
+ */
+const NextEventCountdownTicker = memo(function NextEventCountdownTicker({
+  enabled,
+  suhoorTime,
+  iftarTime,
+  onEventChange,
+}: NextEventCountdownProps) {
+  useEffect(() => {
+    if (!enabled || !suhoorTime || !iftarTime) return;
+
+    const parseTimeToDate = (timeStr: string): Date => {
+      const cleaned = timeStr.replace(/\s*\(.*?\)\s*/g, '').trim();
+      const [time, period] = cleaned.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      const date = new Date();
+      let hour24 = hours;
+      if (period === 'PM' && hours !== 12) hour24 += 12;
+      if (period === 'AM' && hours === 12) hour24 = 0;
+      if (isNaN(hour24) || isNaN(minutes)) return date;
+      date.setHours(hour24, minutes, 0, 0);
+      return date;
+    };
+
+    const update = () => {
+      const now = new Date();
+      const suhoor = parseTimeToDate(suhoorTime);
+      const iftar = parseTimeToDate(iftarTime);
+
+      let next: { name: string; time: string; countdown: string } | null = null;
+
+      if (suhoor > now) {
+        const diff = suhoor.getTime() - now.getTime();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        next = {
+          name: 'Suhoor Ends',
+          time: suhoorTime,
+          countdown: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
+        };
+      } else if (iftar > now) {
+        const diff = iftar.getTime() - now.getTime();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        next = {
+          name: 'Iftar Time',
+          time: iftarTime,
+          countdown: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
+        };
+      }
+
+      onEventChange(next);
+    };
+
+    update();
+    const handle = setInterval(update, 1000);
+    return () => clearInterval(handle);
+  }, [enabled, suhoorTime, iftarTime, onEventChange]);
+
+  return null;
+});
 
 export default function RamadanMode() {
   const navigate = useNavigate();
@@ -317,23 +393,16 @@ export default function RamadanMode() {
     }
   }, [location.latitude, location.longitude]);
 
-  // Update countdown every second
-  useEffect(() => {
-    if (!isRamadan) return;
-
-    const updateCountdown = async () => {
-      try {
-        if (suhoorTime && iftarTime) {
-          await updateNextEventCountdown(suhoorTime, iftarTime);
-        }
-      } catch (error) {
-        console.error('Failed to update countdown:', error);
-      }
-    };
-
-    const interval = setInterval(updateCountdown, 1000); // Update every second
-    return () => clearInterval(interval);
-  }, [isRamadan, suhoorTime, iftarTime]);
+  // Stable reference passed to <NextEventCountdownTicker />.
+  // Because setNextEvent is a state setter (already identity-stable in React),
+  // useCallback with empty deps produces a fixed prop for the memoized ticker
+  // so its useEffect never re-subscribes unless inputs actually change.
+  const handleNextEventChange = useCallback(
+    (evt: { name: string; time: string; countdown: string } | null) => {
+      setNextEvent(evt);
+    },
+    [],
+  );
 
   const saveData = (newData: RamadanData) => {
     setData(newData);
@@ -1015,6 +1084,19 @@ export default function RamadanMode() {
           </Button>
         </div>
       </div>
+
+      {/*
+        Memoized 1/sec countdown ticker.  Lives in its own component so its
+        setInterval-triggered setState only re-renders the countdown bits of
+        the page (the card that shows "Next Event: 3h 22m"), NOT the 12+
+        framer-motion cards that make up the rest of RamadanMode.
+      */}
+      <NextEventCountdownTicker
+        enabled={isRamadan}
+        suhoorTime={suhoorTime}
+        iftarTime={iftarTime}
+        onEventChange={handleNextEventChange}
+      />
     </LayoutManager>
   );
 }

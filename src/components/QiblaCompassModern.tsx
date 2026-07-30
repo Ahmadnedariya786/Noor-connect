@@ -21,6 +21,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useSettings } from '@/contexts/SettingsContext';
+import { rafThrottle } from '@/lib/performance-optimizations';
 
 // ─── Types ────────────────────────────────────────────────────
 type CompassState =
@@ -313,7 +314,8 @@ const QiblaCompassModern = () => {
       // FIX: Track whether absolute orientation has fired to avoid double-processing
       let absoluteFired = false;
 
-      const listener = (event: DeviceOrientationEvent) => {
+      // Inner processor — does the smoothing + setState work.
+      const processEvent = (event: DeviceOrientationEvent) => {
         try {
           // Skip deviceorientation if deviceorientationabsolute already provides data
           if (event.type === 'deviceorientation' && absoluteFired) return;
@@ -337,6 +339,16 @@ const QiblaCompassModern = () => {
           handleSensorError(err);
         }
       };
+
+      //
+      // THROTTLE: rafThrottle caps invocation to the next animation frame
+      // (~30–60 Hz depending on device tier).  The deviceorientation APIs
+      // can fire at 60 Hz on high-end phones but React can only render a
+      // new compass rotation at VSYNC anyway; passing every sample through
+      // was generating excess re-renders and unnecessary smoothing work,
+      // which would drop the Qibla page to ~26 FPS on mid-tier devices.
+      //
+      const listener: (event: DeviceOrientationEvent) => void = rafThrottle(processEvent);
 
       orientationListenerRef.current = listener;
       window.addEventListener('deviceorientationabsolute', listener, true);

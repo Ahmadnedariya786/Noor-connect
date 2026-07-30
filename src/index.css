@@ -7,6 +7,20 @@
 /* Enhanced Premium Design System - Gold & Black Theme */
 
 @layer base {
+  /*
+   * Tiered visual overrides: when the device is classified as `low` or
+   * `minimal` in device-performance.ts, we strip backdrop-filter: blur()
+   * globally.  Multiple simultaneous backdrop-blurs on Mali-400/450 GPUs
+   * consume 30+ ms/frame in texture readback — the ENTIRE 30-FPS budget.
+   * Replacing them with a solid semi-opaque background is visually very
+   * close and recovers a stable 30 FPS on budget devices.
+   */
+  html.reduce-blur [class*="backdrop-blur"],
+  html.reduce-blur [style*="backdrop-filter"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   [data-animations="off"] *,
   .no-animations * {
     transition: none !important;

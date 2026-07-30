@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
 import { Preferences } from '@capacitor/preferences';
 import { isLowEndDevice } from '@/lib/performance-optimizations';
 
@@ -215,9 +215,16 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   }, [animationEnabled, isLoaded]);
 
   useEffect(() => {
+    // Guard: only write to localStorage AFTER Preferences async load completes
+    // (isLoaded === true).  Without this guard, the effect fires on the very
+    // first mount before `loadSettings()` resolves, then the async Preferences
+    // load mutates state again, which can trigger 'storage' event listeners in
+    // Profile/AdhanSelector — producing a cascade of setState → re-render →
+    // storage-write cycles that manifest as GC thrashing in Logcat.
+    if (!isLoaded) return;
     localStorage.setItem(GREETING_KEY, greetingEnabled.toString());
     localStorage.removeItem(LEGACY_GREETING_KEY);
-  }, [greetingEnabled]);
+  }, [greetingEnabled, isLoaded]);
 
   // Persist splash greeting changes to Preferences
   useEffect(() => {
@@ -233,24 +240,30 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(SPLASH_ENABLED_KEY, splashEnabled.toString());
   }, [splashEnabled, isLoaded]);
 
-  const setTheme = (nextTheme: ThemePreference) => {
+  const setTheme = useCallback((nextTheme: ThemePreference) => {
     setThemeState(nextTheme);
     setEffectiveTheme(getEffectiveTheme(nextTheme));
-  };
-  const toggleTheme = () => {
-    const newTheme: ThemePreference = effectiveTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-  };
-  const setAnimationEnabled = (enabled: boolean) => setAnimationEnabledState(enabled);
-  const toggleAnimation = () => setAnimationEnabledState((prev) => !prev);
-  const setGreetingEnabled = (enabled: boolean) => setGreetingEnabledState(enabled);
-  const toggleGreeting = () => setGreetingEnabledState((prev) => !prev);
-  const setSplashGreetingEnabled = (enabled: boolean) => setSplashGreetingEnabledState(enabled);
-  const toggleSplashGreeting = () => setSplashGreetingEnabledState((prev) => !prev);
-  const setSplashEnabled = (enabled: boolean) => setSplashEnabledState(enabled);
-  const toggleSplash = () => setSplashEnabledState((prev) => !prev);
+  }, []);
+  const toggleTheme = useCallback(() => {
+    setEffectiveTheme((currentEffective) => {
+      const newTheme: ThemePreference = currentEffective === 'dark' ? 'light' : 'dark';
+      setThemeState(newTheme);
+      return newTheme;
+    });
+  }, []);
+  const setAnimationEnabled = useCallback((enabled: boolean) => setAnimationEnabledState(enabled), []);
+  const toggleAnimation = useCallback(() => setAnimationEnabledState((prev) => !prev), []);
+  const setGreetingEnabled = useCallback((enabled: boolean) => setGreetingEnabledState(enabled), []);
+  const toggleGreeting = useCallback(() => setGreetingEnabledState((prev) => !prev), []);
+  const setSplashGreetingEnabled = useCallback((enabled: boolean) => setSplashGreetingEnabledState(enabled), []);
+  const toggleSplashGreeting = useCallback(() => setSplashGreetingEnabledState((prev) => !prev), []);
+  const setSplashEnabled = useCallback((enabled: boolean) => setSplashEnabledState(enabled), []);
+  const toggleSplash = useCallback(() => setSplashEnabledState((prev) => !prev), []);
 
-  // Memoize context value to prevent unnecessary re-renders
+  // Memoize context value to prevent unnecessary re-renders.
+  // All setters are wrapped in useCallback with stable references,
+  // so the context value identity only changes when the READ values
+  // (theme / animationEnabled / greetingEnabled / etc.) actually change.
   const contextValue = useMemo(() => ({
     theme,
     effectiveTheme,
@@ -271,10 +284,20 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   }), [
     theme,
     effectiveTheme,
+    setTheme,
+    toggleTheme,
     animationEnabled,
+    setAnimationEnabled,
+    toggleAnimation,
     greetingEnabled,
+    setGreetingEnabled,
+    toggleGreeting,
     splashGreetingEnabled,
+    setSplashGreetingEnabled,
+    toggleSplashGreeting,
     splashEnabled,
+    setSplashEnabled,
+    toggleSplash,
   ]);
 
   return (

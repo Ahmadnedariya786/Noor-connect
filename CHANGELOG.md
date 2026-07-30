@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-07-30
+
+### 🚀 Major Features
+
+#### Advanced Notification System
+- **Heads-Up Adhaan**: Deep native integration for high-priority, full-screen intent Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".
+- **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g. Fajr-specific Hadith for Fajr reminders).
+- **Modern Notification History**: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.
+
+#### UI/UX & Quality of Life
+- **Profile Redesign**: Revamped the "Open Source & Support" card in settings to use a clean, stacked layout for better mobile responsiveness.
+- **WhatsApp Support**: Replaced GitHub link with official GitLab repository and added a direct "Issues and Feedback" button that opens WhatsApp support.
+- **Widget Refinements**: Fixed a bug where the QuranProgressWidget "Stale Data" badge appeared incorrectly on empty states, and improved RTL alignment for the DailyHadith widget.
+
+---
+
 ## [2.0.1] - 2026-07-21
 
 ### 📖 Quran Progress Tracking Fixes

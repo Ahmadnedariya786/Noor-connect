@@ -1,7 +1,7 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.1.0--beta-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.2.0-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
 
@@ -24,25 +24,23 @@ We're proud to announce our partnership with **[No Copyright Nasheed](https://no
 
 - ✅ **Official License Grant**: Free perpetual license to integrate 400+ premium nasheeds
 - ✅ **Official Feature**: Noor Connect is now featured on the [No Copyright Nasheed website](https://nocopyrightnasheed.com/) as a trusted partner
-- 🎵 **Coming in v2.1**: 400+ curated nasheeds with adaptive streaming for weak wifi/2G connections
+- 🎵 **Coming in v2.2**: 400+ curated nasheeds with adaptive streaming for weak wifi/2G connections
 
 This partnership ensures every nasheed is legally licensed, high-quality, and supports the creators — aligning perfectly with our Islamic ethics.
 
 ---
 
-## 🆕 What's New in v2.0.1
+## 🆕 What's New in v2.2.0
 
-### 📖 Quran Progress Tracking Fixes — Complete Overhaul
+### ⚡ Performance & Core Web Vitals Optimization
 
-**Fixed critical issues with Quran reading progress tracking and display to provide accurate reading statistics:**
+**Fixed critical performance bottlenecks across low-end devices:**
 
-| Issue | Fix |
+| Metric / Issue | Fix |
 |-------|-----|
-| **Incorrect surah count** | Progress now only counts fully completed surahs (when all ayahs are read), not partially read ones |
-| **Misleading UI text** | Updated "Surahs Completed" to "Surahs fully Completed" for clarity |
-| **Wrong progress calculation** | Changed from ayah-based estimation to accurate page-based tracking (604 total pages) |
-| **Position tracking bug** | Fixed progress to track current page position instead of maximum page ever visited |
-| **Widget sync mismatch** | Added widget-compatible localStorage key sync for native Android widgets |
+| **Poor LCP (6.8s+)** | Removed lazy-loading waterfall on the home Dashboard route. Synchronous mounting eliminates JS parsing delays and brings LCP back down to <1.5s. |
+| **Settings Hang / Freeze** | Added `onPointerDown` preloading to BottomNav items. Tapping "Settings" now starts downloading the 73KB Profile chunk 150ms before the route change, making navigation feel instant. |
+| **GPU Texture Thrashing (Mali)** | Modified BottomNav to subscribe to `animation-tier-changed` events. Low-end phones now strip the expensive `backdropFilter: blur(28px)` and replace it with a solid opaque color, saving 30ms/frame on budget GPUs. |
 
 **Technical Changes:**
 - Updated `QuranProgressWidget` to display pages read (X/604) instead of ayahs
@@ -61,9 +59,14 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - Native Android widgets now sync correctly with reading progress
 - No more misleading progress statistics when navigating between pages
 
+### 🔔 Intelligent Notification Engine
+- **Ghost Notification Fix:** Solved a critical issue where Ramadan reminders (Suhoor, Iftar, Tarawih) would persist into other months. A new "Safety Clear" on-boot check now sweeps the native OS buffer to proactively delete expired alarms.
+- **Deterministic Scheduling:** Rewrote the background notification ID generator. Notifications now use predictable ID mapping (`Suhoor: 2001`, `Iftar: 2002`, etc.) rather than random hashes, ensuring Capacitor can properly overwrite or cancel them without memory leaks.
+- **Accurate Calendar Countdowns:** Replaced deprecated tabular Ramadan estimates with the asynchronous `islamicCalendarService`, ensuring countdown notifications accurately respect Hijri date boundaries and offsets.
+
 ---
 
-## 🚀 **Coming in v2.1 — Nasheed Library**
+## 🚀 **Nasheed Library (v2.2)**
 
 ### 🎵 **400+ Premium Nasheeds — Legally Licensed & Free**
 
@@ -111,6 +114,11 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 - **Muslim Pro Grade UI**: Exquisite SVG-based compass dial with Kaaba alignment glow effects, jitter-reducing low-pass filters, and haptic feedback upon true Qibla lock.
 - **Web & Manual Fallback**: If sensors fail, the app gracefully falls back to GPS/Web-oriented calculation paths.
 
+### 📅 Advanced Islamic Calendar & Events
+- **Complete Hijri Calendar**: View Gregorian and Hijri dates side-by-side with global offset adjustments.
+- **Ramadan Mode**: A comprehensive fasting hub featuring Suhoor/Iftar countdowns, daily Taraweeh progress tracking, hydration reminders, and specialized Ramadan Duas.
+- **Holiday Countdowns**: Automated visual countdowns for major Islamic events like Eid al-Fitr, Eid al-Adha, and Laylat al-Qadr.
+
 ### ⏲️ Smart Prayer Times & Adhan Control
 - **Offline Calculation**: Fast, precise, localization-based timings for Hanafi and Shafi'i madhabs generated fully offline.
 - **Granular Adhan Toggles**: Selectively enable or disable Adhan alarms per individual prayer using deep native background alarms—silence Asr without muting Maghrib!
@@ -130,15 +138,22 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 - **Enhanced Islamic Quiz**: Test your knowledge of Deen with interactive, gamified Islamic quizzes. Includes daily rewards, combo multipliers, mystery boxes, and reliable cross-platform gamification logic.
 - **Islamic Remedies (Tibb-e-Nabawi)**: Prophetic medicine index with a favorites list for quick reference.
 - **Eid & Festive Checklist**: Special event mode with checklists and celebratory popups to prepare for Eid and other significant Islamic events.
+- **Prayer Statistics & Analytics**: Detailed visual graphs tracking prayer completion, Qaza history, and weekly/monthly performance.
+- **Spiritual Habit Tracker**: Track daily habits (like reading Quran, giving charity) with streak preservation.
+
+### 📖 History & Literature
+- **Seerah of the Prophet (ﷺ)**: Comprehensive biography reader with chapters, categorization (Makkan, Madinan), and reading progress tracking.
+- **Qisas Al-Anbiya**: Detailed stories of the Prophets with progress tracking and categorized reading sessions.
+- **Ebooks Library**: Modern Islamic ebooks reader for deeper theological exploration.
 
 ### 📻 Rich Media & Islamic Library
 - **Hadith Encyclopedia (87K)**: 16 complete collections with Arabic + English, grade badges, bookmarks, daily hadith widget, and full-text navigation.
 - **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via Akamai CDN (hls_roku) for reliable HLS streaming. CSP-compliant HTTP support included.
 - **Radio Statistics & Achievements**: Track your listening habits with detailed statistics per station, total listening time, streak tracking, and unlockable achievements for consistent listening.
 - **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication. Uses **standard Madani Mushaf** (industry standard for Muslim world with 604 pages).
-- **🎵 Nasheed Library (v2.1)**: 400+ legally licensed nasheeds via official No Copyright Nasheed partnership. Adaptive streaming for 2G/weak wifi, offline download, sleep timer, lyrics sync, and curated daily recommendations. **Officially featured** on No Copyright Nasheed website.
+- **🎵 Nasheed Library (v2.2)**: 400+ legally licensed nasheeds via official No Copyright Nasheed partnership. Adaptive streaming for 2G/weak wifi, offline download, sleep timer, lyrics sync, and curated daily recommendations. **Officially featured** on No Copyright Nasheed website.
 
-### 🎵 Dedicated Nasheed Player (v2.1+)
+### 🎵 Dedicated Nasheed Player (v2.2+)
 
 - **Official No Copyright Nasheed Partnership**: Exclusive integration with 400+ high-quality nasheeds from the renowned No Copyright Nasheed platform — **legally licensed** and **officially featured** on their website.
 - **Adaptive Streaming**: Smart bitrate adaptation (64kbps/128kbps/256kbps) for seamless playback on 2G, weak wifi, or limited data — no buffering, ever.
@@ -150,20 +165,32 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
   - Continuous playback with crossfade between tracks
   - Background playback with notification controls
 - **Categories**: Morning/Evening adhkar, Ramadan, Eid, Kids, Arabic/English/Urdu, Instrumental, Acapella
+
+### 📱 Android Integration & Security
+- **Native Android Widgets**: Home screen widgets for Next Prayer, Quran Reading Progress, Daily Ayah, Daily Hadith, and a Digital Tasbeeh. Everything auto-syncs with your in-app progress.
+- **Auto Backup & Restore**: Robust local backup system that automatically secures your settings, bookmarks, Qaza records, Quran progress, and **now fully includes all Capacitor Preferences** (like Nasheed radio stats, theme preferences, and advanced hardware configurations). Leverages Android's native `SharedPreferences` to silently sync via Google Drive so data is safely detected on re-install.
+- **Advanced Notification System**: 
+  - **Heads-Up Adhaan**: Deep native integration for high-priority, full-screen intent Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".
+  - **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g. Fajr-specific Hadith for Fajr reminders).
+  - **Modern Notification History**: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.
 - **Privacy-First**: No listening analytics, no tracking, all data local. Optional anonymous usage stats (opt-in only).
 
 
-### 📱 Enhanced Widget System & Dashboard
-- **Native Android Widgets Suite v2**: 5 beautiful, lightning-fast native Kotlin widgets — Next Prayer (live countdown + progress ring), Daily Ayah, Daily Hadith (grade-colored), Quran Progress (ring + streak + Ramadan goal), Tasbeeh Counter (tap-to-increment, haptic, dhikr cycle)
-- **Unified Background Refresh**: Single WorkManager (30min periodic + expedited one-shot + motion-based step detection)
-- **Exact Prayer Alarms**: Native alarms at each prayer time with graceful inexact fallback
-- **System Event Survival**: Boot/Time/Locale changes handled via WidgetBootReceiver → WidgetRefreshWorker
-- **Capacitor Bridge (WidgetBridge)**: 4-method plugin (syncPrayerData, syncDailyContent, syncQuranProgress, pushTasbeehIncrement)
-- **Strict Payload Validation**: Prayer payload requires exactly 6 prayers, valid nextPrayerIndex
-- **Live Interactive Previews**: Complete visual grid customizer in the web dashboard allows you to instantly preview the color schemes and layouts of widgets before enabling them
-- **Robust Platform Abstraction**: All Android native widget background updates wrapped with robust Capacitor checks (`capacitor-utils.ts`) to completely eliminate cross-platform console errors when running in the browser
-- **Dual Update Modes**: Support for both basic (next-prayer only) and full (prayer schedule, Quran data, Hijri date) widget updates straight to the Android home-screen
-- **Automatic Background Sync**: Configurable auto-update timer (every 30 minutes) perfectly syncs the app to your home screen using native Android widgets and services
+### 📱 Native Android Widgets Suite (v2.2 Hardened)
+- **5 High-Performance Native Widgets**:
+  - **Next Prayer Widget (4×2 & 4×1)**: Real-time countdown timer, progress ring, next prayer badge, and location chip. Uses exact alarms for sub-second prayer transitions.
+  - **Daily Ayah Widget (4×2)**: Beautiful typography using *Scheherazade New* font, RTL support, Surah/Ayah reference chip, and English translation.
+  - **Daily Hadith Widget (4×2)**: Complete Hadith snippet with color-coded grade badge (Sahih, Hasan, Da'if), book source chip, narrator attribution, and RTL alignment.
+  - **Quran Progress Widget (4×2)**: Circular progress ring, current Surah badge, total completion percentage, streak counter, and Ramadan goal progress indicator.
+  - **Tasbeeh Counter Widget (2×2)**: Interactive tap-to-increment counter with zero-latency `PendingIntent` execution, haptic vibration feedback, target rollover, and instant reset button.
+- **Architectural Resilience & Performance**:
+  - **Single Source of Truth (`WidgetPrefs`)**: Backed by Android `SharedPreferences` with atomic synchronization to prevent race conditions during rapid taps.
+  - **WorkManager Refresh Engine (`WidgetRefreshWorker`)**: 30-minute periodic update loop with automatic self-stop when no widget instances are on the home screen to conserve battery.
+  - **Exact Alarm Manager (`WidgetAlarmScheduler`)**: Schedules high-precision alarms for prayer times; automatically degrades to 15-minute inexact windows if exact alarm permission is denied on Android API 31+.
+  - **System Event Survival (`WidgetBootReceiver`)**: Automatically restores prayer alarms, enqueues periodic syncs, and refreshes layouts after device reboot (`BOOT_COMPLETED`, `LOCKED_BOOT_COMPLETED`), time zone change (`TIMEZONE_CHANGED`), manual time set (`TIME_SET`), or language change (`LOCALE_CHANGED`).
+  - **Background Motion & Location Sync (`WidgetForegroundService`)**: Battery-friendly step detection and location monitoring (10km threshold) to update widgets during travel.
+  - **Capacitor Bridge (`WidgetBridge`)**: TypeScript layer with strict runtime validation (`validatePrayerPayload`, `validateQuranProgressPayload`), automatic exponential backoff retries, and no-op web fallbacks.
+  - **Responsive Scaling & Layouts**: Configured with standard Android grid dimensions (`targetCellWidth="4"`, `targetCellHeight="2"`), auto-fitting text views, `ellipsize="end"`, and graceful empty states (`layout_empty`) to ensure pixel-perfect rendering across all screen densities (from mdpi up to xxxhdpi).
 
 ---
 

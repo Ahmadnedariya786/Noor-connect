@@ -38,6 +38,13 @@ export class AdhanService {
   private static instance: AdhanService;
   private audio: HTMLAudioElement | null = null;
   private notificationPermission: NotificationPermission = 'default';
+  /**
+   * Stable bound listener so we can removeEventListener in cleanup().
+   * We cache it once so it has the same function identity on every call.
+   */
+  private _audioStateListeners: Set<(isPlaying: boolean) => void> | null = null;
+  private _onAudioPlaying: (() => void) | null = null;
+  private _onAudioPausedOrEnded: (() => void) | null = null;
 
   static getInstance(): AdhanService {
     if (!AdhanService.instance) {
@@ -47,17 +54,81 @@ export class AdhanService {
   }
 
   constructor() {
-    this.initializeAudio();
-    // Don't request notification permission eagerly - wait for user interaction
-    // Permission will be requested when user enables adhan or toggles notifications
+    // DO NOT eagerly initialize audio (new Audio()) here —
+    // in a Capacitor/WebView APK this triggers AAudioStreamBuilder_openStream
+    // on the main thread during module import (Settings mount), causing 100+ms jank.
+    // Instead, create the Audio element lazily on the first playAdhan() call.
+  }
+
+  /**
+   * Lazy audio initialization — only called the first time Adhan playback is requested.
+   * Ensures AAudio native stream opening happens on a user gesture (after paint),
+   * never during React's render/commit phase.
+   *
+   * Also attaches audio-element listeners once (not per play call) so downstream
+   * subscribers can track playback state reactively, eliminating the need for
+   * 500ms `setInterval` polling in AdhanControl.tsx.
+   */
+  private ensureAudio(): void {
+    if (this.audio) return;
+    this.audio = new Audio();
+    this.audio.preload = 'none'; // 'auto' forces codec probe at import time
+
+    // Guard against double-init: only wire the listeners the first time.
+    if (this._onAudioPlaying !== null) return;
+
+    this._onAudioPlaying = () => this._notifyStateChange(true);
+    this._onAudioPausedOrEnded = () => this._notifyStateChange(false);
+
+    this.audio.addEventListener('playing', this._onAudioPlaying);
+    this.audio.addEventListener('pause', this._onAudioPausedOrEnded);
+    this.audio.addEventListener('ended', this._onAudioPausedOrEnded);
+  }
+
+  /**
+   * Subscribe to adhan playback state changes.
+   * Returns an unsubscribe function.
+   *
+   * Designed so React components can do:
+   *   useEffect(() => adhanService.onPlaybackChange(setIsPlaying), []);
+   */
+  onPlaybackChange(listener: (isPlaying: boolean) => void): () => void {
+    if (!this._audioStateListeners) {
+      this._audioStateListeners = new Set();
+    }
+    this._audioStateListeners.add(listener);
+    // Immediately deliver current state so subscribers don't flash stale UI.
+    listener(this.isPlaying());
+    return () => {
+      this._audioStateListeners?.delete(listener);
+    };
+  }
+
+  private _notifyStateChange(isPlaying: boolean): void {
+    if (!this._audioStateListeners) return;
+    for (const listener of this._audioStateListeners) {
+      try {
+        listener(isPlaying);
+      } catch {
+        // Never let a subscriber crash the adhan service.
+      }
+    }
+    // Also broadcast on the window so legacy listeners can hook in.
+    try {
+      window.dispatchEvent(new CustomEvent('adhan-playback-changed', { detail: { isPlaying } }));
+    } catch {
+      /* ignore */
+    }
   }
 
   /**
    * Initialize audio element for Adhan playback
+   * @deprecated Use ensureAudio() instead — kept for backward compatibility with
+   * any external callers, but now a no-op since init must be lazy.
    */
   private initializeAudio(): void {
-    this.audio = new Audio();
-    this.audio.preload = 'auto';
+    // No-op; eager init is the cause of the AAudio mount-block issue.
+    // See ensureAudio() which is called on-demand from playAdhan().
   }
 
   /**
@@ -172,6 +243,7 @@ export class AdhanService {
    * Play Adhan for specific prayer
    */
   async playAdhan(prayerName: string, customUrl?: string): Promise<boolean> {
+    this.ensureAudio();
     if (!this.audio) return false;
 
     const config = this.getAdhanConfig();
@@ -334,8 +406,18 @@ export class AdhanService {
    */
   cleanup(): void {
     if (this.audio) {
+      if (this._onAudioPlaying) {
+        this.audio.removeEventListener('playing', this._onAudioPlaying);
+        this._onAudioPlaying = null;
+      }
+      if (this._onAudioPausedOrEnded) {
+        this.audio.removeEventListener('pause', this._onAudioPausedOrEnded);
+        this.audio.removeEventListener('ended', this._onAudioPausedOrEnded);
+        this._onAudioPausedOrEnded = null;
+      }
       this.audio.pause();
       this.audio.src = '';
+      this.audio = null;
     }
   }
 }

@@ -40,7 +40,8 @@ type ServiceWorkerPrayerTimings = Record<string, { time: string }>;
 const PRAYER_NAMES = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
 
 const getPrayerNotificationMessage = (prayerName: string, prayerTime: string): { title: string; body: string } => {
-  const randomQuote = PRAYER_QUOTES[Math.floor(Math.random() * PRAYER_QUOTES.length)];
+  const quotes = PRAYER_QUOTES[prayerName] || PRAYER_QUOTES['Default'];
+  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
   return {
     title: `${prayerName} Prayer Time`,
     body: `It's time for ${prayerName} prayer (${prayerTime}).\n${randomQuote}`,

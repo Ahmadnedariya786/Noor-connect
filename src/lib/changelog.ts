@@ -31,6 +31,18 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
+    version: '2.2.0',
+    date: '2026-07-30',
+    title: 'Advanced Notifications & UI Polish',
+    changes: [
+      { type: 'feature', description: 'Advanced Notification System: Deep native integration for high-priority Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".' },
+      { type: 'feature', description: 'Context-Aware Prayer Quotes: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g., Fajr-specific Hadith for Fajr reminders).' },
+      { type: 'improvement', description: 'Modern Notification History: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.' },
+      { type: 'improvement', description: 'Profile Polish: "Open Source & Support" card redesigned with full-width buttons, and added direct WhatsApp feedback integration.' },
+      { type: 'fix', description: 'Widget Data Sync: Fixed QuranProgressWidget badge behavior and corrected RTL text alignment in DailyHadith widget.' }
+    ],
+  },
+  {
     version: '2.0.1',
     date: '2026-07-21',
     title: 'Quran Progress Tracking Fixes',

@@ -352,9 +352,46 @@ class UnifiedNotificationService {
       'Dhuhr': 1002,
       'Asr': 1003,
       'Maghrib': 1004,
-      'Isha': 1005
+      'Isha': 1005,
+      'Suhoor': 2001,
+      'Iftar': 2002,
+      'Tarawih': 2003,
+      'Quran': 2004,
+      'Charity': 2005
     };
+    if (prayerName.startsWith('Water-')) {
+      const minutes = parseInt(prayerName.split('-')[1]);
+      return 2100 + (minutes || 0);
+    }
     return ids[prayerName] || 1000 + Math.floor(Math.random() * 100);
+  }
+
+  // Clear ONLY Ramadan related notifications (avoids clearing daily prayers)
+  async clearRamadanNotifications(): Promise<void> {
+    if (this.isCapacitor) {
+      try {
+        const pending = await LocalNotifications.getPending();
+        const ramadanTypes = ['Suhoor', 'Iftar', 'Tarawih', 'Quran', 'Charity', 'Water-'];
+        const toCancel = pending.notifications.filter(n => {
+          if (n.extra && n.extra.prayerName) {
+            return ramadanTypes.some(t => n.extra.prayerName.startsWith(t));
+          }
+          if (n.title && n.title.includes('Ramadan')) {
+             return true;
+          }
+          return false;
+        });
+        
+        if (toCancel.length > 0) {
+          await LocalNotifications.cancel({
+            notifications: toCancel.map(n => ({ id: n.id }))
+          });
+          console.log('Cleared Ramadan notifications:', toCancel.length);
+        }
+      } catch (error) {
+        console.error('Failed to clear Capacitor Ramadan notifications:', error);
+      }
+    }
   }
 
   // Clear all notifications

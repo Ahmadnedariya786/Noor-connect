@@ -56,7 +56,7 @@ const DEFAULT_NOTIFICATION_ICON = '/icon-192x192.png';
 const DEFAULT_NOTIFICATION_BADGE = '/icon-96x96.png';
 
 export class NotificationManager {
-  private preferences: NotificationPreferences;
+  private preferences: NotificationPreferences = { ...DEFAULT_PREFERENCES };
   private lastNotificationDate: string | null = null;
   private sentNotificationIds: Set<string> = new Set();
   private isSupported: boolean;
@@ -65,14 +65,52 @@ export class NotificationManager {
   private permissionCheckInterval: ReturnType<typeof setInterval> | null = null;
   private dailyNotificationCount: number = 0;
   private notificationHistory: NotificationEvent[] = [];
+  private loaded = false;
 
   constructor() {
     this.isSupported = 'Notification' in window;
-    this.preferences = this.loadPreferences();
-    this.lastNotificationDate = this.getLastNotificationDate();
-    this.sentNotificationIds = this.loadSentNotifications();
-    this.dailyNotificationCount = this.loadDailyNotificationCount();
-    this.notificationHistory = this.loadNotificationHistory();
+    // DO NOT read localStorage here — performing 5× JSON.parse() +
+    // Set/Array allocations at module-import time was causing ART GC
+    // thrashing on Settings mount (6 consecutive GCs in logcat trace).
+    // Instead, defer storage access until ensureLoaded() is called
+    // from the first actual usage (start(), getPreferences(), etc.).
+  }
+
+  /**
+   * One-time lazy initializer that reads all persisted preferences from
+   * localStorage.  Called on-demand from every public method that needs
+   * the cached data.  This moves JSON.parse() + transient object allocations
+   * OUT of the React render/import critical path.
+   *
+   * Every field is assigned a safe default BEFORE attempting to parse
+   * storage, so even if localStorage throws (full disk, privacy mode,
+   * corrupt payload) all internal state is still well-defined and the
+   * non-null assertions below are guaranteed to be safe.
+   */
+  private ensureLoaded(): void {
+    if (this.loaded) return;
+
+    // Install safe defaults first (no throws possible here)
+    this.preferences = { ...DEFAULT_PREFERENCES };
+    this.lastNotificationDate = null;
+    this.sentNotificationIds = new Set();
+    this.dailyNotificationCount = 0;
+    this.notificationHistory = [];
+
+    try {
+      this.preferences = this.loadPreferences();
+      this.lastNotificationDate = this.getLastNotificationDate();
+      this.sentNotificationIds = this.loadSentNotifications();
+      this.dailyNotificationCount = this.loadDailyNotificationCount();
+      this.notificationHistory = this.loadNotificationHistory();
+    } catch (error) {
+      // On any failure (e.g. corrupt JSON, quota exceeded, disabled storage)
+      // fall back to the defaults installed above.  The user loses
+      // *persisted* state but the class remains functional.
+      console.warn('NotificationManager: failed to load persisted state, using defaults.', error);
+    }
+
+    this.loaded = true;
   }
 
   // Load preferences from localStorage
@@ -208,17 +246,20 @@ export class NotificationManager {
 
   // Check if daily notification limit reached
   private hasReachedDailyLimit(): boolean {
+    this.ensureLoaded();
     return this.dailyNotificationCount >= this.preferences.maxDailyNotifications;
   }
 
   // Increment daily notification count
   private incrementDailyCount(): void {
-    this.dailyNotificationCount++;
+    this.ensureLoaded();
+    this.dailyNotificationCount = this.dailyNotificationCount + 1;
     this.saveDailyNotificationCount();
   }
 
   // Reset daily count (called when date changes)
   private resetDailyCount(): void {
+    this.ensureLoaded();
     this.dailyNotificationCount = 0;
     this.saveDailyNotificationCount();
   }
@@ -234,6 +275,7 @@ export class NotificationManager {
 
   // Check if notification was already sent today
   private wasNotificationSentToday(id: string): boolean {
+    this.ensureLoaded();
     const today = new Date().toDateString();
     // Reset if it's a new day
     if (this.lastNotificationDate !== today) {
@@ -246,6 +288,7 @@ export class NotificationManager {
 
   // Get appropriate content based on time and preferences
   private getTimelyContent(): IslamicContent | null {
+    this.ensureLoaded();
     const timeOfDay = this.getTimeBasedType();
     const availableTypes: string[] = [];
 
@@ -306,11 +349,13 @@ export class NotificationManager {
 
   // Get current preferences
   getPreferences(): NotificationPreferences {
+    this.ensureLoaded();
     return { ...this.preferences };
   }
 
   // Update preferences
   updatePreferences(newPreferences: Partial<NotificationPreferences>): void {
+    this.ensureLoaded();
     this.preferences = { ...this.preferences, ...newPreferences };
     this.savePreferences();
   }
@@ -397,14 +442,15 @@ export class NotificationManager {
 
   // Enhanced Ramadan countdown with contextual messages
   private async checkRamadanCountdown(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.ramadanCountdowns) {
       return;
     }
 
-    const today = new Date();
-
-    if (isRamadanCountdownPeriod(today)) {
-      const daysUntil = getDaysUntilRamadan(today);
+    try {
+      const { islamicCalendarService } = await import('@/lib/islamic-calendar-service');
+      const calendarInfo = await islamicCalendarService.getIslamicCalendarInfo();
+      const daysUntil = calendarInfo.daysUntilRamadan;
 
       if (daysUntil > 0 && daysUntil <= 30) {
         let title = 'Ramadan Countdown';
@@ -439,11 +485,14 @@ export class NotificationManager {
 
         await this.sendNotification(event);
       }
+    } catch (error) {
+      console.error('Failed to check Ramadan countdown:', error);
     }
   }
 
   // Check and send Eid greetings
   private async checkEidGreetings(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.eidGreetings) {
       return;
     }
@@ -498,6 +547,7 @@ export class NotificationManager {
 
   // Enhanced Friday Surah Kahf reminder with varied content
   private async checkFridayKahfReminder(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.fridayKahfReminders) {
       return;
     }
@@ -542,6 +592,7 @@ export class NotificationManager {
 
   // Enhanced daily hadith with variety
   private async checkDailyHadith(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.dailyHadithNotifications) {
       return;
     }
@@ -583,6 +634,7 @@ export class NotificationManager {
 
   // New: Quranic verse notifications
   private async checkQuranicVerses(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.quranicVerses) {
       return;
     }
@@ -613,6 +665,7 @@ export class NotificationManager {
 
   // New: Dhikr reminders
   private async checkDhikrReminders(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.dhikrReminders) {
       return;
     }
@@ -644,6 +697,7 @@ export class NotificationManager {
 
   // New: Islamic knowledge notifications
   private async checkIslamicKnowledge(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.islamicKnowledge) {
       return;
     }
@@ -674,6 +728,7 @@ export class NotificationManager {
 
   // New: Motivational messages
   private async checkMotivationalMessages(): Promise<void> {
+    this.ensureLoaded();
     if (!this.preferences.motivationalMessages) {
       return;
     }
@@ -719,6 +774,7 @@ export class NotificationManager {
 
   // Enhanced main check method with all notification types
   async checkAllNotifications(): Promise<void> {
+    this.ensureLoaded();
     if (!this.areNotificationsEnabled()) {
       return;
     }
@@ -741,6 +797,7 @@ export class NotificationManager {
     if (this.intervalId !== null) {
       return;
     }
+    this.ensureLoaded();
 
     // On low-end devices, check less frequently to reduce battery/CPU impact
     const checkInterval = isLowEndDevice() ? 300000 : 60000;
@@ -775,11 +832,13 @@ export class NotificationManager {
 
   // Get notification history
   getNotificationHistory(): NotificationEvent[] {
+    this.ensureLoaded();
     return [...this.notificationHistory];
   }
 
   // Clear notification history
   clearNotificationHistory(): void {
+    this.ensureLoaded();
     this.notificationHistory = [];
     try {
       localStorage.setItem(NOTIFICATION_HISTORY_KEY, JSON.stringify(this.notificationHistory));
@@ -790,11 +849,13 @@ export class NotificationManager {
 
   // Get today's notification count
   getTodayNotificationCount(): number {
-    return this.dailyNotificationCount;
+    this.ensureLoaded();
+    return this.dailyNotificationCount ?? 0;
   }
 
   // Test notification with random content
   async sendTestNotification(): Promise<void> {
+    this.ensureLoaded();
     const content = getRandomContent();
     
     if (content) {

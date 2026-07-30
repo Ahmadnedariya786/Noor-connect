@@ -19,10 +19,15 @@ export function AutoBackupRestoreDialog() {
 
   useEffect(() => {
     if (localStorage.getItem(PROMPTED_KEY)) return;
-    if (!hasAutoBackup()) return;
 
-    setLastTime(getLastAutoBackupTime());
-    setIsOpen(true);
+    async function checkBackup() {
+      if (!(await hasAutoBackup())) return;
+      const time = await getLastAutoBackupTime();
+      setLastTime(time);
+      setIsOpen(true);
+    }
+    
+    checkBackup();
   }, []);
 
   const handleRestore = async () => {
@@ -46,8 +51,8 @@ export function AutoBackupRestoreDialog() {
     setIsOpen(false);
   };
 
-  const handleDelete = () => {
-    clearAutoBackup();
+  const handleDelete = async () => {
+    await clearAutoBackup();
     localStorage.setItem(PROMPTED_KEY, 'true');
     setIsOpen(false);
   };

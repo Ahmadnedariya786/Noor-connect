@@ -100,10 +100,20 @@ export const DEFAULT_HABITS: Habit[] = [
   }
 ];
 
-class HabitTracker {
+export class HabitTracker {
   private readonly HABITS_KEY = 'islamic-habits';
   private readonly ENTRIES_KEY = 'habit-entries';
   private readonly CUSTOM_HABITS_KEY = 'custom-habits';
+  /**
+   * Debounce handle for ENTRIES_KEY writes.  Habit entries can grow to
+   * 500+ items which makes JSON.stringify take 30+ ms on ARM A53 cores
+   * (that's a full frame dropped at 30 FPS right after the user taps the
+   * habit checkmark, when they expect animated feedback).  We coalesce
+   * writes within the same macrotask so a batch of calls (e.g. habit
+   * toggle → hide → streak update) writes only once.
+   */
+  private _entriesWriteTimer: ReturnType<typeof setTimeout> | null = null;
+  private _entriesPendingPayload: string | null = null;
 
   // Get all habits (default + custom, excluding hidden)
   getHabits(): Habit[] {
@@ -271,6 +281,34 @@ class HabitTracker {
     }
   }
 
+  /**
+   * Deferred, coalesced writer for habit-entries.  JSON.stringify +
+   * localStorage.setItem happen in a setTimeout(0) so the current render
+   * (checkmark animation, toast, etc.) isn't blocked.  Multiple writes
+   * within the same macrotask collapse to a single flush.
+   */
+  private scheduleEntriesWrite(entries: HabitEntry[]): void {
+    try {
+      this._entriesPendingPayload = JSON.stringify(entries);
+    } catch (error) {
+      console.error('Failed to serialize habit entries:', error);
+      return;
+    }
+    if (this._entriesWriteTimer !== null) return;
+    this._entriesWriteTimer = setTimeout(() => {
+      const payload = this._entriesPendingPayload;
+      this._entriesWriteTimer = null;
+      this._entriesPendingPayload = null;
+      try {
+        if (payload !== null) {
+          localStorage.setItem(this.ENTRIES_KEY, payload);
+        }
+      } catch (error) {
+        console.error('Failed to persist habit entries:', error);
+      }
+    }, 0);
+  }
+
   // Save habit entry
   private saveEntry(entry: HabitEntry): void {
     try {
@@ -278,7 +316,7 @@ class HabitTracker {
       const entries: HabitEntry[] = entriesJson ? JSON.parse(entriesJson) : [];
       
       entries.push(entry);
-      localStorage.setItem(this.ENTRIES_KEY, JSON.stringify(entries));
+      this.scheduleEntriesWrite(entries);
     } catch (error) {
       console.error('Failed to save habit entry:', error);
     }
@@ -291,7 +329,7 @@ class HabitTracker {
       const entries: HabitEntry[] = entriesJson ? JSON.parse(entriesJson) : [];
       
       const filtered = entries.filter(entry => entry.id !== entryId);
-      localStorage.setItem(this.ENTRIES_KEY, JSON.stringify(filtered));
+      this.scheduleEntriesWrite(filtered);
     } catch (error) {
       console.error('Failed to delete habit entry:', error);
     }
@@ -304,7 +342,7 @@ class HabitTracker {
       const entries: HabitEntry[] = entriesJson ? JSON.parse(entriesJson) : [];
       
       const filtered = entries.filter(entry => entry.habitId !== habitId);
-      localStorage.setItem(this.ENTRIES_KEY, JSON.stringify(filtered));
+      this.scheduleEntriesWrite(filtered);
     } catch (error) {
       console.error('Failed to delete habit entries:', error);
     }

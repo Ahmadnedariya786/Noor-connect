@@ -100,7 +100,7 @@
         android:fontFamily="@font/scheherazade_new"
         android:gravity="end|center_vertical"
         android:textDirection="rtl"
-        android:textAlignment="textStart"
+        android:textAlignment="viewEnd"
         android:lineSpacingMultiplier="1.4"
         android:ellipsize="end"
         android:maxLines="2"

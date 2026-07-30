@@ -64,13 +64,12 @@ export function AdhanControl({ className }: AdhanControlProps) {
     };
   }, []);
 
-  // Check if Adhan is playing
+  // Subscribe reactively to adhan playback state changes via adhan-service's
+  // new onPlaybackChange() subscriber.  Eliminates the previous 500ms
+  // setInterval() poll that was doing unnecessary work twice per second
+  // even when nothing was playing.
   useEffect(() => {
-    const checkPlaying = () => {
-      setIsPlaying(adhanService.isPlaying());
-    };
-    const interval = setInterval(checkPlaying, 500);
-    return () => clearInterval(interval);
+    return adhanService.onPlaybackChange(setIsPlaying);
   }, []);
 
   const toggleAdhan = () => {

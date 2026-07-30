@@ -50,25 +50,30 @@ export const AdhanSelector = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Load custom adhans for the dropdown
-    const loadCustomMetadata = async () => {
-      try {
-        const localforage = (await import('localforage')).default;
-        const adhanStore = localforage.createInstance({
-          name: 'islamic-companion',
-          storeName: 'custom-adhans',
-          description: 'User uploaded adhan audio files'
-        });
-        const saved = await adhanStore.getItem<any[]>('custom-adhan-audio');
-        if (saved) {
-          setCustomAdhans(saved.map(a => ({ id: a.id, name: `Custom: ${a.name}` })));
+    // Load custom adhan metadata from IndexedDB/localforage.
+    // Defer 600ms so Profile.tsx's initial paint + framer-motion page
+    // transition completes before we spin up IndexedDB connections,
+    // which otherwise cause a synchronous IDBFactory.open() call on
+    // the main thread inside React's commit phase.
+    let t: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      void (async () => {
+        try {
+          const localforage = (await import('localforage')).default;
+          const adhanStore = localforage.createInstance({
+            name: 'islamic-companion',
+            storeName: 'custom-adhans',
+            description: 'User uploaded adhan audio files'
+          });
+          const saved = await adhanStore.getItem<any[]>('custom-adhan-audio');
+          if (saved) {
+            setCustomAdhans(saved.map(a => ({ id: a.id, name: `Custom: ${a.name}` })));
+          }
+        } catch (error) {
+          console.error("Error loading custom adhan metadata:", error);
         }
-      } catch (error) {
-        console.error("Error loading custom adhan metadata:", error);
-      }
-    };
-
-    loadCustomMetadata();
+      })();
+      t = null;
+    }, 600);
 
     // Sync preferences when storage changes or external events fire
     const handleSync = () => {
@@ -80,6 +85,7 @@ export const AdhanSelector = () => {
     window.addEventListener('adhan-config-changed' as any, handleSync);
 
     return () => {
+      if (t !== null) clearTimeout(t);
       stopAllAdhanPreviews();
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);

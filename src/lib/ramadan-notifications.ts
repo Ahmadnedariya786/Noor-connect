@@ -169,7 +169,8 @@ export class RamadanNotifications {
 
   // Clear all Ramadan notifications
   async clearRamadanNotifications() {
-    await unifiedNotifications.clearAllNotifications();
+    console.log('Clearing old Ramadan notifications');
+    await unifiedNotifications.clearRamadanNotifications();
   }
 
   // Schedule all Ramadan notifications for the day

@@ -7,6 +7,7 @@ export class AndroidAudioHelper {
   private static instance: AndroidAudioHelper;
   private wakeLock: WakeLockSentinel | null = null;
   private pageVisibilityHandler: ((isVisible: boolean) => void) | null = null;
+  private visibilityListener: (() => void) | null = null;
 
   static getInstance(): AndroidAudioHelper {
     if (!AndroidAudioHelper.instance) {
@@ -74,8 +75,7 @@ export class AndroidAudioHelper {
    * Setup platform-specific audio optimizations
    */
   setupPlatformOptimizations(audio: HTMLAudioElement): void {
-    // Common optimizations for all platforms
-    audio.preload = 'auto';
+    audio.preload = 'none'; // 'auto' forces main-thread codec probe on Android WebView
     audio.loop = false;
     
     // Platform-specific optimizations
@@ -99,20 +99,31 @@ export class AndroidAudioHelper {
       (audio as any).setAttribute('playsinline', 'true');
       (audio as any).setAttribute('webkit-playsinline', 'true');
       (audio as any).setAttribute('x-webkit-airplay', 'allow');
-      
-      // Audio context for better background handling
-      if (!this.audioContext && 'AudioContext' in window) {
-        this.audioContext = new (window as any).AudioContext();
-        this.audioContext.resume();
-      }
-      
-      // Request wake lock for background playback
-      this.requestWakeLock();
-      
+
+      // AudioContext + wake lock: defer until audio actually starts playing.
+      // Creating them eagerly during setupPlatformOptimizations() was blocking
+      // the main thread on Settings mount via AAudioStreamBuilder_openStream.
+      const ensureAudioContext = () => {
+        if (this.audioContext) return;
+        if (!('AudioContext' in window)) return;
+        try {
+          this.audioContext = new (window as any).AudioContext();
+          this.audioContext.resume().catch(() => {});
+        } catch {
+          /* ignore */
+        }
+      };
+      audio.addEventListener('play', ensureAudioContext, { once: true });
+
+      const ensureWakeLock = () => {
+        this.requestWakeLock();
+      };
+      audio.addEventListener('play', ensureWakeLock, { once: true });
+
       // Set up visibility change handler for Android
       this.setupVisibilityHandler();
-      
-      console.log('Android audio optimizations applied');
+
+      console.log('Android audio optimizations applied (lazy AudioContext + wakeLock)');
     } catch (error) {
       console.warn('Failed to apply Android optimizations:', error);
     }
@@ -161,11 +172,11 @@ export class AndroidAudioHelper {
    * Setup visibility change handler for background playback
    */
   setupVisibilityHandler(): void {
-    if (this.pageVisibilityHandler) return;
-    
+    if (this.visibilityListener) return;
+
     this.pageVisibilityHandler = (isVisible: boolean) => {
       console.log(`Page visibility changed: ${isVisible ? 'visible' : 'hidden'}`);
-      
+
       // Handle background/foreground transitions
       if (!isVisible) {
         // Page went to background
@@ -175,10 +186,15 @@ export class AndroidAudioHelper {
         console.log('Page entered foreground mode');
       }
     };
-    
-    document.addEventListener('visibilitychange', () => {
+
+    // Store a stable listener reference so cleanup() can remove the exact
+    // function we registered.  The previous approach created a fresh
+    // anonymous closure in removeEventListener, which never matched anything
+    // in the DOM's listener list — leaking a listener on every cleanup().
+    this.visibilityListener = () => {
       this.pageVisibilityHandler?.(!document.hidden);
-    });
+    };
+    document.addEventListener('visibilitychange', this.visibilityListener);
   }
 
   /**
@@ -231,8 +247,9 @@ export class AndroidAudioHelper {
     }
     
     // Clean up visibility handler
-    if (this.pageVisibilityHandler) {
-      document.removeEventListener('visibilitychange', () => {});
+    if (this.visibilityListener) {
+      document.removeEventListener('visibilitychange', this.visibilityListener);
+      this.visibilityListener = null;
       this.pageVisibilityHandler = null;
     }
     

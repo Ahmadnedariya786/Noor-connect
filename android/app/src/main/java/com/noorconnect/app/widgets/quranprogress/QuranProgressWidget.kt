@@ -75,9 +75,9 @@ class QuranProgressWidget : AppWidgetProvider() {
                 views.setInt(R.id.widget_ring_progress, "setImageLevel", (progressFraction * 10000).toInt())
             }
 
-            // Stale data badge
+            // Stale data badge — only show for non-null payload (0L would always be "stale")
             val now = System.currentTimeMillis()
-            val isStale = payload?.let { (now - it.lastReadTimestamp) > 2 * 60 * 60 * 1000L } ?: false
+            val isStale = payload?.let { (now - it.lastReadTimestamp) > 4 * 60 * 60 * 1000L } ?: false
             views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
 
             // Accessibility content description

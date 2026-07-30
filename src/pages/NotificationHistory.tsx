@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Notification History Page
  * Displays all past notifications with filtering and management options
  */
@@ -275,26 +275,27 @@ const NotificationHistory = () => {
             <ScrollArea className="h-[400px]">
               <div className="space-y-3">
                 {filteredNotifications.map((notification, index) => (
-                  <Card key={`${notification.timestamp}-${index}`} className="p-3 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1">
+                  <Card key={`${notification.timestamp}-${index}`} className="p-4 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-muted/40 transition-all duration-300 hover:shadow-md hover:border-primary/20 group cursor-default mb-3 overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1 bg-muted p-2 rounded-xl group-hover:bg-primary/10 transition-colors">
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-sm truncate">{notification.title}</h4>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <h4 className="font-semibold text-sm truncate text-foreground group-hover:text-primary transition-colors">{notification.title}</h4>
                           <Badge
                             variant="secondary"
-                            className={`text-xs ${getNotificationBadgeColor(notification.type)}`}
+                            className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${getNotificationBadgeColor(notification.type)}`}
                           >
                             {notification.type.replace('-', ' ')}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mb-3 leading-relaxed opacity-90">
                           {notification.body}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
+                          <Clock className="w-3.5 h-3.5" />
                           <span>{getRelativeTime(notification.timestamp)}</span>
                         </div>
                       </div>

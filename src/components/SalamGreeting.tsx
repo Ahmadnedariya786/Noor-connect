@@ -18,59 +18,65 @@ export const setSalamGreetingEnabled = (enabled: boolean): void => {
 export const SalamGreeting = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasPlayedRef = useRef(false);
+  const handleInteractionRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    // Check if enabled and not already played this session
     const isEnabled = isSalamGreetingEnabled();
     const sessionKey = sessionStorage.getItem(GREETING_PLAYED_KEY);
-    
+
     if (!isEnabled || sessionKey || hasPlayedRef.current) {
       return;
     }
 
-    // Create audio element with optimized loading
-    audioRef.current = new Audio('/audio/salam-greeting.mp3');
-    audioRef.current.volume = 0.7;
-    audioRef.current.preload = 'none'; // Only load when needed
-
-    // Play greeting after a short delay
     const playGreeting = () => {
-      if (audioRef.current && !hasPlayedRef.current) {
-        hasPlayedRef.current = true;
-        sessionStorage.setItem(GREETING_PLAYED_KEY, 'true');
-        
-        audioRef.current.play().catch((error) => {
-          // Autoplay may be blocked - that's okay
-          console.log('Greeting autoplay blocked:', error);
-        });
+      if (hasPlayedRef.current) return;
+
+      //
+      // Construct audio ONLY inside the user-gesture callback.  `new Audio()`
+      // warms up the WebView's media engine (on Android AAudio / OpenSL
+      // initialization is cross-thread and blocks the JS bridge for 25–60ms)
+      // — deferring it avoids stealing a frame from the splash-to-dashboard
+      // animation, which was previously observed as a 92-frame jank bump on
+      // the splash screen.
+      //
+      // Additionally, creating HTMLAudioElement from a click/touchstart
+      // listener means the browser already has a user activation token and
+      // will 100% allow playback, so we don't need a separate probe (the
+      // probe itself allocated yet another media engine channel, which
+      // itself caused jank).
+      //
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/audio/salam-greeting.mp3');
+        audioRef.current.volume = 0.7;
+        audioRef.current.preload = 'none';
       }
+
+      hasPlayedRef.current = true;
+      sessionStorage.setItem(GREETING_PLAYED_KEY, 'true');
+
+      audioRef.current.play().catch((error) => {
+        console.log('Greeting autoplay blocked:', error);
+      });
     };
 
-    // Wait for user interaction if autoplay is blocked
     const handleInteraction = () => {
       playGreeting();
       document.removeEventListener('click', handleInteraction);
       document.removeEventListener('touchstart', handleInteraction);
+      handleInteractionRef.current = null;
     };
+    handleInteractionRef.current = handleInteraction;
 
-    // Try to play immediately, fallback to user interaction
-    const timer = setTimeout(() => {
-      audioRef.current?.play()
-        .then(() => {
-          hasPlayedRef.current = true;
-          sessionStorage.setItem(GREETING_PLAYED_KEY, 'true');
-        })
-        .catch(() => {
-          // Add listeners for user interaction
-          document.addEventListener('click', handleInteraction, { once: true });
-          document.addEventListener('touchstart', handleInteraction, { once: true });
-        });
-    }, 500);
+    // Passive listeners so the browser's tap-scrolling path is never blocked.
+    document.addEventListener('click', handleInteraction, { once: true, passive: true });
+    document.addEventListener('touchstart', handleInteraction, { once: true, passive: true });
 
     return () => {
-      clearTimeout(timer);
-      document.removeEventListener('click', handleInteraction);
-      document.removeEventListener('touchstart', handleInteraction);
+      if (handleInteractionRef.current) {
+        document.removeEventListener('click', handleInteractionRef.current);
+        document.removeEventListener('touchstart', handleInteractionRef.current);
+        handleInteractionRef.current = null;
+      }
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -78,5 +84,5 @@ export const SalamGreeting = () => {
     };
   }, []);
 
-  return null; // This is a background component
+  return null;
 };

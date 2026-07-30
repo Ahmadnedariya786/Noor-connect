@@ -1,9 +1,8 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, Play, Pause, Trash2, Check, Music } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { useToast } from "@/hooks/use-toast";
-import localforage from "localforage";
 import { getAdhanPreferences, setAdhanForPrayer, type PrayerName, type AdhanPreferences } from "@/lib/adhan-preferences";
 
 const CUSTOM_ADHAN_KEY = 'custom-adhan-audio';
@@ -16,18 +15,38 @@ interface CustomAdhan {
   addedAt: number;
 }
 
-// Store for custom adhan files
-const adhanStore = localforage.createInstance({
-  name: 'islamic-companion',
-  storeName: 'custom-adhans',
-  description: 'User uploaded adhan audio files'
-});
+// ─── Lazy localforage store (typed contract) ──────────────────────────
+// We only use 2 methods on the localforage instance — getItem / setItem.
+// Declaring this typed interface (instead of `any`) gives us full TS safety
+// without needing to install/bundle the entire localforage type declarations
+// at edit time.  The actual module is still dynamically imported so the
+// IndexedDB connection opens lazily (never on Settings mount).
+interface LocalforageAdhanStore {
+  getItem<T>(key: string): Promise<T | null>;
+  setItem<T>(key: string, value: T): Promise<T>;
+}
+let _adhanStore: LocalforageAdhanStore | null = null;
+async function getAdhanStore(): Promise<LocalforageAdhanStore> {
+  if (_adhanStore) return _adhanStore;
+  const localforageModule = await import('localforage');
+  const localforageInstance = (
+    (localforageModule as { default?: LocalforageAdhanStore & { createInstance: (opts: any) => LocalforageAdhanStore } }).default ??
+    (localforageModule as unknown as LocalforageAdhanStore & { createInstance: (opts: any) => LocalforageAdhanStore })
+  );
+  _adhanStore = localforageInstance.createInstance({
+    name: 'islamic-companion',
+    storeName: 'custom-adhans',
+    description: 'User uploaded adhan audio files'
+  });
+  return _adhanStore;
+}
 
 // Export helper function to get custom adhan audio
 export const getCustomAdhanUrl = async (id: string): Promise<string | null> => {
   try {
+    const adhanStore = await getAdhanStore();
     const adhans = await adhanStore.getItem<CustomAdhan[]>(CUSTOM_ADHAN_KEY);
-    const adhan = adhans?.find(a => a.id === id);
+    const adhan = adhans?.find((a) => a.id === id);
     if (!adhan) return null;
 
     const binaryString = atob(adhan.data);
@@ -54,18 +73,27 @@ export function CustomAdhanUpload() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadCustomAdhans();
+    // Defer IndexedDB loads + setups: 800ms after mount lets the page paint and
+    // transition animation completes before we open an IndexedDB connection.
+    let t: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      loadCustomAdhans();
+      t = null;
+    }, 800);
 
     // Listen for storage changes to keep preferences in sync
     const handleStorageChange = () => {
       setPreferences(getAdhanPreferences());
     };
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      if (t !== null) clearTimeout(t);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const loadCustomAdhans = async () => {
     try {
+      const adhanStore = await getAdhanStore();
       const saved = await adhanStore.getItem<CustomAdhan[]>(CUSTOM_ADHAN_KEY);
       if (saved) setCustomAdhans(saved);
     } catch (error) {
@@ -102,6 +130,7 @@ export function CustomAdhanUpload() {
       };
 
       const updated = [...customAdhans, newAdhan];
+      const adhanStore = await getAdhanStore();
       await adhanStore.setItem(CUSTOM_ADHAN_KEY, updated);
       setCustomAdhans(updated);
 
@@ -150,6 +179,7 @@ export function CustomAdhanUpload() {
 
   const handleDelete = async (id: string) => {
     const updated = customAdhans.filter(a => a.id !== id);
+    const adhanStore = await getAdhanStore();
     await adhanStore.setItem(CUSTOM_ADHAN_KEY, updated);
     setCustomAdhans(updated);
 
