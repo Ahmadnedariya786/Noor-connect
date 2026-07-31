@@ -64,6 +64,29 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Deterministic Scheduling:** Rewrote the background notification ID generator. Notifications now use predictable ID mapping (`Suhoor: 2001`, `Iftar: 2002`, etc.) rather than random hashes, ensuring Capacitor can properly overwrite or cancel them without memory leaks.
 - **Accurate Calendar Countdowns:** Replaced deprecated tabular Ramadan estimates with the asynchronous `islamicCalendarService`, ensuring countdown notifications accurately respect Hijri date boundaries and offsets.
 
+### 🛡️ Bulletproof Backup & Restore System
+**A complete rebuild of data protection — built for users who never think about backups, so nothing is ever lost:**
+
+| Feature | Details |
+|---------|---------|
+| **Unified Backup Service** | One `backup-service.ts` is now the single source of truth. The two legacy backup systems were consolidated — existing backups are **auto-migrated** on first launch, nothing lost. |
+| **Complete Data Capture** | Every localStorage key + all Capacitor Preferences + e-book metadata. Seerah/Qisas/Hadith reading progress, quiz economy, sleep settings, global player states, Eid checklists and more are now included. |
+| **Rolling Auto-Snapshots** | The last **3 snapshots** (2 on web) are kept with timestamps. Snapshots run every 20 minutes **and when you close the app**. |
+| **Google Cloud Backup Rules** | New `backup_rules.xml` + `data_extraction_rules.xml` declare WebView storage and preferences for Android Auto Backup (caches excluded to stay under the 25MB limit). On eligible devices your data is silently restored after a reinstall. |
+| **Real Export on Android** | The Backup button now writes the file and opens the **system share sheet** (save to Downloads, Drive, Files) — previously the download silently failed in the WebView. |
+| **First-Launch Restore Prompt** | After reinstalling, the app detects your previous data automatically and offers one-tap restore — no instructions needed. |
+| **Never Loses Data Silently** | Restores verify data integrity, warn when importing an older backup over newer data, recover partially from failures, and report exactly what happened in plain language. |
+
+### 🎵 Nasheed Player Upgrades
+- **Offline Playback Cache**: Played nasheeds are now cached for offline listening (200 tracks, 90-day retention, quota-safe). Each track shows its cache status with one-tap delete, plus a clear-all option.
+- **Filter by Artist**: Browse the 400+ nasheed library with quick artist-filter chips.
+- **Back to Top**: Instantly jump back to the top of long library lists.
+
+### ⚡ Interaction & Frame-Rate Optimization
+- **BottomNav rewrite**: CSS-only active states replace the animation library overhead — snappier taps and fewer dropped frames on low-end GPUs.
+- **Faster page transitions**: Route change animation cut from 150ms to 50ms.
+- **Smarter FPS monitoring**: The dev FPS monitor pauses when the app is hidden, keeping background usage at zero cost.
+
 ---
 
 ## 🚀 **Nasheed Library (v2.2)**
@@ -168,7 +191,7 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 
 ### 📱 Android Integration & Security
 - **Native Android Widgets**: Home screen widgets for Next Prayer, Quran Reading Progress, Daily Ayah, Daily Hadith, and a Digital Tasbeeh. Everything auto-syncs with your in-app progress.
-- **Auto Backup & Restore**: Robust local backup system that automatically secures your settings, bookmarks, Qaza records, Quran progress, and **now fully includes all Capacitor Preferences** (like Nasheed radio stats, theme preferences, and advanced hardware configurations). Leverages Android's native `SharedPreferences` to silently sync via Google Drive so data is safely detected on re-install.
+- **Auto Backup & Restore**: Robust backup system that automatically secures your settings, bookmarks, Qaza records, Quran progress, and all Capacitor Preferences (like Nasheed radio stats, theme preferences, and advanced hardware configurations). Keeps rolling snapshots (3 on Android, 2 on web) every 20 minutes and on app close. Declares full Android Auto Backup rules so Google Drive silently syncs your data and it is offered back on re-install.
 - **Advanced Notification System**: 
   - **Heads-Up Adhaan**: Deep native integration for high-priority, full-screen intent Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".
   - **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g. Fajr-specific Hadith for Fajr reminders).
@@ -205,8 +228,9 @@ Noor Connect is built from the ground up for performance and ethical transparenc
   - Pre-configured `foss` Gradle flavor specifically built to strip `play-services` for pure open-source distribution. 
   - Fastlane F-Droid metadata integration ready.
   - **APK Size Optimization**: Implemented a comprehensive F-Droid prebuild script (`clean-dist-data.js`) to strip >300MB of redundant JSON data from bundled assets. Uses **local Mushaf WebP storage** and CDN fallback to maintain feature completeness while keeping footprint manageable.
-- **Data Portability**: Full App Backup & Restore capabilities directly to internal storage (localStorage + Capacitor Preferences). Auto-backup on first install, auto-restore on reinstall. All data stays strictly local.
-- **Cross-Platform Backup**: `backup-restore-service.ts` uses localStorage (no native filesystem dependency) with background processing via `requestIdleCallback`/`setTimeout` to avoid UI blocking.
+- **Data Portability**: Full App Backup & Restore capabilities directly to internal storage (localStorage + Capacitor Preferences). Rolling auto-snapshots every 20 minutes and on app close, with an automatic restore prompt after reinstall. All data stays strictly local.
+- **Unified Backup Service**: A single `backup-service.ts` consolidates the legacy backup systems — old backups are auto-migrated on first launch. Platform-aware export: Android opens the native share sheet (Capacitor Filesystem + Share), web uses blob download. Every operation returns a typed result with plain-language errors — nothing fails silently.
+- **Android Auto Backup Rules**: `backup_rules.xml` + `data_extraction_rules.xml` include WebView storage, Capacitor Preferences and widget prefs (large caches excluded to respect the 25MB cloud limit), so Google's silent cloud backup survives uninstall/reinstall on eligible devices.
 - **Low-End Device Optimizations** (2016+ devices, 30+ FPS target):
   - Adaptive device detection (`device-performance.ts`) — CPU cores, device memory, connection type, save-data mode
   - Automatic animation reduction (`shouldReduceAnimations`) respecting `prefers-reduced-motion`
