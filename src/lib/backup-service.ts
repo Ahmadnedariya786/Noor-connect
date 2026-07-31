@@ -10,9 +10,10 @@
  *      every Capacitor Preference, e-book metadata.
  *   2. Nothing important is ever silently dropped — every operation returns a
  *      typed BackupResult with an error message in plain language.
- *   3. Rolling snapshots (3) are kept in Capacitor Preferences, which is included in
- *      Android Auto Backup (see backup_rules.xml / data_extraction_rules.xml), so a
- *      snapshot taken before uninstall survives a reinstall + cloud restore.
+ *   3. The single latest snapshot is kept in Capacitor Preferences, which is
+ *      included in Android Auto Backup (see backup_rules.xml /
+ *      data_extraction_rules.xml), so a snapshot taken before uninstall survives
+ *      a reinstall + cloud restore.
  *   4. First launch after a fresh install automatically offers to restore the
  *      latest snapshot — zero instructions required.
  */
@@ -26,16 +27,16 @@ import { clearAllBooks, getDownloadedBooks, type DownloadedBook } from './ebooks
 // ─── Format & retention ───────────────────────────────────────────────────────
 
 export const BACKUP_VERSION = '2.1';
-/** Web keeps 2 snapshots (they share the ~5MB localStorage quota with user data);
- *  native keeps 3 (SharedPreferences XML has no such cap). */
-export const MAX_SNAPSHOTS = Capacitor.isNativePlatform() ? 3 : 2;
 
 /** Skip a snapshot if the last one is younger than this (prevents burst writes). */
 const SNAPSHOT_MIN_INTERVAL_MS = 60_000;
 
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 
-const SNAPSHOT_PREFIX = 'backup-snapshot-';
+/** Single latest snapshot — always overwritten, never rotated. */
+const SNAPSHOT_LATEST_KEY = 'backup-snapshot-latest';
+/** Legacy rotation prefix (backup-snapshot-<ISO>); migrated and swept on upgrade. */
+const SNAPSHOT_LEGACY_PREFIX = 'backup-snapshot-';
 const SNAPSHOT_META_KEY = 'backup-snapshot-meta';
 const AUTO_BACKUP_KEY = 'auto-backup-data';
 const AUTO_BACKUP_META_KEY = 'auto-backup-metadata';
@@ -43,7 +44,7 @@ const LEGACY_DATA_KEY = 'backup_data'; // System B v1.0 (localStorage)
 const LEGACY_META_KEY = 'backup_metadata'; // System B v1.0 (localStorage)
 const LEGACY_CHECKED_KEY = 'backup_checked_session'; // System B v1.0 (Preferences)
 const CHECK_DONE_KEY = 'backup-restore-check-done'; // localStorage, per-install
-export const AUTO_BACKUP_ENABLED_KEY = 'auto-backup-enabled';
+const AUTO_BACKUP_ENABLED_KEY = 'auto-backup-enabled'; // legacy toggle, removed in v2.2
 
 /** On web, Capacitor Preferences are stored under this prefix inside localStorage. */
 const WEB_PREFERENCES_PREFIX = 'CapacitorStorage.';
@@ -83,7 +84,6 @@ export interface BackupResult<T = void> {
 }
 
 export interface SnapshotInfo {
-  key: string;
   timestamp: string; // ISO
   sizeBytes: number;
 }
@@ -100,7 +100,6 @@ export interface RestoreSummary {
 
 export interface RestoreOpportunity {
   snapshot: SnapshotInfo;
-  snapshotCount: number;
 }
 
 // ─── Known data keys (documentation + ordering) ───────────────────────────────
@@ -172,7 +171,7 @@ const KNOWN_STORAGE_KEYS: readonly string[] = [
   // Widgets
   'widget-customization', 'widget-config-changed', 'widget-update-requested', 'widget-refresh',
   // Misc
-  'mystery-box-last-claim', 'mystery-box-history', 'auto-backup-enabled',
+  'mystery-box-last-claim', 'mystery-box-history',
   'offline-sync-config', 'background-sync-config', 'background-sync-task',
   'next-sync-time', 'daily-ayah-cache', 'daily-hadith-cache',
 ];
@@ -195,9 +194,9 @@ function stripWebPrefix(key: string): string {
 
 function isInternalKey(key: string): boolean {
   const bare = stripWebPrefix(key);
-  if (bare === AUTO_BACKUP_KEY || bare === AUTO_BACKUP_META_KEY || bare === SNAPSHOT_META_KEY) return true;
+  if (bare === SNAPSHOT_LATEST_KEY || bare === AUTO_BACKUP_KEY || bare === AUTO_BACKUP_META_KEY || bare === SNAPSHOT_META_KEY) return true;
   if (bare === LEGACY_CHECKED_KEY || bare === LEGACY_DATA_KEY || bare === LEGACY_META_KEY || bare === CHECK_DONE_KEY) return true;
-  return bare.startsWith(SNAPSHOT_PREFIX);
+  return bare.startsWith(SNAPSHOT_LEGACY_PREFIX);
 }
 
 /**
@@ -344,91 +343,40 @@ export const exportBackup = async (options: BuildBackupOptions = {}): Promise<st
   return result.data.json;
 };
 
-// ─── Snapshots (rolling, quota-safe, single-flight) ───────────────────────────
+// ─── Snapshot (single latest, single-flight) ──────────────────────────────────
 
 let snapshotQueue: Promise<BackupResult<SnapshotInfo | null>> | null = null;
 let lastSnapshotAt = 0;
 
 async function writeSnapshot(payload: BackupData): Promise<BackupResult<SnapshotInfo>> {
   try {
-    const timestamp = new Date().toISOString();
-    const key = `${SNAPSHOT_PREFIX}${timestamp}`;
     const json = JSON.stringify(payload);
-    await Preferences.set({ key, value: json });
-
-    const info: SnapshotInfo = { key, timestamp, sizeBytes: json.length };
-    const meta = await readMeta();
-    meta.unshift(info);
-    const trimmed = meta.slice(0, MAX_SNAPSHOTS);
-    await Preferences.set({ key: SNAPSHOT_META_KEY, value: JSON.stringify(trimmed) });
-
-    // Delete the snapshots that fell out of the window.
-    const removed = meta.slice(MAX_SNAPSHOTS);
-    for (const old of removed) {
-      try {
-        await Preferences.remove({ key: old.key });
-      } catch (error) {
-        console.warn(`BackupService: failed to remove old snapshot ${old.key}`, error);
-      }
-    }
-
-    return { success: true, data: info };
+    await Preferences.set({ key: SNAPSHOT_LATEST_KEY, value: json });
+    return { success: true, data: { timestamp: payload.exportedAt, sizeBytes: json.length } };
   } catch (error) {
     console.error('BackupService: writeSnapshot failed', error);
     return { success: false, error: 'Could not save the automatic backup.' };
   }
 }
 
-async function readMeta(): Promise<SnapshotInfo[]> {
+async function readLatestSnapshot(): Promise<SnapshotInfo | null> {
   try {
-    const { value } = await Preferences.get({ key: SNAPSHOT_META_KEY });
-    if (!value) return [];
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (s): s is SnapshotInfo =>
-        !!s && typeof s.key === 'string' && typeof s.timestamp === 'string' && typeof s.sizeBytes === 'number'
-    );
-  } catch {
-    return [];
-  }
-}
-
-async function rebuildMeta(): Promise<SnapshotInfo[]> {
-  try {
-    const { keys } = await Preferences.keys();
-    const snapshotKeys = keys
-      .filter(key => stripWebPrefix(key).startsWith(SNAPSHOT_PREFIX))
-      .sort();
-    const infos: SnapshotInfo[] = [];
-    for (const key of snapshotKeys) {
-      const { value } = await Preferences.get({ key });
-      if (!value) continue;
-      infos.push({ key, timestamp: stripWebPrefix(key).slice(SNAPSHOT_PREFIX.length), sizeBytes: value.length });
-    }
-    infos.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
-    if (infos.length > 0) {
-      await Preferences.set({ key: SNAPSHOT_META_KEY, value: JSON.stringify(infos.slice(0, MAX_SNAPSHOTS)) });
-    }
-    return infos;
+    const { value } = await Preferences.get({ key: SNAPSHOT_LATEST_KEY });
+    if (!value) return null;
+    const parsed = JSON.parse(value) as BackupData;
+    return {
+      timestamp: parsed.exportedAt ?? new Date().toISOString(),
+      sizeBytes: value.length,
+    };
   } catch (error) {
-    console.warn('BackupService: failed to rebuild snapshot index', error);
-    return [];
+    console.warn('BackupService: failed to read latest snapshot', error);
+    return null;
   }
 }
-
-export const listSnapshots = async (): Promise<SnapshotInfo[]> => {
-  await ensureMigrated();
-  let meta = await readMeta();
-  if (meta.length === 0) {
-    meta = await rebuildMeta();
-  }
-  return meta;
-};
 
 export const getLatestSnapshot = async (): Promise<SnapshotInfo | null> => {
-  const snapshots = await listSnapshots();
-  return snapshots[0] ?? null;
+  await ensureMigrated();
+  return readLatestSnapshot();
 };
 
 export const hasAutoBackup = async (): Promise<boolean> => {
@@ -441,9 +389,10 @@ export const getLastAutoBackupTime = async (): Promise<string | null> => {
 };
 
 /**
- * Create a rolling snapshot of all user data. Safe to call from anywhere:
- * concurrent calls are serialized (single-flight) and a 60s minimum interval
- * prevents burst writes (e.g. interval tick + app pause firing together).
+ * Create a snapshot of all user data, always overwriting the previous one.
+ * Safe to call from anywhere: concurrent calls are serialized (single-flight)
+ * and a 60s minimum interval prevents burst writes (e.g. interval tick + app
+ * pause firing together).
  */
 export const takeSnapshot = async (): Promise<BackupResult<SnapshotInfo | null>> => {
   if (snapshotQueue) return snapshotQueue;
@@ -451,8 +400,7 @@ export const takeSnapshot = async (): Promise<BackupResult<SnapshotInfo | null>>
     try {
       const now = Date.now();
       if (now - lastSnapshotAt < SNAPSHOT_MIN_INTERVAL_MS) {
-        const latest = await getLatestSnapshot();
-        return { success: true, data: latest };
+        return { success: true, data: await readLatestSnapshot() };
       }
 
       const built = await buildBackup({ pretty: false, includeEbooks: true, includePrefs: true, budget: snapshotBudget() });
@@ -487,17 +435,10 @@ export const autoBackup = async (): Promise<string> => {
 
 export const clearAutoBackup = async (): Promise<void> => {
   try {
-    const meta = await readMeta();
-    for (const info of meta) {
-      try {
-        await Preferences.remove({ key: info.key });
-      } catch (error) {
-        console.warn(`BackupService: failed to remove snapshot ${info.key}`, error);
-      }
-    }
     const { keys } = await Preferences.keys();
     for (const key of keys) {
-      if (stripWebPrefix(key).startsWith(SNAPSHOT_PREFIX)) {
+      const bare = stripWebPrefix(key);
+      if (bare === SNAPSHOT_LATEST_KEY || bare === SNAPSHOT_META_KEY || bare.startsWith(SNAPSHOT_LEGACY_PREFIX)) {
         try {
           await Preferences.remove({ key });
         } catch {
@@ -505,7 +446,6 @@ export const clearAutoBackup = async (): Promise<void> => {
         }
       }
     }
-    await Preferences.remove({ key: SNAPSHOT_META_KEY });
     await Preferences.remove({ key: AUTO_BACKUP_KEY });
     await Preferences.remove({ key: AUTO_BACKUP_META_KEY });
   } catch (error) {
@@ -543,8 +483,7 @@ async function migrateLegacyBackups(): Promise<void> {
           preferences: parsed.preferences ?? {},
           downloadedBooks: [],
         };
-        const key = `${SNAPSHOT_PREFIX}${payload.exportedAt}`;
-        const { value } = await Preferences.get({ key });
+        const { value } = await Preferences.get({ key: SNAPSHOT_LATEST_KEY });
         if (!value) {
           await writeSnapshot(payload);
         }
@@ -561,8 +500,7 @@ async function migrateLegacyBackups(): Promise<void> {
       if (oldBlob) {
         const parsed = JSON.parse(oldBlob) as BackupData;
         if (parsed && parsed.storage) {
-          const key = `${SNAPSHOT_PREFIX}${parsed.exportedAt ?? new Date().toISOString()}`;
-          const { value } = await Preferences.get({ key });
+          const { value } = await Preferences.get({ key: SNAPSHOT_LATEST_KEY });
           if (!value) {
             await writeSnapshot(parsed);
           }
@@ -576,10 +514,37 @@ async function migrateLegacyBackups(): Promise<void> {
 
     await Preferences.remove({ key: LEGACY_CHECKED_KEY });
 
-    // Rebuild the snapshot index if it is missing.
-    const meta = await readMeta();
-    if (meta.length === 0) {
-      await rebuildMeta();
+    // Collapse legacy rolling snapshots (backup-snapshot-<ISO>) into the single
+    // latest key — newest wins, then all rotation artifacts are swept.
+    const { value: latestValue } = await Preferences.get({ key: SNAPSHOT_LATEST_KEY });
+    if (!latestValue) {
+      const { keys } = await Preferences.keys();
+      const legacyKeys = keys.filter(k => stripWebPrefix(k).startsWith(SNAPSHOT_LEGACY_PREFIX)).sort();
+      if (legacyKeys.length > 0) {
+        const { value } = await Preferences.get({ key: legacyKeys[legacyKeys.length - 1] });
+        if (value) {
+          await Preferences.set({ key: SNAPSHOT_LATEST_KEY, value });
+        }
+      }
+    }
+    const { keys } = await Preferences.keys();
+    for (const key of keys) {
+      const bare = stripWebPrefix(key);
+      if (bare.startsWith(SNAPSHOT_LEGACY_PREFIX) || bare === SNAPSHOT_META_KEY) {
+        try {
+          await Preferences.remove({ key });
+        } catch {
+          // best effort
+        }
+      }
+    }
+
+    // The old auto-backup toggle key is gone — remove it if an older version
+    // of the app left it behind.
+    try {
+      localStorage.removeItem(AUTO_BACKUP_ENABLED_KEY);
+    } catch {
+      // best effort
     }
   } catch (error) {
     console.error('BackupService: migrateLegacyBackups failed', error);
@@ -734,16 +699,12 @@ export const importBackupJson = async (text: string): Promise<BackupResult<Resto
 
 /** Restore the latest snapshot (used by the first-launch dialog). */
 export const restoreFromAutoBackup = async (): Promise<BackupResult<RestoreSummary>> => {
-  const latest = await getLatestSnapshot();
-  if (!latest) {
-    return { success: false, error: 'No automatic backup was found.' };
-  }
-  return restoreFromSnapshot(latest.timestamp);
-};
-
-export const restoreFromSnapshot = async (timestamp: string): Promise<BackupResult<RestoreSummary>> => {
   try {
-    const { value } = await Preferences.get({ key: `${SNAPSHOT_PREFIX}${timestamp}` });
+    const latest = await getLatestSnapshot();
+    if (!latest) {
+      return { success: false, error: 'No automatic backup was found.' };
+    }
+    const { value } = await Preferences.get({ key: SNAPSHOT_LATEST_KEY });
     if (!value) {
       return { success: false, error: 'That backup could not be found.' };
     }
@@ -754,7 +715,7 @@ export const restoreFromSnapshot = async (timestamp: string): Promise<BackupResu
     const summary = await applyBackupPayload(parsed);
     return { success: true, data: summary };
   } catch (error) {
-    console.error('BackupService: restoreFromSnapshot failed', error);
+    console.error('BackupService: restoreFromAutoBackup failed', error);
     return { success: false, error: 'That backup could not be restored.' };
   }
 };
@@ -847,8 +808,7 @@ export const checkForRestoreOpportunity = async (): Promise<RestoreOpportunity |
     }
 
     localStorage.setItem(CHECK_DONE_KEY, 'true');
-    const snapshots = await listSnapshots();
-    return { snapshot: latest, snapshotCount: snapshots.length };
+    return { snapshot: latest };
   } catch (error) {
     console.error('BackupService: checkForRestoreOpportunity failed', error);
     return null;
@@ -861,8 +821,8 @@ let initialized = false;
 
 /**
  * Call once at app startup. Runs legacy migration and arms the app-pause
- * snapshot: whenever the app goes to the background and auto-backup is
- * enabled, a snapshot is taken (debounced by the 60s minimum interval).
+ * snapshot: whenever the app goes to the background, a snapshot is taken
+ * (debounced by the 60s minimum interval). Auto-backup is always on.
  */
 export const initBackupService = (): void => {
   if (initialized) return;
@@ -872,9 +832,7 @@ export const initBackupService = (): void => {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
-      if (localStorage.getItem(AUTO_BACKUP_ENABLED_KEY) === 'true') {
-        void takeSnapshot();
-      }
+      void takeSnapshot();
     }
   });
 };

@@ -17,7 +17,7 @@ import { CustomAdhanUpload } from "@/components/CustomAdhanUpload";
 import { getCalculationMethod, setCalculationMethod, type CalculationMethodName } from "@/lib/prayer-calculator";
 import { AladhanAPI } from "@/lib/aladhan-api";
 import { getStorageStats, clearAllBooks, formatFileSize, downloadBook, isBookDownloaded } from "@/lib/ebooks-storage";
-import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize, getLastAutoBackupTime, listSnapshots, restoreFromSnapshot, type SnapshotInfo } from "@/lib/backup";
+import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize, getLastAutoBackupTime } from "@/lib/backup";
 import { notificationManager, type NotificationPreferences } from "@/lib/notification-manager";
 import { localNotifications } from "@/lib/local-notifications";
 import { PrayerMethodSelector } from "@/components/PrayerMethodSelector";
@@ -74,8 +74,6 @@ const Profile = () => {
   const [quranFont, setQuranFontState] = useState<QuranFont>("uthmani");
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
   const [lastAutoBackupTime, setLastAutoBackupTime] = useState<string | null>(null);
-  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
-  const [restoringSnapshot, setRestoringSnapshot] = useState<string | null>(null);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     ramadanCountdowns: true,
     eidGreetings: true,
@@ -120,31 +118,17 @@ const Profile = () => {
     testAdhan,
   } = usePrayerAlarm();
 
-  const [autoBackupOn, setAutoBackupOn] = useState(() =>
-    localStorage.getItem('auto-backup-enabled') === 'true'
-  );
-
   const updateBackupTime = useCallback(async () => {
     const time = await getLastAutoBackupTime();
     setLastAutoBackupTime(time);
-    const snaps = await listSnapshots();
-    setSnapshots(snaps);
   }, []);
 
-  const { enable: enableAutoBackup, disable: disableAutoBackup } = useAutoBackup(updateBackupTime);
+  // Always-on auto backup: runs every 20 minutes of app use and on app close.
+  useAutoBackup(updateBackupTime);
 
   useEffect(() => {
     updateBackupTime();
   }, [updateBackupTime]);
-
-  useEffect(() => {
-    if (autoBackupOn) {
-      enableAutoBackup();
-    } else {
-      disableAutoBackup();
-    }
-    localStorage.setItem('auto-backup-enabled', autoBackupOn ? 'true' : 'false');
-  }, [autoBackupOn, enableAutoBackup, disableAutoBackup]);
 
   const [reminderMinutes, setReminderMinutes] = useState('0');
   const [hijriOffset, setHijriOffset] = useState('0');
@@ -671,33 +655,6 @@ const Profile = () => {
     }
   };
 
-  const handleSnapshotRestore = async (timestamp: string) => {
-    setRestoringSnapshot(timestamp);
-    try {
-      const result = await restoreFromSnapshot(timestamp);
-      if (result.success && result.data) {
-        if (result.data.failedKeys > 0) {
-          toast({
-            title: "⚠️ Restored with some issues",
-            description: `Most of your data was restored, but ${result.data.failedKeys} item(s) could not be restored.`,
-            variant: "destructive"
-          });
-        } else {
-          toast({ title: "✅ Restore Complete", description: "Your data has been restored. App will refresh in 2 seconds." });
-        }
-        setTimeout(() => window.location.reload(), 2000);
-      } else {
-        toast({
-          title: "❌ Restore Failed",
-          description: result.error || "This backup could not be restored.",
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setRestoringSnapshot(null);
-    }
-  };
-
   const handleClearCache = async () => {
     if (confirm("This will delete all downloaded books and cached data. Continue?")) {
       await clearCache();
@@ -1174,82 +1131,43 @@ const Profile = () => {
 
         {/* Auto Backup */}
         <div className="space-y-3">
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">
-            {t('autoBackup') || 'Auto Backup'}
-          </h3>
-          <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
-                  <RefreshCw className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <Label className="text-sm font-bold">{t('autoBackup') || 'Auto Backup'}</Label>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {t('autoBackupDescription') || 'Automatically saves your data every 20 minutes and prompts restore on reinstall.'}
-                  </p>
-                </div>
+          <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                <RefreshCw className="w-5 h-5" />
               </div>
-              <Switch
-                checked={autoBackupOn}
-                onCheckedChange={setAutoBackupOn}
-                className="shrink-0 data-[state=checked]:bg-emerald-500"
-              />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-bold">{t('autoBackup') || 'Auto Backup'}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {t('lastSaved') || 'Last saved'}:{' '}
+                  {lastAutoBackupTime
+                    ? `${new Date(lastAutoBackupTime).toLocaleDateString()} ${new Date(lastAutoBackupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : t('never') || 'Never'}
+                </p>
+              </div>
             </div>
 
-            {autoBackupOn && (
-              <div className="space-y-3 pt-4 border-t border-border/40">
-                <div className="flex items-center gap-2 p-3 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
-                  <div className="p-1.5 rounded-lg bg-emerald-500/10">
-                    <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-foreground">
-                      {lastAutoBackupTime
-                        ? `${t('lastBackup') || 'Last backup'}: ${new Date(lastAutoBackupTime).toLocaleDateString()} ${new Date(lastAutoBackupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                        : t('noBackupYet') || 'No backup yet'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('autoBackupStatus') || 'Auto-backup runs every 20 minutes while you use the app.'}
-                    </p>
-                  </div>
-                </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              {t('backupStatusLine') || 'Saved on this device. Also save a file to Google Drive to protect against phone loss.'}
+            </p>
 
-                <div className="p-3 bg-muted/30 rounded-2xl">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                    {t('howItWorks') || 'How it works'}
-                  </p>
-                  <p className="text-xs text-foreground/80 leading-relaxed">
-                    {t('autoBackupHowItWorks') || 'Your data is saved locally on this device every 20 minutes. If you uninstall and reinstall the app, you will be prompted to restore your previous backup — no file picker needed. All your settings, prayer data, qaza records, bookmarks, and Quran progress are included.'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {snapshots.length > 0 && (
-              <div className="p-3 bg-muted/30 rounded-2xl space-y-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  {t('savedCopies') || 'Saved copies'}
-                </p>
-                {snapshots.map((snap) => (
-                  <div key={snap.key} className="flex items-center justify-between gap-2 text-xs">
-                    <span className="text-foreground/80">
-                      {new Date(snap.timestamp).toLocaleDateString()}{' '}
-                      {new Date(snap.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-[11px]"
-                      disabled={restoringSnapshot !== null}
-                      onClick={() => handleSnapshotRestore(snap.timestamp)}
-                    >
-                      {restoringSnapshot === snap.timestamp ? 'Restoring...' : t('restore')}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" onClick={handleBackup}>
+                <Download className="w-4 h-4 me-2" />
+                {t('backupToDrive') || 'Save backup file to Drive/Downloads'}
+              </Button>
+              <input
+                type="file"
+                accept=".json"
+                ref={fileInputRef}
+                onChange={handleRestore}
+                className="hidden"
+              />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="w-4 h-4 me-2" />
+                {t('restoreFromFile') || 'Restore from file'}
+              </Button>
+            </div>
           </Card>
         </div>
 
@@ -1272,30 +1190,12 @@ const Profile = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" onClick={handleBackup}>
-              <Download className="w-4 h-4 ms-2" />
-              {t('backup')}
-            </Button>
-            <input
-              type="file"
-              accept=".json"
-              ref={fileInputRef}
-              onChange={handleRestore}
-              className="hidden"
-            />
-            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="w-4 h-4 ms-2" />
-              {t('restore')}
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" size="sm" onClick={handleClearBooks} className="text-destructive">
-              <Trash2 className="w-4 h-4 ms-2" />
+              <Trash2 className="w-4 h-4 me-2" />
               {t('clearBooks')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleClearCache} className="text-destructive">
-              <Trash2 className="w-4 h-4 ms-2" />
+              <Trash2 className="w-4 h-4 me-2" />
               {t('clearCache')}
             </Button>
           </div>

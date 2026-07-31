@@ -71,7 +71,7 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 |---------|---------|
 | **Unified Backup Service** | One `backup-service.ts` is now the single source of truth. The two legacy backup systems were consolidated — existing backups are **auto-migrated** on first launch, nothing lost. |
 | **Complete Data Capture** | Every localStorage key + all Capacitor Preferences + e-book metadata. Seerah/Qisas/Hadith reading progress, quiz economy, sleep settings, global player states, Eid checklists and more are now included. |
-| **Rolling Auto-Snapshots** | The last **3 snapshots** (2 on web) are kept with timestamps. Snapshots run every 20 minutes **and when you close the app**. |
+| **Always-On Auto Save** | No toggle, no way to turn it off: a snapshot is taken every 20 minutes of app use **and when you close the app**. The **latest snapshot always overwrites the previous one**, and is offered back on reinstall. |
 | **Google Cloud Backup Rules** | New `backup_rules.xml` + `data_extraction_rules.xml` declare WebView storage and preferences for Android Auto Backup (caches excluded to stay under the 25MB limit). On eligible devices your data is silently restored after a reinstall. |
 | **Real Export on Android** | The Backup button now writes the file and opens the **system share sheet** (save to Downloads, Drive, Files) — previously the download silently failed in the WebView. |
 | **First-Launch Restore Prompt** | After reinstalling, the app detects your previous data automatically and offers one-tap restore — no instructions needed. |
@@ -191,7 +191,7 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 
 ### 📱 Android Integration & Security
 - **Native Android Widgets**: Home screen widgets for Next Prayer, Quran Reading Progress, Daily Ayah, Daily Hadith, and a Digital Tasbeeh. Everything auto-syncs with your in-app progress.
-- **Auto Backup & Restore**: Robust backup system that automatically secures your settings, bookmarks, Qaza records, Quran progress, and all Capacitor Preferences (like Nasheed radio stats, theme preferences, and advanced hardware configurations). Keeps rolling snapshots (3 on Android, 2 on web) every 20 minutes and on app close. Declares full Android Auto Backup rules so Google Drive silently syncs your data and it is offered back on re-install.
+- **Auto Backup & Restore**: Robust always-on backup system that automatically secures your settings, bookmarks, Qaza records, Quran progress, and all Capacitor Preferences (like Nasheed radio stats, theme preferences, and advanced hardware configurations). No toggle — the latest snapshot is saved every 20 minutes and on app close. Declares full Android Auto Backup rules so Google Drive silently syncs your data and it is offered back on re-install.
 - **Advanced Notification System**: 
   - **Heads-Up Adhaan**: Deep native integration for high-priority, full-screen intent Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".
   - **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g. Fajr-specific Hadith for Fajr reminders).
@@ -228,7 +228,7 @@ Noor Connect is built from the ground up for performance and ethical transparenc
   - Pre-configured `foss` Gradle flavor specifically built to strip `play-services` for pure open-source distribution. 
   - Fastlane F-Droid metadata integration ready.
   - **APK Size Optimization**: Implemented a comprehensive F-Droid prebuild script (`clean-dist-data.js`) to strip >300MB of redundant JSON data from bundled assets. Uses **local Mushaf WebP storage** and CDN fallback to maintain feature completeness while keeping footprint manageable.
-- **Data Portability**: Full App Backup & Restore capabilities directly to internal storage (localStorage + Capacitor Preferences). Rolling auto-snapshots every 20 minutes and on app close, with an automatic restore prompt after reinstall. All data stays strictly local.
+- **Data Portability**: Full App Backup & Restore capabilities directly to internal storage (localStorage + Capacitor Preferences). The latest snapshot is saved automatically every 20 minutes and on app close, with an automatic restore prompt after reinstall. All data stays strictly local.
 - **Unified Backup Service**: A single `backup-service.ts` consolidates the legacy backup systems — old backups are auto-migrated on first launch. Platform-aware export: Android opens the native share sheet (Capacitor Filesystem + Share), web uses blob download. Every operation returns a typed result with plain-language errors — nothing fails silently.
 - **Android Auto Backup Rules**: `backup_rules.xml` + `data_extraction_rules.xml` include WebView storage, Capacitor Preferences and widget prefs (large caches excluded to respect the 25MB cloud limit), so Google's silent cloud backup survives uninstall/reinstall on eligible devices.
 - **Low-End Device Optimizations** (2016+ devices, 30+ FPS target):

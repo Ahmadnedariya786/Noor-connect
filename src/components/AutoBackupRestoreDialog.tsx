@@ -84,20 +84,16 @@ export function AutoBackupRestoreDialog() {
 
         {opportunity && (
           <div className="py-4 space-y-4">
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+            <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Last saved:</span>
                 <span className="font-medium">{formatTime(opportunity.snapshot.timestamp)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Saved copies:</span>
-                <span className="font-medium">{opportunity.snapshotCount}</span>
               </div>
             </div>
 
             <p className="text-sm text-muted-foreground">
               Your data is saved on this device automatically. If you skip this now, you can
-              restore it later from the Settings page.
+              export or restore a backup file later from the Settings page.
             </p>
           </div>
         )}
