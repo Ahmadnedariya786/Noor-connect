@@ -100,7 +100,9 @@ export function useWidgetSync() {
       try {
         const payload = parseQuranProgress(localStorage.getItem(QURAN_PROGRESS_KEY));
         if (payload) syncQuranProgress(payload).catch(() => {});
-      } catch {}
+      } catch {
+        // Error is non-critical, silently ignored
+      }
     };
 
     const onTasbeehCustom = () => {
@@ -111,7 +113,9 @@ export function useWidgetSync() {
           if (delta > 0) pushTasbeehIncrement(delta).catch(() => {});
           prevTasbeehRef.current = next;
         }
-      } catch {}
+      } catch {
+        // Error is non-critical, silently ignored
+      }
     };
 
     window.addEventListener(STORAGE_EVENT, onStorage);

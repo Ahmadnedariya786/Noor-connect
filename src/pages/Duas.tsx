@@ -164,7 +164,9 @@ const Duas = memo(function Duas() {
     if (navigator.share) {
       try {
         await navigator.share({ title: `Dua - ${dua.category}`, text: shareText });
-      } catch (error) {}
+      } catch {
+        // Error is non-critical, silently ignored
+      }
     } else {
       navigator.clipboard.writeText(shareText);
       toast({ title: "Copied to clipboard" });

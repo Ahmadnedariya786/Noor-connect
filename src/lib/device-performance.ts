@@ -252,8 +252,6 @@ function runCanvasTest(): Promise<{ fps: number; jankScore: number }> {
     requestAnimationFrame(tick);
   });
 }
-});
-}
 
 function runWebGLTest(): Promise<{ fps: number; jankScore: number }> {
   return new Promise(resolve => {
@@ -337,12 +335,9 @@ gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
          document.body.removeChild(canvas);
          const fps = Math.round((frames / (now - startTime)) * 1000);
          const jankScore = jankFrames / frames;
-         resolve({ fps: Math.min(60, fps), jankScore });
-       }
-     }
-   });
- }
-    }
+resolve({ fps: Math.min(60, fps), jankScore });
+        }
+      }
     requestAnimationFrame(tick);
   });
 }

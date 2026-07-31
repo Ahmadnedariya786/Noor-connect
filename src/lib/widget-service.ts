@@ -185,7 +185,9 @@ function buildPrayerPayload(
       const m = getMadhab?.();
       if (m === 'shafi') return 'SHAFI';
       if (m === 'hanafi') return 'HANAFI';
-    } catch {}
+    } catch {
+      // Error is non-critical, silently ignored
+    }
     return 'HANAFI';
   })();
 

@@ -317,7 +317,11 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
     storeEbookMapping(url, title);
     return () => {
       if (pdfDocumentRef.current) {
-        try { pdfDocumentRef.current.destroy(); } catch {}
+        try {
+          pdfDocumentRef.current.destroy();
+        } catch {
+          // Error is non-critical, silently ignored
+        }
       }
     };
   }, [url, title]);

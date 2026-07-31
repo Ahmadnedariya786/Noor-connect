@@ -32,8 +32,8 @@ const MOOD_LABELS: Record<string, string> = {
   irritable: "Irritable", anxious: "Anxious", emotional: "Emotional",
 };
 
-function generatePDFReport(data: HaidhTrackerData) {
-  const { jsPDF } = require("jspdf");
+async function generatePDFReport(data: HaidhTrackerData) {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 

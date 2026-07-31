@@ -12,7 +12,7 @@ export const isLowEndDevice = (): boolean => {
   if (cores <= 2) return true;
   
   // Check device memory (if available)
-  // @ts-ignore - deviceMemory is not in standard TypeScript types
+  // @ts-expect-error - deviceMemory is not in standard TypeScript types
   const memory = navigator.deviceMemory || 4;
   if (memory <= 2) return true;
   
@@ -147,7 +147,7 @@ export const cleanupMemory = (): void => {
   
   // Trigger garbage collection if available (Chrome dev tools)
   try {
-    // @ts-ignore
+    // @ts-expect-error - window.gc is Chrome DevTools only
     window.gc();
   } catch {
     // Ignore if gc is not available
@@ -214,9 +214,9 @@ export const clearCacheOnMemoryPressure = (): void => {
   if (typeof window === 'undefined') return;
   
   if ('memory' in performance) {
-    // @ts-ignore
+    // @ts-expect-error - performance.memory is non-standard
     const memoryLimit = performance.memory.jsHeapSizeLimit;
-    // @ts-ignore
+    // @ts-expect-error - performance.memory is non-standard
     const usedMemory = performance.memory.usedJSHeapSize;
     
     // Clear cache if using more than 80% of available memory
