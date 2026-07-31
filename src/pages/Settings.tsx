@@ -31,7 +31,11 @@ const Settings = () => {
     setMadhab(value);
     setMadhabState(value);
     // Clear cached prayer times so the new fiqh is fetched on next render
-    try { localStorage.removeItem('cached_prayer_times'); } catch {}
+    try {
+      localStorage.removeItem('cached_prayer_times');
+    } catch {
+      // Ignore localStorage errors
+    }
   };
 
   useEffect(() => {

@@ -27,17 +27,17 @@ const PRAYER_TOGGLE_MAP: Record<PrayerName, keyof AdhanConfig> = {
   Isha: 'ishaEnabled',
 };
 
-// Keep initial alarm flag aligned with adhan-config if it exists
-if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-  const existingToggle = localStorage.getItem(STORAGE_KEY);
-  const adhanConfig = adhanService.getAdhanConfig();
-  if (existingToggle === null) {
-    localStorage.setItem(STORAGE_KEY, adhanConfig.enabled ? 'true' : 'false');
-  } else if ((existingToggle === 'true') !== adhanConfig.enabled) {
-    // Favor user-facing toggle stored in localStorage but mirror it into adhan-config
-    adhanService.saveAdhanConfig({ ...adhanConfig, enabled: existingToggle === 'true' });
+const initializeAlarmSync = () => {
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    const existingToggle = localStorage.getItem(STORAGE_KEY);
+    const adhanConfig = adhanService.getAdhanConfig();
+    if (existingToggle === null) {
+      localStorage.setItem(STORAGE_KEY, adhanConfig.enabled ? 'true' : 'false');
+    } else if ((existingToggle === 'true') !== adhanConfig.enabled) {
+      adhanService.saveAdhanConfig({ ...adhanConfig, enabled: existingToggle === 'true' });
+    }
   }
-}
+};
 
 interface PrayerTime {
   name: string;
@@ -71,6 +71,14 @@ export const GlobalPrayerAlarm = () => {
   const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      initializeAlarmSync();
+    }
+  }, []);
 
   const isAdhanEnabledForPrayer = useCallback(
     (prayerName: PrayerName | null) => {
@@ -464,9 +472,9 @@ export const GlobalPrayerAlarm = () => {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('adhan-config-changed' as any, handleConfigChange);
-    window.addEventListener('adhan-preferences-changed' as any, handleConfigChange);
-    window.addEventListener('prayer-method-changed' as any, handleConfigChange);
+    window.addEventListener('adhan-config-changed', handleConfigChange as EventListener);
+    window.addEventListener('adhan-preferences-changed', handleConfigChange as EventListener);
+    window.addEventListener('prayer-method-changed', handleConfigChange as EventListener);
     window.addEventListener(PRAYER_ALARM_TOGGLE_EVENT, handleToggle as EventListener);
     window.addEventListener(PRAYER_ALARM_CONTROL_EVENT, handleControl as EventListener);
 
@@ -474,7 +482,9 @@ export const GlobalPrayerAlarm = () => {
       stopChecking();
       emitPlaybackState(false, null);
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('adhan-config-changed' as any, handleConfigChange);
+      window.removeEventListener('adhan-config-changed', handleConfigChange as EventListener);
+      window.removeEventListener('adhan-preferences-changed', handleConfigChange as EventListener);
+      window.removeEventListener('prayer-method-changed', handleConfigChange as EventListener);
       window.removeEventListener(PRAYER_ALARM_TOGGLE_EVENT, handleToggle as EventListener);
       window.removeEventListener(PRAYER_ALARM_CONTROL_EVENT, handleControl as EventListener);
     };

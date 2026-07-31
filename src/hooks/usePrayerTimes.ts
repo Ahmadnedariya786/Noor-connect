@@ -252,7 +252,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       const madhab = getMadhab();
       const fetchSignature = `${locationKey}|${dayKey}|${methodId}|${madhab}`;
 
-      if (lastFetchSignatureRef.current === fetchSignature && prayerTimesRef.current) {
+      if (lastFetchSignatureRef.current === fetchSignature) {
         return;
       }
 
@@ -263,7 +263,6 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       let timeZone = locationData.timeZone;
 
       try {
-        const madhab = getMadhab();
         // Aladhan API: 0 = Shafi, 1 = Hanafi
         // Maliki and Hanbali follow Shafi calculation for Asr
         const schoolParam = madhab === 'hanafi' ? 1 : 0;
@@ -290,14 +289,14 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
 
       // Parse the timings back to Date objects
       // Aladhan API returns times like "05:30 (PKT)" — strip the timezone suffix
-      const parseTime = (timeStr: string) => {
+      const parseTime = (timeStr: string): Date => {
         const cleaned = timeStr.replace(/\s*\(.*?\)\s*/g, '').trim();
         const parts = cleaned.split(':');
         const h = parseInt(parts[0], 10);
         const m = parseInt(parts[1], 10);
         if (isNaN(h) || isNaN(m)) {
-          console.warn('Failed to parse time string:', timeStr);
-          return new Date(now); // fallback to current time
+          console.error('Failed to parse time string:', timeStr);
+          throw new Error(`Invalid time format: ${timeStr}`);
         }
         const d = new Date(now);
         d.setHours(h, m, 0, 0);
