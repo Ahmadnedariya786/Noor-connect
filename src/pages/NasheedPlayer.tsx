@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { AppBar } from '@/components/AppBar';
 import { PageTransition } from '@/components/PageTransition';
 import { Card } from '@/components/ui/card';
@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Search, Play, Pause, Music2, ExternalLink,
-    Heart, Clock, Shuffle, ListMusic
+    Heart, Clock, Shuffle, ListMusic, ArrowUp, X, CheckCircle2
 } from 'lucide-react';
 import nasheedsData from '@/data/nasheeds.json';
 import { useGlobalNasheed, type NasheedTrack } from '@/lib/global-nasheed';
+import { nasheedCache } from '@/lib/nasheed-cache';
 
 const CDN_URL = "https://noor-nasheed-cdn.arifubaid0345.workers.dev";
 
@@ -21,9 +22,14 @@ const allTracks: NasheedTrack[] = nasheedsData.tracks.map(t => ({
     url: t.url.startsWith('http') ? t.url : `${CDN_URL}${t.url}`
 }));
 
+const uniqueArtists = [...new Set(allTracks.map(t => t.artist))].sort();
+
 export default function NasheedPlayer() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<Tab>('all');
+    const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+    const [cachedUrls, setCachedUrls] = useState<Set<string>>(new Set());
 
     const {
         isPlaying, currentTrack,
@@ -32,36 +38,84 @@ export default function NasheedPlayer() {
         toggleFavorite, toggleShuffle, isShuffled,
     } = useGlobalNasheed();
 
+    // ── Scroll listener (passive + rAF-throttled) ─────────────────────────────
+    useEffect(() => {
+        let ticking = false;
+        const onScroll = () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    setShowScrollTop(window.scrollY > 300);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    // ── Cache status: load cached track URLs on mount + after each track plays ─
+    useEffect(() => {
+        nasheedCache.getCachedUrls().then(urls => setCachedUrls(new Set(urls)));
+    }, [currentTrack?.url]);
+
+    const handleDeleteFromCache = useCallback(async (url: string) => {
+        const deleted = await nasheedCache.deleteCached(url);
+        if (deleted) {
+            setCachedUrls(prev => {
+                const next = new Set(prev);
+                next.delete(url);
+                return next;
+            });
+        }
+    }, []);
+
+    const handleClearAllCache = useCallback(async () => {
+        await nasheedCache.clearAll();
+        setCachedUrls(new Set());
+    }, []);
+
+    const toggleAuthor = useCallback((author: string) => {
+        setSelectedAuthors(prev =>
+            prev.includes(author) ? prev.filter(a => a !== author) : [...prev, author]
+        );
+    }, []);
+
+    const clearAuthors = useCallback(() => setSelectedAuthors([]), []);
+
     // ── Derived track lists ───────────────────────────────────────────────────
     const filteredAll = useMemo(() => {
         const q = searchQuery.toLowerCase();
-        return allTracks.filter(t =>
-            t.title.toLowerCase().includes(q) ||
-            t.artist.toLowerCase().includes(q)
-        );
-    }, [searchQuery]);
+        return allTracks.filter(t => {
+            const matchesSearch = t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q);
+            const matchesAuthor = selectedAuthors.length === 0 || selectedAuthors.includes(t.artist);
+            return matchesSearch && matchesAuthor;
+        });
+    }, [searchQuery, selectedAuthors]);
 
-    const favoriteTracks = useMemo(() =>
-        favorites
+    const favoriteTracks = useMemo(() => {
+        const q = searchQuery.toLowerCase();
+        return favorites
             .map(id => allTracks.find(t => t.id === id))
             .filter((t): t is NasheedTrack => !!t)
             .filter(t => {
-                const q = searchQuery.toLowerCase();
-                return t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q);
-            }),
-        [favorites, searchQuery]
-    );
+                const matchesSearch = t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q);
+                const matchesAuthor = selectedAuthors.length === 0 || selectedAuthors.includes(t.artist);
+                return matchesSearch && matchesAuthor;
+            });
+    }, [favorites, searchQuery, selectedAuthors]);
 
-    const recentTracks = useMemo(() =>
-        recentlyPlayed
+    const recentTracks = useMemo(() => {
+        const q = searchQuery.toLowerCase();
+        return recentlyPlayed
             .map(id => allTracks.find(t => t.id === id))
             .filter((t): t is NasheedTrack => !!t)
             .filter(t => {
-                const q = searchQuery.toLowerCase();
-                return t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q);
-            }),
-        [recentlyPlayed, searchQuery]
-    );
+                const matchesSearch = t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q);
+                const matchesAuthor = selectedAuthors.length === 0 || selectedAuthors.includes(t.artist);
+                return matchesSearch && matchesAuthor;
+            });
+    }, [recentlyPlayed, searchQuery, selectedAuthors]);
 
     const displayedTracks = activeTab === 'all'
         ? filteredAll
@@ -166,6 +220,60 @@ export default function NasheedPlayer() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+
+                    {/* ── Cache Status ────────────────────────────────────────── */}
+                    {cachedUrls.size > 0 && (
+                        <div className="flex items-center justify-between text-[11px] font-medium px-1">
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                {cachedUrls.size} cached for offline
+                            </span>
+                            <button
+                                onClick={handleClearAllCache}
+                                className="text-muted-foreground hover:text-rose-500 transition-colors"
+                            >
+                                Clear cache
+                            </button>
+                        </div>
+                    )}
+
+                    {/* ── Author Filter ──────────────────────────────────────── */}
+                    {uniqueArtists.length > 0 && (
+                        <div className="flex items-center gap-1.5">
+                            <div
+                                className="flex-1 overflow-x-auto"
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            >
+                                <div className="flex gap-1.5 pb-0.5">
+                                    {uniqueArtists.map(author => {
+                                        const isSelected = selectedAuthors.includes(author);
+                                        return (
+                                            <button
+                                                key={author}
+                                                onClick={() => toggleAuthor(author)}
+                                                className={`whitespace-nowrap px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-all border shrink-0 ${
+                                                    isSelected
+                                                        ? 'bg-emerald-600 text-white border-emerald-600'
+                                                        : 'bg-card text-muted-foreground border-border hover:border-emerald-500/50 hover:text-foreground'
+                                                }`}
+                                            >
+                                                {author}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            {selectedAuthors.length > 0 && (
+                                <button
+                                    onClick={clearAuthors}
+                                    className="shrink-0 p-1.5 rounded-full hover:bg-muted transition-colors"
+                                    aria-label="Clear author filter"
+                                >
+                                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                            )}
+                        </div>
+                    )}
 
                     {/* ── Tabs ─────────────────────────────────────────────── */}
                     <div className="flex gap-2">
@@ -293,6 +401,22 @@ export default function NasheedPlayer() {
                                                     </div>
                                                 )}
 
+                                                {/* Cached Indicator / Delete */}
+                                                {cachedUrls.has(track.url) && (
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        className="w-8 h-8 rounded-full shrink-0 text-emerald-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteFromCache(track.url);
+                                                        }}
+                                                        title="Remove from offline cache"
+                                                    >
+                                                        <CheckCircle2 className="w-3.5 h-3.5 fill-current" />
+                                                    </Button>
+                                                )}
+
                                                 {/* Favorite Button */}
                                                 <Button
                                                     size="icon"
@@ -318,6 +442,18 @@ export default function NasheedPlayer() {
                     </div>
                 </div>
             </div>
+
+            {/* ── Back to Top ──────────────────────────────────────────────── */}
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className={`fixed right-5 z-50 w-11 h-11 rounded-full bg-emerald-600 text-white shadow-lg flex items-center justify-center transition-all duration-200 ${
+                    showScrollTop ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none translate-y-2'
+                }`}
+                style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)' }}
+                aria-label="Back to top"
+            >
+                <ArrowUp className="w-5 h-5" />
+            </button>
         </PageTransition>
     );
 }

@@ -275,7 +275,9 @@ function startMonitor() {
   if (monitorRafId !== null) return;
 
   const tick = () => {
-    monitorFrameCount++;
+    if (!document.hidden) {
+      monitorFrameCount++;
+    }
     const now = performance.now();
     if (now - monitorLastTime >= 1000) {
       const fps = monitorFrameCount;

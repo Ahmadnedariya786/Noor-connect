@@ -1,6 +1,6 @@
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { NetworkFirst, StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { ExpirationPlugin } from 'workbox-expiration';
 
@@ -22,6 +22,7 @@ try {
 const ASSET_CACHE_NAME = 'noor-connect-assets-v1';
 const API_CACHE_NAME = 'noor-connect-api-v1';
 const HADITH_CACHE_NAME = 'noor-connect-hadith-v1';
+const NASHEED_CACHE_NAME = 'noor-connect-nasheed-v1';
 
 registerRoute(
   ({ request }) => ['script', 'style', 'worker'].includes(request.destination),
@@ -42,6 +43,18 @@ registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [200], types: ['basic'] }),
       new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 }),
+    ],
+  })
+);
+
+// Nasheed audio from CDN — CacheFirst for offline + weak WiFi
+registerRoute(
+  ({ url }) => url.hostname === 'noor-nasheed-cdn.arifubaid0345.workers.dev',
+  new CacheFirst({
+    cacheName: NASHEED_CACHE_NAME,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 90 * 24 * 60 * 60, purgeOnQuotaError: true }),
     ],
   })
 );

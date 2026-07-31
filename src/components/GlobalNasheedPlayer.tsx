@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Slider } from "./ui/slider";
 import { useGlobalNasheed, setGlobalNasheedAudioRef } from "@/lib/global-nasheed";
+import { nasheedCache } from "@/lib/nasheed-cache";
 import { useGlobalRadio } from "@/lib/global-radio";
 import { useGlobalQuran } from "@/lib/global-quran";
 
@@ -318,6 +319,16 @@ export function GlobalNasheedPlayer() {
             audio.removeEventListener('loadstart', handleLoadStart);
         };
     }, [isPlaying, repeatMode, currentTrack?.url]);
+
+    // ── Pre-fetch next track in queue for instant "next" ─────────────────────
+    // The service worker caches the response (CacheFirst), so when the user
+    // advances to the next track, it loads from cache — no buffering on weak WiFi.
+    useEffect(() => {
+        const next = queue[currentIndex + 1];
+        if (next) {
+            nasheedCache.preload(next.url);
+        }
+    }, [currentTrack?.url, queue, currentIndex]);
 
     // ── Media Session API ──────────────────────────────────────────────────
     useEffect(() => {
