@@ -8,60 +8,58 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.2.0] - 2026-08-01
 
-### Prayer Times Refactor, Mushaf Viewer Rewrite & Lint Fixes
-
-#### ✨ New Features
-- **Major usePrayerTimes Hook Refactor**: Simplified logic, improved caching with signature-based deduping, fallback location handling (geolocation → IP → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook.
+### 🕌 Major Prayer Times Refactor
+- **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
 - **Mushaf Viewer Complete Rewrite**: Pinch-to-zoom via CSS transforms, pan gestures, auto-hide nav (3s), surround page prefetching, surah index sheet, bookmark/resume, loading skeleton, dark/light theme aware — all without external libraries.
-- **GlobalPrayerAlarm Optimization**: Added localStorage caching to skip redundant geolocation/API calls when today's prayer times already cached; abort controller for clean fetch cancellation.
-- **New Equalizer Component**: Animated audio visualizer for Nasheed Player with configurable bars, colors, heights, and animation timing.
-- **Added react-window & @types/react-window** dependencies for virtualized list support in future components.
+- **GlobalPrayerAlarm Optimization**: localStorage caching skips redundant geolocation/API calls when today's times already cached; abort controller for clean fetch cancellation.
 
-#### ⚡ Improvements
-- **Prayer Times Hook**: Race condition fixes (removed stale ref checks), `parseTime` now throws on invalid input instead of returning current time, redundant `getMadhab()` calls removed.
-- **GlobalPrayerAlarm**: Module-level side effects moved to `useEffect` with `initializedRef`; event listener type safety fixed (removed `as any` casts); missing cleanup listeners added.
-- **Settings.tsx**: Fixed empty catch block (eslint error) with proper comment.
+### 🎵 Nasheed Player Upgrades
+- **New Equalizer Component**: Animated audio visualizer with configurable bars, colors, heights, and animation timing.
+- **Offline Playback Cache**: Played nasheeds cached for offline listening (200 tracks, 90-day retention, quota-safe) with cache status indicators.
+- **Filter by Artist**: Quick artist-filter chips for browsing 400+ nasheed library.
+- **Back to Top**: Instant jump to top of long library lists.
 
-#### 🐛 Bug Fixes
-- **Resolved 12 lint errors** across codebase: 5 empty catch blocks (added non-critical comments), 1 `require()`→`import` conversion, 4 `@ts-ignore`→`@ts-expect-error` with descriptions, 1 parsing error (extra closing braces in `device-performance.ts`).
-- **Prayer Notifications**: `usePrayerNotifications` hook now shares signature ref with caller to force re-schedule on method/madhab changes; 1s throttle prevents rapid scheduling.
+### ⚡ Performance & Core Web Vitals
+- **Added react-window & @types/react-window** for virtualized list support.
+- **Prayer Times Hook**: Race condition fixes (removed stale ref checks), `parseTime` throws on invalid input instead of returning current time.
+- **GlobalPrayerAlarm**: Module-level side effects moved to `useEffect`; event listener type safety fixed; missing cleanup listeners added.
 
----
+### 🛡️ Code Quality & Lint Fixes
+- **Resolved 12 lint errors**: 5 empty catch blocks (added non-critical comments), 1 `require()`→`import` conversion, 4 `@ts-ignore`→`@ts-expect-error` with descriptions, 1 parsing error (extra closing braces).
+- **Settings.tsx**: Fixed empty catch block (eslint error).
+- **TypeScript**: Stricter types in prayer times and alarm modules.
 
-## [2.2.0] - 2026-07-31
+### 🕌 Prayer Tracking & Qaza Fixes
+- **Critical Prayer Tracking Bridge**: `syncMissedPrayersToQaza()` moved from unused SalahTracker into Dashboard.tsx — missed prayers auto-detected and added to qaza from home screen.
+- **Dashboard Prayer Time Validation**: Check-in passes prayer times to `togglePrayer()`, showing "Cannot check in before prayer time" error instead of silently bypassing.
+- **Qaza History Centralized**: Moved to `qaza-tracker.ts` lib functions (`getQazaHistory`, `addQazaHistoryEntry`, `getQazaDailyGoal`, `setQazaDailyGoal`).
+- **Streak Reset on Foreground**: `visibilitychange` listener calls `checkStreakReset()` on app return, ensuring streaks reset correctly after days away.
+- **Hadith Collection Flash Fix**: `HadithBookView` initializes `metadataLoading` to `true`, checks `remoteCollectionData` for loading guard — eliminates "1 book" flash.
 
-### Backup UI, Prayer Tracking Fixes & Cache Warning
+### 🧹 Dead Code Cleanup
+- **Deleted Unused Components**: `SalahTracker.tsx` (205 lines), `PrayerTimesList.tsx` (451 lines), `EnhancedPrayerTimesList.tsx` (111 lines) — imported but never rendered.
+- **Dashboard Cleanup**: Removed unused lazy imports for `PrayerTimesList`, `SalahTracker`, `QazaTracker`.
 
-#### ✨ New Features
-- **Advanced Notification System**: Deep native integration for high-priority Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".
-- **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g., Fajr-specific Hadith for Fajr reminders).
-- **Islamic Nasheeds Library**: High-performance audio player with 400+ vocals-only, copyright-free nasheeds powered by a custom Cloudflare CDN.
-- **Advanced Media Player**: Persistent background audio playback, queue management, favorites system, offline resilience, and weak-WiFi auto-buffering.
-- **Backup System UI Redesign**: Gold-themed card with animated status indicator, success flash feedback, and CSS-only micro-interactions that preserve 60fps on low-end devices.
-- **Expandable "How Backup Works" section**: Detailed 4-part guide explaining automatic device backup (20-min snapshots), Google Drive cloud backup, manual file export, and restore process. Translated in 5 languages.
-- **Cache Clear Warning**: Replaced native `confirm()` dialog with a proper AlertDialog that clearly explains what will be removed (downloaded books, cached assets) and what stays safe (prayer records, bookmarks, settings, backup snapshot).
+### 🌐 Complete Language & Translation Overhaul
+- **All 5 Languages Synchronized**: English, Arabic, Urdu, Bengali, Russian — 410 translation keys each (was 278-314 with 99-105 missing).
+- **Hardcoded English Strings Eliminated**: 20+ AppBar titles, BottomNav labels, DashboardFeatureCards now use `t()`.
+- **Locale-Aware Formatting**: `time-formatter.ts`, `useI18n.ts`, `widget-service.ts` respect selected language.
+- **RTL/Widget Sync Consistency**: Migrated to `useLanguage()` for proper RTL and widget string sync.
+- **Widget String Sync**: Android widgets receive translated prayer labels in all 5 languages.
 
-#### ⚡ Improvements
-- **Modern Notification History**: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.
-- **Profile Polish**: "Open Source & Support" card redesigned with full-width buttons, and added direct WhatsApp feedback integration.
-- **Dead Code Removed**: Deleted `SalahTracker.tsx` (205 lines), `PrayerTimesList.tsx` (451 lines), and `EnhancedPrayerTimesList.tsx` (111 lines) — all were imported but never rendered in any JSX.
-- **Dashboard Cleanup**: Removed unused lazy imports for `PrayerTimesList`, `SalahTracker`, and `QazaTracker` from Dashboard.tsx.
+### 🔔 Intelligent Notification Engine
+- **Ghost Notification Fix**: Ramadan reminders (Suhoor, Iftar, Tarawih) no longer persist into other months — safety clear on-boot sweeps native OS buffer.
+- **Deterministic Scheduling**: Predictable ID mapping (`Suhoor: 2001`, `Iftar: 2002`) replaces random hashes for proper overwrite/cancel.
+- **Accurate Calendar Countdowns**: Async `islamicCalendarService` replaces deprecated tabular estimates.
 
-### 🌐 Complete Language & Translation Overhaul (New in 2.2.0)
-- **All Locale Files Synchronized**: All 5 languages (English, Arabic, Urdu, Bengali, Russian) now have **410 translation keys** each — previously 278-314 keys with 99-105 missing per language.
-- **Hardcoded English Strings Eliminated**: Fixed 20+ AppBar titles, BottomNav labels, DashboardFeatureCards, and component strings that bypassed the i18n system. All now use `t()` translation function.
-- **Locale-Aware Formatting**: `time-formatter.ts`, `useI18n.ts`, and `widget-service.ts` now respect the app's selected language for date/number formatting instead of hardcoded `en-US`.
-- **RTL/Widget Sync Consistency**: Migrated components from bare `useTranslation()` to `useLanguage()` for proper RTL direction and native widget string sync across all supported languages.
-- **Widget String Sync**: Native Android widgets now receive translated prayer labels (`fajr`, `dhuhr`, `asr`, `maghrib`, `isha`, `nextPrayer`, `todaysPrayers`) in all 5 languages.
-
-#### 🐛 Bug Fixes
-- **Widget Data Sync**: Fixed `QuranProgressWidget` badge behavior and corrected RTL text alignment in DailyHadith widget.
-- **Critical Prayer Tracking Bridge**: Moved `syncMissedPrayersToQaza()` from the unused SalahTracker component into Dashboard.tsx. Missed prayers are now correctly auto-detected and added to qaza from the home screen.
-- **Dashboard Prayer Time Validation**: Check-in now passes prayer times to `togglePrayer()`, so users get the "Cannot check in before prayer time" error instead of silently bypassing the time gate.
-- **Qaza History Centralized**: Moved history and daily goal management from direct localStorage in QazaPage into `qaza-tracker.ts` lib functions (`getQazaHistory`, `addQazaHistoryEntry`, `getQazaDailyGoal`, `setQazaDailyGoal`).
-- **PrayerName Type Deduplicated**: `qaza-tracker.ts` now re-exports `PrayerName` from `salah-tracker.ts` instead of maintaining a separate identical type definition.
-- **Streak Reset on Foreground**: Added `visibilitychange` listener in Dashboard.tsx that calls `checkStreakReset()` when the app returns to foreground, ensuring streaks reset correctly even after days away.
-- **Hadith Collection Flash Fix**: `HadithBookView` now initializes `metadataLoading` to `true` and checks `remoteCollectionData` instead of `staticCollectionData` for the loading guard. Eliminates the "1 book" flash when entering a collection.
+### 🛡️ Bulletproof Backup & Restore System
+- **Unified Backup Service**: Single `backup-service.ts` consolidates legacy systems — existing backups auto-migrated on first launch.
+- **Complete Data Capture**: All localStorage + Capacitor Preferences + e-book metadata, Seerah/Qisas/Hadith progress, quiz economy, sleep settings, global player states, Eid checklists.
+- **Always-On Auto Save**: Snapshot every 20 min of use + on app close; latest overwrites previous; offered back on reinstall.
+- **Google Cloud Backup Rules**: `backup_rules.xml` + `data_extraction_rules.xml` declare WebView storage and preferences for Android Auto Backup (caches excluded for 25MB limit).
+- **Real Export on Android**: Backup button opens system share sheet (save to Downloads, Drive, Files) — previously failed silently in WebView.
+- **First-Launch Restore Prompt**: Auto-detects previous data after reinstall, offers one-tap restore.
+- **Never Loses Data Silently**: Verifies integrity, warns on older-over-newer import, recovers partially from failures, reports in plain language.
 
 ---
 
