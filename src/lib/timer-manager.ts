@@ -118,4 +118,11 @@ class TimerManager {
 // Global singleton instance for app-wide timer management
 const globalTimerManager = new TimerManager();
 
+// Auto-cleanup on page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    globalTimerManager.clear();
+  });
+}
+
 export { TimerManager, globalTimerManager };

@@ -108,7 +108,32 @@ export const lazyLoadImage = (img: HTMLImageElement, src: string): void => {
 
 // Preload critical resources (images consumed on-page, not manifest-only assets)
 export const preloadCriticalResources = (): void => {
-  if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
+
+    // Preload favicon
+    const faviconLink = document.createElement('link');
+    faviconLink.rel = 'preload';
+    faviconLink.href = '/favicon.png';
+    faviconLink.as = 'image';
+    document.head.appendChild(faviconLink);
+
+    // Preload Qibla image (used in OG tags and potentially in app)
+    const qiblaLink = document.createElement('link');
+    qiblaLink.rel = 'preload';
+    qiblaLink.href = '/qibla.png';
+    qiblaLink.as = 'image';
+    document.head.appendChild(qiblaLink);
+
+    // Preload key app icons for PWA (likely to be used immediately)
+    const iconSizes = [192, 512]; // Medium and large sizes
+    for (const size of iconSizes) {
+        const iconLink = document.createElement('link');
+        iconLink.rel = 'preload';
+        iconLink.href = `/icon-${size}x${size}.png`;
+        iconLink.as = 'image';
+        // Add crossorigin for images if needed (though same-origin)
+        document.head.appendChild(iconLink);
+    }
 };
 
 // Optimize scroll performance

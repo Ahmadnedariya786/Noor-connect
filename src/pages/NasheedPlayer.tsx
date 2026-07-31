@@ -1,29 +1,21 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { FixedSizeList } from 'react-window';
 import { AppBar } from '@/components/AppBar';
 import { PageTransition } from '@/components/PageTransition';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { Equalizer } from '@/components/Equalizer';
 import {
     Search, Play, Pause, Music2, ExternalLink,
     Heart, Clock, Shuffle, ListMusic, ArrowUp, X, CheckCircle2
 } from 'lucide-react';
-import nasheedsData from '@/data/nasheeds.json';
+import type { NasheedTrack, NasheedsData } from '@/data/nasheeds.json';
 import { useGlobalNasheed, type NasheedTrack } from '@/lib/global-nasheed';
 import { nasheedCache } from '@/lib/nasheed-cache';
 
 const CDN_URL = "https://noor-nasheed-cdn.arifubaid0345.workers.dev";
-
-type Tab = 'all' | 'favorites' | 'recent';
-
-// Normalize track URLs to always point at real CDN
-const allTracks: NasheedTrack[] = nasheedsData.tracks.map(t => ({
-    ...t,
-    url: t.url.startsWith('http') ? t.url : `${CDN_URL}${t.url}`
-}));
-
-const uniqueArtists = [...new Set(allTracks.map(t => t.artist))].sort();
 
 export default function NasheedPlayer() {
     const { t } = useLanguage();
@@ -32,6 +24,26 @@ export default function NasheedPlayer() {
     const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [cachedUrls, setCachedUrls] = useState<Set<string>>(new Set());
+    const [nasheedsData, setNasheedsData] = useState<NasheedsData | null>(null);
+
+    useEffect(() => {
+        import('@/data/nasheeds.json').then(module => {
+            setNasheedsData(module.default);
+        });
+    }, []);
+
+    const allTracks = useMemo(() => {
+        if (!nasheedsData) return [];
+        return nasheedsData.tracks.map(t => ({
+            ...t,
+            url: t.url.startsWith('http') ? t.url : `${CDN_URL}${t.url}`
+        }));
+    }, [nasheedsData]);
+
+    const uniqueArtists = useMemo(() => {
+        if (!allTracks) return [];
+        return [...new Set(allTracks.map(t => t.artist))].sort();
+    }, [allTracks]);
 
     const {
         isPlaying, currentTrack,
@@ -202,14 +214,14 @@ export default function NasheedPlayer() {
                             Licensed from <strong>NoCopyrightNasheeds</strong><br />
                             <span className="opacity-70">NCN Community License</span>
                         </p>
-                        <a
-                            href={nasheedsData.attribution.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 transition-colors px-3 py-1.5 rounded-full text-white font-medium shrink-0"
-                        >
-                            Visit <ExternalLink className="w-3 h-3" />
-                        </a>
+<a
+                             href={nasheedsData?.attribution.website ?? '#'}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="flex items-center gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 transition-colors px-3 py-1.5 rounded-full text-white font-medium shrink-0"
+                         >
+                             Visit <ExternalLink className="w-3 h-3" />
+                         </a>
                     </div>
 
                     {/* ── Search ───────────────────────────────────────────── */}
@@ -335,114 +347,138 @@ export default function NasheedPlayer() {
                                 )}
                             </div>
                         ) : (
-                            <div className="grid gap-2">
-                                {displayedTracks.map((track, idx) => {
-                                    const isCurrentTrack = currentTrack?.id === track.id;
-                                    const isCurrentlyPlaying = isCurrentTrack && isPlaying;
-                                    const isFav = favorites.includes(track.id);
+                            <div className="h-[calc(100vh-400px)] min-h-[300px]">
+                              <FixedSizeList
+                                height="100%"
+                                itemCount={displayedTracks.length}
+                                itemSize={90}
+                                width="100%"
+                                overscanCount={5}
+                              >
+                                {({ index, style }) => (
+                                  <div style={style}>
+                                    {(() => {
+                                      const track = displayedTracks[index];
+                                      const isCurrentTrack = currentTrack?.id === track.id;
+                                      const isCurrentlyPlaying = isCurrentTrack && isPlaying;
+                                      const isFav = favorites.includes(track.id);
 
-                                    return (
-                                        <Card
-                                            key={`${track.id}-${activeTab}`}
-                                            className={`rounded-xl border transition-all duration-200 ${
-                                                isCurrentTrack
-                                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50 shadow-sm'
-                                                    : 'bg-card hover:bg-accent/40 border-border'
+                                      return (
+                                        <div style={{ paddingRight: '8px' }}>
+                                          <Card
+                                            className={`rounded-xl border transition-all duration-200 $
+                                              isCurrentTrack
+                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50 shadow-sm'
+                                                : 'bg-card hover:bg-accent/40 border-border'
                                             }`}
-                                        >
+                                          >
                                             <div className="flex items-center gap-3 p-3">
-                                                {/* Track Number / Play Button */}
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className={`w-10 h-10 rounded-full shrink-0 transition-all ${
-                                                        isCurrentTrack
-                                                            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                                            : 'bg-muted/60 text-muted-foreground hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700'
-                                                    }`}
-                                                    onClick={() => handlePlay(track)}
-                                                >
-                                                    {isCurrentlyPlaying ? (
-                                                        <Pause className="w-4 h-4 fill-current" />
-                                                    ) : isCurrentTrack && !isPlaying ? (
-                                                        <Play className="w-4 h-4 fill-current ml-0.5" />
-                                                    ) : (
-                                                        <span className="text-xs font-bold">{idx + 1}</span>
-                                                    )}
-                                                </Button>
-
-                                                {/* Track Info */}
-                                                <div
-                                                    className="flex-1 min-w-0 cursor-pointer"
-                                                    onClick={() => handlePlay(track)}
-                                                >
-                                                    <h4 className={`font-semibold text-[14px] truncate leading-tight mb-0.5 ${
-                                                        isCurrentTrack ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground'
-                                                    }`}>
-                                                        {track.title}
-                                                    </h4>
-                                                    <p className="text-xs text-muted-foreground truncate uppercase tracking-wide font-medium">
-                                                        {track.artist}
-                                                    </p>
-                                                </div>
-
-                                                {/* Equalizer animation */}
-                                                {isCurrentlyPlaying && (
-                                                    <div className="flex items-end gap-0.5 h-4 shrink-0">
-                                                        {[...Array(4)].map((_, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="w-1 bg-emerald-500 rounded-full animate-bounce"
-                                                                style={{
-                                                                    animationDelay: `${i * 120}ms`,
-                                                                    animationDuration: `${700 + i * 100}ms`,
-                                                                    height: `${50 + i * 15}%`
-                                                                }}
-                                                            />
-                                                        ))}
-                                                    </div>
+                                              {/* Track Number / Play Button */}
+                                              <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className={`w-10 h-10 rounded-full shrink-0 transition-all $
+                                                  isCurrentTrack
+                                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                                    : 'bg-muted/60 text-muted-foreground hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700'
+                                                }`}
+                                                onClick={() => handlePlay(track)}
+                                              >
+                                                {isCurrentlyPlaying ? (
+                                                  <Pause className="w-4 h-4 fill-current" />
+                                                ) : isCurrentTrack && !isPlaying ? (
+                                                  <Play className="w-4 h-4 fill-current ml-0.5" />
+                                                ) : (
+                                                  <span className="text-xs font-bold">${index + 1}</span>
                                                 )}
+                                              </Button>
 
-                                                {/* Cached Indicator / Delete */}
-                                                {cachedUrls.has(track.url) && (
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="w-8 h-8 rounded-full shrink-0 text-emerald-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteFromCache(track.url);
-                                                        }}
-                                                        title="Remove from offline cache"
-                                                    >
-                                                        <CheckCircle2 className="w-3.5 h-3.5 fill-current" />
-                                                    </Button>
-                                                )}
+                                              {/* Track Info */}
+                                              <div
+                                                className="flex-1 min-w-0 cursor-pointer"
+                                                onClick={() => handlePlay(track)}
+                                              >
+                                                <h4 className={`font-semibold text-[14px] truncate leading-tight mb-0.5 $
+                                                  isCurrentTrack ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground'
+                                                }`}>
+                                                  {track.title}
+                                                </h4>
+                                                <p className="text-xs text-muted-foreground truncate uppercase tracking-wide font-medium">
+                                                  {track.artist}
+                                                </p>
+                                              </div>
 
-                                                {/* Favorite Button */}
+                                              {/* Equalizer animation */}
+                                              {isCurrentlyPlaying && (
+                                                <Equalizer
+                                                    bars={4}
+                                                    delayStep={120}
+                                                    durationBase={700}
+                                                    durationStep={100}
+                                                    heightPercent={(i) => 50 + i * 15}
+                                                    className="shrink-0"
+                                                />
+                                              )}
+
+                                              {/* Cached Indicator / Delete */}
+                                              {cachedUrls.has(track.url) && (
                                                 <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className={`w-8 h-8 rounded-full shrink-0 transition-all ${
-                                                        isFav
-                                                            ? 'text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20'
-                                                            : 'text-muted-foreground/40 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20'
-                                                    }`}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleFavorite(track.id);
-                                                    }}
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  className="w-8 h-8 rounded-full shrink-0 text-emerald-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteFromCache(track.url);
+                                                  }}
+                                                  title="Remove from offline cache"
                                                 >
-                                                    <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                                                  <CheckCircle2 className="w-3.5 h-3.5 fill-current" />
                                                 </Button>
+                                              )}
+
+                                              {/* Favorite Toggle */}
+                                              <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className={`w-8 h-8 rounded-full shrink-0 transition-colors $
+                                                  isFav
+                                                    ? 'text-rose-500 fill-current'
+                                                    : 'text-muted-foreground hover:text-rose-500'
+                                                }`}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleFavorite(track.id);
+                                                }}
+                                              >
+                                                {isFav ? (
+                                                  <Heart className="w-4 h-4 fill-current" />
+                                                ) : (
+                                                  <Heart className="w-4 h-4" />
+                                                )}
+                                              </Button>
+
+                                              {/* Share */}
+                                              <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="w-8 h-8 rounded-full shrink-0 text-muted-foreground hover:text-emerald-500 transition-colors"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleShare(track);
+                                                }}
+                                              >
+                                                <ExternalLink className="w-4 h-4" />
+                                              </Button>
                                             </div>
-                                        </Card>
-                                    );
-                                })}
+                                          </Card>
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
+                              </FixedSizeList>
                             </div>
-                        )}
-                    </div>
-                </div>
+                          )}
             </div>
 
             {/* ── Back to Top ──────────────────────────────────────────────── */}
@@ -456,6 +492,8 @@ export default function NasheedPlayer() {
             >
                 <ArrowUp className="w-5 h-5" />
             </button>
+                </div>
+            </div>
         </PageTransition>
     );
 }

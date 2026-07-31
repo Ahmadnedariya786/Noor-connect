@@ -33,6 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { FixedSizeList } from 'react-window';
 import { getMushafPageUrl } from '@/lib/quran-mushaf-image-cache';
 
 /** Prefetch surrounding pages using browser image cache */
@@ -464,57 +465,67 @@ export default function MushafViewer() {
                 Surahs
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[75vh] rounded-t-3xl bg-[#f5f0e8] dark:bg-[#1a1a2e] border-t-2 border-amber-300 dark:border-amber-800">
-              <SheetHeader>
-                <SheetTitle className="text-amber-900 dark:text-amber-100 text-lg font-bold">
-                  Surah Index
-                </SheetTitle>
-              </SheetHeader>
-              <ScrollArea className="h-[calc(75vh-80px)] mt-4 pr-2">
-                <div className="space-y-1.5 pb-6">
-                  {allSurahs.map((s) => {
-                    const startPage = SURAH_START_PAGES[s.number] || 1;
-                    const isActive = s.number === surahNumber;
-                    return (
-                      <button
-                        key={s.number}
-                        onClick={() => goToPage(startPage)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                          isActive
-                            ? 'bg-teal-100 dark:bg-teal-900/40 ring-2 ring-teal-400 dark:ring-teal-600'
-                            : 'hover:bg-amber-100/60 dark:hover:bg-amber-900/20'
-                        }`}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                            isActive
-                              ? 'bg-teal-600 text-white'
-                              : 'bg-amber-200/60 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200'
-                          }`}
-                        >
-                          {s.number}
-                        </div>
-                        <div className="flex-1 text-left min-w-0">
-                          <p className={`text-sm font-semibold truncate ${isActive ? 'text-teal-800 dark:text-teal-200' : 'text-gray-800 dark:text-gray-200'}`}>
-                            {s.englishName}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {s.englishNameTranslation}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-base font-arabic text-amber-800 dark:text-amber-200 leading-tight">
-                            {s.name}
-                          </p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
-                            p. {startPage}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
+<SheetContent side="bottom" className="h-[75vh] rounded-t-3xl bg-[#f5f0e8] dark:bg-[#1a1a2e] border-t-2 border-amber-300 dark:border-amber-800">
+                <SheetHeader>
+                  <SheetTitle className="text-amber-900 dark:text-amber-100 text-lg font-bold">
+                    Surah Index
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="h-[calc(75vh-80px)] mt-4 pr-2">
+                  <FixedSizeList
+                    height="100%"
+                    itemCount={allSurahs.length}
+                    itemSize={72}
+                    width="100%"
+                    overscanCount={5}
+                  >
+                    {({ index, style }) => (
+                      <div style={style}>
+                        {(() => {
+                          const s = allSurahs[index];
+                          const startPage = SURAH_START_PAGES[s.number] || 1;
+                          const isActive = s.number === surahNumber;
+                          return (
+                            <button
+                              onClick={() => goToPage(startPage)}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+                                isActive
+                                  ? 'bg-teal-100 dark:bg-teal-900/40 ring-2 ring-teal-400 dark:ring-teal-600'
+                                  : 'hover:bg-amber-100/60 dark:hover:bg-amber-900/20'
+                              }`}
+                            >
+                              <div
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                                  isActive
+                                    ? 'bg-teal-600 text-white'
+                                    : 'bg-amber-200/60 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200'
+                                }`}
+                              >
+                                {s.number}
+                              </div>
+                              <div className="flex-1 text-left min-w-0">
+                                <p className={`text-sm font-semibold truncate ${isActive ? 'text-teal-800 dark:text-teal-200' : 'text-gray-800 dark:text-gray-200'}`}>
+                                  {s.englishName}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                  {s.englishNameTranslation}
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-base font-arabic text-amber-800 dark:text-amber-200 leading-tight">
+                                  {s.name}
+                                </p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500">
+                                  p. {startPage}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </FixedSizeList>
                 </div>
-              </ScrollArea>
             </SheetContent>
           </Sheet>
 

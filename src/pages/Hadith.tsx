@@ -4,11 +4,11 @@ import { ArrowLeft, BookOpen, Share2, Loader2, RefreshCw, Library, Bookmark } fr
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import hadithData from "../data/hadith.json";
 import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
 import { getAllCollections } from "@/data/hadith-collections";
 import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import type { HadithItem } from '@/data/hadith.json';
 
 interface HadithData {
   hadith: string;
@@ -27,11 +27,25 @@ function getDailySeed(refreshSeed?: number | null): number {
 }
 
 const Hadith = () => {
-  const { t } = useLanguage();
+const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [hadith, setHadith] = useState<HadithData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hadithDataList, setHadithDataList] = useState<HadithItem[] | null>(null);
+
+  useEffect(() => {
+    import('@/data/hadith.json').then(module => {
+      setHadithDataList(module.default);
+    });
+  }, []);
+    const [hadithDataList, setHadithDataList] = useState<HadithItem[] | null>(null);
+
+    useEffect(() => {
+        import('@/data/hadith.json').then(module => {
+            setHadithDataList(module.default);
+        });
+    }, []);
 
   const fetchHadith = useCallback(async (isRefresh = false) => {
     const today = new Date().toISOString().slice(0, 10);
@@ -73,16 +87,26 @@ const Hadith = () => {
           book: importedHadith.collection.replace(/[-_]/g, " "),
           number: String(importedHadith.hadithNumber || importedHadith.id),
         };
-      } else {
-        const randomIdx = Math.floor(Math.random() * hadithData.length);
-        const item = hadithData[randomIdx];
-        finalData = {
-          hadith: item.text || 'No hadith text available',
-          translation: item.translation || '',
-          book: item.source || 'Unknown',
-          number: String(item.number || randomIdx + 1),
-        };
-      }
+} else {
+         if (!hadithDataList) {
+             // Fallback if data hasn't loaded yet
+             finalData = {
+                 hadith: "No hadith text available",
+                 translation: "",
+                 book: "Unknown",
+                 number: "1",
+             };
+         } else {
+             const randomIdx = Math.floor(Math.random() * hadithDataList.length);
+             const item = hadithDataList[randomIdx];
+             finalData = {
+                 hadith: item.text || 'No hadith text available',
+                 translation: item.translation || '',
+                 book: item.source || 'Unknown',
+                 number: String(item.number || randomIdx + 1),
+             };
+         }
+       }
       
       setHadith(finalData);
       localStorage.setItem("lastHadithDate", today);

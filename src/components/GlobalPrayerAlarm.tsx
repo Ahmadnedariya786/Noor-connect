@@ -70,6 +70,7 @@ const normalizePrayerName = (name: string): PrayerName | null => {
 export const GlobalPrayerAlarm = () => {
   const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const isAdhanEnabledForPrayer = useCallback(
     (prayerName: PrayerName | null) => {
@@ -132,7 +133,7 @@ export const GlobalPrayerAlarm = () => {
     }
   }, []);
 
-  const fetchAndCachePrayerTimes = useCallback(async () => {
+  const fetchAndCachePrayerTimes = useCallback(async (signal?: AbortSignal) => {
     try {
       // Guard: skip geolocation if we already have today's prayer times cached
       const existingCache = readCachedPrayerTimes();
@@ -163,13 +164,19 @@ export const GlobalPrayerAlarm = () => {
         console.log(`Using fallback location: ${fallbackLocation.name}`);
       }
 
+      if (signal?.aborted) return;
+
       const response = await fetch(
-        `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=2`
+        `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=2`,
+        { signal }
       );
 
       if (!response.ok) return;
 
       const rawData = await response.json();
+
+      if (signal?.aborted) return;
+
       const parseResult = safeParseApiResponse(prayerTimesApiResponseSchema, rawData);
 
       if (!parseResult.success) {
@@ -210,6 +217,7 @@ export const GlobalPrayerAlarm = () => {
         console.warn('Failed to schedule native background alarms', err);
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.error('Error fetching prayer times:', error);
     }
   }, [readCachedPrayerTimes]);
@@ -382,15 +390,26 @@ export const GlobalPrayerAlarm = () => {
   const startChecking = useCallback(() => {
     if (checkIntervalRef.current) return;
 
-    fetchAndCachePrayerTimes();
+    // Create new AbortController for this session
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
+    fetchAndCachePrayerTimes(signal);
     checkPrayerTime();
-    checkIntervalRef.current = setInterval(checkPrayerTime, 30000);
+    checkIntervalRef.current = setInterval(() => {
+      if (!signal.aborted) checkPrayerTime();
+    }, 30000);
   }, [checkPrayerTime, fetchAndCachePrayerTimes]);
 
   const stopChecking = useCallback(() => {
     if (checkIntervalRef.current) {
       clearInterval(checkIntervalRef.current);
       checkIntervalRef.current = null;
+    }
+    // Abort any pending fetch
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
     stopCurrentAdhan();
   }, [stopCurrentAdhan]);

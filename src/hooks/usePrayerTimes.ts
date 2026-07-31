@@ -11,9 +11,9 @@ import { AladhanAPI, ALADHAN_METHODS } from '@/lib/aladhan-api';
 import { formatPrayerTime } from '@/lib/time-formatter';
 import { GeolocationService } from '@/lib/geolocation-service';
 import { isNativePlatform } from '@/lib/capacitor-utils';
-import { getMenstrualModeData } from '@/lib/menstrual-mode';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
 import { getMadhab } from '@/lib/storage';
+import { usePrayerNotifications } from './usePrayerNotifications';
 
 export interface PrayerTimes {
   fajr: Date;
@@ -539,51 +539,8 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
     return () => window.removeEventListener('online', handleOnline);
   }, [location, fetchPrayerTimes, fetchPrayerTimesWithCoordinates]);
 
-  const notificationPrayerTimesKey = useMemo(() => {
-    if (!prayerTimes || !location) {
-      return null;
-    }
-
-    return JSON.stringify({
-      fajr: formatPrayerTime(prayerTimes.fajr, '24'),
-      dhuhr: formatPrayerTime(prayerTimes.dhuhr, '24'),
-      asr: formatPrayerTime(prayerTimes.asr, '24'),
-      maghrib: formatPrayerTime(prayerTimes.maghrib, '24'),
-      isha: formatPrayerTime(prayerTimes.isha, '24'),
-      location: `${location.latitude},${location.longitude}`
-    });
-  }, [prayerTimes, location]);
-
   // Schedule notifications only when prayer times actually change (deep comparison)
-  useEffect(() => {
-    if (!prayerTimes || !location || !notificationPrayerTimesKey) return;
-
-    const menstrualMode = getMenstrualModeData();
-    if (menstrualMode.isActive && menstrualMode.pausePrayerNotifications) {
-      import('@/lib/local-notifications').then(({ localNotifications }) => {
-        localNotifications.clearPrayerNotifications().catch((error) => {
-          console.error('Failed to clear prayer notifications in Menstrual Mode:', error);
-        });
-      });
-      return;
-    }
-
-    // Only schedule if prayer times have actually changed
-    if (previousNotificationSignatureRef.current !== notificationPrayerTimesKey) {
-      previousNotificationSignatureRef.current = notificationPrayerTimesKey;
-
-      // Throttle notification scheduling to prevent rapid calls
-      const timeoutId = setTimeout(() => {
-        import('@/lib/local-notifications').then(({ localNotifications }) => {
-          localNotifications.schedulePrayerNotificationsFromAPI().catch((error) => {
-            console.error('Failed to schedule prayer notifications:', error);
-          });
-        });
-      }, 1000); // 1 second throttle
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [prayerTimes, location, notificationPrayerTimesKey]);
+  usePrayerNotifications(prayerTimes, location, previousNotificationSignatureRef);
 
   // Listen for prayer method changes
   useEffect(() => {

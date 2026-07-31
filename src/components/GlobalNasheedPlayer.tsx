@@ -7,6 +7,7 @@ import { useGlobalNasheed, setGlobalNasheedAudioRef } from "@/lib/global-nasheed
 import { nasheedCache } from "@/lib/nasheed-cache";
 import { useGlobalRadio } from "@/lib/global-radio";
 import { useGlobalQuran } from "@/lib/global-quran";
+import { Equalizer } from "./Equalizer";
 
 const formatTime = (time: number): string => {
     if (!time || isNaN(time) || !isFinite(time)) return "0:00";
@@ -515,19 +516,18 @@ export function GlobalNasheedPlayer() {
                                 <>
                                     <Music className={`w-28 h-28 text-emerald-500/40 ${isPlaying ? 'animate-pulse' : ''}`} />
                                     {isPlaying && (
-                                        <div className="absolute bottom-4 flex items-end gap-1 h-8">
-                                            {[...Array(5)].map((_, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="w-1.5 bg-emerald-400 rounded-full animate-bounce"
-                                                    style={{
-                                                        animationDelay: `${i * 100}ms`,
-                                                        animationDuration: `${600 + i * 100}ms`,
-                                                        height: `${40 + Math.sin(i * 1.5) * 30}%`
-                                                    }}
-                                                />
-                                            ))}
-                                        </div>
+                                        <Equalizer
+                                            bars={5}
+                                            barWidth="w-1.5"
+                                            barColor="bg-emerald-400"
+                                            heightClass="h-8"
+                                            gapClass="gap-1"
+                                            className="absolute bottom-4"
+                                            delayStep={100}
+                                            durationBase={600}
+                                            durationStep={100}
+                                            heightPercent={(i) => 40 + Math.sin(i * 1.5) * 30}
+                                        />
                                     )}
                                 </>
                             )}

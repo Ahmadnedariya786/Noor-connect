@@ -13,10 +13,11 @@ const BottomNav = memo(function BottomNav() {
   const isDark = effectiveTheme === 'dark';
   const activeColor = isDark ? AMBER_DARK : AMBER;
 
-  const [noBlur, setNoBlur] = useState<boolean>(() =>
-    typeof document !== 'undefined' &&
-    document.documentElement.classList.contains('reduce-blur')
-  );
+  const [noBlur, setNoBlur] = useState<boolean>(() => {
+    if (typeof document === 'undefined') return false;
+    const tier = document.documentElement.dataset.animationTier;
+    return tier === 'minimal' || tier === 'low' || document.documentElement.classList.contains('reduce-blur');
+  });
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -39,8 +40,6 @@ const BottomNav = memo(function BottomNav() {
     <nav
       className="w-full fixed bottom-0 left-0 right-0 z-[100] pointer-events-none flex justify-center"
       style={{
-        willChange: 'transform',
-        transform: 'translateZ(0)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)',
         paddingLeft: '16px',
         paddingRight: '16px',

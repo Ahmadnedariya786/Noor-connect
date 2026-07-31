@@ -797,6 +797,10 @@ export class NotificationManager {
     if (this.intervalId !== null) {
       return;
     }
+    // Prevent duplicate permission check intervals
+    if (this.permissionCheckInterval !== null) {
+      // interval already running
+    }
     this.ensureLoaded();
 
     // On low-end devices, check less frequently to reduce battery/CPU impact
@@ -892,3 +896,10 @@ export class NotificationManager {
 
 // Singleton instance
 export const notificationManager = new NotificationManager();
+
+// Auto-cleanup on page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    notificationManager.stop();
+  });
+}

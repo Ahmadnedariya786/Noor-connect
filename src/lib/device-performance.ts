@@ -186,7 +186,7 @@ function runCSSTest(): Promise<{ fps: number; jankScore: number }> {
       const elapsed = now - startTime;
       box.style.transform = `translate3d(${Math.sin(elapsed * 0.001) * 50}px, ${Math.cos(elapsed * 0.001) * 50}px, 0) scale(${1 + Math.sin(elapsed * 0.002) * 0.1})`;
 
-      if (elapsed < 1500) {
+      if (elapsed < 350) {
         requestAnimationFrame(tick);
       } else {
         document.body.removeChild(container);
@@ -240,7 +240,7 @@ function runCanvasTest(): Promise<{ fps: number; jankScore: number }> {
         ctx.fill();
       }
 
-      if (now - startTime < 1500) {
+      if (now - startTime < 350) {
         requestAnimationFrame(tick);
       } else {
         document.body.removeChild(canvas);
@@ -251,6 +251,8 @@ function runCanvasTest(): Promise<{ fps: number; jankScore: number }> {
     }
     requestAnimationFrame(tick);
   });
+}
+});
 }
 
 function runWebGLTest(): Promise<{ fps: number; jankScore: number }> {
@@ -327,16 +329,19 @@ function runWebGLTest(): Promise<{ fps: number; jankScore: number }> {
       gl.viewport(0, 0, 200, 200);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      if (now - startTime < 1500) {
-        requestAnimationFrame(tick);
-      } else {
-        document.body.removeChild(canvas);
-        const fps = Math.round((frames / (now - startTime)) * 1000);
-        const jankScore = jankFrames / frames;
-        resolve({ fps: Math.min(60, fps), jankScore });
-      }
+       if (now - startTime < 350) {
+         requestAnimationFrame(tick);
+       } else {
+         document.body.removeChild(canvas);
+         const fps = Math.round((frames / (now - startTime)) * 1000);
+         const jankScore = jankFrames / frames;
+         resolve({ fps: Math.min(60, fps), jankScore });
+       }
+     }
+   });
+ }
     }
     requestAnimationFrame(tick);
   });

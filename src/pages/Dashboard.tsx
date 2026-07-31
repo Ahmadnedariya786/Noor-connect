@@ -442,60 +442,73 @@ export default function Dashboard() {
     Isha: <CloudMoon className="w-5 h-5" />,
   };
 
-  const dashboardPrayers = prayers.map(p => {
-    const prayerDate = p.date;
-    const now = currentTime;
-    const isUpcoming = prayerDate && prayerDate > now;
-    const pKey = p.name.toLowerCase() as PrayerName;
-    const isCompleted = todayPrayers ? !!todayPrayers[pKey] : false;
-    
-    // Check if it's Friday and handle Jummah logic
-    const isFriday = now.getDay() === 5;
-    const isAfter2PM = now.getHours() >= 14;
-    let displayName = p.name;
-    
-    if (p.name === 'Dhuhr' && isFriday && !isAfter2PM) {
-      displayName = 'Jummah';
-    }
-    
-    const handleCheckIn = () => {
-      const resolvedTimes = resolvePrayerTimes();
-      const result = togglePrayer(pKey, resolvedTimes || undefined);
-      toast({
-        title: result.success ? "Check-in Updated" : "Cannot Check-in",
-        description: result.message,
-        variant: result.success ? "default" : "destructive",
-      });
-    };
-    
-    return {
-      name: displayName,
-      originalName: p.name,
-      time: p.time,
-      icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
-      isActive: nextPrayerName === p.name,
-      isUpcoming: isUpcoming,
-      isCompleted,
-      onCheckIn: handleCheckIn,
-    };
-  });
+const handleCheckIn = useCallback((pKey: PrayerName) => {
+    const resolvedTimes = resolvePrayerTimes();
+    const result = togglePrayer(pKey, resolvedTimes || undefined);
+    toast({
+      title: result.success ? "Check-in Updated" : "Cannot Check-in",
+      description: result.message,
+      variant: result.success ? "default" : "destructive",
+    });
+  }, [toast, resolvePrayerTimes]);
 
-  const nextPrayerInfo = {
-    name: nextPrayerName || "Loading...",
-    time: nextPrayerTime || "--:--",
-    targetTime: targetTime,
-    progress: (() => {
-      const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
-      const prevPrayer = nextIdx > 0 ? prayers[nextIdx - 1] : null;
-      const prevDate = prevPrayer?.date;
-      if (!prevDate || !targetTime) return 0;
-      const start = prevDate.getTime();
-      const end = targetTime.getTime();
-      const now = currentTime.getTime();
-      if (end <= start) return 0;
-      return Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
-    })(),
-  };
+  const dashboardPrayers = useMemo(() => {
+    return prayers.map(p => {
+      const prayerDate = p.date;
+      const now = currentTime;
+      const isUpcoming = prayerDate && prayerDate > now;
+      const pKey = p.name.toLowerCase() as PrayerName;
+      const isCompleted = todayPrayers ? !!todayPrayers[pKey] : false;
+
+      // Check if it's Friday and handle Jummah logic
+      const isFriday = now.getDay() === 5;
+      const isAfter2PM = now.getHours() >= 14;
+      let displayName = p.name;
+
+      if (p.name === 'Dhuhr' && isFriday && !isAfter2PM) {
+        displayName = 'Jummah';
+      }
+
+      return {
+        name: displayName,
+        originalName: p.name,
+        time: p.time,
+        icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
+        isActive: nextPrayerName === p.name,
+        isUpcoming: isUpcoming,
+        isCompleted,
+        onCheckIn: handleCheckIn,
+      };
+    });
+  }, [prayers, currentTime, todayPrayers, nextPrayerName, handleCheckIn, prayerIcons]);
+
+  const nextPrayerInfo = useMemo(() => {
+    const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
+    const prevPrayer = nextIdx > 0 ? prayers[nextIdx - 1] : null;
+    const prevDate = prevPrayer?.date;
+    if (!prevDate || !targetTime) return {
+      name: nextPrayerName || "Loading...",
+      time: nextPrayerTime || "--:--",
+      targetTime: targetTime,
+      progress: 0,
+    };
+    const start = prevDate.getTime();
+    const end = targetTime.getTime();
+    const now = currentTime.getTime();
+    if (end <= start) return {
+      name: nextPrayerName || "Loading...",
+      time: nextPrayerTime || "--:--",
+      targetTime: targetTime,
+      progress: 0,
+    };
+    const progress = Math.min(100, Math.max(0, ((currentTime.getTime() - start) / (end - start)) * 100));
+    return {
+      name: nextPrayerName || "Loading...",
+      time: nextPrayerTime || "--:--",
+      targetTime: targetTime,
+      progress,
+    };
+  }, [prayers, nextPrayerName, nextPrayerTime, targetTime, currentTime]);
 
   return (
     <PageTransition>
