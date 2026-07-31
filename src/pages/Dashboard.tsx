@@ -8,9 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
 const DailyAyah = lazy(() => import("@/components/EnhancedDailyAyah").then(module => ({ default: module.EnhancedDailyAyah })));
 const DailyHadith = lazy(() => import("@/components/EnhancedDailyHadith").then(module => ({ default: module.EnhancedDailyHadith })));
-const PrayerTimesList = lazy(() => import("@/components/PrayerTimesList").then(module => ({ default: module.PrayerTimesList })));
-const SalahTracker = lazy(() => import("@/components/SalahTracker").then(module => ({ default: module.SalahTracker })));
-const QazaTracker = lazy(() => import("@/components/QazaTracker").then(module => ({ default: module.QazaTracker })));
 import { LocationSearch } from "@/components/LocationSearch";
 import { LayoutManager } from "@/components/LayoutManager";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -20,7 +17,8 @@ import { isMenstrualModeActive, getMenstrualModeData, activateMenstrualMode, dea
 import { cn } from "@/lib/utils";
 import { EidCelebrationOverlay } from "@/components/EidCelebrationOverlay";
 import { CheckCircle, AlertTriangle } from "lucide-react";
-import { getTodayPrayers, togglePrayer, type PrayerName, type DailyPrayers } from "@/lib/salah-tracker";
+import { getTodayPrayers, togglePrayer, resolvePrayerTimes, checkStreakReset, type PrayerName, type DailyPrayers } from "@/lib/salah-tracker";
+import { syncMissedPrayersToQaza } from "@/lib/qaza-tracker";
 import { BatteryOptimizationDialog } from "@/components/BatteryOptimizationDialog";
 import { FeatureCards } from "@/components/DashboardFeatureCards";
 
@@ -87,6 +85,35 @@ export default function Dashboard() {
     
     window.addEventListener('salah-updated', handleSalahUpdated);
     return () => window.removeEventListener('salah-updated', handleSalahUpdated);
+  }, []);
+
+  // Bridge: sync missed prayers to qaza when prayer times are available
+  useEffect(() => {
+    if (todayPrayers && prayers.length > 0) {
+      const resolvedTimes = resolvePrayerTimes();
+      if (resolvedTimes) {
+        const syncData = {
+          fajr: todayPrayers.fajr,
+          dhuhr: todayPrayers.dhuhr,
+          asr: todayPrayers.asr,
+          maghrib: todayPrayers.maghrib,
+          isha: todayPrayers.isha,
+        };
+        syncMissedPrayersToQaza(syncData, resolvedTimes);
+      }
+    }
+  }, [todayPrayers, prayers]);
+
+  // Reset streak check when app comes to foreground
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkStreakReset();
+        setTodayPrayers(getTodayPrayers());
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
 
@@ -432,7 +459,8 @@ export default function Dashboard() {
     }
     
     const handleCheckIn = () => {
-      const result = togglePrayer(pKey);
+      const resolvedTimes = resolvePrayerTimes();
+      const result = togglePrayer(pKey, resolvedTimes || undefined);
       toast({
         title: result.success ? "Check-in Updated" : "Cannot Check-in",
         description: result.message,

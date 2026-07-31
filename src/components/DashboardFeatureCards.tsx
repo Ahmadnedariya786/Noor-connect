@@ -1,6 +1,7 @@
 ﻿import { memo } from "react";
 import { BookOpen, Grid3X3, Building } from "lucide-react";
 import { m } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 interface FeatureCard {
   id: string;
@@ -17,33 +18,35 @@ interface FeatureCardsProps {
 }
 
 export const FeatureCards = memo(function FeatureCards({ onNavigate }: FeatureCardsProps) {
+  const { t } = useLanguage();
+
   const featureCards: FeatureCard[] = [
     {
       id: 'quran',
-      title: 'Quran',
-      description: 'Read & Listen',
+      title: t('quran') || 'Quran',
+      description: t('readAndListen') || 'Read & Listen',
       icon: BookOpen,
       gradient: 'from-[#1A1A1A] to-[#1A1A1A]',
       route: '/quran',
-      stats: '114 Surahs'
+      stats: t('surahsCount') || '114 Surahs'
     },
     {
       id: 'prayer',
-      title: 'Prayer',
-      description: 'Times',
+      title: t('prayer') || 'Prayer',
+      description: t('prayerTimes') || 'Times',
       icon: Building,
       gradient: 'from-[#1A1A1A] to-[#1A1A1A]',
       route: '/prayer-times',
-      stats: '5 Daily'
+      stats: t('dailyPrayers') || '5 Daily'
     },
     {
       id: 'services',
-      title: 'Services',
-      description: 'All Features',
+      title: t('services') || 'Services',
+      description: t('allFeatures') || 'All Features',
       icon: Grid3X3,
       gradient: 'from-[#1A1A1A] to-[#1A1A1A]',
       route: '/services',
-      stats: '15+ Features'
+      stats: t('featuresCount') || '15+ Features'
     }
   ];
 

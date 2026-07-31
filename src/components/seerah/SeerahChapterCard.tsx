@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import type { SeerahChapterSummary } from "@/lib/seerah";
 
 interface SeerahChapterCardProps {
@@ -16,7 +16,7 @@ const periodColors: Record<SeerahChapterSummary["period"], string> = {
 };
 
 export function SeerahChapterCard({ chapter, onClick, index }: SeerahChapterCardProps) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   const periodLabels: Record<SeerahChapterSummary["period"], string> = {
     "pre-prophethood": t("seerahPeriodPreProphethood"),

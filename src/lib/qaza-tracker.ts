@@ -1,5 +1,8 @@
 import { getMenstrualModeData } from './menstrual-mode';
 import { getMenstrualModeData as getHaidhModeData } from './haidh-tracker';
+import { type PrayerName } from './salah-tracker';
+
+export type { PrayerName };
 
 /**
  * Qaza (Missed Prayer) Tracker
@@ -9,8 +12,8 @@ import { getMenstrualModeData as getHaidhModeData } from './haidh-tracker';
 
 const QAZA_STORAGE_KEY = 'qaza-prayers';
 const PROCESSED_QAZA_KEY = 'processed-salah-qaza';
-
-export type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+const HISTORY_KEY = 'qaza-history';
+const GOAL_KEY = 'qaza-daily-goal';
 
 export interface QazaStats {
   total: number;
@@ -180,5 +183,55 @@ export const clearAllQaza = (): void => {
     isha: 0
   });
   localStorage.removeItem(PROCESSED_QAZA_KEY);
+  localStorage.removeItem(HISTORY_KEY);
+  localStorage.removeItem(GOAL_KEY);
   window.dispatchEvent(new CustomEvent('qaza-updated'));
+};
+
+// ─── History & Goal ───────────────────────────────────────────────────────────
+
+export interface QazaHistoryEntry {
+  date: string;
+  completed: number;
+  prayer: PrayerName;
+}
+
+export const getQazaHistory = (): QazaHistoryEntry[] => {
+  try {
+    const data = localStorage.getItem(HISTORY_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveQazaHistory = (history: QazaHistoryEntry[]): void => {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+};
+
+export const addQazaHistoryEntry = (prayer: PrayerName): void => {
+  const history = getQazaHistory();
+  history.push({ date: new Date().toDateString(), completed: 1, prayer });
+  saveQazaHistory(history);
+};
+
+export const getQazaDailyGoal = (): number => {
+  try {
+    const saved = localStorage.getItem(GOAL_KEY);
+    return saved ? parseInt(saved, 10) || 5 : 5;
+  } catch {
+    return 5;
+  }
+};
+
+export const setQazaDailyGoal = (goal: number): void => {
+  localStorage.setItem(GOAL_KEY, goal.toString());
+};
+
+export const getTodayQazaCompleted = (): number => {
+  const history = getQazaHistory();
+  const today = new Date().toDateString();
+  return history
+    .filter(h => h.date === today)
+    .reduce((sum, h) => sum + h.completed, 0);
 };

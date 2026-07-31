@@ -3,6 +3,7 @@ import { AppBar } from '@/components/AppBar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { Badge } from '@/components/ui/badge';
 import { LayoutManager } from '@/components/LayoutManager';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -81,6 +82,7 @@ interface GameState {
 }
 
 export default function EnhancedIslamicQuiz() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [gameState, setGameState] = useState<GameState>({
     questions: [],
@@ -537,7 +539,7 @@ export default function EnhancedIslamicQuiz() {
     return (
       <LayoutManager>
         <div className="min-h-screen bg-background">
-          <AppBar title="Achievements" showBack />
+          <AppBar title={t("achievements") || "Achievements"} showBack />
           <div className="max-w-lg mx-auto p-4">
             <AchievementDisplay />
           </div>
@@ -550,7 +552,7 @@ export default function EnhancedIslamicQuiz() {
     return (
       <LayoutManager>
         <div className="min-h-screen bg-background">
-          <AppBar title="Islamic Quiz" showBack />
+          <AppBar title={t("islamicQuiz") || "Islamic Quiz"} showBack />
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
           </div>
@@ -570,7 +572,7 @@ export default function EnhancedIslamicQuiz() {
   return (
     <LayoutManager>
       <div className="min-h-screen bg-background">
-        <AppBar title="Islamic Quiz" showBack />
+        <AppBar title={t("islamicQuiz") || "Islamic Quiz"} showBack />
       
         <div className="max-w-lg mx-auto p-4 space-y-4">
           {!quizComplete ? (
@@ -787,7 +789,7 @@ function QuizMenu({
   return (
     <LayoutManager>
       <div className="min-h-screen bg-background">
-        <AppBar title="Islamic Quiz" showBack />
+        <AppBar title={t("islamicQuiz") || "Islamic Quiz"} showBack />
         
         {/* Loss Aversion Banner */}
         <LossAversionBanner 

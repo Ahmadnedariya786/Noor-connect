@@ -1,7 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search, Bookmark } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { SeerahChapterCard } from "@/components/seerah/SeerahChapterCard";
 import { goBackOrFallback } from "@/lib/navigation";
 import { getLastRead, getReadingProgress, type ReadingFeature } from "@/lib/reading-storage";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import {
   loadSeerahChapterList,
   loadSeerahMetadata,
@@ -22,7 +22,7 @@ type PeriodFilter = "all" | "pre-prophethood" | "makkan" | "madinan" | "final-da
 
 export default function SeerahHome() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("all");

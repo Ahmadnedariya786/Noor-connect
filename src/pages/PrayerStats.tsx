@@ -5,12 +5,14 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, TrendingUp, Award, Target, CheckCircle, Circle } from "lucide-react";
 import { getPrayerHistory, type DailyPrayers } from "@/lib/salah-tracker";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
-const PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const PRAYER_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
 const CHART_COLORS = ['#C9860A', '#E8A020', '#F3B140', '#FCD570', '#FDE7A6'];
 
 export default function PrayerStats() {
+  const { t } = useLanguage();
+  const PRAYERS = [t("fajr"), t("dhuhr"), t("asr"), t("maghrib"), t("isha")];
   const [history, setHistory] = useState<DailyPrayers[]>([]);
   const [stats, setStats] = useState({
     totalPrayers: 0,
@@ -118,7 +120,7 @@ export default function PrayerStats() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppBar title="Prayer Statistics" showBack />
+      <AppBar title={t("prayerStatistics") || "Prayer Statistics"} showBack />
       
       <div className="max-w-lg mx-auto p-4 space-y-4">
         {/* Overview Card */}

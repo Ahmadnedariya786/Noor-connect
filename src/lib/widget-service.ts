@@ -21,6 +21,7 @@ import {
 import { calculatePrayerTimes, formatPrayerTime, getCalculationMethod } from './prayer-calculator';
 import { getMadhab } from './storage';
 import { isNativePlatform } from './capacitor-utils';
+import i18n from './i18n-new';
 import type {
   PrayerPayload,
   PrayerEntry,
@@ -35,7 +36,8 @@ import type {
 
 function getHijriDateString(): string {
   try {
-    const fmt = new Intl.DateTimeFormat('en-u-ca-islamic', {
+    const locale = i18n.language || 'en';
+    const fmt = new Intl.DateTimeFormat(locale + '-u-ca-islamic', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -48,7 +50,8 @@ function getHijriDateString(): string {
 
 function getGregorianDateString(): string {
   try {
-    return new Date().toLocaleDateString('en-US', {
+    const locale = i18n.language || 'en';
+    return new Date().toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -59,7 +62,8 @@ function getGregorianDateString(): string {
 }
 
 function getCurrentTimeString(): string {
-  return new Date().toLocaleTimeString('en-US', {
+  const locale = i18n.language || 'en';
+  return new Date().toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
@@ -67,13 +71,11 @@ function getCurrentTimeString(): string {
 }
 
 function getCurrentLocale(): string {
-  try {
-    const stored = localStorage.getItem('app-language') || localStorage.getItem('i18nextLng');
-    if (stored) return stored.split('-')[0];
-  } catch {}
-  return typeof navigator !== 'undefined'
-    ? (navigator.language || 'en').split('-')[0]
-    : 'en';
+  const stored = i18n.language || localStorage.getItem('i18nextLng');
+  if (stored) return stored.split('-')[0];
+  return (typeof navigator !== 'undefined'
+    ? (navigator.language || 'en')
+    : 'en').split('-')[0];
 }
 
 /**

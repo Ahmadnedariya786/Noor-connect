@@ -13,7 +13,7 @@ export function HadithBookView() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [remoteCollectionData, setRemoteCollectionData] = useState<HadithCollection | null>(null);
-  const [metadataLoading, setMetadataLoading] = useState(false);
+  const [metadataLoading, setMetadataLoading] = useState(true);
 
   const staticCollectionData = useMemo(() => {
     return collection ? getCollectionByName(collection) : null;
@@ -73,8 +73,8 @@ export function HadithBookView() {
     navigate(`/hadith/collections/${collection}/${book.number}`);
   };
 
-  // Show loading only if no static fallback data
-  if (metadataLoading && !staticCollectionData) {
+  // Show loading while fetching remote metadata
+  if (metadataLoading && !remoteCollectionData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-muted-foreground">

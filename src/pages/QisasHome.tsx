@@ -1,7 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, Users, BookOpen } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { ProphetCard } from "@/components/qisas/ProphetCard";
 import { goBackOrFallback } from "@/lib/navigation";
 import { getLastRead, getReadingProgress } from "@/lib/reading-storage";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import {
   loadProphetList,
   loadQisasMetadata,
@@ -28,7 +28,7 @@ type EraFilter =
 
 export default function QisasHome() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [eraFilter, setEraFilter] = useState<EraFilter>("all");

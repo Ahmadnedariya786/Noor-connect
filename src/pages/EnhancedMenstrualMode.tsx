@@ -196,7 +196,7 @@ export default function EnhancedMenstrualModePage() {
   return (
     <LayoutManager>
       <div className="min-h-screen bg-background">
-        <AppBar title="Enhanced Menstrual Mode" />
+        <AppBar title={t("enhancedMenstrualMode") || "Enhanced Menstrual Mode"} />
 
         <div className="max-w-lg mx-auto p-4 space-y-4">
           <div className="flex items-center gap-3">

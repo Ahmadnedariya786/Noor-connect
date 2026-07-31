@@ -373,7 +373,7 @@ const Tafsir = () => {
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAF9] pb-20 dark:bg-slate-950">
         <AppBar
-          title={currentSurahTafsir ? currentSurahTafsir.englishName : selectedSurah ? selectedSurah.englishName : "Tafsir"}
+          title={currentSurahTafsir ? currentSurahTafsir.englishName : selectedSurah ? selectedSurah.englishName : t("tafsir") || "Tafsir"}
           showBack={true}
           onBack={goBack}
           actions={

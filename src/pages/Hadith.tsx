@@ -8,6 +8,7 @@ import hadithData from "../data/hadith.json";
 import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
 import { getAllCollections } from "@/data/hadith-collections";
 import { PageTransition } from "@/components/PageTransition";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 interface HadithData {
   hadith: string;
@@ -26,6 +27,7 @@ function getDailySeed(refreshSeed?: number | null): number {
 }
 
 const Hadith = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [hadith, setHadith] = useState<HadithData | null>(null);
@@ -231,7 +233,7 @@ const Hadith = () => {
                 className="bg-card text-foreground hover:bg-muted/50 border border-border/40 shadow-sm rounded-xl h-12 w-12"
                 variant="outline"
                 size="icon"
-                title="Bookmarked Hadith"
+                title={t("bookmarkedHadith") || "Bookmarked Hadith"}
               >
                 <Bookmark className="w-4 h-4 text-[#C9860A]" />
               </Button>

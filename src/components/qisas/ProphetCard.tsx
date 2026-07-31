@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import type { ProphetSummary } from "@/lib/qisas";
 
 interface ProphetCardProps {
@@ -17,7 +17,7 @@ const eraColors: Record<ProphetSummary["era"], string> = {
 };
 
 export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   const eraLabels: Record<ProphetSummary["era"], string> = {
     "beginning-of-creation": t("qisasEraBeginning"),

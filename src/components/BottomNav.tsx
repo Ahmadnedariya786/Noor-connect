@@ -30,9 +30,9 @@ const BottomNav = memo(function BottomNav() {
   const navItems = [
     { title: (t('qibla') || 'Qibla'), path: '/qibla', icon: Compass },
     { title: (t('quran') || 'Quran'), path: '/quran', icon: BookOpen },
-    { title: 'Home', path: '/', icon: Home, exact: true },
-    { title: 'Services', path: '/services', icon: LayoutGrid },
-    { title: 'Settings', path: '/profile', icon: SettingsIcon },
+    { title: (t('home') || 'Home'), path: '/', icon: Home, exact: true },
+    { title: (t('services') || 'Services'), path: '/services', icon: LayoutGrid },
+    { title: (t('settings') || 'Settings'), path: '/profile', icon: SettingsIcon },
   ];
 
   return (

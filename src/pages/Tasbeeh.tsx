@@ -171,7 +171,7 @@ const Tasbeeh = () => {
                   <button
                     onClick={toggleZenMode}
                     className="p-1.5 rounded-full text-[#C9860A] hover:bg-[#C9860A]/10 transition-colors"
-                    title="Zen Mode"
+                    title={t("zenMode") || "Zen Mode"}
                   >
                     <Moon className="w-3.5 h-3.5" />
                   </button>

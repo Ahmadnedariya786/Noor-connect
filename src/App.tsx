@@ -22,6 +22,7 @@ import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
 import { AutoBackupRestoreDialog } from "@/components/AutoBackupRestoreDialog";
 import { initBackupService } from "@/lib/backup-service";
+import { useAutoBackup } from "@/hooks/useAutoBackup";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
 import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
@@ -306,6 +307,9 @@ function AppContent() {
 function AppShell() {
   const [showSplash, setShowSplash] = useState(true);
   const { animationEnabled, splashGreetingEnabled, splashEnabled } = useSettings();
+  // Always-on auto backup: runs immediately, then every 20 minutes of app use
+  // while any page is open (not just the Settings page).
+  useAutoBackup();
   // Push Quran-progress + tasbeeh state to native widgets when they change
   useWidgetSync();
   

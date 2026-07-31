@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +53,7 @@ const books = ebooksData as LibraryBook[];
 
 // --- Main Enhanced Ebooks Page ---
 export default function EnhancedEbooksPage() {
+  const { t } = useLanguage();
   // --- State Management ---
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("title");
@@ -374,7 +376,7 @@ export default function EnhancedEbooksPage() {
         {/* Continue Reading */}
         {lastReadBook && (
           <EnhancedBookShelf
-            title="Continue Reading"
+            title={t("continueReading") || "Continue Reading"}
             books={[lastReadBook]}
             onBookClick={handleBookClick}
             onDownload={handleDownload}
@@ -388,7 +390,7 @@ export default function EnhancedEbooksPage() {
         {/* Recently Read */}
         {recentlyRead.length > 0 && (
           <EnhancedBookShelf
-            title="Recently Read"
+            title={t("recentlyRead") || "Recently Read"}
             books={recentlyRead.slice(0, 5)}
             onBookClick={handleBookClick}
             onDownload={handleDownload}

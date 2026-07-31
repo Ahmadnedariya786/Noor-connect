@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 interface Name {
   number: number;
@@ -121,6 +122,7 @@ const namesOfAllah: Name[] = [
 const FAVORITES_KEY = 'names-of-allah-favorites';
 
 export default function NamesOfAllah() {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState<number[]>(() => {
     const saved = localStorage.getItem(FAVORITES_KEY);
@@ -153,7 +155,7 @@ export default function NamesOfAllah() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background pb-20">
-        <AppBar title="99 Names of Allah" showBack />
+        <AppBar title={t("namesOfAllahFull") || "99 Names of Allah"} showBack />
 
         <div className="max-w-lg mx-auto px-5 pt-4 space-y-6">
           {/* Premium Hero Card */}

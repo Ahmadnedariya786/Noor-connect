@@ -2,12 +2,17 @@
  * Global Time Formatter Utility
  * Handles consistent time formatting across the app based on user preferences
  */
+import i18n from '@/lib/i18n-new';
 
 export interface TimeFormatOptions {
   format?: '12' | '24';
   showSeconds?: boolean;
   showAMPM?: boolean;
   timeZone?: string;
+}
+
+function getLocale(): string {
+  return i18n.language || 'en';
 }
 
 /**
@@ -55,7 +60,7 @@ export function formatTime(
       timeOptions.second = '2-digit';
     }
 
-    return date.toLocaleTimeString('en-US', timeOptions);
+    return date.toLocaleTimeString(getLocale(), timeOptions);
   } else {
     // 24-hour format
     const timeOptions: Intl.DateTimeFormatOptions = {
@@ -69,7 +74,7 @@ export function formatTime(
       timeOptions.second = '2-digit';
     }
 
-    return date.toLocaleTimeString('en-US', timeOptions);
+    return date.toLocaleTimeString(getLocale(), timeOptions);
   }
 }
 

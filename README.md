@@ -32,6 +32,32 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ## 🆕 What's New in v2.2.0
 
+### 🎨 Backup System UI/UX Overhaul
+- **Gold-Themed Card**: Redesigned AutoBackupCard with animated status indicator, success flash feedback, and CSS-only micro-interactions that preserve 60fps on low-end devices.
+- **Expandable "How Backup Works" Section**: Detailed 4-part guide explaining automatic device backup (20-min snapshots), Google Drive cloud backup, manual file export, and restore process. Translated in 5 languages (EN, AR, UR, BN, RU).
+- **Cache Clear Warning**: Replaced native `confirm()` dialog with a proper AlertDialog that clearly explains what will be removed (downloaded books, cached assets) and what stays safe (prayer records, bookmarks, settings, backup snapshot).
+
+### 🕌 Prayer Tracking & Qaza Fixes
+- **Critical Prayer Tracking Bridge**: Moved `syncMissedPrayersToQaza()` from the unused SalahTracker component into Dashboard.tsx. Missed prayers are now correctly auto-detected and added to qaza from the home screen.
+- **Dashboard Prayer Time Validation**: Check-in now passes prayer times to `togglePrayer()`, so users get the "Cannot check in before prayer time" error instead of silently bypassing the time gate.
+- **Qaza History Centralized**: Moved history and daily goal management from direct localStorage in QazaPage into `qaza-tracker.ts` lib functions (`getQazaHistory`, `addQazaHistoryEntry`, `getQazaDailyGoal`, `setQazaDailyGoal`).
+- **PrayerName Type Deduplicated**: `qaza-tracker.ts` now re-exports `PrayerName` from `salah-tracker.ts` instead of maintaining a separate identical type definition.
+- **Streak Reset on Foreground**: Added `visibilitychange` listener in Dashboard.tsx that calls `checkStreakReset()` when the app returns to foreground, ensuring streaks reset correctly even after days away.
+
+### 📖 Hadith Collection Fix
+- **Hadith Collection Flash Fix**: `HadithBookView` now initializes `metadataLoading` to `true` and checks `remoteCollectionData` instead of `staticCollectionData` for the loading guard. Eliminates the "1 book" flash when entering a collection.
+
+### 🧹 Dead Code Cleanup
+- **Deleted Unused Components**: Removed `SalahTracker.tsx` (205 lines), `PrayerTimesList.tsx` (451 lines), and `EnhancedPrayerTimesList.tsx` (111 lines) — all were imported but never rendered in any JSX.
+- **Dashboard Cleanup**: Removed unused lazy imports for `PrayerTimesList`, `SalahTracker`, and `QazaTracker` from Dashboard.tsx.
+
+### 🌐 Complete Language & Translation Overhaul
+- **All Locale Files Synchronized**: All 5 languages (English, Arabic, Urdu, Bengali, Russian) now have **410 translation keys** each — previously 278-314 keys with 99-105 missing per language.
+- **Hardcoded English Strings Eliminated**: Fixed 20+ AppBar titles, BottomNav labels, DashboardFeatureCards, and component strings that bypassed the i18n system. All now use `t()` translation function.
+- **Locale-Aware Formatting**: `time-formatter.ts`, `useI18n.ts`, and `widget-service.ts` now respect the app's selected language for date/number formatting instead of hardcoded `en-US`.
+- **RTL/Widget Sync Consistency**: Migrated components from bare `useTranslation()` to `useLanguage()` for proper RTL direction and native widget string sync across all supported languages.
+- **Widget String Sync**: Native Android widgets now receive translated prayer labels (`fajr`, `dhuhr`, `asr`, `maghrib`, `isha`, `nextPrayer`, `todaysPrayers`) in all 5 languages.
+
 ### ⚡ Performance & Core Web Vitals Optimization
 
 **Fixed critical performance bottlenecks across low-end devices:**
@@ -126,7 +152,7 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 
 ### 📖 Enhanced Quran & Tafsir Explorer
 
-- **Complete Holy Quran**: Clean, beautifully styled Uthmani and Indo-Pak reading interfaces with **local Madani Mushaf WebP images** (604 pages). Advanced caching system prefetches pages for instant display.
+- **Complete Holy Quran**: Clean, beautifully styled reading interfaces with ** Madani Mushaf WebP images** (604 pages). Advanced caching system prefetches pages for instant display.
 - **Standard Mushaf Implementation**: Industry-standard **Madani Mushaf layout** with optimized WebP storage for privacy-first offline Quran reading.
 - **Advanced Tafsir System**: 25+ global Quranic commentary editions instantly accessible via high-speed spaCy API integration, eliminating heavy database overhead.
 - **Multilingual Support**: Read meanings and Tafsir in English, Arabic, Bengali, Urdu, and Russian.

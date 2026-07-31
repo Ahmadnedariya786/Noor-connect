@@ -11,8 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { habitTracker, type Habit, type HabitEntry, type HabitStats, DEFAULT_HABITS } from "@/lib/habit-tracker";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 const HabitTracker = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -398,7 +400,7 @@ const HabitTracker = () => {
                       size="sm"
                       onClick={() => setEditingHabit(habit)}
                       className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
-                      title="Edit habit"
+                      title={t("editHabit") || "Edit habit"}
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -407,7 +409,7 @@ const HabitTracker = () => {
                       size="sm"
                       onClick={() => deleteCustomHabit(habit.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                      title="Delete habit"
+                      title={t("deleteHabit") || "Delete habit"}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

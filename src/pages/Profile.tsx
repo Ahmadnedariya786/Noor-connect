@@ -1,23 +1,23 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
-import { Moon, Sun, Download, Upload, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings as SettingsIcon, Clock, Package, Vibrate, ArrowLeft, DollarSign } from "lucide-react";
+import { Moon, Sun, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings as SettingsIcon, Clock, Package, Vibrate, ArrowLeft, DollarSign, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAutoBackup } from "@/hooks/useAutoBackup";
 import { getMadhab, setMadhab, getTimeFormat, setTimeFormat as saveTimeFormat, isIslamicSleepReminderEnabled, setIslamicSleepReminderEnabled, getIslamicSleepOffset, setIslamicSleepOffset, type MadhabType } from "@/lib/storage";
 import { AdhanSelector } from "@/components/AdhanSelector";
 import { CustomAdhanUpload } from "@/components/CustomAdhanUpload";
 import { getCalculationMethod, setCalculationMethod, type CalculationMethodName } from "@/lib/prayer-calculator";
 import { AladhanAPI } from "@/lib/aladhan-api";
-import { getStorageStats, clearAllBooks, formatFileSize, downloadBook, isBookDownloaded } from "@/lib/ebooks-storage";
-import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize, getLastAutoBackupTime } from "@/lib/backup";
+import { getStorageStats, clearAllBooks, formatFileSize } from "@/lib/ebooks-storage";
+import { clearCache, getQuranFontSize, setQuranFontSize } from "@/lib/backup";
 import { notificationManager, type NotificationPreferences } from "@/lib/notification-manager";
 import { localNotifications } from "@/lib/local-notifications";
 import { PrayerMethodSelector } from "@/components/PrayerMethodSelector";
@@ -32,6 +32,7 @@ import { CURRENT_APP_VERSION } from "@/lib/constants";
 import { hasUnseenChangelog } from "@/lib/changelog";
 import { useSettings } from "@/contexts/SettingsContext";
 import { scheduleIslamicSleepReminder, cancelIslamicSleepReminder, getNextIslamicSleepReminderTime } from "@/lib/islamic-sleep-reminder";
+import { AutoBackupCard } from "@/components/AutoBackupCard";
 
 // Changelog badge component
 const ChangelogBadge = () => {
@@ -65,7 +66,6 @@ const Profile = () => {
     splashEnabled,
     setSplashEnabled,
   } = useSettings();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [madhab, setMadhabState] = useState<MadhabType>("shafi");
   const [timeFormat, setTimeFormatState] = useState<"12" | "24">("24");
@@ -73,7 +73,6 @@ const Profile = () => {
   const [quranFontSize, setQuranFontSizeState] = useState(24);
   const [quranFont, setQuranFontState] = useState<QuranFont>("uthmani");
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
-  const [lastAutoBackupTime, setLastAutoBackupTime] = useState<string | null>(null);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     ramadanCountdowns: true,
     eidGreetings: true,
@@ -95,6 +94,7 @@ const Profile = () => {
   const [preferredCurrency, setPreferredCurrency] = useState(() => localStorage.getItem('preferred-currency') || 'USD');
   
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showClearCacheDialog, setShowClearCacheDialog] = useState(false);
 
   useEffect(() => {
     if (showChangelog) {
@@ -117,18 +117,6 @@ const Profile = () => {
     stopAdhan,
     testAdhan,
   } = usePrayerAlarm();
-
-  const updateBackupTime = useCallback(async () => {
-    const time = await getLastAutoBackupTime();
-    setLastAutoBackupTime(time);
-  }, []);
-
-  // Always-on auto backup: runs every 20 minutes of app use and on app close.
-  useAutoBackup(updateBackupTime);
-
-  useEffect(() => {
-    updateBackupTime();
-  }, [updateBackupTime]);
 
   const [reminderMinutes, setReminderMinutes] = useState('0');
   const [hijriOffset, setHijriOffset] = useState('0');
@@ -222,7 +210,6 @@ const Profile = () => {
       refreshPermissionStatus();
       checkPrayerNotificationStatus();
       getStorageStats().then(setStorageStats);
-      getLastAutoBackupTime().then(setLastAutoBackupTime);
     };
     const ric = (window as any).requestIdleCallback;
     if (typeof ric === 'function') {
@@ -523,144 +510,11 @@ const Profile = () => {
     }
   };
 
-  const handleBackup = async () => {
-    const { id: toastId, update } = toast({
-      title: "Creating Backup...",
-      description: "Please wait while we prepare your backup file.",
-    });
-
-    try {
-      const result = await downloadBackup();
-      if (!result.success) {
-        update({
-          id: toastId,
-          title: "❌ Backup Failed",
-          description: result.error || "Failed to create backup. Please try again.",
-          variant: "destructive"
-        });
-        return;
-      }
-      if (result.data?.platform === 'native') {
-        update({
-          id: toastId,
-          title: "✅ Backup File Ready",
-          description: "Choose where to save it (Downloads, Drive, Files) — keep it somewhere safe.",
-        });
-      } else {
-        update({
-          id: toastId,
-          title: "✅ Backup Downloaded",
-          description: "Your backup file was downloaded to your device.",
-        });
-      }
-    } catch (error) {
-      update({
-        id: toastId,
-        title: "❌ Backup Failed",
-        description: "Failed to create backup. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const { id: toastId, update } = toast({
-      title: "Restoring Backup...",
-      description: "Please wait while we restore your data.",
-    });
-
-    try {
-      const result = await importBackup(file);
-
-      if (!result.success || !result.data) {
-        update({
-          id: toastId,
-          title: "❌ Restore Failed",
-          description: result.error || "Failed to restore backup. Please check the file and try again.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const summary = result.data;
-
-      if (summary.warning) {
-        update({
-          id: toastId,
-          title: "⚠️ Older Backup",
-          description: `${summary.warning} Restoring it now...`,
-          variant: "destructive"
-        });
-      }
-
-      if (summary.booksToDownload && summary.booksToDownload.length > 0) {
-        update({
-          id: toastId,
-          title: "📚 Downloading Library...",
-          description: `Restoring ${summary.booksToDownload.length} books. This may take a few minutes.`,
-        });
-
-        let downloadedCount = 0;
-        for (const book of summary.booksToDownload) {
-          try {
-            const isDownloaded = await isBookDownloaded(book.url);
-            if (!isDownloaded) {
-              await downloadBook(book);
-            }
-            downloadedCount++;
-
-            if (downloadedCount % Math.max(1, Math.floor(summary.booksToDownload.length / 5)) === 0) {
-              update({
-                id: toastId,
-                title: "📚 Downloading Library...",
-                description: `Progress: ${downloadedCount}/${summary.booksToDownload.length} books restored.`,
-              });
-            }
-          } catch (err) {
-            console.error(`Failed to download ${book.title}`, err);
-          }
-        }
-
-        update({
-          id: toastId,
-          title: "✅ Restore Complete",
-          description: `Successfully restored ${downloadedCount}/${summary.booksToDownload.length} books. App will refresh in 2 seconds.`,
-        });
-      } else if (summary.failedKeys > 0) {
-        update({
-          id: toastId,
-          title: "⚠️ Restored with some issues",
-          description: `Most of your data was restored, but ${summary.failedKeys} item(s) could not be restored. App will refresh in 2 seconds.`,
-          variant: "destructive"
-        });
-      } else {
-        update({
-          id: toastId,
-          title: "✅ Restore Complete",
-          description: "Your data has been restored successfully. App will refresh in 2 seconds.",
-        });
-      }
-
-      setTimeout(() => window.location.reload(), 2000);
-    } catch (error) {
-      update({
-        id: toastId,
-        title: "❌ Restore Failed",
-        description: "Failed to restore backup. Please check file and try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleClearCache = async () => {
-    if (confirm("This will delete all downloaded books and cached data. Continue?")) {
-      await clearCache();
-      setStorageStats({ totalBooks: 0, totalSize: 0 });
-      toast({ title: "Cache cleared" });
-    }
+    await clearCache();
+    setStorageStats({ totalBooks: 0, totalSize: 0 });
+    toast({ title: "Cache cleared" });
+    setShowClearCacheDialog(false);
   };
 
   const handleClearBooks = async () => {
@@ -1131,44 +985,7 @@ const Profile = () => {
 
         {/* Auto Backup */}
         <div className="space-y-3">
-          <Card className="overflow-hidden border-border/40 shadow-sm rounded-[24px] p-5 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
-                <RefreshCw className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold">{t('autoBackup') || 'Auto Backup'}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {t('lastSaved') || 'Last saved'}:{' '}
-                  {lastAutoBackupTime
-                    ? `${new Date(lastAutoBackupTime).toLocaleDateString()} ${new Date(lastAutoBackupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                    : t('never') || 'Never'}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              {t('backupStatusLine') || 'Saved on this device. Also save a file to Google Drive to protect against phone loss.'}
-            </p>
-
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={handleBackup}>
-                <Download className="w-4 h-4 me-2" />
-                {t('backupToDrive') || 'Save backup file to Drive/Downloads'}
-              </Button>
-              <input
-                type="file"
-                accept=".json"
-                ref={fileInputRef}
-                onChange={handleRestore}
-                className="hidden"
-              />
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="w-4 h-4 me-2" />
-                {t('restoreFromFile') || 'Restore from file'}
-              </Button>
-            </div>
-          </Card>
+          <AutoBackupCard />
         </div>
 
 
@@ -1194,7 +1011,7 @@ const Profile = () => {
               <Trash2 className="w-4 h-4 me-2" />
               {t('clearBooks')}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleClearCache} className="text-destructive">
+            <Button variant="outline" size="sm" onClick={() => setShowClearCacheDialog(true)} className="text-destructive">
               <Trash2 className="w-4 h-4 me-2" />
               {t('clearCache')}
             </Button>
@@ -1603,6 +1420,62 @@ const Profile = () => {
           <Changelog onClose={() => setShowChangelog(false)} />
         </div>
       )}
+
+      {/* Clear Cache Warning Dialog */}
+      <AlertDialog open={showClearCacheDialog} onOpenChange={setShowClearCacheDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Clear Cache?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>This will remove temporary files and downloaded content to free up space.</p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Will be removed:</p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm">
+                      <X className="w-3.5 h-3.5 text-destructive shrink-0" />
+                      <span>Downloaded e-book PDFs</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <X className="w-3.5 h-3.5 text-destructive shrink-0" />
+                      <span>Offline cached assets (re-downloads on next visit)</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Your data is safe:</p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Prayer records, bookmarks, qaza tracker</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Settings, preferences, habit tracker</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Auto backup snapshot</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearCache}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear Cache
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

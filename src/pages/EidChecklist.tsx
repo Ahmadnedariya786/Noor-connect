@@ -8,6 +8,7 @@ import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { 
   Sparkles, 
   Moon, 
@@ -95,6 +96,7 @@ const defaultChecklistItems: Omit<ChecklistItem, 'checked'>[] = [
 ];
 
 export default function EidChecklist() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isEidAlFitr, isEidAlAdha, islamicInfo, isLoading } = useIslamicCalendar();
@@ -352,7 +354,7 @@ export default function EidChecklist() {
     return (
       <PageTransition>
         <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
-          <AppBar title="Eid Checklist" showBack={true} />
+          <AppBar title={t("eidChecklist") || "Eid Checklist"} showBack={true} />
           
           <div className="flex-1 flex items-center justify-center p-6">
             <motion.div 
@@ -393,7 +395,7 @@ export default function EidChecklist() {
     return (
       <PageTransition>
         <div className="min-h-screen bg-[#f8f9fa] pb-32">
-          <AppBar title="Eid Checklist" showBack={true} />
+          <AppBar title={t("eidChecklist") || "Eid Checklist"} showBack={true} />
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
           </div>
@@ -411,7 +413,7 @@ export default function EidChecklist() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#f8f9fa] pb-32">
-        <AppBar title="Eid Checklist" showBack={true} />
+        <AppBar title={t("eidChecklist") || "Eid Checklist"} showBack={true} />
 
         <div className="max-w-xl mx-auto p-4 space-y-8 mt-2">
           {/* Eid Header Card */}

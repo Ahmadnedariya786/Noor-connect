@@ -12,6 +12,7 @@ import { MetalPricesService, MetalPrices } from "@/lib/metalPrices";
 import { ZakatNisabService } from "@/lib/zakatNisab";
 import { METAL_PRICE_CONSTANTS } from "@/lib/constants";
 import { ExchangeRateFallbackService } from "@/lib/exchange-rate-fallback";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 interface ZakatAssets {
   cash: number;
@@ -106,6 +107,7 @@ const FALLBACK_CURRENCIES = [
 ];
 
 export default function ZakatCalculator() {
+  const { t } = useLanguage();
   const [assets, setAssets] = useState<ZakatAssets>({
     cash: 0,
     bankBalance: 0,
@@ -383,7 +385,7 @@ export default function ZakatCalculator() {
   return (
     <LayoutManager>
       <div className="min-h-screen bg-background">
-        <AppBar title="Zakat Calculator" showBack />
+        <AppBar title={t("zakatCalculator") || "Zakat Calculator"} showBack />
 
         <div className="max-w-lg mx-auto p-4 space-y-4">
           {/* Info Card */}

@@ -12,6 +12,7 @@ import { useGlobalQuran } from "@/lib/global-quran";
 import { useToast } from "@/hooks/use-toast";
 import { pickNonRepeatingIndex } from "@/lib/non-repeating-picker";
 import { remedyGamification } from "@/lib/remedy-gamification";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 const storageKeyForMood = (moodId: string) => `dashboard-mood-remedy-${moodId}`;
 
@@ -50,6 +51,7 @@ const viewerTextVariants = {
 };
 
 export default function IslamicRemedies() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [phase, setPhase] = useState<"prompt" | "viewing">("prompt");
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
@@ -227,7 +229,7 @@ export default function IslamicRemedies() {
     <PageTransition>
       <div className="min-h-screen bg-background pb-32">
         <AppBar
-          title="Islamic Wellness"
+          title={t("islamicWellness") || "Islamic Wellness"}
           showBack={true}
           action={
             <button onClick={() => navigate("/remedy-favorites")} className="relative">

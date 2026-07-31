@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslation } from 'react-i18next';
-import i18n from '@/lib/i18n-new';
+import { useLanguage } from '@/contexts/LanguageContext-new';
 
 interface PdfAudioPlayerProps {
   pdfSource: string;
@@ -24,7 +23,7 @@ const PdfAudioPlayer: React.FC<PdfAudioPlayerProps> = ({
   onPageChange,
   onClose
 }) => {
-  const { t } = useTranslation(undefined, { i18n });
+  const { t } = useLanguage();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 

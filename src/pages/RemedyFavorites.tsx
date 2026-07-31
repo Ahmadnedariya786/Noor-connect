@@ -9,8 +9,10 @@ import { useGlobalQuran } from "@/lib/global-quran";
 import { useToast } from "@/hooks/use-toast";
 import { remedyGamification, type FavoriteRemedy } from "@/lib/remedy-gamification";
 import { moods, type Mood } from "@/data/mood-data";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 export default function RemedyFavorites() {
+  const { t } = useLanguage();
   const [favorites, setFavorites] = useState<FavoriteRemedy[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -103,7 +105,7 @@ export default function RemedyFavorites() {
     return (
       <PageTransition>
         <div className="min-h-screen bg-background pb-32">
-          <AppBar title="Favorite Remedies" showBack={true} />
+          <AppBar title={t("favoriteRemedies") || "Favorite Remedies"} showBack={true} />
           
           <div className="px-5 pt-4">
             <Card className="border-dashed border-border/60 bg-background/60 p-8 text-center">
@@ -125,7 +127,7 @@ export default function RemedyFavorites() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background pb-32">
-        <AppBar title="Favorite Remedies" showBack={true} />
+        <AppBar title={t("favoriteRemedies") || "Favorite Remedies"} showBack={true} />
         
         <div className="px-5 pt-4 space-y-4">
           {/* Search and Filter */}

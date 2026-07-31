@@ -11,13 +11,13 @@ import {
   Share2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { PageTransition } from "@/components/PageTransition";
 import { goBackOrFallback } from "@/lib/navigation";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import {
   loadSeerahChapter,
   loadSeerahChapterList,
@@ -39,7 +39,7 @@ type PeriodKey = SeerahChapterSummary["period"];
 export default function SeerahReader() {
   const { chapterId } = useParams<{ chapterId: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [chapter, setChapter] = useState<SeerahChapter | null>(null);
   const [allChapters, setAllChapters] = useState<SeerahChapterSummary[]>([]);
   const [loading, setLoading] = useState(true);

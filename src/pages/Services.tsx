@@ -87,7 +87,7 @@ export default function Services() {
     return (
         <PageTransition>
             <div className="min-h-screen bg-background pb-32 transition-colors duration-300">
-                <AppBar title="Services" showBack={true} />
+                <AppBar title={t("services") || "Services"} showBack={true} />
 
                 {/* Premium Featured Header Card */}
                 <div className="px-5 pt-4 mb-8">

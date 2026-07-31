@@ -10,6 +10,7 @@ import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { 
   Calculator, 
   Users, 
@@ -74,6 +75,7 @@ const CURRENCIES = [
 ];
 
 export default function FitranaCalculator() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isEidAlFitr, isEidAlAdha, islamicInfo, isLoading } = useIslamicCalendar();
@@ -262,7 +264,7 @@ export default function FitranaCalculator() {
     return (
       <PageTransition>
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-32">
-          <AppBar title="Fitrana Calculator" showBack={true} />
+          <AppBar title={t("fitranaCalculator") || "Fitrana Calculator"} showBack={true} />
           
           <div className="max-w-lg mx-auto p-4 sm:p-5">
             <div className="relative overflow-hidden rounded-[24px] p-8 text-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-900/5 min-h-[50vh] flex flex-col items-center justify-center">
@@ -295,7 +297,7 @@ export default function FitranaCalculator() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-32">
-        <AppBar title="Overview" showBack={true} />
+        <AppBar title={t("overview") || "Overview"} showBack={true} />
 
         <div className="max-w-lg mx-auto p-4 sm:p-5 space-y-5">
           {/* Enhanced Info Card */}

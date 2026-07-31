@@ -14,6 +14,7 @@ import { AladhanAPI } from "@/lib/aladhan-api";
 import { IslamicRamadanAPI } from "@/lib/islamic-fasting-api";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { RamadanNotifications } from "@/lib/ramadan-notifications";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 const RAMADAN_STORAGE = 'ramadan-data';
 
@@ -106,6 +107,7 @@ const NextEventCountdownTicker = memo(function NextEventCountdownTicker({
 });
 
 export default function RamadanMode() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [suhoorTime, setSuhoorTime] = useState<string>("");
@@ -501,7 +503,7 @@ export default function RamadanMode() {
   return (
     <LayoutManager>
       <div className="min-h-screen bg-background">
-        <AppBar title="Ramadan Mode" />
+        <AppBar title={t("ramadanMode") || "Ramadan Mode"} />
 
         <div className="max-w-lg mx-auto p-4 space-y-4">
           {/* Header */}

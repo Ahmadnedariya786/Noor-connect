@@ -10,7 +10,6 @@ import {
   Type,
   Share2,
 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { PageTransition } from "@/components/PageTransition";
 import { goBackOrFallback } from "@/lib/navigation";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import {
   loadProphetList,
   loadProphetStory,
@@ -39,7 +39,7 @@ type EraKey = ProphetSummary["era"];
 export default function QisasReader() {
   const { prophetId } = useParams<{ prophetId: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [prophet, setProphet] = useState<ProphetStory | null>(null);
   const [allProphets, setAllProphets] = useState<ProphetSummary[]>([]);
   const [loading, setLoading] = useState(true);

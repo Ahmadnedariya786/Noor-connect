@@ -9,12 +9,18 @@ import { AppBar } from "@/components/AppBar";
 import { LayoutManager } from "@/components/LayoutManager";
 import { useToast } from "@/hooks/use-toast";
 import { goBackOrFallback } from "@/lib/navigation";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { 
   getQazaPrayers, 
   addQazaPrayer, 
   completeQazaPrayer, 
   setQazaCount,
   clearAllQaza,
+  addQazaHistoryEntry,
+  getQazaHistory,
+  getQazaDailyGoal,
+  setQazaDailyGoal,
+  getTodayQazaCompleted,
   type PrayerName 
 } from "@/lib/qaza-tracker";
 
@@ -32,16 +38,14 @@ interface QazaHistory {
   prayer: PrayerName;
 }
 
-const HISTORY_KEY = 'qaza-history';
-const GOAL_KEY = 'qaza-daily-goal';
-
 export default function QazaPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [qazaCounts, setQazaCounts] = useState<Record<PrayerName, number>>(getQazaPrayers());
-  const [dailyGoal, setDailyGoal] = useState(5);
-  const [todayCompleted, setTodayCompleted] = useState(0);
-  const [history, setHistory] = useState<QazaHistory[]>([]);
+  const [dailyGoal, setDailyGoal] = useState(getQazaDailyGoal());
+  const [todayCompleted, setTodayCompleted] = useState(getTodayQazaCompleted());
+  const [history, setHistory] = useState<QazaHistory[]>(getQazaHistory() as QazaHistory[]);
   const [editingPrayer, setEditingPrayer] = useState<PrayerName | null>(null);
   const [editValue, setEditValue] = useState("");
 
@@ -57,21 +61,9 @@ export default function QazaPage() {
 
   const loadQazaData = () => {
     setQazaCounts(getQazaPrayers());
-    // Load goal
-    const savedGoal = localStorage.getItem(GOAL_KEY);
-    if (savedGoal) setDailyGoal(parseInt(savedGoal));
-
-    // Load history
-    const savedHistory = localStorage.getItem(HISTORY_KEY);
-    if (savedHistory) {
-      const parsed = JSON.parse(savedHistory) as QazaHistory[];
-      setHistory(parsed);
-
-      // Calculate today's completed
-      const today = new Date().toDateString();
-      const todayHistory = parsed.filter(h => h.date === today);
-      setTodayCompleted(todayHistory.reduce((sum, h) => sum + h.completed, 0));
-    }
+    setDailyGoal(getQazaDailyGoal());
+    setHistory(getQazaHistory() as QazaHistory[]);
+    setTodayCompleted(getTodayQazaCompleted());
   };
 
   const totalQaza = Object.values(qazaCounts).reduce((a, b) => a + b, 0);
@@ -87,16 +79,10 @@ export default function QazaPage() {
     if (qazaCounts[prayer] <= 0) return;
     
     completeQazaPrayer(prayer, 1);
+    addQazaHistoryEntry(prayer);
     setQazaCounts(getQazaPrayers());
-    
-    // Add to history
-    const today = new Date().toDateString();
-    const newHistory: QazaHistory = { date: today, completed: 1, prayer };
-    const updatedHistory = [...history, newHistory];
-    setHistory(updatedHistory);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
-    
-    setTodayCompleted(prev => prev + 1);
+    setHistory(getQazaHistory() as QazaHistory[]);
+    setTodayCompleted(getTodayQazaCompleted());
     toast({ title: `Completed 1 ${prayer} Qaza`, description: "Keep up the good work!" });
   };
 
@@ -115,7 +101,7 @@ export default function QazaPage() {
 
   const handleGoalChange = (goal: number) => {
     setDailyGoal(goal);
-    localStorage.setItem(GOAL_KEY, goal.toString());
+    setQazaDailyGoal(goal);
   };
 
   const handleReset = () => {
@@ -123,7 +109,6 @@ export default function QazaPage() {
     setQazaCounts(getQazaPrayers());
     setHistory([]);
     setTodayCompleted(0);
-    localStorage.removeItem(HISTORY_KEY);
     toast({ title: "All Qaza reset", description: "Starting fresh" });
   };
 
@@ -139,7 +124,7 @@ export default function QazaPage() {
   return (
     <LayoutManager>
       <div className="min-h-screen bg-background">
-        <AppBar title="Qaza Tracker" />
+        <AppBar title={t("qazaTracker") || "Qada Tracker"} />
       
       <div className="max-w-lg mx-auto p-4 space-y-4">
         {/* Header */}

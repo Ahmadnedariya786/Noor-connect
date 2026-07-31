@@ -15,9 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AppBar } from '@/components/AppBar';
 import { serviceWorkerManager, type NotificationHistoryItem } from '@/lib/service-worker-registration';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { unifiedNotifications } from '@/lib/unified-notifications';
 
 const NotificationHistory = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -173,7 +175,7 @@ const NotificationHistory = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppBar
-        title="Notification History"
+        title={t("notificationHistory") || "Notification History"}
         showBack={true}
       />
 

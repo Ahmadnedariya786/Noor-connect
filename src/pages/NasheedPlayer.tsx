@@ -4,6 +4,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import {
     Search, Play, Pause, Music2, ExternalLink,
     Heart, Clock, Shuffle, ListMusic, ArrowUp, X, CheckCircle2
@@ -25,6 +26,7 @@ const allTracks: NasheedTrack[] = nasheedsData.tracks.map(t => ({
 const uniqueArtists = [...new Set(allTracks.map(t => t.artist))].sort();
 
 export default function NasheedPlayer() {
+    const { t } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<Tab>('all');
     const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
@@ -148,7 +150,7 @@ export default function NasheedPlayer() {
     return (
         <PageTransition>
             <div className="min-h-screen bg-background pb-40">
-                <AppBar title="Islamic Nasheeds" showBack={true} />
+                <AppBar title={t("islamicNasheeds") || "Islamic Nasheeds"} showBack={true} />
 
                 <div className="px-4 pt-4 pb-6 space-y-5">
                     {/* ── Hero Card ────────────────────────────────────────── */}

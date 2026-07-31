@@ -45,9 +45,12 @@ import {
 } from "@/lib/book-collections";
 
 const books = ebooksData as LibraryBook[];
+import { useLanguage } from "@/contexts/LanguageContext-new";
+
 const LOCAL_PREFIX = 'local:';
 
 export default function EbooksModern() {
+  const { t } = useLanguage();
   // State
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -576,7 +579,7 @@ export default function EbooksModern() {
               )}
               
               <BookShelf
-                title="Recommended for You"
+                 title={t("recommendedForYou") || "Recommended for You"}
                 icon={Sparkles}
                 books={recommendedBooks}
                 onBookClick={openBookDetail}
@@ -591,7 +594,7 @@ export default function EbooksModern() {
               />
               
               <BookShelf
-                title="Trending Now"
+                 title={t("trendingNow") || "Trending Now"}
                 icon={TrendingUp}
                 books={trendingBooks}
                 onBookClick={openBookDetail}
@@ -605,7 +608,7 @@ export default function EbooksModern() {
               />
               
               <BookShelf
-                title="New Arrivals"
+                 title={t("newArrivals") || "New Arrivals"}
                 icon={Zap}
                 books={newArrivals}
                 onBookClick={openBookDetail}

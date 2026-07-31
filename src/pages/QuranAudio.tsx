@@ -5,12 +5,14 @@ import { QuranAudioErrorBoundary } from "@/components/QuranAudio/QuranAudioError
 import { Card, CardContent } from "@/components/ui/card";
 import { Headphones, Download, PlayCircle, Settings as SettingsIcon, Sparkles, Volume2, Radio, Mic, Heart, Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 export default function QuranAudio() {
+    const { t } = useLanguage();
     return (
         <PageTransition>
             <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/20 dark:via-teal-950/20 dark:to-cyan-950/20 pb-32">
-                <AppBar title="Quran Audio" showBack={true} />
+                <AppBar title={t("quranAudio") || "Quran Audio"} showBack={true} />
                 
                 <div className="px-5 pt-4 space-y-6">
                     {/* Premium Hero Section */}
