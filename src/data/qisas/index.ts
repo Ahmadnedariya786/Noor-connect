@@ -28,7 +28,7 @@ async function fetchQisasJson<T>(url: string): Promise<T | null> {
 
 // ─── Caches ─────────────────────────────────────────────────────────
 let qisasBookCache: QisasBook | null = null;
-let prophetCache = new Map<string, ProphetStory>();
+const prophetCache = new Map<string, ProphetStory>();
 
 // ─── Public API ─────────────────────────────────────────────────────
 

@@ -52,7 +52,7 @@ function runCSSBenchmark(): Promise<{ fps: number; jankScore: number }> {
     
     const frames: number[] = [];
     let last = performance.now();
-    let cancelled = false;
+    const cancelled = false;
     
     const tick = (now: number) => {
       if (cancelled) return;
@@ -93,7 +93,7 @@ function runCanvasBenchmark(): Promise<{ fps: number; jankScore: number }> {
     
     const frames: number[] = [];
     let last = performance.now();
-    let cancelled = false;
+    const cancelled = false;
     
     const tick = (now: number) => {
       if (cancelled) return;
@@ -202,7 +202,7 @@ function runWebGLBenchmark(): Promise<{ fps: number; jankScore: number }> {
     
     const frames: number[] = [];
     let last = performance.now();
-    let cancelled = false;
+    const cancelled = false;
     
     const tick = (now: number) => {
       if (cancelled) return;

@@ -28,7 +28,7 @@ async function fetchSeerahJson<T>(url: string): Promise<T | null> {
 
 // ─── Caches ─────────────────────────────────────────────────────────
 let seerahBookCache: SeerahBook | null = null;
-let chapterCache = new Map<string, SeerahChapter>();
+const chapterCache = new Map<string, SeerahChapter>();
 
 // ─── Public API ─────────────────────────────────────────────────────
 
