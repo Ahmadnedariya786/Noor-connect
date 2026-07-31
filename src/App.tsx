@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,14 +26,6 @@ import { useAutoBackup } from "@/hooks/useAutoBackup";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
 import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
-
-// ─── Early bootstrap: apply tiered visual overrides before first paint ──────
-// getAnimationTier() returns a cached/heuristic tier synchronously and kicks
-// off the async FPS benchmark in the background (see device-performance.ts).
-// Calling applyTieredVisualOverrides here ensures CSS classes like
-// html.reduce-blur and data-animation-tier are present on the very first render
-// frame — preventing a flash of unreduced-blur on low/minimal-tier devices.
-applyTieredVisualOverrides(getAnimationTier());
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -156,26 +148,26 @@ const HaidhTracker = lazy(() => import("./pages/HaidhTracker"));
 const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
 
-// Apply initial animation state from localStorage (will be updated by SettingsContext when it loads)
-// Check for low-end device and disable animations if no user preference is set
-const storedAnimationPreference = localStorage.getItem("animations_enabled");
-const isLowEndDeviceCheck = isLowEndDevice();
-let isAnimationDisabled: boolean;
+function AnimationInitializer() {
+  useEffect(() => {
+    const storedAnimationPreference = localStorage.getItem("animations_enabled");
+    const isLowEndDeviceCheck = isLowEndDevice();
+    let isAnimationDisabled: boolean;
 
-if (storedAnimationPreference === null) {
-  // No user preference set - use device detection
-  isAnimationDisabled = isLowEndDeviceCheck;
-  // Store the initial preference so it persists
-  localStorage.setItem("animations_enabled", isAnimationDisabled.toString());
-} else {
-  // User has set a preference - respect it
-  isAnimationDisabled = storedAnimationPreference === "false";
-}
+    if (storedAnimationPreference === null) {
+      isAnimationDisabled = isLowEndDeviceCheck;
+      localStorage.setItem("animations_enabled", isAnimationDisabled.toString());
+    } else {
+      isAnimationDisabled = storedAnimationPreference === "false";
+    }
 
-if (isAnimationDisabled) {
-  document.documentElement.classList.add("no-animations");
+    if (isAnimationDisabled) {
+      document.documentElement.classList.add("no-animations");
+    }
+    document.documentElement.dataset.animations = isAnimationDisabled ? "off" : "on";
+  }, []);
+  return null;
 }
-document.documentElement.dataset.animations = isAnimationDisabled ? "off" : "on";
 
 function AppRoutes() {
   const location = useLocation();
@@ -313,6 +305,38 @@ function AppShell() {
   // Push Quran-progress + tasbeeh state to native widgets when they change
   useWidgetSync();
   
+  // Initialize animation preference (deferred from module scope)
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      const storedAnimationPreference = localStorage.getItem("animations_enabled");
+      const isLowEndDeviceCheck = isLowEndDevice();
+      let isAnimationDisabled: boolean;
+
+      if (storedAnimationPreference === null) {
+        isAnimationDisabled = isLowEndDeviceCheck;
+        localStorage.setItem("animations_enabled", isAnimationDisabled.toString());
+      } else {
+        isAnimationDisabled = storedAnimationPreference === "false";
+      }
+
+      if (isAnimationDisabled) {
+        document.documentElement.classList.add("no-animations");
+      }
+      document.documentElement.dataset.animations = isAnimationDisabled ? "off" : "on";
+    }
+  }, []);
+
+  // Apply tiered visual overrides (deferred from module scope)
+  const tierInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!tierInitializedRef.current) {
+      tierInitializedRef.current = true;
+      applyTieredVisualOverrides(getAnimationTier());
+    }
+  }, []);
+
   useEffect(() => {
     // If splash is disabled, hide it immediately
     if (!splashEnabled) {

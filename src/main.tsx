@@ -9,12 +9,6 @@ import './lib/i18n-new'; // Initialize new offline-first i18n
 void localNotifications.initialize();
 
 import { LanguageProvider } from "@/contexts/LanguageContext-new";
-import { isLowEndDevice } from "@/lib/performance-optimizations";
-
-// Immediately apply hardware degradation class for low-end devices
-if (isLowEndDevice()) {
-  document.documentElement.classList.add("low-end-device");
-}
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
@@ -27,6 +21,12 @@ if (rootElement) {
   );
 } else {
   console.error("Root element not found");
+}
+
+// Defer low-end device detection until after React root is created
+import { isLowEndDevice } from "@/lib/performance-optimizations";
+if (isLowEndDevice()) {
+  document.documentElement.classList.add("low-end-device");
 }
 
 // Service worker is handled automatically by vite-plugin-pwa (injectRegister: 'auto')

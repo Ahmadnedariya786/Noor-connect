@@ -39,14 +39,6 @@ import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { globalTimerManager } from "@/lib/timer-manager";
 
-const prayerIcons: Record<string, React.ReactNode> = {
-  Fajr: <Moon className="w-5 h-5 text-indigo-400" />,
-  Dhuhr: <Sun className="w-5 h-5 text-amber-400" />,
-  Asr: <Cloud className="w-5 h-5 text-blue-400" />,
-  Maghrib: <Sunset className="w-5 h-5 text-orange-400" />,
-  Isha: <CloudMoon className="w-5 h-5 text-purple-400" />,
-};
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -66,6 +58,15 @@ export default function Dashboard() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [targetTime, setTargetTime] = useState<Date | null>(null);
   const { toast } = useToast();
+
+  // Memoized prayer icons
+  const prayerIcons = useMemo((): Record<string, React.ReactNode> => ({
+    Fajr: <Moon className="w-5 h-5 text-indigo-400" />,
+    Dhuhr: <Sun className="w-5 h-5 text-amber-400" />,
+    Asr: <Cloud className="w-5 h-5 text-blue-400" />,
+    Maghrib: <Sunset className="w-5 h-5 text-orange-400" />,
+    Isha: <CloudMoon className="w-5 h-5 text-purple-400" />,
+  }), []);
 
   // Global location state
   const location = useLocationState();
@@ -430,17 +431,14 @@ export default function Dashboard() {
   }, []);
 
 
-
-  // Countdown is handled internally in PremiumDashboard's LiveCountdown component to avoid parent renders
-
-
-  const prayerIcons: Record<string, React.ReactNode> = {
-    Fajr: <Moon className="w-5 h-5" />,
-    Dhuhr: <Sun className="w-5 h-5" />,
-    Asr: <Cloud className="w-5 h-5" />,
-    Maghrib: <Sunset className="w-5 h-5" />,
-    Isha: <CloudMoon className="w-5 h-5" />,
-  };
+  // Stable minute tick ref for nextPrayerInfo to avoid depending on currentTime directly
+  const minuteTickRef = useRef(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      minuteTickRef.current = (minuteTickRef.current + 1) % 60;
+    }, 60000);
+    return () => clearInterval(id);
+  }, []);
 
 const handleCheckIn = useCallback((pKey: PrayerName) => {
     const resolvedTimes = resolvePrayerTimes();
@@ -494,23 +492,32 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
     };
     const start = prevDate.getTime();
     const end = targetTime.getTime();
-    const now = currentTime.getTime();
+    // Use minuteTickRef to trigger recalculation without depending on currentTime directly
+    void minuteTickRef.current;
+    const now = Date.now();
     if (end <= start) return {
       name: nextPrayerName || "Loading...",
       time: nextPrayerTime || "--:--",
       targetTime: targetTime,
       progress: 0,
     };
-    const progress = Math.min(100, Math.max(0, ((currentTime.getTime() - start) / (end - start)) * 100));
+    const progress = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
     return {
       name: nextPrayerName || "Loading...",
       time: nextPrayerTime || "--:--",
       targetTime: targetTime,
       progress,
     };
-  }, [prayers, nextPrayerName, nextPrayerTime, targetTime, currentTime]);
+}, [prayers, nextPrayerName, nextPrayerTime, targetTime]);
 
-  return (
+  // Stable callbacks for PremiumDashboard props
+  const onServiceClick = useCallback((route: string) => navigate(route), [navigate]);
+  const onVerseClick = useCallback(() => navigate('/quran'), [navigate]);
+  const onHadithClick = useCallback(() => navigate('/hadith/collections'), [navigate]);
+  const onNotificationClick = useCallback(() => navigate('/notification-history'), [navigate]);
+  const onLocationClick = useCallback(() => setShowManualLocationDialog(true), [setShowManualLocationDialog]);
+
+return (
     <PageTransition>
       <PremiumDashboard
         currentTime={currentTime}
@@ -518,11 +525,11 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
         nextPrayer={nextPrayerInfo}
         prayers={dashboardPrayers}
         locationLabel={locationLabel}
-        onServiceClick={(route) => navigate(route)}
-        onVerseClick={() => navigate('/quran')}
-        onHadithClick={() => navigate('/hadith/collections')}
-        onNotificationClick={() => navigate('/notification-history')}
-        onLocationClick={() => setShowManualLocationDialog(true)}
+        onServiceClick={onServiceClick}
+        onVerseClick={onVerseClick}
+        onHadithClick={onHadithClick}
+        onNotificationClick={onNotificationClick}
+        onLocationClick={onLocationClick}
         showManualLocationDialog={showManualLocationDialog}
         setShowManualLocationDialog={setShowManualLocationDialog}
         LocationSearch={LocationSearch}
