@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.2.0] - 2026-08-01
+
+### Prayer Times Refactor, Mushaf Viewer Rewrite & Lint Fixes
+
+#### ✨ New Features
+- **Major usePrayerTimes Hook Refactor**: Simplified logic, improved caching with signature-based deduping, fallback location handling (geolocation → IP → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook.
+- **Mushaf Viewer Complete Rewrite**: Pinch-to-zoom via CSS transforms, pan gestures, auto-hide nav (3s), surround page prefetching, surah index sheet, bookmark/resume, loading skeleton, dark/light theme aware — all without external libraries.
+- **GlobalPrayerAlarm Optimization**: Added localStorage caching to skip redundant geolocation/API calls when today's prayer times already cached; abort controller for clean fetch cancellation.
+- **New Equalizer Component**: Animated audio visualizer for Nasheed Player with configurable bars, colors, heights, and animation timing.
+- **Added react-window & @types/react-window** dependencies for virtualized list support in future components.
+
+#### ⚡ Improvements
+- **Prayer Times Hook**: Race condition fixes (removed stale ref checks), `parseTime` now throws on invalid input instead of returning current time, redundant `getMadhab()` calls removed.
+- **GlobalPrayerAlarm**: Module-level side effects moved to `useEffect` with `initializedRef`; event listener type safety fixed (removed `as any` casts); missing cleanup listeners added.
+- **Settings.tsx**: Fixed empty catch block (eslint error) with proper comment.
+
+#### 🐛 Bug Fixes
+- **Resolved 12 lint errors** across codebase: 5 empty catch blocks (added non-critical comments), 1 `require()`→`import` conversion, 4 `@ts-ignore`→`@ts-expect-error` with descriptions, 1 parsing error (extra closing braces in `device-performance.ts`).
+- **Prayer Notifications**: `usePrayerNotifications` hook now shares signature ref with caller to force re-schedule on method/madhab changes; 1s throttle prevents rapid scheduling.
+
+---
+
 ## [2.2.0] - 2026-07-31
 
 ### Backup UI, Prayer Tracking Fixes & Cache Warning
