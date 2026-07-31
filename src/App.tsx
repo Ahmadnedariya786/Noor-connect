@@ -20,8 +20,8 @@ import i18n from "@/lib/i18n-new";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
-import { BackupRestoreDialog } from "@/components/BackupRestoreDialog";
 import { AutoBackupRestoreDialog } from "@/components/AutoBackupRestoreDialog";
+import { initBackupService } from "@/lib/backup-service";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
 import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
@@ -279,7 +279,6 @@ function AppContent() {
                 <PWAInstallPrompt />
                 <EidChecklistNotification />
                 <FitranaCalculatorNotification />
-                <BackupRestoreDialog />
                 <AutoBackupRestoreDialog />
               </Suspense>
             </div>
@@ -344,6 +343,9 @@ function AppShell() {
 
   useEffect(() => {
     notificationManager.start();
+
+    // Unified backup service: legacy migration + app-pause snapshots
+    initBackupService();
     
     // Safety clear for Ramadan notifications if it's not Ramadan
     import('@/lib/islamic-calendar-service').then(async ({ islamicCalendarService }) => {

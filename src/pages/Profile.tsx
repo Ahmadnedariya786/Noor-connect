@@ -17,7 +17,7 @@ import { CustomAdhanUpload } from "@/components/CustomAdhanUpload";
 import { getCalculationMethod, setCalculationMethod, type CalculationMethodName } from "@/lib/prayer-calculator";
 import { AladhanAPI } from "@/lib/aladhan-api";
 import { getStorageStats, clearAllBooks, formatFileSize, downloadBook, isBookDownloaded } from "@/lib/ebooks-storage";
-import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize, getLastAutoBackupTime } from "@/lib/backup";
+import { downloadBackup, importBackup, clearCache, getQuranFontSize, setQuranFontSize, getLastAutoBackupTime, listSnapshots, restoreFromSnapshot, type SnapshotInfo } from "@/lib/backup";
 import { notificationManager, type NotificationPreferences } from "@/lib/notification-manager";
 import { localNotifications } from "@/lib/local-notifications";
 import { PrayerMethodSelector } from "@/components/PrayerMethodSelector";
@@ -74,6 +74,8 @@ const Profile = () => {
   const [quranFont, setQuranFontState] = useState<QuranFont>("uthmani");
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
   const [lastAutoBackupTime, setLastAutoBackupTime] = useState<string | null>(null);
+  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
+  const [restoringSnapshot, setRestoringSnapshot] = useState<string | null>(null);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     ramadanCountdowns: true,
     eidGreetings: true,
@@ -125,9 +127,15 @@ const Profile = () => {
   const updateBackupTime = useCallback(async () => {
     const time = await getLastAutoBackupTime();
     setLastAutoBackupTime(time);
+    const snaps = await listSnapshots();
+    setSnapshots(snaps);
   }, []);
 
   const { enable: enableAutoBackup, disable: disableAutoBackup } = useAutoBackup(updateBackupTime);
+
+  useEffect(() => {
+    updateBackupTime();
+  }, [updateBackupTime]);
 
   useEffect(() => {
     if (autoBackupOn) {
@@ -538,12 +546,29 @@ const Profile = () => {
     });
 
     try {
-      await downloadBackup();
-      update({
-        id: toastId,
-        title: "✅ Backup Complete",
-        description: "Your backup has been downloaded successfully.",
-      });
+      const result = await downloadBackup();
+      if (!result.success) {
+        update({
+          id: toastId,
+          title: "❌ Backup Failed",
+          description: result.error || "Failed to create backup. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (result.data?.platform === 'native') {
+        update({
+          id: toastId,
+          title: "✅ Backup File Ready",
+          description: "Choose where to save it (Downloads, Drive, Files) — keep it somewhere safe.",
+        });
+      } else {
+        update({
+          id: toastId,
+          title: "✅ Backup Downloaded",
+          description: "Your backup file was downloaded to your device.",
+        });
+      }
     } catch (error) {
       update({
         id: toastId,
@@ -566,25 +591,36 @@ const Profile = () => {
     try {
       const result = await importBackup(file);
 
-      if (!result.success) {
+      if (!result.success || !result.data) {
         update({
           id: toastId,
           title: "❌ Restore Failed",
-          description: result.message,
+          description: result.error || "Failed to restore backup. Please check the file and try again.",
           variant: "destructive"
         });
         return;
       }
 
-      if (result.booksToDownload && result.booksToDownload.length > 0) {
+      const summary = result.data;
+
+      if (summary.warning) {
+        update({
+          id: toastId,
+          title: "⚠️ Older Backup",
+          description: `${summary.warning} Restoring it now...`,
+          variant: "destructive"
+        });
+      }
+
+      if (summary.booksToDownload && summary.booksToDownload.length > 0) {
         update({
           id: toastId,
           title: "📚 Downloading Library...",
-          description: `Restoring ${result.booksToDownload.length} books. This may take a few minutes.`,
+          description: `Restoring ${summary.booksToDownload.length} books. This may take a few minutes.`,
         });
 
         let downloadedCount = 0;
-        for (const book of result.booksToDownload) {
+        for (const book of summary.booksToDownload) {
           try {
             const isDownloaded = await isBookDownloaded(book.url);
             if (!isDownloaded) {
@@ -592,12 +628,11 @@ const Profile = () => {
             }
             downloadedCount++;
 
-            // Update progress every few books
-            if (downloadedCount % Math.max(1, Math.floor(result.booksToDownload.length / 5)) === 0) {
+            if (downloadedCount % Math.max(1, Math.floor(summary.booksToDownload.length / 5)) === 0) {
               update({
                 id: toastId,
                 title: "📚 Downloading Library...",
-                description: `Progress: ${downloadedCount}/${result.booksToDownload.length} books restored.`,
+                description: `Progress: ${downloadedCount}/${summary.booksToDownload.length} books restored.`,
               });
             }
           } catch (err) {
@@ -608,7 +643,14 @@ const Profile = () => {
         update({
           id: toastId,
           title: "✅ Restore Complete",
-          description: `Successfully restored ${downloadedCount}/${result.booksToDownload.length} books. App will refresh in 2 seconds.`,
+          description: `Successfully restored ${downloadedCount}/${summary.booksToDownload.length} books. App will refresh in 2 seconds.`,
+        });
+      } else if (summary.failedKeys > 0) {
+        update({
+          id: toastId,
+          title: "⚠️ Restored with some issues",
+          description: `Most of your data was restored, but ${summary.failedKeys} item(s) could not be restored. App will refresh in 2 seconds.`,
+          variant: "destructive"
         });
       } else {
         update({
@@ -618,7 +660,6 @@ const Profile = () => {
         });
       }
 
-      // Delayed reload for better UX
       setTimeout(() => window.location.reload(), 2000);
     } catch (error) {
       update({
@@ -627,6 +668,33 @@ const Profile = () => {
         description: "Failed to restore backup. Please check file and try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleSnapshotRestore = async (timestamp: string) => {
+    setRestoringSnapshot(timestamp);
+    try {
+      const result = await restoreFromSnapshot(timestamp);
+      if (result.success && result.data) {
+        if (result.data.failedKeys > 0) {
+          toast({
+            title: "⚠️ Restored with some issues",
+            description: `Most of your data was restored, but ${result.data.failedKeys} item(s) could not be restored.`,
+            variant: "destructive"
+          });
+        } else {
+          toast({ title: "✅ Restore Complete", description: "Your data has been restored. App will refresh in 2 seconds." });
+        }
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        toast({
+          title: "❌ Restore Failed",
+          description: result.error || "This backup could not be restored.",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setRestoringSnapshot(null);
     }
   };
 
@@ -1157,6 +1225,31 @@ const Profile = () => {
                 </div>
               </div>
             )}
+
+            {snapshots.length > 0 && (
+              <div className="p-3 bg-muted/30 rounded-2xl space-y-2">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  {t('savedCopies') || 'Saved copies'}
+                </p>
+                {snapshots.map((snap) => (
+                  <div key={snap.key} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="text-foreground/80">
+                      {new Date(snap.timestamp).toLocaleDateString()}{' '}
+                      {new Date(snap.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-[11px]"
+                      disabled={restoringSnapshot !== null}
+                      onClick={() => handleSnapshotRestore(snap.timestamp)}
+                    >
+                      {restoringSnapshot === snap.timestamp ? 'Restoring...' : t('restore')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
 
@@ -1518,14 +1611,6 @@ const Profile = () => {
             >
               <HandHeart className="w-4 h-4 ms-2" />
               {t('makeDua')}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-[#5865F2] hover:text-[#5865F2] hover:bg-[#5865F2]/10 border-[#5865F2]/20"
-              onClick={() => window.open('https://discord.gg/DNChmZWk5k', '_blank')}
-            >
-              <MessageCircle className="w-4 h-4 ms-2" />
-              {t('joinDiscord')}
             </Button>
           </div>
         </Card>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { autoBackup as doAutoBackup } from '@/lib/backup';
+import { autoBackup } from '@/lib/backup-service';
 
 const ACTIVITY_TIMEOUT = 20 * 60 * 1000;
 
@@ -11,7 +11,7 @@ export function useAutoBackup(onBackup?: () => void) {
 
   const runBackup = useCallback(async () => {
     try {
-      await doAutoBackup();
+      await autoBackup();
       onBackupRef.current?.();
     } catch (error) {
       // Silent fail

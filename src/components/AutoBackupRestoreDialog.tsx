@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,91 +8,109 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { hasAutoBackup, getLastAutoBackupTime, restoreFromAutoBackup, clearAutoBackup } from '@/lib/backup';
+import {
+  checkForRestoreOpportunity,
+  restoreFromAutoBackup,
+  clearAutoBackup,
+  type RestoreOpportunity,
+} from '@/lib/backup-service';
 
-const PROMPTED_KEY = 'auto-backup-prompted';
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
 
 export function AutoBackupRestoreDialog() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [lastTime, setLastTime] = useState<string | null>(null);
+  const [opportunity, setOpportunity] = useState<RestoreOpportunity | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem(PROMPTED_KEY)) return;
-
-    async function checkBackup() {
-      if (!(await hasAutoBackup())) return;
-      const time = await getLastAutoBackupTime();
-      setLastTime(time);
-      setIsOpen(true);
-    }
-    
-    checkBackup();
+    let cancelled = false;
+    checkForRestoreOpportunity().then(opp => {
+      if (!cancelled && opp) setOpportunity(opp);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleRestore = async () => {
     setIsRestoring(true);
     try {
       const result = await restoreFromAutoBackup();
-      if (result.success) {
-        setIsOpen(false);
-        localStorage.setItem(PROMPTED_KEY, 'true');
+      if (result.success && result.data) {
+        if (result.data.failedKeys > 0) {
+          console.warn('Backup restore partially failed', result.data);
+        }
+        setOpportunity(null);
         window.location.reload();
+      } else {
+        console.error('Restore failed:', result.error);
       }
-    } catch {
-      // silent
+    } catch (error) {
+      console.error('Restore error:', error);
     } finally {
       setIsRestoring(false);
     }
   };
 
   const handleSkip = () => {
-    localStorage.setItem(PROMPTED_KEY, 'true');
-    setIsOpen(false);
+    setOpportunity(null);
   };
 
   const handleDelete = async () => {
-    await clearAutoBackup();
-    localStorage.setItem(PROMPTED_KEY, 'true');
-    setIsOpen(false);
+    setIsDeleting(true);
+    try {
+      await clearAutoBackup();
+    } finally {
+      setIsDeleting(false);
+      setOpportunity(null);
+    }
   };
 
+  const isBusy = isRestoring || isDeleting;
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleSkip}>
+    <Dialog open={opportunity !== null} onOpenChange={handleSkip}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Previous Backup Found</DialogTitle>
+          <DialogTitle>Welcome back! Your data is here</DialogTitle>
           <DialogDescription>
-            We found an auto-backup saved on this device. Would you like to restore your data?
+            Noor Connect found your previous data on this device. Would you like to restore it?
+            Everything will come back — prayer records, bookmarks, and settings.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Last Backup:</span>
-              <span className="font-medium">
-                {lastTime
-                  ? new Date(lastTime).toLocaleDateString() + ' ' + new Date(lastTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : 'Unknown'}
-              </span>
+        {opportunity && (
+          <div className="py-4 space-y-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Last saved:</span>
+                <span className="font-medium">{formatTime(opportunity.snapshot.timestamp)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Saved copies:</span>
+                <span className="font-medium">{opportunity.snapshotCount}</span>
+              </div>
             </div>
-          </div>
 
-          <p className="text-sm text-muted-foreground">
-            Restoring will recover your prayer settings, bookmarks, qaza records, and other personal data. This backup was created automatically during your previous use.
-          </p>
-        </div>
+            <p className="text-sm text-muted-foreground">
+              Your data is saved on this device automatically. If you skip this now, you can
+              restore it later from the Settings page.
+            </p>
+          </div>
+        )}
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={handleSkip} disabled={isRestoring}>
+          <Button variant="outline" onClick={handleSkip} disabled={isBusy}>
             Skip
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={isRestoring}>
-            Delete & Start Fresh
+          <Button variant="destructive" onClick={handleDelete} disabled={isBusy}>
+            {isDeleting ? 'Deleting...' : 'Delete & Start Fresh'}
           </Button>
-          <Button onClick={handleRestore} disabled={isRestoring}>
-            {isRestoring ? 'Restoring...' : 'Restore Backup'}
+          <Button onClick={handleRestore} disabled={isBusy}>
+            {isRestoring ? 'Restoring...' : 'Restore My Data'}
           </Button>
         </DialogFooter>
       </DialogContent>

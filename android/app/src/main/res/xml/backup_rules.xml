@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <include domain="sharedpref" path="NoorConnectWidgetPrefs.xml"/>
-    <include domain="sharedpref" path="WidgetConfigPrefs.xml"/>
+    <!-- All app data lives in WebView storage (app_webview/) + Capacitor
+         Preferences (CapacitorStorage.xml) + widget SharedPreferences.
+         Large regenerable caches (IndexedDB audio/PDFs, Service Worker
+         caches, cache dir) are excluded to stay under the 25 MB cloud
+         backup limit. -->
+    <include domain="sharedpref" path="." />
+    <include domain="database" path="." />
+    <include domain="file" path="." />
+    <include domain="root" path="app_webview/Default/Local Storage/" />
+    <exclude domain="root" path="app_webview/Default/IndexedDB/" />
+    <exclude domain="root" path="app_webview/Default/Service Worker/" />
+    <exclude domain="root" path="app_webview/Default/Cache/" />
+    <exclude domain="cache" path="." />
 </full-backup-content>
