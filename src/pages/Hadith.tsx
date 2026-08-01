@@ -39,13 +39,6 @@ const { t } = useLanguage();
       setHadithDataList(module.default);
     });
   }, []);
-    const [hadithDataList, setHadithDataList] = useState<HadithItem[] | null>(null);
-
-    useEffect(() => {
-        import('@/data/hadith.json').then(module => {
-            setHadithDataList(module.default);
-        });
-    }, []);
 
   const fetchHadith = useCallback(async (isRefresh = false) => {
     const today = new Date().toISOString().slice(0, 10);
