@@ -51,7 +51,7 @@ function applyLanguageSideEffects(lang: LanguageCode) {
   // 4. Apply a local Urdu-friendly font stack via CSS variable
   // Using setProperty to set a CSS custom property is preferred over direct style.fontFamily
   if (lang === 'ur') {
-    root.setProperty('--lang-font-family', "'Urdu Typesetting', 'Noto Nastaliq Urdu', 'Noto Sans Arabic', Tahoma, sans-serif");
+    root.setProperty('--lang-font-family', "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif");
   } else {
     root.setProperty('--lang-font-family', 'var(--font-sans)'); // Reset to default
   }

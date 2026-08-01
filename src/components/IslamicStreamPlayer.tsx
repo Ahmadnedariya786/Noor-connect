@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
+import { Capacitor } from '@capacitor/core';
 import {
   Maximize,
   Minimize,
@@ -49,10 +50,18 @@ export default function IslamicStreamPlayer() {
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const playStartRef = useRef<number>(0);
-  const streamUrlsRef = useRef<Record<StreamLocation, string | null>>({
-    makkah: FALLBACK_STREAMS.makkah?.url || null,
-    madinah: FALLBACK_STREAMS.madinah?.url || null,
+  const isNative = Capacitor.isNativePlatform();
+  const streamUrlsRef = useRef<Record<StreamLocation, { primary: string; fallback: string | null }>>({
+    makkah: {
+      primary: isNative ? FALLBACK_STREAMS.makkah?.nativeUrl || '' : FALLBACK_STREAMS.makkah?.webUrl || '',
+      fallback: isNative ? FALLBACK_STREAMS.makkah?.webUrl || null : null,
+    },
+    madinah: {
+      primary: isNative ? FALLBACK_STREAMS.madinah?.nativeUrl || '' : FALLBACK_STREAMS.madinah?.webUrl || '',
+      fallback: isNative ? FALLBACK_STREAMS.madinah?.webUrl || null : null,
+    },
   });
+  const fallbackTriedRef = useRef<Record<StreamLocation, boolean>>({ makkah: false, madinah: false });
   const activeTabRef = useRef<StreamLocation>('makkah');
 
   const [activeTab, setActiveTab] = useState<StreamLocation>('makkah');
@@ -67,16 +76,16 @@ export default function IslamicStreamPlayer() {
   const [currentLevel, setCurrentLevel] = useState<number>(-1); // -1 is auto
   const [showQualityMenu, setShowQualityMenu] = useState(false);
 
-  const [streams, setStreams] = useState<Record<StreamLocation, StreamState>>({
+  const [streams, setStreams] = useState<Record<StreamLocation, StreamState>>(() => ({
     makkah: {
-      channel: FALLBACK_STREAMS.makkah,
+      channel: { name: FALLBACK_STREAMS.makkah?.name || 'Al-Quran Al-Kareem (Makkah)', url: streamUrlsRef.current.makkah.primary },
       isLoading: true, error: null, isPlaying: false, isBuffering: false,
     },
     madinah: {
-      channel: FALLBACK_STREAMS.madinah,
+      channel: { name: FALLBACK_STREAMS.madinah?.name || 'As-Sunnah (Madinah)', url: streamUrlsRef.current.madinah.primary },
       isLoading: true, error: null, isPlaying: false, isBuffering: false,
     },
-  });
+  }));
 
   const current = streams[activeTab];
   const meta = LOCATION_META[activeTab];
@@ -125,7 +134,8 @@ export default function IslamicStreamPlayer() {
     retryCountRef.current[tab] = attempt + 1;
     retryTimerRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
-      const url = streamUrlsRef.current[tab];
+      const urls = streamUrlsRef.current[tab];
+      const url = fallbackTriedRef.current[tab] && urls.fallback ? urls.fallback : urls.primary;
       if (url) initHLS(url, tab);
     }, delay);
   }, []);
@@ -206,22 +216,14 @@ export default function IslamicStreamPlayer() {
               hls.swapAudioCodec();
               hls.recoverMediaError();
             } else {
-              setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Stream interrupted due to weak connection.', isLoading: false, isBuffering: false } }));
-              destroyHLS();
-              scheduleRetry(tab);
+              fallbackOrError(tab);
             }
             break;
           case Hls.ErrorTypes.NETWORK_ERROR:
-            flushListenTime();
-            setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Network error — check your connection.', isLoading: false, isBuffering: false } }));
-            destroyHLS();
-            scheduleRetry(tab);
+            fallbackOrError(tab);
             break;
           default:
-            flushListenTime();
-            setStreams(prev => ({ ...prev, [tab]: { ...prev[tab], error: 'Stream unavailable. Try again shortly.', isLoading: false, isBuffering: false } }));
-            destroyHLS();
-            scheduleRetry(tab);
+            fallbackOrError(tab);
             break;
         }
       });
@@ -253,11 +255,31 @@ export default function IslamicStreamPlayer() {
     }
   }, [destroyHLS, scheduleRetry, lowEnd]);
 
+  /* ─── On fatal error: try fallback once, then friendly error + Retry ─── */
+  const fallbackOrError = useCallback((tab: StreamLocation) => {
+    const urls = streamUrlsRef.current[tab];
+    if (urls?.fallback && !fallbackTriedRef.current[tab]) {
+      fallbackTriedRef.current[tab] = true;
+      retryCountRef.current[tab] = 0;
+      console.warn(`[IslamicStreamPlayer] ${tab} primary failed, switching to fallback stream...`);
+      initHLS(urls.fallback, tab);
+    } else {
+      flushListenTime();
+      setStreams(prev => ({
+        ...prev,
+        [tab]: { ...prev[tab], error: 'Stream temporarily unavailable. Please try again later.', isLoading: false, isBuffering: false, isPlaying: false },
+      }));
+      destroyHLS();
+      scheduleRetry(tab);
+    }
+  }, [initHLS, destroyHLS, scheduleRetry, flushListenTime]);
+
   /* ─── Online/Offline Monitor ─── */
   useEffect(() => {
     const goOnline = () => {
       setIsOnline(true);
-      const url = streamUrlsRef.current[activeTabRef.current];
+      const urls = streamUrlsRef.current[activeTabRef.current];
+      const url = fallbackTriedRef.current[activeTabRef.current] && urls.fallback ? urls.fallback : urls.primary;
       if (url && streams[activeTabRef.current]?.error) initHLS(url, activeTabRef.current);
     };
     const goOffline = () => setIsOnline(false);
@@ -279,19 +301,9 @@ export default function IslamicStreamPlayer() {
     };
   }, [flushListenTime]);
 
-  /* ─── Fetch remote playlist once ─── */
+  /* ─── Initialize stream URLs once ─── */
   useEffect(() => {
-    const makkah = FALLBACK_STREAMS.makkah;
-    const madinah = FALLBACK_STREAMS.madinah;
-    streamUrlsRef.current = {
-      makkah: makkah?.url || null,
-      madinah: madinah?.url || null,
-    };
-    setStreams(prev => ({
-      makkah: { ...prev.makkah, channel: makkah, isLoading: false },
-      madinah: { ...prev.madinah, channel: madinah, isLoading: false },
-    }));
-    const url = streamUrlsRef.current[activeTabRef.current];
+    const url = streamUrlsRef.current[activeTabRef.current].primary;
     if (url) initHLS(url, activeTabRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -299,7 +311,8 @@ export default function IslamicStreamPlayer() {
   /* ─── Switch tab → init new stream ─── */
   useEffect(() => {
     activeTabRef.current = activeTab;
-    const url = streamUrlsRef.current[activeTab];
+    fallbackTriedRef.current[activeTab] = false;
+    const url = streamUrlsRef.current[activeTab].primary;
     if (url) initHLS(url, activeTab);
     return () => { destroyHLS(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -318,8 +331,10 @@ export default function IslamicStreamPlayer() {
 
   /* ─── Controls ─── */
   const handleRetry = useCallback(() => {
-    const url = streamUrlsRef.current[activeTab];
+    const url = streamUrlsRef.current[activeTab].primary;
     if (url) {
+      fallbackTriedRef.current[activeTab] = false;
+      retryCountRef.current[activeTab] = 0;
       setStreams(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], error: null, isLoading: true } }));
       initHLS(url, activeTab);
     }
@@ -547,7 +562,7 @@ export default function IslamicStreamPlayer() {
 
               {/* Right: Quality + Fullscreen */}
               <div className="flex items-center gap-3">
-                {levels.length > 0 && (
+                {levels.length > 1 && (
                   <div className="relative">
                     {showQualityMenu && (
                       <div className="absolute bottom-full right-0 mb-2 w-32 bg-black/90 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden flex flex-col z-50 py-1 shadow-2xl">

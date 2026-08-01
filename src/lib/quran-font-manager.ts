@@ -18,13 +18,13 @@ export const QURAN_FONTS: Record<QuranFont, QuranFontOption> = {
     id: 'uthmani',
     name: 'Uthmani',
     description: 'Standard Madinah/Mushaf look',
-    fontFamily: "'Noto Naskh Arabic', 'Scheherazade New', 'Traditional Arabic', serif"
+    fontFamily: "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif"
   },
   indopak: {
     id: 'indopak',
     name: 'Indo-Pak',
     description: 'Common in Pakistan/India',
-    fontFamily: "'Urdu Typesetting', 'Lateef', 'Noto Nastaliq Urdu', 'Noto Sans Arabic', serif"
+    fontFamily: "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif"
   },
   system: {
     id: 'system',

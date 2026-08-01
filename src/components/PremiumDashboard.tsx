@@ -67,9 +67,10 @@ interface PremiumDashboardProps {
 
 function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabled: boolean; hijriDate: string; timeFormat: '12' | '24' }) {
   const [time, setTime] = useState(new Date());
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    // Clock updates every 10 seconds since it only shows HH:MM format
+    setIsHydrated(true);
     const timerId = globalTimerManager.addCallback(() => setTime(new Date()), 10000, 'premium-clock');
     return () => globalTimerManager.removeCallback(timerId);
   }, []);
@@ -80,14 +81,28 @@ function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabl
     hour12: timeFormat === '12',
   });
 
+  const skeletonStyle = { height: 'clamp(52px, 18vw, 96px)', width: '100%' };
+
   return (
     <div className="text-center pt-3 pb-4 flex flex-col justify-center items-center gap-1">
-      <h1
-        className="font-black leading-none tracking-tighter text-foreground"
-        style={{ fontSize: 'clamp(52px, 18vw, 96px)' }}
-      >
-        {timeStr}
-      </h1>
+      {/* Static LCP anchor - screen reader only */}
+      <h1 className="sr-only">Noor Connect</h1>
+      {/* Clock with skeleton fallback */}
+      <div style={skeletonStyle} aria-hidden={isHydrated ? 'true' : 'false'}>
+        {isHydrated ? (
+          <h1
+            className="font-black leading-none tracking-tighter text-foreground"
+            style={{ fontSize: 'clamp(52px, 18vw, 96px)' }}
+          >
+            {timeStr}
+          </h1>
+        ) : (
+          <div
+            className="h-full w-full animate-pulse bg-muted rounded-lg"
+            aria-hidden="true"
+          />
+        )}
+      </div>
       <p
         className="text-sm md:text-base font-semibold tracking-wide text-primary px-4 text-center leading-tight"
       >
@@ -316,7 +331,7 @@ function PremiumDashboardInner({
               </p>
             </div>
             <div className="flex items-end justify-between mb-4">
-              <p className="text-3xl font-bold text-white" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              <p className="text-3xl font-bold text-white" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
                 {nextPrayer.name}
               </p>
               <div className="text-right">

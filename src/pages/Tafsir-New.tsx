@@ -823,7 +823,7 @@ const Tafsir = () => {
                               <p
                                 className="text-3xl md:text-4xl text-right leading-[2.5] text-slate-800 font-arabic"
                                 dir="rtl"
-                                style={{ fontFamily: "var(--quran-font, 'Amiri', serif)" }}
+                                style={{ fontFamily: 'inherit' }}
                               >
                                 {tafsir.arabic}
                               </p>

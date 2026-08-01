@@ -1,7 +1,7 @@
-/* Urdu font stack using local or system fonts only */
+/* Urdu font stack using system fonts only */
 html[lang="ur"] body,
 html[lang="ur"] .font-urdu {
-  font-family: 'Urdu Typesetting', 'Noto Nastaliq Urdu', 'Noto Sans Arabic', Tahoma, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif;
 }
 
 /* Ensure proper text rendering for Urdu */

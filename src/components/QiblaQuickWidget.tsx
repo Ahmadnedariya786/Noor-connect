@@ -49,7 +49,7 @@ export function QiblaQuickWidget() {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-4xl font-bold tracking-tight text-white" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+            <p className="text-4xl font-bold tracking-tight text-white" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
               {bearing}°
               <span className="text-sm font-semibold ms-2" style={{ color: '#C9860A' }}>
                 {qibla.cardinalDirection}

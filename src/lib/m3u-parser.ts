@@ -114,16 +114,19 @@ export async function fetchSaudiPlaylist(): Promise<ParsedPlaylist> {
 
 /**
  * Fallback URLs if IPTV playlist fails
- * These are tested working HLS streams (hls_roku versions work, hls_fta returns 404)
+ * Platform-aware: native apps use the adaptive Aloula CDN (1080p/480p/360p),
+ * web browsers use m.live.net.sa (720p, CORS-enabled).
  */
 export const FALLBACK_STREAMS = {
   makkah: {
     name: 'Al-Quran Al-Kareem (Makkah)',
-    url: 'https://cdn-globecast.akamaized.net/live/eds/saudi_quran/hls_roku/index.m3u8',
+    nativeUrl: 'https://aloula-redirect.vercel.app/7/playlist.m3u8',
+    webUrl: 'http://m.live.net.sa:1935/live/quran/playlist.m3u8',
   },
   madinah: {
     name: 'As-Sunnah (Madinah)',
-    url: 'https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/index.m3u8',
+    nativeUrl: 'https://aloula-redirect.vercel.app/6/playlist.m3u8',
+    webUrl: 'http://m.live.net.sa:1935/live/sunnah/playlist.m3u8',
   },
 };
 

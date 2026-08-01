@@ -32,6 +32,11 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ## 🆕 What's New in v2.2.0
 
+### 📻 Live Streams Reliability (Hotfix)
+- **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (which browsers reject before playback ever starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
+- **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.
+- **Android Cleartext Whitelist**: `m.live.net.sa` added to the network security config so the streams play on Android (cleartext HTTP on port 1935).
+
 ### 🕌 Major Prayer Times Refactor
 - **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
 - **Mushaf Viewer Complete Rewrite**: Pinch-to-zoom via CSS transforms, pan gestures, auto-hide nav (3s), surround page prefetching, surah index sheet, bookmark/resume, loading skeleton, dark/light theme aware — all without external libraries.
@@ -169,7 +174,7 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 
 ### 📻 Rich Media & Islamic Library
 - **Hadith Encyclopedia (87K)**: 16 complete collections with Arabic + English, grade badges, bookmarks, daily hadith widget, and full-text navigation.
-- **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via Akamai CDN (hls_roku) for reliable HLS streaming. CSP-compliant HTTP support included.
+- **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via CORS-enabled HLS (m.live.net.sa primary, Aloula CDN fallback) with automatic source-switching and friendly error handling. Android cleartext whitelist included.
 - **Radio Statistics & Achievements**: Track your listening habits with detailed statistics per station, total listening time, streak tracking, and unlockable achievements for consistent listening.
 - **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication. Uses **standard Madani Mushaf** (industry standard for Muslim world with 604 pages).
 - **🎵 Nasheed Library (v2.2)**: 400+ legally licensed nasheeds via official No Copyright Nasheed partnership. Adaptive streaming for 2G/weak wifi, offline download, sleep timer, lyrics sync, and curated daily recommendations. **Officially featured** on No Copyright Nasheed website.

@@ -685,7 +685,7 @@ const QiblaCompassModern = () => {
 
           {/* Large Bearing Display */}
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-6xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+            <span className="text-6xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
               {Math.round(qiblaResult.bearing)}°
             </span>
             <span className="text-2xl font-bold text-[#C9860A]">
@@ -915,7 +915,7 @@ const QiblaCompassModern = () => {
                 <div className="text-center pb-4 border-b border-border/50">
                   <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
                   <div className="flex items-baseline justify-center gap-1.5">
-                    <p className="text-4xl font-black" style={{ color: THEME.accent, fontFamily: 'Georgia, serif' }}>{Math.round(qiblaResult.bearing)}°</p>
+                    <p className="text-4xl font-black" style={{ color: THEME.accent, fontFamily: 'inherit' }}>{Math.round(qiblaResult.bearing)}°</p>
                     <p className="text-sm font-bold text-foreground/80">{qiblaResult.cardinalDirection}</p>
                   </div>
                   <p className="text-xs text-muted-foreground/70 mt-2 mx-auto max-w-[240px] leading-relaxed">

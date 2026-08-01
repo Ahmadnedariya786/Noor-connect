@@ -115,11 +115,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const [isMounted, setIsMounted] = useState(true);
 
     useEffect(() => {
-        // Aggressively reduced splash duration to improve LCP
-        const cores = navigator.hardwareConcurrency || 4;
-        let baseDuration = cores >= 8 ? 150 : cores >= 4 ? 300 : 500;
-
-        if (!animationsEnabled) baseDuration = 100;
+        const baseDuration = animationsEnabled ? 100 : 50;
 
         const fadeTimer = setTimeout(() => {
             setIsFading(true);
@@ -139,6 +135,8 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a1128] overflow-hidden transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}
             style={{
                 background: "linear-gradient(135deg, #0a1128 0%, #1a237e 50%, #0d1b2a 100%)",
+                willChange: "opacity",
+                transform: "translateZ(0)",
             }}
         >
             {/* Stars Background */}
@@ -158,7 +156,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             backgroundClip: "text",
-                            fontFamily: "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif"
+                            fontFamily: "inherit"
                         }}
                     >
                         Noor Connect

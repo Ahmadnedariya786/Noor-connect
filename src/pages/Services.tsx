@@ -109,7 +109,7 @@ export default function Services() {
                                 <Sparkles className="w-4 h-4" style={{ color: '#C9860A' }} />
                                 <span className="text-white/90 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>Islamic Hub</span>
                             </div>
-                            <h2 className="text-4xl font-bold text-white leading-tight tracking-tight mb-2" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                            <h2 className="text-4xl font-bold text-white leading-tight tracking-tight mb-2" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
                                 Discover<br/>Resources
                             </h2>
                             <p className="text-white/60 text-sm font-medium max-w-[85%] leading-relaxed">

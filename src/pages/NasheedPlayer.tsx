@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { FixedSizeList } from 'react-window';
 import { AppBar } from '@/components/AppBar';
 import { PageTransition } from '@/components/PageTransition';
@@ -11,11 +11,13 @@ import {
     Search, Play, Pause, Music2, ExternalLink,
     Heart, Clock, Shuffle, ListMusic, ArrowUp, X, CheckCircle2
 } from 'lucide-react';
-import type { NasheedTrack, NasheedsData } from '@/data/nasheeds.json';
+import nasheedsData from '@/data/nasheeds.json';
 import { useGlobalNasheed, type NasheedTrack } from '@/lib/global-nasheed';
 import { nasheedCache } from '@/lib/nasheed-cache';
 
 const CDN_URL = "https://noor-nasheed-cdn.arifubaid0345.workers.dev";
+
+type Tab = 'all' | 'favorites' | 'recent';
 
 export default function NasheedPlayer() {
     const { t } = useLanguage();
@@ -24,21 +26,15 @@ export default function NasheedPlayer() {
     const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [cachedUrls, setCachedUrls] = useState<Set<string>>(new Set());
-    const [nasheedsData, setNasheedsData] = useState<NasheedsData | null>(null);
-
-    useEffect(() => {
-        import('@/data/nasheeds.json').then(module => {
-            setNasheedsData(module.default);
-        });
-    }, []);
+    const listContainerRef = useRef<HTMLDivElement>(null);
+    const [listHeight, setListHeight] = useState(300);
 
     const allTracks = useMemo(() => {
-        if (!nasheedsData) return [];
         return nasheedsData.tracks.map(t => ({
             ...t,
             url: t.url.startsWith('http') ? t.url : `${CDN_URL}${t.url}`
         }));
-    }, [nasheedsData]);
+    }, []);
 
     const uniqueArtists = useMemo(() => {
         if (!allTracks) return [];
@@ -72,6 +68,35 @@ export default function NasheedPlayer() {
     useEffect(() => {
         nasheedCache.getCachedUrls().then(urls => setCachedUrls(new Set(urls)));
     }, [currentTrack?.url]);
+
+    // Measure list container height for react-window FixedSizeList.
+    // The list sits below the fold, so recompute on scroll (rAF-throttled)
+    // so it fills from its position down to the bottom nav as it comes into view.
+    useEffect(() => {
+        let ticking = false;
+        const updateHeight = () => {
+            ticking = false;
+            const el = listContainerRef.current;
+            if (!el) return;
+            const top = el.getBoundingClientRect().top;
+            const height = window.innerHeight - top - 80; // 80 = bottom nav height
+            const next = height > 300 ? Math.floor(height) : 300;
+            setListHeight(prev => (prev === next ? prev : next));
+        };
+        const onScroll = () => {
+            if (!ticking) {
+                ticking = true;
+                requestAnimationFrame(updateHeight);
+            }
+        };
+        updateHeight();
+        window.addEventListener('resize', updateHeight);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => {
+            window.removeEventListener('resize', updateHeight);
+            window.removeEventListener('scroll', onScroll);
+        };
+    }, []);
 
     const handleDeleteFromCache = useCallback(async (url: string) => {
         const deleted = await nasheedCache.deleteCached(url);
@@ -347,11 +372,11 @@ export default function NasheedPlayer() {
                                 )}
                             </div>
                         ) : (
-                            <div className="h-[calc(100vh-400px)] min-h-[300px]">
+                            <div ref={listContainerRef} className="min-h-[300px]">
                               <FixedSizeList
-                                height="100%"
+                                height={listHeight}
                                 itemCount={displayedTracks.length}
-                                itemSize={90}
+                                itemSize={72}
                                 width="100%"
                                 overscanCount={5}
                               >
@@ -388,25 +413,32 @@ export default function NasheedPlayer() {
                                                   <Pause className="w-4 h-4 fill-current" />
                                                 ) : isCurrentTrack && !isPlaying ? (
                                                   <Play className="w-4 h-4 fill-current ml-0.5" />
-                                                ) : (
-                                                  <span className="text-xs font-bold">${index + 1}</span>
-                                                )}
+) : (
+                                                   <span className="text-xs font-bold">{`#${index + 1}`}</span>
+                                                  )}
                                               </Button>
 
-                                              {/* Track Info */}
-                                              <div
-                                                className="flex-1 min-w-0 cursor-pointer"
-                                                onClick={() => handlePlay(track)}
-                                              >
-                                                <h4 className={`font-semibold text-[14px] truncate leading-tight mb-0.5 $
-                                                  isCurrentTrack ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground'
-                                                }`}>
-                                                  {track.title}
-                                                </h4>
-                                                <p className="text-xs text-muted-foreground truncate uppercase tracking-wide font-medium">
-                                                  {track.artist}
-                                                </p>
-                                              </div>
+{/* Track Info */}
+                                               <div
+                                                 className="flex-1 min-w-0 cursor-pointer"
+                                                 onClick={() => handlePlay(track)}
+                                               >
+                                                 <h4 className={`font-semibold text-[14px] truncate leading-tight mb-0.5 $
+                                                   isCurrentTrack ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground'
+                                                 }`}>
+                                                   {track.title}
+                                                 </h4>
+                                                 <p className="text-xs text-muted-foreground truncate tracking-wide font-medium">
+                                                   {(() => {
+                                                     const a = track.artist?.trim();
+                                                     const fallback = 'Unknown Artist';
+                                                     if (!a) return fallback;
+                                                     const lower = a.toLowerCase();
+                                                     if (lower === 'nasheed' || lower === 'background nasheed' || lower === 'beautiful nasheed' || lower === 'heart touching nasheed') return fallback;
+                                                     return a;
+                                                   })()}
+                                                 </p>
+                                               </div>
 
                                               {/* Equalizer animation */}
                                               {isCurrentlyPlaying && (
@@ -447,7 +479,7 @@ export default function NasheedPlayer() {
                                                 }`}
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  handleFavorite(track.id);
+                                                  toggleFavorite(track.id);
                                                 }}
                                               >
                                                 {isFav ? (
@@ -455,19 +487,6 @@ export default function NasheedPlayer() {
                                                 ) : (
                                                   <Heart className="w-4 h-4" />
                                                 )}
-                                              </Button>
-
-                                              {/* Share */}
-                                              <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="w-8 h-8 rounded-full shrink-0 text-muted-foreground hover:text-emerald-500 transition-colors"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  handleShare(track);
-                                                }}
-                                              >
-                                                <ExternalLink className="w-4 h-4" />
                                               </Button>
                                             </div>
                                           </Card>
