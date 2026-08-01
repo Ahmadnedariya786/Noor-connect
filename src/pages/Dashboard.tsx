@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, Suspense, lazy, type MouseEvent, memo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy, type MouseEvent, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
