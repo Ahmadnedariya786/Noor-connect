@@ -475,7 +475,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
         isActive: nextPrayerName === p.name,
         isUpcoming: isUpcoming,
         isCompleted,
-        onCheckIn: handleCheckIn,
+        onCheckIn: () => handleCheckIn(pKey),
       };
     });
   }, [prayers, currentTime, todayPrayers, nextPrayerName, handleCheckIn, prayerIcons]);
