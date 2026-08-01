@@ -249,8 +249,14 @@ export const GlobalPrayerAlarm = () => {
           ? await getAdhanUrlForPrayer(prayerName)
           : await getAdhanUrlForPrayer('Dhuhr');
 
-      const audio = new Audio(adhanUrl);
-      audioRef.current = audio;
+      // Reuse existing audio element if available, otherwise create new one
+      let audio = audioRef.current;
+      if (!audio) {
+        audio = new Audio(adhanUrl);
+        audioRef.current = audio;
+      } else {
+        audio.src = adhanUrl;
+      }
       const { volume } = adhanService.getAdhanConfig();
       audio.volume = Math.min(Math.max((volume ?? 80) / 100, 0), 1);
       audio.preload = 'auto';

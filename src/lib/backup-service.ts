@@ -819,6 +819,8 @@ export const checkForRestoreOpportunity = async (): Promise<RestoreOpportunity |
 
 let initialized = false;
 
+let visibilityChangeHandler: (() => void) | null = null;
+
 /**
  * Call once at app startup. Runs legacy migration and arms the app-pause
  * snapshot: whenever the app goes to the background, a snapshot is taken
@@ -830,11 +832,17 @@ export const initBackupService = (): void => {
 
   void ensureMigrated();
 
-  document.addEventListener('visibilitychange', () => {
+  if (visibilityChangeHandler) {
+    document.removeEventListener('visibilitychange', visibilityChangeHandler);
+  }
+
+  visibilityChangeHandler = () => {
     if (document.visibilityState === 'hidden') {
       void takeSnapshot();
     }
-  });
+  };
+
+  document.addEventListener('visibilitychange', visibilityChangeHandler);
 };
 
 // ─── Misc helpers (moved from backup.ts, kept as-is) ──────────────────────────

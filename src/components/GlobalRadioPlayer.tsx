@@ -37,30 +37,7 @@ export function GlobalRadioPlayer() {
   const isTransitioning = useRef(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Suppress chrome extension errors globally
-  useEffect(() => {
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      const message = args[0];
-      if (typeof message === 'string' && 
-          (message.includes('chrome-extension://') || 
-           message.includes('sdk.script.js') ||
-           message.includes('net::ERR_FAILED') ||
-           message.includes('GeolocationPositionError') ||
-           message.includes('google-services.json not found') ||
-           message.includes('content.js') ||
-           message.includes('no ad'))) {
-        return; // Suppress chrome extension and harmless build/telemetry errors
-      }
-      originalConsoleError.apply(console, args);
-    };
-
-    return () => {
-      console.error = originalConsoleError;
-    };
-  }, []);
-
-  // Helper to destroy Hls
+  // Initialize global audio reference
   const destroyHls = () => {
     if (hlsRef.current) {
       hlsRef.current.destroy();

@@ -318,6 +318,10 @@ export function GlobalNasheedPlayer() {
             audio.removeEventListener('stalled', handleStalled);
             audio.removeEventListener('error', handleError);
             audio.removeEventListener('loadstart', handleLoadStart);
+            if (retryTimerRef.current) {
+                clearTimeout(retryTimerRef.current);
+                retryTimerRef.current = null;
+            }
         };
     }, [isPlaying, repeatMode, currentTrack?.url]);
 

@@ -306,7 +306,11 @@ export class LocalNotificationManager {
 
         if (Capacitor.isNativePlatform()) {
           if (this.isPrayerAlarmEnabled()) {
-            await nativeAdhan.schedule(nativeAlarms, true);
+            try {
+              await nativeAdhan.schedule(nativeAlarms, true);
+            } catch (error) {
+              console.warn('Failed to schedule native adhan alarms:', error);
+            }
           } else {
             await nativeAdhan.clear();
           }
@@ -429,7 +433,11 @@ export class LocalNotificationManager {
           }
 
           if (this.isPrayerAlarmEnabled()) {
-            await nativeAdhan.schedule(nativeAlarms, true);
+            try {
+              await nativeAdhan.schedule(nativeAlarms, true);
+            } catch (error) {
+              console.warn('Failed to schedule native adhan alarms:', error);
+            }
           }
         }
       }

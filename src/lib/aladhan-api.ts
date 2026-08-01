@@ -124,8 +124,10 @@ export class AladhanAPI {
       url += `&school=${school}`;
     }
 
+    const controller = new AbortController();
+
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -202,7 +204,8 @@ export class AladhanAPI {
     }
 
     try {
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
