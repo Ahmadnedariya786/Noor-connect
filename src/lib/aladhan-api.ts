@@ -138,6 +138,10 @@ export class AladhanAPI {
         throw new Error(`API Error: ${result.status}`);
       }
 
+      if (!result.data || !Array.isArray(result.data)) {
+        throw new Error('API response missing or invalid data array');
+      }
+
       const monthlyData: AladhanMonthlyData = {
         month,
         year,
@@ -475,11 +479,10 @@ export class AladhanAPI {
     const parts = cleaned.split(':');
     const hours = parseInt(parts[0], 10);
     const minutes = parseInt(parts[1], 10);
-    const date = new Date();
     if (isNaN(hours) || isNaN(minutes)) {
-      console.warn('AladhanAPI.parseTime: failed to parse:', timeStr);
-      return date;
+      throw new Error(`parseTime: invalid time string "${timeStr}"`);
     }
+    const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     return date;
   }

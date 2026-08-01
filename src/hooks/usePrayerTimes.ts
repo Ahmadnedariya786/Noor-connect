@@ -384,16 +384,26 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
 
           const locationLabel = locationData.city || locationData.country || 'Unknown';
 
-          try {
-            const { WidgetService } = await import('@/lib/widget-service');
-            WidgetService.updateWidget(
-              locationData.latitude,
-              locationData.longitude,
-              locationLabel,
-              times
-            ).catch(() => {});
-          } catch {
-            // WidgetService not available on this platform
+          // Validate times matches expected widget payload shape
+          const requiredPrayerKeys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+          const isValidTimes = requiredPrayerKeys.every(key => 
+            typeof times[key] === 'string' && times[key].trim() !== ''
+          );
+
+          if (!isValidTimes) {
+            console.warn('WidgetService.updateWidget skipped: times payload missing or invalid prayer times', times);
+          } else {
+            try {
+              const { WidgetService } = await import('@/lib/widget-service');
+              WidgetService.updateWidget(
+                locationData.latitude,
+                locationData.longitude,
+                locationLabel,
+                times
+              ).catch(() => {});
+            } catch {
+              // WidgetService not available on this platform
+            }
           }
         }
 
@@ -581,16 +591,27 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
     const handleWidgetUpdate = async () => {
       if (location && prayerTimes) {
         const locationLabel = location.city || location.country || 'Unknown';
-        try {
-          const { WidgetService } = await import('@/lib/widget-service');
-          WidgetService.updateWidget(
-            location.latitude,
-            location.longitude,
-            locationLabel,
-            prayerTimes
-          ).catch(() => {});
-        } catch {
-          // WidgetService not available on this platform
+
+        // Validate prayerTimes matches expected widget payload shape
+        const requiredPrayerKeys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+        const isValidTimes = requiredPrayerKeys.every(key =>
+          typeof prayerTimes[key] === 'string' && prayerTimes[key].trim() !== ''
+        );
+
+        if (!isValidTimes) {
+          console.warn('WidgetService.updateWidget skipped: prayerTimes payload missing or invalid', prayerTimes);
+        } else {
+          try {
+            const { WidgetService } = await import('@/lib/widget-service');
+            WidgetService.updateWidget(
+              location.latitude,
+              location.longitude,
+              locationLabel,
+              prayerTimes
+            ).catch(() => {});
+          } catch {
+            // WidgetService not available on this platform
+          }
         }
       }
     };

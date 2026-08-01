@@ -284,6 +284,13 @@ export class LocalNotificationManager {
             prayerName,
           });
 
+          const validPrayerNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
+
+          if (!validPrayerNames.includes(prayerName as typeof validPrayerNames[number])) {
+            console.warn(`Invalid prayer name "${prayerName}", skipping native alarm`);
+            continue;
+          }
+
           nativeAlarms.push({
             id: notificationId,
             triggerAt: prayerDate.getTime(),
@@ -421,6 +428,12 @@ export class LocalNotificationManager {
             if (key && !adhanConfig[key]) continue;
 
             if (prayer.date > now) {
+              const validPrayerNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
+              if (!validPrayerNames.includes(prayer.name as typeof validPrayerNames[number])) {
+                console.warn(`Invalid prayer name "${prayer.name}", skipping native alarm`);
+                continue;
+              }
+
               nativeAlarms.push({
                 id: this.getNotificationId(prayer.name, prayer.date),
                 triggerAt: prayer.date.getTime(),

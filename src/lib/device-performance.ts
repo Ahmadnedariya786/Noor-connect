@@ -260,7 +260,9 @@ function runWebGLTest(): Promise<{ fps: number; jankScore: number }> {
     canvas.height = 200;
     canvas.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
     document.body.appendChild(canvas);
-    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    const gl2 = canvas.getContext('webgl2');
+    const gl = gl2 || canvas.getContext('webgl');
+    const isWebGL2 = !!gl2;
 
     if (!gl) {
       document.body.removeChild(canvas);
@@ -268,27 +270,49 @@ function runWebGLTest(): Promise<{ fps: number; jankScore: number }> {
       return;
     }
 
-    const vsSource = `
-      attribute vec2 a_position;
-      uniform vec2 u_resolution;
-      void main() {
-        vec2 zeroToOne = a_position / u_resolution;
-        vec2 zeroToTwo = zeroToOne * 2.0;
-        vec2 clipSpace = zeroToTwo - 1.0;
-        gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
-      }
-    `;
-    const fsSource = `
-      precision mediump float;
-      uniform float u_time;
-      void main() {
-        vec2 uv = gl_FragCoord.xy / 200.0;
-        float color = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.5 + 0.5;
-        gl_FragColor = vec4(color, color * 0.5, 1.0 - color, 1.0);
-      }
-    `;
+    const vsSource = isWebGL2
+      ? `#version 300 es
+        in vec2 a_position;
+        uniform vec2 u_resolution;
+        void main() {
+          vec2 zeroToOne = a_position / u_resolution;
+          vec2 zeroToTwo = zeroToOne * 2.0;
+          vec2 clipSpace = zeroToTwo - 1.0;
+          gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+        }
+      `
+      : `
+        attribute vec2 a_position;
+        uniform vec2 u_resolution;
+        void main() {
+          vec2 zeroToOne = a_position / u_resolution;
+          vec2 zeroToTwo = zeroToOne * 2.0;
+          vec2 clipSpace = zeroToTwo - 1.0;
+          gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+        }
+      `;
+    const fsSource = isWebGL2
+      ? `#version 300 es
+        precision mediump float;
+        uniform float u_time;
+        out vec4 fragColor;
+        void main() {
+          vec2 uv = gl_FragCoord.xy / 200.0;
+          float color = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.5 + 0.5;
+          fragColor = vec4(color, color * 0.5, 1.0 - color, 1.0);
+        }
+      `
+      : `
+        precision mediump float;
+        uniform float u_time;
+        void main() {
+          vec2 uv = gl_FragCoord.xy / 200.0;
+          float color = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.5 + 0.5;
+          gl_FragColor = vec4(color, color * 0.5, 1.0 - color, 1.0);
+        }
+      `;
 
-    function createShader(gl: WebGLRenderingContext, type: number, source: string) {
+    function createShader(gl: WebGLRenderingContext | WebGL2RenderingContext, type: number, source: string) {
       const shader = gl.createShader(type)!;
       gl.shaderSource(shader, source);
       gl.compileShader(shader);

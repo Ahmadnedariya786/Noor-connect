@@ -66,7 +66,7 @@ export interface BackupData {
   appVersion?: string;
   exportedAt: string;
   storage: Record<string, string | null>;
-  preferences?: Record<string, string | null>;
+  preferences?: Record<string, string>;
   downloadedBooks?: DownloadedBook[];
 }
 
@@ -233,8 +233,8 @@ function captureLocalStorage(): Record<string, string | null> {
   return storage;
 }
 
-async function capturePreferences(): Promise<Record<string, string | null>> {
-  const prefs: Record<string, string | null> = {};
+async function capturePreferences(): Promise<Record<string, string>> {
+  const prefs: Record<string, string> = {};
   try {
     const { keys } = await Preferences.keys();
     for (const key of keys) {
@@ -283,7 +283,7 @@ export const buildBackup = async (
       }
     }
 
-    let prefs: Record<string, string | null> = {};
+    let prefs: Record<string, string> = {};
     if (includePrefs && isNative) {
       prefs = await capturePreferences();
     }
@@ -306,7 +306,7 @@ export const buildBackup = async (
     }
     // Then drop non-critical preferences.
     if (json.length > budget) {
-      const critical: Record<string, string | null> = {};
+      const critical: Record<string, string> = {};
       for (const key of CRITICAL_PREF_KEYS) {
         if (prefs[key] !== undefined) critical[key] = prefs[key];
       }

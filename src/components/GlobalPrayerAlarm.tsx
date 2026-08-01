@@ -121,7 +121,7 @@ export const GlobalPrayerAlarm = () => {
       if (!cached) return null;
 
       const parsed = JSON.parse(cached) as Partial<CachedPrayerTimes>;
-      if (!parsed || !Array.isArray(parsed.times) || typeof parsed.date !== 'string') {
+      if (!parsed || !Array.isArray(parsed.times) || typeof parsed.date !== 'string' || parsed.date.trim() === '') {
         return null;
       }
 
@@ -130,7 +130,8 @@ export const GlobalPrayerAlarm = () => {
           (item): item is PrayerTime =>
             Boolean(item) &&
             typeof item.name === 'string' &&
-            typeof item.time === 'string'
+            typeof item.time === 'string' &&
+            item.time.trim() !== ''
         )
         .map((item) => ({ name: item.name, time: normalizeTimeString(item.time) }));
 
@@ -366,6 +367,9 @@ export const GlobalPrayerAlarm = () => {
     const reminderMinutes = parseInt(localStorage.getItem(REMINDER_MINUTES_KEY) || '0', 10);
 
     for (const prayer of times) {
+      if (typeof prayer.time !== 'string' || prayer.time.trim() === '') {
+        continue;
+      }
       const prayerTime = normalizeTimeString(prayer.time);
       const prayerKey = `${today}-${prayer.name}`;
       const reminderKey = `${today}-${prayer.name}-reminder`;
