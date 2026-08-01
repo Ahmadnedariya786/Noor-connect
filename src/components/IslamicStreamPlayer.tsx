@@ -329,6 +329,27 @@ export default function IslamicStreamPlayer() {
     };
   }, []);
 
+  /* ─── Recalc video size when fullscreen state / orientation changes ─── */
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const recalc = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'contain';
+    };
+    recalc();
+    const t = setTimeout(recalc, 100);
+    window.addEventListener('resize', recalc);
+    window.addEventListener('orientationchange', recalc);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', recalc);
+      window.removeEventListener('orientationchange', recalc);
+    };
+  }, [isFullscreen]);
+
   /* ─── Controls ─── */
   const handleRetry = useCallback(() => {
     const url = streamUrlsRef.current[activeTab].primary;
@@ -372,8 +393,19 @@ export default function IslamicStreamPlayer() {
      const el = containerRef.current;
      if (!el) return;
      try {
-       if (!isFullscreen) await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
-       else await (document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.());
+       if (!isFullscreen) {
+         await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
+         if (Capacitor.isNativePlatform()) {
+           document.documentElement.requestFullscreen?.();
+           (screen.orientation as any)?.lock?.('landscape').catch(() => {});
+         }
+       } else {
+         await (document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.());
+         if (Capacitor.isNativePlatform()) {
+           document.exitFullscreen?.();
+           (screen.orientation as any)?.unlock?.();
+         }
+       }
      } catch (error) {
        // Handle error if needed
      }
@@ -390,7 +422,18 @@ export default function IslamicStreamPlayer() {
   return (
     <div
       ref={containerRef}
-      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-white/8 ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'relative'}`}
+      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-white/8 ${isFullscreen ? 'fixed top-0 left-0 rounded-none flex flex-col' : 'relative'}`}
+      style={isFullscreen ? {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 9999,
+        background: '#000',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      } : undefined}
       onMouseMove={showAndScheduleHide}
       onTouchStart={showAndScheduleHide}
     >
@@ -437,13 +480,14 @@ export default function IslamicStreamPlayer() {
 
       {/* ── Video Area ── */}
       <div
-        className="relative w-full bg-black"
-        style={{ aspectRatio: '16/9' }}
+        className={`relative w-full bg-black ${isFullscreen ? 'h-full' : ''}`}
+        style={isFullscreen ? { aspectRatio: 'auto', flex: 1 } : { aspectRatio: '16/9' }}
         onClick={() => { if (!current.isLoading && !current.error) { togglePlay(); showAndScheduleHide(); } }}
       >
         <video
           ref={videoRef}
-          className="w-full h-full object-contain"
+          className={`${isFullscreen ? 'absolute inset-0' : 'relative'} w-full h-full object-contain`}
+          style={isFullscreen ? { width: '100%', height: '100%', objectFit: 'contain' } : undefined}
           playsInline
           muted={isMuted}
         />

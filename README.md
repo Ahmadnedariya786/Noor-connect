@@ -36,6 +36,8 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (which browsers reject before playback ever starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
 - **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.
 - **Android Cleartext Whitelist**: `m.live.net.sa` added to the network security config so the streams play on Android (cleartext HTTP on port 1935).
+- **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
+- **Quality Selector Cleanup**: Quality picker is now hidden when the active stream only exposes a single quality level (the primary `m.live.net.sa` streams are single-variant 720p), keeping the controls clean.
 
 ### 🕌 Major Prayer Times Refactor
 - **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.

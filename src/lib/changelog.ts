@@ -35,6 +35,9 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
     date: '2026-08-01',
     title: 'Major Prayer Times Refactor, Mushaf Viewer Rewrite & Lint Fixes',
     changes: [
+      { type: 'fix', description: 'Live Streams Reliability: Replaced CORS-blocked Aloula CDN redirect URLs with verified CORS-enabled m.live.net.sa HLS streams for Makkah/Madinah; automatic one-time fallback to the secondary source before showing a friendly error; Android cleartext whitelist for m.live.net.sa.' },
+      { type: 'fix', description: 'Android Fullscreen Rendering: Native requestFullscreen + landscape orientation lock on Android, edge-to-edge 100vw/100vh container with safe-area insets, video sizing recalculated on resize/orientationchange with object-fit contain; 16:9 layout restored on exit.' },
+      { type: 'improvement', description: 'Quality Selector Cleanup: Hidden automatically when the active stream exposes only a single quality level (primary m.live.net.sa streams are single-variant 720p).' },
       { type: 'feature', description: 'Major usePrayerTimes Hook Rewrite: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new usePrayerNotifications hook with 1s throttle.' },
       { type: 'feature', description: 'Mushaf Viewer Complete Rewrite: Pinch-to-zoom via CSS transforms, pan gestures, auto-hide nav (3s), surround page prefetching, surah index sheet, bookmark/resume, loading skeleton, dark/light theme aware — all without external libraries.' },
       { type: 'feature', description: 'GlobalPrayerAlarm Optimization: localStorage caching skips redundant geolocation/API calls when today\'s times already cached; abort controller for clean fetch cancellation.' },
