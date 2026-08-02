@@ -159,6 +159,8 @@ const KNOWN_STORAGE_KEYS: readonly string[] = [
   'before-sleep-enabled', 'bedtime-hour', 'bedtime-minute', 'bedtime-notification-id',
   // Global players
   'global-quran-state', 'global-nasheed-state-v2', 'global-radio-state',
+  // Radio UI
+  'pinned-radio-stations',
   // Notifications & adhan
   'notification-preferences', 'notification-history', 'notification-last-asked',
   'notification-permission-timestamp', 'notification-permission-denied',

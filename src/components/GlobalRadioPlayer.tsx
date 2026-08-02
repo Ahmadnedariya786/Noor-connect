@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalRadio, getGlobalAudioRef, setGlobalAudioRef } from "@/lib/global-radio";
-import { radioStations } from "@/data/radio-stations";
+import { getStationImage } from "@/data/radio-stations-extra";
 import { recordListeningTime } from "@/lib/radio-stats";
 import Hls from 'hls.js';
 
@@ -77,8 +77,7 @@ export function GlobalRadioPlayer() {
 
     try {
       const station = globalRadio.currentStation;
-      const stationData = radioStations.find(s => s.id === station.id);
-      const artworkUrl = stationData?.img || '/icon-192x192.png';
+      const artworkUrl = getStationImage(station.url, station.id);
 
       navigator.mediaSession.metadata = new MediaMetadata({
         title: station.name,
