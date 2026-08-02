@@ -107,7 +107,6 @@ const DashboardWidgets = lazy(() => import("./pages/DashboardWidgets"));
 const SurahList = lazy(() => import("./pages/SurahList"));
 const QuranReader = lazy(() => import("./pages/QuranReader"));
 const QuranProgress = lazy(() => import("./pages/QuranProgress"));
-const MushafViewer = lazy(() => import("./pages/MushafViewer"));
 const Tasbeeh = lazy(() => import("./pages/Tasbeeh"));
 const Qibla = lazy(() => import("./pages/Qibla"));
 const Duas = lazy(() => import("./pages/Duas"));
@@ -203,10 +202,6 @@ function AppRoutes() {
         <Route path="/dashboard-widgets" element={<DashboardWidgets />} />
         <Route path="/quran" element={<SurahList />} />
         <Route path="/quran-reader/:surahNumber" element={<Navigate to="/quran" replace />} />
-        <Route path="/mushaf" element={<MushafViewer />} />
-        <Route path="/mushaf/:pageNum" element={<MushafViewer />} />
-        <Route path="/mushaf/surah/:surahNumber" element={<MushafViewer />} />
-        <Route path="/mushaf-viewer" element={<MushafViewer />} />
         <Route path="/quran/:surahName" element={<QuranReader />} />
         <Route path="/quran-progress" element={<QuranProgress />} />
         <Route path="/tasbeeh" element={<Tasbeeh />} />

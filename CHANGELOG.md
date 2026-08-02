@@ -15,9 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
 - **Quality Selector Cleanup**: Quality picker hidden when the active stream only exposes a single quality level (primary `m.live.net.sa` streams are single-variant 720p).
 
-### 🕌 Major Prayer Times Refactor
+### 🕌 Major Prayer Times & Quran Refactor
 - **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
-- **Mushaf Viewer Complete Rewrite**: Pinch-to-zoom via CSS transforms, pan gestures, auto-hide nav (3s), surround page prefetching, surah index sheet, bookmark/resume, loading skeleton, dark/light theme aware — all without external libraries.
+- **Removed Standalone Mushaf Viewer**: Deleted the standalone `/mushaf` image-based viewer feature to streamline the app. The app now exclusively uses the vertical-scrolling `/quran` reader (which still utilizes the beautiful Madani Mushaf WebP images and integrates with recitation progress/streaks).
 - **GlobalPrayerAlarm Optimization**: localStorage caching skips redundant geolocation/API calls when today's times already cached; abort controller for clean fetch cancellation.
 
 ### 🎵 Nasheed Player Upgrades
