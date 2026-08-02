@@ -669,6 +669,35 @@ export const HAIDH_EDUCATION: EducationTopic[] = [
   },
 ];
 
+export interface WellnessArticle {
+  title: string;
+  category: 'nutrition' | 'exercise' | 'mental-health' | 'hygiene';
+  content: string;
+}
+
+export const WELLNESS_ARTICLES: WellnessArticle[] = [
+  {
+    title: 'Nutrition During Your Cycle',
+    category: 'nutrition',
+    content: 'Iron-rich foods (spinach, lentils, red meat) help replenish iron lost during your period. Pair them with Vitamin C (citrus, bell peppers) to boost absorption. Avoid excess salt and caffeine which can worsen bloating and cramping.',
+  },
+  {
+    title: 'Managing Cramps & Pain',
+    category: 'exercise',
+    content: 'Gentle exercises like walking, light stretching, or yoga can increase blood flow and release endorphins, acting as natural painkillers. Applying a heating pad to your lower abdomen also relaxes uterine muscles.',
+  },
+  {
+    title: 'Emotional Well-being',
+    category: 'mental-health',
+    content: 'Hormonal shifts can cause mood swings or fatigue. Since you are exempt from obligatory prayers, the sudden change in routine can sometimes feel spiritually isolating. Replace prayer times with dedicated Dhikr, listening to the Quran, or simply resting without guilt.',
+  },
+  {
+    title: 'Hydration & Bloating',
+    category: 'nutrition',
+    content: 'It sounds counterintuitive, but drinking more water helps your body retain less water, reducing bloating. Aim for at least 8 glasses a day. Herbal teas like peppermint or ginger can also soothe nausea and stomach cramps.',
+  },
+];
+
 // ─── Legacy compat shims ──────────────────────────────────────
 // These allow Dashboard.tsx to keep working without modification
 

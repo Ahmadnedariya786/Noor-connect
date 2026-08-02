@@ -1,5 +1,5 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Droplets, BookOpen, BookHeart, Zap } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Droplets, BookOpen, BookHeart, Zap, Thermometer, GlassWater } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -62,6 +62,12 @@ export function HaidhLogTab({ data, onLog }: Props) {
   const [notes, setNotes] = useState<string>(existingLog?.notes ?? "");
   const [ghusulCompleted, setGhusulCompleted] = useState(existingLog?.ghusulCompleted ?? false);
   const [missedFast, setMissedFast] = useState(existingLog?.missedFast ?? false);
+  const todayStr2 = toDateStr(new Date());
+  const [waterGlasses, setWaterGlasses] = useState(() => {
+    const stored = localStorage.getItem(`noor-water-${todayStr2}`);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+  const [painLevel, setPainLevel] = useState(0);
 
   // Reset local state if today's persisted log changes externally.
   useEffect(() => {
@@ -246,6 +252,79 @@ export function HaidhLogTab({ data, onLog }: Props) {
           />
           <div className="flex justify-between mt-2 text-xs uppercase tracking-widest text-muted-foreground">
             <span>Low</span><span>High</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Pain scale */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between ml-1">
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <Thermometer className="w-3 h-3" /> Pain Scale
+          </h3>
+          <span className="text-xs font-black text-foreground">
+            {painLevel === 0 ? 'None' : painLevel <= 3 ? 'Mild' : painLevel <= 6 ? 'Moderate' : 'Severe'}
+          </span>
+        </div>
+        <div className="bg-background border border-border rounded-2xl p-4 space-y-3">
+          <div className="flex gap-1.5">
+            {Array.from({ length: 10 }).map((_, i) => {
+              const lvl = i + 1;
+              const active = lvl <= painLevel;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setPainLevel(lvl === painLevel ? 0 : lvl)}
+                  className={`flex-1 h-7 rounded-md transition-all ${
+                    active
+                      ? lvl <= 3 ? 'bg-emerald-500' : lvl <= 6 ? 'bg-amber-500' : 'bg-rose-500'
+                      : 'bg-muted'
+                  }`}
+                />
+              );
+            })}
+          </div>
+          <div className="flex justify-between text-[10px] text-muted-foreground uppercase tracking-wider">
+            <span>None</span><span>Mild</span><span>Moderate</span><span>Severe</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Water intake */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between ml-1">
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <GlassWater className="w-3 h-3" /> Water Intake
+          </h3>
+          <span className="text-xs font-black text-foreground">{waterGlasses}/8</span>
+        </div>
+        <div className="bg-background border border-border rounded-2xl p-4">
+          <div className="flex gap-1.5 mb-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  const next = i < waterGlasses ? i : i + 1;
+                  setWaterGlasses(next);
+                  localStorage.setItem(`noor-water-${todayStr2}`, String(next));
+                }}
+                className={`flex-1 h-8 rounded-lg transition-all border flex items-center justify-center ${
+                  i < waterGlasses
+                    ? 'bg-blue-500/20 border-blue-500/40'
+                    : 'bg-muted/40 border-border'
+                }`}
+              >
+                <GlassWater className={`w-3 h-3 transition-colors ${
+                  i < waterGlasses ? 'text-blue-500' : 'text-muted-foreground/30'
+                }`} />
+              </button>
+            ))}
+          </div>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500"
+              style={{ width: `${(waterGlasses / 8) * 100}%` }}
+            />
           </div>
         </div>
       </section>

@@ -1,5 +1,4 @@
-import { getMenstrualModeData } from './menstrual-mode';
-import { getMenstrualModeData as getHaidhModeData } from './haidh-tracker';
+import { getMenstrualModeData } from './haidh-tracker';
 import { type PrayerName } from './salah-tracker';
 
 export type { PrayerName };
@@ -105,10 +104,8 @@ export const syncMissedPrayersToQaza = (
   const todayKey = now.toISOString().split('T')[0];
   const processed = getProcessedQaza();
   const prayers: PrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-  const oldMenstrualMode = getMenstrualModeData();
-  const haidhMode = getHaidhModeData();
-  const isPaused = (oldMenstrualMode.isActive && oldMenstrualMode.pauseQazaAutoSync) ||
-                   (haidhMode.isActive && haidhMode.pauseQazaAutoSync);
+  const haidhMode = getMenstrualModeData();
+  const isPaused = haidhMode.isActive && haidhMode.pauseQazaAutoSync;
 
   // If Menstrual Mode is active, skip auto-Qaza and mark already-ended prayers as processed
   // so they are not added later when mode is turned off.

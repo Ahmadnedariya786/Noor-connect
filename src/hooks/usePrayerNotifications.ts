@@ -1,6 +1,6 @@
 import { useEffect, useMemo, type MutableRefObject } from 'react';
 import { formatPrayerTime } from '@/lib/time-formatter';
-import { getMenstrualModeData } from '@/lib/menstrual-mode';
+import { getMenstrualModeData } from '@/lib/haidh-tracker';
 import type { PrayerTimes, LocationData } from './usePrayerTimes';
 
 /**

@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell
@@ -195,7 +195,7 @@ export function HaidhAnalyticsTab({ data }: Props) {
                     r.score === "slightly-irregular" && "text-amber-500",
                     r.score === "irregular" && "text-rose-500",
                   )}>
-                    {r.score === "regular" ? "Regular" : r.score === "slightly-irrigular" ? "Slighty Irregular" : "Irregular"}
+                    {r.score === "regular" ? "Regular" : r.score === "slightly-irregular" ? "Slightly Irregular" : "Irregular"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">±{r.variation}d · {r.trend}</p>
                 </div>
@@ -317,8 +317,8 @@ export function HaidhAnalyticsTab({ data }: Props) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "oklch(var(--card))",
-                      border: "1px solid oklch(var(--border))",
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
                       borderRadius: "12px",
                       fontSize: "12px",
                     }}

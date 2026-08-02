@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { BookOpen, Settings as SettingsIcon, Compass, LayoutGrid, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { memo, useEffect, useState } from "react";
@@ -12,6 +12,12 @@ const BottomNav = memo(function BottomNav() {
   const { animationEnabled, effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
   const activeColor = isDark ? AMBER_DARK : AMBER;
+  const location = useLocation();
+
+  // Hide global nav on routes that have their own bottom navigation
+  if (location.pathname.startsWith('/noor-cycle')) {
+    return null;
+  }
 
   const [noBlur, setNoBlur] = useState<boolean>(() => {
     if (typeof document === 'undefined') return false;

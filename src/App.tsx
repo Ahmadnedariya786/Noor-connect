@@ -99,8 +99,7 @@ const SalamGreeting = lazy(() => import("@/components/SalamGreeting").then(modul
 const FestivePopup = lazy(() => import("@/components/FestivePopup").then(module => ({ default: module.FestivePopup })));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt").then(module => ({ default: module.PWAInstallPrompt })));
 
-// Lazy load critical components
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+import Dashboard from "./pages/Dashboard";
 
 // Lazy load route components
 const DashboardWidgets = lazy(() => import("./pages/DashboardWidgets"));

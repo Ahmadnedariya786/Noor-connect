@@ -11,6 +11,8 @@ import type { HaidhTrackerData } from "@/lib/haidh-tracker";
 const ID_GHUSL = "haidh-ghusl-reminder";
 const ID_PREDICT = "haidh-period-predict";
 const ID_DAILY_LOG = "haidh-daily-log";
+const ID_FERTILE = "haidh-fertile-window";
+const ID_FAST_MAKEUP = "haidh-fast-makeup";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -33,6 +35,8 @@ export const syncHaidhNotifications = async (data: HaidhTrackerData): Promise<vo
     localNotifications.cancelNotification(ID_GHUSL),
     localNotifications.cancelNotification(ID_PREDICT),
     localNotifications.cancelNotification(ID_DAILY_LOG),
+    localNotifications.cancelNotification(ID_FERTILE),
+    localNotifications.cancelNotification(ID_FAST_MAKEUP),
   ]);
 
   const now = new Date();
@@ -78,6 +82,43 @@ export const syncHaidhNotifications = async (data: HaidhTrackerData): Promise<vo
       "Log your day",
       "Take a moment to log today's flow and how you're feeling.",
       next,
+    );
+  }
+
+  // 4) Fertile window reminder — ~14 days before next predicted period
+  if (data.periodPredictionReminderEnabled && data.nextPredictedStart) {
+    const predicted = new Date(data.nextPredictedStart);
+    // 15 days before next period is generally the start of the fertile window
+    const fire = setTime(new Date(predicted.getTime() - 15 * MS_PER_DAY), at(10, 0));
+    // Ensure we are not currently active and the time is in the future
+    if (!data.isActive && fire.getTime() > now.getTime()) {
+      await localNotifications.scheduleNotification(
+        ID_FERTILE,
+        "Fertile Window",
+        "Your fertile window is expected to begin today. Track your body's signs.",
+        fire,
+      );
+    }
+  }
+
+  // 5) Smart Qaza Fasting Reminder — If user owes fasts and isn't currently menstruating
+  const unfulfilledFasts = data.missedRamadanFasts - data.madeUpRamadanFasts;
+  if (!data.isActive && unfulfilledFasts > 0) {
+    // Find the next Sunday evening (to prepare for Monday fasting)
+    let nextSunday = new Date(now);
+    nextSunday.setDate(now.getDate() + ((7 - now.getDay()) % 7)); // Next Sunday
+    const fire = setTime(nextSunday, at(19, 0)); // 7:00 PM Sunday
+    
+    // If today is Sunday and it's past 7 PM, push to next Sunday
+    if (fire.getTime() <= now.getTime()) {
+      fire.setDate(fire.getDate() + 7);
+    }
+
+    await localNotifications.scheduleNotification(
+      ID_FAST_MAKEUP,
+      "Make up your fasts",
+      `You have ${unfulfilledFasts} missed fasts. Tomorrow is Monday, a great day to make one up!`,
+      fire,
     );
   }
 };

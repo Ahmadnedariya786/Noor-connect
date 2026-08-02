@@ -384,7 +384,7 @@ export function GlobalNasheedPlayer() {
                 <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
                     {/* Plain div with inline style — guaranteed dark regardless of light/dark theme */}
                     <div
-                        className="w-full max-w-lg mx-auto backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden animate-in slide-in-from-bottom border border-white/10"
+                        className="w-full max-w-lg mx-auto backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden border border-white/10"
                         style={{ background: 'rgba(24,24,27,0.97)', color: '#fff' }}
                     >
                         {/* Progress bar — clickable to seek */}
@@ -420,9 +420,7 @@ export function GlobalNasheedPlayer() {
                                 onClick={() => setIsExpanded(true)}
                             >
                                 <div
-                                    className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border border-white/10 ${
-                                        isPlaying && !showSpinner ? 'animate-pulse' : ''
-                                    }`}
+                                    className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border border-white/10`}
                                     style={{ background: isError ? 'rgba(239,68,68,0.2)' : isPlaying && !showSpinner ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)' }}
                                 >
                                     {showSpinner ? (
@@ -518,7 +516,7 @@ export function GlobalNasheedPlayer() {
                                 </div>
                             ) : (
                                 <>
-                                    <Music className={`w-28 h-28 text-emerald-500/40 ${isPlaying ? 'animate-pulse' : ''}`} />
+                                    <Music className={`w-28 h-28 ${isPlaying ? 'text-emerald-500/50' : 'text-emerald-500/30'}`} />
                                     {isPlaying && (
                                         <Equalizer
                                             bars={5}

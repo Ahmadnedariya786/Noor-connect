@@ -13,7 +13,7 @@ import { LayoutManager } from "@/components/LayoutManager";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
 import { shouldShowMenstrualFeatures } from "@/lib/gender-settings";
-import { isMenstrualModeActive, getMenstrualModeData, activateMenstrualMode, deactivateMenstrualMode } from "@/lib/menstrual-mode";
+import { isMenstrualModeActive, getMenstrualModeData, activateMenstrualMode, deactivateMenstrualMode } from "@/lib/haidh-tracker";
 import { cn } from "@/lib/utils";
 import { EidCelebrationOverlay } from "@/components/EidCelebrationOverlay";
 import { CheckCircle, AlertTriangle } from "lucide-react";
@@ -520,7 +520,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
 return (
     <PageTransition>
       <PremiumDashboard
-        currentTime={currentTime}
+        
         hijriDate={hijriDate || ""}
         nextPrayer={nextPrayerInfo}
         prayers={dashboardPrayers}

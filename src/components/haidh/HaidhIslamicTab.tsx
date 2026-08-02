@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Heart, BookOpen, AlertTriangle, CheckCircle, Moon, Wind, BookHeart, Droplets, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import {
   markFastMadeUp,
   getCurrentCycle,
   HAIDH_EDUCATION,
+  WELLNESS_ARTICLES,
   type HaidhTrackerData,
   type FiqhStatus,
 } from "@/lib/haidh-tracker";
@@ -32,6 +33,7 @@ function phaseContent(data: HaidhTrackerData, fiqh: FiqhStatus) {
 
 export function HaidhIslamicTab({ data, fiqh }: Props) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openArticle, setOpenArticle] = useState<number | null>(null);
   const cycle = getCurrentCycle(data);
   const isNifas = cycle?.bleedingType === "nifas";
   const content = phaseContent(data, fiqh);
@@ -284,6 +286,32 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
                   {item.source && (
                     <p className="text-xs text-muted-foreground mt-2 italic">{item.source}</p>
                   )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Women's Health & Wellness Articles */}
+      <div className="bg-card border border-border rounded-[32px] p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Heart className="w-4 h-4 text-rose-500" />
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Health & Wellness</h3>
+        </div>
+        <div className="space-y-2">
+          {WELLNESS_ARTICLES.map((item, i) => (
+            <div key={i} className="border border-border rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setOpenArticle(openArticle === i ? null : i)}
+                className="w-full flex items-center justify-between p-4 text-left text-sm font-bold text-foreground hover:bg-muted/30 transition-colors"
+              >
+                {item.title}
+                <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform ml-2", openArticle === i && "rotate-180")} />
+              </button>
+              {openArticle === i && (
+                <div className="px-4 pb-4 text-sm text-foreground/80 leading-relaxed bg-muted/10 rounded-b-2xl">
+                  <p>{item.content}</p>
                 </div>
               )}
             </div>

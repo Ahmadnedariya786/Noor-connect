@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Droplets, CheckCircle, Moon, AlertTriangle, Sparkles, Wind, BookOpen, Star, CalendarClock } from "lucide-react";
+import { Droplets, CheckCircle, Moon, AlertTriangle, Sparkles, Wind, BookOpen, Star, CalendarClock, GlassWater, Thermometer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HaidhGhuslChecklist as GhuslChecklist } from "@/components/haidh/HaidhGhuslChecklist";
@@ -31,6 +31,11 @@ const toDateStr = (d: Date) => {
 export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props) {
   const cycle = getCurrentCycle(data);
   const today = toDateStr(new Date());
+  const [waterGlasses, setWaterGlasses] = useState(() => {
+    const stored = localStorage.getItem(`noor-water-${today}`);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+  const [painLevel, setPainLevel] = useState(0);
 
   const activeDays = useMemo(() => {
     if (!cycle) return 0;
@@ -173,7 +178,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
             </div>
 
             <div className="w-24 h-24 mb-6 relative">
-              <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-pulse" />
+              <div className="absolute inset-0 rounded-full bg-emerald-500/10 border border-emerald-500/15" />
               <div className="absolute inset-2 rounded-full border border-emerald-500/20" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <Moon className="w-10 h-10 text-emerald-500" />
@@ -306,6 +311,82 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
           <p className="text-xs text-muted-foreground">
             Avg {regularity.averageCycle}d · Range {regularity.minCycle}–{regularity.maxCycle}d · Based on last {data.cycles.filter(c => c.endDate).length} cycles
           </p>
+        </div>
+      )}
+
+      {/* ── Water intake tracker ───────────────────────────────────────── */}
+      <div className="bg-card border border-border rounded-[28px] p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <GlassWater className="w-4 h-4 text-blue-500" />
+            <span className="text-xs font-black uppercase tracking-widest text-blue-500">Daily Water</span>
+          </div>
+          <span className="text-xs text-muted-foreground font-medium">{waterGlasses}/8 glasses</span>
+        </div>
+        <div className="flex gap-1.5 mb-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                const next = i < waterGlasses ? i : i + 1;
+                setWaterGlasses(next);
+                localStorage.setItem(`noor-water-${today}`, String(next));
+              }}
+              className={`flex-1 h-8 rounded-lg transition-all border ${
+                i < waterGlasses
+                  ? 'bg-blue-500/20 border-blue-500/40'
+                  : 'bg-muted/40 border-border'
+              }`}
+            >
+              <GlassWater className={`w-3 h-3 mx-auto transition-colors ${
+                i < waterGlasses ? 'text-blue-500' : 'text-muted-foreground/30'
+              }`} />
+            </button>
+          ))}
+        </div>
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500"
+            style={{ width: `${(waterGlasses / 8) * 100}%` }}
+          />
+        </div>
+        {data.isActive && (
+          <p className="text-[11px] text-muted-foreground/70 mt-2">
+            Staying hydrated helps reduce cramping and fatigue.
+          </p>
+        )}
+      </div>
+
+      {/* ── Pain level quick-log ──────────────────────────────────────── */}
+      {data.isActive && (
+        <div className="bg-card border border-border rounded-[28px] p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Thermometer className="w-4 h-4 text-amber-500" />
+              <span className="text-xs font-black uppercase tracking-widest text-amber-500">Pain Level</span>
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">{painLevel === 0 ? 'None' : painLevel <= 3 ? 'Mild' : painLevel <= 6 ? 'Moderate' : 'Severe'}</span>
+          </div>
+          <div className="flex gap-1.5">
+            {Array.from({ length: 10 }).map((_, i) => {
+              const lvl = i + 1;
+              const active = lvl <= painLevel;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setPainLevel(lvl === painLevel ? 0 : lvl)}
+                  className={`flex-1 h-7 rounded-md transition-all ${
+                    active
+                      ? lvl <= 3 ? 'bg-emerald-500/60' : lvl <= 6 ? 'bg-amber-500/60' : 'bg-rose-500/60'
+                      : 'bg-muted/40'
+                  }`}
+                />
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
+            <span>None</span><span>Mild</span><span>Moderate</span><span>Severe</span>
+          </div>
         </div>
       )}
 
