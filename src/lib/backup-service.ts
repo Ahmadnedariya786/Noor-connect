@@ -176,6 +176,8 @@ const KNOWN_STORAGE_KEYS: readonly string[] = [
   'mystery-box-last-claim', 'mystery-box-history',
   'offline-sync-config', 'background-sync-config', 'background-sync-task',
   'next-sync-time', 'daily-ayah-cache', 'daily-hadith-cache',
+  // Dynamic (prefixed) keys — matched by prefix at runtime
+  'noor-water-<date>', 'ebook-<bookId>', 'exchange-rate-fallback-<currency>',
 ];
 
 /** Pref keys that survive snapshot compaction when storage pressure is extreme. */

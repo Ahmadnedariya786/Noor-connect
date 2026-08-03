@@ -38,6 +38,8 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Android Cleartext Whitelist**: `m.live.net.sa` added to the network security config so the streams play on Android (cleartext HTTP on port 1935).
 - **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
 - **Quality Selector Cleanup**: Quality picker is now hidden when the active stream only exposes a single quality level (the primary `m.live.net.sa` streams are single-variant 720p), keeping the controls clean.
+- **Source Info Cards Synced**: In-player stream source info cards updated to match the new `m.live.net.sa` primary + Aloula fallback configuration.
+- **Android 14+ Crash Fix**: Replaced the adaptive app icon (rejected by Android 14+ strict notification validation) with a proper white-on-transparent vector drawable — fixes the `BadForegroundServiceNotificationException` crash in `WidgetForegroundService` and prevents the same crash in `AdhanPlaybackService` and `WidgetRefreshWorker`.
 
 ### 🕌 Major Prayer Times & Quran Refactor
 - **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
@@ -49,6 +51,9 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Major UI/UX Overhaul**: Transitioned the tracker from a sidebar layout to a fully mobile-optimized native Bottom Tab Bar, preventing layout overlaps.
 - **Health Tracking Integrations**: Built a daily Water Hydration Tracker (8 glasses) and a 1-10 Pain Scale logger directly into the Today and Log tabs.
 - **Deep System Integration**: Unified the `haidh-tracker-v2` engine. It now actively communicates with the broader app to automatically silence Prayer Notifications and halt Qaza (Missed Prayer) auto-syncing while a cycle is active.
+- **Log Confirmation UX**: "Log Today's Data" now shows a "Logged for {date}" confirmation card with a locked summary and a Modify Data button — no more ambiguous saves.
+- **Pain Scale Persistence**: Pain levels are now saved into the daily log record (survive tab switches and app restarts) instead of existing only in component state.
+- **Missed Fast Count Fix**: Turning off a missed fast now decrements the count instead of double-counting.
 - **Performance Optimizations**: Eliminated a heavy, GPU-bound `animate-pulse` effect on the Tuhr icon that was causing frame drops on legacy devices. Removed fragmented legacy state files.
 - **Islamic Wellness Library**: Curated Fiqh & Wellness articles added to the Islamic knowledge tab, covering nutrition, exercise, and mental health from an Islamic perspective.
 
