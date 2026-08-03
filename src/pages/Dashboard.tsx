@@ -13,7 +13,6 @@ import { LayoutManager } from "@/components/LayoutManager";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
 import { shouldShowMenstrualFeatures } from "@/lib/gender-settings";
-import { isMenstrualModeActive, getMenstrualModeData, activateMenstrualMode, deactivateMenstrualMode } from "@/lib/haidh-tracker";
 import { cn } from "@/lib/utils";
 import { EidCelebrationOverlay } from "@/components/EidCelebrationOverlay";
 import { CheckCircle, AlertTriangle } from "lucide-react";
@@ -34,7 +33,6 @@ import { useToast } from "@/hooks/use-toast";
 import { LocationCardSkeleton, LoadingSpinner } from "@/components/LoadingSkeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GeocodingService } from "@/lib/geocoding";
-import { PRAYER_ALARM_CONTROL_EVENT, PRAYER_ALARM_TOGGLE_EVENT } from "@/lib/prayer-alarm-events";
 import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { globalTimerManager } from "@/lib/timer-manager";
@@ -72,7 +70,6 @@ export default function Dashboard() {
   const location = useLocationState();
 
   const [showManualLocationDialog, setShowManualLocationDialog] = useState(false);
-  const [menstrualModeData, setMenstrualModeData] = useState(getMenstrualModeData());
   const [showBatteryOptDialog, setShowBatteryOptDialog] = useState(false);
   const [todayPrayers, setTodayPrayers] = useState<DailyPrayers | null>(null);
 
@@ -300,56 +297,6 @@ export default function Dashboard() {
     }
   };
 
-
-  // Handle menstrual mode toggle
-  const handleMenstrualModeToggle = async () => {
-    if (menstrualModeData.isActive) {
-      const updated = deactivateMenstrualMode(new Date());
-      setMenstrualModeData(updated);
-      toast({
-        title: ti18n('menstrualModeEnded'),
-        description: ti18n('prayerReminderSchedulingResumed'),
-      });
-    } else {
-      const updated = activateMenstrualMode(new Date());
-      setMenstrualModeData(updated);
-
-      // Disable the web adhan alarm state immediately while mode is active.
-      localStorage.setItem("prayer-alarm-enabled", "false");
-      window.dispatchEvent(
-        new CustomEvent(PRAYER_ALARM_TOGGLE_EVENT, { detail: { enabled: false } })
-      );
-      window.dispatchEvent(
-        new CustomEvent(PRAYER_ALARM_CONTROL_EVENT, { detail: { action: "stop" } })
-      );
-
-      if (updated.pausePrayerNotifications) {
-        try {
-          const { localNotifications } = await import("@/lib/local-notifications");
-          await localNotifications.clearPrayerNotifications();
-        } catch (error) {
-          console.error(ti18n('failedToClearPrayerNotifications'), error);
-        }
-      }
-
-      toast({
-        title: ti18n('menstrualModeEnabled'),
-        description: ti18n('prayerRemindersPaused'),
-      });
-    }
-  };
-
-  // Listen for menstrual mode updates
-  useEffect(() => {
-    const handleModeUpdate = () => {
-      setMenstrualModeData(getMenstrualModeData());
-    };
-
-    window.addEventListener("menstrual-mode-updated", handleModeUpdate);
-    return () => {
-      window.removeEventListener("menstrual-mode-updated", handleModeUpdate);
-    };
-  }, []);
 
 // Initialize prayer times when location changes
    useEffect(() => {
