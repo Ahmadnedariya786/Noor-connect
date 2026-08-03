@@ -14,11 +14,6 @@ const BottomNav = memo(function BottomNav() {
   const activeColor = isDark ? AMBER_DARK : AMBER;
   const location = useLocation();
 
-  // Hide global nav on routes that have their own bottom navigation
-  if (location.pathname.startsWith('/noor-cycle')) {
-    return null;
-  }
-
   const [noBlur, setNoBlur] = useState<boolean>(() => {
     if (typeof document === 'undefined') return false;
     const tier = document.documentElement.dataset.animationTier;
@@ -33,6 +28,11 @@ const BottomNav = memo(function BottomNav() {
     window.addEventListener('animation-tier-changed', handler);
     return () => window.removeEventListener('animation-tier-changed', handler);
   }, []);
+
+  // Hide global nav on routes that have their own bottom navigation
+  if (location.pathname.startsWith('/noor-cycle')) {
+    return null;
+  }
 
   const navItems = [
     { title: (t('qibla') || 'Qibla'), path: '/qibla', icon: Compass },
