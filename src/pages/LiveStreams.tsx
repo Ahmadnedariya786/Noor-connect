@@ -30,9 +30,10 @@ export default function LiveStreams() {
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
               <Wifi className="w-4 h-4 text-emerald-600" />
             </div>
-            <p className="text-xs font-bold text-foreground">HLS Stream</p>
+            <p className="text-xs font-bold text-foreground">Live Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Official Saudi streams via Akamai CDN (hls_roku). Direct HLS streaming for reliability.
+              Live from the Two Holy Mosques — Makkah (Al-Quran Al-Kareem) &amp; Madinah (As-Sunnah). Primary:
+              m.live.net.sa (CORS-enabled HLS, 720p). Fallback: Aloula CDN.
             </p>
           </div>
 
@@ -40,9 +41,10 @@ export default function LiveStreams() {
             <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center">
               <Shield className="w-4 h-4 text-indigo-600" />
             </div>
-            <p className="text-xs font-bold text-foreground">Privacy First</p>
+            <p className="text-xs font-bold text-foreground">Auto Fallback</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              No tracking, no YouTube. Streams play directly via open-source HLS.js (MIT).
+              If the primary stream fails, it switches to the secondary source once, then shows a friendly
+              error with Retry. Android cleartext whitelist included.
             </p>
           </div>
         </div>

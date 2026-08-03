@@ -1,7 +1,7 @@
 ﻿/**
  * Islamic Stream Player — Premium Redesign
  * HLS streaming for Makkah & Madinah.
- * Uses hls.js (MIT License) + iptv-org open playlist.
+ * Uses hls.js (MIT License). Primary source m.live.net.sa, fallback Aloula CDN.
  * YouTube dependency removed for F-Droid compliance.
  */
 
@@ -22,8 +22,7 @@ import {
   MonitorPlay,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { fetchSaudiPlaylist, FALLBACK_STREAMS, type Channel } from '@/lib/m3u-parser';
-import { isLowEndDevice } from '@/lib/performance-optimizations';
+import { FALLBACK_STREAMS, type Channel } from '@/lib/m3u-parser';import { isLowEndDevice } from '@/lib/performance-optimizations';
 import { recordListeningTime } from '@/lib/radio-stats';
 
 type StreamLocation = 'makkah' | 'madinah';
