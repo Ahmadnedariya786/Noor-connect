@@ -16,10 +16,12 @@ export interface DailyLog {
   symptoms: string[];
   mood: MoodType | null;
   energyLevel: 1 | 2 | 3 | 4 | 5 | null;
+  painLevel: number; // 0–10
   notes: string;
   isIstihadhah: boolean;
   ghusulCompleted: boolean;
   missedFast: boolean;
+  committed: boolean; // true once the user confirms the day's log
 }
 
 export interface CycleEntry {
@@ -388,10 +390,12 @@ export const logDay = (date: Date, log: Partial<DailyLog>): HaidhTrackerData => 
     symptoms: [],
     mood: null,
     energyLevel: null,
+    painLevel: 0,
     notes: '',
     isIstihadhah: false,
     ghusulCompleted: false,
     missedFast: false,
+    committed: false,
     ...log,
   };
 
@@ -436,6 +440,12 @@ export const markGhusulComplete = (date: Date = new Date()): HaidhTrackerData =>
 export const incrementMissedFast = (): HaidhTrackerData => {
   const data = getHaidhData();
   return saveHaidhData({ ...data, missedRamadanFasts: data.missedRamadanFasts + 1 });
+};
+
+export const decrementMissedFast = (): HaidhTrackerData => {
+  const data = getHaidhData();
+  if (data.missedRamadanFasts <= 0) return data;
+  return saveHaidhData({ ...data, missedRamadanFasts: data.missedRamadanFasts - 1 });
 };
 
 export const markFastMadeUp = (): HaidhTrackerData => {

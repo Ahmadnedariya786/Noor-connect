@@ -9,6 +9,8 @@ import {
   getPredictionConfidence,
   calculateOvulationDay,
   getRegularityInfo,
+  logDay,
+  getLogForDate,
   type HaidhTrackerData,
   type FiqhStatus,
 } from "@/lib/haidh-tracker";
@@ -35,7 +37,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
     const stored = localStorage.getItem(`noor-water-${today}`);
     return stored ? parseInt(stored, 10) : 0;
   });
-  const [painLevel, setPainLevel] = useState(0);
+  const [painLevel, setPainLevel] = useState(() => getLogForDate(data, today)?.painLevel ?? 0);
 
   const activeDays = useMemo(() => {
     if (!cycle) return 0;
@@ -374,7 +376,11 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
               return (
                 <button
                   key={i}
-                  onClick={() => setPainLevel(lvl === painLevel ? 0 : lvl)}
+                  onClick={() => {
+                    const next = lvl === painLevel ? 0 : lvl;
+                    setPainLevel(next);
+                    logDay(new Date(), { painLevel: next });
+                  }}
                   className={`flex-1 h-7 rounded-md transition-all ${
                     active
                       ? lvl <= 3 ? 'bg-emerald-500/60' : lvl <= 6 ? 'bg-amber-500/60' : 'bg-rose-500/60'

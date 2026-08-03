@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Droplets, BookOpen, BookHeart, Zap, Thermometer, GlassWater } from "lucide-react";
+import { Check, Droplets, BookOpen, BookHeart, Zap, Thermometer, GlassWater, Lock, Pencil, PartyPopper } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import {
   startCycle,
   SYMPTOMS,
   incrementMissedFast,
+  decrementMissedFast,
   markFastMadeUp,
   type HaidhTrackerData,
   type DailyLog,
@@ -46,6 +47,8 @@ const toDateStr = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
+const painLabel = (lvl: number) => (lvl === 0 ? "None" : lvl <= 3 ? "Mild" : lvl <= 6 ? "Moderate" : "Severe");
+
 export function HaidhLogTab({ data, onLog }: Props) {
   const cycle = getCurrentCycle(data);
   const todayStr = toDateStr(new Date());
@@ -55,10 +58,16 @@ export function HaidhLogTab({ data, onLog }: Props) {
     [cycle, data, todayStr]
   );
 
+  // True once the user has confirmed the day's log — locks the form until tomorrow.
+  const [isEditing, setIsEditing] = useState(!existingLog?.committed);
+  const isLogged = !!existingLog?.committed;
+  const formLocked = isLogged && !isEditing;
+
   const [flow, setFlow] = useState<FlowIntensity>(existingLog?.flow ?? "none");
   const [symptoms, setSymptoms] = useState<string[]>(existingLog?.symptoms ?? []);
   const [mood, setMood] = useState<MoodType | null>(existingLog?.mood ?? null);
   const [energy, setEnergy] = useState<number>(existingLog?.energyLevel ?? 3);
+  const [painLevel, setPainLevel] = useState<number>(existingLog?.painLevel ?? 0);
   const [notes, setNotes] = useState<string>(existingLog?.notes ?? "");
   const [ghusulCompleted, setGhusulCompleted] = useState(existingLog?.ghusulCompleted ?? false);
   const [missedFast, setMissedFast] = useState(existingLog?.missedFast ?? false);
@@ -67,7 +76,6 @@ export function HaidhLogTab({ data, onLog }: Props) {
     const stored = localStorage.getItem(`noor-water-${todayStr2}`);
     return stored ? parseInt(stored, 10) : 0;
   });
-  const [painLevel, setPainLevel] = useState(0);
 
   // Reset local state if today's persisted log changes externally.
   useEffect(() => {
@@ -75,6 +83,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
     setSymptoms(existingLog?.symptoms ?? []);
     setMood(existingLog?.mood ?? null);
     setEnergy(existingLog?.energyLevel ?? 3);
+    setPainLevel(existingLog?.painLevel ?? 0);
     setNotes(existingLog?.notes ?? "");
     setGhusulCompleted(existingLog?.ghusulCompleted ?? false);
     setMissedFast(existingLog?.missedFast ?? false);
@@ -116,6 +125,11 @@ export function HaidhLogTab({ data, onLog }: Props) {
     save({ energyLevel: val as DailyLog["energyLevel"] });
   };
 
+  const handlePain = (lvl: number) => {
+    setPainLevel(lvl);
+    save({ painLevel: lvl });
+  };
+
   const handleNotes = (v: string) => {
     setNotes(v);
     if (notesTimer.current) clearTimeout(notesTimer.current);
@@ -133,10 +147,100 @@ export function HaidhLogTab({ data, onLog }: Props) {
     const next = !missedFast;
     setMissedFast(next);
     save({ missedFast: next });
-    if (next) incrementMissedFast();
+    if (next && !existingLog?.missedFast) incrementMissedFast();
+    else if (!next && existingLog?.missedFast) decrementMissedFast();
+  };
+
+  const handleCommit = () => {
+    // Logs only persist when attached to an active cycle. If the user logs
+    // bleeding without one, start the cycle first (same as handleFlow).
+    if (!cycle) {
+      if (flow === "none") {
+        toast.error("Start a period first — tap a flow option to begin your cycle");
+        return;
+      }
+      startCycle(new Date(), "haidh");
+    }
+    save(
+      {
+        flow, symptoms, mood,
+        energyLevel: energy as DailyLog["energyLevel"],
+        painLevel, notes, ghusulCompleted, missedFast,
+        committed: true,
+      },
+      true
+    );
+    setIsEditing(false);
+    toast.success(`Logged for ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`);
   };
 
   const owed = Math.max(0, data.missedRamadanFasts - data.madeUpRamadanFasts);
+
+  const formattedDate = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  // ── Locked summary view ─────────────────────────────────────
+  if (formLocked && existingLog) {
+    return (
+      <div className="space-y-5 pb-24">
+        {/* Confirmation card */}
+        <div className="rounded-[28px] bg-emerald-500/10 border border-emerald-500/30 p-6 text-center space-y-3 relative overflow-hidden">
+          <div className="absolute -top-8 -right-8 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+            <PartyPopper className="w-8 h-8 text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-xl font-black text-foreground">Logged for {formattedDate}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Your log is saved for today — you can log again tomorrow.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+            <Lock className="w-3 h-3" /> Locked until tomorrow
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="rounded-[24px] bg-card border border-border p-5 space-y-3">
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Today's Summary</h3>
+          <div className="flex flex-wrap gap-2">
+            <span className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold">
+              Flow: {flow === "none" ? "None" : flow[0].toUpperCase() + flow.slice(1)}
+            </span>
+            {painLevel > 0 && (
+              <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold">
+                Pain: {painLabel(painLevel)}
+              </span>
+            )}
+            {mood && (
+              <span className="px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-xs font-bold">
+                {MOODS.find(m => m.id === mood)?.emoji} {MOODS.find(m => m.id === mood)?.label}
+              </span>
+            )}
+            {symptoms.length > 0 && (
+              <span className="px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-600 dark:text-violet-400 text-xs font-bold">
+                {symptoms.length} symptom{symptoms.length > 1 ? "s" : ""}
+              </span>
+            )}
+            <span className="px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 text-xs font-bold">
+              Energy: {energy}/5
+            </span>
+          </div>
+          {ghusulCompleted && (
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <Check className="w-3.5 h-3.5" /> Ghusl performed
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => setIsEditing(true)}
+          className="w-full flex items-center justify-center gap-2 h-13 py-3.5 rounded-2xl bg-card border border-border font-bold text-foreground hover:bg-muted/60 transition-colors"
+        >
+          <Pencil className="w-4 h-4" /> Modify Data
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-24">
@@ -147,7 +251,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
         <div>
           <h2 className="text-xl font-black tracking-tight text-foreground">Today's Log</h2>
           <p className="text-xs text-muted-foreground uppercase tracking-widest">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            {formattedDate}
           </p>
         </div>
       </div>
@@ -156,6 +260,12 @@ export function HaidhLogTab({ data, onLog }: Props) {
         <p className="text-xs text-muted-foreground bg-muted/50 border border-border rounded-2xl p-3">
           Logging flow will automatically start a new cycle.
         </p>
+      )}
+
+      {isLogged && isEditing && (
+        <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3">
+          <Pencil className="w-3.5 h-3.5 shrink-0" /> Editing today's log — tap "Save Today's Log" when done.
+        </div>
       )}
 
       {/* Flow */}
@@ -263,7 +373,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
             <Thermometer className="w-3 h-3" /> Pain Scale
           </h3>
           <span className="text-xs font-black text-foreground">
-            {painLevel === 0 ? 'None' : painLevel <= 3 ? 'Mild' : painLevel <= 6 ? 'Moderate' : 'Severe'}
+            {painLabel(painLevel)}
           </span>
         </div>
         <div className="bg-background border border-border rounded-2xl p-4 space-y-3">
@@ -274,7 +384,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
               return (
                 <button
                   key={i}
-                  onClick={() => setPainLevel(lvl === painLevel ? 0 : lvl)}
+                  onClick={() => handlePain(lvl === painLevel ? 0 : lvl)}
                   className={`flex-1 h-7 rounded-md transition-all ${
                     active
                       ? lvl <= 3 ? 'bg-emerald-500' : lvl <= 6 ? 'bg-amber-500' : 'bg-rose-500'
@@ -397,6 +507,15 @@ export function HaidhLogTab({ data, onLog }: Props) {
           )}
         </div>
       </section>
+
+      {/* Commit button */}
+      <button
+        onClick={handleCommit}
+        className="w-full h-14 rounded-2xl bg-gradient-to-r from-rose-700 to-rose-500 hover:from-rose-600 hover:to-rose-400 text-white font-black text-base shadow-xl shadow-rose-900/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] sticky bottom-4"
+      >
+        {isLogged ? <Check className="w-5 h-5" /> : <Droplets className="w-5 h-5" />}
+        {isLogged ? "Save Today's Log" : "Log Today's Data"}
+      </button>
     </div>
   );
 }
