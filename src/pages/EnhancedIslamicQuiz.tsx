@@ -12,6 +12,7 @@ import {
   Trophy, 
   RotateCcw, 
   CheckCircle, 
+  Check,
   XCircle, 
   Lightbulb, 
   Award,
@@ -100,7 +101,7 @@ export default function EnhancedIslamicQuiz() {
   });
   
   const [quizComplete, setQuizComplete] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [stats, setStats] = useState<QuizStats | null>(null);
   const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
@@ -150,7 +151,7 @@ export default function EnhancedIslamicQuiz() {
     if (mode === 'survival') questionCount = 100; // Endless until wrong
     
     const questions = quizManager.getQuestions(
-      selectedCategory || config?.category || undefined, 
+      selectedCategories.length > 0 ? selectedCategories : undefined, 
       selectedDifficulty !== 'all' ? selectedDifficulty : config?.difficulty || undefined, 
       questionCount
     );
@@ -178,7 +179,7 @@ export default function EnhancedIslamicQuiz() {
     // Reset combo for new quiz
     setCombo(0);
     setComboMultiplier(1);
-  }, [selectedCategory, selectedDifficulty, selectedGameMode]);
+  }, [selectedCategories, selectedDifficulty, selectedGameMode]);
 
   const finishQuiz = useCallback(() => {
     setQuizComplete(true);
@@ -486,8 +487,8 @@ export default function EnhancedIslamicQuiz() {
     return <QuizMenu 
       onStartQuiz={startNewQuiz}
       onSelectMode={() => setGameMode('modeSelect')}
-      selectedCategory={selectedCategory}
-      setSelectedCategory={setSelectedCategory}
+      selectedCategories={selectedCategories}
+      setSelectedCategories={setSelectedCategories}
       selectedDifficulty={selectedDifficulty}
       setSelectedDifficulty={setSelectedDifficulty}
       stats={stats}
@@ -768,8 +769,8 @@ export default function EnhancedIslamicQuiz() {
 function QuizMenu({ 
   onStartQuiz, 
   onSelectMode,
-  selectedCategory, 
-  setSelectedCategory, 
+  selectedCategories, 
+  setSelectedCategories, 
   selectedDifficulty, 
   setSelectedDifficulty,
   stats,
@@ -878,26 +879,36 @@ function QuizMenu({
           {/* Category Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Select Category</CardTitle>
-              <CardDescription>Choose your area of knowledge</CardDescription>
+              <CardTitle className="text-lg">Select Topics</CardTitle>
+              <CardDescription>
+                {selectedCategories.length > 0
+                  ? `${selectedCategories.length} selected — tap again to deselect`
+                  : 'Choose one or more topics (none = all topics)'}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {QUIZ_CATEGORIES.filter(c => c.unlocked).map(category => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="w-full justify-start"
-                >
-                  <span className="mr-2">{category.icon}</span>
-                  <span>{category.name}</span>
-                  {stats?.categoryMastery[category.id] && (
-                    <Badge variant="secondary" className="ml-auto">
-                      {stats.categoryMastery[category.id]}%
-                    </Badge>
-                  )}
-                </Button>
-              ))}
+              {QUIZ_CATEGORIES.filter(c => c.unlocked).map(category => {
+                const isSelected = selectedCategories.includes(category.id);
+                return (
+                  <Button
+                    key={category.id}
+                    variant={isSelected ? "default" : "outline"}
+                    onClick={() => setSelectedCategories(prev =>
+                      isSelected ? prev.filter(id => id !== category.id) : [...prev, category.id]
+                    )}
+                    className="w-full justify-start"
+                  >
+                    <span className="mr-2">{category.icon}</span>
+                    <span>{category.name}</span>
+                    {isSelected && <Check className="w-4 h-4 ml-auto" />}
+                    {!isSelected && stats?.categoryMastery[category.id] && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {stats.categoryMastery[category.id]}%
+                      </Badge>
+                    )}
+                  </Button>
+                );
+              })}
             </CardContent>
           </Card>
 
@@ -1019,8 +1030,16 @@ function QuizMenu({
           {/* Quick Start Button */}
           <Button onClick={() => onStartQuiz('classic')} className="w-full" size="lg">
             <Target className="w-4 h-4 mr-2" />
-            Quick Start (Classic)
+            Start Quiz
           </Button>
+          <p className="text-center text-xs text-muted-foreground -mt-2">
+            {selectedCategories.length > 0
+              ? QUIZ_CATEGORIES.filter(c => selectedCategories.includes(c.id)).map(c => c.name).join(', ')
+              : 'All topics'}
+            {' · '}
+            {selectedDifficulty === 'all' ? 'All difficulties' : selectedDifficulty}
+            {' · 10 questions'}
+          </p>
         </div>
       </div>
     </LayoutManager>

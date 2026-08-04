@@ -155,14 +155,14 @@ export function GameModeSelector({ onSelectMode, onBack }: GameModeSelectorProps
     {
       id: 'category',
       name: 'Category Mastery',
-      description: 'Focus on one category to master it completely.',
+      description: 'Focus on your selected topics to master them completely.',
       icon: <Crown className="w-8 h-8" />,
       color: 'text-amber-500',
       gradient: 'from-amber-500/20 to-yellow-500/20',
       bestScore: bestScores.category,
       unlockLevel: 2,
       rules: [
-        'Choose any category',
+        'Choose any topics',
         'Track mastery progress',
         'Bronze → Silver → Gold → Platinum',
         'Unlock legendary items!'

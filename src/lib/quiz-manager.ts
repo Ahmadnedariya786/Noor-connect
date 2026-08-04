@@ -269,12 +269,12 @@ export class QuizManager {
     }
   }
 
-  // Get questions for a specific category and difficulty
-  getQuestions(category?: string, difficulty?: string, count: number = 10): QuizQuestion[] {
+  // Get questions for specific categories and difficulty
+  getQuestions(categories?: string[], difficulty?: string, count: number = 10): QuizQuestion[] {
     let filtered = ENHANCED_QUESTIONS;
     
-    if (category) {
-      filtered = filtered.filter(q => q.category === category);
+    if (categories && categories.length > 0) {
+      filtered = filtered.filter(q => categories.includes(q.category));
     }
     
     if (difficulty) {
