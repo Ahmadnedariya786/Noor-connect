@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.2.0] - 2026-08-01
 
+### ⚡ 5-Phase Performance Optimization Pass
+- **Re-render churn eliminated**: Subscriber-counted global timer scheduler (starts/stops with subscribers); dashboard's 30s clock tick replaced with a derived 60s `minuteTick`; guarded state updates in countdown widgets, Ramadan widget, and the radio player stop redundant re-renders.
+- **Long list rendering**: Hadith collections render in pages of 300 with IntersectionObserver infinite scroll; memoized cards for hadith, books, and radio stations; debounced Tafsir / Names of Allah search with cached filtered results.
+- **Startup & bundle size**: Premium dashboard and the weekly chart are code-split (chart renders only when animations are enabled and the device can handle it); dead `chart.tsx` removed; module preload hints filtered for heavy chunks; first auto-backup and daily hadith fetch deferred to idle time with an in-memory parse cache.
+- **GPU & CSS**: Gold shimmer sweep and skeletons run on compositor-only properties; 48 `transition: all` rules replaced with targeted transitions; framer `layout`/`layoutId` FLIP animations replaced with cheap fades; `reduce-blur` now also strips `.blur-light`/`.blur-medium` and all `blur-*` filters on low-end devices; static `will-change` layers removed.
+- **Timer & memory leaks fixed**: Ebook download progress interval cleared on failure; periodic notification checks made idempotent with tracked interval + removable listener + `stopPeriodicChecks()`; dead `PrayerCountdown` component deleted; animation tier benchmark runs once per session instead of on every consumer mount.
+
 ### 📻 Live Streams Reliability & Fullscreen Fixes
 - **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (rejected by browsers before playback starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
 - **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.

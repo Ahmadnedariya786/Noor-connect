@@ -32,6 +32,13 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ## 🆕 What's New in v2.2.0
 
+### ⚡ Performance & Smoothness Optimization Pass
+- **Re-Render Churn Eliminated**: The dashboard clock no longer re-renders the whole app twice a second — the 30s global tick was replaced with a derived 60s update, countdown timers now share a subscriber-counted scheduler, and widget state updates are guarded so nothing re-renders when values haven't changed.
+- **Faster Long Lists**: Hadith books now load in pages of 300 with automatic infinite scroll instead of rendering every hadith at once; hadith cards, book cards, and radio station cards are memoized, and Tafsir / Names of Allah search is debounced with cached filtered results for smooth 60fps browsing.
+- **Faster App Startup**: The premium dashboard and weekly chart now load on demand (the chart only loads on capable devices), a dead chart component was removed, and heavy background work — the first auto-backup and the daily hadith fetch — is deferred to browser idle time so first paint happens sooner.
+- **Smoother Low-End Devices**: All blur/backdrop effects are now stripped on low-end devices, transitions animate only GPU-friendly properties (transform/opacity) instead of `all`, framer-motion layout FLIP animations were replaced with cheap fades, and the device animation benchmark runs once per session instead of on every screen.
+- **Timer & Memory Leaks Fixed**: Ebook download progress stops cleanly on failure, periodic notification checks are idempotent with a proper `stopPeriodicChecks()`, and dead code was removed.
+
 ### 📻 Live Streams Reliability (Hotfix)
 - **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (which browsers reject before playback ever starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
 - **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.
