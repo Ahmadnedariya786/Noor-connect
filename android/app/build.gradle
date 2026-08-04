@@ -135,6 +135,12 @@ task stripCompressedAssets {
         def deleted = 0
         assetsPublicDir.eachFileRecurse { f ->
             if (f.isFile() && (f.name.endsWith('.gz') || f.name.endsWith('.br'))) {
+                // Keep the gzip archives we intentionally ship for offline hadith
+                // loading (dist/data/hadith-collections/**/*.json.gz). Everything
+                // else is a vite-plugin-compression browser duplicate.
+                if (f.name.endsWith('.json.gz') && f.path.contains('hadith-collections')) {
+                    return
+                }
                 f.delete()
                 deleted++
             }

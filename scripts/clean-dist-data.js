@@ -1,30 +1,37 @@
 /**
  * clean-dist-data.js
  * -------------------
- * Removes large data directories from dist/ before `cap sync android`.
+ * Prepares dist/ before `cap sync android`.
  *
- * WHY THIS IS SAFE:
- *  - dist/mushaf/         → Mushaf WebP pages (84 MB). Capacitor copies from
- *                           android/app/src/main/assets/mushaf directly, so this
- *                           dist copy is pure duplication. Removed = ~84 MB saved.
+ * WHAT IT DOES:
+ *  - dist/mushaf/         → KEPT. cap sync replaces assets/public with the contents
+ *                           of dist, so dist/mushaf IS what ships in the APK
+ *                           (the Mushaf viewer fetches /mushaf/<page>.webp). Deleting
+ *                           it here used to strip all mushaf pages from the APK.
  *
  *  - dist/data/tafsir/    → Tafsir JSON files (174 MB). The app uses OFFLINE_EDITIONS
  *                           (3 editions) and falls back to CDN for the rest. Removing
  *                           forces ALL editions to use CDN jsdelivr.net. Online-only
  *                           for Tafsir is acceptable since it's an advanced feature.
- *                           Removed = ~174 MB saved.
+ *                           Removed.
  *
- *  - dist/data/hadith-collections/ → Hadith JSON (100 MB). All collections load via
- *                           fetch() from /data/hadith-collections/ at runtime. The app
- *                           already gracefully handles network errors with empty states.
- *                           Removed = ~100 MB saved.
+ *  - dist/data/hadith-collections/ → Hadith JSON (~110 MB). NOT deleted: the app loads
+ *                           these at runtime with fetch(), so they must ship in the APK.
+ *                           Instead each *.json is gzipped to *.json.gz (zlib level 9,
+ *                           ~65-70% smaller) and the raw JSON removed. The runtime
+ *                           loader (src/lib/gzip-loader.ts) transparently decompresses
+ *                           them with DecompressionStream, keeping hadiths fully offline.
  *
- * TOTAL ESTIMATED SAVING:  ~358 MB from final APK assets.
+ *  - *.gz/*.br siblings   → Vite's compression plugins emit precompressed copies of
+ *                           every asset. Capacitor's WebView serves files straight from
+ *                           disk with no HTTP compression, so they are dead weight in
+ *                           the APK. Removed (except the intentional hadith .json.gz).
  *
  * RUN VIA:  npm run android:build  (already wired in package.json)
  */
 
-import { rmSync, existsSync, statSync, readdirSync } from 'fs';
+import { rmSync, existsSync, statSync, readdirSync, writeFileSync, unlinkSync, readFileSync } from 'fs';
+import { gzipSync } from 'zlib';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -45,16 +52,62 @@ function getSizeMB(dir) {
   return (total / 1024 / 1024).toFixed(1);
 }
 
-const targets = [
-  { path: path.join(distDir, 'mushaf'),                   label: 'dist/mushaf (Mushaf pages duplication)' },
+/** Collect all *.json file paths under dir (recursively). */
+function collectJsonFiles(dir) {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      out.push(...collectJsonFiles(p));
+    } else if (e.name.endsWith('.json') && existsSync(p)) {
+      out.push(p);
+    }
+  }
+  return out;
+}
+
+/** Gzip every *.json under dir (recursively) to *.json.gz, then delete the original. */
+function compressJsonDir(dir) {
+  if (!existsSync(dir)) return { beforeMB: 0, afterMB: 0, count: 0, failed: [] };
+  const files = collectJsonFiles(dir);
+  const failed = [];
+  let before = 0;
+  let after = 0;
+  for (const file of files) {
+    const raw = statSync(file).size;
+    before += raw;
+    try {
+      const compressed = gzipSync(readFileSync(file), { level: 9 });
+      writeFileSync(file + '.gz', compressed);
+      unlinkSync(file);
+      after += compressed.length;
+    } catch (err) {
+      failed.push(`${path.basename(file)}: ${err.message}`);
+      after += raw;
+    }
+  }
+  return {
+    beforeMB: (before / 1024 / 1024).toFixed(1),
+    afterMB: (after / 1024 / 1024).toFixed(1),
+    count: files.length,
+    failed,
+  };
+}
+
+const deleteTargets = [
   { path: path.join(distDir, 'data', 'tafsir'),           label: 'dist/data/tafsir (online-only fallback available)' },
-  { path: path.join(distDir, 'data', 'hadith-collections'), label: 'dist/data/hadith-collections (runtime fetch)' },
 ];
 
-let totalSaved = 0;
+const compressTarget = {
+  path: path.join(distDir, 'data', 'hadith-collections'),
+  label: 'dist/data/hadith-collections (runtime fetch — gzipped, stays offline)',
+};
+
 console.log('\n📦 Pre-cap-sync APK size cleanup\n');
 
-for (const target of targets) {
+let totalSaved = 0;
+
+for (const target of deleteTargets) {
   if (existsSync(target.path)) {
     const mb = getSizeMB(target.path);
     rmSync(target.path, { recursive: true, force: true });
@@ -62,6 +115,51 @@ for (const target of targets) {
     console.log(`  ✓ Removed ${target.label}  (${mb} MB)`);
   } else {
     console.log(`  – Skipped ${target.label}  (not found)`);
+  }
+}
+
+if (existsSync(compressTarget.path)) {
+  const r = compressJsonDir(compressTarget.path);
+  const saved = parseFloat(r.beforeMB) - parseFloat(r.afterMB);
+  totalSaved += saved;
+  console.log(`  ✓ Compressed ${compressTarget.label}`);
+  console.log(`      ${r.count} files: ${r.beforeMB} MB → ${r.afterMB} MB  (−${saved.toFixed(1)} MB)`);
+  if (r.failed.length) {
+    console.log(`      ⚠ ${r.failed.length} file(s) failed (left as plain JSON):`);
+    for (const e of r.failed) console.log(`        – ${e}`);
+  }
+} else {
+  console.log(`  – Skipped ${compressTarget.label}  (not found)`);
+}
+
+// Vite's compression plugins emit *.gz/*.br siblings for every asset. Capacitor's
+// WebView serves files straight from disk with no HTTP compression, so those copies
+// are dead weight in the APK. Remove every *.br and every *.gz EXCEPT the
+// intentional hadith *.json.gz produced above (dist/data/hadith-collections).
+{
+  const keptGzPrefix = compressTarget.path + path.sep;
+  const toRemove = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        walk(full);
+      } else if (e.name.endsWith('.br') || (e.name.endsWith('.gz') && !full.startsWith(keptGzPrefix))) {
+        toRemove.push(full);
+      }
+    }
+  };
+  walk(distDir);
+  let removedMB = 0;
+  for (const full of toRemove) {
+    try {
+      removedMB += statSync(full).size;
+      rmSync(full, { force: true });
+    } catch {}
+  }
+  if (removedMB > 0) {
+    totalSaved += removedMB / 1024 / 1024;
+    console.log(`  ✓ Removed redundant .gz/.br copies (unused by Capacitor local serving)  (${(removedMB / 1024 / 1024).toFixed(1)} MB)`);
   }
 }
 

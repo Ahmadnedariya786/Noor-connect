@@ -56,7 +56,23 @@ export interface HadithChapter {
 const PUBLIC_BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 const HADITH_DATA_BASE = `${PUBLIC_BASE}/data/hadith-collections`;
 
+import { loadGzippedJson, isGzipSupported } from "@/lib/gzip-loader";
+
+/**
+ * Fetch JSON with transparent gzip support.
+ * In the APK the data ships as *.json.gz (see clean-dist-data.js) and is
+ * decompressed at runtime; on the web the plain *.json files exist, so we
+ * fall back to them automatically. Old WebViews skip gzip entirely.
+ */
 async function fetchPublicJson<T>(url: string): Promise<T | null> {
+  if (isGzipSupported()) {
+    try {
+      return await loadGzippedJson<T>(`${url}.gz`);
+    } catch (err) {
+      // No .gz variant (web deployment, legacy build) — fall through to plain JSON.
+      console.warn(`Gzip variant missing for ${url}:`, err);
+    }
+  }
   try {
     const res = await fetch(url);
     if (!res.ok) return null;

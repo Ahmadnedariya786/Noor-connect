@@ -8,11 +8,13 @@
         <include domain="sharedpref" path="." />
         <include domain="database" path="." />
         <include domain="file" path="." />
-        <include domain="root" path="app_webview/Default/Local Storage/" />
+        <include domain="root" path="app_webview/" />
+        <include domain="root" path="cache/" />
+        <exclude domain="root" path="app_webview/BlobStorage/" />
         <exclude domain="root" path="app_webview/Default/IndexedDB/" />
         <exclude domain="root" path="app_webview/Default/Service Worker/" />
         <exclude domain="root" path="app_webview/Default/Cache/" />
-        <exclude domain="cache" path="." />
+        <exclude domain="root" path="app_webview/Default/File System/" />
     </cloud-backup>
     <device-transfer>
         <!-- Device-to-device transfers are not limited to 25 MB, so carry
@@ -21,6 +23,5 @@
         <include domain="database" path="." />
         <include domain="file" path="." />
         <include domain="root" path="app_webview/" />
-        <exclude domain="cache" path="." />
     </device-transfer>
 </data-extraction-rules>

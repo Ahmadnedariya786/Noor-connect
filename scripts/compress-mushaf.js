@@ -17,28 +17,46 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mushafDir = join(__dirname, '../public/mushaf');
 
 const QUALITY = 75;       // WebP lossy quality (0-100). 75 = great for text scans.
-const BATCH = 20;         // Parallel files per batch (keeps RAM usage bounded)
+const WIDTH = 810;        // Target width — mushaf pages are displayed at ~330 CSS px (≤990 physical px)
+const HEIGHT = 1145;      // Target height (810 × 1527/1080 ≈ 1145, aspect preserved)
+const BATCH = 8;          // Parallel files per batch (keeps RAM usage bounded + avoids AV file locks)
+const MAX_RETRIES = 5;    // Windows AV can briefly lock files — retry with backoff
 
 async function compressFile(file) {
   const fullPath = join(mushafDir, file);
   const before = statSync(fullPath).size;
 
-  try {
-    // Read → re-encode as WebP lossy q=75 → overwrite in place
-    const buf = await sharp(fullPath)
-      .webp({ quality: QUALITY, effort: 4 })
-      .toBuffer();
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      // Read via fs (share-all flags — resilient to AV/indexer file locks on Windows),
+      // then process from the in-memory Buffer.
+      const { readFile, writeFile, rename } = await import('fs/promises');
+      const input = await readFile(fullPath);
 
-    // Only write if we actually saved bytes
-    if (buf.length < before) {
-      await import('fs/promises').then(fs => fs.writeFile(fullPath, buf));
-      return { file, before, after: buf.length, saved: before - buf.length };
+      const buf = await sharp(input)
+        .resize(WIDTH, HEIGHT, { fit: 'fill' })
+        .webp({ quality: QUALITY, effort: 4 })
+        .toBuffer();
+
+      // Only write if we actually saved bytes — write to temp + rename (atomic)
+      if (buf.length < before) {
+        const tmpPath = fullPath + '.tmp';
+        await writeFile(tmpPath, buf);
+        await rename(tmpPath, fullPath);
+        return { file, before, after: buf.length, saved: before - buf.length };
+      }
+      return { file, before, after: before, saved: 0 };
+    } catch (err) {
+      const isLock = /unknown error|EBUSY|EPERM|EACCES/.test(err.message || '');
+      if (attempt < MAX_RETRIES && isLock) {
+        await new Promise(r => setTimeout(r, 500 * attempt));
+        continue;
+      }
+      console.error(`  ✗ Error on ${file}:`, err.message);
+      return { file, before, after: before, saved: 0, error: true };
     }
-    return { file, before, after: before, saved: 0 };
-  } catch (err) {
-    console.error(`  ✗ Error on ${file}:`, err.message);
-    return { file, before, after: before, saved: 0, error: true };
   }
+  return { file, before, after: before, saved: 0, error: true };
 }
 
 async function run() {
@@ -48,7 +66,7 @@ async function run() {
 
   const totalBefore = files.reduce((sum, f) => sum + statSync(join(mushafDir, f)).size, 0);
   console.log(`\nFound ${files.length} WebP files  (${(totalBefore / 1024 / 1024).toFixed(1)} MB total)`);
-  console.log(`Compressing at WebP quality=${QUALITY}  (batch size=${BATCH})…\n`);
+  console.log(`Downscaling to ${WIDTH}x${HEIGHT} at WebP quality=${QUALITY}  (batch size=${BATCH})…\n`);
 
   let totalSaved = 0;
   let processed = 0;
