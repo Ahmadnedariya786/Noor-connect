@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.2.0] - 2026-08-01
 
+### 📦 APK Size Optimization
+- **Mushaf Downscale**: 606 images → 810×1145 WebP q75 (83.9 → 56.6 MB).
+- **Hadith Gzip**: 34 JSON files → `.json.gz` (95.4 → 19.8 MB, 79 MB saved), loaded via `DecompressionStream` with fallback.
+- **Vite Duplicate Purge**: `clean-dist-data.js` strips all redundant `.br`/`.gz` from dist (except hadith `.json.gz`), reducing dist from 110 → 34.8 MB.
+- **Gradle Asset Optimization**: `stripCompressedAssets` removes vite browser duplicates from APK; `moveMushafImages` copies downscaled mushaf into APK at build time.
+- **Final APK**: 94.4 MB (was ~97.4 MB), all offline features intact.
+
 ### ⚡ 5-Phase Performance Optimization Pass
 - **Re-render churn eliminated**: Subscriber-counted global timer scheduler (starts/stops with subscribers); dashboard's 30s clock tick replaced with a derived 60s `minuteTick`; guarded state updates in countdown widgets, Ramadan widget, and the radio player stop redundant re-renders.
 - **Long list rendering**: Hadith collections render in pages of 300 with IntersectionObserver infinite scroll; memoized cards for hadith, books, and radio stations; debounced Tafsir / Names of Allah search with cached filtered results.

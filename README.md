@@ -48,6 +48,15 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Source Info Cards Synced**: In-player stream source info cards updated to match the new `m.live.net.sa` primary + Aloula fallback configuration.
 - **Android 14+ Crash Fix**: Replaced the adaptive app icon (rejected by Android 14+ strict notification validation) with a proper white-on-transparent vector drawable — fixes the `BadForegroundServiceNotificationException` crash in `WidgetForegroundService` and prevents the same crash in `AdhanPlaybackService` and `WidgetRefreshWorker`.
 
+### 📦 APK Size Optimization (v2.2.0)
+- **Mushaf Downscale**: All 606 mushaf images downscaled from full resolution to 810×1145 WebP (quality 75), reducing mushaf source from 83.9 MB → 56.6 MB.
+- **Hadith Gzip**: All 34 hadith JSON files compressed to `.json.gz` (95.4 MB → 19.8 MB, 79 MB saved), loaded via `DecompressionStream` with graceful fallback to plain JSON.
+- **Vite Duplicate Purge**: `clean-dist-data.js` strips all redundant `.br`/`.gz` files from dist (except intentional hadith `.json.gz`), reducing dist from 110 MB → 34.8 MB.
+- **Gradle Asset Optimization**: Android's `stripCompressedAssets` task removes vite-generated `.gz`/`.br` browser duplicates from APK assets; `moveMushafImages` task copies the downscaled mushaf from `public/mushaf` into the APK at build time.
+- **Final APK**: 94.4 MB (was ~97.4 MB), with all offline features intact (hadith gzip, mushaf images, audio).
+
+---
+
 ### 🕌 Major Prayer Times & Quran Refactor
 - **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
 - **Removed Standalone Mushaf Viewer**: Deleted the standalone `/mushaf` image-based viewer feature to streamline the app. The app now exclusively uses the vertical-scrolling `/quran` reader (which still utilizes the beautiful Madani Mushaf WebP images and integrates with recitation progress/streaks).
@@ -58,6 +67,9 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Major UI/UX Overhaul**: Transitioned the tracker from a sidebar layout to a fully mobile-optimized native Bottom Tab Bar, preventing layout overlaps.
 - **Health Tracking Integrations**: Built a daily Water Hydration Tracker (8 glasses) and a 1-10 Pain Scale logger directly into the Today and Log tabs.
 - **Deep System Integration**: Unified the `haidh-tracker-v2` engine. It now actively communicates with the broader app to automatically silence Prayer Notifications and halt Qaza (Missed Prayer) auto-syncing while a cycle is active.
+- **PIN Lock**: The Noor Cycle tracker is protected by a 4-digit PIN lock for privacy.
+- **PDF Doctor Report**: Export a cycle health report as a PDF for sharing with healthcare providers.
+- **Fiqh Guidance**: Madhab-based Islamic rules (Hanafi/Maliki/Shafi'i/Hanbali) for haidh, nifas, ghusl checklist, and istihadhah auto-detection.
 - **Log Confirmation UX**: "Log Today's Data" now shows a "Logged for {date}" confirmation card with a locked summary and a Modify Data button — no more ambiguous saves.
 - **Pain Scale Persistence**: Pain levels are now saved into the daily log record (survive tab switches and app restarts) instead of existing only in component state.
 - **Missed Fast Count Fix**: Turning off a missed fast now decrements the count instead of double-counting.
@@ -153,9 +165,12 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 
 - **Complete Holy Quran**: Clean, beautifully styled reading interfaces with ** Madani Mushaf WebP images** (604 pages). Advanced caching system prefetches pages for instant display.
 - **Standard Mushaf Implementation**: Industry-standard **Madani Mushaf layout** with optimized WebP storage for privacy-first offline Quran reading.
-- **Advanced Tafsir System**: 25+ global Quranic commentary editions instantly accessible via high-speed spaCy API integration, eliminating heavy database overhead.
+- **Surah Explorer**: Browse all 114 surahs with live search (Arabic, English, translation, number) and Meccan/Medinan filter chips, plus a "Continue Reading" resume card and a rotating Daily Ayah card.
+- **Advanced Tafsir System**: 25+ global Quranic commentary editions instantly accessible via high-speed spaCy API integration, eliminating heavy database overhead, with search, bookmarks, notes, history, font-size controls, and download support.
 - **Multilingual Support**: Read meanings and Tafsir in English, Arabic, Bengali, Urdu, and Russian.
-- **Recitation Playback**: Immersive background audio from multiple reciters with progress tracking.
+- **Recitation Playback**: Immersive background audio from multiple reciters with progress tracking. Dedicated audio player with reciter selection (11 expert reciters), all 114 surahs, seekable progress bar, volume control, MP3 download, and auto-advance to the next surah.
+- **Offline Quran Engine**: Optional IndexedDB offline storage for surah data, recitations, and audio segments with a background sync service (1-hour interval, WiFi-only, charging-only, native BackgroundRunner on Android) so the Quran works completely offline.
+- **Quran Progress & Achievements**: Page-based reading progress (X/604), reading streaks with emoji milestones, total ayahs read, and 7 unlockable reading achievements.
 
 ### 🕋 Premium Qibla Compass
 - **High-Precision Native Sensors**: Completely overhauled native compass utilization tapping into device magnetometers for raw, smooth orientation. 60fps hardware-accelerated JS interpolation eliminates sensor jitter and UI lag on legacy Android devices.
@@ -170,21 +185,24 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 ### ⏲️ Smart Prayer Times & Adhan Control
 - **Offline Calculation**: Fast, precise, localization-based timings for Hanafi and Shafi'i madhabs generated fully offline.
 - **Granular Adhan Toggles**: Selectively enable or disable Adhan alarms per individual prayer using deep native background alarms—silence Asr without muting Maghrib!
+- **Custom Adhan Upload**: Upload your own MP3 adhan (max 10 MB), preview it, and assign it to any of the 5 prayers — stored on-device in IndexedDB.
 - **Optimized TTS & Audio**: Highly tuned Adhan playback utilizing an advanced audio engine to prevent interruptions or background sleep killing. 
+- **Smart Settings**: 12+ prayer calculation methods (MWL, Egyptian, Karachi, Umm al-Qura, Dubai, North America, etc.) with a "recommended for your location" suggester, madhab selector (Shafi/Hanafi), 12/24-hour time format, and Hijri date adjustment (±2 days).
 
 ### 📿 Complete Spiritual Tracking & Menstrual Mode
 - **Gender-Adaptive Onboarding**: Intelligent routing that completely re-adapts internal features based on the user.
 - **Menstrual Mode**: Carefully tracks cycles, automatically silencing obligatory Adhans, halting Salah charts, and adjusting habit trackers during breaks without breaking daily login streaks.
 - **Qaza & Habits**: Keep a long-term offline ledger of your missed prayers (Qaza Tracker), digital Tasbeeh goals, and weekly spiritual habit consistency.
+- **Digital Tasbeeh**: 5 dhikrs with transliteration and translation, milestone goal rollover (33 → 99 → 100), full-screen immersive **Zen Mode**, lifetime totals, daily session history, and rich haptic feedback patterns on every tap.
 - **Salah Focus Timer**: A dedicated Do-Not-Disturb timer to help you maintain khushu (focus) during prayer.
 - **Mood-Based Reflections**: Enhanced Mood Selector providing tailored Daily Ayahs and Islamic Greetings based on how you feel.
 
 ### 📚 Islamic Life & Education Tools
 - **Zakat & Fitrana Calculators**: Advanced offline calculators to accurately determine your annual Zakat and Ramadan Fitrana obligations. Features gold and silver weight calculators with purity options, real-time exchange rate tracking with fallback for offline use, preferred currency settings, and automatic rate updates when online.
-- **Hisnul Muslim & Duas**: Comprehensive library of authentic supplications for all occasions.
-- **Names of Allah (Asma-ul-Husna)**: Beautifully rendered 99 Names of Allah with meanings and fluid animations.
-- **Enhanced Islamic Quiz**: Test your knowledge of Deen with interactive, gamified Islamic quizzes. Includes daily rewards, combo multipliers, mystery boxes, and reliable cross-platform gamification logic.
-- **Islamic Remedies (Tibb-e-Nabawi)**: Prophetic medicine index with a favorites list for quick reference.
+- **Hisnul Muslim & Duas**: Comprehensive library of 80+ authentic supplications for all occasions with category filters, search, a daily "Dua of the Day", audio playback (Arabic TTS), favorites, sharing, and repetition counters for repeated adhkar.
+- **Names of Allah (Asma-ul-Husna)**: Beautifully rendered 99 Names of Allah with meanings, transliteration, search, favorites-only filter, and an elegant detail modal with fluid animations.
+- **Enhanced Islamic Quiz**: Test your knowledge of Deen with interactive, gamified Islamic quizzes. Includes a full XP economy with 15 levels, daily rewards, combo multipliers, mystery boxes (Knowledge Box / Wisdom Chest), a lives system, an in-app store for power-ups, daily challenges, boosters, and reliable cross-platform gamification logic.
+- **Islamic Remedies (Tibb-e-Nabawi)**: Mood-based prophetic medicine index (12 moods) with surah/ayah/dua/hadith/dhikr remedies, a daily remedy (+25 XP), gamification with XP levels and 8 achievements, full-screen viewers, and a favorites list for quick reference.
 - **Eid & Festive Checklist**: Special event mode with checklists and celebratory popups to prepare for Eid and other significant Islamic events.
 - **Prayer Statistics & Analytics**: Detailed visual graphs tracking prayer completion, Qaza history, and weekly/monthly performance.
 - **Spiritual Habit Tracker**: Track daily habits (like reading Quran, giving charity) with streak preservation.
@@ -195,8 +213,9 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 - **Ebooks Library**: Modern Islamic ebooks reader for deeper theological exploration.
 
 ### 📻 Rich Media & Islamic Library
-- **Hadith Encyclopedia (87K)**: 16 complete collections with Arabic + English, grade badges, bookmarks, daily hadith widget, and full-text navigation.
+- **Hadith Encyclopedia (52K+)**: 16 complete collections with Arabic + English, color-coded grade badges (Sahih/Hasan/Da'if), bookmarks, daily hadith, full-text search, and page-by-page navigation. Infinite scroll loads 300 hadith at a time for smooth browsing. Uses gzip-compressed JSON for fast offline loading.
 - **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via CORS-enabled HLS (m.live.net.sa primary, Aloula CDN fallback) with automatic source-switching and friendly error handling. Android cleartext whitelist included.
+- **Quran Radio Station Catalog**: 200+ streaming stations (reciters, translations, tafsir, hadith, surah loops, adhkar, mosque mix, fatwa) with search, 9 category filters, a curated "Featured Reciters" row, pin/unpin favorites, and persistent global playback that continues across screens.
 - **Radio Statistics & Achievements**: Track your listening habits with detailed statistics per station, total listening time, streak tracking, and unlockable achievements for consistent listening.
 - **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication. Uses **standard Madani Mushaf** (industry standard for Muslim world with 604 pages).
 - **🎵 Nasheed Library (v2.2)**: 400+ legally licensed nasheeds via official No Copyright Nasheed partnership. Adaptive streaming for 2G/weak wifi, offline download, sleep timer, lyrics sync, and curated daily recommendations. **Officially featured** on No Copyright Nasheed website.
@@ -218,14 +237,19 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 - **Native Android Widgets**: Home screen widgets for Next Prayer, Quran Reading Progress, Daily Ayah, Daily Hadith, and a Digital Tasbeeh. Everything auto-syncs with your in-app progress.
 - **Auto Backup & Restore**: Robust always-on backup system that automatically secures your settings, bookmarks, Qaza records, Quran progress, and all Capacitor Preferences (like Nasheed radio stats, theme preferences, and advanced hardware configurations). No toggle — the latest snapshot is saved every 20 minutes and on app close. Declares full Android Auto Backup rules so Google Drive silently syncs your data and it is offered back on re-install.
 - **Advanced Notification System**: 
-  - **Heads-Up Adhaan**: Deep native integration for high-priority, full-screen intent Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".
-  - **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g. Fajr-specific Hadith for Fajr reminders).
-  - **Modern Notification History**: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.
+- **Heads-Up Adhaan**: Deep native integration for high-priority, full-screen intent Adhaan notifications with direct lock-screen controls to "Stop Adhaan" or "Open App".
+- **Context-Aware Prayer Quotes**: Intelligent prayer reminders that attach specific Quranic Ayahs or Ahadith related to the exact prayer time (e.g. Fajr-specific Hadith for Fajr reminders).
+- **Friday Kahf Reminder**: Once-per-day Friday notification with the Verse of the Day (Surah Al-Kahf) and a short reflection.
+- **Islamic Sleep Reminder**: Gentle bedtime notification with rotating Ayatul Kursi, Surahs Al-Ikhlas/Al-Falaq/An-Nas, and sleeping-on-right-side guidance, scheduled relative to Isha prayer.
+- **Modern Notification History**: Beautiful, fully-featured notification history tracking UI with rich visual cards, status badges, timestamp grouping, and categorical filtering.
+- **Media Session Lock-Screen Controls**: Play/pause/stop/previous/next controls on the Android lock screen and notification shade during Quran audio or nasheed playback via Media Session API.
 - **Privacy-First**: No listening analytics, no tracking, all data local. Optional anonymous usage stats (opt-in only).
 
 
 ### 📱 Native Android Widgets Suite (v2.2 Hardened)
-- **5 High-Performance Native Widgets**:
+- **5 High-Performance Native Widgets** (see above).
+- **In-App Dashboard Customizer** (`/dashboard-widgets`): toggle, reorder, preview, and pin/unpin 15 widgets across essential/optional/premium categories. Pinned essentials (prayer-times, daily-ayah, daily-hadith) cannot be removed. Layout persists to localStorage and syncs across sessions.
+- **Architectural Resilience & Performance**: (existing content unchanged)
   - **Next Prayer Widget (4×2 & 4×1)**: Real-time countdown timer, progress ring, next prayer badge, and location chip. Uses exact alarms for sub-second prayer transitions.
   - **Daily Ayah Widget (4×2)**: Beautiful typography using *Scheherazade New* font, RTL support, Surah/Ayah reference chip, and English translation.
   - **Daily Hadith Widget (4×2)**: Complete Hadith snippet with color-coded grade badge (Sahih, Hasan, Da'if), book source chip, narrator attribution, and RTL alignment.
@@ -247,7 +271,7 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 Noor Connect is built from the ground up for performance and ethical transparency.
 
 - **Frontend Core**: React 18, TypeScript, Vite, Tailwind CSS, & Framer Motion.
-- **Enterprise GitHub Upgrades**: Built-in auto-updater component that checks the GitHub repository directly. You can update your APK entirely detached from major app stores.
+- **Enterprise GitHub Upgrades**: Version-aware changelog with an in-app "What's New" modal that highlights new features on every update, with per-version change tracking and a green badge indicator for unseen updates.
 - **F-Droid First (FOSS)**: 
   - Strictly **Zero Analytics**, **Zero Trackers**. 
   - Pre-configured `foss` Gradle flavor specifically built to strip `play-services` for pure open-source distribution. 

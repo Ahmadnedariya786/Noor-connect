@@ -33,8 +33,9 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
   {
     version: '2.2.0',
     date: '2026-08-01',
-    title: 'Major Prayer Times Refactor, Mushaf Viewer Rewrite & Lint Fixes',
+    title: 'APK Size Optimization, Major Prayer Times Refactor & Lint Fixes',
     changes: [
+      { type: 'improvement', description: 'APK size reduced from ~97.4 MB → 94.4 MB: mushaf images downscaled to 810×1145 WebP (83.9 → 56.6 MB), hadith JSON gzip-compressed (95.4 → 19.8 MB), redundant .br/.gz purged from dist (110 → 34.8 MB).' },
       { type: 'improvement', description: 'Performance Optimization Pass: The dashboard clock no longer re-renders the app twice a second, countdown timers share a subscriber-counted scheduler, and widget state updates are guarded so nothing re-renders when values haven\'t changed — smoother scrolling and navigation everywhere.' },
       { type: 'improvement', description: 'Faster Long Lists: Hadith books now load 300 at a time with automatic infinite scroll, and cards across hadith, books, and radio stations are memoized for 60fps browsing. Tafsir and Names of Allah search is debounced with cached filtered results.' },
       { type: 'improvement', description: 'Faster App Startup: The premium dashboard loads on demand, the weekly chart only loads on capable devices, and heavy background work (first auto-backup, daily hadith fetch) is deferred to idle time.' },
