@@ -1,108 +1,132 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+﻿import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Flame, Target, ArrowRight, BookOpen, Clock } from 'lucide-react';
-import { habitTracker, habitIntegration, type Habit, type HabitEntry, type IntegratedPrayerInfo } from '@/lib/habit-tracker';
+import { Check, ArrowRight, Target } from 'lucide-react';
+import { habitTracker, type Habit, type HabitEntry } from '@/lib/habit-tracker';
 import { cn } from '@/lib/utils';
 
 interface HabitWidgetProps {
   className?: string;
 }
 
-const PRAYER_LABELS: Record<string, string> = { fajr: 'F', dhuhr: 'D', asr: 'A', maghrib: 'M', isha: 'I' };
+const CATEGORY_COLOR: Record<string, string> = {
+  quran: '#10b981',
+  prayer: '#3b82f6',
+  dhikr: '#8b5cf6',
+  charity: '#ec4899',
+  fasting: '#f97316',
+  general: '#64748b'
+};
 
 export function HabitWidget({ className }: HabitWidgetProps) {
   const navigate = useNavigate();
-  const today = new Date().toISOString().split('T')[0];
   const [habits, setHabits] = useState<Habit[]>([]);
   const [entries, setEntries] = useState<HabitEntry[]>([]);
-  const [prayers, setPrayers] = useState<IntegratedPrayerInfo[]>([]);
 
-  const refresh = () => {
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  const refresh = useCallback(() => {
     setHabits(habitTracker.getHabits());
     setEntries(habitTracker.getEntriesForDate(today));
-    habitIntegration.getIntegratedPrayerStatus().then(setPrayers);
-  };
+  }, [today]);
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    window.addEventListener('visibilitychange', onVisible);
+    return () => window.removeEventListener('visibilitychange', onVisible);
+  }, [refresh]);
+
+  const toggle = useCallback(
+    (habitId: string) => {
+      habitTracker.toggleHabit(habitId, today);
+      refresh();
+    },
+    [today, refresh]
+  );
 
   const completedCount = useMemo(() => entries.length, [entries]);
-  const prayersDone = useMemo(() => prayers.filter(p => p.completed).length, [prayers]);
+  const doneIds = useMemo(() => new Set(entries.map(e => e.habitId)), [entries]);
 
-  const toggle = (habitId: string) => {
-    habitTracker.toggleHabit(habitId, today);
-    refresh();
-  };
+  if (habits.length === 0) return null;
 
-  const isToday = true;
-
-  if ((habits.length === 0 && prayers.length === 0)) return null;
+  const pct = completedCount / habits.length;
+  const r = 15;
+  const c = 2 * Math.PI * r;
 
   return (
-    <Card className={`overflow-hidden border-border/40 ${className ?? ''}`}>
+    <Card className={cn('overflow-hidden border-border/40', className ?? '')}>
       <CardContent className="p-4 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="relative w-10 h-10 shrink-0">
+            <svg width={40} height={40} className="-rotate-90">
+              <circle cx={20} cy={20} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={5} />
+              <circle
+                cx={20}
+                cy={20}
+                r={r}
+                fill="none"
+                stroke="rgba(201,134,10,0.95)"
+                strokeWidth={5}
+                strokeLinecap="round"
+                strokeDasharray={c}
+                strokeDashoffset={c * (1 - Math.min(1, Math.max(0, pct)))}
+                className="transition-[stroke-dashoffset] duration-500 ease-out"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums">
+              {Math.round(pct * 100)}%
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs font-semibold flex items-center gap-1">
+              <Target className="w-3 h-3 text-[#C9860A]" /> Habits
+            </h4>
+            <p className="text-[10px] text-muted-foreground">
+              {completedCount}/{habits.length} done today
+            </p>
+          </div>
+        </div>
 
-        {/* Prayer mini-status */}
-        {prayers.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <h4 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <Clock className="w-3 h-3" /> Salah
-              </h4>
-              <span className="text-xs font-medium text-muted-foreground">{prayersDone}/5</span>
-            </div>
-            <div className="flex gap-1">
-              {prayers.map(p => (
-                <div
-                  key={p.name}
+        <div className="space-y-1">
+          {habits.slice(0, 4).map(h => {
+            const done = doneIds.has(h.id);
+            const color = CATEGORY_COLOR[h.category] ?? '#64748b';
+            return (
+              <button
+                key={h.id}
+                onClick={() => toggle(h.id)}
+                className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-muted/50 transition-colors duration-150 text-left"
+              >
+                <span
                   className={cn(
-                    "w-6 h-6 rounded text-xs font-bold flex items-center justify-center",
-                    p.completed ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
+                    'w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-all duration-200 shrink-0',
+                    done ? 'border-transparent' : 'border-muted-foreground/30'
                   )}
-                  title={p.label}
+                  style={done ? { backgroundColor: color } : undefined}
                 >
-                  {PRAYER_LABELS[p.name]}
-                </div>
-              ))}
-            </div>
-          </div>
+                  {done && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
+                </span>
+                <span className="text-xs">{h.icon}</span>
+                <span className={cn('text-xs flex-1 truncate', done ? 'text-[#C9860A] font-medium' : 'text-foreground')}>
+                  {h.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {habits.length > 4 && (
+          <p className="text-[10px] text-muted-foreground text-center">+{habits.length - 4} more</p>
         )}
 
-        {/* Habits mini-list */}
-        {habits.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <h4 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <Target className="w-3 h-3" /> Habits
-              </h4>
-              <span className="text-xs font-medium text-muted-foreground">{completedCount}/{habits.length}</span>
-            </div>
-            <div className="space-y-1">
-              {habits.slice(0, 4).map(h => {
-                const done = entries.some(e => e.habitId === h.id);
-                return (
-                  <button key={h.id} onClick={() => toggle(h.id)} className="w-full flex items-center gap-2 p-1 rounded hover:bg-muted/50 transition-colors text-left">
-                    {done ? (
-                      <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                    ) : (
-                      <Circle className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
-                    )}
-                    <span className="text-xs">{h.icon}</span>
-                    <span className={`text-xs flex-1 truncate ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{h.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {habits.length > 4 && (
-              <p className="text-xs text-muted-foreground text-center mt-1">+{habits.length - 4} more</p>
-            )}
-          </div>
-        )}
-
-        <Button variant="ghost" size="sm" onClick={() => navigate('/habit-tracker')} className="w-full text-xs gap-1 text-muted-foreground">
-          Open Habit Tracker <ArrowRight className="w-3 h-3" />
-        </Button>
+        <button
+          onClick={() => navigate('/habit-tracker')}
+          className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-150"
+        >
+          Open Habit Tracker <ArrowRight className="w-3 h-3 rtl:rotate-180" />
+        </button>
       </CardContent>
     </Card>
   );

@@ -213,6 +213,71 @@ export class HabitTracker {
     }
   }
 
+  // Update a custom habit in place (keeps id + entry history)
+  updateHabit(habit: Habit): void {
+    try {
+      const customHabits = this.getCustomHabits();
+      const index = customHabits.findIndex(h => h.id === habit.id);
+      if (index === -1) return;
+      customHabits[index] = { ...habit };
+      localStorage.setItem(this.CUSTOM_HABITS_KEY, JSON.stringify(customHabits));
+    } catch (error) {
+      console.error('Failed to update habit:', error);
+    }
+  }
+
+  /**
+   * Pure streak computation over a list of unique YYYY-MM-DD dates.
+   * Shared by the stats API and the UI so the page can compute streaks
+   * for every habit from a single entries read (no per-habit storage I/O).
+   */
+  static computeStreakFromDates(dates: string[], today?: string): HabitStreak {
+    const sortedDates = [...new Set(dates)].sort().reverse();
+
+    if (sortedDates.length === 0) {
+      return { current: 0, longest: 0 };
+    }
+
+    const ref = today ?? new Date().toISOString().split('T')[0];
+    const checkDate = new Date(`${ref}T00:00:00`);
+    let currentStreak = 0;
+
+    for (const date of sortedDates) {
+      const entryDate = new Date(`${date}T00:00:00`);
+      const diffDays = Math.floor((checkDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 0 || diffDays === 1) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    let lastDate = new Date(`${sortedDates[0]}T00:00:00`);
+    let tempStreak = 1;
+    let longestStreak = 1;
+
+    for (let i = 1; i < sortedDates.length; i++) {
+      const currentDate = new Date(`${sortedDates[i]}T00:00:00`);
+      const diffDays = Math.floor((lastDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        tempStreak++;
+      } else {
+        longestStreak = Math.max(longestStreak, tempStreak);
+        tempStreak = 1;
+      }
+      lastDate = currentDate;
+    }
+
+    longestStreak = Math.max(longestStreak, tempStreak);
+
+    return {
+      current: currentStreak,
+      longest: longestStreak,
+      lastCompletedDate: sortedDates[0]
+    };
+  }
+
   // Get habit entries for a date range
   getEntries(startDate?: string, endDate?: string): HabitEntry[] {
     try {
@@ -403,62 +468,7 @@ export class HabitTracker {
   // Calculate streak for a habit
   private calculateStreak(habitId: string): HabitStreak {
     try {
-      const entries = this.getEntriesForHabit(habitId);
-      const sortedDates = [...new Set(entries.map(e => e.date))].sort().reverse();
-      
-      if (sortedDates.length === 0) {
-        return { current: 0, longest: 0 };
-      }
-
-      let currentStreak = 0;
-      let longestStreak = 0;
-      let tempStreak = 0;
-      
-      const today = new Date().toISOString().split('T')[0];
-      const checkDate = new Date(today);
-      
-      // Check current streak
-      for (const date of sortedDates) {
-        const entryDate = new Date(date);
-        const diffDays = Math.floor((checkDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 0) {
-          currentStreak++;
-          checkDate.setDate(checkDate.getDate() - 1);
-        } else if (diffDays === 1) {
-          currentStreak++;
-          checkDate.setDate(checkDate.getDate() - 1);
-        } else {
-          break;
-        }
-      }
-      
-      // Calculate longest streak
-      let lastDate = new Date(sortedDates[0]);
-      tempStreak = 1;
-      longestStreak = 1;
-      
-      for (let i = 1; i < sortedDates.length; i++) {
-        const currentDate = new Date(sortedDates[i]);
-        const diffDays = Math.floor((lastDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) {
-          tempStreak++;
-        } else {
-          longestStreak = Math.max(longestStreak, tempStreak);
-          tempStreak = 1;
-        }
-        
-        lastDate = currentDate;
-      }
-      
-      longestStreak = Math.max(longestStreak, tempStreak);
-      
-      return {
-        current: currentStreak,
-        longest: longestStreak,
-        lastCompletedDate: sortedDates[0]
-      };
+      return HabitTracker.computeStreakFromDates(this.getEntriesForHabit(habitId).map(e => e.date));
     } catch (error) {
       console.error('Failed to calculate streak:', error);
       return { current: 0, longest: 0 };
