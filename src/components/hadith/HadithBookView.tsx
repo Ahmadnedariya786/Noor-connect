@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, BookOpen, Users, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,10 +68,55 @@ export function HadithBookView() {
     );
   }, [collectionData, searchTerm]);
 
-  const handleBookClick = (book: HadithBook) => {
-    // Navigate to book content
-    navigate(`/hadith/collections/${collection}/${book.number}`);
-  };
+  interface BookCardProps {
+  book: HadithBook;
+  collection: string;
+  navigate: ReturnType<typeof useNavigate>;
+}
+
+const BookCard = memo(function BookCard({ book, collection, navigate }: BookCardProps) {
+  return (
+    <Card
+      key={book.number}
+      className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-border/50 hover:border-primary/30"
+      onClick={() => navigate(`/hadith/collections/${collection}/${book.number}`)}
+    >
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-colors">
+              <BookOpen className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                {book.name}
+              </h3>
+              <p className="text-sm text-muted-foreground font-arabic" dir="rtl">
+                {book.arabicName}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </div>
+
+        {book.hadithCount && (
+          <div className="flex items-center gap-2">
+            <Users className="w-3 h-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              {book.hadithCount} hadith
+            </span>
+          </div>
+        )}
+
+        {book.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {book.description}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
 
   // Show loading while fetching remote metadata
   if (metadataLoading && !remoteCollectionData) {
@@ -174,45 +219,11 @@ export function HadithBookView() {
         {/* Chapters/Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBooks.map((book) => (
-            <Card
-              key={book.number}
-              className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-border/50 hover:border-primary/30"
-              onClick={() => handleBookClick(book)}
-            >
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-colors">
-                      <BookOpen className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {book.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground font-arabic" dir="rtl">
-                        {book.arabicName}
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-
-                {book.hadithCount && (
-                  <div className="flex items-center gap-2">
-                    <Users className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {book.hadithCount} hadith
-                    </span>
-                  </div>
-                )}
-
-                {book.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {book.description}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <BookCard
+              book={book}
+              collection={collection!}
+              navigate={navigate}
+            />
           ))}
         </div>
 

@@ -19,6 +19,7 @@ class TimerManager {
   private callbacks: Map<string, TimerEntry> = new Map();
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private tickInterval: number = 1000; // Check every second (smallest common interval)
+  private subscriberCount: number = 0;
 
   /**
    * Add a callback to be executed at a specific interval
@@ -37,10 +38,11 @@ class TimerManager {
       id: callbackId
     });
 
-    // Start the timer if not already running
-    if (!this.intervalId) {
+    // Start the timer when the first subscriber registers
+    if (this.subscriberCount === 0) {
       this.start();
     }
+    this.subscriberCount++;
 
     return callbackId;
   }
@@ -50,10 +52,13 @@ class TimerManager {
    * @param id - The ID of the callback to remove
    */
   removeCallback(id: string): void {
-    this.callbacks.delete(id);
+    const hadEntry = this.callbacks.delete(id);
 
-    // Stop the timer if no callbacks remain
-    if (this.callbacks.size === 0 && this.intervalId) {
+    // Stop the timer when the last subscriber unregisters
+    if (hadEntry && this.subscriberCount > 0) {
+      this.subscriberCount--;
+    }
+    if (this.subscriberCount === 0 && this.intervalId) {
       this.stop();
     }
   }
@@ -75,6 +80,7 @@ class TimerManager {
    */
   clear(): void {
     this.callbacks.clear();
+    this.subscriberCount = 0;
     this.stop();
   }
 

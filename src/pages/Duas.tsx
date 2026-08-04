@@ -42,7 +42,7 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
   };
 
   return (
-    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <Card className={`p-5 relative overflow-hidden border-border/40 shadow-sm ${isDuaOfDay ? 'border-[#C9860A]/30 bg-gradient-to-br from-[#C9860A]/5 to-transparent' : 'bg-card'}`}>
         {isDuaOfDay && (
           <div className="absolute top-3 right-3">

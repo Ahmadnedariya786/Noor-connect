@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { memo, useCallback, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Radio, Play, Pause, BarChart3, Search,
@@ -83,7 +83,7 @@ const QuranRadio = () => {
     return () => clearTimeout(t);
   }, []);
 
-  const togglePin = (station: StationView) => {
+  const togglePin = useCallback((station: StationView) => {
     setPinned((prev) => {
       const next = new Set(prev);
       if (next.has(station.url)) next.delete(station.url);
@@ -93,7 +93,7 @@ const QuranRadio = () => {
       } catch { /* ignore */ }
       return next;
     });
-  };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -115,7 +115,7 @@ const QuranRadio = () => {
     []
   );
 
-  const handleStationSelect = (station: StationView) => {
+  const handleStationSelect = useCallback((station: StationView) => {
     // If clicking on the currently playing station, toggle play/pause
     if (globalRadio.currentStation?.url === station.url) {
       if (globalRadio.isPlaying) {
@@ -136,10 +136,12 @@ const QuranRadio = () => {
       name: station.name,
       url: station.url
     });
-  };
+  }, [globalRadio.currentStation?.url, globalRadio.isPlaying, globalRadio.playRadio, globalRadio.pauseRadio]);
 
-  const isCurrentStation = (station: StationView) =>
-    globalRadio.currentStation?.url === station.url;
+  const isCurrentStation = useCallback(
+    (station: StationView) => globalRadio.currentStation?.url === station.url,
+    [globalRadio.currentStation?.url]
+  );
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -299,8 +301,8 @@ const StationGrid: React.FC<StationGridProps> = ({ stations, pinned, isCurrentSt
         station={station}
         isPinned={pinned.has(station.url)}
         isPlaying={isCurrentStation(station) && isPlaying}
-        onSelect={() => onSelect(station)}
-        onTogglePin={() => onTogglePin(station)}
+        onSelect={onSelect}
+        onTogglePin={onTogglePin}
       />
     ))}
   </div>
@@ -310,8 +312,8 @@ interface StationCardProps {
   station: StationView;
   isPinned: boolean;
   isPlaying: boolean;
-  onSelect: () => void;
-  onTogglePin: () => void;
+  onSelect: (station: StationView) => void;
+  onTogglePin: (station: StationView) => void;
 }
 
 // Themed icon per category (non-reciter stations).
@@ -382,7 +384,7 @@ const avatarColor = (url: string): string => {
   return avatarPalette[h % avatarPalette.length];
 };
 
-const StationCard: React.FC<StationCardProps> = ({ station, isPinned, isPlaying, onSelect, onTogglePin }) => {
+const StationCard = memo<StationCardProps>(({ station, isPinned, isPlaying, onSelect, onTogglePin }) => {
   const [imageError, setImageError] = useState(false);
 
   const showPhoto = station.category === "reciter" && !!station.img && !imageError;
@@ -393,7 +395,7 @@ const StationCard: React.FC<StationCardProps> = ({ station, isPinned, isPlaying,
         ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
         : 'hover:scale-105'
         }`}
-      onClick={onSelect}
+      onClick={() => onSelect(station)}
     >
       {/* Station Image / Art */}
       <div className="aspect-square relative overflow-hidden">
@@ -415,7 +417,7 @@ const StationCard: React.FC<StationCardProps> = ({ station, isPinned, isPlaying,
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onTogglePin();
+            onTogglePin(station);
           }}
           aria-label={isPinned ? "Unpin station" : "Pin station"}
           className="absolute top-2 start-2 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center hover:bg-black/70 transition-colors"
@@ -462,7 +464,7 @@ const StationCard: React.FC<StationCardProps> = ({ station, isPinned, isPlaying,
       </div>
     </Card>
   );
-};
+});
 
 const InitialsAvatar: React.FC<{ name: string; nameEn: string; url: string }> = ({ name, nameEn, url }) => (
   <div className={`w-full h-full ${avatarColor(url)} flex items-center justify-center`}>

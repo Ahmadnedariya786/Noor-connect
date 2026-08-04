@@ -9,7 +9,7 @@ interface CountdownReturn {
   formattedTime: string;
 }
 
-export const useCountdown = (targetTime: Date): CountdownReturn => {
+export const useCountdown = (targetTime: Date, id: string): CountdownReturn => {
   const [timeLeft, setTimeLeft] = useState(() => {
     const now = new Date();
     const difference = targetTime.getTime() - now.getTime();
@@ -34,7 +34,7 @@ export const useCountdown = (targetTime: Date): CountdownReturn => {
       }
     };
 
-    timerIdRef.current = globalTimerManager.addCallback(updateCountdown, 1000, 'countdown');
+    timerIdRef.current = globalTimerManager.addCallback(updateCountdown, 1000, id);
 
     return () => {
       if (timerIdRef.current) {
@@ -42,7 +42,7 @@ export const useCountdown = (targetTime: Date): CountdownReturn => {
         timerIdRef.current = null;
       }
     };
-  }, [calculateTimeLeft]);
+  }, [calculateTimeLeft, id]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;

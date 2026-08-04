@@ -15,8 +15,20 @@ export default defineConfig(({ mode }) => ({
   build: {
     minify: 'terser',
     chunkSizeWarningLimit: 600,
-    target: 'es2015', // Target older browsers for better compatibility
-    cssCodeSplit: true, // Split CSS for better caching
+    target: 'es2015',
+    cssCodeSplit: true,
+    modulePreload: {
+      polyfill: false,
+      resolveDependencies: (filename, deps) => {
+        // Exclude heavy vendor chunks from modulepreload (they're lazy-loaded)
+        return deps.filter(dep =>
+          !dep.includes('pdf-vendor') &&
+          !dep.includes('charts') &&
+          !dep.includes('radix-ui') &&
+          !dep.includes('animations')
+        );
+      }
+    },
     terserOptions: {
       compress: {
         drop_console: mode === 'production',

@@ -147,14 +147,15 @@ export default function EnhancedEbooksPage() {
 
   const handleDownload = useCallback(async (book: LibraryBook | DownloadedBook | UserBook, e: React.MouseEvent) => {
     e.stopPropagation();
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
     try {
       setDownloadProgress(prev => ({ ...prev, [book.url]: 0 }));
       
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setDownloadProgress(prev => {
           const current = prev[book.url] || 0;
           if (current >= 95) {
-            clearInterval(progressInterval);
+            if (progressInterval) clearInterval(progressInterval);
             return prev;
           }
           return { ...prev, [book.url]: Math.min(current + 10, 95) };
@@ -163,7 +164,7 @@ export default function EnhancedEbooksPage() {
 
       await downloadBook(book.url, book.title);
       
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       setDownloadProgress(prev => ({ ...prev, [book.url]: 100 }));
       
       setTimeout(() => {
@@ -180,6 +181,7 @@ export default function EnhancedEbooksPage() {
         description: `${book.title} is being downloaded`
       });
     } catch (error) {
+      if (progressInterval) clearInterval(progressInterval);
       toast({
         title: "Download failed",
         description: "Could not download the book",

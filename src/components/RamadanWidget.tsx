@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Moon, Sunrise, Sunset, Timer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,12 @@ const formatCountdown = (milliseconds: number): string => {
   return `${minutes}m ${seconds}s`;
 };
 
+interface NextInfo {
+  label: string;
+  time: Date | null;
+  countdown: string;
+}
+
 export function RamadanWidget({
   isRamadan,
   ramadanDay,
@@ -35,9 +41,7 @@ export function RamadanWidget({
   timeZone,
 }: RamadanWidgetProps) {
   const navigate = useNavigate();
-  const [nextLabel, setNextLabel] = useState<string>("");
-  const [nextTime, setNextTime] = useState<Date | null>(null);
-  const [countdown, setCountdown] = useState<string>("");
+  const [nextInfo, setNextInfo] = useState<NextInfo>({ label: "", time: null, countdown: "" });
 
   const fajrStart = prayerTimesWithEnd?.fajr?.start ?? null;
   const maghribStart = prayerTimesWithEnd?.maghrib?.start ?? null;
@@ -54,9 +58,11 @@ export function RamadanWidget({
 
   const computeNext = useCallback(() => {
     if (!isRamadan || !fajrStart || !maghribStart) {
-      setNextLabel("");
-      setNextTime(null);
-      setCountdown("");
+      setNextInfo(prev =>
+        prev.label === "" && prev.time === null && prev.countdown === ""
+          ? prev
+          : { label: "", time: null, countdown: "" }
+      );
       return;
     }
 
@@ -66,24 +72,30 @@ export function RamadanWidget({
     // - Before Fajr: Suhoor ends at Fajr
     // - Between Fajr and Maghrib: Iftar at Maghrib
     // - After Maghrib: Suhoor ends tomorrow (approx. +24h from today's Fajr)
+    let label: string;
+    let time: Date;
     if (now < fajrStart) {
-      setNextLabel("Suhoor ends");
-      setNextTime(fajrStart);
-      setCountdown(formatCountdown(fajrStart.getTime() - now.getTime()));
-      return;
+      label = "Suhoor ends";
+      time = fajrStart;
+    } else if (now < maghribStart) {
+      label = "Iftar";
+      time = maghribStart;
+    } else {
+      label = "Suhoor ends (tomorrow)";
+      time = new Date(fajrStart.getTime() + 24 * 60 * 60 * 1000);
     }
+    const countdown = formatCountdown(time.getTime() - now.getTime());
 
-    if (now < maghribStart) {
-      setNextLabel("Iftar");
-      setNextTime(maghribStart);
-      setCountdown(formatCountdown(maghribStart.getTime() - now.getTime()));
-      return;
-    }
-
-    const approxTomorrowFajr = new Date(fajrStart.getTime() + 24 * 60 * 60 * 1000);
-    setNextLabel("Suhoor ends (tomorrow)");
-    setNextTime(approxTomorrowFajr);
-    setCountdown(formatCountdown(approxTomorrowFajr.getTime() - now.getTime()));
+    setNextInfo(prev => {
+      if (
+        prev.label === label &&
+        prev.countdown === countdown &&
+        ((prev.time === null && time === null) || prev.time?.getTime() === time.getTime())
+      ) {
+        return prev;
+      }
+      return { label, time, countdown };
+    });
   }, [isRamadan, fajrStart, maghribStart]);
 
   useEffect(() => {
@@ -197,10 +209,10 @@ export function RamadanWidget({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Timer className="w-4 h-4 text-[#C9860A]" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-white">{nextLabel || "Next"}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-white">{nextInfo.label || "Next"}</span>
                 </div>
                 <span className="text-sm font-bold tabular-nums text-[#C9860A]">
-                  {countdown || "—"}
+                  {nextInfo.countdown || "—"}
                 </span>
               </div>
 

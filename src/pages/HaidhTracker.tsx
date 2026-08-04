@@ -257,9 +257,10 @@ export default function HaidhTracker() {
               >
                 {isActive && (
                   <motion.div
-                    layoutId="noor-cycle-tab-bg"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
                     className="absolute inset-0 bg-rose-500/10 rounded-xl"
-                    transition={{ type: "spring", bounce: 0.25, duration: 0.4 }}
                   />
                 )}
                 <Icon className={cn("w-[18px] h-[18px] relative z-10 transition-transform", isActive && "scale-110")} />

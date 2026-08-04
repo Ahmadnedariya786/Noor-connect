@@ -88,7 +88,7 @@ const Settings = () => {
                 >
                   {isActive && (
                     <motion.div
-                      {...motionProps({ layoutId: 'theme-active' })}
+                      {...motionProps({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.2 } })}
                       className="absolute inset-0 bg-background rounded-2xl border border-border shadow-sm"
                     />
                   )}
@@ -211,7 +211,7 @@ const Settings = () => {
                 >
                   {isActive && (
                     <motion.div
-                      {...motionProps({ layoutId: 'fiqh-active' })}
+                      {...motionProps({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.2 } })}
                       className="absolute inset-0 bg-background rounded-2xl border border-border shadow-sm"
                     />
                   )}

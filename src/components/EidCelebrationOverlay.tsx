@@ -4,16 +4,23 @@ import { Moon, Star, X, Sparkles, Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
+import { useSettings } from "@/contexts/SettingsContext";
+import { useAnimationTier } from "@/hooks/useAnimationTier";
 
 export function EidCelebrationOverlay() {
+  const { animationEnabled } = useSettings();
+  const { tier } = useAnimationTier();
   const { isEidAlFitr, isEidAlAdha, islamicInfo, isRamadan } = useIslamicCalendar();
   const [isVisible, setIsVisible] = useState(false);
-  
+
+  const overlayEnabled = animationEnabled && tier !== 'low' && tier !== 'minimal';
+
   // GUARD: Never show Eid overlay if we're still in Ramadan (month 9)
   // This prevents false triggers on the last day of Ramadan
   const safeEidType = isRamadan ? null : (isEidAlFitr ? 'fitr' : isEidAlAdha ? 'adha' : null);
 
   useEffect(() => {
+    if (!overlayEnabled) return;
     if (!safeEidType) return;
 
     const lastSeenKey = `eid-greeting-seen-${safeEidType}-${islamicInfo?.hijriYear}`;
@@ -30,7 +37,7 @@ export function EidCelebrationOverlay() {
       localStorage.setItem(lastSeenKey, 'true');
       return () => clearTimeout(timer);
     }
-  }, [safeEidType, islamicInfo]);
+  }, [safeEidType, islamicInfo, overlayEnabled]);
 
   const triggerConfetti = () => {
     const duration = 5 * 1000;
@@ -52,7 +59,7 @@ export function EidCelebrationOverlay() {
     }, 250);
   };
 
-  if (!isVisible || !safeEidType) return null;
+  if (!isVisible || !safeEidType || !overlayEnabled) return null;
 
   return (
     <AnimatePresence>

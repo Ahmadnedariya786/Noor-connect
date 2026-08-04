@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -58,6 +58,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { PageTransition } from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
+import { useSettings } from "@/contexts/SettingsContext";
 import { fetchSurahTafsir, TAFSIR_EDITIONS, type TafsirEdition } from "@/lib/tafsir";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -119,6 +120,7 @@ const Tafsir = () => {
   const [tafsirLoading, setTafsirLoading] = useState(false);
   const [bookmarks, setBookmarks] = useState<Array<{ surah: number, surahName: string }>>([]);
   const [searchTafsirQuery, setSearchTafsirQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [tafsirHistory, setTafsirHistory] = useState<Array<{ surah: number, surahName: string, timestamp: number }>>([]);
   const [personalNotes, setPersonalNotes] = useState<Record<string, string>>({});
   const [showNotesEditor, setShowNotesEditor] = useState(false);
@@ -127,6 +129,7 @@ const Tafsir = () => {
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg" | "xl">("base");
   const [loadingFromOffline, setLoadingFromOffline] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { animationEnabled } = useSettings();
 
   const fontSizeClasses = {
     sm: "text-base leading-relaxed",
@@ -148,18 +151,23 @@ const Tafsir = () => {
     fetchSurahs();
   }, []);
 
-  // Update filtered surahs whenever search query or surahs list changes
+  // Update filtered surahs whenever search query or surahs list changes (with debounce)
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
   useEffect(() => {
     if (!surahs.length) return;
 
     const filtered = surahs.filter(
       (surah) =>
-        surah.englishName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        surah.name.includes(searchQuery) ||
-        surah.number.toString().includes(searchQuery)
+        surah.englishName.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        surah.name.includes(debouncedSearchQuery) ||
+        surah.number.toString().includes(debouncedSearchQuery)
     );
     setFilteredSurahs(filtered);
-  }, [searchQuery, surahs]);
+  }, [debouncedSearchQuery, surahs]);
 
 
   const fetchSurahs = async () => {
@@ -348,14 +356,14 @@ const Tafsir = () => {
     });
   };
 
-  const getFilteredTafsirs = () => {
+  const filteredTafsirs = useMemo(() => {
     if (!currentSurahTafsir?.tafsirs) return [];
     if (!searchTafsirQuery) return currentSurahTafsir.tafsirs;
 
     return currentSurahTafsir.tafsirs.filter(tafsir =>
       tafsir.text?.toLowerCase().includes(searchTafsirQuery.toLowerCase())
     );
-  };
+  }, [currentSurahTafsir, searchTafsirQuery]);
 
 
   const isBookmarked = selectedSurah &&
@@ -784,10 +792,88 @@ const Tafsir = () => {
 
               {/* Tafsir Content List */}
               <div className="space-y-12">
-                {getFilteredTafsirs().map((tafsir: TafsirData, idx) => {
+                {filteredTafsirs.map((tafsir: TafsirData, idx) => {
                   const noteKey = `${tafsir.surah}:${tafsir.ayah}`;
                   const hasNote = personalNotes[noteKey];
-                  return (
+                  const cardContent = (
+                    <>
+                      <div className="group relative">
+                        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+                          {/* Ayah Reference Badge */}
+                          <div className="flex items-center justify-between px-8 py-5 bg-slate-50/50 border-b border-slate-100">
+                            <div className="flex items-center gap-3">
+                              <span className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-emerald-600/20">
+                                {tafsir.ayah}
+                              </span>
+                              <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{t('ayah')} {tafsir.ayah}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn("h-10 w-10 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors", hasNote && "bg-blue-50 text-blue-600")}
+                                onClick={() => handleNote(tafsir.surah, tafsir.ayah)}
+                              >
+                                <Edit3 className="w-5 h-5" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="p-8 md:p-10 space-y-10">
+                            {/* Arabic Text Section */}
+                            {tafsir.arabic && (
+                              <div className="space-y-4">
+                                <p
+                                  className="text-3xl md:text-4xl text-right leading-[2.5] text-slate-800 font-arabic"
+                                  dir="rtl"
+                                  style={{ fontFamily: 'inherit' }}
+                                >
+                                  {tafsir.arabic}
+                                </p>
+                                {tafsir.translation && (
+                                  <p className="text-lg md:text-xl text-slate-500 italic leading-relaxed border-l-2 border-emerald-100 pl-4 py-1">
+                                    {tafsir.translation}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Tafsir Commentary Section */}
+                            <div className="space-y-6">
+                              <div className="flex items-center gap-2">
+                                <Separator className="flex-1" />
+                                <Badge variant="outline" className="text-xs uppercase tracking-widest text-slate-400 font-bold border-slate-200">
+                                  {t('tafsirCommentary')}
+                                </Badge>
+                                <Separator className="flex-1" />
+                              </div>
+
+                              <div className={cn(
+                                "text-slate-700 text-justify",
+                                fontSizeClasses[fontSize as keyof typeof fontSizeClasses] || fontSizeClasses.base
+                              )}>
+                                {tafsir.text}
+                              </div>
+                            </div>
+
+                            {/* Personal Note Section */}
+                            {hasNote && (
+                              <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100 space-y-3 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider relative z-10">
+                                  <MessageSquare className="w-3 h-3" />
+                                  {t('myReflection')}
+                                </div>
+                                <p className="text-base text-blue-800/80 italic leading-relaxed relative z-10">{personalNotes[noteKey]}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+
+                  return animationEnabled ? (
                     <motion.div
                       key={idx}
                       initial={{ opacity: 0, y: 20 }}
@@ -795,84 +881,16 @@ const Tafsir = () => {
                       transition={{ delay: idx * 0.05 }}
                       className="group relative"
                     >
-                      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
-                        {/* Ayah Reference Badge */}
-                        <div className="flex items-center justify-between px-8 py-5 bg-slate-50/50 border-b border-slate-100">
-                          <div className="flex items-center gap-3">
-                            <span className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-emerald-600/20">
-                              {tafsir.ayah}
-                            </span>
-                            <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{t('ayah')} {tafsir.ayah}</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className={cn("h-10 w-10 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors", hasNote && "bg-blue-50 text-blue-600")}
-                              onClick={() => handleNote(tafsir.surah, tafsir.ayah)}
-                            >
-                              <Edit3 className="w-5 h-5" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="p-8 md:p-10 space-y-10">
-                          {/* Arabic Text Section */}
-                          {tafsir.arabic && (
-                            <div className="space-y-4">
-                              <p
-                                className="text-3xl md:text-4xl text-right leading-[2.5] text-slate-800 font-arabic"
-                                dir="rtl"
-                                style={{ fontFamily: 'inherit' }}
-                              >
-                                {tafsir.arabic}
-                              </p>
-                              {tafsir.translation && (
-                                <p className="text-lg md:text-xl text-slate-500 italic leading-relaxed border-l-2 border-emerald-100 pl-4 py-1">
-                                  {tafsir.translation}
-                                </p>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Tafsir Commentary Section */}
-                          <div className="space-y-6">
-                            <div className="flex items-center gap-2">
-                              <Separator className="flex-1" />
-                              <Badge variant="outline" className="text-xs uppercase tracking-widest text-slate-400 font-bold border-slate-200">
-                                {t('tafsirCommentary')}
-                              </Badge>
-                              <Separator className="flex-1" />
-                            </div>
-
-                            <div className={cn(
-                              "text-slate-700 text-justify",
-                              fontSizeClasses[fontSize as keyof typeof fontSizeClasses] || fontSizeClasses.base
-                            )}>
-                              {tafsir.text}
-                            </div>
-                          </div>
-
-                          {/* Personal Note Section */}
-                          {hasNote && (
-                            <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100 space-y-3 relative overflow-hidden">
-                              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-                              <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider relative z-10">
-                                <MessageSquare className="w-3 h-3" />
-                                {t('myReflection')}
-                              </div>
-                              <p className="text-base text-blue-800/80 italic leading-relaxed relative z-10">{personalNotes[noteKey]}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      {cardContent}
                     </motion.div>
+                  ) : (
+                    <div key={idx} className="group relative">{cardContent}</div>
                   );
                 })}
               </div>
 
               {/* No Results in Search */}
-              {!tafsirLoading && getFilteredTafsirs().length === 0 && (
+              {!tafsirLoading && filteredTafsirs.length === 0 && (
                 <div className="text-center py-12 px-6 bg-white rounded-3xl border border-dashed border-slate-200">
                   <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
                     <Search className="w-8 h-8 text-slate-300" />

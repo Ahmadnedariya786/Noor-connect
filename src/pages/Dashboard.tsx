@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy, type
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PremiumDashboard } from "@/components/PremiumDashboard";
 import { Moon, Sun, Sunset, Cloud, CloudMoon, Bell, Compass, LayoutGrid, Settings as SettingsIcon, Wallet, Calendar, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
 const DailyAyah = lazy(() => import("@/components/EnhancedDailyAyah").then(module => ({ default: module.EnhancedDailyAyah })));
 const DailyHadith = lazy(() => import("@/components/EnhancedDailyHadith").then(module => ({ default: module.EnhancedDailyHadith })));
+const PremiumDashboard = lazy(() => import("@/components/PremiumDashboard").then(module => ({ default: module.PremiumDashboard })));
 import { LocationSearch } from "@/components/LocationSearch";
 import { LayoutManager } from "@/components/LayoutManager";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -35,13 +35,12 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GeocodingService } from "@/lib/geocoding";
 import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
-import { globalTimerManager } from "@/lib/timer-manager";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { t: ti18n } = useI18n();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [minuteTick, setMinuteTick] = useState(0);
   const [greeting, setGreeting] = useState("");
   const [prayers, setPrayers] = useState<PrayerTime[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,8 +252,6 @@ export default function Dashboard() {
   }, [location.latitude, location.longitude, location.timeZone, location.locationName, location.setLocation, formatTimeFromAPI, parseTimeToDate, timeFormat]);
 
   useEffect(() => {
-    const timerId = globalTimerManager.addCallback(() => setCurrentTime(new Date()), 30000, 'dashboard-time');
-
     // Add online listener to refresh prayer times as soon as internet is back
     const handleOnline = () => {
       loadPrayerTimes();
@@ -264,7 +261,6 @@ export default function Dashboard() {
     window.addEventListener('online', handleOnline);
 
     return () => {
-      globalTimerManager.removeCallback(timerId);
       window.removeEventListener('online', handleOnline);
     };
   }, [loadPrayerTimes]);
@@ -383,6 +379,7 @@ export default function Dashboard() {
   useEffect(() => {
     const id = setInterval(() => {
       minuteTickRef.current = (minuteTickRef.current + 1) % 60;
+      setMinuteTick(t => t + 1);
     }, 60000);
     return () => clearInterval(id);
   }, []);
@@ -398,9 +395,10 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
   }, [toast, resolvePrayerTimes]);
 
   const dashboardPrayers = useMemo(() => {
+    void minuteTick;
+    const now = new Date();
     return prayers.map(p => {
       const prayerDate = p.date;
-      const now = currentTime;
       const isUpcoming = prayerDate && prayerDate > now;
       const pKey = p.name.toLowerCase() as PrayerName;
       const isCompleted = todayPrayers ? !!todayPrayers[pKey] : false;
@@ -425,7 +423,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
         onCheckIn: () => handleCheckIn(pKey),
       };
     });
-  }, [prayers, currentTime, todayPrayers, nextPrayerName, handleCheckIn, prayerIcons]);
+  }, [prayers, minuteTick, todayPrayers, nextPrayerName, handleCheckIn, prayerIcons]);
 
   const nextPrayerInfo = useMemo(() => {
     const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
@@ -466,27 +464,29 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
 
 return (
     <PageTransition>
-      <PremiumDashboard
-        
-        hijriDate={hijriDate || ""}
-        nextPrayer={nextPrayerInfo}
-        prayers={dashboardPrayers}
-        locationLabel={locationLabel}
-        onServiceClick={onServiceClick}
-        onVerseClick={onVerseClick}
-        onHadithClick={onHadithClick}
-        onNotificationClick={onNotificationClick}
-        onLocationClick={onLocationClick}
-        showManualLocationDialog={showManualLocationDialog}
-        setShowManualLocationDialog={setShowManualLocationDialog}
-        LocationSearch={LocationSearch}
-        GeocodingService={GeocodingService}
-        AladhanAPI={AladhanAPI}
-        location={location}
-        prayerTimesHook={prayerTimesHook}
-        setLoadingAPI={setLoadingAPI}
-        toast={toast}
-      />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+        <PremiumDashboard
+          
+          hijriDate={hijriDate || ""}
+          nextPrayer={nextPrayerInfo}
+          prayers={dashboardPrayers}
+          locationLabel={locationLabel}
+          onServiceClick={onServiceClick}
+          onVerseClick={onVerseClick}
+          onHadithClick={onHadithClick}
+          onNotificationClick={onNotificationClick}
+          onLocationClick={onLocationClick}
+          showManualLocationDialog={showManualLocationDialog}
+          setShowManualLocationDialog={setShowManualLocationDialog}
+          LocationSearch={LocationSearch}
+          GeocodingService={GeocodingService}
+          AladhanAPI={AladhanAPI}
+          location={location}
+          prayerTimesHook={prayerTimesHook}
+          setLoadingAPI={setLoadingAPI}
+          toast={toast}
+        />
+      </Suspense>
     </PageTransition>
   );
 }

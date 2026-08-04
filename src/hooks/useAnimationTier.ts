@@ -263,6 +263,7 @@ function getInitialTier(): AnimationTier['tier'] {
 }
 
 let currentTier: AnimationTier['tier'] = getInitialTier();
+let benchmarkStarted = false;
 const listeners = new Set<(tier: AnimationTier) => void>();
 
 let monitorRafId: number | null = null;
@@ -386,7 +387,10 @@ export function useAnimationTier(): AnimationTier {
       }
     };
 
-    runBenchmark();
+    if (!benchmarkStarted) {
+      benchmarkStarted = true;
+      runBenchmark();
+    }
 
     monitorRefCount++;
     if (monitorRefCount === 1) {

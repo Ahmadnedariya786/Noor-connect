@@ -116,6 +116,8 @@ const hadithCollection: Hadith[] = [
 const HADITH_STORAGE_KEY = "enhanced-daily-hadith";
 const LAST_UPDATE_KEY = "hadith-last-update";
 
+let cachedCollectionsHadith: EnhancedHadith | null = null;
+
 export function EnhancedDailyHadith() {
   const navigate = useNavigate();
   const [hadith, setHadith] = useState<Hadith | null>(null);
@@ -150,13 +152,20 @@ export function EnhancedDailyHadith() {
 
       // In the background, try to get a richer hadith from collections
       // (never blocks the UI — if it fails, the cached hardcoded one stays)
-      getDailyHadithFromCollections().then((importedHadith) => {
-        if (importedHadith) {
-          const enhanced = mapEnhancedHadithToWidget(importedHadith);
-          localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(enhanced));
-          setHadith(enhanced);
-        }
-      }).catch(() => {});
+      if (cachedCollectionsHadith) {
+        const enhanced = mapEnhancedHadithToWidget(cachedCollectionsHadith);
+        localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(enhanced));
+        setHadith(enhanced);
+      } else {
+        getDailyHadithFromCollections().then((importedHadith) => {
+          if (importedHadith) {
+            cachedCollectionsHadith = importedHadith;
+            const enhanced = mapEnhancedHadithToWidget(importedHadith);
+            localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(enhanced));
+            setHadith(enhanced);
+          }
+        }).catch(() => {});
+      }
     } catch (error) {
       console.error('Error loading hadith:', error);
       setHadith(hadithCollection[0]); // Fallback
@@ -166,7 +175,12 @@ export function EnhancedDailyHadith() {
   }, []);
 
   useEffect(() => {
-    loadHadith();
+    let idleId: number | null = null;
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(() => loadHadith(), { timeout: 3000 });
+    } else {
+      loadHadith();
+    }
 
     // Listen for app visibility changes to refresh if needed
     const handleVisibilityChange = () => {
@@ -184,6 +198,9 @@ export function EnhancedDailyHadith() {
     window.addEventListener('widget-refresh', handleRefresh);
 
     return () => {
+      if (idleId !== null) {
+        window.cancelIdleCallback(idleId);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('widget-refresh', handleRefresh);
     };
@@ -195,6 +212,7 @@ export function EnhancedDailyHadith() {
       const randomSeed = Math.floor(Math.random() * 100000) + 1;
       const importedHadith = await getDailyHadithFromCollections(randomSeed);
       if (importedHadith) {
+        cachedCollectionsHadith = importedHadith;
         setHadith(mapEnhancedHadithToWidget(importedHadith));
       } else {
         const randomIndex = Math.floor(Math.random() * hadithCollection.length);

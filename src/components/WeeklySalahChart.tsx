@@ -1,24 +1,48 @@
-﻿/**
+/**
  * Weekly Salah History Chart
  * Shows prayer completion over the past 7 days
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Calendar } from "lucide-react";
 import { getPrayerHistory, type DailyPrayers } from "@/lib/salah-tracker";
 import { Skeleton } from "@/components/LoadingSkeleton";
 import { useI18n } from "@/hooks/useI18n";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
+import { useSettings } from "@/contexts/SettingsContext";
+import { useAnimationTier } from "@/hooks/useAnimationTier";
+import type { ChartData } from "./WeeklySalahChartRecharts";
 
-interface ChartData {
-  day: string;
-  fullDate: string;
-  completed: number;
-  total: number;
+const RechartsBarChart = lazy(() => import("./WeeklySalahChartRecharts"));
+
+function SimpleBarFallback({ chartData }: { chartData: ChartData[] }) {
+  return (
+    <div className="flex items-end justify-between gap-1.5 h-full w-full px-1">
+      {chartData.map((entry, index) => {
+        const ratio = entry.total > 0 ? entry.completed / entry.total : 0;
+        const height = Math.max(5, Math.round(ratio * 100));
+        const color = entry.completed === 5
+          ? "#C9860A"
+          : entry.completed >= 3
+            ? "rgba(201,134,10,0.65)"
+            : entry.completed >= 1
+              ? "rgba(201,134,10,0.35)"
+              : "rgba(255,255,255,0.08)";
+        return (
+          <div key={index} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
+            <div className="w-full max-w-[28px] rounded-t" style={{ height: `${height}%`, backgroundColor: color }} />
+            <span className="text-[10px] text-muted-foreground">{entry.day}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function WeeklySalahChart() {
   const { t: ti18n } = useI18n();
+  const { animationEnabled } = useSettings();
+  const { tier } = useAnimationTier();
+  const chartEnabled = animationEnabled && tier !== 'low' && tier !== 'minimal';
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [dataVersion, setDataVersion] = useState(0);
   const [weeklyStats, setWeeklyStats] = useState({ completed: 0, total: 0, percentage: 0 });
@@ -70,13 +94,6 @@ export function WeeklySalahChart() {
     };
   }, [refreshData]);
 
-  const getBarColor = (completed: number): string => {
-    if (completed === 5) return "#C9860A";
-    if (completed >= 3) return "rgba(201,134,10,0.65)";
-    if (completed >= 1) return "rgba(201,134,10,0.35)";
-    return "rgba(255,255,255,0.08)";
-  };
-
   return (
     <Card className="bg-[#1A1A1A] border border-[#C9860A]/30 overflow-hidden min-h-[200px] shadow-md">
       <CardHeader className="pb-2 pt-4">
@@ -102,26 +119,13 @@ export function WeeklySalahChart() {
         {/* Chart with fixed height to prevent CLS */}
         <div className="h-24 w-full min-h-[96px]">
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart key={dataVersion} data={chartData} barCategoryGap="20%">
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis hide domain={[0, 5]} />
-                <Bar
-                  dataKey="completed"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={28}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getBarColor(entry.completed)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            chartEnabled ? (
+              <Suspense fallback={<SimpleBarFallback chartData={chartData} />}>
+                <RechartsBarChart chartData={chartData} dataVersion={dataVersion} />
+              </Suspense>
+            ) : (
+              <SimpleBarFallback chartData={chartData} />
+            )
           ) : (
             <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground text-xs">
               <Calendar className="w-8 h-8 mb-2 opacity-50" />

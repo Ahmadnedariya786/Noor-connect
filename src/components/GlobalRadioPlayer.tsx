@@ -63,7 +63,8 @@ export function GlobalRadioPlayer() {
 
     const updateTimer = () => {
       const currentSessionTime = Math.floor((Date.now() - globalRadio.sessionStartTime!) / 1000);
-      setDisplayDuration(globalRadio.accumulatedTime + currentSessionTime);
+      const nextDuration = globalRadio.accumulatedTime + currentSessionTime;
+      setDisplayDuration(prev => (prev === nextDuration ? prev : nextDuration));
     };
 
     updateTimer(); // Initial update

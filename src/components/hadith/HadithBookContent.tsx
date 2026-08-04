@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, BookOpen, ChevronRight, Copy, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,106 @@ import { getCollectionByName, HadithBook, HadithCollection, EnhancedHadith } fro
 import { getHadithBookData, getHadithCollectionMetadata } from "@/lib/hadith";
 import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
+
+const SHOW_ALL_PAGE_SIZE = 300;
+
+interface HadithCardProps {
+  hadith: EnhancedHadith;
+  index: number;
+  collection: string;
+  book: string;
+  bookmarked: boolean;
+  navigate: ReturnType<typeof useNavigate>;
+  toast: ReturnType<typeof useToast>["toast"];
+  toggleBookmark: (item: { collection: string; bookNumber: string; hadithNumber: string; arabic: string; englishTranslation?: string; bookName?: string }) => void;
+}
+
+const HadithCard = memo(function HadithCard({ hadith, index, collection, book, bookmarked, navigate, toast, toggleBookmark }: HadithCardProps) {
+  return (
+    <Card
+      className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-border/50 hover:border-primary/30"
+      onClick={() => navigate(`/hadith/collections/${collection}/${book}/${hadith.hadithNumber}`)}
+    >
+      <CardContent className="p-6 space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge variant="outline" className="text-xs">
+                #{hadith.hadithNumber}
+              </Badge>
+              {hadith.grade && (
+                <Badge variant="outline" className={`text-xs ${getGradeBadgeClass(hadith.grade)}`}>
+                  {hadith.grade}
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 ml-auto rounded-lg hover:bg-primary/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleBookmark({
+                    collection,
+                    bookNumber: book,
+                    hadithNumber: hadith.hadithNumber,
+                    arabic: hadith.arabic,
+                    englishTranslation: hadith.englishTranslation,
+                    bookName: hadith.bookName,
+                  });
+                }}
+              >
+                <Bookmark className={`w-3.5 h-3.5 ${bookmarked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+              </Button>
+            </div>
+
+            {/* Arabic Text */}
+            <div className="glass-card p-4 rounded-xl mb-3">
+              <p className="text-xl md:text-2xl font-arabic text-right leading-loose text-foreground" dir="rtl">
+                {hadith.arabic}
+              </p>
+            </div>
+
+            {/* Translation */}
+            {hadith.englishTranslation && (
+              <p className="text-sm text-muted-foreground italic leading-relaxed whitespace-pre-wrap">
+                {hadith.englishTranslation}
+              </p>
+            )}
+
+            {/* Narrator */}
+            {hadith.narrator && (
+              <p className="text-sm font-semibold text-primary mt-3">
+                Narrated by: {hadith.narrator}
+              </p>
+            )}
+
+            {/* Copy */}
+            <div className="flex items-center gap-2 mt-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs rounded-lg hover:bg-primary/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const text = `${hadith.arabic}\n\n${hadith.englishTranslation || ""}\n\n— ${collection} (${hadith.hadithNumber})`;
+                  navigator.clipboard.writeText(text).then(() => {
+                    toast({ title: "Copied to clipboard" });
+                  });
+                }}
+              >
+                <Copy className="w-3.5 h-3.5 mr-1" />
+                Copy
+              </Button>
+            </div>
+
+          </div>
+
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors mt-1" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
 
 function normalizeBookNumber(bookNumber: string): string {
   const parsed = Number.parseInt(bookNumber, 10);
@@ -139,13 +239,41 @@ export function HadithBookContent() {
     });
   }, [hadithData, searchTerm]);
 
-  const { isBookmarked, toggleBookmark } = useHadithBookmarks();
+  const { bookmarks, toggleBookmark } = useHadithBookmarks();
+
+  const bookmarkSet = useMemo(
+    () => new Set(bookmarks.map(b => `${b.collection}:${b.hadithNumber}`)),
+    [bookmarks]
+  );
+
+  const isBookmarked = useCallback(
+    (hadithNumber: string) => bookmarkSet.has(`${collection}:${hadithNumber}`),
+    [bookmarkSet, collection]
+  );
 
   const [displayCount, setDisplayCount] = useState(50);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setDisplayCount(50);
   }, [searchTerm, book, collection]);
+
+  // Auto-load more hadith when the sentinel at the end of the list becomes visible
+  useEffect(() => {
+    if (displayCount >= filteredHadith.length || filteredHadith.length === 0) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some(e => e.isIntersecting)) {
+          setDisplayCount(prev => Math.min(prev + SHOW_ALL_PAGE_SIZE, filteredHadith.length));
+        }
+      },
+      { rootMargin: "1200px 0px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [displayCount, filteredHadith.length]);
 
   const displayedHadith = useMemo(() => {
     return filteredHadith.slice(0, displayCount);
@@ -282,94 +410,23 @@ export function HadithBookContent() {
         {/* Hadith List */}
         {!loading && (
           <div className="space-y-4">
-            {displayedHadith.map((hadith, index) => {
-              const tags = Array.isArray(hadith.tags) ? hadith.tags : [];
-              return (
-                <Card
-                  key={`${hadith.id}-${hadith.bookNumber}-${hadith.hadithNumber}-${index}`}
-                  className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-border/50 hover:border-primary/30"
-                  onClick={() => navigate(`/hadith/collections/${collection}/${book}/${hadith.hadithNumber}`)}
-                >
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant="outline" className="text-xs">
-                            #{hadith.hadithNumber}
-                          </Badge>
-                          {hadith.grade && (
-                            <Badge variant="outline" className={`text-xs ${getGradeBadgeClass(hadith.grade)}`}>
-                              {hadith.grade}
-                            </Badge>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 ml-auto rounded-lg hover:bg-primary/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleBookmark({
-                                collection: collection!,
-                                bookNumber: book!,
-                                hadithNumber: hadith.hadithNumber,
-                                arabic: hadith.arabic,
-                                englishTranslation: hadith.englishTranslation,
-                                bookName: hadith.bookName,
-                              });
-                            }}
-                          >
-                            <Bookmark className={`w-3.5 h-3.5 ${isBookmarked(collection!, hadith.hadithNumber) ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                          </Button>
-                        </div>
+            {displayedHadith.map((hadith, index) => (
+              <HadithCard
+                key={`${hadith.id}-${hadith.bookNumber}-${hadith.hadithNumber}-${index}`}
+                hadith={hadith}
+                index={index}
+                collection={collection!}
+                book={book!}
+                bookmarked={isBookmarked(hadith.hadithNumber)}
+                navigate={navigate}
+                toast={toast}
+                toggleBookmark={toggleBookmark}
+              />
+            ))}
 
-                        {/* Arabic Text */}
-                        <div className="glass-card p-4 rounded-xl mb-3">
-                          <p className="text-xl md:text-2xl font-arabic text-right leading-loose text-foreground" dir="rtl">
-                            {hadith.arabic}
-                          </p>
-                        </div>
-
-                        {/* Translation */}
-                        {hadith.englishTranslation && (
-                          <p className="text-sm text-muted-foreground italic leading-relaxed whitespace-pre-wrap">
-                            {hadith.englishTranslation}
-                          </p>
-                        )}
-
-                        {/* Narrator */}
-                        {hadith.narrator && (
-                          <p className="text-sm font-semibold text-primary mt-3">
-                            Narrated by: {hadith.narrator}
-                          </p>
-                        )}
-
-                        {/* Copy */}
-                        <div className="flex items-center gap-2 mt-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs rounded-lg hover:bg-primary/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const text = `${hadith.arabic}\n\n${hadith.englishTranslation || ""}\n\n— ${collection} (${hadith.hadithNumber})`;
-                              navigator.clipboard.writeText(text).then(() => {
-                                toast({ title: "Copied to clipboard" });
-                              });
-                            }}
-                          >
-                            <Copy className="w-3.5 h-3.5 mr-1" />
-                            Copy
-                          </Button>
-                        </div>
-
-                      </div>
-
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors mt-1" />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {displayCount < filteredHadith.length && (
+              <div ref={sentinelRef} aria-hidden="true" />
+            )}
 
             {/* Load More / Show All */}
             {filteredHadith.length > displayCount && (
@@ -386,7 +443,7 @@ export function HadithBookContent() {
                     Load More ({filteredHadith.length - displayCount} remaining)
                   </Button>
                   <Button
-                    onClick={() => setDisplayCount(filteredHadith.length)}
+                    onClick={() => setDisplayCount(Math.min(filteredHadith.length, SHOW_ALL_PAGE_SIZE))}
                     variant="outline"
                     className="flex-1 rounded-xl border-primary/20 hover:bg-primary/5"
                   >

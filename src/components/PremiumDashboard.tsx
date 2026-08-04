@@ -10,6 +10,7 @@ import {
   type DashboardWidgetConfig
 } from "@/lib/dashboard-widget-config";
 import { globalTimerManager } from "@/lib/timer-manager";
+import { useAnimationTier } from "@/hooks/useAnimationTier";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -110,7 +111,7 @@ function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
       const diff = targetTime.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining("00:00:00");
+        setTimeRemaining(prev => (prev === "00:00:00" ? prev : "00:00:00"));
         return;
       }
 
@@ -122,7 +123,7 @@ function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
         ? `${hours}h ${minutes}m ${seconds}s`
         : `${minutes}m ${seconds}s`;
 
-      setTimeRemaining(countdownStr);
+      setTimeRemaining(prev => (prev === countdownStr ? prev : countdownStr));
     };
 
     updateDisplay();
@@ -151,6 +152,7 @@ function PremiumDashboardInner({
   toast,
 }: PremiumDashboardProps) {
   const { animationEnabled } = useSettings();
+  const { tier } = useAnimationTier();
   const { isRamadan, ramadanDay } = useIslamicCalendar();
   const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>([]);
   const [timeFormat, setTimeFormat] = useState<'12' | '24'>(() => (localStorage.getItem('time-format') as '12' | '24') || '24');
@@ -196,7 +198,7 @@ function PremiumDashboardInner({
     return () => window.removeEventListener('time-format-changed', handleFormatChange as EventListener);
   }, []);
 
-  const motionProps = (props: any) => animationEnabled ? props : {};
+  const motionProps = (props: any) => (animationEnabled && tier !== 'low' && tier !== 'minimal') ? props : {};
 
   return (
     <div

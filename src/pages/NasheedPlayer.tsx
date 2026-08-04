@@ -242,9 +242,9 @@ export default function NasheedPlayer() {
                 <div className="px-4 pt-4 pb-6 space-y-4">
                     {/* ── Hero Card ────────────────────────────────────────── */}
                     <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-950 via-teal-950 to-zinc-900 text-white shadow-xl">
-                        {/* Decorative glows — will-change ensures GPU-composited, no layout cost */}
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none will-change-transform" />
-                        <div className="absolute bottom-0 left-0 w-28 h-28 bg-teal-500/8 rounded-full blur-xl -ml-6 -mb-6 pointer-events-none will-change-transform" />
+                        {/* Decorative glows */}
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-28 h-28 bg-teal-500/8 rounded-full blur-xl -ml-6 -mb-6 pointer-events-none" />
 
                         <div className="relative z-10 p-5">
                             <div className="flex items-start justify-between mb-4">

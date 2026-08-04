@@ -2,11 +2,13 @@ import { useEffect, useRef, useCallback } from 'react';
 import { autoBackup } from '@/lib/backup-service';
 
 const ACTIVITY_TIMEOUT = 20 * 60 * 1000;
+const FIRST_BACKUP_DELAY = 5 * 1000;
 
 /**
- * Always-on auto backup. Runs immediately on mount, then every 20 minutes of
- * app use (the timer resets on any user activity). There is no toggle —
- * backups are non-negotiable by design.
+ * Always-on auto backup. Runs shortly after mount (deferred to idle time so
+ * it never blocks startup), then every 20 minutes of app use (the timer
+ * resets on any user activity). There is no toggle — backups are
+ * non-negotiable by design.
  */
 export function useAutoBackup(onBackup?: () => void) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -33,7 +35,15 @@ export function useAutoBackup(onBackup?: () => void) {
   }, [runBackup]);
 
   useEffect(() => {
-    runBackup();
+    let firstBackupTimeout: ReturnType<typeof setTimeout> | null = null;
+    let firstBackupIdleId: number | null = null;
+    firstBackupTimeout = setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        firstBackupIdleId = window.requestIdleCallback(() => runBackup());
+      } else {
+        runBackup();
+      }
+    }, FIRST_BACKUP_DELAY);
     intervalRef.current = setInterval(() => {
       runBackup();
     }, ACTIVITY_TIMEOUT);
@@ -43,6 +53,12 @@ export function useAutoBackup(onBackup?: () => void) {
     events.forEach(event => window.addEventListener(event, activityHandler));
     (window as any).__autoBackupActivityHandler = activityHandler;
     return () => {
+      if (firstBackupTimeout) {
+        clearTimeout(firstBackupTimeout);
+      }
+      if (firstBackupIdleId !== null) {
+        window.cancelIdleCallback(firstBackupIdleId);
+      }
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;

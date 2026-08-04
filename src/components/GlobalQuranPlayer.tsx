@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useReciters } from "@/hooks/useReciters";
 import { AlertCircle, Pause, Play, User, Volume2, X, ChevronUp, ChevronDown, Repeat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -213,7 +213,7 @@ export function GlobalQuranPlayer() {
             <>
                 <audio ref={audioRef} />
                 <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
-                    <Card className="w-full max-w-lg mx-auto bg-zinc-900/95 backdrop-blur-xl text-white border-white/10 shadow-2xl rounded-full p-2 pr-4 flex items-center justify-between transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-bottom border">
+                    <Card className="w-full max-w-lg mx-auto bg-zinc-900/95 backdrop-blur-md text-white border-white/10 shadow-2xl rounded-full p-2 pr-4 flex items-center justify-between transition-transform duration-300 hover:scale-[1.02] animate-in slide-in-from-bottom border">
                         {/* Clickable Area to Expand */}
                         <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={() => setIsExpanded(true)}>
                             {/* Rotating Vinyl Icon */}

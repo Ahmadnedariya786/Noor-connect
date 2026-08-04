@@ -7,7 +7,7 @@ interface TimeDisplayProps {
 }
 
 function TimeDisplayComponent({ targetTime, className }: TimeDisplayProps) {
-  const countdown = useCountdown(targetTime);
+  const countdown = useCountdown(targetTime, 'time-display-countdown');
   
   return (
     <span className={className}>

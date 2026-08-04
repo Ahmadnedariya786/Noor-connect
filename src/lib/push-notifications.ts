@@ -375,18 +375,36 @@ export class PushNotificationSystem {
   }
 
   // Schedule periodic checks
+  private periodicInterval: ReturnType<typeof setInterval> | null = null;
+  private periodicVisibilityHandler: (() => void) | null = null;
+
   startPeriodicChecks(): void {
+    // Idempotent — repeated calls must not stack intervals or listeners.
+    if (this.periodicInterval !== null) return;
+
     // Check every 15 minutes
-    setInterval(() => {
+    this.periodicInterval = setInterval(() => {
       this.checkAndSendNotifications();
     }, 15 * 60 * 1000);
 
     // Also check on visibility change (when user returns to app)
-    document.addEventListener('visibilitychange', () => {
+    this.periodicVisibilityHandler = () => {
       if (document.visibilityState === 'visible') {
         this.checkAndSendNotifications();
       }
-    });
+    };
+    document.addEventListener('visibilitychange', this.periodicVisibilityHandler);
+  }
+
+  stopPeriodicChecks(): void {
+    if (this.periodicInterval !== null) {
+      clearInterval(this.periodicInterval);
+      this.periodicInterval = null;
+    }
+    if (this.periodicVisibilityHandler !== null) {
+      document.removeEventListener('visibilitychange', this.periodicVisibilityHandler);
+      this.periodicVisibilityHandler = null;
+    }
   }
 }
 

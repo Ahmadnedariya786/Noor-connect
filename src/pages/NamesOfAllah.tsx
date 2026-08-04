@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AppBar } from "@/components/AppBar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -140,17 +140,19 @@ export default function NamesOfAllah() {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
   };
 
-  const filteredNames = namesOfAllah.filter(name => {
-    const matchesSearch =
-      name.transliteration.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      name.meaning.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      name.arabic.includes(searchQuery);
+  const filteredNames = useMemo(() => {
+    return namesOfAllah.filter(name => {
+      const matchesSearch =
+        name.transliteration.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        name.meaning.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        name.arabic.includes(searchQuery);
 
-    if (showFavoritesOnly) {
-      return matchesSearch && favorites.includes(name.number);
-    }
-    return matchesSearch;
-  });
+      if (showFavoritesOnly) {
+        return matchesSearch && favorites.includes(name.number);
+      }
+      return matchesSearch;
+    });
+  }, [searchQuery, showFavoritesOnly, favorites]);
 
   return (
     <PageTransition>
@@ -285,7 +287,6 @@ export default function NamesOfAllah() {
                 onClick={() => setSelectedName(null)}
               />
               <motion.div
-                layoutId={`card-${selectedName.number}`}
                 initial={{ opacity: 0, y: 100, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 100, scale: 0.9 }}

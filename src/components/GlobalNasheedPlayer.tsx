@@ -384,7 +384,7 @@ export function GlobalNasheedPlayer() {
                 <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
                     {/* Plain div with inline style — guaranteed dark regardless of light/dark theme */}
                     <div
-                        className="w-full max-w-lg mx-auto backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden border border-white/10"
+                        className="w-full max-w-lg mx-auto backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden border border-white/10"
                         style={{ background: 'rgba(24,24,27,0.97)', color: '#fff' }}
                     >
                         {/* Progress bar — clickable to seek */}
