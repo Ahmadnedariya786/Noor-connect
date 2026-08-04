@@ -783,6 +783,7 @@ function QuizMenu({
   canClaimMysteryBox,
   activeEvent
 }: any) {
+  const { t } = useLanguage();
   const dailyStatus = quizStore.getDailyRewardStatus();
   const canClaimDaily = dailyStatus.canClaimToday;
 
