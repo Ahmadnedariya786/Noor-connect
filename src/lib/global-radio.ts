@@ -65,7 +65,32 @@ const saveRadioState = (state: RadioState): void => {
 let globalState: RadioState = loadStoredRadioState();
 const listeners = new Set<(state: RadioState) => void>();
 
+// Volume slider drags fire setVolume per pointer move (up to ~60 Hz). Each
+// notify re-renders every subscriber (GlobalRadioPlayer + GlobalQuranPlayer
+// + GlobalNasheedPlayer + LayoutManager) and writes localStorage, which
+// janks mid-drag. Volume is collapsed to one notify per animation frame;
+// the state itself updates synchronously so listeners always read the
+// latest value. A synchronous notify (play/pause/etc.) cancels any
+// pending rAF so we never emit a redundant duplicate.
+let pendingVolumeRaf: number | null = null;
+
+const cancelPendingVolumeNotify = () => {
+  if (pendingVolumeRaf !== null) {
+    cancelAnimationFrame(pendingVolumeRaf);
+    pendingVolumeRaf = null;
+  }
+};
+
+const scheduleVolumeNotify = () => {
+  if (pendingVolumeRaf !== null) return;
+  pendingVolumeRaf = requestAnimationFrame(() => {
+    pendingVolumeRaf = null;
+    notifyListeners();
+  });
+};
+
 const notifyListeners = () => {
+  cancelPendingVolumeNotify();
   listeners.forEach(listener => listener(globalState));
   saveRadioState(globalState);
 };
@@ -122,7 +147,7 @@ const actions = {
       volume: Math.max(0, Math.min(100, volume)),
       isMuted: false // Unmute when setting volume
     };
-    notifyListeners();
+    scheduleVolumeNotify();
   },
 
   toggleMute: () => {

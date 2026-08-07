@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getFavorites, toggleFavorite } from "@/lib/storage";
 import { duasData, duaCategories } from "@/data/duas";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface DuaCardProps {
   dua: typeof duasData[0];
@@ -42,7 +41,7 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <div className="active:scale-[0.99] transition-transform duration-100">
       <Card className={`p-5 relative overflow-hidden border-border/40 shadow-sm ${isDuaOfDay ? 'border-[#C9860A]/30 bg-gradient-to-br from-[#C9860A]/5 to-transparent' : 'bg-card'}`}>
         {isDuaOfDay && (
           <div className="absolute top-3 right-3">
@@ -109,7 +108,7 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
           )}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }, (prevProps, nextProps) => {
   return (
@@ -136,19 +135,21 @@ const Duas = memo(function Duas() {
     return duasData[dayOfYear % duasData.length];
   }, []);
 
-  const filteredDuas = duasData.filter((dua) => {
-    if (selectedCategory !== "All" && dua.category !== selectedCategory) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return (
-        dua.translation.toLowerCase().includes(q) ||
-        dua.transliteration.toLowerCase().includes(q) ||
-        dua.arabic.includes(q) ||
-        (dua.reference && dua.reference.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  const filteredDuas = useMemo(() => {
+    return duasData.filter((dua) => {
+      if (selectedCategory !== "All" && dua.category !== selectedCategory) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return (
+          dua.translation.toLowerCase().includes(q) ||
+          dua.transliteration.toLowerCase().includes(q) ||
+          dua.arabic.includes(q) ||
+          (dua.reference && dua.reference.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [selectedCategory, searchQuery]);
 
   const handleToggleFavorite = (duaId: string) => {
     const isFavorite = toggleFavorite(duaId);
@@ -254,17 +255,18 @@ const Duas = memo(function Duas() {
               </Button>
             </Card>
           ) : (
-            <AnimatePresence>
+            <div className="flex flex-col gap-4">
               {filteredDuas.map((dua) => (
-                <DuaCard
-                  key={dua.id}
-                  dua={dua}
-                  isFavorite={favorites.includes(dua.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  onShare={shareDua}
-                />
+                <div key={dua.id} style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 260px' }}>
+                  <DuaCard
+                    dua={dua}
+                    isFavorite={favorites.includes(dua.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    onShare={shareDua}
+                  />
+                </div>
               ))}
-            </AnimatePresence>
+            </div>
           )}
         </div>
       </div>

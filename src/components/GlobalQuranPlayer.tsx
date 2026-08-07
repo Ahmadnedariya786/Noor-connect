@@ -30,6 +30,11 @@ export function GlobalQuranPlayer() {
     const { isPlaying: isRadioPlaying, updateRadioState: updateRadioState } = useGlobalRadio();
 
     const [isExpanded, setIsExpanded] = useState(false);
+    // Local seek position drives the slider + time labels at full update rate
+    // WITHOUT touching the global store (which notifies every useGlobalQuran
+    // consumer and writes localStorage). Global progress is pushed at ~1Hz.
+    const [seekValue, setSeekValue] = useState(0);
+    const lastProgressPushRef = useRef(0);
 
     // Use shared reciter hook
     const { reciters, isLoading: isReciterLoading, error: fetchError } = useReciters();
@@ -109,6 +114,12 @@ export function GlobalQuranPlayer() {
         loadAudio();
     }, [surahNumber, reciter?.id, isPlaying]); // Depend on ID to trigger change
 
+    // Sync the local seek display whenever a new track is loaded (new surah
+    // starts at 0, same-surah resume restores the persisted position).
+    useEffect(() => {
+        setSeekValue(progress);
+    }, [surahNumber, reciter?.id]);
+
     // Handle Play/Pause State
     useEffect(() => {
         const audio = audioRef.current;
@@ -145,10 +156,21 @@ export function GlobalQuranPlayer() {
         if (!audio) return;
 
         const handleTimeUpdate = () => {
-            setProgress(audio.currentTime);
-            setDuration(audio.duration || 0);
+            const t = audio.currentTime;
+            const dur = audio.duration || 0;
+            // Smooth local UI: re-render only this component (~4Hz).
+            setSeekValue(t);
+            // Global store: throttle to ~1Hz so listeners + localStorage
+            // writes don't run at timeupdate rate.
+            const now = performance.now();
+            if (now - lastProgressPushRef.current > 1000) {
+                lastProgressPushRef.current = now;
+                setProgress(t);
+                if (dur && isFinite(dur)) setDuration(dur);
+            }
         };
         const handleEnded = () => {
+            setSeekValue(0);
             updateState({ isPlaying: false, progress: 0 });
         };
         const handleCanPlay = () => setIsAudioLoading(false);
@@ -286,16 +308,17 @@ export function GlobalQuranPlayer() {
                         {/* Progress */}
                         <div className="space-y-2">
                             <Slider
-                                value={[progress]}
+                                value={[seekValue]}
                                 max={duration || 100}
                                 onValueChange={([v]) => {
+                                    setSeekValue(v);
                                     if (audioRef.current) audioRef.current.currentTime = v;
                                     setProgress(v);
                                 }}
                                 className="cursor-pointer"
                             />
                             <div className="flex justify-between text-xs font-mono text-muted-foreground">
-                                <span>{formatTime(progress)}</span>
+                                <span>{formatTime(seekValue)}</span>
                                 <span>{formatTime(duration)}</span>
                             </div>
                         </div>

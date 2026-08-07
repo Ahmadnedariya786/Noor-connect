@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+﻿import { memo, useEffect, useRef, useState } from "react";
 import { Play, Pause, Volume2, VolumeX, Radio, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +21,40 @@ const formatDuration = (totalSeconds: number): string => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
+interface ElapsedTimerProps {
+  isPlaying: boolean;
+  sessionStartTime: number | null;
+  accumulatedTime: number;
+}
+
+/**
+ * Elapsed listening time. Runs its own 1s interval so only this tiny
+ * memoized <span> re-renders each second — the rest of the (always-mounted,
+ * HLS-capable) player stays untouched. When paused, it simply displays the
+ * accumulated total with no interval running at all.
+ */
+const ElapsedTimer = memo(function ElapsedTimer({ isPlaying, sessionStartTime, accumulatedTime }: ElapsedTimerProps) {
+  const [display, setDisplay] = useState(accumulatedTime);
+
+  useEffect(() => {
+    if (!isPlaying || !sessionStartTime) {
+      setDisplay(accumulatedTime);
+      return;
+    }
+
+    const update = () => {
+      const next = accumulatedTime + Math.floor((Date.now() - sessionStartTime) / 1000);
+      setDisplay(prev => (prev === next ? prev : next));
+    };
+
+    update(); // Show correct value immediately on (re)start
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [isPlaying, sessionStartTime, accumulatedTime]);
+
+  return <span className="font-mono">{formatDuration(display)}</span>;
+});
+
 export function GlobalRadioPlayer() {
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -28,7 +62,6 @@ export function GlobalRadioPlayer() {
   const globalRadio = useGlobalRadio();
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [displayDuration, setDisplayDuration] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 2;
 
@@ -53,24 +86,8 @@ export function GlobalRadioPlayer() {
     };
   }, []);
 
-  // Listening timer - uses Date.now() delta for accuracy even when backgrounded
-  useEffect(() => {
-    if (!globalRadio.isPlaying || !globalRadio.sessionStartTime) {
-      // When paused, just show accumulated time
-      setDisplayDuration(globalRadio.accumulatedTime);
-      return;
-    }
-
-    const updateTimer = () => {
-      const currentSessionTime = Math.floor((Date.now() - globalRadio.sessionStartTime!) / 1000);
-      const nextDuration = globalRadio.accumulatedTime + currentSessionTime;
-      setDisplayDuration(prev => (prev === nextDuration ? prev : nextDuration));
-    };
-
-    updateTimer(); // Initial update
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [globalRadio.isPlaying, globalRadio.sessionStartTime, globalRadio.accumulatedTime]);
+  // Listening timer: handled inside the memoized <ElapsedTimer /> child so
+  // per-second ticks only re-render that tiny span, never this component.
 
   // Media Session API - for lock screen controls and background stability
   useEffect(() => {
@@ -537,7 +554,11 @@ export function GlobalRadioPlayer() {
                     <p className="text-sm font-bold truncate text-foreground">{globalRadio?.currentTrackInfo || 'Unknown Station'}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
                       <Clock className="w-3 h-3" />
-                      <span className="font-mono">{formatDuration(displayDuration)}</span>
+                      <ElapsedTimer
+                        isPlaying={globalRadio.isPlaying}
+                        sessionStartTime={globalRadio.sessionStartTime}
+                        accumulatedTime={globalRadio.accumulatedTime}
+                      />
                       <span className="text-primary/50">•</span>
                       <span>{globalRadio.isPlaying ? 'Live' : 'Paused'}</span>
                     </div>

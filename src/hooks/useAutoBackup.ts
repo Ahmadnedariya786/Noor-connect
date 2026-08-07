@@ -13,6 +13,7 @@ const FIRST_BACKUP_DELAY = 5 * 1000;
 export function useAutoBackup(onBackup?: () => void) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const activityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastActivityResetRef = useRef(0);
   const onBackupRef = useRef(onBackup);
   onBackupRef.current = onBackup;
 
@@ -26,6 +27,14 @@ export function useAutoBackup(onBackup?: () => void) {
   }, []);
 
   const resetActivityTimer = useCallback(() => {
+    // Throttle: scroll/mousemove fire per pixel. Resetting a timer for every
+    // single event creates needless timer churn/GC on the UI thread (jank on
+    // budget Android WebViews). Resetting once per second is more than enough
+    // — the activity window only moves by ≤1s of precision.
+    const now = Date.now();
+    if (now - lastActivityResetRef.current < 1000) return;
+    lastActivityResetRef.current = now;
+
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
     }

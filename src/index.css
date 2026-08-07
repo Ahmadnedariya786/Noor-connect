@@ -368,7 +368,9 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    /* transform/opacity only — animating filter or box-shadow repaints on
+       every frame and churns the GPU on budget Android WebViews */
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
   }
 
   .glass-gold {
@@ -387,7 +389,7 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid hsl(0 0% 100% / 0.1);
     box-shadow: 0 8px 32px hsl(0 0% 0% / 0.3);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
   }
 
   .glass-card {
@@ -400,7 +402,7 @@
       0 4px 24px hsl(0 0% 0% / 0.1),
       0 1px 2px hsl(0 0% 0% / 0.05),
       inset 0 1px 0 hsl(0 0% 100% / 0.1);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
   }
 
   .glass-card-gold {
@@ -413,7 +415,7 @@
       0 4px 24px hsl(0 0% 0% / 0.1),
       0 1px 2px hsl(0 0% 0% / 0.05),
       inset 0 1px 0 var(--islamic-gold-glow);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
   }
 
   /* Enhanced Premium Card Styles */

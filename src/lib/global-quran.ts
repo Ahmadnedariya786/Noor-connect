@@ -105,11 +105,18 @@ export const quranActions = {
     },
 
     setProgress: (progress: number) => {
+        // Guard: skip sub-tick updates. timeupdate fires ~4×/sec while playing;
+        // notifying every listener + writing localStorage at that rate re-renders
+        // every useGlobalQuran consumer (including the Nasheed player and mood
+        // selectors) and churns GC. Callers are expected to throttle to ~1Hz;
+        // this threshold is a safety net for any unthrottled producer.
+        if (Math.abs(progress - globalState.progress) < 0.25) return;
         globalState = { ...globalState, progress };
-        notifyListeners(); // Note: frequent updates might impact perf if many listeners
+        notifyListeners();
     },
 
     setDuration: (duration: number) => {
+        if (duration === globalState.duration) return;
         globalState = { ...globalState, duration };
         notifyListeners();
     }

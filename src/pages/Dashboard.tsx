@@ -22,7 +22,6 @@ import { BatteryOptimizationDialog } from "@/components/BatteryOptimizationDialo
 import { FeatureCards } from "@/components/DashboardFeatureCards";
 
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
-import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { getTimeFormat, formatTime } from "@/lib/time-formatter";
 import { useLocationState } from "@/lib/location-state";
@@ -115,7 +114,8 @@ export default function Dashboard() {
 
 
   const prayerTimesHook = usePrayerTimes();
-  useWidgetSync(); // Synchronize data with native Android widgets automatically
+  // Note: useWidgetSync is registered globally in App.tsx (AppShell) — a
+  // second registration here would double-fire widget bridge pushes.
 
   const prayerLocation = prayerTimesHook.location;
 
