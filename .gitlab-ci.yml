@@ -25,15 +25,20 @@ variables:
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle-home"
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8"
 
-# Share npm modules + gradle caches across pipelines (keyed on lockfiles).
+# Two caches:
+#  1) npm modules + gradle caches, keyed on lockfiles (invalidated when deps change)
+#  2) the Android SDK, keyed on SDK version — avoids re-downloading ~400 MB every push
 cache:
-  key:
-    files:
-      - package-lock.json
-      - android/gradle/wrapper/gradle-wrapper.properties
-  paths:
-    - node_modules/
-    - .gradle-home/
+  - key:
+      files:
+        - package-lock.json
+        - android/gradle/wrapper/gradle-wrapper.properties
+    paths:
+      - node_modules/
+      - .gradle-home/
+  - key: "android-sdk-$ANDROID_COMPILE_SDK-$ANDROID_BUILD_TOOLS"
+    paths:
+      - .android-sdk/
 
 build-apk:
   stage: build
@@ -44,11 +49,10 @@ build-apk:
     - 'apt-get install -y -qq --no-install-recommends openjdk-17-jdk-headless unzip'
     - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64'
     - 'export PATH="$JAVA_HOME/bin:$PATH"'
-    # --- Android SDK command-line tools ---
+    # --- Android SDK command-line tools (skip download when cached) ---
     - 'mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"'
-    - 'curl -fsSLo /tmp/cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip'
-    - 'unzip -q /tmp/cmdtools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"'
-    - 'mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"'
+    - '[ -d "$ANDROID_SDK_ROOT/cmdline-tools/latest" ] || curl -fsSLo /tmp/cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip'
+    - '[ -d "$ANDROID_SDK_ROOT/cmdline-tools/latest" ] || (unzip -q /tmp/cmdtools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools" && mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest")'
     - 'yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null 2>&1 || true'
     - '"$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" "platforms;android-$ANDROID_COMPILE_SDK" "build-tools;$ANDROID_BUILD_TOOLS" "platform-tools"'
     # --- Web build + APK size cleanup + Capacitor sync (F-Droid order) ---
@@ -61,9 +65,21 @@ build-apk:
     - 'cd android'
     - './gradlew assembleFossRelease --no-daemon'
     - 'cd ..'
+    # --- Rename APK with version + print download links (findable in job log) ---
+    - 'VERSION=$(awk -F"\"" "/\"version\"/{print \$4}" package.json)'
+    - 'VERSION=${VERSION:-unknown}'
+    - 'mkdir -p dist-apk'
+    - 'cp android/app/build/outputs/apk/fossRelease/app-fossRelease-unsigned.apk "dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
+    - 'echo ""'
+    - 'echo "=================================================="'
+    - 'echo "APK file: dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
+    - 'echo "Latest build on $CI_DEFAULT_BRANCH: ${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/artifacts/${CI_DEFAULT_BRANCH}/download?job=build-apk"'
+    - 'echo "This job: ${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/${CI_JOB_ID}/artifacts/download"'
+    - 'echo "=================================================="'
   artifacts:
     name: "noor-connect-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
+    expose_as: "apk"
     paths:
-      - android/app/build/outputs/apk/fossRelease/*.apk
+      - dist-apk/*.apk
     expire_in: 14 days
     when: on_success
