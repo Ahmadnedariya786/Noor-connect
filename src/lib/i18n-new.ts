@@ -10,6 +10,7 @@ import arTranslations from '../locales/ar.json';
 import urTranslations from '../locales/ur.json';
 import bnTranslations from '../locales/bn.json';
 import ruTranslations from '../locales/ru.json';
+import frTranslations from '../locales/fr.json';
 
 // Build i18next resources object
 const resources = {
@@ -18,6 +19,7 @@ const resources = {
   ur: { translation: urTranslations },
   bn: { translation: bnTranslations },
   ru: { translation: ruTranslations },
+  fr: { translation: frTranslations },
 };
 
 // Initialize i18next

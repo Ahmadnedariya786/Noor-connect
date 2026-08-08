@@ -592,7 +592,7 @@ const Profile = () => {
                     <Globe className="w-3.5 h-3.5" />
                     {t('language')}
                   </Label>
-                  <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "ar" | "ur" | "bn" | "ru")}>
+                  <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "ar" | "ur" | "bn" | "ru" | "fr")}>
                     <SelectTrigger className="w-full h-12 rounded-xl bg-muted/30 border-none ring-0 focus:ring-primary/20">
                       <SelectValue />
                     </SelectTrigger>
@@ -602,6 +602,7 @@ const Profile = () => {
                       <SelectItem value="ur">اردو (Urdu)</SelectItem>
                       <SelectItem value="bn">বাংলা (Bengali)</SelectItem>
                       <SelectItem value="ru">Русский (Russian)</SelectItem>
+                      <SelectItem value="fr">Français (French)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

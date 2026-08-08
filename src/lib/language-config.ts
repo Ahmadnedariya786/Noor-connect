@@ -5,7 +5,7 @@
  * Import from here instead of hard-coding codes elsewhere.
  */
 
-export type LanguageCode = 'en' | 'ar' | 'ur' | 'bn' | 'ru';
+export type LanguageCode = 'en' | 'ar' | 'ur' | 'bn' | 'ru' | 'fr';
 export type Direction = 'ltr' | 'rtl';
 
 export interface LanguageTypography {
@@ -69,6 +69,14 @@ export const LANGUAGES: Record<LanguageCode, LanguageConfig> = {
         englishLabel: 'Russian',
         dir: 'ltr',
         quranApiCode: 'ru',
+        typography: { lineHeight: 1.5, fontSizeAdjust: '100%' },
+    },
+    fr: {
+        code: 'fr',
+        nativeLabel: 'Français',
+        englishLabel: 'French',
+        dir: 'ltr',
+        quranApiCode: 'fr',
         typography: { lineHeight: 1.5, fontSizeAdjust: '100%' },
     },
 };
