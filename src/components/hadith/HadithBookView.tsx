@@ -77,7 +77,6 @@ export function HadithBookView() {
 const BookCard = memo(function BookCard({ book, collection, navigate }: BookCardProps) {
   return (
     <Card
-      key={book.number}
       className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-border/50 hover:border-primary/30"
       onClick={() => navigate(`/hadith/collections/${collection}/${book.number}`)}
     >
@@ -220,6 +219,7 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBooks.map((book) => (
             <BookCard
+              key={book.number}
               book={book}
               collection={collection!}
               navigate={navigate}
