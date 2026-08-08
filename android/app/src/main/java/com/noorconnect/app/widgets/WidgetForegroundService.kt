@@ -5,6 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -56,6 +58,18 @@ class WidgetForegroundService : Service() {
         @JvmStatic fun stop(context: Context) {
             val intent = Intent(context, WidgetForegroundService::class.java)
             context.stopService(intent)
+        }
+
+        /**
+         * True if at least one instance of ANY widget type is still placed.
+         * Used by onDisabled handlers to avoid stopping the shared foreground
+         * service (or cancelling alarms) when other widget types remain.
+         */
+        @JvmStatic fun hasActiveWidgets(context: Context): Boolean {
+            val mgr = AppWidgetManager.getInstance(context)
+            return WidgetRefreshWorker.WIDGET_PROVIDERS.any { provider ->
+                mgr.getAppWidgetIds(ComponentName(context, provider::class.java)).isNotEmpty()
+            }
         }
 
         // Track running state for health checks

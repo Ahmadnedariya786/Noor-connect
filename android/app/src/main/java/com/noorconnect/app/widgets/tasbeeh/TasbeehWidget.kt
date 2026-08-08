@@ -175,9 +175,8 @@ class TasbeehWidget : AppWidgetProvider() {
     }
 
     override fun onDisabled(context: Context) {
-        val mgr = AppWidgetManager.getInstance(context)
-        val ids = mgr.getAppWidgetIds(ComponentName(context, TasbeehWidget::class.java))
-        if (ids.isEmpty()) {
+        // Only stop the shared foreground service when NO widget of ANY type remains
+        if (!WidgetForegroundService.hasActiveWidgets(context)) {
             WidgetForegroundService.stop(context)
         }
         Log.d(TAG, "Widget disabled")

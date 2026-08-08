@@ -385,9 +385,9 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
           const locationLabel = locationData.city || locationData.country || 'Unknown';
 
           // Validate times matches expected widget payload shape
-          const requiredPrayerKeys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
-          const isValidTimes = requiredPrayerKeys.every(key => 
-            typeof times[key] === 'string' && times[key].trim() !== ''
+          const requiredPrayerKeys = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+          const isValidTimes = requiredPrayerKeys.every(key =>
+            !isNaN(prayerDates[key].getTime())
           );
 
           if (!isValidTimes) {
@@ -399,7 +399,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
                 locationData.latitude,
                 locationData.longitude,
                 locationLabel,
-                times
+                prayerDates
               ).catch(() => {});
             } catch {
               // WidgetService not available on this platform
@@ -595,7 +595,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
         // Validate prayerTimes matches expected widget payload shape
         const requiredPrayerKeys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
         const isValidTimes = requiredPrayerKeys.every(key =>
-          typeof prayerTimes[key] === 'string' && prayerTimes[key].trim() !== ''
+          prayerTimes[key] instanceof Date && !isNaN((prayerTimes[key] as Date).getTime())
         );
 
         if (!isValidTimes) {

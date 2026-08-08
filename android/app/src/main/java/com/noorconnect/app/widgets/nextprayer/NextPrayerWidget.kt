@@ -210,14 +210,11 @@ class NextPrayerWidget : AppWidgetProvider() {
     }
 
     override fun onDisabled(context: Context) {
-        // Note: we deliberately DON'T cancel the foreground service here,
-        // because other widget types may still need it. The service self-stops
-        // when no widgets are present (handled in WidgetRefreshWorker).
-        // However, we DO cancel the prayer alarm if no NextPrayer widgets exist.
-        val mgr = AppWidgetManager.getInstance(context)
-        val ids = mgr.getAppWidgetIds(android.content.ComponentName(context, NextPrayerWidget::class.java))
-        if (ids.isEmpty()) {
+        // Only stop the shared foreground service / cancel alarms when NO widget
+        // of ANY type remains, because other widget types may still need them.
+        if (!WidgetForegroundService.hasActiveWidgets(context)) {
             WidgetAlarmScheduler.cancelAllAlarms(context)
+            WidgetForegroundService.stop(context)
         }
         Log.d(TAG, "Widget disabled")
     }

@@ -60,6 +60,7 @@ function parseQuranProgress(raw: string | null): QuranProgressPayload | null {
       lastReadTimestamp,
       lastReadLabel,
       goalPercent: Number(p.goalPercent ?? p.goal ?? 0),
+      lastUpdated: Date.now(),
     };
   } catch {
     return null;
