@@ -68,9 +68,10 @@ build-apk:
     # --- Rename APK with version + print download links (findable in job log) ---
     - 'VERSION=$(awk -F"\"" "/\"version\"/{print \$4}" package.json)'
     - 'VERSION=${VERSION:-unknown}'
+    - 'APK_PATH=$(find android/app/build/outputs -name "*.apk" -type f | head -n 1)'
     - 'mkdir -p dist-apk'
-    - 'cp android/app/build/outputs/apk/fossRelease/app-fossRelease-unsigned.apk "dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
-    - 'cp android/app/build/outputs/apk/fossRelease/app-fossRelease-unsigned.apk dist-apk/Noor-Connect-foss-unsigned.apk'
+    - 'cp "${APK_PATH}" "dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
+    - 'cp "${APK_PATH}" dist-apk/Noor-Connect-foss-unsigned.apk'
     - 'echo ""'
     - 'echo "=================================================="'
     - 'echo "APK file: dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
