@@ -70,16 +70,30 @@ build-apk:
     - 'VERSION=${VERSION:-unknown}'
     - 'mkdir -p dist-apk'
     - 'cp android/app/build/outputs/apk/fossRelease/app-fossRelease-unsigned.apk "dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
+    - 'cp android/app/build/outputs/apk/fossRelease/app-fossRelease-unsigned.apk dist-apk/Noor-Connect-foss-unsigned.apk'
     - 'echo ""'
     - 'echo "=================================================="'
     - 'echo "APK file: dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
     - 'echo "Latest build on $CI_DEFAULT_BRANCH: ${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/artifacts/${CI_DEFAULT_BRANCH}/download?job=build-apk"'
     - 'echo "This job: ${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/${CI_JOB_ID}/artifacts/download"'
     - 'echo "=================================================="'
+  # Manual only: this job never runs on push — click the ▶ play button on the
+  # pipeline (or Run Pipeline) whenever you want a fresh APK.
+  rules:
+    - when: manual
+      allow_failure: false
   artifacts:
-    name: "noor-connect-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
-    expose_as: "apk"
-    paths:
-      - dist-apk/*.apk
-    expire_in: 14 days
-    when: on_success
+    # Entry 1: single-file artifact for the "Download apk" button in MRs.
+    # (expose_as cannot be combined with a wildcard path.)
+    - name: "noor-connect-apk-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
+      expose_as: "apk"
+      paths:
+        - dist-apk/Noor-Connect-foss-unsigned.apk
+      expire_in: 14 days
+      when: on_success
+    # Entry 2: everything, including the versioned filename.
+    - name: "noor-connect-all-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
+      paths:
+        - dist-apk/
+      expire_in: 14 days
+      when: on_success
