@@ -70,11 +70,17 @@ build-apk:
     - 'VERSION=${VERSION:-unknown}'
     - 'APK_PATH=$(find android/app/build/outputs -name "*.apk" -type f | head -n 1)'
     - 'mkdir -p dist-apk'
-    - 'cp "${APK_PATH}" "dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
-    - 'cp "${APK_PATH}" dist-apk/Noor-Connect-foss-unsigned.apk'
+    # Android refuses to install unsigned APKs ("certificate" error), so sign
+    # with a throwaway test key. This is NOT for publishing — F-Droid and
+    # Google Play re-sign with their own keys when you ship.
+    - 'keytool -genkeypair -v -keystore test.keystore -alias testkey -keyalg RSA -keysize 2048 -validity 10000 -storepass testtest -keypass testtest -dname "CN=Noor Connect Test,O=Noor Connect,C=US" > /dev/null 2>&1'
+    - '"$ANDROID_SDK_ROOT/build-tools/$ANDROID_BUILD_TOOLS/zipalign" -p 4 "${APK_PATH}" dist-apk/aligned.apk'
+    - '"$ANDROID_SDK_ROOT/build-tools/$ANDROID_BUILD_TOOLS/apksigner" sign --ks test.keystore --ks-pass pass:testtest --key-pass pass:testtest --out "dist-apk/Noor-Connect-v${VERSION}-foss.apk" dist-apk/aligned.apk'
+    - 'cp "dist-apk/Noor-Connect-v${VERSION}-foss.apk" dist-apk/Noor-Connect-foss.apk'
+    - 'rm -f dist-apk/aligned.apk'
     - 'echo ""'
     - 'echo "=================================================="'
-    - 'echo "APK file: dist-apk/Noor-Connect-v${VERSION}-foss-unsigned.apk"'
+    - 'echo "APK file: dist-apk/Noor-Connect-v${VERSION}-foss.apk (signed with test key)"'
     - 'echo "Latest build on $CI_DEFAULT_BRANCH: ${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/artifacts/${CI_DEFAULT_BRANCH}/download?job=build-apk"'
     - 'echo "This job: ${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/${CI_JOB_ID}/artifacts/download"'
     - 'echo "=================================================="'
@@ -89,6 +95,6 @@ build-apk:
     name: "noor-connect-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
     expose_as: "apk"
     paths:
-      - dist-apk/Noor-Connect-foss-unsigned.apk
+      - dist-apk/Noor-Connect-foss.apk
     expire_in: 14 days
     when: on_success
