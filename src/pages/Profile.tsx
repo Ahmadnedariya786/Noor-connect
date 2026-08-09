@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useI18n } from "@/hooks/useI18n";
-import { Moon, Sun, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings as SettingsIcon, Clock, Package, Vibrate, ArrowLeft, DollarSign, Check, X } from "lucide-react";
+import { Moon, Sun, Trash2, HardDrive, Calculator, Volume2, Bell, BellOff, Calendar, Heart, BookOpen, Mail, HandHeart, MessageCircle, Globe, User, UserCircle, UserX, ShieldCheck, ShieldOff, Smartphone, AlertTriangle, RefreshCw, Headphones, Settings as SettingsIcon, Clock, Package, Vibrate, ArrowLeft, DollarSign, Check, X, Bitcoin, Briefcase, ExternalLink, Zap, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -49,11 +49,41 @@ const ChangelogBadge = () => {
   );
 };
 
+// ─── Donation addresses (FILL IN BEFORE SHIPPING) ───
+// Leave empty to show the "coming soon" state instead of copying.
+const BITCOIN_ADDRESS = "bc1q43nelc0skgng752wesq5ez4qzhgl09cksmlddx";
+const SOLANA_ADDRESS = "3Aw78BrsdtBeZNpTQvAP6kjtUpGqDBqhr8dATzEZgp8V";
+const BNB_ADDRESS = "0xb170A4621662c5f870E4186a81dA7645B132cb09";
+
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
   const { t: ti18n } = useI18n();
+
+  const handleDonate = useCallback((currency: string, address: string) => {
+    if (!address) {
+      toast({
+        title: `${currency} address coming soon`,
+        description: "The donation address will be added in the next update. Your duas are the best support!",
+      });
+      return;
+    }
+    const copy = (text: string) => {
+      navigator.clipboard?.writeText(text);
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    };
+    copy(address);
+    toast({
+      title: `${currency} address copied`,
+      description: "JazakAllah Khair! Send the donation and it reaches the project directly — no middlemen, no tracking.",
+    });
+  }, [toast]);
   const {
     theme,
     setTheme,
@@ -67,6 +97,7 @@ const Profile = () => {
     setSplashEnabled,
   } = useSettings();
 
+  const [donatePulse, setDonatePulse] = useState(false);
   const [madhab, setMadhabState] = useState<MadhabType>("shafi");
   const [timeFormat, setTimeFormatState] = useState<"12" | "24">("24");
   const [calculationMethod, setCalculationMethodState] = useState<CalculationMethodName>("MuslimWorldLeague");
@@ -1370,6 +1401,111 @@ const Profile = () => {
                 Audio Nasheeds in this application are non-commercially licensed from <a href="https://nocopyrightnasheeds.com" target="_blank" className="font-bold text-emerald-600 hover:underline">NoCopyrightNasheeds</a> under the NCN Community License Agreement.
               </p>
             </div>
+          </div>
+        </Card>
+
+        {/* Support the Developer — Donate */}
+        <Card className="p-5 bg-gradient-to-br from-amber-500/5 to-orange-500/5 border-amber-500/10 overflow-hidden">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center border border-amber-500/20 shrink-0">
+              <Heart className={`w-6 h-6 text-amber-600 transition-transform duration-300 ${donatePulse ? 'scale-150' : ''}`} />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-foreground">Love this app? Support it</h3>
+              <p className="text-xs text-muted-foreground">No ads. No trackers. No data selling. Your support keeps it free for everyone.</p>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <Button
+              className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white shadow-sm shadow-amber-500/25 transition-all"
+              onClick={() => {
+                setDonatePulse(true);
+                setTimeout(() => setDonatePulse(false), 400);
+                handleDonate("Bitcoin", BITCOIN_ADDRESS);
+              }}
+            >
+              <Bitcoin className="w-4 h-4 mr-2" />
+              <span className="font-medium">Support Noor Connect</span>
+            </Button>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Button
+                variant="outline"
+                className="w-full h-11 justify-center bg-background hover:bg-amber-500/10 hover:text-amber-700 hover:border-amber-500/30 transition-all"
+                onClick={() => handleDonate("Solana", SOLANA_ADDRESS)}
+              >
+                <Zap className="w-4 h-4 mr-2 text-amber-600" />
+                <span className="font-medium">Solana</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full h-11 justify-center bg-background hover:bg-amber-500/10 hover:text-amber-700 hover:border-amber-500/30 transition-all"
+                onClick={() => handleDonate("BNB", BNB_ADDRESS)}
+              >
+              <Coins className="w-4 h-4 mr-2 text-amber-600" />
+              <span className="font-medium">BNB</span>
+            </Button>
+          </div>
+        </div>
+
+        <p className="mt-3 text-[11px] text-muted-foreground/70 leading-relaxed">
+          100% of donations go to development — no fees, no middlemen. Supports BTC, SOL & BNB. Tap to copy the address, then paste it in your wallet.
+        </p>
+        </Card>
+
+        {/* About the Developer — Freelance */}
+        <Card className="p-5 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border-emerald-500/10 overflow-hidden">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
+              <Briefcase className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-foreground">Love this app? I built it.</h3>
+              <p className="text-xs text-muted-foreground">One developer. Zero trackers. Built for the sake of Allah.</p>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+            I also build production software, websites, and security audits for businesses and startups. If you need a developer who delivers quality work, let's talk.
+          </p>
+          <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 mb-4">
+            Built end-to-end: 6 languages, 5 native widgets, 400+ licensed nasheeds
+          </p>
+
+          <div className="space-y-2.5">
+            <Button
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/25 transition-all"
+              onClick={() => window.open('https://wa.me/923352706540', '_blank')}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              <span className="font-medium">Let's Talk on WhatsApp</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-11 justify-center bg-background hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500/30 transition-all"
+              onClick={() => window.open('https://ubaid-ur-rehmanportfolio.vercel.app/', '_blank')}
+            >
+              <ExternalLink className="w-4 h-4 mr-2 text-emerald-600" />
+              <span className="font-medium">View my work</span>
+            </Button>
+            <button
+              className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-muted-foreground hover:text-emerald-700 transition-colors"
+              onClick={() => window.location.href = 'mailto:arifubaid0345@gmail.com'}
+            >
+              <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>
+                <span className="font-semibold text-foreground">Gmail</span> — arifubaid0345@gmail.com
+              </span>
+            </button>
+            <button
+              className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-muted-foreground hover:text-emerald-700 transition-colors"
+              onClick={() => window.location.href = 'mailto:ubaid0345@proton.me'}
+            >
+              <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>
+                Other email: <span className="font-semibold text-foreground">Proton</span> — ubaid0345@proton.me
+              </span>
+            </button>
           </div>
         </Card>
 
