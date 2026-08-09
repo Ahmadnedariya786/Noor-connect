@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FALLBACK_LOCATIONS } from '@/lib/location-state';
+import { LOCATION_STORAGE_KEY } from '@/lib/location-config';
 import { Compass, Loader2, LocateFixed, RefreshCw, Navigation, MapPin } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { GeolocationService, type LocationCoordinates } from '@/lib/geolocation-service';
@@ -41,6 +42,42 @@ function getFallbackLocationByTimezone(timezone: string) {
   // Return matching city or default to Mecca
   return FALLBACK_LOCATIONS[timezone as keyof typeof FALLBACK_LOCATIONS] ||
     { name: 'Mecca', lat: 21.4225, lon: 39.8262 };
+}
+
+// ─── Instant boot location ────────────────────────────────────────
+// Best instantly-available location so the compass renders on the very
+// first paint — no waiting for a GPS fix. Prefers the stored location
+// (saved by the app's dashboard detection), falls back to a timezone
+// approximation, then a sensible default.
+function loadInitialLocation(): { coords: LocationCoordinates; name: string } {
+  try {
+    const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (
+        parsed &&
+        typeof parsed.latitude === 'number' &&
+        typeof parsed.longitude === 'number' &&
+        Number.isFinite(parsed.latitude) &&
+        Number.isFinite(parsed.longitude) &&
+        parsed.latitude >= -90 && parsed.latitude <= 90 &&
+        parsed.longitude >= -180 && parsed.longitude <= 180
+      ) {
+        return {
+          coords: { latitude: parsed.latitude, longitude: parsed.longitude, accuracy: 1000 },
+          name: typeof parsed.locationName === 'string' && parsed.locationName ? parsed.locationName : '',
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('Qibla: failed to read stored location:', error);
+  }
+
+  const fallback = getFallbackLocationByTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  return {
+    coords: { latitude: fallback.lat, longitude: fallback.lon, accuracy: 1000 },
+    name: `${fallback.name} (Offline)`,
+  };
 }
 
 // ─── Constants ────────────────────────────────────────────────
@@ -115,12 +152,15 @@ const QiblaCompassModern = () => {
   const isDark = effectiveTheme === 'dark';
 
   // ── Location State ───────────────────────────────────────────
+  const [bootLocation] = useState(loadInitialLocation);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [location, setLocation] = useState<LocationCoordinates | null>(null);
-  const [qiblaResult, setQiblaResult] = useState<QiblaResult | null>(null);
-  const [cityName, setCityName] = useState<string>('');
+  const [location, setLocation] = useState<LocationCoordinates | null>(bootLocation.coords);
+  const [qiblaResult, setQiblaResult] = useState<QiblaResult | null>(
+    () => calculateQibla(bootLocation.coords.latitude, bootLocation.coords.longitude)
+  );
+  const [cityName, setCityName] = useState<string>(bootLocation.name);
 
   // ── Compass State ────────────────────────────────────────────
   const [deviceHeading, setDeviceHeading] = useState<number | null>(null);
@@ -135,8 +175,9 @@ const QiblaCompassModern = () => {
   } | null>(null);
 
   // ── Refs ─────────────────────────────────────────────────────
-  const locationRef = useRef<LocationCoordinates | null>(null);
-  const cityNameRef = useRef('');
+  const locationRef = useRef<LocationCoordinates | null>(bootLocation.coords);
+  const cityNameRef = useRef(bootLocation.name);
+  const isMountedRef = useRef(true);
   const orientationListenerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
   const sensorTimeoutRef = useRef<number | null>(null);
   const hasSensorEventRef = useRef(false);
@@ -528,7 +569,15 @@ const QiblaCompassModern = () => {
       try {
         const permission = await navigator.permissions.query({ name: 'geolocation' });
         if (permission.state === 'denied') {
-          applyFallbackLocation('Location access denied. Showing an approximate Qibla based on your timezone.');
+          if (cityNameRef.current.includes('(Offline)')) {
+            // No usable location at all → timezone approximation
+            applyFallbackLocation('Location access denied. Showing an approximate Qibla based on your timezone.');
+          } else if (mode === 'manual') {
+            // GPS failed but a saved location exists — keep it
+            setLocationError('Location permission denied. Showing the saved location.');
+          }
+          setIsLoadingLocation(false);
+          setIsRefreshingLocation(false);
           return;
         }
       } catch (err) {
@@ -536,32 +585,70 @@ const QiblaCompassModern = () => {
       }
     }
 
+    // Fast path: low-accuracy fix that can reuse a recent cached position
+    // (returns near-instantly when a fix exists), so the compass updates
+    // without waiting for a fresh satellite lock.
+    let position: LocationCoordinates | null = null;
     try {
-      const position = await GeolocationService.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
+      position = await GeolocationService.getCurrentPosition({
+        enableHighAccuracy: false,
+        timeout: 5000,
+        maximumAge: 300000,
       });
+    } catch {
+      // fall through to the high-accuracy path
+    }
 
-      applyLocationData(position, '');
+    // Slow path: fresh high-accuracy GPS fix
+    if (!position) {
+      try {
+        position = await GeolocationService.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
+      } catch {
+        position = null;
+      }
+    }
 
+    if (!isMountedRef.current) return;
+
+    if (position) {
+      // Drop any stale "(Offline)" marker now that GPS is live
+      const resolvedName = cityNameRef.current.replace(/\s*\(Offline\)\s*$/, '');
+      applyLocationData(position, resolvedName);
       // Start continuous distance tracking
       startDistanceTracking();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to detect location.';
-      applyFallbackLocation(message);
-    } finally {
-      setIsLoadingLocation(false);
-      setIsRefreshingLocation(false);
+    } else if (cityNameRef.current.includes('(Offline)')) {
+      // No usable location at all → timezone approximation
+      applyFallbackLocation('Location unavailable. Showing an approximate Qibla for your timezone.');
+    } else if (mode === 'manual') {
+      // GPS failed but we already have a saved location — keep it
+      setLocationError('Could not refresh location. Showing the saved location.');
     }
+
+    setIsLoadingLocation(false);
+    setIsRefreshingLocation(false);
   }, [applyFallbackLocation, applyLocationData, startDistanceTracking, stopDistanceTracking]);
 
-  // ── Initialize: sniff sensor BEFORE the 8-second timeout ──────
+  // ── Initialize: render instantly, then refine location & compass ──
   useEffect(() => {
+    isMountedRef.current = true;
+
+    // The stored/timezone location is already applied synchronously by the
+    // state initializers, so the compass renders on the first paint. Refine
+    // its magnetic bearing right away (async BGS declination lookup).
+    if (locationRef.current) {
+      applyLocationData(locationRef.current, cityNameRef.current);
+    }
+
+    // Upgrade the fix in the background (cached → GPS) without blocking the UI.
     void refreshLocation('initial');
 
     // Fast sensor sniff (~300ms) — sets state immediately instead of waiting 8s
     detectOrientationSensor().then((result) => {
+      if (!isMountedRef.current) return;
       if (result === 'unsupported') {
         setCompassState('unsupported');
       } else if (result === 'permission-required') {
@@ -572,10 +659,11 @@ const QiblaCompassModern = () => {
     });
 
     return () => {
+      isMountedRef.current = false;
       stopCompassTracking();
       stopDistanceTracking();
     };
-  }, [detectCompassAvailability, refreshLocation, stopCompassTracking, stopDistanceTracking]);
+  }, [applyLocationData, detectCompassAvailability, refreshLocation, stopCompassTracking, stopDistanceTracking]);
 
   // ── Derived Values ─────────────────────────────────────────────
   const alignment = useMemo(() => {
@@ -873,8 +961,8 @@ const QiblaCompassModern = () => {
       {/* ── Status & Controls Section ───────────────────────────── */}
       <div className="relative z-10 px-6 pb-8 space-y-4">
 
-        {/* Status Badge */}
-        <div className="flex justify-center">
+        {/* Status Badge — fixed-height slot keeps layout stable across states */}
+        <div className="flex justify-center items-center min-h-[48px]">
           {alignment?.isAligned ? (
             <div className={cn(
               "flex items-center gap-2 px-5 py-2.5 rounded-full border animate-in fade-in zoom-in duration-300 shadow-sm",
@@ -897,65 +985,67 @@ const QiblaCompassModern = () => {
                 Turn <span className="font-semibold" style={{ color: THEME.accent }}>{alignment.instruction.degrees}°</span> {alignment.instruction.direction}
               </span>
             </div>
-          ) : compassUnavailable && qiblaResult ? (
-            // ── Rich no-sensor fallback UI ──────────────────────────
-            <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-center gap-3 px-4 py-3 rounded-2xl border"
-                style={{ background: 'rgba(201,134,10,0.06)', borderColor: 'rgba(201,134,10,0.25)' }}>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-600">
-                  <Compass className="w-4 h-4" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-bold" style={{ color: THEME.accent }}>No Sensor Detected</p>
-                  <p className="text-xs text-muted-foreground leading-snug mt-0.5">Your device doesn't have a digital compass, but you can still find the Qibla!</p>
-                </div>
-              </div>
-              
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-4">
-                <div className="text-center pb-4 border-b border-border/50">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
-                  <div className="flex items-baseline justify-center gap-1.5">
-                    <p className="text-4xl font-black" style={{ color: THEME.accent, fontFamily: 'inherit' }}>{Math.round(qiblaResult.bearing)}°</p>
-                    <p className="text-sm font-bold text-foreground/80">{qiblaResult.cardinalDirection}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground/70 mt-2 mx-auto max-w-[240px] leading-relaxed">
-                    This angle is a fixed geographic line from your city to Mecca. It will not change when you move your device.
-                  </p>
-                </div>
-                
-                <div className="space-y-3.5">
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">How to use this number:</p>
-                  
-                  <div className="flex gap-3 text-left items-start">
-                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">1</div>
-                    <p className="text-xs text-foreground/90 leading-relaxed">
-                      <strong className="text-foreground block mb-0.5">Using a real compass:</strong>
-                      Hold a plastic compass flat. Turn your body until you face the <strong>{Math.round(qiblaResult.bearing)}°</strong> mark.
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-3 text-left items-start">
-                    <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">2</div>
-                    <p className="text-xs text-foreground/90 leading-relaxed">
-                      <strong className="text-foreground block mb-0.5">Using Google Maps:</strong>
-                      Open Maps. The top of your screen is always North (0°). Turn to face <strong>{qiblaResult.cardinalDirection}</strong>.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
+          ) : !compassUnavailable ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-muted-foreground text-sm">
               {compassState === 'permission-required' ? 'Tap Enable Compass below' :
                 compassState === 'denied' ? 'Compass permission denied' :
                   compassState === 'activating' ? 'Starting compass...' :
                     'Enable compass for live guidance'}
             </div>
-          )}
+          ) : null}
         </div>
 
-        {/* Info Cards */}
-        <div className="space-y-3">
+        {/* Info Cards — grid-stacked with the no-sensor fallback so the height is constant */}
+        <div className="grid grid-cols-1">
+          {/* Rich no-sensor fallback UI (visible only when the compass is unavailable) */}
+          <div className={cn("row-start-1 col-start-1 w-full space-y-3", compassUnavailable && qiblaResult ? "visible" : "invisible")}>
+            <div className="flex items-center justify-center gap-3 px-4 py-3 rounded-2xl border"
+              style={{ background: 'rgba(201,134,10,0.06)', borderColor: 'rgba(201,134,10,0.25)' }}>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-600">
+                <Compass className="w-4 h-4" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold" style={{ color: THEME.accent }}>No Sensor Detected</p>
+                <p className="text-xs text-muted-foreground leading-snug mt-0.5">Your device doesn't have a digital compass, but you can still find the Qibla!</p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-4">
+              <div className="text-center pb-4 border-b border-border/50">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
+                <div className="flex items-baseline justify-center gap-1.5">
+                  <p className="text-4xl font-black" style={{ color: THEME.accent, fontFamily: 'inherit' }}>{Math.round(qiblaResult.bearing)}°</p>
+                  <p className="text-sm font-bold text-foreground/80">{qiblaResult.cardinalDirection}</p>
+                </div>
+                <p className="text-xs text-muted-foreground/70 mt-2 mx-auto max-w-[240px] leading-relaxed">
+                  This angle is a fixed geographic line from your city to Mecca. It will not change when you move your device.
+                </p>
+              </div>
+
+              <div className="space-y-3.5">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">How to use this number:</p>
+
+                <div className="flex gap-3 text-left items-start">
+                  <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">1</div>
+                  <p className="text-xs text-foreground/90 leading-relaxed">
+                    <strong className="text-foreground block mb-0.5">Using a real compass:</strong>
+                    Hold a plastic compass flat. Turn your body until you face the <strong>{Math.round(qiblaResult.bearing)}°</strong> mark.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 text-left items-start">
+                  <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">2</div>
+                  <p className="text-xs text-foreground/90 leading-relaxed">
+                    <strong className="text-foreground block mb-0.5">Using Google Maps:</strong>
+                    Open Maps. The top of your screen is always North (0°). Turn to face <strong>{qiblaResult.cardinalDirection}</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Distance + Heading cards */}
+          <div className={cn("row-start-1 col-start-1 space-y-3", compassUnavailable && qiblaResult ? "invisible" : "visible")}>
           {/* Enhanced Distance Card */}
           <Card className="bg-card/80 backdrop-blur-md border-border shadow-lg overflow-hidden">
             <CardContent className="p-5">
@@ -1066,6 +1156,7 @@ const QiblaCompassModern = () => {
             <p className="text-muted-foreground/70 text-xs mt-1">
               {isLiveCompass ? 'Device orientation' : 'Enable compass for direction'}
             </p>
+          </div>
           </div>
         </div>
 
