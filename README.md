@@ -39,6 +39,13 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Smoother Low-End Devices**: All blur/backdrop effects are now stripped on low-end devices, transitions animate only GPU-friendly properties (transform/opacity) instead of `all`, framer-motion layout FLIP animations were replaced with cheap fades, and the device animation benchmark runs once per session instead of on every screen.
 - **Timer & Memory Leaks Fixed**: Ebook download progress stops cleanly on failure, periodic notification checks are idempotent with a proper `stopPeriodicChecks()`, and dead code was removed.
 
+### 📱 Native Widget Reliability
+- **Quran Progress Widget Sync Fixed**: The widget now actually updates — the sync payload was missing its `lastUpdated` timestamp and was being silently rejected by validation on every push. Reading progress, streaks, and Ramadan goal data now reach the widget reliably.
+- **Daily Content No Longer Dropped**: With no hadith cache present, the fallback hadith had an empty source that failed validation and dropped the whole ayah + hadith update. Daily Ayah / Daily Hadith widgets now always receive content.
+- **Shared Service Lifecycle Fixed**: Removing one widget type no longer stops the shared foreground service (step detection + location monitoring) or prayer alarms while other widgets remain on the home screen — everything survives until the *last* widget is removed.
+- **DST Double-Shift Removed**: Prayer times are no longer shown one hour late in daylight-saving months — a manual DST adjustment was double-shifting the times and ignoring the widget's actual location timezone.
+- **Widget Times Match the App**: The app now pushes the exact parsed prayer times (previously an API string map was sent, which the payload builder silently dropped), so widgets show the same times as the in-app prayer panel.
+
 ### 📻 Live Streams Reliability (Hotfix)
 - **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (which browsers reject before playback ever starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
 - **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.
@@ -260,7 +267,7 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
   - **WorkManager Refresh Engine (`WidgetRefreshWorker`)**: 30-minute periodic update loop with automatic self-stop when no widget instances are on the home screen to conserve battery.
   - **Exact Alarm Manager (`WidgetAlarmScheduler`)**: Schedules high-precision alarms for prayer times; automatically degrades to 15-minute inexact windows if exact alarm permission is denied on Android API 31+.
   - **System Event Survival (`WidgetBootReceiver`)**: Automatically restores prayer alarms, enqueues periodic syncs, and refreshes layouts after device reboot (`BOOT_COMPLETED`, `LOCKED_BOOT_COMPLETED`), time zone change (`TIMEZONE_CHANGED`), manual time set (`TIME_SET`), or language change (`LOCALE_CHANGED`).
-  - **Background Motion & Location Sync (`WidgetForegroundService`)**: Battery-friendly step detection and location monitoring (10km threshold) to update widgets during travel.
+  - **Background Motion & Location Sync (`WidgetForegroundService`)**: Battery-friendly step detection and location monitoring (10km threshold) to update widgets during travel. Stays alive while *any* widget type is placed — each widget's removal handler verifies all widget types before stopping the service or cancelling alarms.
   - **Capacitor Bridge (`WidgetBridge`)**: TypeScript layer with strict runtime validation (`validatePrayerPayload`, `validateQuranProgressPayload`), automatic exponential backoff retries, and no-op web fallbacks.
   - **Responsive Scaling & Layouts**: Configured with standard Android grid dimensions (`targetCellWidth="4"`, `targetCellHeight="2"`), auto-fitting text views, `ellipsize="end"`, and graceful empty states (`layout_empty`) to ensure pixel-perfect rendering across all screen densities (from mdpi up to xxxhdpi).
 

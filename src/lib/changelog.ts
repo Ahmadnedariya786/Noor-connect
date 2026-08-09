@@ -35,6 +35,12 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
     date: '2026-08-01',
     title: 'APK Size Optimization, Major Prayer Times Refactor & Lint Fixes',
     changes: [
+      { type: 'fix', description: 'Native Widget Reliability: Quran Progress widget now actually updates — the payload was missing its lastUpdated timestamp and was silently rejected by validation on every sync.' },
+      { type: 'fix', description: 'Native Widget Reliability: Daily Ayah + Hadith content is no longer dropped when no hadith cache exists (fallback hadith had an empty source that failed validation).' },
+      { type: 'fix', description: 'Native Widget Reliability: Removing one widget type no longer stops the shared foreground service or prayer alarms while other widgets are still on your home screen — monitoring survives until the last widget is removed.' },
+      { type: 'fix', description: 'Native Widget Reliability: Prayer times are no longer shown one hour late during daylight-saving months — removed a manual DST adjustment that double-shifted the times in regions with DST.' },
+      { type: 'fix', description: 'Native Widget Reliability: Widget prayer data now actually pushes from the app — the prayer-time hook was sending API text strings instead of Date objects, so the widget payload was silently dropped and the widget showed stale times until the 30-minute sync.' },
+      { type: 'improvement', description: 'Native Widget Cleanup: Removed dead StepDetectionService and LocationChangeService (replaced by inline logic in the foreground service).' },
       { type: 'improvement', description: 'APK size reduced from ~97.4 MB → 94.4 MB: mushaf images downscaled to 810×1145 WebP (83.9 → 56.6 MB), hadith JSON gzip-compressed (95.4 → 19.8 MB), redundant .br/.gz purged from dist (110 → 34.8 MB).' },
       { type: 'improvement', description: 'Performance Optimization Pass: The dashboard clock no longer re-renders the app twice a second, countdown timers share a subscriber-counted scheduler, and widget state updates are guarded so nothing re-renders when values haven\'t changed — smoother scrolling and navigation everywhere.' },
       { type: 'improvement', description: 'Faster Long Lists: Hadith books now load 300 at a time with automatic infinite scroll, and cards across hadith, books, and radio stations are memoized for 60fps browsing. Tafsir and Names of Allah search is debounced with cached filtered results.' },
