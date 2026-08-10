@@ -97,17 +97,23 @@ export function GlobalRadioPlayer() {
       const station = globalRadio.currentStation;
       const artworkUrl = getStationImage(station.url, station.id);
 
+      const artworkMime = artworkUrl.endsWith('.webp')
+        ? 'image/webp'
+        : artworkUrl.endsWith('.jpg')
+          ? 'image/jpeg'
+          : 'image/png';
+
       navigator.mediaSession.metadata = new MediaMetadata({
         title: station.name,
         artist: 'Quran Reciter',
         album: 'Noor Connect Radio',
         artwork: [
-          { src: artworkUrl, sizes: '96x96', type: 'image/png' },
-          { src: artworkUrl, sizes: '128x128', type: 'image/png' },
-          { src: artworkUrl, sizes: '192x192', type: 'image/png' },
-          { src: artworkUrl, sizes: '256x256', type: 'image/png' },
-          { src: artworkUrl, sizes: '384x384', type: 'image/png' },
-          { src: artworkUrl, sizes: '512x512', type: 'image/png' },
+          { src: artworkUrl, sizes: '96x96', type: artworkMime },
+          { src: artworkUrl, sizes: '128x128', type: artworkMime },
+          { src: artworkUrl, sizes: '192x192', type: artworkMime },
+          { src: artworkUrl, sizes: '256x256', type: artworkMime },
+          { src: artworkUrl, sizes: '384x384', type: artworkMime },
+          { src: artworkUrl, sizes: '512x512', type: artworkMime },
         ]
       });
 
