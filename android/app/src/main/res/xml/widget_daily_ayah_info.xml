@@ -12,4 +12,5 @@
     android:initialLayout="@layout/widget_daily_ayah"
     android:description="@string/widget_daily_ayah_desc"
     android:resizeMode="horizontal|vertical"
+    android:widgetFeatures="reconfigurable"
     android:configure=".widgets.WidgetConfigureActivity" />

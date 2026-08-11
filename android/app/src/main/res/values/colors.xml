@@ -1,38 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Brand fallback (API < 31). Material You overrides live in values-v31/colors.xml -->
+    <!-- Light mode palette (API < 31 fallback). Dark palette lives in
+         values-night/colors.xml; Material You overrides in values-v31/colors.xml
+         (light) and values-night-v31/colors.xml (dark). -->
 
     <!-- Backgrounds -->
-    <color name="widget_bg_primary">#FF0B0F14</color>
-    <color name="widget_bg_surface">#FF111827</color>
-    <color name="widget_bg_elevated">#FF1A2330</color>
+    <color name="widget_bg_primary">#FFEDE7DB</color>
+    <color name="widget_bg_surface">#FFF7F3EA</color>
+    <color name="widget_bg_elevated">#FFFFFFFF</color>
 
     <!-- Accents -->
-    <color name="widget_accent_emerald">#FF10B981</color>
+    <color name="widget_accent_emerald">#FF047857</color>
     <color name="widget_accent_emerald_dim">#FF065F46</color>
-    <color name="widget_accent_gold">#FFF59E0B</color>
-    <color name="widget_accent_gold_dim">#FF92400E</color>
+    <color name="widget_accent_gold">#FF8A5F08</color>
+    <color name="widget_accent_gold_dim">#FF7C5208</color>
 
     <!-- Text -->
-    <color name="widget_text_primary">#FFF9FAFB</color>
-    <color name="widget_text_secondary">#FF9CA3AF</color>
-    <color name="widget_text_on_accent">#FF0B0F14</color>
+    <color name="widget_text_primary">#FF241F1A</color>
+    <color name="widget_text_secondary">#FF6B6357</color>
+    <color name="widget_text_on_accent">#FF241F1A</color>
 
     <!-- Misc -->
-    <color name="widget_divider">#FF1F2937</color>
-    <color name="widget_pattern_overlay">#1A10B981</color>
+    <color name="widget_divider">#FFE4DCCB</color>
+    <color name="widget_pattern_overlay">#1410B981</color>
 
     <!-- Status dots -->
-    <color name="widget_dot_active_fill">#FF10B981</color>
-    <color name="widget_dot_passed_fill">#FF4B5563</color>
-    <color name="widget_dot_upcoming_stroke">#FF6B7280</color>
+    <color name="widget_dot_active_fill">#FF047857</color>
+    <color name="widget_dot_passed_fill">#FFC9C1B2</color>
+    <color name="widget_dot_upcoming_stroke">#FFA99F8E</color>
 
     <!-- Tasbeeh -->
-    <color name="widget_tasbeeh_ring">#1A10B981</color>
-    <color name="widget_tasbeeh_ring_complete">#FF10B981</color>
-    <color name="widget_grade_sahih">#FF10B981</color>
-    <color name="widget_grade_hasan">#FFF59E0B</color>
-    <color name="widget_grade_daif">#FFEF4444</color>
+    <color name="widget_tasbeeh_ring">#1410B981</color>
+    <color name="widget_tasbeeh_ring_complete">#FF047857</color>
+    <color name="widget_grade_sahih">#FF047857</color>
+    <color name="widget_grade_hasan">#FF8A5F08</color>
+    <color name="widget_grade_daif">#FFBA1A1A</color>
 
     <!-- Splash retained -->
     <color name="splash_background">#FF0D0D0D</color>

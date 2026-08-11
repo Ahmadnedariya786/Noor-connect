@@ -12,13 +12,14 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebView;
-import android.webkit.WebViewRenderProcessClient;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.WebViewListener;
 import com.noorconnect.app.widgets.WidgetBridge;
 import com.noorconnect.app.widgets.WidgetForegroundService;
 
@@ -56,25 +57,26 @@ public class MainActivity extends BridgeActivity {
     }
 
     /**
-     * Register a render-process crash handler (API 29+).
+     * Register a render-process crash handler.
      *
      * When the WebView renderer process dies (OOM, heavy JS, WebView bugs) the
      * default behaviour is to tear down the whole app — the classic "app closes
      * itself" crash. Returning {@code true} from onRenderProcessGone keeps the
      * app alive; we then reload the page so the user lands back where they were
      * instead of losing the session.
+     *
+     * Capacitor's BridgeWebViewClient already forwards onRenderProcessGone to
+     * registered WebViewListeners, so we hook the Bridge's listener API instead
+     * of installing a custom WebViewClient (which would bypass Capacitor's
+     * local-server/intercept logic).
      */
     private void installRenderProcessCrashHandler(WebView webView) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return; // RenderProcessClient is only available on API 29+
-        }
         try {
-            webView.setWebViewRenderProcessClient(new WebViewRenderProcessClient() {
+            getBridge().addWebViewListener(new WebViewListener() {
                 @Override
                 public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
                     boolean didCrash = detail != null && detail.didCrash();
                     Log.w("MainActivity", "WebView renderer gone. didCrash=" + didCrash
-                            + ", pid=" + (detail != null ? detail.rendererPid() : -1)
                             + " — reloading instead of killing the app.");
                     // The renderer process is dead; the WebView must be reloaded.
                     view.post(() -> {

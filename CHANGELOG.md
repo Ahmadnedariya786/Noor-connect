@@ -41,6 +41,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Prayer Payload Shape Fixed**: `usePrayerTimes` was passing the Aladhan API *string* map (e.g. `"05:30"`) to the widget builder, which expects `Date` objects — every `getTime()` was `undefined`, all entries were filtered out, and the payload was dropped, leaving widgets stale until the 30-minute timer recomputed times offline. The hook now pushes the parsed `Date` objects, so widgets reflect the exact times shown in-app.
 - **Dead Code Removed**: Deleted orphaned `StepDetectionService` and `LocationChangeService` (superseded by the inline step/location logic in `WidgetForegroundService`).
 
+### 🎨 Native Widget Quality Pass — Light & Dark Theme Support
+- **Light + Dark Themes**: All five widgets now ship a full light palette (warm parchment) alongside the dark theme, with dedicated `values-night` / `values-night-v31` overrides — the widgets gracefully switch appearance with the system theme on every Android version, and follow Material You dynamic color on Android 12+.
+- **System Corner Radius (Tier 1 WS-2)**: On API 31+ widgets now use the platform-provided `system_app_widget_background_radius` / `system_app_widget_inner_radius` instead of a hardcoded radius, so corners visually match the launcher and OEM surfaces.
+- **Reconfigurable Widgets (Tier 1 WS-4)**: All five widget providers now declare `widgetFeatures="reconfigurable"`, letting users tap an existing widget on the home screen to reconfigure it (size, theme, accent) without removing and re-adding it.
+- **Contrast & Readability Pass (WC-3)**: Accent and text colors darkened in both palettes (deeper emerald/gold, darker `#BA1A1A` da'if-grade red) and the stale-data badge darkened — every element now clears WCAG AA contrast on light backgrounds.
+
 ### 🕌 Major Prayer Times & Quran Refactor
 - **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
 - **Removed Standalone Mushaf Viewer**: Deleted the standalone `/mushaf` image-based viewer feature to streamline the app. The app now exclusively uses the vertical-scrolling `/quran` reader (which still utilizes the beautiful Madani Mushaf WebP images and integrates with recitation progress/streaks).

@@ -46,6 +46,12 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **DST Double-Shift Removed**: Prayer times are no longer shown one hour late in daylight-saving months — a manual DST adjustment was double-shifting the times and ignoring the widget's actual location timezone.
 - **Widget Times Match the App**: The app now pushes the exact parsed prayer times (previously an API string map was sent, which the payload builder silently dropped), so widgets show the same times as the in-app prayer panel.
 
+### 🎨 Native Widget Quality Pass — Light & Dark Theme Support
+- **Light + Dark Themes**: All five widgets now ship a full light palette (warm parchment) alongside the dark theme, with dedicated `values-night` / `values-night-v31` overrides — widgets gracefully switch appearance with the system theme on every Android version, and follow Material You dynamic color on Android 12+.
+- **System Corner Radius**: On Android 12+ widgets now use the platform-provided system widget radius instead of a hardcoded value, so their corners visually match the launcher and OEM surfaces.
+- **Reconfigurable on the Home Screen**: All five widgets now declare `widgetFeatures="reconfigurable"` — tap an existing widget to reconfigure it (size, theme, accent) without removing and re-adding it.
+- **Contrast & Readability Pass**: Accent and text colors darkened in both palettes (deeper emerald/gold, darker da'if-grade red) and the stale-data badge darkened, so every element clears WCAG AA contrast on light backgrounds.
+
 ### 📻 Live Streams Reliability (Hotfix)
 - **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (which browsers reject before playback ever starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
 - **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.

@@ -12,4 +12,5 @@
     android:initialLayout="@layout/widget_quran_progress"
     android:description="@string/widget_quran_progress_desc"
     android:resizeMode="horizontal|vertical"
+    android:widgetFeatures="reconfigurable"
     android:configure=".widgets.WidgetConfigureActivity" />
