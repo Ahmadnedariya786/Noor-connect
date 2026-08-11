@@ -45,7 +45,7 @@ public class AdhanAlarmReceiver extends BroadcastReceiver {
                         PowerManager.PARTIAL_WAKE_LOCK,
                         "noorconnect:adhan_alarm");
                 sWakeLock.setReferenceCounted(false);
-                sWakeLock.acquire(30_000); // 30-second timeout
+                sWakeLock.acquire(10_000); // 10-second safety timeout
                 Log.d(TAG, "WakeLock acquired");
             }
         }

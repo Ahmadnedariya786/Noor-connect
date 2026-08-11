@@ -213,7 +213,7 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location|specialUse"
-            android:stopWithTask="false" />
+            android:stopWithTask="true" />
 
         <!-- Battery optimization change receiver (existing — retained) -->
         <receiver android:name=".BatteryOptimizationReceiver" android:exported="true">

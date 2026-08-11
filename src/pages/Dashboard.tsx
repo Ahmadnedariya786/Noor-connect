@@ -328,25 +328,14 @@ export default function Dashboard() {
 
   // Clear stale location data on mount to prevent ISTRES issue
   useEffect(() => {
-    // Guard against reload loops - only allow one reload per session
-    const ISTRES_RELOAD_GUARD = 'istres-reload-guard';
-    const hasReloaded = sessionStorage.getItem(ISTRES_RELOAD_GUARD);
-
-    // Helper function to handle ISTRES cleanup and reload
-    const cleanupIstresAndReload = (reason: string) => {
-      if (hasReloaded) {
-        console.warn('ISTRES cleanup skipped - already reloaded this session:', reason);
-        // Clear the problematic data without reloading
-        localStorage.removeItem('user-location-data');
-        localStorage.removeItem('location-storage');
-        return;
-      }
-
-      sessionStorage.setItem(ISTRES_RELOAD_GUARD, 'true');
+    // Helper function to handle ISTRES cleanup without hard reload
+    const cleanupIstres = (reason: string) => {
       localStorage.removeItem('user-location-data');
       localStorage.removeItem('location-storage');
       console.log('Cleared location data due to ISTRES:', reason);
-      window.location.reload();
+      if (location.locationName?.includes('Istres') || location.locationName?.includes('ISTRES')) {
+        location.resetToDefault();
+      }
     };
 
     // Clear any stale IP-based location that might show wrong city
@@ -356,10 +345,9 @@ export default function Dashboard() {
         const data = localStorage.getItem(key);
         if (data) {
           const parsed = JSON.parse(data);
-          // Clear if it contains ISTRES or other problematic location data
           if (parsed.city === 'Istres' || parsed.locationName?.includes('Istres') ||
             parsed.city === 'ISTRES' || parsed.locationName?.includes('ISTRES')) {
-            cleanupIstresAndReload('localStorage contains ISTRES');
+            cleanupIstres('localStorage contains ISTRES');
           }
         }
       } catch (error) {
@@ -367,9 +355,8 @@ export default function Dashboard() {
       }
     });
 
-    // Also force clear any problematic data if location is showing ISTRES
     if (location.locationName?.includes('Istres') || location.locationName?.includes('ISTRES')) {
-      cleanupIstresAndReload('location state contains ISTRES');
+      cleanupIstres('location state contains ISTRES');
     }
   }, []);
 

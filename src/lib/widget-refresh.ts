@@ -139,3 +139,10 @@ export const refreshAllWidgets = () => {
 
 // Export singleton instance
 export const widgetRefreshManager = WidgetRefreshManager.getInstance();
+
+// Auto-cleanup on page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    widgetRefreshManager.destroy();
+  });
+}

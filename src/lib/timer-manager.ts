@@ -18,7 +18,7 @@ interface TimerEntry {
 class TimerManager {
   private callbacks: Map<string, TimerEntry> = new Map();
   private intervalId: ReturnType<typeof setInterval> | null = null;
-  private tickInterval: number = 1000; // Check every second (smallest common interval)
+  private tickInterval: number = 10000; // Check every 10 seconds to save CPU & battery
   private subscriberCount: number = 0;
 
   /**
@@ -95,6 +95,7 @@ class TimerManager {
     if (this.intervalId) return;
 
     this.intervalId = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       const now = Date.now();
 
       this.callbacks.forEach((entry) => {

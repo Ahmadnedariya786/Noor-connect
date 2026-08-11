@@ -248,19 +248,20 @@ export class WidgetService {
       if (err instanceof Error && err.message.includes('quota')) {
         console.warn('[WidgetService] Storage quota exceeded, attempting cleanup');
         try {
-          const allKeys = Object.keys(localStorage);
+          const cacheKeys = ['daily-ayah-cache', 'daily-hadith-cache'];
           const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-          allKeys.forEach(k => {
-            try {
-              const item = localStorage.getItem(k);
-              if (item) {
+          
+          cacheKeys.forEach(k => {
+            const item = localStorage.getItem(k);
+            if (item) {
+              try {
                 const parsed = JSON.parse(item);
-                if (parsed.timestamp && parsed.timestamp < thirtyDaysAgo) {
+                if (parsed.lastUpdated && parsed.lastUpdated < thirtyDaysAgo) {
                   localStorage.removeItem(k);
                 }
+              } catch {
+                localStorage.removeItem(k);
               }
-            } catch {
-              localStorage.removeItem(k);
             }
           });
         } catch (cleanupError) {

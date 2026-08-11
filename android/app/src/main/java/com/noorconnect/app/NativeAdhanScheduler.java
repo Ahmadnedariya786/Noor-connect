@@ -112,7 +112,7 @@ public final class NativeAdhanScheduler {
         showIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         int showFlags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
         PendingIntent showPendingIntent = PendingIntent.getActivity(
-                context, alarm.id + 50000, showIntent, showFlags);
+                context, 1000000000 + alarm.id, showIntent, showFlags);
 
         try {
             // PRIMARY: setAlarmClock() — immune to Doze, shows ⏰ in status bar

@@ -198,7 +198,7 @@ export class WebQibla {
   }
 
   private updateQiblaData(): void {
-    if (!this.location || !this.isListening) return;
+    if (!this.location || !this.isListening || (typeof document !== 'undefined' && document.hidden)) return;
 
     const qiblaBearing = calculateQiblaBearing(this.location.latitude, this.location.longitude);
     const distance = calculateDistanceToKaabaKm(this.location.latitude, this.location.longitude);

@@ -106,8 +106,7 @@ public class MainActivity extends BridgeActivity {
                 Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
                 startActivityForResult(intent, EXACT_ALARM_PERMISSION_REQUEST);
             } else {
-                // Permission already granted - start widget foreground service
-                WidgetForegroundService.start(this);
+                // Permission already granted
             }
         }
     }
@@ -151,18 +150,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
-        // Re-check permissions on resume in case user granted them from settings
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (canScheduleExactAlarms()) {
-                WidgetForegroundService.start(this);
-            }
-        }
-        // Also re-check battery optimization
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            if (pm != null && pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                WidgetForegroundService.start(this);
-            }
+        // Start widget foreground service once on resume if exact alarms are allowed
+        if (canScheduleExactAlarms()) {
+            WidgetForegroundService.start(this);
         }
     }
 
