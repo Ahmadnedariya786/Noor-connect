@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Daily Hadith Widget (4×2)
-  - Top: source chip + grade badge
-  - Arabic text (RTL, Scheherazade New)
-  - Translation
-  - Narrator row
+  Daily Hadith Widget (4×2) — 2026 Premium Redesign
+  ─────────────────────────────────────────────────
+  TOP    : نور brand · "HADITH OF THE DAY" · Grade badge · Source chip
+  MIDDLE : Arabic hadith text (Amiri Quran, RTL)
+  DIVIDER: Gold fade line
+  BOTTOM : Translation · narrator italic footer
+  ─────────────────────────────────────────────────
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -12,72 +14,60 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg_shape"
     android:orientation="vertical"
-    android:padding="@dimen/widget_padding_inner"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="12dp"
     android:layoutDirection="locale"
     android:textDirection="locale">
 
-    <!-- Top row: source chip + grade badge + stale badge -->
+    <!-- ══════ TOP ROW ══════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <!-- Source chip -->
-        <LinearLayout
+        <!-- نور brand -->
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/widget_chip_shape"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp">
+            android:fontFamily="@font/amiri_quran"
+            android:text="نور"
+            android:textColor="@color/widget_accent_emerald"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/widget_hadith_source"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/widget_hadith_source_default"
-                android:textColor="@color/widget_accent_gold"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <!-- Dot separator -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:text="·"
+            android:textColor="@color/widget_accent_gold"
+            android:alpha="0.5"
+            android:textSize="14sp" />
 
         <!-- Section label -->
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="end"
             android:letterSpacing="0.15"
             android:text="@string/widget_daily_hadith_section"
             android:textAllCaps="true"
-            android:textColor="@color/widget_accent_gold_dim"
-            android:textSize="9sp"
-            android:textStyle="bold" />
+            android:textColor="@color/widget_accent_gold"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:alpha="0.7" />
 
-        <!-- Grade badge -->
-        <TextView
-            android:id="@+id/widget_hadith_grade"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/widget_chip_shape"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:text="@string/widget_hadith_grade_default"
-            android:textColor="@color/widget_grade_sahih"
-            android:textSize="10sp"
-            android:textStyle="bold" />
-
-        <!-- Stale data badge -->
+        <!-- Stale badge -->
         <TextView
             android:id="@+id/widget_stale_badge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:background="@drawable/widget_stale_badge"
             android:paddingStart="6dp"
             android:paddingEnd="6dp"
@@ -88,36 +78,69 @@
             android:textSize="9sp"
             android:textStyle="bold"
             android:visibility="gone" />
+
+        <!-- Grade badge (color set programmatically) -->
+        <TextView
+            android:id="@+id/widget_hadith_grade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/widget_chip_emerald"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="@string/widget_hadith_grade_default"
+            android:textColor="@color/widget_grade_sahih"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+
+        <!-- Source chip -->
+        <TextView
+            android:id="@+id/widget_hadith_source"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/widget_chip_shape"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="@string/widget_hadith_source_default"
+            android:textColor="@color/widget_accent_gold"
+            android:textSize="10sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
-<!-- Arabic hadith -->
+    <!-- ══════ ARABIC HADITH — hero ══════ -->
     <TextView
         android:id="@+id/widget_hadith_arabic"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="6dp"
-        android:fontFamily="@font/scheherazade_new"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/amiri_quran"
         android:gravity="end|center_vertical"
         android:textDirection="rtl"
         android:textAlignment="viewEnd"
-        android:lineSpacingMultiplier="1.4"
+        android:lineSpacingMultiplier="1.5"
         android:ellipsize="end"
         android:maxLines="2"
         android:text="@string/widget_hadith_arabic_default"
         android:textColor="@color/widget_text_primary"
-        android:textSize="@dimen/widget_text_arabic_headline" />
+        android:textSize="19sp" />
 
-    <!-- Arabesque divider -->
+    <!-- ══════ GOLD FADE DIVIDER ══════ -->
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"
         android:contentDescription="@null"
-        android:src="@drawable/widget_pattern_divider" />
+        android:src="@drawable/widget_pattern_divider"
+        android:scaleType="fitXY" />
 
-    <!-- Translation -->
+    <!-- ══════ TRANSLATION ══════ -->
     <TextView
         android:id="@+id/widget_hadith_translation"
         android:layout_width="match_parent"
@@ -126,22 +149,24 @@
         android:maxLines="2"
         android:text="@string/widget_hadith_translation_default"
         android:textColor="@color/widget_text_secondary"
-        android:textSize="13sp" />
+        android:textSize="12sp"
+        android:lineSpacingMultiplier="1.3" />
 
-    <!-- Narrator -->
+    <!-- ══════ NARRATOR FOOTER ══════ -->
     <TextView
         android:id="@+id/widget_hadith_narrator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="@string/widget_hadith_narrator_default"
-        android:textColor="@color/widget_accent_gold_dim"
-        android:textSize="11sp"
-        android:textStyle="italic" />
+        android:textColor="@color/widget_accent_gold"
+        android:textSize="10sp"
+        android:textStyle="italic"
+        android:alpha="0.75" />
 
-    <!-- Empty state -->
+    <!-- ══════ Empty state ══════ -->
     <LinearLayout
         android:id="@+id/layout_empty"
         android:layout_width="match_parent"
@@ -150,9 +175,17 @@
         android:orientation="vertical"
         android:visibility="gone">
 
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:contentDescription="@null"
+            android:src="@drawable/widget_ornament_corner"
+            android:alpha="0.5" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="@string/widget_empty_title"
             android:textColor="@color/widget_text_primary"
             android:textSize="14sp"

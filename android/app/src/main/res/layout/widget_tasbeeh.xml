@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Tasbeeh Counter Widget (2×2)
-  - Background: faint target ring
-  - Top: current dhikr name
-  - Center: huge count
-  - Below: target "/ 33"
-  - Bottom: total today
-  - Bottom-left: reset icon (separate PendingIntent)
+  Tasbeeh Counter Widget (2×2) — 2026 Premium Redesign
+  ─────────────────────────────────────────────────
+  BACKGROUND : Faint target ring overlay
+  TOP        : Dhikr name chip (SubhanAllah, Alhamdulillah, etc.)
+  CENTER     : Large count number (hero) + target pill
+  BOTTOM     : Today total + Reset button (bottom-left) + Open App (bottom-right)
+  ─────────────────────────────────────────────────
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg_shape"
-    android:padding="12dp"
+    android:padding="14dp"
     android:layoutDirection="locale"
     android:textDirection="locale">
 
-    <!-- Faint target ring background -->
+    <!-- Faint target ring background overlay -->
     <ImageView
         android:id="@+id/widget_target_ring"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
         android:layout_gravity="center"
         android:contentDescription="@null"
         android:src="@drawable/widget_tasbeeh_target_ring" />
@@ -33,7 +33,7 @@
         android:orientation="vertical"
         android:gravity="center">
 
-        <!-- Top row: dhikr name + stale badge -->
+        <!-- Top row: dhikr name chip + stale badge -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -44,11 +44,16 @@
                 android:id="@+id/widget_dhikr_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:letterSpacing="0.1"
+                android:background="@drawable/widget_chip_shape"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:letterSpacing="0.08"
                 android:text="@string/widget_tasbeeh_subhanallah"
                 android:textAllCaps="true"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <!-- Stale data badge -->
@@ -56,7 +61,7 @@
                 android:id="@+id/widget_stale_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/widget_stale_badge"
                 android:paddingStart="6dp"
                 android:paddingEnd="6dp"
@@ -69,35 +74,37 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- Huge count -->
+        <!-- Huge count number -->
         <TextView
             android:id="@+id/widget_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:fontFamily="sans-serif-condensed"
             android:letterSpacing="-0.04"
             android:text="0"
-            android:textColor="@color/widget_text_primary"
-            android:textSize="@dimen/widget_text_tasbeeh_count"
-            android:textStyle="bold" />
+            android:textColor="@color/widget_accent_emerald"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false" />
 
-        <!-- Target -->
+        <!-- Target pill -->
         <TextView
             android:id="@+id/widget_target"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="1dp"
             android:text="@string/widget_tasbeeh_target_default"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
+            android:textColor="@color/widget_accent_gold"
+            android:textSize="12sp"
+            android:alpha="0.8" />
 
         <!-- Total today -->
         <TextView
             android:id="@+id/widget_total_today"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="@string/widget_tasbeeh_total_today_default"
             android:textColor="@color/widget_text_secondary"
             android:textSize="11sp" />
@@ -106,26 +113,26 @@
     <!-- Reset icon (bottom-left) -->
     <ImageView
         android:id="@+id/widget_reset"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_gravity="bottom|start"
-        android:alpha="0.5"
+        android:alpha="0.6"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/widget_tasbeeh_reset_desc"
-        android:padding="6dp"
+        android:padding="7dp"
         android:src="@drawable/widget_ornament_corner"
         android:tint="@color/widget_text_secondary" />
 
     <!-- Open-in-app chevron (bottom-right) -->
     <ImageView
         android:id="@+id/widget_open_app"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_gravity="bottom|end"
-        android:alpha="0.5"
+        android:alpha="0.6"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/widget_tasbeeh_open_app_desc"
-        android:padding="6dp"
+        android:padding="7dp"
         android:rotation="180"
         android:src="@drawable/widget_ornament_corner"
         android:tint="@color/widget_text_secondary" />

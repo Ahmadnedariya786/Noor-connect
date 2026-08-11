@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Quran Progress Widget (4×2)
-  - Top: section label + streak badge
-  - Middle: ring (total %) + last read / juz / pages
-  - Bottom: linear progress bar (Ramadan goal)
+  Quran Progress Widget (4×2) — 2026 Premium Redesign
+  ─────────────────────────────────────────────────
+  TOP    : نور brand · "QURAN TRACKER" · Streak chip
+  MIDDLE : 72dp Progress Ring (%) · Last read surah · Juz & Page chips
+  BOTTOM : Ramadan / Daily Goal linear bar
+  ─────────────────────────────────────────────────
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -11,17 +13,42 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg_shape"
     android:orientation="vertical"
-    android:padding="@dimen/widget_padding_inner"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="12dp"
     android:layoutDirection="locale"
     android:textDirection="locale">
 
-    <!-- Top row -->
+    <!-- ══════ TOP ROW ══════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
+        <!-- نور brand -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/amiri_quran"
+            android:text="نور"
+            android:textColor="@color/widget_accent_emerald"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Dot separator -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:text="·"
+            android:textColor="@color/widget_accent_gold"
+            android:alpha="0.5"
+            android:textSize="14sp" />
+
+        <!-- Section label -->
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -29,45 +56,17 @@
             android:letterSpacing="0.15"
             android:text="@string/widget_quran_progress_section"
             android:textAllCaps="true"
-            android:textColor="@color/widget_accent_gold_dim"
-            android:textSize="9sp"
-            android:textStyle="bold" />
+            android:textColor="@color/widget_accent_gold"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:alpha="0.7" />
 
-<!-- Streak badge -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_chip_shape"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:layout_width="10dp"
-                android:layout_height="10dp"
-                android:layout_marginEnd="4dp"
-                android:contentDescription="@null"
-                android:src="@drawable/widget_ornament_corner"
-                android:tint="@color/widget_accent_gold" />
-
-            <TextView
-                android:id="@+id/widget_streak"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/widget_quran_progress_streak_default"
-                android:textColor="@color/widget_accent_gold"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Stale data badge -->
+        <!-- Stale badge -->
         <TextView
             android:id="@+id/widget_stale_badge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="6dp"
             android:background="@drawable/widget_stale_badge"
             android:paddingStart="6dp"
             android:paddingEnd="6dp"
@@ -78,16 +77,44 @@
             android:textSize="9sp"
             android:textStyle="bold"
             android:visibility="gone" />
+
+        <!-- Streak chip -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/widget_chip_shape"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:text="🔥"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/widget_streak"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/widget_quran_progress_streak_default"
+                android:textColor="@color/widget_accent_gold"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Middle row: ring + info -->
+    <!-- ══════ MIDDLE ROW (Ring + Surah Info) ══════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="10dp">
 
         <!-- Progress ring -->
         <FrameLayout
@@ -121,12 +148,12 @@
                 android:textStyle="bold" />
         </FrameLayout>
 
-        <!-- Info column -->
+        <!-- Surah info column -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:orientation="vertical">
 
             <TextView
@@ -137,29 +164,46 @@
                 android:maxLines="1"
                 android:text="@string/widget_quran_progress_last_read_default"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="13sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/widget_juz"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="@string/widget_quran_progress_juz_default"
-                android:textColor="@color/widget_text_secondary"
-                android:textSize="11sp" />
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/widget_pages"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/widget_quran_progress_pages_default"
-                android:textColor="@color/widget_text_secondary"
-                android:textSize="11sp" />
+                <TextView
+                    android:id="@+id/widget_juz"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/widget_chip_shape"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="@string/widget_quran_progress_juz_default"
+                    android:textColor="@color/widget_text_secondary"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/widget_pages"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/widget_chip_shape"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="@string/widget_quran_progress_pages_default"
+                    android:textColor="@color/widget_text_secondary"
+                    android:textSize="10sp" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Bottom: Ramadan goal bar -->
+    <!-- ══════ BOTTOM (Ramadan / Daily Goal Bar) ══════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -171,22 +215,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/widget_quran_progress_goal_default"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="10sp" />
+            android:textColor="@color/widget_accent_gold"
+            android:textSize="10sp"
+            android:alpha="0.8" />
 
         <ProgressBar
             android:id="@+id/widget_goal_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginTop="2dp"
+            android:layout_height="6dp"
+            android:layout_marginTop="3dp"
             android:max="100"
             android:progress="0"
-            android:progressBackgroundTint="@color/widget_divider"
+            android:progressBackgroundTint="@color/widget_ring_track"
             android:progressTint="@color/widget_accent_emerald" />
     </LinearLayout>
 
-    <!-- Empty state -->
+    <!-- ══════ Empty state ══════ -->
     <LinearLayout
         android:id="@+id/layout_empty"
         android:layout_width="match_parent"
