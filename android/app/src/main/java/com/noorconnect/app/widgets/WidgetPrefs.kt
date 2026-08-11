@@ -32,8 +32,14 @@ object WidgetPrefs {
     private const val KEY_LAST_WIDGET_UPDATE = "last_widget_update_ms_"
     private const val MIN_UPDATE_INTERVAL_MS = 500L // 500ms minimum between updates per widget
 
-    fun privatePrefs(context: Context): SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    fun privatePrefs(context: Context): SharedPreferences {
+        val targetContext = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N && !context.isDeviceProtectedStorage) {
+            context.createDeviceProtectedStorageContext()
+        } else {
+            context
+        }
+        return targetContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
 
     // ─────────── Prayer ───────────
 

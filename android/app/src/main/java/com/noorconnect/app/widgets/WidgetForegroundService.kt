@@ -48,10 +48,14 @@ class WidgetForegroundService : Service() {
 
         @JvmStatic fun start(context: Context) {
             val intent = Intent(context, WidgetForegroundService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not start WidgetForegroundService from background context: ${e.message}")
             }
         }
 
