@@ -11,7 +11,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.webkit.WebView;
+import android.webkit.WebViewRenderProcessClient;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -44,12 +46,51 @@ public class MainActivity extends BridgeActivity {
         WebView webView = this.getBridge().getWebView();
         if (webView != null) {
             webView.setMotionEventSplittingEnabled(true);
+            installRenderProcessCrashHandler(webView);
         }
 
         // No persistent foreground service needed.
         // Adhan alarms use setAlarmClock() which is Doze-immune.
         // Adhan playback uses a short-lived foreground service started
         // by AdhanAlarmReceiver only when it's time to play.
+    }
+
+    /**
+     * Register a render-process crash handler (API 29+).
+     *
+     * When the WebView renderer process dies (OOM, heavy JS, WebView bugs) the
+     * default behaviour is to tear down the whole app — the classic "app closes
+     * itself" crash. Returning {@code true} from onRenderProcessGone keeps the
+     * app alive; we then reload the page so the user lands back where they were
+     * instead of losing the session.
+     */
+    private void installRenderProcessCrashHandler(WebView webView) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return; // RenderProcessClient is only available on API 29+
+        }
+        try {
+            webView.setWebViewRenderProcessClient(new WebViewRenderProcessClient() {
+                @Override
+                public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                    boolean didCrash = detail != null && detail.didCrash();
+                    Log.w("MainActivity", "WebView renderer gone. didCrash=" + didCrash
+                            + ", pid=" + (detail != null ? detail.rendererPid() : -1)
+                            + " — reloading instead of killing the app.");
+                    // The renderer process is dead; the WebView must be reloaded.
+                    view.post(() -> {
+                        try {
+                            view.loadUrl(getBridge().getLocalUrl());
+                        } catch (Exception e) {
+                            Log.e("MainActivity", "Failed to reload after renderer crash", e);
+                            view.reload();
+                        }
+                    });
+                    return true; // Handle it: keep the app process alive.
+                }
+            });
+        } catch (Throwable t) {
+            Log.w("MainActivity", "Could not install render process crash handler", t);
+        }
     }
 
     /**

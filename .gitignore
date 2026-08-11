@@ -35,6 +35,7 @@ dist-ssr
 vite.config.ts.timestamp*
 
 tsconfig.tsbuildinfo
+tsconfig.*.tsbuildinfo
 bun.lockb
 
 # Android
