@@ -16,10 +16,10 @@ import path from 'path';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mushafDir = join(__dirname, '../public/mushaf');
 
-const QUALITY = 75;       // WebP lossy quality (0-100). 75 = great for text scans.
+const QUALITY = 68;       // WebP lossy quality (0-100). 68 = optimal for Arabic scanned text.
 const WIDTH = 810;        // Target width — mushaf pages are displayed at ~330 CSS px (≤990 physical px)
 const HEIGHT = 1145;      // Target height (810 × 1527/1080 ≈ 1145, aspect preserved)
-const BATCH = 8;          // Parallel files per batch (keeps RAM usage bounded + avoids AV file locks)
+const BATCH = 12;         // Parallel files per batch
 const MAX_RETRIES = 5;    // Windows AV can briefly lock files — retry with backoff
 
 async function compressFile(file) {
@@ -28,14 +28,12 @@ async function compressFile(file) {
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      // Read via fs (share-all flags — resilient to AV/indexer file locks on Windows),
-      // then process from the in-memory Buffer.
       const { readFile, writeFile, rename } = await import('fs/promises');
       const input = await readFile(fullPath);
 
       const buf = await sharp(input)
         .resize(WIDTH, HEIGHT, { fit: 'fill' })
-        .webp({ quality: QUALITY, effort: 4 })
+        .webp({ quality: QUALITY, effort: 6, smartSubsample: true })
         .toBuffer();
 
       // Only write if we actually saved bytes — write to temp + rename (atomic)

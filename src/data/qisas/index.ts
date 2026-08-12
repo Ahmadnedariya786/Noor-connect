@@ -8,6 +8,8 @@ import type {
   QisasMetadata,
 } from "./types";
 
+import { isGzipSupported, loadGzippedJson } from "../../lib/gzip-loader";
+
 // ─── Types ──────────────────────────────────────────────────────────
 export type { QisasBook, ProphetStory, ProphetSummary, QisasMetadata };
 
@@ -16,6 +18,13 @@ const PUBLIC_BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 const QISAS_DATA_URL = `${PUBLIC_BASE}/data/qisas/qisas.json`;
 
 async function fetchQisasJson<T>(url: string): Promise<T | null> {
+  if (isGzipSupported()) {
+    try {
+      return await loadGzippedJson<T>(url + ".gz");
+    } catch {
+      // Fall through to plain JSON
+    }
+  }
   try {
     const res = await fetch(url);
     if (!res.ok) return null;

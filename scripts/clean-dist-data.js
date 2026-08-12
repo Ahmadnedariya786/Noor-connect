@@ -98,10 +98,20 @@ const deleteTargets = [
   { path: path.join(distDir, 'data', 'tafsir'),           label: 'dist/data/tafsir (online-only fallback available)' },
 ];
 
-const compressTarget = {
-  path: path.join(distDir, 'data', 'hadith-collections'),
-  label: 'dist/data/hadith-collections (runtime fetch — gzipped, stays offline)',
-};
+const compressTargets = [
+  {
+    path: path.join(distDir, 'data', 'hadith-collections'),
+    label: 'dist/data/hadith-collections (runtime fetch — gzipped, stays offline)',
+  },
+  {
+    path: path.join(distDir, 'data', 'seerah'),
+    label: 'dist/data/seerah (gzipped, stays offline)',
+  },
+  {
+    path: path.join(distDir, 'data', 'qisas'),
+    label: 'dist/data/qisas (gzipped, stays offline)',
+  },
+];
 
 console.log('\n📦 Pre-cap-sync APK size cleanup\n');
 
@@ -118,33 +128,35 @@ for (const target of deleteTargets) {
   }
 }
 
-if (existsSync(compressTarget.path)) {
-  const r = compressJsonDir(compressTarget.path);
-  const saved = parseFloat(r.beforeMB) - parseFloat(r.afterMB);
-  totalSaved += saved;
-  console.log(`  ✓ Compressed ${compressTarget.label}`);
-  console.log(`      ${r.count} files: ${r.beforeMB} MB → ${r.afterMB} MB  (−${saved.toFixed(1)} MB)`);
-  if (r.failed.length) {
-    console.log(`      ⚠ ${r.failed.length} file(s) failed (left as plain JSON):`);
-    for (const e of r.failed) console.log(`        – ${e}`);
+for (const compressTarget of compressTargets) {
+  if (existsSync(compressTarget.path)) {
+    const r = compressJsonDir(compressTarget.path);
+    const saved = parseFloat(r.beforeMB) - parseFloat(r.afterMB);
+    totalSaved += saved;
+    console.log(`  ✓ Compressed ${compressTarget.label}`);
+    console.log(`      ${r.count} files: ${r.beforeMB} MB → ${r.afterMB} MB  (−${saved.toFixed(1)} MB)`);
+    if (r.failed.length) {
+      console.log(`      ⚠ ${r.failed.length} file(s) failed (left as plain JSON):`);
+      for (const e of r.failed) console.log(`        – ${e}`);
+    }
+  } else {
+    console.log(`  – Skipped ${compressTarget.label}  (not found)`);
   }
-} else {
-  console.log(`  – Skipped ${compressTarget.label}  (not found)`);
 }
 
 // Vite's compression plugins emit *.gz/*.br siblings for every asset. Capacitor's
 // WebView serves files straight from disk with no HTTP compression, so those copies
 // are dead weight in the APK. Remove every *.br and every *.gz EXCEPT the
-// intentional hadith *.json.gz produced above (dist/data/hadith-collections).
+// intentional *.json.gz files produced above.
 {
-  const keptGzPrefix = compressTarget.path + path.sep;
+  const keptGzPrefixes = compressTargets.map(t => t.path + path.sep);
   const toRemove = [];
   const walk = (dir) => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, e.name);
       if (e.isDirectory()) {
         walk(full);
-      } else if (e.name.endsWith('.br') || (e.name.endsWith('.gz') && !full.startsWith(keptGzPrefix))) {
+      } else if (e.name.endsWith('.br') || (e.name.endsWith('.gz') && !keptGzPrefixes.some(p => full.startsWith(p)))) {
         toRemove.push(full);
       }
     }
