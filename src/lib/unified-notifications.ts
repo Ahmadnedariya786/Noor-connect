@@ -205,14 +205,6 @@ class UnifiedNotificationService {
     }
   }
 
-      console.log('Notification sent successfully:', options.title);
-      return true;
-    } catch (error) {
-      console.error('Failed to show notification:', error);
-      return false;
-    }
-  }
-
   // Test notification with detailed debugging
   async testNotification(): Promise<{ success: boolean; details: string; error?: string }> {
     const details: string[] = [];

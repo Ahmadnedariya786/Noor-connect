@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
 const DailyAyah = lazy(() => import("@/components/EnhancedDailyAyah").then(module => ({ default: module.EnhancedDailyAyah })));
 const DailyHadith = lazy(() => import("@/components/EnhancedDailyHadith").then(module => ({ default: module.EnhancedDailyHadith })));
-const PremiumDashboard = lazy(() => import("@/components/PremiumDashboard").then(module => ({ default: module.PremiumDashboard })));
+import { PremiumDashboard } from "@/components/PremiumDashboard";
 import { LocationSearch } from "@/components/LocationSearch";
 import { LayoutManager } from "@/components/LayoutManager";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -451,29 +451,26 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
 
 return (
     <PageTransition>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
-        <PremiumDashboard
-          
-          hijriDate={hijriDate || ""}
-          nextPrayer={nextPrayerInfo}
-          prayers={dashboardPrayers}
-          locationLabel={locationLabel}
-          onServiceClick={onServiceClick}
-          onVerseClick={onVerseClick}
-          onHadithClick={onHadithClick}
-          onNotificationClick={onNotificationClick}
-          onLocationClick={onLocationClick}
-          showManualLocationDialog={showManualLocationDialog}
-          setShowManualLocationDialog={setShowManualLocationDialog}
-          LocationSearch={LocationSearch}
-          GeocodingService={GeocodingService}
-          AladhanAPI={AladhanAPI}
-          location={location}
-          prayerTimesHook={prayerTimesHook}
-          setLoadingAPI={setLoadingAPI}
-          toast={toast}
-        />
-      </Suspense>
+      <PremiumDashboard
+        hijriDate={hijriDate || ""}
+        nextPrayer={nextPrayerInfo}
+        prayers={dashboardPrayers}
+        locationLabel={locationLabel}
+        onServiceClick={onServiceClick}
+        onVerseClick={onVerseClick}
+        onHadithClick={onHadithClick}
+        onNotificationClick={onNotificationClick}
+        onLocationClick={onLocationClick}
+        showManualLocationDialog={showManualLocationDialog}
+        setShowManualLocationDialog={setShowManualLocationDialog}
+        LocationSearch={LocationSearch}
+        GeocodingService={GeocodingService}
+        AladhanAPI={AladhanAPI}
+        location={location}
+        prayerTimesHook={prayerTimesHook}
+        setLoadingAPI={setLoadingAPI}
+        toast={toast}
+      />
     </PageTransition>
   );
 }
