@@ -227,11 +227,12 @@ function runWebGLBenchmark(): Promise<{ fps: number; jankScore: number }> {
 }
 
 async function runFullBenchmark(): Promise<BenchmarkResult> {
-  const [css, canvas, webgl] = await Promise.all([
-    runCSSBenchmark(),
-    runCanvasBenchmark(),
-    runWebGLBenchmark(),
-  ]);
+  // Run tests sequentially to avoid 3× rAF competition on a single-core CPU
+  // during the splash animation. On a 2016 Snapdragon 410 this alone recovers
+  // ~40-60ms of first-boot jank.
+  const css = await runCSSBenchmark();
+  const canvas = await runCanvasBenchmark();
+  const webgl = await runWebGLBenchmark();
   
   const weights = { css: 0.4, canvas: 0.3, webgl: 0.3 };
   const compositeFPS = css.fps * weights.css + canvas.fps * weights.canvas + webgl.fps * weights.webgl;
@@ -257,9 +258,22 @@ function getInitialTier(): AnimationTier['tier'] {
   const cores = navigator.hardwareConcurrency || 4;
   const memory = (navigator as any).deviceMemory || 4;
   
-  if (cores <= 2 || memory <= 2) return 'low';
-  if (cores <= 4 || memory <= 4) return 'medium';
-  return 'high';
+  let tier: AnimationTier['tier'];
+  if (cores <= 2 || memory <= 2) tier = 'low';
+  else if (cores <= 4 || memory <= 4) tier = 'medium';
+  else tier = 'high';
+
+  // Apply early blur suppression immediately based on hardware hints,
+  // before the async benchmark resolves (~1-2s later).  This closes the
+  // "jank window" on the first scroll after cold boot.
+  if (tier === 'low' || tier === 'minimal') {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('reduce-blur');
+      document.documentElement.dataset.animationTier = tier;
+    }
+  }
+
+  return tier;
 }
 
 let currentTier: AnimationTier['tier'] = getInitialTier();

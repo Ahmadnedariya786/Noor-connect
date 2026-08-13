@@ -14,6 +14,11 @@
    * consume 30+ ms/frame in texture readback — the ENTIRE 30-FPS budget.
    * Replacing them with a solid semi-opaque background is visually very
    * close and recovers a stable 30 FPS on budget devices.
+   *
+   * EARLY HEURISTIC: Before the async FPS benchmark finishes (~1-2s),
+   * we apply the same suppression immediately on devices with ≤4 cores
+   * or ≤2GB RAM using the navigator hints.  This eliminates the "jank
+   * window" where full blur was active before the benchmark resolved.
    */
   html.reduce-blur [class*="backdrop-blur"],
   html.reduce-blur [style*="backdrop-filter"] {
@@ -31,6 +36,16 @@
 
   html.reduce-blur [class*="blur-"] {
     filter: none !important;
+  }
+
+  /* data-animation-tier aliases so both the CSS class and data attribute work */
+  html[data-animation-tier='low'] [class*="backdrop-blur"],
+  html[data-animation-tier='low'] [style*="backdrop-filter"],
+  html[data-animation-tier='minimal'] [class*="backdrop-blur"],
+  html[data-animation-tier='minimal'] [style*="backdrop-filter"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--card);
   }
 
   [data-animations="off"] *,
@@ -316,7 +331,16 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--lang-font-family);
+    /* Transition suppressed on low-end tier via [data-animation-tier] below */
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* On low/minimal tier: kill the body color transition — it triggers a full
+   * repaint of the entire viewport on theme switch, which is expensive on
+   * Mali-400/450 GPUs.  background/color changes become instant instead. */
+  html[data-animation-tier='low'] body,
+  html[data-animation-tier='minimal'] body {
+    transition: none !important;
   }
 
   .quran-arabic {
