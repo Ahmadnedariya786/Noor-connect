@@ -4,6 +4,8 @@
  * Targets 30+ FPS on 2016+ devices (1.5GB RAM, 4 cores, budget GPU)
  */
 
+import { whenIdle } from '@/lib/performance-optimizations';
+
 export interface DeviceCapabilities {
   cpuCores: number;
   deviceMemory: number | null;
@@ -464,23 +466,25 @@ export function getAnimationTier(): AnimationTier {
     /* storage disabled / corrupt — fall through to benchmark */
   }
 
-  // Run benchmark async, return high tier immediately for first paint.
-  Promise.resolve()
-    .then(() => runFPSBenchmark())
-    .then((benchmark) => {
-      const tier = determineAnimationTier(benchmark, capabilities, prefersReducedMotion);
-      try {
-        localStorage.setItem(TIER_STORAGE_KEY, JSON.stringify(tier));
-        localStorage.setItem(
-          TIER_STORAGE_META_KEY,
-          JSON.stringify({ savedAt: Date.now() }),
-        );
-      } catch {
-        /* quota exceeded or private mode — don't crash */
-      }
-      applyTieredVisualOverrides(tier);
-      window.dispatchEvent(new CustomEvent('animation-tier-changed', { detail: tier }));
-    });
+  // Defer the benchmark to idle time so it never competes with first paint or
+  // the splash animation for frames (main cause of startup frame skips).
+  whenIdle(() => {
+    runFPSBenchmark()
+      .then((benchmark) => {
+        const tier = determineAnimationTier(benchmark, capabilities, prefersReducedMotion);
+        try {
+          localStorage.setItem(TIER_STORAGE_KEY, JSON.stringify(tier));
+          localStorage.setItem(
+            TIER_STORAGE_META_KEY,
+            JSON.stringify({ savedAt: Date.now() }),
+          );
+        } catch {
+          /* quota exceeded or private mode — don't crash */
+        }
+        applyTieredVisualOverrides(tier);
+        window.dispatchEvent(new CustomEvent('animation-tier-changed', { detail: tier }));
+      });
+  });
 
   const initial: AnimationTier = {
     ...TIER_DEFAULTS.high,

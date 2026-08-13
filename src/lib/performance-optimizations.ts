@@ -25,6 +25,23 @@ export const isLowEndDevice = (): boolean => {
   return false;
 };
 
+/**
+ * Run a callback when the main thread is idle (after first paint), falling
+ * back to a short timeout. Keeps heavy startup work (e.g. the FPS benchmark)
+ * off the critical render path so it can't cause frame skips / Davey lockups.
+ */
+export const whenIdle = (cb: () => void): void => {
+  if (typeof window === 'undefined') return;
+  const ric = (window as unknown as {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+  }).requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric(cb, { timeout: 2000 });
+  } else {
+    setTimeout(cb, 200);
+  }
+};
+
 // Reduce animations on low-end devices
 export const shouldReduceAnimations = (): boolean => {
   if (typeof window === 'undefined') return false;

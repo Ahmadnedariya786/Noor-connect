@@ -3,10 +3,12 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { localNotifications } from "@/lib/local-notifications";
+import { whenIdle } from "@/lib/performance-optimizations";
 import './lib/i18n-new'; // Initialize new offline-first i18n
 
-// Initialize local notifications quietly so feature pages can reuse the state.
-void localNotifications.initialize();
+// Initialize local notifications on the first idle slice so it doesn't compete
+// with the initial paint / Capacitor bridge startup (reduces startup jank).
+whenIdle(() => { void localNotifications.initialize(); });
 
 import { LanguageProvider } from "@/contexts/LanguageContext-new";
 
