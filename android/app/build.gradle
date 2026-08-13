@@ -140,9 +140,14 @@ task stripCompressedAssets {
         assetsPublicDir.eachFileRecurse { f ->
             if (f.isFile() && (f.name.endsWith('.gz') || f.name.endsWith('.br'))) {
                 // Keep the gzip archives we intentionally ship for offline hadith
-                // loading (dist/data/hadith-collections/**/*.json.gz). Everything
-                // else is a vite-plugin-compression browser duplicate.
+                // loading (dist/data/hadith-collections/**/*.json.gz), but delete
+                // their plain .json twins — AAPT2 treats foo.json + foo.json.gz
+                // as duplicate resources.
                 if (f.name.endsWith('.json.gz') && f.path.contains('hadith-collections')) {
+                    def twin = new File(f.path.replaceAll(/\.gz$/, ''))
+                    if (twin.exists() && twin.delete()) {
+                        deleted++
+                    }
                     return
                 }
                 f.delete()

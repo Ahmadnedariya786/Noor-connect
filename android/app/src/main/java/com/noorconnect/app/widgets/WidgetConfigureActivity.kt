@@ -39,9 +39,13 @@ class WidgetConfigureActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_widget_configure)
 
-        // Get widget ID and type from intent
-        widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-        widgetType = intent.getStringExtra(EXTRA_WIDGET_TYPE) ?: ""
+        // Get widget ID from intent. Launchers send AppWidgetManager.EXTRA_APPWIDGET_ID;
+        // fall back to our custom extra for internal launches.
+        widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        }
+        widgetType = intent.getStringExtra(EXTRA_WIDGET_TYPE) ?: deriveWidgetType(widgetId) ?: ""
 
         if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
@@ -158,6 +162,15 @@ class WidgetConfigureActivity : AppCompatActivity() {
         val result = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
         setResult(RESULT_OK, result)
         finish()
+    }
+
+    /**
+     * Derive the widget type key (e.g. "dailyayah") from the provider class name
+     * when the launcher does not send a custom type extra.
+     */
+    private fun deriveWidgetType(appWidgetId: Int): String? {
+        val info = AppWidgetManager.getInstance(this).getAppWidgetInfo(appWidgetId) ?: return null
+        return info.provider.className.substringAfterLast('.').removeSuffix("Widget").lowercase()
     }
 
     private fun getWidgetPrefs(): SharedPreferences =
