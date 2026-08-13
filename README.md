@@ -32,6 +32,18 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ## 🆕 What's New in v2.2.0
 
+### ⚙️ Modular Settings Architecture & Android OOM Crash Elimination
+- **Legacy Android WebView OOM Resolution**: Replaced monolithic 1,600-line Settings component with a fast navigation index landing page (`/profile`) that defers state loading by 500ms, resolving Android WebView out-of-memory crashes on 2016-era low-end devices.
+- **12 Sub-Page Categories (`/settings/:sectionId`)**: Built lazy-loaded modular sub-pages for Theme, Haptics, Personal Info, Prayer Calculation, Notifications, Adhan & Sounds, Backup & Restore, Storage & Cache, Privacy, About, Support, and Developer Contact.
+- **Authentic Developer Contact & Crypto Support**: Restored verified WhatsApp, Portfolio, Gmail, ProtonMail links, and BTC/SOL/BNB donation addresses.
+
+### 🔔 Expanded Smart Notification Suite
+- **Pre-Fajr Tahajjud & Night Prayer**: Pre-Fajr reminders during the last third of the night.
+- **Salat al-Duha Alerts**: Mid-morning Duha prayer notification.
+- **Sunnah Fasting Reminders**: Automated Monday & Thursday Sunnah fasting notifications.
+- **Daily Quran Tilawat Goal**: Evening reminder to complete daily Quran recitation.
+- **Bedtime Sunnah Azkar**: Nightly Ayatul Kursi and protection dua reminders before sleep.
+
 ### ⚡ Performance & Smoothness Optimization Pass
 - **Re-Render Churn Eliminated**: The dashboard clock no longer re-renders the whole app twice a second — the 30s global tick was replaced with a derived 60s update, countdown timers now share a subscriber-counted scheduler, and widget state updates are guarded so nothing re-renders when values haven't changed.
 - **Faster Long Lists**: Hadith books now load in pages of 300 with automatic infinite scroll instead of rendering every hadith at once; hadith cards, book cards, and radio station cards are memoized, and Tafsir / Names of Allah search is debounced with cached filtered results for smooth 60fps browsing.

@@ -19,6 +19,11 @@ export interface NotificationPreferences {
   dhikrReminders: boolean;
   islamicKnowledge: boolean;
   motivationalMessages: boolean;
+  tahajjudReminders: boolean;
+  duhaReminders: boolean;
+  fastingDaysReminders: boolean;
+  quranTrackerReminders: boolean;
+  bedtimeDuaReminders: boolean;
   maxDailyNotifications: number; // Smart frequency control
 }
 
@@ -28,7 +33,7 @@ export interface NotificationEvent {
   body: string;
   icon?: string;
   timestamp: number;
-  type: 'ramadan-countdown' | 'eid-greeting' | 'islamic-date' | 'friday-kahf' | 'daily-hadith' | 'quranic-verse' | 'dhikr-reminder' | 'islamic-knowledge' | 'motivational-message' | 'morning-reminder' | 'evening-reminder';
+  type: 'ramadan-countdown' | 'eid-greeting' | 'islamic-date' | 'friday-kahf' | 'daily-hadith' | 'quranic-verse' | 'dhikr-reminder' | 'islamic-knowledge' | 'motivational-message' | 'morning-reminder' | 'evening-reminder' | 'tahajjud-reminder' | 'duha-reminder' | 'fasting-reminder' | 'quran-tracker' | 'bedtime-dua';
   contentType?: 'hadith' | 'quran' | 'dhikr' | 'dua' | 'knowledge' | 'motivation';
   priority?: 'low' | 'medium' | 'high';
 }
@@ -44,6 +49,11 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   dhikrReminders: true,
   islamicKnowledge: true,
   motivationalMessages: true,
+  tahajjudReminders: true,
+  duhaReminders: true,
+  fastingDaysReminders: true,
+  quranTrackerReminders: true,
+  bedtimeDuaReminders: true,
   maxDailyNotifications: 5, // Smart frequency limit
 };
 
@@ -757,6 +767,108 @@ export class NotificationManager {
     }
   }
 
+  // Tahajjud Prayer Reminders (Pre-Fajr)
+  private async checkTahajjudReminders(): Promise<void> {
+    this.ensureLoaded();
+    if (!this.preferences.tahajjudReminders) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour >= 3 && hour < 5) {
+      const event: NotificationEvent = {
+        id: `tahajjud-${now.toDateString()}`,
+        title: 'Tahajjud & Night Prayer',
+        body: 'The Lord descends every night during the last third of the night. Stand in prayer and seek His forgiveness.',
+        type: 'tahajjud-reminder',
+        timestamp: Date.now(),
+        priority: 'high'
+      };
+      await this.sendNotification(event);
+    }
+  }
+
+  // Duha Prayer Reminders (Mid-morning)
+  private async checkDuhaReminders(): Promise<void> {
+    this.ensureLoaded();
+    if (!this.preferences.duhaReminders) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour >= 9 && hour < 11) {
+      const event: NotificationEvent = {
+        id: `duha-${now.toDateString()}`,
+        title: 'Salat al-Duha Reminder',
+        body: 'Offer two Rak\'ahs of Duha prayer today — fulfilling charity for every joint in your body.',
+        type: 'duha-reminder',
+        timestamp: Date.now(),
+        priority: 'medium'
+      };
+      await this.sendNotification(event);
+    }
+  }
+
+  // Sunnah Fasting Reminders (Mondays & Thursdays)
+  private async checkFastingDaysReminders(): Promise<void> {
+    this.ensureLoaded();
+    if (!this.preferences.fastingDaysReminders) return;
+
+    const now = new Date();
+    const day = now.getDay();
+    // 0 = Sunday, 1 = Monday, 4 = Thursday
+    if (day === 1 || day === 4) {
+      const dayName = day === 1 ? 'Monday' : 'Thursday';
+      const event: NotificationEvent = {
+        id: `fasting-${now.toDateString()}`,
+        title: `Sunnah Fasting — ${dayName}`,
+        body: `Deeds are presented on ${dayName}s. Prepare for Sunnah fasting today to earn immense rewards.`,
+        type: 'fasting-reminder',
+        timestamp: Date.now(),
+        priority: 'medium'
+      };
+      await this.sendNotification(event);
+    }
+  }
+
+  // Quran Tracker & Tilawat Goal Reminders
+  private async checkQuranTrackerReminders(): Promise<void> {
+    this.ensureLoaded();
+    if (!this.preferences.quranTrackerReminders) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour >= 17 && hour < 19) {
+      const event: NotificationEvent = {
+        id: `quran-tracker-${now.toDateString()}`,
+        title: 'Daily Quran Tilawat',
+        body: 'Have you recited your daily portion of the Noble Quran today? Spend 10 minutes with the Book of Allah.',
+        type: 'quran-tracker',
+        timestamp: Date.now(),
+        priority: 'medium'
+      };
+      await this.sendNotification(event);
+    }
+  }
+
+  // Nightly Bedtime Sunnah Azkar Reminders
+  private async checkBedtimeDuaReminders(): Promise<void> {
+    this.ensureLoaded();
+    if (!this.preferences.bedtimeDuaReminders) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour >= 21 && hour < 23) {
+      const event: NotificationEvent = {
+        id: `bedtime-dua-${now.toDateString()}`,
+        title: 'Bedtime Sunnah Azkar',
+        body: 'Recite Ayatul Kursi, Surah Al-Ikhlas, Al-Falaq, and An-Nas before sleep for divine protection through the night.',
+        type: 'bedtime-dua',
+        timestamp: Date.now(),
+        priority: 'medium'
+      };
+      await this.sendNotification(event);
+    }
+  }
+
   // Trigger festive UI for special events
   private triggerFestiveUI(event: IslamicDate): void {
     // Dispatch custom event for UI components to listen to
@@ -788,6 +900,11 @@ export class NotificationManager {
       this.checkDhikrReminders(),
       this.checkIslamicKnowledge(),
       this.checkMotivationalMessages(),
+      this.checkTahajjudReminders(),
+      this.checkDuhaReminders(),
+      this.checkFastingDaysReminders(),
+      this.checkQuranTrackerReminders(),
+      this.checkBedtimeDuaReminders(),
     ]);
   }
 

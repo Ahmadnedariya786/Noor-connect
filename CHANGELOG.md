@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.2.0] - 2026-08-01
 
+### ⚙️ Modular Settings Architecture & Android OOM Crash Elimination
+- **Legacy Android WebView OOM Resolution**: Deprecated the 1,600-line monolithic Settings page that rendered 15+ sections simultaneously.
+- **Index Landing Page (`/profile`)**: Replaced with a fast navigation index leveraging 500ms single-pass deferred async state fetching to eliminate UI-thread blocking.
+- **Lazy-Loaded Sub-Pages (`/settings/:sectionId`)**: Built 12 modular sub-pages covering Theme, Haptics, Personal Info, Prayer Calculation, Notifications, Adhan, Backup, Storage, Privacy, About, Support, and Developer Contact.
+- **Authentic Contact & Support**: Restored verified developer WhatsApp, Portfolio, Gmail, ProtonMail links, and BTC/SOL/BNB donation addresses.
+
+### 🔔 Expanded Smart Notification Suite
+- **Pre-Fajr Tahajjud & Night Prayer**: Reminders during the last third of the night to stand in prayer.
+- **Salat al-Duha Alerts**: Mid-morning Duha prayer notification to fulfill daily body joint charity.
+- **Sunnah Fasting Reminders**: Automated Monday & Thursday Sunnah fasting notifications.
+- **Daily Quran Tilawat Goal**: Evening reminder to complete daily Quran reading targets.
+- **Bedtime Sunnah Azkar**: Nightly reminder to recite Ayatul Kursi and protection surahs before sleep.
+
 ### 📦 APK Size Optimization
 - **Mushaf Downscale**: 606 images → 810×1145 WebP q75 (83.9 → 56.6 MB).
 - **Hadith Gzip**: 34 JSON files → `.json.gz` (95.4 → 19.8 MB, 79 MB saved), loaded via `DecompressionStream` with fallback.

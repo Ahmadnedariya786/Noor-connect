@@ -139,6 +139,7 @@ const Tafsir = lazy(() => import("./pages/Tafsir-New"));
 const EidChecklist = lazy(() => import("./pages/EidChecklist"));
 const FitranaCalculator = lazy(() => import("./pages/FitranaCalculator"));
 const Settings = lazy(() => import("./pages/Settings"));
+const SettingsSubPage = lazy(() => import("./pages/SettingsSubPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const SeerahHome = lazy(() => import("./pages/SeerahHome"));
 const SeerahReader = lazy(() => import("./pages/SeerahReader"));
@@ -241,7 +242,8 @@ function AppRoutes() {
         <Route path="/tafsir" element={<Tafsir />} />
         <Route path="/eid-checklist" element={<EidChecklist />} />
         <Route path="/fitrana-calculator" element={<FitranaCalculator />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<Navigate to="/profile" replace />} />
+        <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

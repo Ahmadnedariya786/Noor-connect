@@ -38,14 +38,40 @@ class UnifiedNotificationService {
     return this.isCapacitor;
   }
 
+  // Helper to generate safe 32-bit integer ID for Android LocalNotifications (max 2,147,483,647)
+  private generateSafeId(): number {
+    return Math.floor(Math.random() * 1000000000) + 1000;
+  }
+
+  // Ensure high-importance notification channel exists on Android 8.0+ (API 26+)
+  private async ensureChannelCreated(): Promise<string> {
+    const channelId = 'noor_notifications_channel';
+    if (this.isCapacitor) {
+      try {
+        await LocalNotifications.createChannel({
+          id: channelId,
+          name: 'Noor Connect Notifications',
+          description: 'Prayer times and daily spiritual reminders',
+          importance: 5, // High importance (shows heads-up banner + sound)
+          visibility: 1, // Visible on lock screen
+          sound: 'default',
+          vibration: true,
+        });
+      } catch (err) {
+        console.warn('Failed to create notification channel:', err);
+      }
+    }
+    return channelId;
+  }
+
   // Get current permission status
   async getPermissionStatus(): Promise<NotificationPermission> {
     if (this.isCapacitor) {
       try {
         const result = await LocalNotifications.checkPermissions();
-        // If display is granted and we are on Android, we also check if notifications are actually enabled
-        // for the app in system settings, but 'granted' here is usually sufficient.
-        return result.display === 'granted' ? 'granted' : 'denied';
+        if (result.display === 'granted') return 'granted';
+        if (result.display === 'denied') return 'denied';
+        return 'default';
       } catch (error) {
         console.warn('Failed to check Capacitor notification permissions:', error);
         return 'denied';
@@ -73,6 +99,9 @@ class UnifiedNotificationService {
       try {
         const result = await LocalNotifications.requestPermissions();
         this.permission = result.display === 'granted' ? 'granted' : 'denied';
+        if (this.permission === 'granted') {
+          await this.ensureChannelCreated();
+        }
         return this.permission === 'granted';
       } catch (error) {
         console.error('Failed to request Capacitor notification permission:', error);
@@ -100,45 +129,35 @@ class UnifiedNotificationService {
 
   // Show a notification
   async showNotification(options: NotificationOptions, immediate: boolean = false): Promise<boolean> {
-    const hasPermission = await this.getPermissionStatus();
+    let hasPermission = await this.getPermissionStatus();
     if (hasPermission !== 'granted') {
-      console.warn('Notification permission not granted');
-      return false;
+      const requested = await this.requestPermission();
+      if (!requested) {
+        console.warn('Notification permission not granted');
+        return false;
+      }
     }
 
     try {
       if (this.isCapacitor) {
-        // Use Capacitor Local Notifications
-        if (immediate) {
-          // For immediate notifications, schedule with a very small delay to ensure it fires
-          await LocalNotifications.schedule({
-            notifications: [{
-              id: Date.now(),
-              title: options.title,
-              body: options.body,
-              schedule: { at: new Date(Date.now() + 100) }, // 100ms delay for immediate fire
-              sound: 'default',
-              smallIcon: 'ic_notification',
-              largeIcon: 'ic_launcher',
-              iconColor: '#1a4a4a',
-              extra: options.data || {}
-            }]
-          });
-        } else {
-          await LocalNotifications.schedule({
-            notifications: [{
-              id: Date.now(),
-              title: options.title,
-              body: options.body,
-              schedule: { at: new Date() },
-              sound: 'default',
-              smallIcon: 'ic_notification',
-              largeIcon: 'ic_launcher',
-              iconColor: '#1a4a4a',
-              extra: options.data || {}
-            }]
-          });
-        }
+        const channelId = await this.ensureChannelCreated();
+        const notificationId = this.generateSafeId();
+        const scheduleTime = immediate ? new Date(Date.now() + 500) : new Date();
+
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: notificationId,
+            title: options.title,
+            body: options.body,
+            schedule: { at: scheduleTime },
+            channelId: channelId,
+            sound: 'default',
+            smallIcon: 'ic_notification',
+            largeIcon: 'ic_launcher',
+            iconColor: '#1a4a4a',
+            extra: options.data || {}
+          }]
+        });
       } else {
         // Use Web Notifications API
         const notification = new Notification(options.title, {
@@ -177,6 +196,14 @@ class UnifiedNotificationService {
           }
         };
       }
+
+      console.log('Notification sent successfully:', options.title);
+      return true;
+    } catch (error) {
+      console.error('Failed to show notification:', error);
+      return false;
+    }
+  }
 
       console.log('Notification sent successfully:', options.title);
       return true;

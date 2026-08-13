@@ -33,8 +33,11 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
   {
     version: '2.2.0',
     date: '2026-08-01',
-    title: 'APK Size Optimization, Major Prayer Times Refactor & Lint Fixes',
+    title: 'APK Size Optimization, Modular Settings Architecture, Smart Notifications & Major Refactor',
     changes: [
+      { type: 'feature', description: 'Android OOM Crash Elimination & Modular Settings: Deprecated monolithic 1,600-line Settings page in favor of a lightweight navigation index landing page (/profile) with 500ms deferred async state loading and 12 lazy-loaded sub-pages (/settings/:sectionId), eliminating Android WebView heap thrashing on legacy 2016-era devices.' },
+      { type: 'feature', description: 'Expanded Islamic Notification Suite: Added 5 new smart notification categories to NotificationManager and settings toggle panel — Pre-Fajr Tahajjud & Night Prayer, Salat al-Duha alerts, Sunnah Fasting (Mondays & Thursdays), Daily Quran Tilawat goal reminders, and Bedtime Sunnah Azkar.' },
+      { type: 'improvement', description: 'Authentic Developer Contact & Support: Restored verified WhatsApp, Portfolio, Gmail, ProtonMail links, and multi-chain crypto donation addresses (BTC, SOL, BNB).' },
       { type: 'fix', description: 'Native Widget Reliability: Quran Progress widget now actually updates — the payload was missing its lastUpdated timestamp and was silently rejected by validation on every sync.' },
       { type: 'fix', description: 'Native Widget Reliability: Daily Ayah + Hadith content is no longer dropped when no hadith cache exists (fallback hadith had an empty source that failed validation).' },
       { type: 'fix', description: 'Native Widget Reliability: Removing one widget type no longer stops the shared foreground service or prayer alarms while other widgets are still on your home screen — monitoring survives until the last widget is removed.' },
