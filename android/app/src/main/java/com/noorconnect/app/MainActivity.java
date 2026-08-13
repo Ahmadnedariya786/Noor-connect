@@ -29,6 +29,9 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Versioned WebView data directory prevents cache corruption across installs/updates
+        WebView.setDataDirectorySuffix(BuildConfig.VERSION_NAME);
+
         registerPlugin(WidgetBridge.class);
         registerPlugin(NativeAdhanPlugin.class);
         registerPlugin(BatteryOptimizationPlugin.class);
