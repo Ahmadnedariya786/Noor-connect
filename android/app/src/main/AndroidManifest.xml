@@ -38,6 +38,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:largeHeap="true"
         android:hardwareAccelerated="true"
+        android:enableOnBackInvokedCallback="true"
         tools:replace="android:allowBackup,android:fullBackupContent,android:dataExtractionRules,android:backupAgent">
 
         <!-- Required on API 34+ to justify FOREGROUND_SERVICE_SPECIAL_USE -->
