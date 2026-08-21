@@ -96,9 +96,9 @@ const initialsOf = (name: string, nameEn: string): string => {
 };
 
 const avatarPalette = [
-  "from-emerald-600 to-teal-800", "from-sky-600 to-blue-800", "from-violet-600 to-purple-800",
-  "from-rose-600 to-pink-800", "from-amber-600 to-orange-800", "from-teal-600 to-cyan-800",
-  "from-indigo-600 to-blue-800", "from-pink-600 to-rose-800",
+  "from-emerald-600 to-teal-800", "from-teal-700 to-emerald-900", "from-[#8a6d1f] to-[#6b500f]",
+  "from-amber-600 to-orange-800", "from-emerald-700 to-[#3f5136]", "from-lime-700 to-emerald-900",
+  "from-stone-600 to-stone-900", "from-[#a16207] to-[#713f12]",
 ];
 
 const avatarGradient = (url: string): string => {
@@ -462,20 +462,21 @@ const StationArtwork: React.FC<{ station: StationView; className?: string }> = (
   return <CategoryArt category={station.category} id={station.id} />;
 };
 
-/* Themed icon per category (non-reciter stations). */
+/* Themed icon per category (non-reciter stations).
+   Palette kept inside the app family: emerald/teal/gold/amber + warm slate. */
 const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ category, id }) => {
   const styles: Record<string, string> = {
-    mosque: "from-emerald-500 to-teal-700",
-    eid: "from-amber-400 to-orange-600",
-    ruqyah: "from-sky-400 to-blue-700",
-    tafsir: "from-violet-400 to-purple-700",
-    hadith: "from-rose-400 to-pink-700",
-    translation: "from-cyan-400 to-sky-700",
-    surah: "from-indigo-400 to-blue-700",
-    stories: "from-fuchsia-400 to-purple-700",
-    adhkar: "from-lime-400 to-green-700",
-    fatwa: "from-slate-400 to-slate-700",
-    biography: "from-teal-400 to-emerald-700",
+    mosque: "from-emerald-600 to-teal-800",
+    eid: "from-amber-500 to-orange-700",
+    ruqyah: "from-teal-600 to-emerald-900",
+    tafsir: "from-emerald-700 to-[#3f5136]",
+    hadith: "from-[#8a6d1f] to-[#6b500f]",
+    translation: "from-teal-700 to-[#134e4a]",
+    surah: "from-emerald-800 to-teal-950",
+    stories: "from-[#a16207] to-[#713f12]",
+    adhkar: "from-lime-700 to-emerald-900",
+    fatwa: "from-stone-500 to-stone-800",
+    biography: "from-emerald-800 to-[#14532d]",
   };
   const iconMap: Record<string, React.ReactNode> = {
     mosque: <Landmark className="w-9 h-9 text-white/90" />,
@@ -493,7 +494,7 @@ const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ catego
     const surahNum = id === 115 ? "٢" : id === 109060 ? "٦٧" : "۩";
     return (
       <div className={`w-full h-full bg-gradient-to-br ${styles.surah} flex items-center justify-center`}>
-        <span className="text-4xl font-bold text-white/95 leading-none" style={{ fontFamily: "serif" }}>
+        <span className="text-4xl font-bold text-[#e7c66b] leading-none" style={{ fontFamily: "serif" }}>
           {surahNum}
         </span>
       </div>
