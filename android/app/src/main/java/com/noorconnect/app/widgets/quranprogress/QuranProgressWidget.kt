@@ -41,6 +41,7 @@ class QuranProgressWidget : AppWidgetProvider() {
             if (payload == null) {
                 views.setTextViewText(R.id.widget_streak, context.getString(R.string.widget_quran_progress_streak_format, 0))
                 views.setTextViewText(R.id.widget_percent, context.getString(R.string.widget_quran_progress_percent_format, 0))
+                views.setTextColor(R.id.widget_percent, WidgetAccent.resolve(context, appWidgetId))
                 views.setTextViewText(R.id.widget_last_read, context.getString(R.string.widget_quran_progress_last_read_format, ""))
                 views.setTextViewText(R.id.widget_juz, context.getString(R.string.widget_quran_progress_juz_format, 1))
                 views.setTextViewText(R.id.widget_pages, context.getString(R.string.widget_quran_progress_pages_format, 0))
@@ -54,6 +55,7 @@ class QuranProgressWidget : AppWidgetProvider() {
                 // Percent (rounded)
                 val pctInt = payload.totalPercent.toInt().coerceIn(0, 100)
                 views.setTextViewText(R.id.widget_percent, context.getString(R.string.widget_quran_progress_percent_format, pctInt))
+                views.setTextColor(R.id.widget_percent, WidgetAccent.resolve(context, appWidgetId))
 
                 // Last read
                 views.setTextViewText(R.id.widget_last_read, context.getString(R.string.widget_quran_progress_last_read_format, payload.lastReadLabel.ifEmpty { "—" }))

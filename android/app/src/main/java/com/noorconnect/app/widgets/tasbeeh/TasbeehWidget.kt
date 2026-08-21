@@ -52,6 +52,7 @@ class TasbeehWidget : AppWidgetProvider() {
 
             views.setTextViewText(R.id.widget_dhikr_name, localizedDhikr(context, state.currentDhikr))
             views.setTextViewText(R.id.widget_count, state.sessionCount.toString())
+            views.setTextColor(R.id.widget_count, WidgetAccent.resolve(context, appWidgetId))
             views.setTextViewText(R.id.widget_target, context.getString(R.string.widget_tasbeeh_target_format, state.targetPerSession))
             views.setTextViewText(R.id.widget_total_today, context.getString(R.string.widget_tasbeeh_total_today_format, state.totalCount))
 

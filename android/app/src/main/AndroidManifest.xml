@@ -92,8 +92,6 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_next_prayer_info" />
-            <meta-data android:name="android.appwidget.configure"
-                       android:value=".widgets.WidgetConfigureActivity" />
         </receiver>
 
         <!-- Daily Ayah Widget (4×2) -->
@@ -107,8 +105,6 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_daily_ayah_info" />
-            <meta-data android:name="android.appwidget.configure"
-                       android:value=".widgets.WidgetConfigureActivity" />
         </receiver>
 
         <!-- Daily Hadith Widget (4×2) -->
@@ -122,8 +118,6 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_daily_hadith_info" />
-            <meta-data android:name="android.appwidget.configure"
-                       android:value=".widgets.WidgetConfigureActivity" />
         </receiver>
 
         <!-- Quran Progress Widget (4×2) -->
@@ -136,8 +130,6 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_quran_progress_info" />
-            <meta-data android:name="android.appwidget.configure"
-                       android:value=".widgets.WidgetConfigureActivity" />
         </receiver>
 
         <!-- Tasbeeh Counter Widget (2×2) -->
@@ -150,8 +142,6 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_tasbeeh_info" />
-            <meta-data android:name="android.appwidget.configure"
-                       android:value=".widgets.WidgetConfigureActivity" />
         </receiver>
 
         <!-- Widget Configuration Activity -->

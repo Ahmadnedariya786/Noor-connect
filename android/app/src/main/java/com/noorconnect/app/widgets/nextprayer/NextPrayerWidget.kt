@@ -52,6 +52,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                 // Set empty state message with call-to-action
                 views.setTextViewText(R.id.empty_message, context.getString(R.string.widget_empty_message))
                 views.setTextViewText(R.id.empty_action, context.getString(R.string.widget_empty_action))
+                views.setTextColor(R.id.empty_action, WidgetAccent.resolve(context, appWidgetId))
 
                 // Set click listener to open app
                 val deeplink = WidgetDeeplink.buildPrayers(focus = "setup")
@@ -82,6 +83,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                 // Set empty state message with call-to-action
                 views.setTextViewText(R.id.empty_message, context.getString(R.string.widget_empty_message))
                 views.setTextViewText(R.id.empty_action, context.getString(R.string.widget_empty_action))
+                views.setTextColor(R.id.empty_action, WidgetAccent.resolve(context, appWidgetId))
 
                 // Set click listener to open app
                 val deeplink = WidgetDeeplink.buildPrayers(focus = "setup")
@@ -111,6 +113,7 @@ class NextPrayerWidget : AppWidgetProvider() {
             val remaining = nextPrayer.time - now
             val countdownStr = formatCountdown(remaining)
             views.setTextViewText(R.id.widget_countdown, countdownStr)
+            views.setTextColor(R.id.widget_countdown, WidgetAccent.resolve(context, appWidgetId))
 
             // ─── Progress ring fill ───
             // NOTE: Do NOT use RemoteViews reflection for setRotation here.

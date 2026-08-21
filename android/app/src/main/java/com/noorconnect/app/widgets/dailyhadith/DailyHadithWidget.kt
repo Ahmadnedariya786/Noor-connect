@@ -12,7 +12,6 @@ import com.noorconnect.app.widgets.WidgetDeeplink
 import com.noorconnect.app.widgets.WidgetForegroundService
 import com.noorconnect.app.widgets.WidgetPrefs
 import com.noorconnect.app.widgets.WidgetRefreshWorker
-import java.util.Calendar
 
 /**
  * Daily Hadith Widget (4×2)
