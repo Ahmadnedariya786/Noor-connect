@@ -87,7 +87,6 @@ export default function IslamicStreamPlayer() {
   }));
 
   const current = streams[activeTab];
-  const meta = LOCATION_META[activeTab];
   const lowEnd = isLowEndDevice();
 
   /* ─── Controls auto-hide ─── */
@@ -153,7 +152,11 @@ export default function IslamicStreamPlayer() {
     if (Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: !lowEnd,
-        lowLatencyMode: !lowEnd,
+        // LL-HLS requires server-side partial-segment support. The SBA
+        // Globecast/Akamai origin serves standard HLS; running lowLatencyMode
+        // against it causes brief garbled ("gibberish") audio at segment
+        // boundaries until the buffer resyncs, so it stays off.
+        lowLatencyMode: false,
         capLevelToPlayerSize: false, // Let user or Auto handle it
         backBufferLength: 30, // Keep some history
         maxBufferLength: 60, // aggressive buffer for stability
@@ -491,13 +494,9 @@ export default function IslamicStreamPlayer() {
           muted={isMuted}
         />
 
-        {/* Ambient glow corners */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-8 -left-8 w-40 h-40 rounded-full blur-3xl opacity-20"
-            style={{ background: meta.color }} />
-          <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full blur-3xl opacity-10"
-            style={{ background: meta.color }} />
-        </div>
+        {/* NOTE: no decorative glow overlays here — they sat on top of the live
+            video, and on devices where reduce-blur strips `filter` (see index.css),
+            the blurred discs rendered as hard-edged light circles over the stream. */}
 
         {/* Loading overlay */}
         {current.isLoading && (
