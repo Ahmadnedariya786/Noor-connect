@@ -35,6 +35,11 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
     date: '2026-08-22',
     title: 'Live Streams — Migrated to Official SBA CDN',
     changes: [
+      { type: 'fix', description: 'Android Widgets — Android 8–11 Rendering Fix: Removed RemoteViews reflection calls to View.setRotation (unsupported before Android 12) that made every Next Prayer / Quran Progress widget update fail with "Problem loading widget". Progress rings now render via drawable levels on all supported versions.' },
+      { type: 'fix', description: 'Android Widgets — Tap Targets Fixed: Next Prayer widget tap (and its empty-state CTA) now opens prayer times on the dashboard instead of a not-found page; Quran Progress widget tap now opens the Quran progress page.' },
+      { type: 'fix', description: 'Android Widgets — In-App Tasbeeh Syncs to the Home Screen: Fixed an event-name mismatch that meant tasbeeh counted inside the app never updated the widget; every in-app tap now reaches the widget instantly.' },
+      { type: 'improvement', description: 'Android Widgets — Accent Colors Now Apply: The accent picked during widget setup is finally applied to widget text, with new Amber, Blue, Purple, Teal and Red palettes added for light and dark themes.' },
+      { type: 'fix', description: 'Android Widgets — No More Silent Prayer-Sync Drops: Prayer data missing any of the six times is now rejected with a clear warning instead of being silently dropped by native validation.' },
       { type: 'fix', description: 'Replaced dead m.live.net.sa HLS streams (Wowza server decommissioned, returning 404) and CORS-blocked Aloula CDN redirects with official SBA streams via Globecast/Akamai CDN (HTTPS, CORS-enabled globally, no platform split needed).' },
       { type: 'improvement', description: 'Unified stream URLs: both native Android and web now use the same HTTPS endpoint — removed the native/web URL split and the Android cleartext HTTP whitelist for m.live.net.sa.' },
       { type: 'improvement', description: 'Added Kwikmotion 1080p as automatic fallback for Makkah (Madinah has no secondary CORS-enabled source).' },

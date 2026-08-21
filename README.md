@@ -32,6 +32,14 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ## 🆕 What's New in v2.2.3
 
+### 📱 Android Widgets — Stability, Deep-Links & Accent Colors
+- **Widgets No Longer Break on Android 8–11**: Removed `RemoteViews` reflection calls to `View.setRotation` (unsupported before Android 12) that made every Next Prayer / Quran Progress widget update fail with "Problem loading widget" on API ≤ 30. Rings now render via drawable levels on all supported versions.
+- **Widget Taps Fixed**: Next Prayer tap (and its empty-state CTA) no longer lands on the 404 page (`/prayers` → dashboard redirect); Quran Progress tap opens the Quran progress page (`/quran/reading` redirect).
+- **In-App Tasbeeh Syncs to the Widget**: Fixed an event-name mismatch (`noorconnect:tasbeeh-changed` was never dispatched; the real event is `tasbeeh-updated`) — tasbeeh counted in-app now updates the home-screen widget instantly instead of only widget-side taps counting.
+- **Accent Colors Work**: The configure screen's accent pick is now applied to widget accent text, and the previously missing Amber / Blue / Purple / Teal / Red palettes were added for light and dark themes.
+- **No Silent Sync Drops**: Prayer data with any missing time is now explicitly rejected with a warning instead of being filtered into a payload that the native validator silently dropped.
+- **Dead Code Removed**: Unused throttle helpers, duplicate step-detection registration, and inert manifest meta-data cleaned out.
+
 ### 📻 Live Streams — Migrated to Official SBA CDN
 - Replaced dead `m.live.net.sa` Wowza streams (404) and CORS-blocked Aloula CDN redirects with official SBA streams via **Globecast/Akamai CDN** (HTTPS, CORS-enabled globally).
 - Unified platform URLs — both native Android and web use the same HTTPS endpoint. No more cleartext HTTP exceptions.
