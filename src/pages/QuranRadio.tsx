@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Radio, Play, Pause, BarChart3, Search, X,
   Pin, PinOff, Landmark, Moon, BookOpen, BookMarked, Headphones,
-  Globe, Sparkles, Scale, Star
+  Globe, Sparkles, Scale, Star, type LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { radioStations, type RadioStation } from "@/data/radio-stations";
 import { extraRadioStations, type RadioCategory } from "@/data/radio-stations-extra";
@@ -70,6 +69,51 @@ const loadPinned = (): Set<string> => {
   return new Set();
 };
 
+/* ── Shared micro-components ─────────────────────────────────── */
+
+/** Staggered opacity-pulse bars (GPU-only). Static + dimmed when paused. */
+const Equalizer = ({ playing, className = "" }: { playing: boolean; className?: string }) => (
+  <span className={`flex items-end gap-[3px] h-3.5 ${className}`} aria-hidden="true">
+    {[0, 150, 300, 450].map((d) => (
+      <span
+        key={d}
+        className={`w-[3px] rounded-full bg-current ${playing ? "animate-pulse motion-reduce:animate-none" : "opacity-40"}`}
+        style={{ height: playing ? undefined : "45%", animationDelay: `${d}ms` }}
+      />
+    ))}
+  </span>
+);
+
+const initialsOf = (name: string, nameEn: string): string => {
+  const en = nameEn.trim();
+  if (en) {
+    const parts = en.split(/\s+/).filter(Boolean).slice(0, 2);
+    const letters = parts.map((p) => p[0]).join("");
+    if (letters) return letters.toUpperCase();
+  }
+  const cleaned = name.replace(/إذاعة|أذاعة|راديو|إسلامي/gi, "").trim();
+  return cleaned ? Array.from(cleaned).slice(0, 2).join(" ") : "?";
+};
+
+const avatarPalette = [
+  "from-emerald-600 to-teal-800", "from-sky-600 to-blue-800", "from-violet-600 to-purple-800",
+  "from-rose-600 to-pink-800", "from-amber-600 to-orange-800", "from-teal-600 to-cyan-800",
+  "from-indigo-600 to-blue-800", "from-pink-600 to-rose-800",
+];
+
+const avatarGradient = (url: string): string => {
+  let h = 0;
+  for (let i = 0; i < url.length; i++) h = (h * 31 + url.charCodeAt(i)) >>> 0;
+  return avatarGradientSafe(h % avatarPalette.length);
+};
+
+// Kept separate so palette edits never produce an out-of-range index.
+function avatarGradientSafe(i: number): string {
+  return avatarPalette[i] ?? avatarPalette[0];
+}
+
+/* ── Page ────────────────────────────────────────────────────── */
+
 const QuranRadio = () => {
   const navigate = useNavigate();
   const globalRadio = useGlobalRadio();
@@ -78,8 +122,7 @@ const QuranRadio = () => {
   const [activeCategory, setActiveCategory] = useState<RadioCategory | "all">("all");
   const [pinned, setPinned] = useState<Set<string>>(loadPinned);
 
-  // Optimistic tap feedback: the station the user just started, cleared once
-  // playback begins (or after a timeout so it never sticks on failure).
+  // Optimistic tap feedback: cleared once playback begins (or timeout).
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -88,18 +131,21 @@ const QuranRadio = () => {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
-    };
+  useEffect(() => () => {
+    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
   }, []);
 
-  // Clear pending indicator as soon as the tapped station actually plays…
   useEffect(() => {
     if (pendingUrl && globalRadio.isPlaying && globalRadio.currentStation?.url === pendingUrl) {
       setPendingUrl(null);
     }
   }, [globalRadio.isPlaying, globalRadio.currentStation?.url, pendingUrl]);
+
+  const markPending = useCallback((url: string) => {
+    setPendingUrl(url);
+    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+    pendingTimerRef.current = setTimeout(() => setPendingUrl(null), 6000);
+  }, []);
 
   const togglePin = useCallback((station: StationView) => {
     setPinned((prev) => {
@@ -131,58 +177,62 @@ const QuranRadio = () => {
     [pinned]
   );
   const categories = useMemo(
-    () =>
-      Object.keys(CATEGORY_LABELS) as RadioCategory[],
+    () => Object.keys(CATEGORY_LABELS) as RadioCategory[],
     []
   );
 
   const handleStationSelect = useCallback((station: StationView) => {
-    // If clicking on the currently playing station, toggle play/pause
     if (globalRadio.currentStation?.url === station.url) {
       if (globalRadio.isPlaying) {
         globalRadio.pauseRadio();
       } else {
-        setPendingUrl(station.url);
-        if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
-        pendingTimerRef.current = setTimeout(() => setPendingUrl(null), 6000);
-        globalRadio.playRadio({
-          id: station.id,
-          name: station.name,
-          url: station.url
-        });
+        markPending(station.url);
+        globalRadio.playRadio({ id: station.id, name: station.name, url: station.url });
       }
       return;
     }
-
-    // Play new station using global radio
-    setPendingUrl(station.url);
-    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
-    pendingTimerRef.current = setTimeout(() => setPendingUrl(null), 6000);
-    globalRadio.playRadio({
-      id: station.id,
-      name: station.name,
-      url: station.url
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    markPending(station.url);
+    globalRadio.playRadio({ id: station.id, name: station.name, url: station.url });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable lib actions only
   }, [globalRadio.currentStation?.url, globalRadio.isPlaying, globalRadio.playRadio, globalRadio.pauseRadio]);
+
+  /** Hero button: pause if playing, resume last station, or start the top featured one. */
+  const handleHeroPlay = useCallback(() => {
+    if (globalRadio.isPlaying && globalRadio.currentStation) {
+      globalRadio.pauseRadio();
+      return;
+    }
+    const target =
+      globalRadio.currentStation ??
+      (featuredStations[0]
+        ? { id: featuredStations[0].id, name: featuredStations[0].name, url: featuredStations[0].url }
+        : null);
+    if (target) {
+      markPending(target.url);
+      globalRadio.playRadio(target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable lib actions only
+  }, [globalRadio.isPlaying, globalRadio.currentStation, globalRadio.playRadio, markPending]);
 
   const isCurrentStation = useCallback(
     (station: StationView) => globalRadio.currentStation?.url === station.url,
     [globalRadio.currentStation?.url]
   );
 
+  const heroPlaying = globalRadio.isPlaying;
+
   return (
     <div className="min-h-screen bg-background pb-32">
-      {/* Header */}
+      {/* ── Functional sticky bar ── */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground">Quran Radio</h1>
-              <p className="text-sm text-muted-foreground">Live Quran recitation 24/7</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-foreground leading-tight">Quran Radio</h1>
+              <p className="text-xs text-muted-foreground">Live Quran recitation 24/7</p>
             </div>
             <Button variant="ghost" size="icon" onClick={() => navigate("/radio-stats")} className="rounded-full">
               <BarChart3 className="w-5 h-5" />
@@ -190,13 +240,13 @@ const QuranRadio = () => {
           </div>
 
           {/* Search */}
-          <div className="mt-3 relative">
+          <div className="mt-2.5 relative">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search reciter or station…"
-              className="ps-9 pe-9"
+              className="ps-9 pe-9 h-10 rounded-full"
               aria-label="Search reciter or station"
             />
             {search && (
@@ -211,94 +261,142 @@ const QuranRadio = () => {
           </div>
 
           {/* Category chips */}
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-4 px-4" role="tablist" aria-label="Station categories">
-            <button
-              onClick={() => setActiveCategory("all")}
-              role="tab"
-              aria-selected={activeCategory === "all"}
-              className={`shrink-0 min-h-[40px] px-4 rounded-full text-xs font-semibold transition-colors ${
-                activeCategory === "all"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-primary/10"
-              }`}
-            >
-              All
-            </button>
+          <div className="mt-2.5 flex gap-2 overflow-x-auto pb-1.5 -mx-4 px-4" role="tablist" aria-label="Station categories">
+            <Chip active={activeCategory === "all"} onClick={() => setActiveCategory("all")}>All</Chip>
             {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                role="tab"
-                aria-selected={activeCategory === cat}
-                className={`shrink-0 min-h-[40px] px-4 rounded-full text-xs font-semibold transition-colors ${
-                  activeCategory === cat
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-primary/10"
-                }`}
-              >
+              <Chip key={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)}>
                 {CATEGORY_LABELS[cat]}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 pt-5 pb-6">
         {isLoading ? (
-          <GridSkeleton />
+          <PageSkeleton />
         ) : (
           <>
-            {/* Featured */}
-            <section className="mb-8">
-              <SectionTitle icon={<Star className="w-5 h-5 text-primary" />} title="Featured Reciters" />
-              <StationGrid
-                stations={featuredStations}
-                pinned={pinned}
-                pendingUrl={pendingUrl}
-                isCurrentStation={isCurrentStation}
-                isPlaying={globalRadio.isPlaying}
-                onSelect={handleStationSelect}
-                onTogglePin={togglePin}
-              />
+            {/* ── Hero banner ── */}
+            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-950 text-white shadow-lg mb-6">
+              {/* Full-cover sheen — static gradient, no filters */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" aria-hidden="true" />
+
+              <div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
+                <div className="min-w-0">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/15 border border-white/25">
+                    <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
+                    Live
+                  </span>
+                  <h2 className="mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
+                    Listen to the Quran,
+                    <br />
+                    <span className="text-emerald-200">anytime.</span>
+                  </h2>
+                  <p className="mt-1.5 text-sm text-white/70" lang="ar" dir="rtl">
+                    بث مباشر على مدار الساعة
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleHeroPlay}
+                  aria-label={heroPlaying ? "Pause radio" : "Start listening"}
+                  className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full bg-white text-emerald-700 flex items-center justify-center shadow-xl transition-transform duration-150 active:scale-95 motion-safe:hover:scale-105"
+                >
+                  {heroPlaying
+                    ? <Pause className="w-7 h-7 md:w-8 md:h-8 fill-current" aria-hidden="true" />
+                    : <Play className="w-7 h-7 md:w-8 md:h-8 fill-current ms-1" aria-hidden="true" />}
+                </button>
+              </div>
             </section>
 
-            {/* Pinned */}
-            {pinnedStations.length > 0 && (
-              <section className="mb-8">
-                <SectionTitle icon={<Pin className="w-5 h-5 text-primary" />} title={`Pinned Stations (${pinnedStations.length})`} />
-                <StationGrid
-                  stations={pinnedStations}
-                  pinned={pinned}
-                  pendingUrl={pendingUrl}
-                  isCurrentStation={isCurrentStation}
-                  isPlaying={globalRadio.isPlaying}
-                  onSelect={handleStationSelect}
-                  onTogglePin={togglePin}
-                />
+            {/* ── Now playing strip ── */}
+            {globalRadio.currentStation && (
+              <section className="mb-6 flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 px-3 py-2.5">
+                <span className="shrink-0 w-9 h-9 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+                  <Equalizer playing={globalRadio.isPlaying} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                    {globalRadio.isPlaying ? "Now Playing" : "Paused"}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground truncate" lang="ar">
+                    {globalRadio.currentStation.name}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full shrink-0"
+                  onClick={handleHeroPlay}
+                  aria-label={globalRadio.isPlaying ? "Pause" : "Play"}
+                >
+                  {globalRadio.isPlaying
+                    ? <Pause className="w-5 h-5" />
+                    : <Play className="w-5 h-5 ms-0.5" />}
+                </Button>
               </section>
             )}
 
-            {/* All Stations */}
-            <section>
-              <SectionTitle
-                icon={<Radio className="w-5 h-5 text-primary" />}
-                title={`All Stations (${filtered.length})`}
-              />
-              {filtered.length === 0 ? (
-                <EmptyState />
-              ) : (
-                <StationGrid
-                  stations={filtered}
-                  pinned={pinned}
-                  pendingUrl={pendingUrl}
-                  isCurrentStation={isCurrentStation}
-                  isPlaying={globalRadio.isPlaying}
+            {/* ── Featured carousel ── */}
+            <SectionHeader icon={Star} title="Featured Reciters" count={featuredStations.length} />
+            <div
+              className="-mx-4 px-4 pb-2 flex gap-3 overflow-x-auto"
+              style={{ scrollSnapType: "x mandatory" }}
+              role="list"
+              aria-label="Featured reciters"
+            >
+              {featuredStations.map((station) => (
+                <FeaturedTile
+                  key={station.url}
+                  station={station}
+                  isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
+                  isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
                   onSelect={handleStationSelect}
-                  onTogglePin={togglePin}
                 />
-              )}
-            </section>
+              ))}
+            </div>
+
+            {/* ── Pinned rows ── */}
+            {pinnedStations.length > 0 && (
+              <>
+                <SectionHeader icon={Pin} title="Pinned" count={pinnedStations.length} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                  {pinnedStations.map((station) => (
+                    <PinnedRow
+                      key={station.url}
+                      station={station}
+                      isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
+                      isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
+                      onSelect={handleStationSelect}
+                      onTogglePin={togglePin}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* ── All stations ── */}
+            <SectionHeader icon={Radio} title="All Stations" count={filtered.length} />
+            {filtered.length === 0 ? (
+              <EmptyState
+                hasFilters={!!search || activeCategory !== "all"}
+                onClear={() => { setSearch(""); setActiveCategory("all"); }}
+              />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="All stations">
+                {filtered.map((station) => (
+                  <StationTile
+                    key={station.url}
+                    station={station}
+                    isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
+                    isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
+                    onSelect={handleStationSelect}
+                    onTogglePin={togglePin}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -306,72 +404,65 @@ const QuranRadio = () => {
   );
 };
 
-const SectionTitle = ({ icon, title }: { icon: React.ReactNode; title: string }) => (
-  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-    {icon}
-    {title}
-  </h2>
+/* ── Building blocks ─────────────────────────────────────────── */
+
+const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
+  <button
+    onClick={onClick}
+    role="tab"
+    aria-selected={active}
+    className={`shrink-0 min-h-[38px] px-4 rounded-full text-xs font-semibold transition-colors ${
+      active
+        ? "bg-primary text-primary-foreground shadow-sm"
+        : "bg-muted text-muted-foreground hover:bg-primary/10"
+    }`}
+  >
+    {children}
+  </button>
 );
 
-const EmptyState = () => (
-  <div className="text-center py-12 text-muted-foreground">
-    <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
-      <Radio className="w-6 h-6 text-muted-foreground/70" />
-    </div>
-    <p className="text-lg font-semibold">No stations found</p>
-    <p className="text-sm mt-1">Try a different search or category.</p>
+const SectionHeader = ({ icon: Icon, title, count }: { icon: LucideIcon; title: string; count?: number }) => (
+  <div className="flex items-center gap-2.5 mt-8 mb-3 first:mt-0">
+    <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+      <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
+    </span>
+    <h2 className="text-base md:text-lg font-bold text-foreground">{title}</h2>
+    {typeof count === "number" && (
+      <span className="px-2 py-0.5 rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">
+        {count}
+      </span>
+    )}
   </div>
 );
 
-const GridSkeleton = () => (
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    {Array.from({ length: 8 }).map((_, i) => (
-      <div key={i} className="aspect-square relative overflow-hidden rounded-2xl bg-muted animate-pulse">
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/30 to-transparent">
-          <div className="h-4 w-3/4 bg-muted-foreground/30 rounded mb-1" />
-          <div className="h-3 w-1/2 bg-muted-foreground/20 rounded" />
-        </div>
-      </div>
-    ))}
-  </div>
-);
+/* ── Artwork resolution (shared by tiles & rows) ─────────────── */
 
-interface StationGridProps {
-  stations: StationView[];
-  pinned: Set<string>;
-  pendingUrl: string | null;
-  isCurrentStation: (s: StationView) => boolean;
-  isPlaying: boolean;
-  onSelect: (s: StationView) => void;
-  onTogglePin: (s: StationView) => void;
-}
+const StationArtwork: React.FC<{ station: StationView; className?: string }> = ({ station }) => {
+  const [imageError, setImageError] = useState(false);
+  const showPhoto = station.category === "reciter" && !!station.img && !imageError;
 
-const StationGrid: React.FC<StationGridProps> = ({ stations, pinned, pendingUrl, isCurrentStation, isPlaying, onSelect, onTogglePin }) => (
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    {stations.map((station) => (
-      <StationCard
-        key={station.url}
-        station={station}
-        isPinned={pinned.has(station.url)}
-        isPlaying={isCurrentStation(station) && isPlaying}
-        isPending={isCurrentStation(station) ? !isPlaying && pendingUrl === station.url : pendingUrl === station.url}
-        onSelect={onSelect}
-        onTogglePin={onTogglePin}
+  if (showPhoto) {
+    return (
+      <img
+        src={station.img}
+        alt=""
+        loading="lazy"
+        className="w-full h-full object-cover"
+        onError={() => setImageError(true)}
       />
-    ))}
-  </div>
-);
+    );
+  }
+  if (station.category === "reciter") {
+    return (
+      <div className={`w-full h-full bg-gradient-to-br ${avatarGradient(station.url)} flex items-center justify-center`}>
+        <span className="text-2xl font-bold text-white/95">{initialsOf(station.name, station.nameEn)}</span>
+      </div>
+    );
+  }
+  return <CategoryArt category={station.category} id={station.id} />;
+};
 
-interface StationCardProps {
-  station: StationView;
-  isPinned: boolean;
-  isPlaying: boolean;
-  isPending: boolean;
-  onSelect: (station: StationView) => void;
-  onTogglePin: (station: StationView) => void;
-}
-
-// Themed icon per category (non-reciter stations).
+/* Themed icon per category (non-reciter stations). */
 const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ category, id }) => {
   const styles: Record<string, string> = {
     mosque: "from-emerald-500 to-teal-700",
@@ -387,23 +478,22 @@ const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ catego
     biography: "from-teal-400 to-emerald-700",
   };
   const iconMap: Record<string, React.ReactNode> = {
-    mosque: <Landmark className="w-10 h-10 text-white/90" />,
-    eid: <Moon className="w-10 h-10 text-white/90" />,
-    ruqyah: <BookOpen className="w-10 h-10 text-white/90" />,
-    tafsir: <BookMarked className="w-10 h-10 text-white/90" />,
-    hadith: <Headphones className="w-10 h-10 text-white/90" />,
-    translation: <Globe className="w-10 h-10 text-white/90" />,
-    stories: <Sparkles className="w-10 h-10 text-white/90" />,
-    fatwa: <Scale className="w-10 h-10 text-white/90" />,
-    adhkar: <Sparkles className="w-10 h-10 text-white/90" />,
+    mosque: <Landmark className="w-9 h-9 text-white/90" />,
+    eid: <Moon className="w-9 h-9 text-white/90" />,
+    ruqyah: <BookOpen className="w-9 h-9 text-white/90" />,
+    tafsir: <BookMarked className="w-9 h-9 text-white/90" />,
+    hadith: <Headphones className="w-9 h-9 text-white/90" />,
+    translation: <Globe className="w-9 h-9 text-white/90" />,
+    stories: <Sparkles className="w-9 h-9 text-white/90" />,
+    fatwa: <Scale className="w-9 h-9 text-white/90" />,
+    adhkar: <Sparkles className="w-9 h-9 text-white/90" />,
   };
 
-  // Surah-specific: show Arabic-Indic surah number in calligraphic style.
   if (category === "surah") {
     const surahNum = id === 115 ? "٢" : id === 109060 ? "٦٧" : "۩";
     return (
       <div className={`w-full h-full bg-gradient-to-br ${styles.surah} flex items-center justify-center`}>
-        <span className="text-5xl font-bold text-white/95 leading-none" style={{ fontFamily: "serif" }}>
+        <span className="text-4xl font-bold text-white/95 leading-none" style={{ fontFamily: "serif" }}>
           {surahNum}
         </span>
       </div>
@@ -412,38 +502,21 @@ const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ catego
 
   return (
     <div className={`w-full h-full bg-gradient-to-br ${styles[category] || styles.mosque} flex items-center justify-center`}>
-      {iconMap[category] || <Radio className="w-10 h-10 text-white/90" />}
+      {iconMap[category] || <Radio className="w-9 h-9 text-white/90" />}
     </div>
   );
 };
 
-const initialsOf = (name: string, nameEn: string): string => {
-  const en = nameEn.trim();
-  if (en) {
-    const parts = en.split(/\s+/).filter(Boolean).slice(0, 2);
-    const letters = parts.map((p) => p[0]).join("");
-    if (letters) return letters.toUpperCase();
-  }
-  const cleaned = name.replace(/إذاعة|أذاعة|راديو|إسلامي/gi, "").trim();
-  return cleaned ? Array.from(cleaned).slice(0, 2).join(" ") : "?";
-};
+/* ── Featured carousel tile ──────────────────────────────────── */
 
-const avatarPalette = [
-  "bg-emerald-600", "bg-sky-600", "bg-violet-600", "bg-rose-600",
-  "bg-amber-600", "bg-teal-600", "bg-indigo-600", "bg-pink-600",
-];
+interface TileProps {
+  station: StationView;
+  isPlaying: boolean;
+  isPending: boolean;
+  onSelect: (s: StationView) => void;
+}
 
-const avatarColor = (url: string): string => {
-  let h = 0;
-  for (let i = 0; i < url.length; i++) h = (h * 31 + url.charCodeAt(i)) >>> 0;
-  return avatarPalette[h % avatarPalette.length];
-};
-
-const StationCard = memo<StationCardProps>(({ station, isPinned, isPlaying, isPending, onSelect, onTogglePin }) => {
-  const [imageError, setImageError] = useState(false);
-
-  const showPhoto = station.category === "reciter" && !!station.img && !imageError;
-
+const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect }) => {
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -452,100 +525,233 @@ const StationCard = memo<StationCardProps>(({ station, isPinned, isPlaying, isPe
   }, [onSelect, station]);
 
   return (
-    <Card
-      role="button"
-      tabIndex={0}
-      aria-label={`${isPlaying ? "Pause" : "Play"} ${station.nameEn || station.name}`}
-      className={`group relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-[transform,box-shadow] duration-200 motion-safe:hover:-translate-y-0.5 ${isPlaying
-        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
-        : ''
-        }`}
+    <button
       onClick={() => onSelect(station)}
       onKeyDown={handleKeyDown}
+      role="listitem"
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${station.nameEn || station.name}`}
+      style={{ scrollSnapAlign: "start" }}
+      className={`relative shrink-0 w-44 h-44 md:w-52 md:h-52 rounded-3xl overflow-hidden text-start shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-[transform,box-shadow] duration-200 motion-safe:hover:-translate-y-1 ${
+        isPlaying ? "ring-2 ring-primary shadow-lg" : ""
+      }`}
     >
-      {/* Station Image / Art */}
-      <div className="aspect-square relative overflow-hidden">
-        {showPhoto ? (
-          <img
-            src={station.img}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-200 motion-safe:group-hover:scale-105"
-            onError={() => setImageError(true)}
-          />
-        ) : station.category === "reciter" ? (
-          <InitialsAvatar name={station.name} nameEn={station.nameEn} url={station.url} />
+      <StationArtwork station={station} />
+      {/* Static scrim so overlaid text always reads (no filters) */}
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" aria-hidden="true" />
+
+      {isPlaying ? (
+        <span className="absolute top-2.5 end-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
+          <Equalizer playing className="h-2.5 [&>span]:w-[2px]" />
+          Live
+        </span>
+      ) : isPending ? (
+        <span className="absolute top-2.5 end-2.5 w-7 h-7 rounded-full bg-black/60 border border-white/25 flex items-center justify-center" aria-hidden="true">
+          <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin motion-reduce:animate-none" />
+        </span>
+      ) : null}
+
+      {/* Play affordance — always visible */}
+      <span
+        className={`absolute bottom-2.5 end-2.5 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-opacity duration-200 ${
+          isPlaying
+            ? "bg-primary text-primary-foreground border-primary/60 opacity-100"
+            : "bg-black/55 border-white/25 text-white opacity-85"
+        }`}
+        aria-hidden="true"
+      >
+        {isPending ? (
+          <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none" />
+        ) : isPlaying ? (
+          <Pause className="w-4 h-4 fill-current" />
         ) : (
-          <CategoryArt category={station.category} id={station.id} />
+          <Play className="w-4 h-4 fill-current ms-0.5" />
         )}
+      </span>
 
-        {/* Subtle desktop hover scrim only (never blocks the art on touch) */}
-        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none max-md:hidden" />
-
-        {/* Pin button — 36px visual, ~48px hit area via inset span */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePin(station);
-          }}
-          aria-label={isPinned ? "Unpin station" : "Pin station"}
-          className="absolute top-2 start-2 z-10 w-9 h-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center hover:bg-black/70 active:scale-95 transition-colors"
-        >
-          <span className="absolute -inset-1.5" aria-hidden="true" />
-          {isPinned ? (
-            <Pin className="w-4 h-4 text-primary fill-primary" />
-          ) : (
-            <PinOff className="w-4 h-4 text-white" />
-          )}
-        </button>
-
-        {/* Play / Pause / Loading badge — always visible (touch has no hover),
-            bottom-end corner like standard audio list rows. Opacity-only motion. */}
-        <div
-          className={`absolute bottom-2 end-2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-opacity duration-200 ${
-            isPlaying
-              ? 'bg-primary text-primary-foreground border-primary/60 opacity-100'
-              : 'bg-black/55 border-white/20 text-white opacity-80 group-hover:opacity-100'
-            }`}
-        >
-          {isPending ? (
-            <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" aria-hidden="true" />
-          ) : isPlaying ? (
-            <Pause className="w-4 h-4 fill-current" aria-hidden="true" />
-          ) : (
-            <Play className="w-4 h-4 fill-current ms-0.5" aria-hidden="true" />
-          )}
-        </div>
-
-        {/* Now Playing Indicator */}
-        {isPlaying && (
-          <div className="absolute top-2 end-2">
-            <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium">
-              <div className="flex gap-0.5" aria-hidden="true">
-                <div className="w-1 h-3 bg-current rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-1 h-3 bg-current rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-1 h-3 bg-current rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
-              </div>
-              Playing
-            </div>
-          </div>
+      <span className="absolute bottom-0 inset-x-0 p-3 pe-12 pointer-events-none">
+        <span className="block text-sm font-bold text-white leading-snug line-clamp-2" lang="ar">
+          {station.name}
+        </span>
+        {station.nameEn && (
+          <span className="block text-[11px] text-white/70 line-clamp-1 mt-0.5">{station.nameEn}</span>
         )}
-      </div>
-
-      {/* Station Name */}
-      <div className="p-3 text-center">
-        <h3 className="font-semibold text-sm line-clamp-2 leading-tight" lang="ar">{station.name}</h3>
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-          {station.nameEn || "Islamic Radio"}
-        </p>
-      </div>
-    </Card>
+      </span>
+    </button>
   );
 });
 
-const InitialsAvatar: React.FC<{ name: string; nameEn: string; url: string }> = ({ name, nameEn, url }) => (
-  <div className={`w-full h-full ${avatarColor(url)} flex items-center justify-center`}>
-    <span className="text-3xl font-bold text-white/95">{initialsOf(name, nameEn)}</span>
+/* ── Pinned compact row ──────────────────────────────────────── */
+
+interface PinnedRowProps extends TileProps {
+  onTogglePin: (s: StationView) => void;
+}
+
+const PinnedRow = memo<PinnedRowProps>(({ station, isPlaying, isPending, onSelect, onTogglePin }) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onSelect(station);
+    }
+  }, [onSelect, station]);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${station.nameEn || station.name}`}
+      onClick={() => onSelect(station)}
+      onKeyDown={handleKeyDown}
+      className={`flex items-center gap-3 rounded-2xl border bg-card p-2 pe-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors duration-150 hover:bg-muted/60 ${
+        isPlaying ? "border-primary/50 bg-primary/5" : "border-border"
+      }`}
+    >
+      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+        <StationArtwork station={station} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground truncate" lang="ar">{station.name}</p>
+        <p className="text-[11px] text-muted-foreground truncate">{station.nameEn || "Islamic Radio"}</p>
+      </div>
+
+      <span
+        className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border ${
+          isPlaying ? "bg-primary text-primary-foreground border-primary/60" : "bg-muted border-transparent text-foreground"
+        }`}
+        aria-hidden="true"
+      >
+        {isPending ? (
+          <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none" />
+        ) : isPlaying ? (
+          <Pause className="w-3.5 h-3.5 fill-current" />
+        ) : (
+          <Play className="w-3.5 h-3.5 fill-current ms-0.5" />
+        )}
+      </span>
+
+      <button
+        onClick={(e) => { e.stopPropagation(); onTogglePin(station); }}
+        aria-label="Unpin station"
+        className="relative shrink-0 w-8 h-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors"
+      >
+        <span className="absolute -inset-1" aria-hidden="true" />
+        <PinOff className="w-4 h-4" />
+      </button>
+    </div>
+  );
+});
+
+/* ── All-stations grid tile ──────────────────────────────────── */
+
+interface GridTileProps extends TileProps {
+  onTogglePin: (s: StationView) => void;
+}
+
+const StationTile = memo<GridTileProps>(({ station, isPlaying, isPending, onSelect, onTogglePin }) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onSelect(station);
+    }
+  }, [onSelect, station]);
+
+  return (
+    <button
+      onClick={() => onSelect(station)}
+      onKeyDown={handleKeyDown}
+      role="listitem"
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${station.nameEn || station.name}`}
+      className={`group relative aspect-square rounded-3xl overflow-hidden text-start shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-[transform,box-shadow] duration-200 motion-safe:hover:-translate-y-1 ${
+        isPlaying ? "ring-2 ring-primary shadow-lg" : ""
+      }`}
+    >
+      <StationArtwork station={station} />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" aria-hidden="true" />
+
+      {/* Pin — 36px visual, ~44px hit area */}
+      <span
+        onClick={(e) => { e.stopPropagation(); onTogglePin(station); }}
+        role="button"
+        tabIndex={-1}
+        aria-label={isPlaying ? undefined : "Pin station"}
+        className="absolute top-2 start-2 z-10 w-9 h-9 rounded-full bg-black/45 flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity"
+      >
+        <Pin className={`w-4 h-4 ${isPlaying ? "text-primary fill-primary" : "text-white"}`} />
+      </span>
+
+      {isPlaying ? (
+        <span className="absolute top-2 end-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
+          <Equalizer playing className="[&>span]:w-[2px]" />
+        </span>
+      ) : isPending ? (
+        <span className="absolute top-2 end-2" aria-hidden="true">
+          <span className="block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin motion-reduce:animate-none" />
+        </span>
+      ) : null}
+
+      {/* Play affordance — always visible */}
+      <span
+        className={`absolute bottom-2 end-2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-opacity duration-200 ${
+          isPlaying
+            ? "bg-primary text-primary-foreground border-primary/60"
+            : "bg-black/55 border-white/25 text-white opacity-85 group-hover:opacity-100"
+        }`}
+        aria-hidden="true"
+      >
+        {isPending ? (
+          <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none" />
+        ) : isPlaying ? (
+          <Pause className="w-4 h-4 fill-current" />
+        ) : (
+          <Play className="w-4 h-4 fill-current ms-0.5" />
+        )}
+      </span>
+
+      <span className="absolute bottom-0 inset-x-0 p-2.5 pe-12 pointer-events-none">
+        <span className="block text-sm font-bold text-white leading-snug line-clamp-2" lang="ar">
+          {station.name}
+        </span>
+        <span className="block text-[11px] text-white/65 line-clamp-1 mt-0.5">
+          {station.nameEn || "Islamic Radio"}
+        </span>
+      </span>
+    </button>
+  );
+});
+
+/* ── Empty state ─────────────────────────────────────────────── */
+
+const EmptyState = ({ hasFilters, onClear }: { hasFilters: boolean; onClear: () => void }) => (
+  <div className="text-center py-14 rounded-3xl border border-dashed border-border">
+    <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
+      <Radio className="w-6 h-6 text-muted-foreground/70" aria-hidden="true" />
+    </div>
+    <p className="text-lg font-semibold text-foreground">No stations found</p>
+    <p className="text-sm text-muted-foreground mt-1">Try a different search or category.</p>
+    {hasFilters && (
+      <Button variant="outline" size="sm" className="mt-4 rounded-full" onClick={onClear}>
+        Clear filters
+      </Button>
+    )}
+  </div>
+);
+
+/* ── Skeleton matching the new layout ────────────────────────── */
+
+const PageSkeleton = () => (
+  <div className="animate-pulse motion-reduce:animate-none" aria-hidden="true">
+    <div className="h-36 md:h-44 rounded-3xl bg-muted mb-6" />
+    <div className="h-8 w-40 bg-muted rounded-lg mb-3" />
+    <div className="flex gap-3 overflow-hidden mb-8">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="shrink-0 w-44 h-44 md:w-52 md:h-52 rounded-3xl bg-muted" />
+      ))}
+    </div>
+    <div className="h-8 w-32 bg-muted rounded-lg mb-3" />
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="aspect-square rounded-3xl bg-muted" />
+      ))}
+    </div>
   </div>
 );
 
