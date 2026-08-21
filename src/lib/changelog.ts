@@ -31,7 +31,7 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
-    version: '2.2.3',
+    version: '2.2.1',
     date: '2026-08-22',
     title: 'Live Streams — Migrated to Official SBA CDN',
     changes: [
@@ -72,7 +72,7 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
       { type: 'improvement', description: 'Faster App Startup: The premium dashboard loads on demand, the weekly chart only loads on capable devices, and heavy background work (first auto-backup, daily hadith fetch) is deferred to idle time.' },
       { type: 'improvement', description: 'Smoother Low-End Devices: All blur effects are stripped on low-end devices, transitions animate only GPU-friendly properties instead of everything, layout FLIP animations were replaced with cheap fades, and the device animation benchmark runs once per session.' },
       { type: 'fix', description: 'Fixed timer & memory leaks: ebook download progress stops cleanly on failure, periodic notification checks can be fully stopped, and dead code was removed.' },
-      { type: 'fix', description: 'Live Streams Reliability: Replaced CORS-blocked Aloula CDN redirect URLs with m.live.net.sa HLS streams (later superseded by v2.2.3 — see above); automatic one-time fallback to the secondary source before showing a friendly error.' },
+      { type: 'fix', description: 'Live Streams Reliability: Replaced CORS-blocked Aloula CDN redirect URLs with m.live.net.sa HLS streams (later superseded by v2.2.1 — see above); automatic one-time fallback to the secondary source before showing a friendly error.' },
       { type: 'fix', description: 'Android Fullscreen Rendering: Native requestFullscreen + landscape orientation lock on Android, edge-to-edge 100vw/100vh container with safe-area insets, video sizing recalculated on resize/orientationchange with object-fit contain; 16:9 layout restored on exit.' },
       { type: 'improvement', description: 'Quality Selector Cleanup: Hidden automatically when the active stream exposes only a single quality level.' },
       { type: 'feature', description: 'Major usePrayerTimes Hook Rewrite: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new usePrayerNotifications hook with 1s throttle.' },

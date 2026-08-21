@@ -1,7 +1,7 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.2.3-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.2.1-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
 
@@ -30,7 +30,7 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ---
 
-## 🆕 What's New in v2.2.3
+## 🆕 What's New in v2.2.1
 
 ### 📱 Android Widgets — Stability, Deep-Links & Accent Colors
 - **Widgets No Longer Break on Android 8–11**: Removed `RemoteViews` reflection calls to `View.setRotation` (unsupported before Android 12) that made every Next Prayer / Quran Progress widget update fail with "Problem loading widget" on API ≤ 30. Rings now render via drawable levels on all supported versions.
@@ -48,126 +48,6 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ---
 
-## 📜 What's New in v2.2.0
-
-### ⚙️ Modular Settings Architecture & Android OOM Crash Elimination
-- **Legacy Android WebView OOM Resolution**: Replaced monolithic 1,600-line Settings component with a fast navigation index landing page (`/profile`) that defers state loading by 500ms, resolving Android WebView out-of-memory crashes on 2016-era low-end devices.
-- **12 Sub-Page Categories (`/settings/:sectionId`)**: Built lazy-loaded modular sub-pages for Theme, Haptics, Personal Info, Prayer Calculation, Notifications, Adhan & Sounds, Backup & Restore, Storage & Cache, Privacy, About, Support, and Developer Contact.
-- **Authentic Developer Contact & Crypto Support**: Restored verified WhatsApp, Portfolio, Gmail, ProtonMail links, and BTC/SOL/BNB donation addresses.
-
-### 🔔 Expanded Smart Notification Suite
-- **Pre-Fajr Tahajjud & Night Prayer**: Pre-Fajr reminders during the last third of the night.
-- **Salat al-Duha Alerts**: Mid-morning Duha prayer notification.
-- **Sunnah Fasting Reminders**: Automated Monday & Thursday Sunnah fasting notifications.
-- **Daily Quran Tilawat Goal**: Evening reminder to complete daily Quran recitation.
-- **Bedtime Sunnah Azkar**: Nightly Ayatul Kursi and protection dua reminders before sleep.
-
-### ⚡ Performance & Smoothness Optimization Pass
-- **Re-Render Churn Eliminated**: The dashboard clock no longer re-renders the whole app twice a second — the 30s global tick was replaced with a derived 60s update, countdown timers now share a subscriber-counted scheduler, and widget state updates are guarded so nothing re-renders when values haven't changed.
-- **Faster Long Lists**: Hadith books now load in pages of 300 with automatic infinite scroll instead of rendering every hadith at once; hadith cards, book cards, and radio station cards are memoized, and Tafsir / Names of Allah search is debounced with cached filtered results for smooth 60fps browsing.
-- **Faster App Startup**: The premium dashboard and weekly chart now load on demand (the chart only loads on capable devices), a dead chart component was removed, and heavy background work — the first auto-backup and the daily hadith fetch — is deferred to browser idle time so first paint happens sooner.
-- **Smoother Low-End Devices**: All blur/backdrop effects are now stripped on low-end devices, transitions animate only GPU-friendly properties (transform/opacity) instead of `all`, framer-motion layout FLIP animations were replaced with cheap fades, and the device animation benchmark runs once per session instead of on every screen.
-- **Timer & Memory Leaks Fixed**: Ebook download progress stops cleanly on failure, periodic notification checks are idempotent with a proper `stopPeriodicChecks()`, and dead code was removed.
-
-### 📱 Native Widget Reliability
-- **Quran Progress Widget Sync Fixed**: The widget now actually updates — the sync payload was missing its `lastUpdated` timestamp and was being silently rejected by validation on every push. Reading progress, streaks, and Ramadan goal data now reach the widget reliably.
-- **Daily Content No Longer Dropped**: With no hadith cache present, the fallback hadith had an empty source that failed validation and dropped the whole ayah + hadith update. Daily Ayah / Daily Hadith widgets now always receive content.
-- **Shared Service Lifecycle Fixed**: Removing one widget type no longer stops the shared foreground service (step detection + location monitoring) or prayer alarms while other widgets remain on the home screen — everything survives until the *last* widget is removed.
-- **DST Double-Shift Removed**: Prayer times are no longer shown one hour late in daylight-saving months — a manual DST adjustment was double-shifting the times and ignoring the widget's actual location timezone.
-- **Widget Times Match the App**: The app now pushes the exact parsed prayer times (previously an API string map was sent, which the payload builder silently dropped), so widgets show the same times as the in-app prayer panel.
-
-### 🎨 Native Widget Quality Pass — Light & Dark Theme Support
-- **Light + Dark Themes**: All five widgets now ship a full light palette (warm parchment) alongside the dark theme, with dedicated `values-night` / `values-night-v31` overrides — widgets gracefully switch appearance with the system theme on every Android version, and follow Material You dynamic color on Android 12+.
-- **System Corner Radius**: On Android 12+ widgets now use the platform-provided system widget radius instead of a hardcoded value, so their corners visually match the launcher and OEM surfaces.
-- **Reconfigurable on the Home Screen**: All five widgets now declare `widgetFeatures="reconfigurable"` — tap an existing widget to reconfigure it (size, theme, accent) without removing and re-adding it.
-- **Contrast & Readability Pass**: Accent and text colors darkened in both palettes (deeper emerald/gold, darker da'if-grade red) and the stale-data badge darkened, so every element clears WCAG AA contrast on light backgrounds.
-
-### 📻 Live Streams Reliability (v2.2.0 → v2.2.3)
-- **Fixed Broken Makkah & Madinah Streams**: The v2.2.0 fix (m.live.net.sa) stopped working when the Wowza server was decommissioned. v2.2.3 replaces both dead sources with official SBA streams via Globecast/Akamai CDN (HTTPS, CORS-enabled globally).
-- **Automatic Source Fallback**: If the primary Globecast stream fails, the player automatically switches to a secondary source once (Kwikmotion 1080p for Makkah) before showing a friendly error with Retry.
-- **Unified HTTPS**: No more cleartext HTTP or Android network security config exceptions — all streams are now served over HTTPS with full CORS support.
-- **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
-- **Quality Selector**: Quality picker hidden when the active stream only exposes a single quality level, keeping the controls clean.
-- **Source Info Cards**: In-player stream source info cards reflect the current SBA/Globecast/Akamai CDN source configuration.
-- **Android 14+ Crash Fix**: Replaced the adaptive app icon (rejected by Android 14+ strict notification validation) with a proper white-on-transparent vector drawable — fixes the `BadForegroundServiceNotificationException` crash in `WidgetForegroundService` and prevents the same crash in `AdhanPlaybackService` and `WidgetRefreshWorker`.
-
-### 📦 APK Size Optimization
-- **Mushaf Downscale**: All 606 mushaf images downscaled from full resolution to 810×1145 WebP (quality 75), reducing mushaf source from 83.9 MB → 56.6 MB.
-- **Hadith Gzip**: All 34 hadith JSON files compressed to `.json.gz` (95.4 MB → 19.8 MB, 79 MB saved), loaded via `DecompressionStream` with graceful fallback to plain JSON.
-- **Vite Duplicate Purge**: `clean-dist-data.js` strips all redundant `.br`/`.gz` files from dist (except intentional hadith `.json.gz`), reducing dist from 110 MB → 34.8 MB.
-- **Gradle Asset Optimization**: Android's `stripCompressedAssets` task removes vite-generated `.gz`/`.br` browser duplicates from APK assets; `moveMushafImages` task copies the downscaled mushaf from `public/mushaf` into the APK at build time.
-- **Final APK**: 94.4 MB (was ~97.4 MB), with all offline features intact (hadith gzip, mushaf images, audio).
-
----
-
-### 🕌 Major Prayer Times & Quran Refactor
-- **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
-- **Removed Standalone Mushaf Viewer**: Deleted the standalone `/mushaf` image-based viewer feature to streamline the app. The app now exclusively uses the vertical-scrolling `/quran` reader (which still utilizes the beautiful Madani Mushaf WebP images and integrates with recitation progress/streaks).
-- **GlobalPrayerAlarm Optimization**: localStorage caching skips redundant geolocation/API calls when today's times already cached; abort controller for clean fetch cancellation.
-
-### 🌸 Noor Cycle & Women's Wellness
-- **Smart Notifications**: Added highly contextual local nudges for Fertile Window tracking (15 days before predicted period) and a smart Qaza Fasting reminder (Sunday evening prompt to make up missed Ramadan fasts, if the user is in Tuhr).
-- **Major UI/UX Overhaul**: Transitioned the tracker from a sidebar layout to a fully mobile-optimized native Bottom Tab Bar, preventing layout overlaps.
-- **Health Tracking Integrations**: Built a daily Water Hydration Tracker (8 glasses) and a 1-10 Pain Scale logger directly into the Today and Log tabs.
-- **Deep System Integration**: Unified the `haidh-tracker-v2` engine. It now actively communicates with the broader app to automatically silence Prayer Notifications and halt Qaza (Missed Prayer) auto-syncing while a cycle is active.
-- **PIN Lock**: The Noor Cycle tracker is protected by a 4-digit PIN lock for privacy.
-- **PDF Doctor Report**: Export a cycle health report as a PDF for sharing with healthcare providers.
-- **Fiqh Guidance**: Madhab-based Islamic rules (Hanafi/Maliki/Shafi'i/Hanbali) for haidh, nifas, ghusl checklist, and istihadhah auto-detection.
-- **Log Confirmation UX**: "Log Today's Data" now shows a "Logged for {date}" confirmation card with a locked summary and a Modify Data button — no more ambiguous saves.
-- **Pain Scale Persistence**: Pain levels are now saved into the daily log record (survive tab switches and app restarts) instead of existing only in component state.
-- **Missed Fast Count Fix**: Turning off a missed fast now decrements the count instead of double-counting.
-- **Performance Optimizations**: Eliminated a heavy, GPU-bound `animate-pulse` effect on the Tuhr icon that was causing frame drops on legacy devices. Removed fragmented legacy state files.
-- **Islamic Wellness Library**: Curated Fiqh & Wellness articles added to the Islamic knowledge tab, covering nutrition, exercise, and mental health from an Islamic perspective.
-
-### 🎵 Nasheed Player Upgrades
-- **New Equalizer Component**: Animated audio visualizer with configurable bars, colors, heights, and animation timing.
-- **Offline Playback Cache**: Played nasheeds cached for offline listening (200 tracks, 90-day retention, quota-safe) with cache status indicators.
-- **Filter by Artist**: Quick artist-filter chips for browsing 400+ nasheed library.
-- **Back to Top**: Instant jump to top of long library lists.
-
-### ⚡ Performance & Core Web Vitals
-- **Added react-window & @types/react-window** for virtualized list support.
-- **Prayer Times Hook**: Race condition fixes (removed stale ref checks), `parseTime` throws on invalid input instead of returning current time.
-- **GlobalPrayerAlarm**: Module-level side effects moved to `useEffect`; event listener type safety fixed; missing cleanup listeners added.
-
-### 🛡️ Code Quality & Lint Fixes
-- **Resolved 12 lint errors**: 5 empty catch blocks (added non-critical comments), 1 `require()`→`import` conversion, 4 `@ts-ignore`→`@ts-expect-error` with descriptions, 1 parsing error (extra closing braces).
-- **Settings.tsx**: Fixed empty catch block (eslint error).
-- **TypeScript**: Stricter types in prayer times and alarm modules.
-
-### 🕌 Prayer Tracking & Qaza Fixes (from 2026-07-31)
-- **Critical Prayer Tracking Bridge**: `syncMissedPrayersToQaza()` moved from unused SalahTracker into Dashboard.tsx — missed prayers auto-detected and added to qaza from home screen.
-- **Dashboard Prayer Time Validation**: Check-in passes prayer times to `togglePrayer()`, showing "Cannot check in before prayer time" error instead of silently bypassing.
-- **Qaza History Centralized**: Moved to `qaza-tracker.ts` lib functions (`getQazaHistory`, `addQazaHistoryEntry`, `getQazaDailyGoal`, `setQazaDailyGoal`).
-- **Streak Reset on Foreground**: `visibilitychange` listener calls `checkStreakReset()` on app return, ensuring streaks reset correctly after days away.
-- **Hadith Collection Flash Fix**: `HadithBookView` initializes `metadataLoading` to `true`, checks `remoteCollectionData` for loading guard — eliminates "1 book" flash.
-
-### 🧹 Dead Code Cleanup
-- **Deleted Unused Components**: `SalahTracker.tsx` (205 lines), `PrayerTimesList.tsx` (451 lines), `EnhancedPrayerTimesList.tsx` (111 lines) — imported but never rendered.
-- **Dashboard Cleanup**: Removed unused lazy imports for `PrayerTimesList`, `SalahTracker`, `QazaTracker`.
-
-### 🌐 Complete Language & Translation Overhaul
-- **All 5 Languages Synchronized**: English, Arabic, Urdu, Bengali, Russian — 410 translation keys each (was 278-314 with 99-105 missing).
-- **Hardcoded English Strings Eliminated**: 20+ AppBar titles, BottomNav labels, DashboardFeatureCards now use `t()`.
-- **Locale-Aware Formatting**: `time-formatter.ts`, `useI18n.ts`, `widget-service.ts` respect selected language.
-- **RTL/Widget Sync Consistency**: Migrated to `useLanguage()` for proper RTL and widget string sync.
-- **Widget String Sync**: Android widgets receive translated prayer labels in all 5 languages.
-
-### 🔔 Intelligent Notification Engine
-- **Ghost Notification Fix**: Ramadan reminders (Suhoor, Iftar, Tarawih) no longer persist into other months — safety clear on-boot sweeps native OS buffer.
-- **Deterministic Scheduling**: Predictable ID mapping (`Suhoor: 2001`, `Iftar: 2002`) replaces random hashes for proper overwrite/cancel.
-- **Accurate Calendar Countdowns**: Async `islamicCalendarService` replaces deprecated tabular estimates.
-
-### 🛡️ Bulletproof Backup & Restore System
-- **Unified Backup Service**: Single `backup-service.ts` consolidates legacy systems — existing backups auto-migrated on first launch.
-- **Complete Data Capture**: All localStorage + Capacitor Preferences + e-book metadata, Seerah/Qisas/Hadith progress, quiz economy, sleep settings, global player states, Eid checklists.
-- **Always-On Auto Save**: Snapshot every 20 min of use + on app close; latest overwrites previous; offered back on reinstall.
-- **Google Cloud Backup Rules**: `backup_rules.xml` + `data_extraction_rules.xml` declare WebView storage and preferences for Android Auto Backup (caches excluded for 25MB limit).
-- **Real Export on Android**: Backup button opens system share sheet (save to Downloads, Drive, Files) — previously failed silently in WebView.
-- **First-Launch Restore Prompt**: Auto-detects previous data after reinstall, offers one-tap restore.
-- **Never Loses Data Silently**: Verifies integrity, warns on older-over-newer import, recovers partially from failures, reports in plain language.
-
----
 
 ## 🚀 **Nasheed Library (v2.2)**
 

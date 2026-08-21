@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [2.2.3] - 2026-08-22
+## [2.2.1] - 2026-08-22
 
 ### 📱 Android Widgets — Stability, Deep-Links & Accent Colors
 
@@ -57,7 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Timer & memory leaks fixed**: Ebook download progress interval cleared on failure; periodic notification checks made idempotent with tracked interval + removable listener + `stopPeriodicChecks()`; dead `PrayerCountdown` component deleted; animation tier benchmark runs once per session instead of on every consumer mount.
 
 ### 📻 Live Streams Reliability & Fullscreen Fixes
-- **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (rejected by browsers before playback starts) with `m.live.net.sa` HLS streams (later superseded by v2.2.3 — see above).
+- **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (rejected by browsers before playback starts) with `m.live.net.sa` HLS streams (later superseded by v2.2.1 — see above).
 - **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to a secondary source once before showing a friendly error with Retry.
 - **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
 - **Quality Selector Cleanup**: Quality picker hidden when the active stream only exposes a single quality level.
