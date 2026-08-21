@@ -32,8 +32,8 @@ export default function LiveStreams() {
             </div>
             <p className="text-xs font-bold text-foreground">Live Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Live from the Two Holy Mosques — Makkah (Al-Quran Al-Kareem) &amp; Madinah (As-Sunnah). Primary:
-              m.live.net.sa (CORS-enabled HLS, 720p). Fallback: Aloula CDN.
+              Live from the Two Holy Mosques — Makkah (Al-Quran Al-Kareem) &amp; Madinah (As-Sunnah).
+              Source: SBA via Globecast/Akamai CDN (HTTPS, global, CORS-enabled).
             </p>
           </div>
 
@@ -43,8 +43,8 @@ export default function LiveStreams() {
             </div>
             <p className="text-xs font-bold text-foreground">Auto Fallback</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              If the primary stream fails, it switches to the secondary source once, then shows a friendly
-              error with Retry. Android cleartext whitelist included.
+              If the primary stream fails, it switches to a secondary source once (Makkah only),
+              then shows a friendly error with Retry.
             </p>
           </div>
         </div>

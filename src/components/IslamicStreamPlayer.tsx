@@ -1,8 +1,8 @@
 ﻿/**
  * Islamic Stream Player — Premium Redesign
  * HLS streaming for Makkah & Madinah.
- * Uses hls.js (MIT License). Primary source m.live.net.sa, fallback Aloula CDN.
- * YouTube dependency removed for F-Droid compliance.
+ * Uses hls.js (MIT License). Primary: SBA/Globecast/Akamai CDN (HTTPS, CORS-enabled).
+ * Fallback: Kwikmotion 1080p for Makkah. YouTube removed for F-Droid compliance.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -53,11 +53,11 @@ export default function IslamicStreamPlayer() {
   const streamUrlsRef = useRef<Record<StreamLocation, { primary: string; fallback: string | null }>>({
     makkah: {
       primary: isNative ? FALLBACK_STREAMS.makkah?.nativeUrl || '' : FALLBACK_STREAMS.makkah?.webUrl || '',
-      fallback: isNative ? FALLBACK_STREAMS.makkah?.webUrl || null : null,
+      fallback: FALLBACK_STREAMS.makkah?.fallbackUrl || null,
     },
     madinah: {
       primary: isNative ? FALLBACK_STREAMS.madinah?.nativeUrl || '' : FALLBACK_STREAMS.madinah?.webUrl || '',
-      fallback: isNative ? FALLBACK_STREAMS.madinah?.webUrl || null : null,
+      fallback: FALLBACK_STREAMS.madinah?.fallbackUrl || null,
     },
   });
   const fallbackTriedRef = useRef<Record<StreamLocation, boolean>>({ makkah: false, madinah: false });

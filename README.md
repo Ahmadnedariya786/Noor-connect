@@ -1,7 +1,7 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.2.0-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.2.3-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
 
@@ -30,7 +30,17 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 
 ---
 
-## 🆕 What's New in v2.2.0
+## 🆕 What's New in v2.2.3
+
+### 📻 Live Streams — Migrated to Official SBA CDN
+- Replaced dead `m.live.net.sa` Wowza streams (404) and CORS-blocked Aloula CDN redirects with official SBA streams via **Globecast/Akamai CDN** (HTTPS, CORS-enabled globally).
+- Unified platform URLs — both native Android and web use the same HTTPS endpoint. No more cleartext HTTP exceptions.
+- Added Kwikmotion 1080p as automatic fallback for Makkah.
+- Removed `m.live.net.sa` from Android network security config.
+
+---
+
+## 📜 What's New in v2.2.0
 
 ### ⚙️ Modular Settings Architecture & Android OOM Crash Elimination
 - **Legacy Android WebView OOM Resolution**: Replaced monolithic 1,600-line Settings component with a fast navigation index landing page (`/profile`) that defers state loading by 500ms, resolving Android WebView out-of-memory crashes on 2016-era low-end devices.
@@ -64,16 +74,16 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **Reconfigurable on the Home Screen**: All five widgets now declare `widgetFeatures="reconfigurable"` — tap an existing widget to reconfigure it (size, theme, accent) without removing and re-adding it.
 - **Contrast & Readability Pass**: Accent and text colors darkened in both palettes (deeper emerald/gold, darker da'if-grade red) and the stale-data badge darkened, so every element clears WCAG AA contrast on light backgrounds.
 
-### 📻 Live Streams Reliability (Hotfix)
-- **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (which browsers reject before playback ever starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
-- **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.
-- **Android Cleartext Whitelist**: `m.live.net.sa` added to the network security config so the streams play on Android (cleartext HTTP on port 1935).
+### 📻 Live Streams Reliability (v2.2.0 → v2.2.3)
+- **Fixed Broken Makkah & Madinah Streams**: The v2.2.0 fix (m.live.net.sa) stopped working when the Wowza server was decommissioned. v2.2.3 replaces both dead sources with official SBA streams via Globecast/Akamai CDN (HTTPS, CORS-enabled globally).
+- **Automatic Source Fallback**: If the primary Globecast stream fails, the player automatically switches to a secondary source once (Kwikmotion 1080p for Makkah) before showing a friendly error with Retry.
+- **Unified HTTPS**: No more cleartext HTTP or Android network security config exceptions — all streams are now served over HTTPS with full CORS support.
 - **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
-- **Quality Selector Cleanup**: Quality picker is now hidden when the active stream only exposes a single quality level (the primary `m.live.net.sa` streams are single-variant 720p), keeping the controls clean.
-- **Source Info Cards Synced**: In-player stream source info cards updated to match the new `m.live.net.sa` primary + Aloula fallback configuration.
+- **Quality Selector**: Quality picker hidden when the active stream only exposes a single quality level, keeping the controls clean.
+- **Source Info Cards**: In-player stream source info cards reflect the current SBA/Globecast/Akamai CDN source configuration.
 - **Android 14+ Crash Fix**: Replaced the adaptive app icon (rejected by Android 14+ strict notification validation) with a proper white-on-transparent vector drawable — fixes the `BadForegroundServiceNotificationException` crash in `WidgetForegroundService` and prevents the same crash in `AdhanPlaybackService` and `WidgetRefreshWorker`.
 
-### 📦 APK Size Optimization (v2.2.0)
+### 📦 APK Size Optimization
 - **Mushaf Downscale**: All 606 mushaf images downscaled from full resolution to 810×1145 WebP (quality 75), reducing mushaf source from 83.9 MB → 56.6 MB.
 - **Hadith Gzip**: All 34 hadith JSON files compressed to `.json.gz` (95.4 MB → 19.8 MB, 79 MB saved), loaded via `DecompressionStream` with graceful fallback to plain JSON.
 - **Vite Duplicate Purge**: `clean-dist-data.js` strips all redundant `.br`/`.gz` files from dist (except intentional hadith `.json.gz`), reducing dist from 110 MB → 34.8 MB.
@@ -239,7 +249,7 @@ In partnership with **No Copyright Nasheed**, we're bringing the largest curated
 
 ### 📻 Rich Media & Islamic Library
 - **Hadith Encyclopedia (52K+)**: 16 complete collections with Arabic + English, color-coded grade badges (Sahih/Hasan/Da'if), bookmarks, daily hadith, full-text search, and page-by-page navigation. Infinite scroll loads 300 hadith at a time for smooth browsing. Uses gzip-compressed JSON for fast offline loading.
-- **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via CORS-enabled HLS (m.live.net.sa primary, Aloula CDN fallback) with automatic source-switching and friendly error handling. Android cleartext whitelist included.
+- **24/7 Quran Radio & Streams**: Direct live video and audio streams from Makkah and Madinah via official SBA Globecast/Akamai CDN (HTTPS, CORS-enabled globally) with automatic source fallback and friendly error handling.
 - **Quran Radio Station Catalog**: 200+ streaming stations (reciters, translations, tafsir, hadith, surah loops, adhkar, mosque mix, fatwa) with search, 9 category filters, a curated "Featured Reciters" row, pin/unpin favorites, and persistent global playback that continues across screens.
 - **Radio Statistics & Achievements**: Track your listening habits with detailed statistics per station, total listening time, streak tracking, and unlockable achievements for consistent listening.
 - **Mushaf Image Optimization**: Local asset storage with Gradle-based image moving during Android build to eliminate duplication. Uses **standard Madani Mushaf** (industry standard for Muslim world with 604 pages).

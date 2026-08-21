@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.2.3] - 2026-08-22
+
+### 📻 Live Streams — Migrated to Official SBA CDN
+- **Replaced dead streams**: The `m.live.net.sa` Wowza server was decommissioned (returning 404) and the Aloula CDN redirect URLs were CORS-blocked. Both replaced with official SBA streams served via Globecast/Akamai CDN (`cdn-globecast.akamaized.net`). HTTPS, CORS-enabled globally, works on both native Android and web.
+- **Unified platform URLs**: Removed the native/web URL split — both platforms now use the same HTTPS endpoint. No more cleartext HTTP or Android network security config exceptions for live streams.
+- **Makkah fallback**: Added Kwikmotion 1080p (Akamai CDN) as an automatic secondary source for Makkah. Madinah has no alternative CORS-enabled source at this time.
+- **Cleaned up Android config**: Removed `m.live.net.sa` from `network_security_config.xml` cleartext whitelist (no longer needed).
+- **Updated UI text**: In-player source info cards and Live Streams page now reflect the new SBA/Globecast/Akamai CDN source.
+
+---
+
 ## [2.2.0] - 2026-08-01
 
 ### ⚙️ Modular Settings Architecture & Android OOM Crash Elimination
@@ -36,12 +47,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Timer & memory leaks fixed**: Ebook download progress interval cleared on failure; periodic notification checks made idempotent with tracked interval + removable listener + `stopPeriodicChecks()`; dead `PrayerCountdown` component deleted; animation tier benchmark runs once per session instead of on every consumer mount.
 
 ### 📻 Live Streams Reliability & Fullscreen Fixes
-- **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (rejected by browsers before playback starts) with verified, CORS-enabled `m.live.net.sa` HLS streams as the primary sources.
-- **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to the secondary Aloula source once before showing a friendly "Stream temporarily unavailable. Please try again later." message.
-- **Android Cleartext Whitelist**: `m.live.net.sa` added to `network_security_config.xml` so streams play on Android (cleartext HTTP on port 1935).
+- **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (rejected by browsers before playback starts) with `m.live.net.sa` HLS streams (later superseded by v2.2.3 — see above).
+- **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to a secondary source once before showing a friendly error with Retry.
 - **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
-- **Quality Selector Cleanup**: Quality picker hidden when the active stream only exposes a single quality level (primary `m.live.net.sa` streams are single-variant 720p).
-- **Source Info Cards Synced**: In-player stream source info cards updated to match the new `m.live.net.sa` primary + Aloula fallback configuration.
+- **Quality Selector Cleanup**: Quality picker hidden when the active stream only exposes a single quality level.
+- **Source Info Cards**: In-player stream source info cards reflect the current CDN source configuration.
 
 ### 🤖 Android Stability
 - **Android 14+ Crash Fix**: Replaced the adaptive app icon (rejected by Android 14+ strict notification validation) with a proper white-on-transparent vector drawable — fixes the `BadForegroundServiceNotificationException` crash in `WidgetForegroundService` and prevents the same crash in `AdhanPlaybackService` and `WidgetRefreshWorker`.

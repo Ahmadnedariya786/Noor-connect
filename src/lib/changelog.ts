@@ -31,6 +31,17 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
+    version: '2.2.3',
+    date: '2026-08-22',
+    title: 'Live Streams — Migrated to Official SBA CDN',
+    changes: [
+      { type: 'fix', description: 'Replaced dead m.live.net.sa HLS streams (Wowza server decommissioned, returning 404) and CORS-blocked Aloula CDN redirects with official SBA streams via Globecast/Akamai CDN (HTTPS, CORS-enabled globally, no platform split needed).' },
+      { type: 'improvement', description: 'Unified stream URLs: both native Android and web now use the same HTTPS endpoint — removed the native/web URL split and the Android cleartext HTTP whitelist for m.live.net.sa.' },
+      { type: 'improvement', description: 'Added Kwikmotion 1080p as automatic fallback for Makkah (Madinah has no secondary CORS-enabled source).' },
+      { type: 'fix', description: 'Updated in-player source info cards and Live Streams page to reflect the new SBA/Globecast/Akamai CDN source.' },
+    ],
+  },
+  {
     version: '2.2.0',
     date: '2026-08-01',
     title: 'APK Size Optimization, Modular Settings Architecture, Smart Notifications & Major Refactor',
@@ -56,9 +67,9 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
       { type: 'improvement', description: 'Faster App Startup: The premium dashboard loads on demand, the weekly chart only loads on capable devices, and heavy background work (first auto-backup, daily hadith fetch) is deferred to idle time.' },
       { type: 'improvement', description: 'Smoother Low-End Devices: All blur effects are stripped on low-end devices, transitions animate only GPU-friendly properties instead of everything, layout FLIP animations were replaced with cheap fades, and the device animation benchmark runs once per session.' },
       { type: 'fix', description: 'Fixed timer & memory leaks: ebook download progress stops cleanly on failure, periodic notification checks can be fully stopped, and dead code was removed.' },
-      { type: 'fix', description: 'Live Streams Reliability: Replaced CORS-blocked Aloula CDN redirect URLs with verified CORS-enabled m.live.net.sa HLS streams for Makkah/Madinah; automatic one-time fallback to the secondary source before showing a friendly error; Android cleartext whitelist for m.live.net.sa.' },
+      { type: 'fix', description: 'Live Streams Reliability: Replaced CORS-blocked Aloula CDN redirect URLs with m.live.net.sa HLS streams (later superseded by v2.2.3 — see above); automatic one-time fallback to the secondary source before showing a friendly error.' },
       { type: 'fix', description: 'Android Fullscreen Rendering: Native requestFullscreen + landscape orientation lock on Android, edge-to-edge 100vw/100vh container with safe-area insets, video sizing recalculated on resize/orientationchange with object-fit contain; 16:9 layout restored on exit.' },
-      { type: 'improvement', description: 'Quality Selector Cleanup: Hidden automatically when the active stream exposes only a single quality level (primary m.live.net.sa streams are single-variant 720p).' },
+      { type: 'improvement', description: 'Quality Selector Cleanup: Hidden automatically when the active stream exposes only a single quality level.' },
       { type: 'feature', description: 'Major usePrayerTimes Hook Rewrite: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new usePrayerNotifications hook with 1s throttle.' },
       { type: 'improvement', description: 'Removed Standalone Mushaf Viewer: Deleted the standalone /mushaf image-based viewer feature to streamline the app. The app now exclusively uses the vertical-scrolling /quran reader.' },
       { type: 'feature', description: 'Noor Cycle Major UI Upgrade: Transitioned from sidebar to a native-feeling Bottom Tab Bar. Added daily Water Hydration Tracker (8 glasses) and Pain Scale Logger (1-10) with local state persistence.' },

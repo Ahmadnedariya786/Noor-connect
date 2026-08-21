@@ -6,7 +6,6 @@
         <domain includeSubdomains="true">qurankareem.radio</domain>
         <domain includeSubdomains="true">stream.radiojar.com</domain>
         <domain includeSubdomains="true">backup.qurango.net</domain>
-        <domain includeSubdomains="true">m.live.net.sa</domain>
     </domain-config>
     
     <!-- Allow cleartext traffic for development and specific radio domains -->

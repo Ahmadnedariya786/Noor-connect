@@ -294,7 +294,7 @@ export const buildBackup = async (
 
     const payload: BackupData = {
       version: BACKUP_VERSION,
-      appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.2.0',
+      appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.2.3',
       exportedAt: new Date().toISOString(),
       storage,
       preferences: prefs,
@@ -481,7 +481,7 @@ async function migrateLegacyBackups(): Promise<void> {
         };
         const payload: BackupData = {
           version: BACKUP_VERSION,
-          appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.2.0',
+          appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.2.3',
           exportedAt: parsed.metadata?.created ?? new Date().toISOString(),
           storage: parsed.localStorage ?? {},
           preferences: parsed.preferences ?? {},
