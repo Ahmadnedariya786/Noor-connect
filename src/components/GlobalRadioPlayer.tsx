@@ -547,7 +547,7 @@ export function GlobalRadioPlayer() {
       {/* Mini Player UI - only shown when visible and station selected */}
       {globalRadio?.currentStation && isVisible && (
         <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
-          <Card className="max-w-lg mx-auto shadow-2xl bg-card/95 backdrop-blur-xl border-border border shadow-primary/10 overflow-hidden animate-in slide-in-from-bottom duration-300">
+          <Card className="max-w-lg mx-auto shadow-2xl bg-card border-border border shadow-primary/10 overflow-hidden animate-in slide-in-from-bottom duration-300">
             <div className="p-3">
               {/* Compact Header with Station Info and Timer */}
               <div className="flex items-center gap-3">

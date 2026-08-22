@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useReciters } from "@/hooks/useReciters";
-import { AlertCircle, Pause, Play, User, Volume2, X, ChevronUp, ChevronDown, Repeat } from "lucide-react";
+import { AlertCircle, Pause, Play, User, Volume2, X, ChevronUp, ChevronDown, Repeat, SkipBack, SkipForward } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -30,6 +30,7 @@ export function GlobalQuranPlayer() {
     const { isPlaying: isRadioPlaying, updateRadioState: updateRadioState } = useGlobalRadio();
 
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isRepeating, setIsRepeating] = useState(false);
     // Local seek position drives the slider + time labels at full update rate
     // WITHOUT touching the global store (which notifies every useGlobalQuran
     // consumer and writes localStorage). Global progress is pushed at ~1Hz.
@@ -170,8 +171,13 @@ export function GlobalQuranPlayer() {
             }
         };
         const handleEnded = () => {
-            setSeekValue(0);
-            updateState({ isPlaying: false, progress: 0 });
+            if (isRepeating) {
+                audio.currentTime = 0;
+                audio.play().catch(() => {});
+            } else {
+                setSeekValue(0);
+                updateState({ isPlaying: false, progress: 0 });
+            }
         };
         const handleCanPlay = () => setIsAudioLoading(false);
         const handleError = () => {
@@ -235,23 +241,41 @@ export function GlobalQuranPlayer() {
             <>
                 <audio ref={audioRef} />
                 <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
-                    <Card className="w-full max-w-lg mx-auto bg-zinc-900/95 backdrop-blur-md text-white border-white/10 shadow-2xl rounded-full p-2 pr-4 flex items-center justify-between transition-transform duration-300 hover:scale-[1.02] animate-in slide-in-from-bottom border">
-                        {/* Clickable Area to Expand */}
+                    <Card className="w-full max-w-lg mx-auto bg-card border-border shadow-2xl rounded-full p-2 pr-4 flex items-center justify-between transition-transform duration-300 hover:scale-[1.02] animate-in slide-in-from-bottom border relative overflow-hidden">
+                        {/* Progress bar in mini player */}
+                        <div className="absolute left-4 right-4 bottom-2 h-1 bg-muted rounded-full">
+                          <div
+                            className="h-full bg-[#C9860A] rounded-full transition-all duration-200 ease-linear"
+                            style={{ width: duration > 0 ? `${Math.min(100, (seekValue / duration) * 100)}%` : "0%" }}
+                          />
+                        </div>
+
                         <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={() => setIsExpanded(true)}>
                             {/* Rotating Vinyl Icon */}
-                            <div className={`w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0 border border-white/10 ${isPlaying ? 'animate-spin-slow' : ''}`}>
+                            <div className={`w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0 border border-primary/20 ${isPlaying ? 'animate-spin-slow' : ''}`}>
                                 <Play className="w-4 h-4 text-primary fill-current" />
                             </div>
 
                             <div className="min-w-0 pr-2">
-                                <p className="font-bold text-sm truncate leading-none mb-1 text-white">{surahName}</p>
-                                <p className="text-xs text-zinc-400 truncate leading-none uppercase tracking-wider font-medium">{reciter?.name}</p>
+                                <p className="font-bold text-sm truncate leading-none mb-1 text-foreground">{surahName}</p>
+                                <p className="text-xs text-muted-foreground truncate leading-none uppercase tracking-wider font-medium">{reciter?.name}</p>
                             </div>
                         </div>
 
                         {/* Controls */}
-                        <div className="flex items-center gap-2">
-                            <Button size="icon" variant="ghost" onClick={togglePlayback} disabled={isLoading} className="text-white hover:text-primary hover:bg-white/10 rounded-full w-9 h-9">
+                        <div className="flex items-center gap-1">
+                            {/* Repeat/Loop Button - Mini */}
+                            <Button
+                                variant={isRepeating ? "default" : "ghost"}
+                                size="icon"
+                                className="h-8 w-8 rounded-full"
+                                onClick={() => setIsRepeating((prev) => !prev)}
+                                title={isRepeating ? "Disable repeat" : "Enable repeat"}
+                            >
+                                <Repeat className="w-4 h-4" />
+                            </Button>
+
+                            <Button size="icon" variant="ghost" onClick={togglePlayback} disabled={isLoading} className="text-foreground hover:text-primary hover:bg-muted rounded-full w-9 h-9">
                                 {isLoading ? (
                                     <div className="w-4 h-4 border-2 border-primary border-t-transparent animate-spin rounded-full" />
                                 ) : isPlaying ? (
@@ -262,7 +286,7 @@ export function GlobalQuranPlayer() {
                             </Button>
 
                             {/* Close/Stop Button */}
-                            <Button size="icon" variant="ghost" onClick={() => { pause(); updateState({ surahNumber: null }); }} className="text-zinc-500 hover:text-destructive hover:bg-white/10 rounded-full w-8 h-8">
+                            <Button size="icon" variant="ghost" onClick={() => { pause(); updateState({ surahNumber: null }); }} className="text-muted-foreground hover:text-destructive hover:bg-muted rounded-full w-8 h-8">
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
@@ -324,11 +348,22 @@ export function GlobalQuranPlayer() {
                         </div>
 
                         {/* Controls */}
-                        <div className="flex items-center justify-center gap-6 pt-2">
+                        <div className="flex items-center justify-center gap-4 pt-2">
+                            {/* Repeat/Loop Button */}
+                            <Button
+                                variant={isRepeating ? "default" : "outline"}
+                                size="icon"
+                                className="h-10 w-10 rounded-full"
+                                onClick={() => setIsRepeating((prev) => !prev)}
+                                title={isRepeating ? "Disable repeat" : "Enable repeat"}
+                            >
+                                <Repeat className="w-5 h-5" />
+                            </Button>
+
                             <Button variant="outline" size="icon" className="h-10 w-10 rounded-full" onClick={() => {
                                 if (audioRef.current) audioRef.current.currentTime -= 10;
                             }}>
-                                <Repeat className="w-4 h-4" /> {/* Just a placeholder for seek back */}
+                                <SkipBack className="w-5 h-5" />
                             </Button>
 
                             <Button size="icon" className="h-16 w-16 rounded-full shadow-lg hover:scale-105 transition-transform" onClick={togglePlayback} disabled={isLoading}>
@@ -344,7 +379,7 @@ export function GlobalQuranPlayer() {
                             <Button variant="outline" size="icon" className="h-10 w-10 rounded-full" onClick={() => {
                                 if (audioRef.current) audioRef.current.currentTime += 10;
                             }}>
-                                <Repeat className="w-4 h-4 rotate-180" /> {/* Just a placeholder for seek fwd */}
+                                <SkipForward className="w-5 h-5" />
                             </Button>
                         </div>
                     </div>

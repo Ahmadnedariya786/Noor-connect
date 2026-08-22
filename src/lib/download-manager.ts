@@ -1,3 +1,9 @@
+export interface DownloadedSurahInfo {
+    reciterId: string;
+    surahNumber: number;
+    size: number;
+}
+
 export class QuranDownloadManager {
     private dbName = "noor-connect-quran-db";
     private storeName = "surahs";
@@ -104,6 +110,43 @@ export class QuranDownloadManager {
     async isSurahDownloaded(reciterId: string, surahNumber: number): Promise<boolean> {
         const blob = await this.getSurah(reciterId, surahNumber);
         return !!blob;
+    }
+
+    async listDownloaded(): Promise<DownloadedSurahInfo[]> {
+        await this.initDB();
+        return new Promise((resolve, reject) => {
+            try {
+                const store = this.getStore("readonly");
+                const items: DownloadedSurahInfo[] = [];
+                const request = store.openCursor();
+
+                request.onsuccess = (event) => {
+                    const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+                    if (!cursor) {
+                        resolve(items);
+                        return;
+                    }
+                    const key = String(cursor.key);
+                    // Keys are "${reciterId}-${surahNumber}"; reciterId itself may contain dashes
+                    const idx = key.lastIndexOf("-");
+                    if (idx > 0) {
+                        const surahNumber = parseInt(key.slice(idx + 1), 10);
+                        if (!isNaN(surahNumber)) {
+                            items.push({
+                                reciterId: key.slice(0, idx),
+                                surahNumber,
+                                size: cursor.value instanceof Blob ? cursor.value.size : 0,
+                            });
+                        }
+                    }
+                    cursor.continue();
+                };
+
+                request.onerror = () => reject("Failed to list downloads");
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 
     async clearAll(): Promise<void> {

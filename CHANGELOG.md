@@ -18,6 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **No More Silent Prayer-Sync Drops**: The widget payload builder silently filtered out prayers with missing times, and the native validator then rejected the resulting 3–5 entry payload — the whole sync was dropped with only a console warning. The builder now explicitly refuses to sync unless all six times are present, with a clear warning.
 - **Dead Code Removed**: Deleted the unused `WidgetPrefs` update-throttle helpers, the never-invoked duplicate step-detection registration in `WidgetRefreshWorker` (the live implementation lives in `WidgetForegroundService`), an unused import, and the inert `android.appwidget.configure` manifest meta-data blocks (real wiring is `android:configure` in each widget info XML).
 
+### 🎵 Quran Audio & Player Enhancements
+- **Quran Audio Page Redesigned**: Complete Spotify-style UI/UX remake — dark hero card, horizontal reciter carousel with circular gold-gradient avatars, surah list with diamond number plates and animated equalizer on the playing row, sticky search bar, and playback via GlobalQuranPlayer mini-player app-wide.
+- **GlobalQuranPlayer Repeat Loop**: Added repeat toggle (loop current surah indefinitely); audio automatically restarts from 0:00 when ended and repeat is enabled.
+- **GlobalQuranPlayer Progress Bar**: Added thin gold progress bar in mini-player showing seek position; expanded player includes seek backward/forward 10s buttons with proper SkipBack/SkipForward icons (was placeholder Repeat icons).
+- **GlobalRadioPlayer Transparency Fixed**: Mini-player background changed from semi-transparent `bg-card/95 backdrop-blur-xl` to solid `bg-card` for fully opaque white appearance.
+- **Download Manager Listing**: Added `listDownloaded()` method to QuranDownloadManager — returns per-reciter offline surah info (count, total size, reciter IDs) for storage stats and "wipe downloads" action.
+- **Quran Audio Play Badge Interactivity**: Circular play icon beside download button now toggles play/pause (was decorative-only).
+- **Performance Fix**: Stabilized `getRowProgress` callback via `useRef` to prevent 114 surah row re-renders during active downloads, fixing FPS degradation.
+
 ### 📻 Live Streams — Migrated to Official SBA CDN
 - **Replaced dead streams**: The `m.live.net.sa` Wowza server was decommissioned (returning 404) and the Aloula CDN redirect URLs were CORS-blocked. Both replaced with official SBA streams served via Globecast/Akamai CDN (`cdn-globecast.akamaized.net`). HTTPS, CORS-enabled globally, works on both native Android and web.
 - **Unified platform URLs**: Removed the native/web URL split — both platforms now use the same HTTPS endpoint. No more cleartext HTTP or Android network security config exceptions for live streams.

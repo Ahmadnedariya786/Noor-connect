@@ -96,8 +96,8 @@ const initialsOf = (name: string, nameEn: string): string => {
 };
 
 const avatarPalette = [
-  "from-emerald-600 to-teal-800", "from-teal-700 to-emerald-900", "from-[#8a6d1f] to-[#6b500f]",
-  "from-amber-600 to-orange-800", "from-emerald-700 to-[#3f5136]", "from-lime-700 to-emerald-900",
+  "from-[#C9860A] to-[#8B5E0A]", "from-amber-600 to-orange-800", "from-[#E8A020] to-[#B8780A]",
+  "from-[#C9860A] to-[#713f12]", "from-amber-700 to-[#3f5136]", "from-lime-700 to-emerald-900",
   "from-stone-600 to-stone-900", "from-[#a16207] to-[#713f12]",
 ];
 
@@ -278,31 +278,31 @@ const QuranRadio = () => {
         ) : (
           <>
             {/* ── Hero banner ── */}
-            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-950 text-white shadow-lg mb-6">
+            <section className="relative overflow-hidden rounded-3xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-lg">
               {/* Full-cover sheen — static gradient, no filters */}
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" aria-hidden="true" />
 
-              <div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
-                <div className="min-w-0">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/15 border border-white/25">
-                    <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
-                    Live
-                  </span>
-                  <h2 className="mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
-                    Listen to the Quran,
-                    <br />
-                    <span className="text-emerald-200">anytime.</span>
-                  </h2>
-                  <p className="mt-1.5 text-sm text-white/70" lang="ar" dir="rtl">
-                    بث مباشر على مدار الساعة
-                  </p>
-                </div>
+<div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
+                 <div className="min-w-0">
+                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-[#C9860A]/20 border border-[#C9860A]/40">
+                     <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
+                     Live
+                   </span>
+                   <h2 className="mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight text-white">
+                     Listen to the Quran,
+                     <br />
+                     <span className="text-[#C9860A]">anytime.</span>
+                   </h2>
+                   <p className="mt-1.5 text-sm text-white/70" lang="ar" dir="rtl">
+                     بث مباشر على مدار الساعة
+                   </p>
+                 </div>
 
-                <button
-                  onClick={handleHeroPlay}
-                  aria-label={heroPlaying ? "Pause radio" : "Start listening"}
-                  className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full bg-white text-emerald-700 flex items-center justify-center shadow-xl transition-transform duration-150 active:scale-95 motion-safe:hover:scale-105"
-                >
+                 <button
+                   onClick={handleHeroPlay}
+                   aria-label={heroPlaying ? "Pause radio" : "Start listening"}
+                   className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#C9860A] text-white flex items-center justify-center shadow-xl transition-transform duration-150 active:scale-95 motion-safe:hover:scale-105"
+                 >
                   {heroPlaying
                     ? <Pause className="w-7 h-7 md:w-8 md:h-8 fill-current" aria-hidden="true" />
                     : <Play className="w-7 h-7 md:w-8 md:h-8 fill-current ms-1" aria-hidden="true" />}
@@ -463,20 +463,20 @@ const StationArtwork: React.FC<{ station: StationView; className?: string }> = (
 };
 
 /* Themed icon per category (non-reciter stations).
-   Palette kept inside the app family: emerald/teal/gold/amber + warm slate. */
+   Palette kept inside the app family: gold/amber + warm slate. */
 const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ category, id }) => {
   const styles: Record<string, string> = {
-    mosque: "from-emerald-600 to-teal-800",
-    eid: "from-amber-500 to-orange-700",
-    ruqyah: "from-teal-600 to-emerald-900",
-    tafsir: "from-emerald-700 to-[#3f5136]",
+    mosque: "from-[#C9860A] to-[#8B5E0A]",
+    eid: "from-[#E8A020] to-[#B8780A]",
+    ruqyah: "from-amber-600 to-orange-800",
+    tafsir: "from-[#C9860A] to-[#713f12]",
     hadith: "from-[#8a6d1f] to-[#6b500f]",
-    translation: "from-teal-700 to-[#134e4a]",
-    surah: "from-emerald-800 to-teal-950",
+    translation: "from-amber-600 to-[#713f12]",
+    surah: "from-[#E8A020] to-[#713f12]",
     stories: "from-[#a16207] to-[#713f12]",
     adhkar: "from-lime-700 to-emerald-900",
     fatwa: "from-stone-500 to-stone-800",
-    biography: "from-emerald-800 to-[#14532d]",
+    biography: "from-[#C9860A] to-[#14532d]",
   };
   const iconMap: Record<string, React.ReactNode> = {
     mosque: <Landmark className="w-9 h-9 text-white/90" />,

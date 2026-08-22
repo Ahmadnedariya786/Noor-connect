@@ -39,6 +39,7 @@ import { useLanguage } from '@/contexts/LanguageContext-new';
 import { getMadhab, setMadhab, type MadhabType } from '@/lib/storage';
 import { AladhanAPI } from '@/lib/aladhan-api';
 import { getStorageStats, clearAllBooks, formatFileSize } from '@/lib/ebooks-storage';
+import { downloadManager } from '@/lib/download-manager';
 import { clearCache } from '@/lib/backup';
 import { notificationManager, type NotificationPreferences } from '@/lib/notification-manager';
 import { unifiedNotifications } from '@/lib/unified-notifications';
@@ -93,10 +94,12 @@ const SettingsSubPage: React.FC = () => {
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
+  const [quranDownloads, setQuranDownloads] = useState({ count: 0, size: 0, reciters: 0 });
   const [genderSettings, setGenderSettingsState] = useState(getGenderSettings());
   const [preferredCurrency, setPreferredCurrency] = useState(() => localStorage.getItem('preferred-currency') || 'USD');
   const [hijriOffset, setHijriOffset] = useState('0');
   const [showClearCacheDialog, setShowClearCacheDialog] = useState(false);
+  const [showClearQuranDialog, setShowClearQuranDialog] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
 
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
@@ -124,6 +127,17 @@ const SettingsSubPage: React.FC = () => {
     if (savedOffset) setHijriOffset(savedOffset);
 
     getStorageStats().then(setStorageStats);
+
+    downloadManager.listDownloaded()
+      .then((items) => {
+        const reciterIds = new Set(items.map((it) => it.reciterId));
+        setQuranDownloads({
+          count: items.length,
+          size: items.reduce((acc, it) => acc + it.size, 0),
+          reciters: reciterIds.size,
+        });
+      })
+      .catch(() => {});
   }, []);
 
   const meta = SECTION_TITLES[sectionId] || { title: 'Settings', subtitle: 'Noor Connect Preferences', icon: Palette };
@@ -139,6 +153,17 @@ const SettingsSubPage: React.FC = () => {
     setStorageStats({ totalBooks: 0, totalSize: 0 });
     toast({ title: 'Cache cleared successfully' });
     setShowClearCacheDialog(false);
+  };
+
+  const handleClearQuranDownloads = async () => {
+    try {
+      await downloadManager.clearAll();
+      setQuranDownloads({ count: 0, size: 0 });
+      toast({ title: 'Offline surahs deleted', description: 'All downloaded Quran audio has been removed from this device.' });
+    } catch {
+      toast({ title: 'Could not delete downloads', variant: 'destructive' });
+    }
+    setShowClearQuranDialog(false);
   };
 
   const handleClearBooks = async () => {
@@ -534,6 +559,12 @@ const SettingsSubPage: React.FC = () => {
             <Card className="p-4 space-y-3 rounded-2xl">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Storage Usage</Label>
               <div className="flex justify-between items-center text-sm font-semibold">
+                <span>Offline Quran Audio</span>
+                <span className="text-amber-600">
+                  {quranDownloads.reciters} reciter{quranDownloads.reciters !== 1 ? "s" : ""} • {quranDownloads.count} surah{quranDownloads.count !== 1 ? "s" : ""} • {formatFileSize(quranDownloads.size)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm font-semibold">
                 <span>Downloaded E-books</span>
                 <span className="text-amber-600">{formatFileSize(storageStats.totalSize)}</span>
               </div>
@@ -551,6 +582,14 @@ const SettingsSubPage: React.FC = () => {
               >
                 <Trash2 className="w-4 h-4" />
                 Clear Temporary Cache
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full rounded-xl gap-2"
+                onClick={() => setShowClearQuranDialog(true)}
+                disabled={quranDownloads.count === 0}
+              >
+                Delete Downloaded Surahs
               </Button>
               <Button
                 variant="outline"
@@ -608,6 +647,33 @@ const SettingsSubPage: React.FC = () => {
                   <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={handleClearCache} className="rounded-xl bg-destructive text-white">
                     Clear Cache
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* DELETE DOWNLOADED SURAHS DIALOG */}
+            <AlertDialog open={showClearQuranDialog} onOpenChange={setShowClearQuranDialog}>
+              <AlertDialogContent className="rounded-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    Delete Downloaded Surahs?
+                  </AlertDialogTitle>
+<AlertDialogDescription asChild>
+                    <div className="space-y-3">
+                      <p>
+                        This removes all offline Quran recitations from {quranDownloads.reciters} reciter{quranDownloads.reciters !== 1 ? "s" : ""}
+                        ({quranDownloads.count} surah{quranDownloads.count !== 1 ? "s" : ""}, {formatFileSize(quranDownloads.size)}).
+                      </p>
+                      <p>Streaming will still work online. You can re-download any surah anytime from the Quran Audio page.</p>
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearQuranDownloads} className="rounded-xl bg-destructive text-white">
+                    Delete Surahs
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

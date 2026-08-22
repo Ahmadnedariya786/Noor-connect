@@ -40,11 +40,28 @@ This partnership ensures every nasheed is legally licensed, high-quality, and su
 - **No Silent Sync Drops**: Prayer data with any missing time is now explicitly rejected with a warning instead of being filtered into a payload that the native validator silently dropped.
 - **Dead Code Removed**: Unused throttle helpers, duplicate step-detection registration, and inert manifest meta-data cleaned out.
 
+### 📱 Android Widgets — Stability, Deep-Links & Accent Colors
+- **Widgets No Longer Break on Android 8–11**: Removed all `RemoteViews` reflection calls to `View.setRotation` from the Next Prayer and Quran Progress widgets. That method only became `@RemotableViewMethod`-safe in Android 12; on API ≤ 30 every widget update threw an `ActionException` during rendering and the launcher showed "Problem loading widget". Progress rings now render purely via `setImageLevel` on the `useLevel` ring drawable, which works on every supported API level (and the redundant rotation/level double-rendering is gone — the arc starts at 12 o'clock).
+- **Widget Taps Fixed**: Next Prayer tap (and its empty-state CTA) no longer lands on the 404 page (`/prayers` → dashboard redirect); Quran Progress tap opens the Quran progress page (`/quran/reading` redirect).
+- **In-App Tasbeeh Syncs to the Widget**: Fixed an event-name mismatch (`noorconnect:tasbeeh-changed` was never dispatched; the real event is `tasbeeh-updated`) — tasbeeh counted in-app now updates the home-screen widget instantly instead of only widget-side taps counting.
+- **Accent Colors Work**: The configure screen's accent pick is now applied to widget accent text, and the previously missing Amber / Blue / Purple / Teal / Red palettes were added for light and dark themes.
+- **No Silent Sync Drops**: Prayer data with any missing time is now explicitly rejected with a warning instead of being filtered into a payload that the native validator silently dropped.
+- **Dead Code Removed**: Unused throttle helpers, duplicate step-detection registration, and inert manifest meta-data cleaned out.
+
 ### 📻 Live Streams — Migrated to Official SBA CDN
 - Replaced dead `m.live.net.sa` Wowza streams (404) and CORS-blocked Aloula CDN redirects with official SBA streams via **Globecast/Akamai CDN** (HTTPS, CORS-enabled globally).
 - Unified platform URLs — both native Android and web use the same HTTPS endpoint. No more cleartext HTTP exceptions.
 - Added Kwikmotion 1080p as automatic fallback for Makkah.
 - Removed `m.live.net.sa` from Android network security config.
+
+### 🎵 Quran Audio & Player Enhancements
+- **Quran Audio Page Redesigned**: Complete Spotify-style UI/UX remake — dark hero card, horizontal reciter carousel with circular gold-gradient avatars, surah list with diamond number plates and animated equalizer on the playing row, sticky search bar, and playback via GlobalQuranPlayer mini-player app-wide.
+- **GlobalQuranPlayer Repeat Loop**: Added repeat toggle (loop current surah indefinitely); audio automatically restarts from 0:00 when ended and repeat is enabled.
+- **GlobalQuranPlayer Progress Bar**: Added thin gold progress bar in mini-player showing seek position; expanded player includes seek backward/forward 10s buttons with proper SkipBack/SkipForward icons (was placeholder Repeat icons).
+- **GlobalRadioPlayer Transparency Fixed**: Mini-player background changed from semi-transparent `bg-card/95 backdrop-blur-xl` to solid `bg-card` for fully opaque white appearance.
+- **Download Manager Listing**: Added `listDownloaded()` method to QuranDownloadManager — returns per-reciter offline surah info (count, total size, reciter IDs) for storage stats and "wipe downloads" action.
+- **Quran Audio Play Badge Interactivity**: Circular play icon beside download button now toggles play/pause (was decorative-only).
+- **Performance Fix**: Stabilized `getRowProgress` callback via `useRef` to prevent 114 surah row re-renders during active downloads, fixing FPS degradation.
 
 ---
 
