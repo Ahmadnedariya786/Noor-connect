@@ -13,6 +13,7 @@ import android.os.Vibrator
 import android.util.Log
 import android.widget.RemoteViews
 import com.noorconnect.app.R
+import com.noorconnect.app.widgets.WidgetAccent
 import com.noorconnect.app.widgets.WidgetDeeplink
 import com.noorconnect.app.widgets.WidgetForegroundService
 import com.noorconnect.app.widgets.WidgetPrefs
