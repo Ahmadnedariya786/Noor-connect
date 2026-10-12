@@ -411,10 +411,10 @@ function AppShell() {
       console.warn('Startup: islamicEventsService failed', e);
     }
 
-    // 5. Service worker registration (PWA)
+    // 5. Service worker registration (PWA - web production only)
     try {
-      if (import.meta.env.PROD && !navigator.serviceWorker.controller) {
-        serviceWorkerManager.register();
+      if (!Capacitor.isNativePlatform() && import.meta.env.PROD && typeof navigator !== 'undefined' && 'serviceWorker' in navigator && !navigator.serviceWorker.controller) {
+        serviceWorkerManager.register().catch(() => {});
       }
     } catch (e) {
       console.warn('Startup: serviceWorkerManager failed', e);

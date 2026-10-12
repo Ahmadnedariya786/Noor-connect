@@ -135,7 +135,7 @@ export default defineConfig(({ mode }) => ({
       srcDir: 'src',
       filename: 'sw.js',
       registerType: "autoUpdate",
-      injectRegister: 'auto',
+      injectRegister: null,
       includeAssets: [
         "favicon.svg",
         "favicon.png",

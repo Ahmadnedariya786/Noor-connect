@@ -14,6 +14,7 @@ import './lib/i18n-new'; // Initialize new offline-first i18n
 whenIdle(() => { void localNotifications.initialize(); });
 
 import { LanguageProvider } from "@/contexts/LanguageContext-new";
+import { Capacitor } from "@capacitor/core";
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
@@ -34,9 +35,8 @@ if (isLowEndDevice()) {
   document.documentElement.classList.add("low-end-device");
 }
 
-// Service worker is handled automatically by vite-plugin-pwa (injectRegister: 'auto')
-// in production. In development, we forcefully unregister to prevent console spam.
-if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+// Service worker is web-only. On native platforms, completely skip.
+if (!Capacitor.isNativePlatform() && import.meta.env.DEV && 'serviceWorker' in navigator) {
   (async () => {
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();

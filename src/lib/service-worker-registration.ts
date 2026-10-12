@@ -4,6 +4,8 @@
  * Version: 2.1.0 - Fixed permission handling
  */
 
+import { Capacitor } from '@capacitor/core';
+
 // Extend Window interface for PWA install prompt
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -42,8 +44,13 @@ class ServiceWorkerManager {
     this.setupMessageListener();
   }
 
-  // Register Service Worker
+  // Register Service Worker (Web only)
   async register(): Promise<boolean> {
+    if (Capacitor.isNativePlatform()) {
+      // Service workers are web-only; skip silently on native platforms
+      return false;
+    }
+
     if (!('serviceWorker' in navigator)) {
       console.warn('Service Worker not supported');
       return false;
@@ -59,12 +66,9 @@ class ServiceWorkerManager {
       // Wait for the Service Worker to be active
       await this.waitForActivation();
 
-      // Note: Periodic sync and notification permissions are now handled
-      // only when user explicitly requests them (Profile page)
-
       return true;
     } catch (error) {
-      console.error('Service Worker registration failed:', error);
+      console.warn('Service Worker registration failed:', error);
       return false;
     }
   }
