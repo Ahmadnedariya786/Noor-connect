@@ -26,8 +26,17 @@ import {
   X,
   Check,
   Activity,
+  Download,
+  RefreshCw,
 } from 'lucide-react';
 import { getLastCrashes, clearCrashes, type CrashEntry } from '@/lib/crash-logger';
+import {
+  checkNightlyUpdate,
+  downloadAndInstallUpdate,
+  formatReleaseDate,
+  type UpdateCheckResult,
+} from '@/lib/update-checker';
+import { BUILD_TIME } from '@/buildInfo';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -147,12 +156,44 @@ const SettingsSubPage: React.FC = () => {
 
   const [crashLogs, setCrashLogs] = useState<CrashEntry[]>([]);
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
+  const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
   useEffect(() => {
     if (sectionId === 'about') {
       setCrashLogs(getLastCrashes());
+      checkNightlyUpdate(false)
+        .then(setUpdateResult)
+        .catch(() => {});
     }
   }, [sectionId]);
+
+  const handleManualCheckUpdate = async () => {
+    setIsCheckingUpdate(true);
+    try {
+      const res = await checkNightlyUpdate(true);
+      setUpdateResult(res);
+      if (res.hasUpdate) {
+        toast({
+          title: 'Nightly Update Available',
+          description: `Released ${formatReleaseDate(res.release?.publishedAt)}. Tap download to install.`,
+        });
+      } else {
+        toast({
+          title: 'Up to Date',
+          description: 'You are running the latest build.',
+        });
+      }
+    } catch {
+      toast({
+        title: 'Check Failed',
+        description: 'Unable to connect to GitHub releases.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   const handleCopyDiagnostics = () => {
     try {
@@ -746,6 +787,62 @@ const SettingsSubPage: React.FC = () => {
             >
               View Release Changelog
             </Button>
+
+            {/* Software Updates / Nightly Build */}
+            <Card className="p-4 space-y-3 rounded-2xl border border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <RefreshCw className={`w-4 h-4 text-amber-500 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Software Updates
+                  </Label>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={handleManualCheckUpdate}
+                  disabled={isCheckingUpdate}
+                >
+                  {isCheckingUpdate ? 'Checking...' : 'Check now'}
+                </Button>
+              </div>
+
+              {updateResult?.hasUpdate && updateResult.release ? (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 gap-3">
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                      <p className="text-xs font-bold text-amber-500 dark:text-amber-400 truncate">
+                        Nightly Build ({formatReleaseDate(updateResult.release.publishedAt)})
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      New updates available for download
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-8 px-3 shrink-0"
+                    onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
+                  >
+                    <Download className="w-3.5 h-3.5 mr-1" />
+                    Download update
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40 text-xs text-muted-foreground">
+                  <div className="truncate pr-2">
+                    <span>Installed: </span>
+                    <span className="font-mono text-[11px]">{formatReleaseDate(BUILD_TIME)}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-emerald-500 font-medium shrink-0">
+                    <Check className="w-3.5 h-3.5" />
+                    <span className="text-[11px]">Up to date</span>
+                  </div>
+                </div>
+              )}
+            </Card>
 
             {/* Diagnostics Black Box */}
             <Card className="p-4 space-y-3 rounded-2xl border border-border">

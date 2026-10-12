@@ -5,12 +5,15 @@ import fs from "fs";
 import { VitePWA } from "vite-plugin-pwa";
 import compression from "vite-plugin-compression";
 
-const APP_VERSION = process.env.npm_package_version ?? "0.0.0";
+const APP_VERSION = process.env.npm_package_version ?? "2.2.1";
+const BUILD_TIME = new Date().toISOString();
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
+    __BUILD_TIME__: JSON.stringify(BUILD_TIME),
+    'import.meta.env.VITE_BUILD_TIME': JSON.stringify(BUILD_TIME),
   },
   build: {
     minify: 'terser',

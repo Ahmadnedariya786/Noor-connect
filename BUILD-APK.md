@@ -31,14 +31,17 @@ base64 -w 0 noorconnectjks > keystore-base64.txt
 # Copy the output and add to KEYSTORE_BASE64 secret
 ```
 
-## 🚀 Build Workflow
+## 🚀 Build Workflows
 
-The workflow is configured to run automatically when:
+### 1. Nightly Build Factory (Automated Continuous APK)
+The nightly workflow runs automatically on every push to `main` (and via manual `workflow_dispatch`):
+- **Workflow:** `.github/workflows/nightly-apk.yml`
+- **Output:** Fixed GitHub Release tagged `nightly` with `noor-connect-nightly.apk`.
+- **In-App Integration:** Noor Connect automatically checks this release and notifies users when an update is available.
 
-- **Tags are pushed** (`refs/tags/*`)
-- **Manually triggered** via `workflow_dispatch`
-
-**Repository:** `.github/workflows/build-apks-signed.yml`
+### 2. Tagged Signed Release Workflow
+The release workflow runs when tags are pushed (`refs/tags/*`) or manually triggered:
+- **Repository Workflow:** `.github/workflows/build-apks-signed.yml`
 
 ## 📦 Build Outputs
 

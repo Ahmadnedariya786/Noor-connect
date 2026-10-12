@@ -11,6 +11,7 @@ import {
 } from "@/lib/dashboard-widget-config";
 import { globalTimerManager } from "@/lib/timer-manager";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
+import { UpdateBanner } from "@/components/UpdateBanner";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -326,6 +327,9 @@ function PremiumDashboardInner({
             <Bell className="w-4 h-4 text-foreground/60" />
           </button>
         </div>
+
+        {/* ── Update Available Banner ── */}
+        <UpdateBanner />
 
         {/* ── Hero Time & Date ── */}
         <LiveClock animationEnabled={animationEnabled} hijriDate={hijriDate} timeFormat={timeFormat} />
