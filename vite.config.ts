@@ -5,15 +5,30 @@ import fs from "fs";
 import { VitePWA } from "vite-plugin-pwa";
 import compression from "vite-plugin-compression";
 
+import { execSync } from "child_process";
+
+const getGitCommit = (): string => {
+  if (process.env.VITE_BUILD_COMMIT) return process.env.VITE_BUILD_COMMIT.trim();
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.trim();
+  try {
+    return execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+};
+
 const APP_VERSION = process.env.npm_package_version ?? "2.2.1";
 const BUILD_TIME = new Date().toISOString();
+const BUILD_COMMIT = getGitCommit();
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
     __BUILD_TIME__: JSON.stringify(BUILD_TIME),
+    __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
     'import.meta.env.VITE_BUILD_TIME': JSON.stringify(BUILD_TIME),
+    'import.meta.env.VITE_BUILD_COMMIT': JSON.stringify(BUILD_COMMIT),
   },
   build: {
     minify: 'terser',

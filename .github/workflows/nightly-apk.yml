@@ -44,6 +44,8 @@ jobs:
         run: npm ci
 
       - name: Build web application
+        env:
+          VITE_BUILD_COMMIT: ${{ github.sha }}
         run: npm run build
 
       - name: Clean dist assets for Android
@@ -72,6 +74,16 @@ jobs:
           echo "timestamp=$BUILD_TIME" >> $GITHUB_OUTPUT
           echo "sha_short=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
+          # Create build-info.json asset
+          cat <<EOF > build-info.json
+          {
+            "commit": "${{ github.sha }}",
+            "sha_short": "$(echo ${{ github.sha }} | cut -c1-7)",
+            "timestamp": "$BUILD_TIME",
+            "version": "2.2.1"
+          }
+          EOF
+
           # Locate generated debug APK (flavor is foss, buildType is debug)
           APK_FILE=$(find android/app/build/outputs/apk -type f -name "*debug.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
@@ -94,12 +106,15 @@ jobs:
           name: "Nightly Build"
           prerelease: true
           make_latest: false
-          files: noor-connect-nightly.apk
+          files: |
+            noor-connect-nightly.apk
+            build-info.json
           body: |
             ### 🌙 Noor Connect — Nightly Build
             
             Continuous automated build from the `main` branch.
             
+            commit: ${{ github.sha }}
             - **Commit SHA:** `${{ github.sha }}` (`${{ steps.prep.outputs.sha_short }}`)
             - **Branch:** `${{ github.ref_name }}`
             - **Build Timestamp (UTC):** `${{ steps.prep.outputs.timestamp }}`

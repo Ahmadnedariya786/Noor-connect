@@ -4,17 +4,26 @@
  * Checks for continuous nightly builds published to:
  * https://api.github.com/repos/Ahmadnedariya786/Noor-connect/releases/tags/nightly
  *
+ * Version comparison logic:
+ * 1. Primary: Compare running build's VITE_BUILD_COMMIT against the release commit SHA.
+ *    - If running commit EQUALS release commit → NO update (hide banner).
+ *    - If running commit DIFFERS from release commit → update available.
+ * 2. Fallback: If commit SHA is missing, compare release published_at against VITE_BUILD_TIME.
+ * 3. Dismissal: Dismissing the banner records the dismissed commit SHA in localStorage so
+ *    it never displays again for that same commit.
+ *
  * Privacy: Zero telemetry or analytics. Only a single public GET request to GitHub Releases.
  * Cache: Stores latest result in localStorage (max 1 check per 6 hours unless forced).
  * Timeout: 8 seconds via AbortController.
  */
 
 import { Capacitor } from '@capacitor/core';
-import { BUILD_TIME } from '@/buildInfo';
+import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 
 const GITHUB_REPO = 'Ahmadnedariya786/Noor-connect';
 const NIGHTLY_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/tags/nightly`;
 const CACHE_KEY = 'noor_nightly_update_cache';
+const DISMISSED_COMMIT_KEY = 'noor_dismissed_update_commit';
 const DISMISSED_SESSION_KEY = 'noor_update_banner_dismissed_session';
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const FETCH_TIMEOUT_MS = 8000; // 8 seconds
@@ -23,6 +32,7 @@ export interface NightlyReleaseInfo {
   tagName: string;
   releaseName: string;
   publishedAt: string; // ISO 8601 string
+  commitSha?: string;  // Extracted commit SHA
   apkUrl: string;
   htmlUrl: string;
   body?: string;
@@ -32,6 +42,7 @@ export interface NightlyReleaseInfo {
 export interface UpdateCheckResult {
   hasUpdate: boolean;
   currentBuildTime: string;
+  currentBuildCommit: string;
   release: NightlyReleaseInfo | null;
   lastChecked: number;
   fromCache: boolean;
@@ -41,6 +52,20 @@ export interface UpdateCheckResult {
 interface StoredCache {
   lastChecked: number;
   release: NightlyReleaseInfo | null;
+}
+
+/**
+ * Compare two commit SHAs safely (supports 7-character short SHAs and 40-character full SHAs).
+ */
+export function isSameCommit(shaA?: string | null, shaB?: string | null): boolean {
+  if (!shaA || !shaB) return false;
+  const a = shaA.trim().toLowerCase();
+  const b = shaB.trim().toLowerCase();
+  if (a === 'unknown' || b === 'unknown' || a.length < 7 || b.length < 7) {
+    return false;
+  }
+  if (a === b) return true;
+  return a.startsWith(b) || b.startsWith(a);
 }
 
 /**
@@ -56,6 +81,61 @@ export function isRemoteNewer(remoteIso?: string | null, localIso?: string | nul
   } catch {
     return false;
   }
+}
+
+/**
+ * Extract commit SHA from release body, target_commitish, or metadata.
+ */
+export function extractCommitFromRelease(body?: string | null, targetCommitish?: string | null): string | null {
+  if (body) {
+    // 1. Direct machine-readable line: commit: <sha>
+    const directMatch = body.match(/^commit:\s*([0-9a-f]{7,40})/im) ||
+                        body.match(/commit:\s*([0-9a-f]{7,40})/i);
+    if (directMatch?.[1]) {
+      return directMatch[1].toLowerCase();
+    }
+
+    // 2. Markdown line: - **Commit SHA:** `<sha>` or - **Commit:** `<sha>`
+    const mdMatch = body.match(/\*\*Commit(?: SHA)?:\*\*\s*`?([0-9a-f]{7,40})`?/i);
+    if (mdMatch?.[1]) {
+      return mdMatch[1].toLowerCase();
+    }
+  }
+
+  // 3. Fallback: target_commitish if it's a valid hex SHA
+  if (targetCommitish && /^[0-9a-f]{7,40}$/i.test(targetCommitish)) {
+    return targetCommitish.toLowerCase();
+  }
+
+  return null;
+}
+
+/**
+ * Evaluates whether an update is available:
+ * - If both commit SHAs are present: true ONLY if they differ; false if they equal.
+ * - If commit SHA is missing: falls back to comparing published_at against buildTime.
+ */
+export function isUpdateAvailable(
+  release: { commitSha?: string | null; publishedAt?: string | null } | null,
+  local: { commitSha?: string | null; buildTime?: string | null }
+): boolean {
+  if (!release) return false;
+
+  const localCommit = local.commitSha?.trim().toLowerCase();
+  const remoteCommit = release.commitSha?.trim().toLowerCase();
+
+  // 1. Primary: Compare by commit identity
+  if (localCommit && remoteCommit && localCommit !== 'unknown' && remoteCommit !== 'unknown') {
+    // Running build EQUALS release commit → NO update: hide banner entirely
+    if (isSameCommit(localCommit, remoteCommit)) {
+      return false;
+    }
+    // SHAs differ → Update available
+    return true;
+  }
+
+  // 2. Fallback: published_at comparison only when SHA is missing
+  return isRemoteNewer(release.publishedAt, local.buildTime);
 }
 
 /**
@@ -119,6 +199,7 @@ export async function downloadAndInstallUpdate(apkUrl?: string): Promise<void> {
  */
 export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResult> {
   const currentBuildTime = BUILD_TIME;
+  const currentBuildCommit = BUILD_COMMIT;
 
   // 1. Check cache first (unless force check requested)
   if (!force) {
@@ -126,10 +207,14 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     if (cached && typeof cached.lastChecked === 'number') {
       const age = Date.now() - cached.lastChecked;
       if (age < CHECK_INTERVAL_MS) {
-        const hasUpdate = isRemoteNewer(cached.release?.publishedAt, currentBuildTime);
+        const hasUpdate = isUpdateAvailable(cached.release, {
+          commitSha: currentBuildCommit,
+          buildTime: currentBuildTime,
+        });
         return {
           hasUpdate,
           currentBuildTime,
+          currentBuildCommit,
           release: cached.release,
           lastChecked: cached.lastChecked,
           fromCache: true,
@@ -152,12 +237,12 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     });
 
     if (!res.ok) {
-      // 404 means no nightly release published yet — safe fallback
       if (res.status === 404) {
         writeCache(null);
         return {
           hasUpdate: false,
           currentBuildTime,
+          currentBuildCommit,
           release: null,
           lastChecked: Date.now(),
           fromCache: false,
@@ -168,8 +253,9 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
 
     const data = await res.json();
     const publishedAt = data.published_at || data.created_at;
+    const commitSha = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
 
-    // Locate the APK asset from release assets
+    // Locate APK download URL from release assets
     let apkUrl = `https://github.com/${GITHUB_REPO}/releases/download/nightly/noor-connect-nightly.apk`;
     let sizeBytes: number | undefined;
 
@@ -188,6 +274,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       tagName: data.tag_name || 'nightly',
       releaseName: data.name || 'Nightly Build',
       publishedAt,
+      commitSha,
       apkUrl,
       htmlUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/nightly`,
       body: data.body,
@@ -196,11 +283,15 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
 
     writeCache(releaseInfo);
 
-    const hasUpdate = isRemoteNewer(publishedAt, currentBuildTime);
+    const hasUpdate = isUpdateAvailable(releaseInfo, {
+      commitSha: currentBuildCommit,
+      buildTime: currentBuildTime,
+    });
 
     return {
       hasUpdate,
       currentBuildTime,
+      currentBuildCommit,
       release: releaseInfo,
       lastChecked: Date.now(),
       fromCache: false,
@@ -212,10 +303,14 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     // On network failure, fall back to cached info if available
     const cached = readCache();
     if (cached?.release) {
-      const hasUpdate = isRemoteNewer(cached.release.publishedAt, currentBuildTime);
+      const hasUpdate = isUpdateAvailable(cached.release, {
+        commitSha: currentBuildCommit,
+        buildTime: currentBuildTime,
+      });
       return {
         hasUpdate,
         currentBuildTime,
+        currentBuildCommit,
         release: cached.release,
         lastChecked: cached.lastChecked,
         fromCache: true,
@@ -226,6 +321,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     return {
       hasUpdate: false,
       currentBuildTime,
+      currentBuildCommit,
       release: null,
       lastChecked: Date.now(),
       fromCache: false,
@@ -237,7 +333,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
 }
 
 /**
- * Format an ISO date for display (e.g. "Oct 12, 2026, 6:30 PM")
+ * Format an ISO date for display (e.g. "Oct 12, 2026")
  */
 export function formatReleaseDate(isoString?: string | null): string {
   if (!isoString) return 'Recent';
@@ -255,9 +351,38 @@ export function formatReleaseDate(isoString?: string | null): string {
 }
 
 /**
- * Check if the user dismissed the update banner for this session.
+ * Record a dismissed commit SHA in localStorage so the banner is never shown again for that same commit.
  */
-export function isBannerDismissed(): boolean {
+export function dismissUpdateCommit(commitSha?: string | null): void {
+  if (!commitSha) return;
+  try {
+    localStorage.setItem(DISMISSED_COMMIT_KEY, commitSha.trim().toLowerCase());
+  } catch {
+    // Ignore storage issues
+  }
+}
+
+/**
+ * Check if the given commit SHA was dismissed in localStorage.
+ */
+export function isCommitDismissed(commitSha?: string | null): boolean {
+  if (!commitSha) return false;
+  try {
+    const dismissed = localStorage.getItem(DISMISSED_COMMIT_KEY);
+    if (!dismissed) return false;
+    return isSameCommit(dismissed, commitSha);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if the update banner was dismissed for this commit or session.
+ */
+export function isBannerDismissed(commitSha?: string | null): boolean {
+  if (commitSha && isCommitDismissed(commitSha)) {
+    return true;
+  }
   try {
     return sessionStorage.getItem(DISMISSED_SESSION_KEY) === '1';
   } catch {
@@ -266,9 +391,12 @@ export function isBannerDismissed(): boolean {
 }
 
 /**
- * Dismiss the update banner for the active session.
+ * Dismiss the update banner (persisting the commit SHA in localStorage).
  */
-export function dismissBanner(): void {
+export function dismissBanner(commitSha?: string | null): void {
+  if (commitSha) {
+    dismissUpdateCommit(commitSha);
+  }
   try {
     sessionStorage.setItem(DISMISSED_SESSION_KEY, '1');
   } catch {

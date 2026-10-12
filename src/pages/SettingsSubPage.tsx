@@ -36,7 +36,7 @@ import {
   formatReleaseDate,
   type UpdateCheckResult,
 } from '@/lib/update-checker';
-import { BUILD_TIME } from '@/buildInfo';
+import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -197,12 +197,21 @@ const SettingsSubPage: React.FC = () => {
 
   const handleCopyDiagnostics = () => {
     try {
-      const text = crashLogs.length > 0 ? JSON.stringify(crashLogs, null, 2) : 'No crashes recorded';
+      const payload = {
+        build: {
+          commit: BUILD_COMMIT,
+          commitShort: BUILD_COMMIT !== 'unknown' ? BUILD_COMMIT.slice(0, 7) : 'dev',
+          builtAt: BUILD_TIME,
+          appVersion: CURRENT_APP_VERSION,
+        },
+        crashes: crashLogs.length > 0 ? crashLogs : 'No crashes recorded',
+      };
+      const text = JSON.stringify(payload, null, 2);
       navigator.clipboard?.writeText(text);
       setCopiedDiagnostics(true);
       toast({
         title: 'Copied to clipboard',
-        description: 'Diagnostics log copied for troubleshooting.',
+        description: 'Diagnostics & build info copied for troubleshooting.',
       });
       setTimeout(() => setCopiedDiagnostics(false), 2000);
     } catch {
@@ -834,7 +843,9 @@ const SettingsSubPage: React.FC = () => {
                 <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40 text-xs text-muted-foreground">
                   <div className="truncate pr-2">
                     <span>Installed: </span>
-                    <span className="font-mono text-[11px]">{formatReleaseDate(BUILD_TIME)}</span>
+                    <span className="font-mono text-[11px]">
+                      {BUILD_COMMIT !== 'unknown' ? `${BUILD_COMMIT.slice(0, 7)} · ` : ''}{formatReleaseDate(BUILD_TIME)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 text-emerald-500 font-medium shrink-0">
                     <Check className="w-3.5 h-3.5" />
@@ -864,6 +875,19 @@ const SettingsSubPage: React.FC = () => {
                     {copiedDiagnostics ? 'Copied' : 'Copy'}
                   </Button>
                 )}
+              </div>
+
+              {/* Installed Build Identity */}
+              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-foreground/80">Commit:</span>
+                  <span className="font-bold text-amber-500 dark:text-amber-400">
+                    {BUILD_COMMIT !== 'unknown' ? BUILD_COMMIT.slice(0, 7) : 'dev'}
+                  </span>
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  Built: {new Date(BUILD_TIME).toLocaleDateString()} {new Date(BUILD_TIME).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
 
               {crashLogs.length === 0 ? (

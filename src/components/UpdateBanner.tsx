@@ -5,13 +5,14 @@ import {
   downloadAndInstallUpdate,
   formatReleaseDate,
   isBannerDismissed,
+  isCommitDismissed,
   dismissBanner,
   type UpdateCheckResult,
 } from '@/lib/update-checker';
 
 export const UpdateBanner: React.FC = () => {
   const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
-  const [dismissed, setDismissed] = useState<boolean>(() => isBannerDismissed());
+  const [dismissed, setDismissed] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -19,6 +20,9 @@ export const UpdateBanner: React.FC = () => {
       .then((res) => {
         if (isMounted) {
           setUpdateInfo(res);
+          const isDismissed = isBannerDismissed(res.release?.commitSha) ||
+                              (res.release?.commitSha ? isCommitDismissed(res.release.commitSha) : false);
+          setDismissed(isDismissed);
         }
       })
       .catch(() => {
@@ -40,7 +44,7 @@ export const UpdateBanner: React.FC = () => {
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dismissBanner();
+    dismissBanner(updateInfo.release?.commitSha);
     setDismissed(true);
   };
 
