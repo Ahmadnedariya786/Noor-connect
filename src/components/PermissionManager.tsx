@@ -9,6 +9,7 @@ import { permissionManager, type PermissionType, type PermissionInfo } from '@/l
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext-new';
 import { GeolocationService } from '@/lib/geolocation-service';
+import { nativeAdhan } from '@/lib/native-adhan';
 
 interface PermissionManagerProps {
   className?: string;
@@ -57,6 +58,9 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
       const success = await permissionManager.requestPermission(type);
       
       if (success) {
+        if (type === 'notifications' && Capacitor.isNativePlatform()) {
+          await nativeAdhan.ensureExactAlarmPermission(true);
+        }
         toast({
           title: 'Permission Granted',
           description: `The ${type} permission has been successfully granted.`,
@@ -68,6 +72,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         } else if (type === 'notifications') {
           if (Capacitor.isNativePlatform()) {
             await LocalNotifications.requestPermissions();
+            await nativeAdhan.ensureExactAlarmPermission(true);
           } else if ('Notification' in window) {
             await Notification.requestPermission();
           }

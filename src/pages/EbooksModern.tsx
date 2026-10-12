@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Search, Book, Download, Plus, X, Trash2,
   BookOpen, Bookmark, HardDrive, BookmarkCheck, CheckCircle,
@@ -442,7 +442,7 @@ export default function EbooksModern() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border safe-top">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

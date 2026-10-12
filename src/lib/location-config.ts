@@ -1,6 +1,8 @@
 export const LOCATION_STORAGE_KEY = 'location-storage';
 
 export const FALLBACK_LOCATIONS = {
+  'Asia/Kolkata': { name: 'New Delhi', lat: 28.6139, lon: 77.2090 },
+  'Asia/Calcutta': { name: 'New Delhi', lat: 28.6139, lon: 77.2090 },
   'Asia/Karachi': { name: 'Karachi', lat: 24.8607, lon: 67.0011 },
   'Asia/Dhaka': { name: 'Dhaka', lat: 23.8103, lon: 90.4125 },
   'Asia/Jakarta': { name: 'Jakarta', lat: -6.2088, lon: 106.8456 },

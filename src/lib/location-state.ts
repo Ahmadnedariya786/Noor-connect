@@ -6,6 +6,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { GeolocationService } from '@/lib/geolocation-service';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
+import { findNearestOfflineCity, type CityData } from '@/data/cities';
 
 export { FALLBACK_LOCATIONS } from '@/lib/location-config';
 
@@ -19,15 +20,21 @@ export interface LocationState {
   isIpBased?: boolean; // true if location was detected via IP fallback
 }
 
-const DEFAULT_LOCATION: LocationState = {
-  latitude: 24.8607, // Karachi
-  longitude: 67.0011, // Karachi
-  locationName: 'Karachi, Pakistan',
-  isDetecting: false,
-  timeZone: 'Asia/Karachi',
-  isIpBased: false,
-  lastUpdated: new Date().toISOString()
+const getInitialDefaultLocation = (): LocationState => {
+  const timeZone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Asia/Kolkata';
+  const fallback = getFallbackLocationByTimezone(timeZone);
+  return {
+    latitude: fallback.lat,
+    longitude: fallback.lon,
+    locationName: fallback.name,
+    isDetecting: false,
+    timeZone,
+    isIpBased: false,
+    lastUpdated: new Date().toISOString()
+  };
 };
+
+const DEFAULT_LOCATION: LocationState = getInitialDefaultLocation();
 
 // Load location from localStorage
 const loadStoredLocation = (): LocationState => {
@@ -95,103 +102,118 @@ export const useLocationState = () => {
     });
   }, []); // No dependency on location — uses functional setState
 
-  const detectLocation = useCallback(async (): Promise<boolean> => {
+  const detectLocation = useCallback(async (): Promise<CityData | null> => {
     if (location.isDetecting) {
-      return false;
+      return null;
     }
 
     setLocationState(prev => ({ ...prev, isDetecting: true }));
 
     try {
-      // Use device geolocation first so we do not leak IP/location data to third-party services.
-      if (!GeolocationService.isSupported()) {
-        throw new Error('Geolocation not supported');
+      let lat: number | null = null;
+      let lon: number | null = null;
+      let isIpBased = false;
+
+      // 1. PRIMARY: Try real device GPS (Capacitor Geolocation on native, navigator.geolocation on web)
+      if (GeolocationService.isSupported()) {
+        try {
+          const position = await GeolocationService.getCurrentPosition({
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+          });
+          lat = position.latitude;
+          lon = position.longitude;
+          isIpBased = false;
+        } catch (gpsError) {
+          console.warn('GPS detection failed or timed out, trying IP fallback:', gpsError);
+        }
       }
 
-      const position = await GeolocationService.getCurrentPosition({
-        enableHighAccuracy: false, // Low accuracy avoids Google Network Provider in some browsers
-        timeout: 5000,
-        maximumAge: 300000
-      });
+      // 2. FALLBACK: If GPS failed or was denied, try IP geolocation fallback
+      if (lat === null || lon === null) {
+        try {
+          const ipResponse = await fetch('https://ipapi.co/json/', {
+            signal: AbortSignal.timeout(4000)
+          });
+          if (ipResponse.ok) {
+            const ipData = await ipResponse.json();
+            if (typeof ipData.latitude === 'number' && typeof ipData.longitude === 'number') {
+              lat = ipData.latitude;
+              lon = ipData.longitude;
+              isIpBased = true;
+            }
+          }
+        } catch (ipError) {
+          console.warn('IP-based geolocation also failed:', ipError);
+        }
+      }
 
-      const { latitude, longitude } = position;
+      // 3. If neither GPS nor IP returned coordinates, do NOT silently fall back to Karachi.
+      if (lat === null || lon === null) {
+        setLocationState(prev => ({ ...prev, isDetecting: false }));
+        return null;
+      }
 
-      // Get location name using reverse geocoding
-      let locationName = 'Current Location';
+      // 4. CRITICAL: DO NOT trust IP city/country string or generic names.
+      // Match against the app's offline city dataset using Haversine distance.
+      const nearestCity = findNearestOfflineCity(lat, lon);
+      if (!nearestCity) {
+        setLocationState(prev => ({ ...prev, isDetecting: false }));
+        return null;
+      }
+
+      // 5. Optionally reverse geocode with Nominatim to enrich the district/suburb display name if online
+      let locationName = `${nearestCity.city}, ${nearestCity.country}`;
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+        const nominatimRes = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
           {
             headers: { 'User-Agent': 'Noor-Connect-Islamic-App/1.0' },
-            signal: AbortSignal.timeout(5000)
+            signal: AbortSignal.timeout(3000)
           }
         );
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.display_name) {
-            locationName = data.display_name.split(',').slice(0, 2).join(', ');
+        if (nominatimRes.ok) {
+          const data = await nominatimRes.json();
+          if (data?.address) {
+            const localName = data.address.city || data.address.town || data.address.suburb || nearestCity.city;
+            const countryName = data.address.country || nearestCity.country;
+            if (localName && countryName) {
+              locationName = `${localName}, ${countryName}`;
+            }
           }
         }
       } catch {
-        // Keep default name
+        // Fallback to offline nearest city display name
       }
 
       const newLocation: LocationState = {
-        latitude,
-        longitude,
+        latitude: nearestCity.lat,
+        longitude: nearestCity.lon,
         locationName,
+        timeZone: nearestCity.timezone,
         isDetecting: false,
-        isIpBased: false, // GPS-based location
+        isIpBased,
         lastUpdated: new Date().toISOString()
       };
 
       setLocationState(newLocation);
       saveLocation(newLocation);
-      return true;
-    } catch (error) {
-      console.warn('Geolocation detection failed, using local fallback:', error);
 
-      try {
-        const storedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
-        if (storedLocation) {
-          const parsed = JSON.parse(storedLocation);
-          if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
-            const restoredLocation: LocationState = {
-              ...DEFAULT_LOCATION,
-              ...parsed,
-              isDetecting: false
-            };
-            setLocationState(restoredLocation);
-            saveLocation(restoredLocation);
-            return true;
-          }
+      // Update Android widget
+      import('@/lib/widget-service').then(({ WidgetService }) => {
+        try {
+          WidgetService.updateWidget(newLocation.latitude, newLocation.longitude, newLocation.locationName);
+        } catch (widgetError) {
+          console.warn('Failed to update widget:', widgetError);
         }
-      } catch (storedError) {
-        console.warn('Failed to reuse stored location:', storedError);
-      }
+      }).catch(err => console.warn('Failed to import widget service:', err));
 
-      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const fallbackLocation = getFallbackLocationByTimezone(userTimezone);
-
-      if (fallbackLocation) {
-        const newLocation: LocationState = {
-          latitude: fallbackLocation.lat,
-          longitude: fallbackLocation.lon,
-          locationName: `${fallbackLocation.name} (Offline)`,
-          timeZone: userTimezone,
-          isDetecting: false,
-          isIpBased: false,
-          lastUpdated: new Date().toISOString()
-        };
-
-        setLocationState(newLocation);
-        saveLocation(newLocation);
-        return true;
-      }
-
+      return nearestCity;
+    } catch (err) {
+      console.error('Unexpected error during location detection:', err);
       setLocationState(prev => ({ ...prev, isDetecting: false }));
-      return false;
+      return null;
     }
   }, [location.isDetecting]);
 
@@ -212,3 +234,4 @@ export const useLocationState = () => {
     }
   }), [location, setLocation, detectLocation, resetToDefault]);
 };
+

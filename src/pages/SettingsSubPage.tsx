@@ -25,7 +25,9 @@ import {
   AlertTriangle,
   X,
   Check,
+  Activity,
 } from 'lucide-react';
+import { getLastCrashes, clearCrashes, type CrashEntry } from '@/lib/crash-logger';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -143,6 +145,34 @@ const SettingsSubPage: React.FC = () => {
   const meta = SECTION_TITLES[sectionId] || { title: 'Settings', subtitle: 'Noor Connect Preferences', icon: Palette };
   const IconComponent = meta.icon;
 
+  const [crashLogs, setCrashLogs] = useState<CrashEntry[]>([]);
+  const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
+
+  useEffect(() => {
+    if (sectionId === 'about') {
+      setCrashLogs(getLastCrashes());
+    }
+  }, [sectionId]);
+
+  const handleCopyDiagnostics = () => {
+    try {
+      const text = crashLogs.length > 0 ? JSON.stringify(crashLogs, null, 2) : 'No crashes recorded';
+      navigator.clipboard?.writeText(text);
+      setCopiedDiagnostics(true);
+      toast({
+        title: 'Copied to clipboard',
+        description: 'Diagnostics log copied for troubleshooting.',
+      });
+      setTimeout(() => setCopiedDiagnostics(false), 2000);
+    } catch {
+      toast({
+        title: 'Failed to copy',
+        description: 'Could not access clipboard.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleCopy = (name: string, address: string) => {
     navigator.clipboard?.writeText(address);
     toast({ title: `${name} address copied to clipboard` });
@@ -181,9 +211,9 @@ const SettingsSubPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-28">
+    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-4">
       {/* Header */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-3.5">
+      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80 px-4 pb-3.5 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
         <div className="max-w-md mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/profile')}
@@ -716,6 +746,80 @@ const SettingsSubPage: React.FC = () => {
             >
               View Release Changelog
             </Button>
+
+            {/* Diagnostics Black Box */}
+            <Card className="p-4 space-y-3 rounded-2xl border border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-amber-500" />
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Diagnostics
+                  </Label>
+                </div>
+                {crashLogs.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={handleCopyDiagnostics}
+                  >
+                    {copiedDiagnostics ? <Check className="w-3.5 h-3.5 mr-1 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                    {copiedDiagnostics ? 'Copied' : 'Copy'}
+                  </Button>
+                )}
+              </div>
+
+              {crashLogs.length === 0 ? (
+                <div className="flex items-center gap-2 py-3 px-3.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span>No crashes recorded</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {crashLogs.map((entry, idx) => (
+                      <div key={idx} className="p-2.5 rounded-xl bg-muted/60 border border-border text-left space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span className="font-mono">{new Date(entry.time).toLocaleTimeString()} · {new Date(entry.time).toLocaleDateString()}</span>
+                          <span className="font-semibold text-foreground/80 truncate max-w-[140px]">{entry.route}</span>
+                        </div>
+                        <p className="text-xs font-semibold text-red-500 dark:text-red-400 break-words">
+                          {entry.message}
+                        </p>
+                        {entry.stack && (
+                          <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-hidden max-h-20 bg-background/50 p-1.5 rounded">
+                            {entry.stack}
+                          </pre>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center pt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs rounded-lg"
+                      onClick={handleCopyDiagnostics}
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copy to Clipboard
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs text-muted-foreground hover:text-red-500 rounded-lg"
+                      onClick={() => {
+                        clearCrashes();
+                        setCrashLogs([]);
+                        toast({ title: 'Diagnostics cleared' });
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Card>
 
             {showChangelog && <Changelog onClose={() => setShowChangelog(false)} />}
           </div>

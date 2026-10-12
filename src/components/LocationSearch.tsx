@@ -5,32 +5,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { GeocodingService, type GeocodingResult } from "@/lib/geocoding";
+import {
+  POPULAR_CITIES,
+  POPULAR_INDIAN_CITIES,
+  POPULAR_GLOBAL_CITIES
+} from "@/data/cities";
+
+export { POPULAR_CITIES, POPULAR_INDIAN_CITIES, POPULAR_GLOBAL_CITIES };
 
 interface LocationSearchProps {
   onLocationSelect: (city: string, country: string) => Promise<void>;
   isLoading?: boolean;
 }
 
-const POPULAR_CITIES = [
-  { city: "Mecca", country: "Saudi Arabia" },
-  { city: "Medina", country: "Saudi Arabia" },
-  { city: "Karachi", country: "Pakistan" },
-  { city: "Lahore", country: "Pakistan" },
-  { city: "Cairo", country: "Egypt" },
-  { city: "Istanbul", country: "Turkey" },
-  { city: "Jakarta", country: "Indonesia" },
-  { city: "Dubai", country: "United Arab Emirates" },
-  { city: "Riyadh", country: "Saudi Arabia" },
-  { city: "London", country: "United Kingdom" },
-  { city: "New York", country: "United States" },
-  { city: "Los Angeles", country: "United States" }
-];
-
 export function LocationSearch({ onLocationSelect, isLoading = false }: LocationSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [regionFilter, setRegionFilter] = useState<'india' | 'international' | 'all'>('india');
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -57,13 +50,13 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
       try {
         const results = await GeocodingService.searchLocation(searchQuery);
         setSuggestions(results);
-        setShowSuggestions(true);
+        setShowSuggestions(results.length > 0);
       } catch (error) {
         console.error("Search failed:", error);
       } finally {
         setIsSearching(false);
       }
-    }, 500); // 500ms debounce
+    }, 300); // 300ms debounce
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -136,7 +129,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
         <div className="space-y-4 relative" ref={wrapperRef}>
           <div className="relative">
             <Input
-              placeholder="Search city (e.g. London, UK)"
+              placeholder="Search city (e.g. Delhi, Mumbai, London)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -185,28 +178,135 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
 
         <div className="mt-6">
           <p className="text-sm font-medium mb-3 text-center">Popular Cities</p>
-          <div className="grid grid-cols-2 gap-2">
-            {POPULAR_CITIES.map((city) => (
-              <Button
-                key={`${city.city}-${city.country}`}
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery(`${city.city}, ${city.country}`);
-                  onLocationSelect(city.city, city.country);
-                }}
-                disabled={isLoading}
-                className="text-xs h-auto py-2 px-2"
-              >
-                {city.city}
-              </Button>
-            ))}
+
+          {/* Region Tabs */}
+          <div className="flex items-center justify-center p-1 bg-muted/60 rounded-xl mb-3 gap-1">
+            <button
+              type="button"
+              onClick={() => setRegionFilter('india')}
+              className={`flex-1 text-xs py-1.5 px-2.5 rounded-lg font-medium transition-all ${
+                regionFilter === 'india'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              India
+            </button>
+            <button
+              type="button"
+              onClick={() => setRegionFilter('international')}
+              className={`flex-1 text-xs py-1.5 px-2.5 rounded-lg font-medium transition-all ${
+                regionFilter === 'international'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              International
+            </button>
+            <button
+              type="button"
+              onClick={() => setRegionFilter('all')}
+              className={`flex-1 text-xs py-1.5 px-2.5 rounded-lg font-medium transition-all ${
+                regionFilter === 'all'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              All
+            </button>
           </div>
+
+          {/* Cities Grid based on selected tab */}
+          {regionFilter === 'india' && (
+            <div className="grid grid-cols-2 gap-2">
+              {POPULAR_INDIAN_CITIES.map((city) => (
+                <Button
+                  key={`${city.city}-${city.country}`}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery(`${city.city}, ${city.country}`);
+                    onLocationSelect(city.city, city.country);
+                  }}
+                  disabled={isLoading}
+                  className="text-xs h-auto py-2 px-2"
+                >
+                  {city.city}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {regionFilter === 'international' && (
+            <div className="grid grid-cols-2 gap-2">
+              {POPULAR_GLOBAL_CITIES.map((city) => (
+                <Button
+                  key={`${city.city}-${city.country}`}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery(`${city.city}, ${city.country}`);
+                    onLocationSelect(city.city, city.country);
+                  }}
+                  disabled={isLoading}
+                  className="text-xs h-auto py-2 px-2"
+                >
+                  {city.city}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {regionFilter === 'all' && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">India</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {POPULAR_INDIAN_CITIES.map((city) => (
+                    <Button
+                      key={`${city.city}-${city.country}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchQuery(`${city.city}, ${city.country}`);
+                        onLocationSelect(city.city, city.country);
+                      }}
+                      disabled={isLoading}
+                      className="text-xs h-auto py-2 px-2"
+                    >
+                      {city.city}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">International</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {POPULAR_GLOBAL_CITIES.map((city) => (
+                    <Button
+                      key={`${city.city}-${city.country}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchQuery(`${city.city}, ${city.country}`);
+                        onLocationSelect(city.city, city.country);
+                      }}
+                      disabled={isLoading}
+                      className="text-xs h-auto py-2 px-2"
+                    >
+                      {city.city}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-4 text-center">
           <p className="text-xs text-muted-foreground">
-            Search provided by OpenStreetMap
+            Offline database with OpenStreetMap search
           </p>
         </div>
       </CardContent>

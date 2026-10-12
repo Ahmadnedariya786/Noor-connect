@@ -285,9 +285,9 @@ const Profile: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-32">
+    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-4">
       {/* Sticky Glassmorphic Navigation Bar */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-3.5 transition-all">
+      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80 px-4 pb-3.5 safe-top transition-all" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
         <div className="max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button

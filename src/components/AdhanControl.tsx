@@ -9,6 +9,7 @@ import { Badge } from './ui/badge';
 import { adhanService, AdhanConfig, Muezzin } from '@/lib/adhan-service';
 import { PRAYER_ALARM_CONTROL_EVENT, PRAYER_ALARM_TOGGLE_EVENT } from '@/lib/prayer-alarm-events';
 import { Capacitor } from '@capacitor/core';
+import { nativeAdhan } from '@/lib/native-adhan';
 
 interface AdhanControlProps {
   className?: string;
@@ -72,8 +73,11 @@ export function AdhanControl({ className }: AdhanControlProps) {
     return adhanService.onPlaybackChange(setIsPlaying);
   }, []);
 
-  const toggleAdhan = () => {
+  const toggleAdhan = async () => {
     const newEnabled = !config.enabled;
+    if (newEnabled && isNativePlatform) {
+      await nativeAdhan.ensureExactAlarmPermission(true);
+    }
     const newConfig = { ...config, enabled: newEnabled };
     adhanService.saveAdhanConfig(newConfig);
     syncAlarmToggle(newEnabled);

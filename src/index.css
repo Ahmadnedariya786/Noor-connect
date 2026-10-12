@@ -55,6 +55,8 @@
   }
 
   :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
 
     /* Azimuth-Inspired Warm Islamic Theme - Light Mode */
     --background: 38 30% 95%; /* Warm cream #F2EDE4 */
@@ -155,7 +157,7 @@
     /* Enhanced Premium Card Effects */
     --card-premium-shadow: 0 4px 20px hsl(0 0% 0% / 0.08), 0 1px 3px hsl(0 0% 0% / 0.05);
     --card-premium-shadow-hover: 0 12px 40px hsl(0 0% 0% / 0.15), 0 4px 12px hsl(0 0% 0% / 0.08);
-    --card-gradient-border: linear-gradient(135deg, hsl(0 0% 100% / 0.5), hsl(0 0% 100% / 0.1));
+    --card-gradient-border: linear-gradient(135deg, hsla(0, 75%, 55%, 0.5), hsl(0 0% 100% / 0.1));
     --card-gold-border: 1px solid hsl(45 100% 50% / 0.3);
     --card-gold-highlight: inset 0 1px 0 hsl(45 100% 50% / 0.2);
 
@@ -356,15 +358,25 @@
   }
 
   /* Enhanced Safe area padding for mobile devices */
+  .safe-top {
+    padding-top: var(--safe-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .safe-area-top {
+    padding-top: var(--safe-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: var(--safe-bottom);
+  }
+
   @supports (padding: max(0px)) {
     .pb-safe {
       padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
-    }
-    .safe-area-bottom {
-      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-    }
-    .safe-area-top {
-      padding-top: env(safe-area-inset-top);
     }
   }
 

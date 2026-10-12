@@ -16,14 +16,14 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 1200, // Reduced for better LCP
       launchAutoHide: true,
-      backgroundColor: "#0D0D0D",
+      backgroundColor: "#0E0B1E",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: false
     },
     LocalNotifications: {
       smallIcon: "ic_notification",
-      iconColor: "#D4AF37",
+      iconColor: "#F5C542",
       sound: "beep.wav"
     },
     PushNotifications: {

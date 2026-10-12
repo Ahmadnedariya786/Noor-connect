@@ -1,7 +1,8 @@
-﻿import { AppBar } from "@/components/AppBar";
+import { AppBar } from "@/components/AppBar";
 import QiblaCompassModern from "@/components/QiblaCompassModern";
 import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const Qibla = () => {
   const { t } = useLanguage();
@@ -12,7 +13,29 @@ const Qibla = () => {
         <AppBar title={t("qibla") || "Qibla"} />
         <div className="flex flex-col min-h-[calc(100vh-64px)]">
           <div className="flex-grow">
-            <QiblaCompassModern />
+            <ErrorBoundary
+              fallback={
+                <div className="flex flex-col items-center justify-center p-6 text-center my-8">
+                  <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto text-xl">
+                      🧭
+                    </div>
+                    <h3 className="text-base font-bold text-foreground">Qibla Temporarily Unavailable</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The compass sensor or location service encountered an issue. You can still determine Qibla using prayer times or tap below to reload.
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="mt-2 px-4 py-2 rounded-xl bg-[#C9860A] text-white text-xs font-bold shadow-md hover:bg-[#E8A020] active:scale-95 transition-all"
+                    >
+                      Retry Compass
+                    </button>
+                  </div>
+                </div>
+              }
+            >
+              <QiblaCompassModern />
+            </ErrorBoundary>
           </div>
           <p className="text-center text-xs text-muted-foreground/60 px-6 pb-8 italic">
             {t(

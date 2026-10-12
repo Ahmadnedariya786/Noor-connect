@@ -20,6 +20,7 @@ import i18n from "@/lib/i18n-new";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { AutoBackupRestoreDialog } from "@/components/AutoBackupRestoreDialog";
 import { initBackupService } from "@/lib/backup-service";
 import { useAutoBackup } from "@/hooks/useAutoBackup";
@@ -253,7 +254,7 @@ function AppRoutes() {
   );
 }
 
-function AppContent() {
+function AppContent({ splashActive }: { splashActive?: boolean }) {
   const { animationEnabled, greetingEnabled } = useSettings();
   const tier = useAnimationTier();
   const reduceMotion = tier.shouldReduceAnimations;
@@ -266,7 +267,7 @@ function AppContent() {
             <div className="flex-shrink-0">
               <Suspense fallback={null}>
                 <GlobalPrayerAlarm />
-                {greetingEnabled && <SalamGreeting />}
+                {greetingEnabled && <SalamGreeting splashActive={splashActive} />}
                 <FestivePopup />
                 <PWAInstallPrompt />
                 <EidChecklistNotification />
@@ -369,47 +370,147 @@ function AppShell() {
   }, []);
 
   useEffect(() => {
-    notificationManager.start();
-
-    // Unified backup service: legacy migration + app-pause snapshots
-    initBackupService();
-    
-    // Safety clear for Ramadan notifications if it's not Ramadan
-    import('@/lib/islamic-calendar-service').then(async ({ islamicCalendarService }) => {
-      try {
-        const info = await islamicCalendarService.getIslamicCalendarInfo();
-        if (info.hijriMonth !== 9) {
-          const { RamadanNotifications } = await import('@/lib/ramadan-notifications');
-          const instance = RamadanNotifications.getInstance();
-          await instance.clearRamadanNotifications();
-        }
-      } catch (e) {
-        console.error('Failed to safety clear Ramadan notifications', e);
-      }
-    });
-
-    islamicEventsService.scheduleUpcomingEvents().catch(error => {
-      console.error('Failed to schedule Islamic events:', error);
-    });
-
-    if (import.meta.env.PROD && !navigator.serviceWorker.controller) {
-      serviceWorkerManager.register();
+    // 1. Notification service init
+    try {
+      notificationManager.start();
+    } catch (e) {
+      console.warn('Startup: notificationManager.start failed', e);
     }
 
-    const savedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
-    if (savedLocation) {
-      try {
+    // 2. Backup service init & auto snapshot
+    try {
+      initBackupService();
+    } catch (e) {
+      console.warn('Startup: initBackupService failed', e);
+    }
+    
+    // 3. Safety clear for Ramadan notifications if it's not Ramadan
+    try {
+      import('@/lib/islamic-calendar-service').then(async ({ islamicCalendarService }) => {
+        try {
+          const info = await islamicCalendarService.getIslamicCalendarInfo();
+          if (info.hijriMonth !== 9) {
+            const { RamadanNotifications } = await import('@/lib/ramadan-notifications');
+            const instance = RamadanNotifications.getInstance();
+            await instance.clearRamadanNotifications();
+          }
+        } catch (e) {
+          console.warn('Failed to safety clear Ramadan notifications', e);
+        }
+      }).catch(e => console.warn('Failed to import islamic-calendar-service', e));
+    } catch (e) {
+      console.warn('Startup: islamic-calendar-service failed', e);
+    }
+
+    // 4. Schedule upcoming Islamic events
+    try {
+      islamicEventsService.scheduleUpcomingEvents().catch(error => {
+        console.warn('Failed to schedule Islamic events:', error);
+      });
+    } catch (e) {
+      console.warn('Startup: islamicEventsService failed', e);
+    }
+
+    // 5. Service worker registration (PWA)
+    try {
+      if (import.meta.env.PROD && !navigator.serviceWorker.controller) {
+        serviceWorkerManager.register();
+      }
+    } catch (e) {
+      console.warn('Startup: serviceWorkerManager failed', e);
+    }
+
+    // 6. Widget auto-update initialization
+    try {
+      const savedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
+      if (savedLocation) {
         const { latitude, longitude, locationName } = JSON.parse(savedLocation);
         import('@/lib/widget-service').then(({ WidgetService }) => {
-          WidgetService.startAutoUpdate(latitude, longitude, locationName);
-        });
-      } catch (err) {
-        console.warn('Failed to start widget auto-update', err);
+          try {
+            WidgetService.startAutoUpdate(latitude, longitude, locationName);
+          } catch (e) {
+            console.warn('Failed to start widget auto-update', e);
+          }
+        }).catch(err => console.warn('Failed to import widget-service', err));
       }
+    } catch (err) {
+      console.warn('Startup: widget auto-update failed', err);
     }
 
+    // 7. Exact-alarm check on native (defensive)
+    try {
+      if (Capacitor.isNativePlatform()) {
+        import('@/lib/native-adhan').then(({ isExactAlarmPermissionGranted }) => {
+          isExactAlarmPermissionGranted?.().catch(() => {});
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.warn('Startup: exact-alarm check failed', e);
+    }
+
+    // ── Defensive Resume Handler (idempotent, guarded) ──
+    const handleResume = () => {
+      // Re-check exact alarms
+      try {
+        if (Capacitor.isNativePlatform()) {
+          import('@/lib/native-adhan').then(({ isExactAlarmPermissionGranted }) => {
+            isExactAlarmPermissionGranted?.().catch(() => {});
+          }).catch(() => {});
+        }
+      } catch (e) {
+        console.warn('Resume: exact-alarm check error', e);
+      }
+
+      // Re-sync widgets
+      try {
+        const loc = localStorage.getItem(LOCATION_STORAGE_KEY);
+        if (loc) {
+          const { latitude, longitude, locationName } = JSON.parse(loc);
+          import('@/lib/widget-service').then(({ WidgetService }) => {
+            WidgetService.startAutoUpdate?.(latitude, longitude, locationName);
+          }).catch(() => {});
+        }
+      } catch (e) {
+        console.warn('Resume: widget sync error', e);
+      }
+
+      // Re-check missed notifications
+      try {
+        notificationManager.checkMissedNotifications?.();
+      } catch (e) {
+        console.warn('Resume: notification check error', e);
+      }
+    };
+
+    let resumeSubCleanup: (() => void) | null = null;
+    try {
+      const subPromise = CapacitorApp.addListener('appStateChange', (state) => {
+        if (state.isActive) {
+          handleResume();
+        }
+      });
+      resumeSubCleanup = () => {
+        subPromise.then(handle => handle.remove?.()).catch(() => {});
+      };
+    } catch {}
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleResume();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
-      notificationManager.stop();
+      try {
+        notificationManager.stop();
+      } catch (e) {
+        console.warn('Cleanup: notificationManager.stop failed', e);
+      }
+      if (resumeSubCleanup) {
+        resumeSubCleanup();
+      }
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 
@@ -422,11 +523,17 @@ function AppShell() {
           <SplashScreen
             animationsEnabled={animationEnabled}
             showGreeting={splashGreetingEnabled}
-            onComplete={() => setShowSplash(false)}
+            onComplete={() => {
+              try {
+                setShowSplash(false);
+              } catch (e) {
+                console.warn('Splash handoff error', e);
+              }
+            }}
           />
         )}
       </AnimatePresence>
-      <AppContent />
+      <AppContent splashActive={showSplash && splashEnabled} />
     </TooltipProvider>
   );
 }

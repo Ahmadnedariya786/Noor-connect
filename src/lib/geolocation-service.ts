@@ -1,9 +1,11 @@
 /**
  * Geolocation Service
- * Handles location detection using standard browser API for F-Droid compliance
+ * Bridges native device GPS via @capacitor/geolocation and web navigator.geolocation
+ * with strict timeouts, clear permission handling, and zero freeze.
  */
 
 import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 export interface LocationCoordinates {
   latitude: number;
@@ -23,14 +25,33 @@ export class GeolocationService {
    * Check if geolocation is supported
    */
   static isSupported(): boolean {
-    return 'geolocation' in navigator;
+    if (Capacitor.isNativePlatform()) {
+      return true;
+    }
+    return typeof navigator !== 'undefined' && 'geolocation' in navigator;
   }
 
   /**
    * Check current permission status
    */
   static async checkPermissions(): Promise<PermissionStatus> {
-    if ('permissions' in navigator) {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await Geolocation.checkPermissions();
+        return {
+          location: result.location,
+          coarseLocation: result.coarseLocation
+        };
+      } catch (error) {
+        console.warn('Native checkPermissions error:', error);
+        return {
+          location: 'prompt',
+          coarseLocation: 'prompt'
+        };
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && 'permissions' in navigator) {
       try {
         const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
         const state = result.state as 'granted' | 'denied' | 'prompt';
@@ -39,7 +60,7 @@ export class GeolocationService {
           coarseLocation: state
         };
       } catch (error) {
-        console.error('Error checking permissions:', error);
+        console.warn('Error checking browser permissions:', error);
       }
     }
 
@@ -50,9 +71,24 @@ export class GeolocationService {
     };
   }
 
+  /**
+   * Request location permissions
+   */
   static async requestPermissions(): Promise<boolean> {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await Geolocation.requestPermissions({
+          permissions: ['location', 'coarseLocation']
+        });
+        return result.location === 'granted' || result.coarseLocation === 'granted';
+      } catch (error) {
+        console.warn('Native requestPermissions failed:', error);
+        return false;
+      }
+    }
+
     return new Promise((resolve) => {
-      if (!navigator.geolocation) {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
         resolve(false);
         return;
       }
@@ -63,25 +99,74 @@ export class GeolocationService {
           console.warn('Geolocation permission request failed or denied:', error);
           resolve(false);
         },
-        { timeout: 10000, enableHighAccuracy: true }
+        { timeout: 8000, enableHighAccuracy: true }
       );
     });
   }
 
+  /**
+   * Get current position with strict timeout and fallback handling
+   * Defaults to 10s timeout to prevent hanging on "Detecting..."
+   */
   static async getCurrentPosition(options?: {
     enableHighAccuracy?: boolean;
     timeout?: number;
     maximumAge?: number;
   }): Promise<LocationCoordinates> {
-    const defaultOptions = {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 300000,
-      ...options
-    };
+    const timeoutMs = options?.timeout ?? 10000;
+    const enableHighAccuracy = options?.enableHighAccuracy ?? true;
+    const maximumAge = options?.maximumAge ?? 300000;
 
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
+    // Hard timeout race promise so detection NEVER hangs
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Location request timed out. Please select your city manually.'));
+      }, timeoutMs);
+    });
+
+    if (Capacitor.isNativePlatform()) {
+      const nativePromise = (async (): Promise<LocationCoordinates> => {
+        // Check and request permissions first if needed
+        try {
+          const perm = await Geolocation.checkPermissions();
+          if (perm.location !== 'granted' && perm.coarseLocation !== 'granted') {
+            const requested = await Geolocation.requestPermissions({
+              permissions: ['location', 'coarseLocation']
+            });
+            if (requested.location === 'denied' && requested.coarseLocation === 'denied') {
+              throw new Error('Location permission denied. Please enable location access in settings or pick your city manually.');
+            }
+          }
+        } catch (permError: any) {
+          if (permError.message?.includes('denied')) {
+            throw permError;
+          }
+          console.warn('Could not verify native permissions, proceeding with GPS request:', permError);
+        }
+
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy,
+          timeout: timeoutMs,
+          maximumAge
+        });
+
+        if (!position?.coords || typeof position.coords.latitude !== 'number' || typeof position.coords.longitude !== 'number' || Number.isNaN(position.coords.latitude) || Number.isNaN(position.coords.longitude)) {
+          throw new Error('Invalid GPS coordinates received from native provider');
+        }
+
+        return {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: typeof position.coords.accuracy === 'number' ? position.coords.accuracy : 1000
+        };
+      })();
+
+      return Promise.race([nativePromise, timeoutPromise]);
+    }
+
+    // Web platform
+    const webPromise = new Promise<LocationCoordinates>((resolve, reject) => {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
         reject(new Error('Geolocation is not supported by your browser'));
         return;
       }
@@ -97,22 +182,28 @@ export class GeolocationService {
         (error) => {
           switch (error.code) {
             case error.PERMISSION_DENIED:
-              reject(new Error('Location access denied. Please enable location permissions.'));
+              reject(new Error('Location access denied. Please enable location permissions or pick your city manually.'));
               break;
             case error.POSITION_UNAVAILABLE:
-              reject(new Error('Location information unavailable.'));
+              reject(new Error('Location information unavailable. Please select your city manually.'));
               break;
             case error.TIMEOUT:
-              reject(new Error('Location request timed out.'));
+              reject(new Error('Location request timed out. Please select your city manually.'));
               break;
             default:
-              reject(new Error('An unknown error occurred while getting location.'));
+              reject(new Error('An error occurred while getting location. Please select your city manually.'));
               break;
           }
         },
-        defaultOptions
+        {
+          enableHighAccuracy,
+          timeout: timeoutMs,
+          maximumAge
+        }
       );
     });
+
+    return Promise.race([webPromise, timeoutPromise]);
   }
 
   static async watchPosition(
@@ -123,39 +214,87 @@ export class GeolocationService {
       maximumAge?: number;
     }
   ): Promise<string> {
-    const defaultOptions = {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 300000,
-      ...options
-    };
+    const timeout = options?.timeout ?? 15000;
+    const enableHighAccuracy = options?.enableHighAccuracy ?? true;
+    const maximumAge = options?.maximumAge ?? 300000;
 
-    if (!navigator.geolocation) {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        if (!Geolocation || typeof Geolocation.watchPosition !== 'function') {
+          return "";
+        }
+        const callbackId = await Geolocation.watchPosition(
+          { enableHighAccuracy, timeout, maximumAge },
+          (position, err) => {
+            if (err) {
+              console.warn('Native Geolocation watch error:', err);
+              return;
+            }
+            if (position?.coords && typeof position.coords.latitude === 'number' && typeof position.coords.longitude === 'number' && !Number.isNaN(position.coords.latitude) && !Number.isNaN(position.coords.longitude)) {
+              try {
+                callback({
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy: typeof position.coords.accuracy === 'number' ? position.coords.accuracy : 1000
+                });
+              } catch (cbErr) {
+                console.warn('Geolocation watch callback error:', cbErr);
+              }
+            }
+          }
+        );
+        return callbackId || "";
+      } catch (err) {
+        console.warn('Native watchPosition failed to start:', err);
+        return "";
+      }
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
       return "";
     }
 
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        callback({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        });
-      },
-      (error) => {
-        // Silently handle watch errors to avoid spam
-      },
-      defaultOptions
-    );
-    return watchId.toString();
+    try {
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          if (position?.coords && typeof position.coords.latitude === 'number' && typeof position.coords.longitude === 'number' && !Number.isNaN(position.coords.latitude) && !Number.isNaN(position.coords.longitude)) {
+            try {
+              callback({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: typeof position.coords.accuracy === 'number' ? position.coords.accuracy : 1000
+              });
+            } catch (cbErr) {
+              console.warn('Geolocation watch callback error:', cbErr);
+            }
+          }
+        },
+        () => {},
+        { enableHighAccuracy, timeout, maximumAge }
+      );
+      return watchId.toString();
+    } catch {
+      return "";
+    }
   }
 
   /**
    * Clear position watch
    */
   static async clearWatch(watchId: string): Promise<void> {
-    if (watchId) {
-      navigator.geolocation.clearWatch(parseInt(watchId, 10));
+    if (!watchId) return;
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        if (Geolocation && typeof Geolocation.clearWatch === 'function') {
+          await Geolocation.clearWatch({ id: watchId });
+        }
+      } else if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.clearWatch(parseInt(watchId, 10));
+      }
+    } catch (err) {
+      console.warn('Failed to clear watch:', err);
     }
   }
 }
+

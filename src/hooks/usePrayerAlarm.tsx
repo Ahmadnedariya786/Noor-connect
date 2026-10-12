@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { getAdhanUrlForPrayer, type PrayerName } from '@/lib/adhan-preferences';
 import { nativeAdhan } from '@/lib/native-adhan';
@@ -64,6 +65,10 @@ export const usePrayerAlarm = () => {
   const enableAlarm = useCallback(async () => {
     if ('Notification' in window && Notification.permission === 'default') {
       await Notification.requestPermission();
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      await nativeAdhan.ensureExactAlarmPermission(true);
     }
 
     // Try to unlock audio playback from a user gesture context.

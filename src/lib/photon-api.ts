@@ -35,6 +35,31 @@ export interface SearchOptions {
   country?: string;
 }
 
+import { searchOfflineCities, type CityData } from '@/data/cities';
+
+function mapCityDataToCityResult(city: CityData, index: number): CityResult {
+  return {
+    place_id: 1000 + index,
+    osm_id: 1000 + index,
+    osm_type: 'node',
+    extent: [],
+    country: city.country,
+    osm_key: 'place',
+    osm_value: 'city',
+    name: city.city,
+    state: city.state,
+    city: city.city,
+    lat: city.lat,
+    lon: city.lon,
+    display_name: `${city.city}, ${city.state ? city.state + ', ' : ''}${city.country}`,
+    class: 'place',
+    type: 'city',
+    importance: city.isPopular ? 1 : 0.8,
+    icon: '',
+    boundingbox: [city.lat, city.lon, city.lat, city.lon]
+  };
+}
+
 class PhotonAPIService {
   private readonly BASE_URL = 'https://photon.komoot.io/api/';
   private searchAbortController: AbortController | null = null;
@@ -45,6 +70,12 @@ class PhotonAPIService {
   async searchCities(query: string, options: SearchOptions = {}): Promise<CityResult[]> {
     if (!query.trim() || query.length < 2) {
       return [];
+    }
+
+    // Check offline database first
+    const offlineMatches = searchOfflineCities(query, options.limit || 10);
+    if (offlineMatches.length > 0) {
+      return offlineMatches.map(mapCityDataToCityResult);
     }
 
     // Cancel previous search if still pending
@@ -138,6 +169,12 @@ class PhotonAPIService {
   async searchCitiesAndTowns(query: string, options: SearchOptions = {}): Promise<CityResult[]> {
     if (!query.trim() || query.length < 2) {
       return [];
+    }
+
+    // Check offline database first
+    const offlineMatches = searchOfflineCities(query, options.limit || 15);
+    if (offlineMatches.length > 0) {
+      return offlineMatches.map(mapCityDataToCityResult);
     }
 
     // Cancel previous search if still pending
@@ -314,6 +351,82 @@ class PhotonAPIService {
         importance: 1,
         icon: '',
         boundingbox: [31.7683, 35.2137, 31.7683, 35.2137]
+      },
+      {
+        place_id: 4,
+        osm_id: 4,
+        osm_type: 'relation',
+        extent: [],
+        country: 'India',
+        osm_key: 'place',
+        osm_value: 'city',
+        name: 'New Delhi',
+        state: 'Delhi',
+        lat: 28.6139,
+        lon: 77.2090,
+        display_name: 'New Delhi, Delhi, India',
+        class: 'place',
+        type: 'city',
+        importance: 1,
+        icon: '',
+        boundingbox: [28.6139, 77.2090, 28.6139, 77.2090]
+      },
+      {
+        place_id: 5,
+        osm_id: 5,
+        osm_type: 'relation',
+        extent: [],
+        country: 'India',
+        osm_key: 'place',
+        osm_value: 'city',
+        name: 'Mumbai',
+        state: 'Maharashtra',
+        lat: 19.0760,
+        lon: 72.8777,
+        display_name: 'Mumbai, Maharashtra, India',
+        class: 'place',
+        type: 'city',
+        importance: 1,
+        icon: '',
+        boundingbox: [19.0760, 72.8777, 19.0760, 72.8777]
+      },
+      {
+        place_id: 6,
+        osm_id: 6,
+        osm_type: 'relation',
+        extent: [],
+        country: 'India',
+        osm_key: 'place',
+        osm_value: 'city',
+        name: 'Hyderabad',
+        state: 'Telangana',
+        lat: 17.3850,
+        lon: 78.4867,
+        display_name: 'Hyderabad, Telangana, India',
+        class: 'place',
+        type: 'city',
+        importance: 1,
+        icon: '',
+        boundingbox: [17.3850, 78.4867, 17.3850, 78.4867]
+      },
+      {
+        place_id: 7,
+        osm_id: 7,
+        osm_type: 'relation',
+        extent: [],
+        country: 'India',
+        osm_key: 'place',
+        osm_value: 'city',
+        name: 'Lucknow',
+        state: 'Uttar Pradesh',
+        lat: 26.8467,
+        lon: 80.9462,
+        display_name: 'Lucknow, Uttar Pradesh, India',
+        class: 'place',
+        type: 'city',
+        importance: 1,
+        icon: '',
+        boundingbox: [26.8467, 80.9462, 26.8467, 80.9462]
       }
     ];
   }

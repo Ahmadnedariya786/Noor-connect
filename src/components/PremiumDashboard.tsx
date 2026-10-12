@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, memo, lazy, Suspense } from "react";
+import React, { useState, useEffect, memo, lazy, Suspense } from "react";
 import { m } from "framer-motion";
 import { Bell, MapPin, ChevronRight, Activity, Compass, Grid3X3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,7 @@ interface PremiumDashboardProps {
   AladhanAPI: any;
   location: any;
   prayerTimesHook: any;
+  loadingAPI?: boolean;
   setLoadingAPI: (loading: boolean) => void;
   toast: any;
 }
@@ -148,6 +149,7 @@ function PremiumDashboardInner({
   AladhanAPI,
   location,
   prayerTimesHook,
+  loadingAPI = false,
   setLoadingAPI,
   toast,
 }: PremiumDashboardProps) {
@@ -225,19 +227,46 @@ function PremiumDashboardInner({
               <div className="space-y-4">
                 <Button
                   onClick={async () => {
-                    const success = await location.detectLocation();
-                    if (success) {
-                      toast({ title: "Location Detected", description: `Updated to ${location.locationName}` });
-                      setShowManualLocationDialog(false);
-                    } else {
-                      toast({ title: "Detection Failed", description: "Please enable location permissions", variant: "destructive" });
+                    try {
+                      setLoadingAPI(true);
+                      const matchedCity = await location.detectLocation();
+                      if (matchedCity) {
+                        AladhanAPI.clearCachedData();
+                        let timezone = matchedCity.timezone;
+                        try {
+                          const result = await AladhanAPI.getTodaysPrayerTimes(matchedCity.lat, matchedCity.lon, 1);
+                          if (result?.timezone) {
+                            timezone = result.timezone;
+                          }
+                        } catch {
+                          // Offline fallback is fine
+                        }
+                        location.setLocation(matchedCity.lat, matchedCity.lon, `${matchedCity.city}, ${matchedCity.country}`, timezone);
+                        await prayerTimesHook.setManualLocation(matchedCity.city, matchedCity.country);
+                        setShowManualLocationDialog(false);
+                        toast({ title: "Location Updated", description: `Time adjusted to ${timezone}` });
+                      } else {
+                        toast({
+                          title: "Detection Failed",
+                          description: "Could not detect GPS location. Please check permissions or select your city manually.",
+                          variant: "destructive"
+                        });
+                      }
+                    } catch (err: any) {
+                      toast({
+                        title: "Detection Failed",
+                        description: err?.message || "Please enable location permissions or select your city manually.",
+                        variant: "destructive"
+                      });
+                    } finally {
+                      setLoadingAPI(false);
                     }
                   }}
-                  disabled={location.isDetecting}
+                  disabled={location.isDetecting || loadingAPI}
                   className="w-full h-12 rounded-2xl font-bold text-white gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 border-none hover:opacity-90 transition-opacity"
                 >
-                  {location.isDetecting ? <Activity className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
-                  {location.isDetecting ? "Detecting..." : "Auto-Detect (GPS/IP)"}
+                  {location.isDetecting || loadingAPI ? <Activity className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
+                  {location.isDetecting || loadingAPI ? "Detecting..." : "Auto-Detect (GPS/IP)"}
                 </Button>
 
                 <div className="flex items-center gap-3 py-2">
@@ -272,7 +301,7 @@ function PremiumDashboardInner({
       )}
 
       {/* Content */}
-      <div className="flex-1 px-5 pb-36 pt-safe-top space-y-6 max-w-lg mx-auto w-full">
+      <div className="flex-1 px-5 pb-36 safe-top space-y-6 max-w-lg mx-auto w-full">
 
         {/* ── Top Bar ── */}
         <div className="flex items-center justify-between pt-4">

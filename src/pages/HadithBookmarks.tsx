@@ -11,7 +11,7 @@ export function HadithBookmarksPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background safe-top">
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
           <div className="flex items-center gap-4">
             <Button

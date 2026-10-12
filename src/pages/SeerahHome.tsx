@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search, Bookmark } from "lucide-react";
 import { motion } from "framer-motion";
@@ -110,7 +110,7 @@ export default function SeerahHome() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-background pb-24 safe-top">
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
           <div className="flex items-center gap-4 mb-6">
             <Button

@@ -231,35 +231,64 @@ export function getRotationInstruction(
  * Returns a promise that resolves within ~300ms.
  */
 export async function detectOrientationSensor(): Promise<'supported' | 'unsupported' | 'permission-required'> {
-  if (typeof window === 'undefined' || !('DeviceOrientationEvent' in window)) {
+  try {
+    if (typeof window === 'undefined' || !('DeviceOrientationEvent' in window)) {
+      return 'unsupported';
+    }
+
+    // iOS 13+ requires permission
+    const ctor = window.DeviceOrientationEvent as typeof DeviceOrientationEvent & { requestPermission?: () => Promise<string> };
+    if (typeof ctor.requestPermission === 'function') {
+      return 'permission-required';
+    }
+
+    // Sniff for actual sensor data in 300ms
+    return new Promise((resolve) => {
+      let settled = false;
+
+      const cleanup = () => {
+        try {
+          window.removeEventListener('deviceorientationabsolute', handler, true);
+          window.removeEventListener('deviceorientation', handler, true);
+        } catch {
+          // ignore
+        }
+      };
+
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve('unsupported');
+      }, 350);
+
+      const handler = (e: DeviceOrientationEvent) => {
+        try {
+          if (!e || settled) return;
+          const webkitHeading = (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading;
+          const hasData = (e.alpha !== null && typeof e.alpha === 'number' && Number.isFinite(e.alpha)) ||
+                          (typeof webkitHeading === 'number' && Number.isFinite(webkitHeading));
+          if (hasData) {
+            settled = true;
+            clearTimeout(timeout);
+            cleanup();
+            resolve('supported');
+          }
+        } catch {
+          // ignore error and allow timeout fallback
+        }
+      };
+
+      try {
+        window.addEventListener('deviceorientationabsolute', handler, true);
+        window.addEventListener('deviceorientation', handler, true);
+      } catch {
+        settled = true;
+        clearTimeout(timeout);
+        resolve('unsupported');
+      }
+    });
+  } catch {
     return 'unsupported';
   }
-
-  // iOS 13+ requires permission
-  const ctor = window.DeviceOrientationEvent as typeof DeviceOrientationEvent & { requestPermission?: () => Promise<string> };
-  if (typeof ctor.requestPermission === 'function') {
-    return 'permission-required';
-  }
-
-  // Sniff for actual sensor data in 300ms
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      window.removeEventListener('deviceorientationabsolute', handler, true);
-      window.removeEventListener('deviceorientation', handler, true);
-      resolve('unsupported');
-    }, 300);
-
-    const handler = (e: DeviceOrientationEvent) => {
-      const hasData = e.alpha !== null || (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading !== undefined;
-      if (hasData) {
-        clearTimeout(timeout);
-        window.removeEventListener('deviceorientationabsolute', handler, true);
-        window.removeEventListener('deviceorientation', handler, true);
-        resolve('supported');
-      }
-    };
-
-    window.addEventListener('deviceorientationabsolute', handler, true);
-    window.addEventListener('deviceorientation', handler, true);
-  });
 }

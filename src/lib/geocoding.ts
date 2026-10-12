@@ -18,13 +18,39 @@ export interface GeocodingResult {
   };
 }
 
+import { searchOfflineCities, getOfflineCityCoordinates } from '@/data/cities';
+
 export class GeocodingService {
   private static readonly NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search';
 
   /**
    * Search for a location by query (city name, address, etc.)
+   * Offline-first: returns local pre-indexed cities instantly without network calls
    */
   static async searchLocation(query: string): Promise<GeocodingResult[]> {
+    // 1. Search offline dataset first (instant, zero network)
+    const offlineMatches = searchOfflineCities(query, 10);
+    const offlineResults: GeocodingResult[] = offlineMatches.map(city => ({
+      display_name: `${city.city}, ${city.state ? city.state + ', ' : ''}${city.country}`,
+      lat: city.lat.toString(),
+      lon: city.lon.toString(),
+      address: {
+        city: city.city,
+        town: city.city,
+        state: city.state,
+        country: city.country
+      }
+    }));
+
+    if (offlineResults.length > 0) {
+      return offlineResults;
+    }
+
+    // 2. If no offline matches, attempt online search if network is available
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return [];
+    }
+
     try {
       const url = `${this.NOMINATIM_BASE}?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
 
@@ -35,25 +61,37 @@ export class GeocodingService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        return [];
       }
 
       const results = await response.json();
       return results;
     } catch (error) {
-      console.error('Failed to search location:', error);
-      throw error;
+      console.warn('Network search failed or offline:', error);
+      return [];
     }
   }
 
   /**
    * Get coordinates for a specific city and country
+   * Offline-first: immediately resolves known cities without network calls
    */
   static async getCityCoordinates(city: string, country: string): Promise<{
     latitude: number;
     longitude: number;
     displayName: string;
   }> {
+    // 1. Check offline dataset first (instant, zero network)
+    const offlineMatch = getOfflineCityCoordinates(city, country);
+    if (offlineMatch) {
+      return {
+        latitude: offlineMatch.lat,
+        longitude: offlineMatch.lon,
+        displayName: `${offlineMatch.city}, ${offlineMatch.state ? offlineMatch.state + ', ' : ''}${offlineMatch.country}`
+      };
+    }
+
+    // 2. Fallback to searchLocation
     const query = city ? `${city}, ${country}` : country;
     const results = await this.searchLocation(query);
 

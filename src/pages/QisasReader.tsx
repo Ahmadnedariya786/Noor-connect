@@ -217,7 +217,7 @@ export default function QisasReader() {
           />
         </div>
 
-        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 z-40">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 z-40 safe-top">
           <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button

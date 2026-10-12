@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" width="640" height="160">
+  <defs>
+    <radialGradient id="markGlow" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#181335"/>
+      <stop offset="60%" stop-color="#0E0B1E"/>
+      <stop offset="100%" stop-color="#080612"/>
+    </radialGradient>
+    <linearGradient id="textGold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="35%" stop-color="#F5C542"/>
+      <stop offset="70%" stop-color="#E8A317"/>
+      <stop offset="100%" stop-color="#D48F0E"/>
+    </linearGradient>
+    <linearGradient id="subGold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E2B85A"/>
+      <stop offset="100%" stop-color="#C58F28"/>
+    </linearGradient>
+    <filter id="markSoftGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Left: The Symbol in a 128x128 Container -->
+  <g transform="translate(16, 16) scale(0.25)">
+    <!-- Container -->
+    <rect width="512" height="512" rx="112" fill="url(#markGlow)"/>
+    <rect width="510" height="510" x="1" y="1" rx="111" fill="none" stroke="#F5C542" stroke-opacity="0.18" stroke-width="2"/>
+
+    <!-- Star -->
+    <g filter="url(#markSoftGlow)">
+      <rect x="230" y="108" width="52" height="52" rx="3.5" fill="url(#textGold)"/>
+      <rect x="230" y="108" width="52" height="52" rx="3.5" transform="rotate(45 256 134)" fill="url(#textGold)"/>
+      <circle cx="256" cy="134" r="7.5" fill="#0E0B1E"/>
+    </g>
+
+    <!-- Pages / Rays -->
+    <path d="M 248 196 C 236 206 198 222 170 228 C 156 231 150 241 154 251 C 172 291 216 316 246 323 C 250 324 252 321 252 317 C 246 280 246 228 248 196 Z" fill="url(#textGold)"/>
+    <path d="M 238 232 C 218 245 194 256 172 256" fill="none" stroke="#0E0B1E" stroke-width="6" stroke-linecap="round"/>
+
+    <path d="M 264 196 C 276 206 314 222 342 228 C 356 231 362 241 358 251 C 340 291 296 316 266 323 C 262 324 260 321 260 317 C 266 280 266 228 264 196 Z" fill="url(#textGold)"/>
+    <path d="M 274 232 C 294 245 318 256 340 256" fill="none" stroke="#0E0B1E" stroke-width="6" stroke-linecap="round"/>
+    <polygon points="256,180 251,195 261,195" fill="url(#textGold)"/>
+
+    <!-- Crescent -->
+    <path d="M 126 222 C 126 322 186 398 256 398 C 326 398 386 322 386 222 C 368 296 320 354 256 354 C 192 354 144 296 126 222 Z" fill="url(#textGold)"/>
+  </g>
+
+  <!-- Right: Clean Geometric Sans Wordmark -->
+  <g transform="translate(172, 0)">
+    <!-- Primary Title: NOOR CONNECT -->
+    <text x="0" y="86"
+          fill="url(#textGold)"
+          font-family="system-ui, -apple-system, 'Montserrat', 'Poppins', 'Segoe UI', sans-serif"
+          font-size="44"
+          font-weight="800"
+          letter-spacing="5">NOOR CONNECT</text>
+
+    <!-- Subtitle: ISLAMIC COMPANION -->
+    <text x="3" y="122"
+          fill="url(#subGold)"
+          fill-opacity="0.9"
+          font-family="system-ui, -apple-system, 'Montserrat', 'Poppins', 'Segoe UI', sans-serif"
+          font-size="14"
+          font-weight="600"
+          letter-spacing="8">ISLAMIC COMPANION</text>
+  </g>
+</svg>

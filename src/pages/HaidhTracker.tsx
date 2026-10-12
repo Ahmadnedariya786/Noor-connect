@@ -184,7 +184,7 @@ export default function HaidhTracker() {
   return (
     <div className="fixed inset-0 bg-background text-foreground z-[100] flex flex-col">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="shrink-0 relative overflow-hidden border-b border-border/60"
+      <header className="shrink-0 relative overflow-hidden border-b border-border/60 safe-top"
         style={{ background: "linear-gradient(135deg, rgba(244,63,94,0.08) 0%, rgba(139,92,246,0.04) 100%)" }}
       >
         <div className="flex items-center px-4 h-14 gap-3">
@@ -235,8 +235,8 @@ export default function HaidhTracker() {
 
       {/* ── Bottom Tab Bar ─────────────────────────────────────────────────── */}
       <nav
-        className="shrink-0 border-t border-border/60 bg-card/90 backdrop-blur-xl"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="shrink-0 border-t border-border/60 bg-card/90 backdrop-blur-xl safe-bottom"
+        style={{ paddingBottom: "var(--safe-bottom)" }}
       >
         <div className="flex items-stretch h-14 px-1">
           {TABS.map((tab) => {

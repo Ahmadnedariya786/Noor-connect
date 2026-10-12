@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect, memo, useRef, startTransition, type CSSProperties } from "react";
+import { useState, useMemo, useEffect, memo, useRef, startTransition, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, ChevronLeft, Sparkles, BookOpen, History, Filter, MapPin, Moon } from "lucide-react";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
@@ -125,7 +125,7 @@ export default function SurahList() {
         <div className="absolute top-0 left-0 right-0 h-48 opacity-[0.03] bg-[radial-gradient(circle_at_2px_2px,_#C9A84C_1px,_transparent_0)] bg-[length:32px_32px] pointer-events-none" />
 
         {/* Premium Hero Section */}
-        <div className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 mb-6">
+        <div className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 mb-6 safe-top">
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a4a] via-[#245a5a] to-[#2c6e6e]" />
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />

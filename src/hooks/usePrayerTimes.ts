@@ -12,6 +12,7 @@ import { formatPrayerTime } from '@/lib/time-formatter';
 import { GeolocationService } from '@/lib/geolocation-service';
 import { isNativePlatform } from '@/lib/capacitor-utils';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
+import { findNearestOfflineCity } from '@/data/cities';
 import { getMadhab } from '@/lib/storage';
 import { usePrayerNotifications } from './usePrayerNotifications';
 
@@ -480,6 +481,15 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       // Try Geolocation first (browser/native API)
       try {
         const geoPosition = await getLocationFromGeolocation();
+        const nearest = findNearestOfflineCity(geoPosition.latitude, geoPosition.longitude);
+        if (nearest) {
+          geoPosition.city = nearest.city;
+          geoPosition.country = nearest.country;
+          geoPosition.locationName = `${nearest.city}, ${nearest.country}`;
+          if (nearest.timezone) {
+            geoPosition.timeZone = nearest.timezone;
+          }
+        }
         saveLocation(geoPosition);
         await fetchPrayerTimesWithCoordinates(geoPosition);
         return;

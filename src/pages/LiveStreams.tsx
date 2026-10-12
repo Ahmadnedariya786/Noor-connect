@@ -1,4 +1,4 @@
-﻿import IslamicStreamPlayer from '@/components/IslamicStreamPlayer';
+import IslamicStreamPlayer from '@/components/IslamicStreamPlayer';
 import { Radio, Wifi, Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,7 @@ export default function LiveStreams() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background safe-top">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
 
         {/* Page Header */}

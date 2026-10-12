@@ -41,14 +41,21 @@ public class MainActivity extends BridgeActivity {
         createDefaultNotificationChannel();
 
         // Request SCHEDULE_EXACT_ALARM permission on Android 12+ (API 31+)
-        requestExactAlarmPermission();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !canScheduleExactAlarms()) {
+            requestExactAlarmPermission();
+        } else {
+            // Request battery optimization whitelist for reliable widget updates
+            requestBatteryOptimizationWhitelist();
+        }
 
-        // Request battery optimization whitelist for reliable widget updates
-        requestBatteryOptimizationWhitelist();
-
-        // Enable Motion Event Splitting on the WebView
+        // Enable Motion Event Splitting and allow immediate audio playback on the WebView
         WebView webView = this.getBridge().getWebView();
         if (webView != null) {
+            try {
+                webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+            } catch (Throwable t) {
+                Log.w("MainActivity", "Failed to set setMediaPlaybackRequiresUserGesture(false)", t);
+            }
             webView.setMotionEventSplittingEnabled(true);
             installRenderProcessCrashHandler(webView);
         }
@@ -100,16 +107,18 @@ public class MainActivity extends BridgeActivity {
 
     /**
      * Request SCHEDULE_EXACT_ALARM permission on Android 12+ (API 31+).
-     * This is required for exact alarm scheduling used by widget prayer-time alarms.
+     * This is required for exact alarm scheduling used by prayer-time alarms.
      */
     private void requestExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!canScheduleExactAlarms()) {
-                // Request the permission
-                Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                startActivityForResult(intent, EXACT_ALARM_PERMISSION_REQUEST);
-            } else {
-                // Permission already granted
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivityForResult(intent, EXACT_ALARM_PERMISSION_REQUEST);
+                } catch (Exception e) {
+                    Log.w("MainActivity", "Failed to launch ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent", e);
+                }
             }
         }
     }
@@ -147,6 +156,8 @@ public class MainActivity extends BridgeActivity {
                     WidgetForegroundService.start(this);
                 }
             }
+            // Proceed to battery optimization check if needed
+            requestBatteryOptimizationWhitelist();
         }
     }
 

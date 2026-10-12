@@ -13,7 +13,7 @@ export function LayoutManager({ children }: LayoutManagerProps) {
   const fixedPadding = 'pb-32';
 
   return (
-    <main className={`flex-1 min-h-0 overflow-y-auto pt-safe-top ${fixedPadding} interactive-layer`} id="main-content" role="main">
+    <main className={`flex-1 min-h-0 overflow-y-auto ${fixedPadding} interactive-layer`} id="main-content" role="main">
       {children}
     </main>
   );

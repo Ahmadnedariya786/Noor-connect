@@ -51,7 +51,7 @@ export interface LocationState {
   isDetecting: boolean;
   latitude: number;
   longitude: number;
-  detectLocation: () => Promise<boolean>;
+  detectLocation: () => Promise<any>;
 }
 
 export interface AladhanPrayerTime {

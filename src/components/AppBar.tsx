@@ -24,7 +24,7 @@ export function AppBar({
   const navigate = useNavigate();
 
   return (
-    <header className={cn("sticky top-0 z-40 transition-all duration-300", className)}
+    <header className={cn("sticky top-0 z-40 transition-all duration-300 safe-top", className)}
       style={{ background: transparent ? 'transparent' : 'hsl(var(--background) / 0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(201,134,10,0.15)' }}
     >
       <div className="relative flex items-center h-[56px] px-4 max-w-lg mx-auto">

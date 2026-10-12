@@ -254,7 +254,10 @@ class PrayerMethodsService {
    */
   getRecommendedMethod(latitude: number, longitude: number): PrayerMethod {
     // Simple region-based recommendations
-    if (latitude >= 24 && latitude <= 26 && longitude >= 50 && longitude <= 56) {
+    if (latitude >= 6 && latitude <= 38 && longitude >= 68 && longitude <= 98) {
+      // South Asia (India, Pakistan, Bangladesh) - University of Islamic Sciences, Karachi
+      return PRAYER_METHODS.find(m => m.id === 5) || DEFAULT_METHOD;
+    } else if (latitude >= 24 && latitude <= 26 && longitude >= 50 && longitude <= 56) {
       // Saudi Arabia region
       return PRAYER_METHODS.find(m => m.id === 4) || DEFAULT_METHOD; // Umm Al-Qura
     } else if (latitude >= 24 && latitude <= 37 && longitude >= 44 && longitude <= 60) {

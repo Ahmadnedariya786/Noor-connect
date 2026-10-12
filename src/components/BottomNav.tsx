@@ -44,9 +44,9 @@ const BottomNav = memo(function BottomNav() {
 
   return (
     <nav
-      className="w-full fixed bottom-0 left-0 right-0 z-[100] pointer-events-none flex justify-center"
+      className="w-full fixed bottom-0 left-0 right-0 z-[100] pointer-events-none flex justify-center safe-bottom"
       style={{
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)',
+        paddingBottom: 'calc(var(--safe-bottom) + 10px)',
         paddingLeft: '16px',
         paddingRight: '16px',
       }}

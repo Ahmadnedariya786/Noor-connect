@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { Preferences } from '@capacitor/preferences';
 import { isLowEndDevice } from '@/lib/performance-optimizations';
 
@@ -182,6 +184,17 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     if (!isLoaded) return;
     document.documentElement.classList.toggle('dark', effectiveTheme === 'dark');
   }, [effectiveTheme, isLoaded]);
+
+  // Sync native status bar icon style with theme (on app init and theme change)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({
+        style: effectiveTheme === 'dark' ? Style.Dark : Style.Light,
+      }).catch((error) => {
+        console.warn('Failed to update status bar style:', error);
+      });
+    }
+  }, [effectiveTheme]);
 
   // Listen for system theme changes when using 'system' preference
   useEffect(() => {

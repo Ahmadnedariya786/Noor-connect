@@ -133,7 +133,7 @@ export default function QuranReader() {
     <PageTransition>
       <div className={`min-h-screen relative overflow-hidden ${isDark ? 'bg-[#000000]' : 'bg-[#F5F5F5]'}`}>
         {/* Top Bar */}
-        <div className={`sticky top-0 z-30 backdrop-blur-md border-b ${isDark ? 'bg-[#000000]/95 border-[#C9A84C]/20' : 'bg-[#F5F5F5]/95 border-[#C9A84C]/20'}`}>
+        <div className={`sticky top-0 z-30 backdrop-blur-md border-b safe-top ${isDark ? 'bg-[#000000]/95 border-[#C9A84C]/20' : 'bg-[#F5F5F5]/95 border-[#C9A84C]/20'}`}>
           <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
             <button
               onClick={() => goBackOrFallback(navigate, '/quran')}

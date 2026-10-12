@@ -98,6 +98,12 @@ export class LocalNotificationManager {
       }
 
       this.isInitialized = true;
+
+      // On Android native, ensure exact alarm permission so prayer notifications fire precisely on time
+      if (Capacitor.isNativePlatform()) {
+        await nativeAdhan.ensureExactAlarmPermission(true);
+      }
+
       return true;
     } catch (error) {
       console.error('Failed to request notification permissions:', error);

@@ -4,6 +4,8 @@ import { prayerTimesApiResponseSchema, safeParseApiResponse } from '@/lib/api-sc
 import { getAdhanUrlForPrayer, type PrayerName } from '@/lib/adhan-preferences';
 import { localNotifications } from '@/lib/local-notifications';
 import { adhanService, type AdhanConfig } from '@/lib/adhan-service';
+import { nativeAdhan } from '@/lib/native-adhan';
+import { Capacitor } from '@capacitor/core';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
 import {
   PRAYER_ALARM_CONTROL_EVENT,
@@ -77,6 +79,13 @@ export const GlobalPrayerAlarm = () => {
     if (!initializedRef.current) {
       initializedRef.current = true;
       initializeAlarmSync();
+
+      if (Capacitor.isNativePlatform()) {
+        const isAlarmEnabled = localStorage.getItem(STORAGE_KEY) === 'true';
+        if (isAlarmEnabled) {
+          nativeAdhan.ensureExactAlarmPermission(false).catch(() => {});
+        }
+      }
     }
   }, []);
 

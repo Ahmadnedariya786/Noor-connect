@@ -1,4 +1,4 @@
-﻿// v2.0.3 - Fixed Missing useMemo import
+// v2.0.3 - Fixed Missing useMemo import
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -212,7 +212,7 @@ export default function IslamicCalendar() {
   }, [calendarDays]);
 
   return (
-    <div className="min-h-screen bg-background pt-6 px-4">
+    <div className="min-h-screen bg-background px-4 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 1.5rem)' }}>
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">

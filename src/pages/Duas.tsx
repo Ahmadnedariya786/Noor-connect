@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, memo, useMemo } from "react";
+import { useState, useEffect, memo, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, Share2, BookHeart, Search, Volume2, Plus, Minus, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -175,7 +175,7 @@ const Duas = memo(function Duas() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background safe-top">
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">

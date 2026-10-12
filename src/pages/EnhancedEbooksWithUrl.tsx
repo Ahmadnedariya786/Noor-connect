@@ -313,7 +313,7 @@ export default function EnhancedEbooksWithUrlPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border safe-top">
         <div className="px-4 py-4 space-y-4">
           {/* Title and Actions */}
           <div className="flex items-center justify-between">

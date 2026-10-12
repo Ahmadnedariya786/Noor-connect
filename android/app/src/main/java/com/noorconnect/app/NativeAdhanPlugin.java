@@ -105,4 +105,54 @@ public class NativeAdhanPlugin extends Plugin {
         result.put("count", NativeAdhanScheduler.getScheduledCount(getContext()));
         call.resolve(result);
     }
+
+    @PluginMethod
+    public void canScheduleExactAlarms(PluginCall call) {
+        JSObject result = new JSObject();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            android.app.AlarmManager alarmManager = (android.app.AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+            boolean canSchedule = alarmManager != null && alarmManager.canScheduleExactAlarms();
+            result.put("canSchedule", canSchedule);
+        } else {
+            result.put("canSchedule", true);
+        }
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void requestExactAlarmPermission(PluginCall call) {
+        JSObject result = new JSObject();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            try {
+                android.app.AlarmManager alarmManager = (android.app.AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+                if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
+                    android.content.Intent intent = new android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setData(android.net.Uri.parse("package:" + getContext().getPackageName()));
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getContext().startActivity(intent);
+                    result.put("opened", true);
+                    call.resolve(result);
+                    return;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to launch ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent", e);
+                try {
+                    android.content.Intent intent = new android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(android.net.Uri.parse("package:" + getContext().getPackageName()));
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getContext().startActivity(intent);
+                    result.put("opened", true);
+                    call.resolve(result);
+                    return;
+                } catch (Exception ex) {
+                    Log.e(TAG, "Failed to launch app details settings", ex);
+                    call.reject("Could not open settings: " + ex.getMessage());
+                    return;
+                }
+            }
+        }
+        result.put("opened", false);
+        result.put("alreadyGranted", true);
+        call.resolve(result);
+    }
 }

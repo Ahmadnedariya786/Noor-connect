@@ -287,8 +287,12 @@ export class AladhanAPI {
     // Fallback to offline calculation
     try {
       const { calculatePrayerTimes } = await import('./prayer-calculator');
-      const times = calculatePrayerTimes(latitude, longitude, new Date());
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const { findNearestOfflineCity } = await import('@/data/cities');
+      const nearest = findNearestOfflineCity(latitude, longitude);
+      const isSouthAsia = (latitude >= 6 && latitude <= 38 && longitude >= 68 && longitude <= 98);
+      const calcMethod = (nearest?.calculationMethod || (isSouthAsia ? 'Karachi' : (method === 1 ? 'Karachi' : undefined))) as any;
+      const times = calculatePrayerTimes(latitude, longitude, new Date(), calcMethod);
+      const timezone = nearest?.timezone || (isSouthAsia ? 'Asia/Kolkata' : Intl.DateTimeFormat().resolvedOptions().timeZone);
 
       return {
         timings: {

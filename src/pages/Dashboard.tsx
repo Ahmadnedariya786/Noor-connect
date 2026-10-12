@@ -274,16 +274,16 @@ export default function Dashboard() {
 
   // Handle location detection
   const handleDetectLocation = async () => {
-    const success = await location.detectLocation();
-    if (success) {
+    const matchedCity = await location.detectLocation();
+    if (matchedCity) {
       // Show appropriate message based on detection method
       if (location.isIpBased) {
         toast({
           title: ti18n('locationDetected'),
-          description: `Location approximated from IP. Enable GPS for accurate results.`,
+          description: `Location approximated from IP (${matchedCity.city}). Enable GPS for accurate results.`,
         });
       } else {
-        toast({ title: ti18n('locationDetected'), description: `Updated to ${location.locationName}` });
+        toast({ title: ti18n('locationDetected'), description: `Updated to ${matchedCity.city}, ${matchedCity.country}` });
       }
 
       // Reload prayer times with new location
@@ -468,6 +468,7 @@ return (
         AladhanAPI={AladhanAPI}
         location={location}
         prayerTimesHook={prayerTimesHook}
+        loadingAPI={loadingAPI}
         setLoadingAPI={setLoadingAPI}
         toast={toast}
       />

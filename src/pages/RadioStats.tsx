@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, Clock, Radio, Trash2, Trophy, Flame, Target, TrendingUp, ArrowLeft, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -83,7 +83,7 @@ export default function RadioStats() {
   const unlockedCount = achievements.filter(a => a.unlocked).length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background safe-top">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
         {/* Page Header */}
         <div className="flex items-center gap-3">
