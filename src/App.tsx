@@ -12,7 +12,7 @@ import { serviceWorkerManager } from "@/lib/service-worker-registration";
 
 import { islamicEventsService } from "@/lib/islamic-events-service";
 import { LayoutManager } from "@/components/LayoutManager";
-import { SplashScreen } from "@/components/SplashScreen";
+import { SplashScreen, forceReleaseSplashScrollLock } from "@/components/SplashScreen";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { AnimatePresence, MotionConfig } from "framer-motion";
 import { LazyMotionWrapper } from "@/components/LazyMotionWrapper";
@@ -346,16 +346,7 @@ function AppShell() {
     markStartupStep('splash-handoff');
     try {
       setShowSplash(false);
-      document.documentElement.classList.remove('splash-active');
-      document.body.classList.remove('splash-active');
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.documentElement.style.touchAction = '';
-      document.body.style.touchAction = '';
-      document.documentElement.style.overscrollBehavior = '';
-      document.body.style.overscrollBehavior = '';
-      const el = document.getElementById('static-splash');
-      if (el) el.remove();
+      forceReleaseSplashScrollLock();
     } catch (e) {
       console.warn('Splash handoff error', e);
     } finally {
@@ -367,12 +358,14 @@ function AppShell() {
   useEffect(() => {
     if (!splashEnabled) {
       handleSplashComplete();
+      forceReleaseSplashScrollLock();
       return;
     }
     const timer = setTimeout(() => {
       if (!splashHandoffDoneRef.current) {
         console.warn('Splash handoff safety fallback triggered');
         handleSplashComplete();
+        forceReleaseSplashScrollLock();
       }
     }, 3500);
     return () => clearTimeout(timer);

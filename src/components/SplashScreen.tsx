@@ -48,6 +48,26 @@ function FloatingStars({ enabled }: { enabled: boolean }) {
     );
 }
 
+// Safe helper to release scroll lock and physically remove static splash node
+export function forceReleaseSplashScrollLock(): void {
+    try {
+        document.documentElement.classList.remove("splash-active");
+        document.body.classList.remove("splash-active");
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+        document.documentElement.style.touchAction = "";
+        document.body.style.touchAction = "";
+        document.documentElement.style.overscrollBehavior = "";
+        document.body.style.overscrollBehavior = "";
+        const el = document.getElementById("static-splash");
+        if (el) {
+            el.remove();
+        }
+    } catch {
+        // Safe fallback: ensure scroll unlock never throws
+    }
+}
+
 interface SplashScreenProps {
     animationsEnabled: boolean;
     showGreeting: boolean;
@@ -79,7 +99,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const shouldAnimate = animationsEnabled && !prefersReducedMotion && !tier.shouldReduceAnimations;
 
     useEffect(() => {
-        // Physically remove the pre-React static splash element from DOM so no gesture-swallowing layer remains
+        // Physically remove the pre-React static splash element from DOM so no duplicate or touch-blocking layer remains
         const staticSplash = document.getElementById("static-splash");
         if (staticSplash) {
             staticSplash.remove();
@@ -89,24 +109,11 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
         document.documentElement.classList.add("splash-active");
         document.body.classList.add("splash-active");
 
-        const unlockScroll = () => {
-            document.documentElement.classList.remove("splash-active");
-            document.body.classList.remove("splash-active");
-            document.documentElement.style.overflow = "";
-            document.body.style.overflow = "";
-            document.documentElement.style.touchAction = "";
-            document.body.style.touchAction = "";
-            document.documentElement.style.overscrollBehavior = "";
-            document.body.style.overscrollBehavior = "";
-            const el = document.getElementById("static-splash");
-            if (el) el.remove();
-        };
-
         const triggerComplete = () => {
             if (hasTriggeredCompletionRef.current) return;
             hasTriggeredCompletionRef.current = true;
             setIsMounted(false);
-            unlockScroll();
+            forceReleaseSplashScrollLock();
             try {
                 onComplete();
             } catch (e) {
@@ -114,7 +121,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             }
         };
 
-        // Snappy splash duration allowing the 200ms staggered entrance + subtle shimmer pulse
+        // Snappy splash duration allowing ambient glow pulse and loading dots
         const baseDuration = shouldAnimate ? 1100 : 100;
 
         const fadeTimer = setTimeout(() => {
@@ -126,7 +133,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
         return () => {
             clearTimeout(fadeTimer);
-            unlockScroll();
+            forceReleaseSplashScrollLock();
         };
     }, [shouldAnimate, onComplete]);
 
@@ -147,14 +154,8 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             {/* Main Content: Logo + Staggered Wordmark */}
             <div className="relative z-10 flex flex-col items-center justify-center space-y-5 px-6">
                 
-                {/* 1. Logo Emblem: scales/fades in first */}
-                <div
-                    className={`relative ${
-                        shouldAnimate
-                            ? 'animate-in zoom-in-90 fade-in duration-500 fill-mode-both'
-                            : ''
-                    }`}
-                >
+                {/* 1. Logo Emblem */}
+                <div className="relative">
                     {/* Subtle ambient gold glow behind logo */}
                     <div
                         className={`absolute inset-0 rounded-3xl pointer-events-none ${
@@ -174,22 +175,8 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                     />
                 </div>
 
-                {/* 2. Wordmark "Noor Connect": fades + slides up ~200ms later with subtle shimmer */}
-                <div
-                    className={`relative flex flex-col items-center justify-center space-y-1.5 ${
-                        shouldAnimate
-                            ? 'animate-in fade-in slide-in-from-bottom-3 duration-500 fill-mode-both'
-                            : ''
-                    }`}
-                    style={
-                        shouldAnimate
-                            ? {
-                                  animationDelay: "200ms",
-                                  animationFillMode: "both",
-                              }
-                            : undefined
-                    }
-                >
+                {/* 2. Wordmark "Noor Connect" + Tagline */}
+                <div className="relative flex flex-col items-center justify-center space-y-1.5">
                     {/* Subtle golden shimmer pulse glow */}
                     <div
                         className={`absolute -inset-3 rounded-full pointer-events-none ${
@@ -217,17 +204,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
                     {showGreeting && (
                         <p
-                            className={`text-xs uppercase tracking-[0.32em] font-semibold text-[#D4AF37]/80 text-center select-none relative z-10 ${
-                                shouldAnimate ? 'animate-in fade-in duration-500 fill-mode-both' : ''
-                            }`}
-                            style={
-                                shouldAnimate
-                                    ? {
-                                          animationDelay: "380ms",
-                                          animationFillMode: "both",
-                                      }
-                                    : undefined
-                            }
+                            className="text-xs uppercase tracking-[0.32em] font-semibold text-[#D4AF37]/80 text-center select-none relative z-10"
                         >
                             Islamic Companion
                         </p>
