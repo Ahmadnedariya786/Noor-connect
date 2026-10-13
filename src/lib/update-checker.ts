@@ -18,6 +18,7 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { toast } from 'sonner';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 
 const GITHUB_REPO = 'Ahmadnedariya786/Noor-connect';
@@ -27,6 +28,73 @@ const DISMISSED_COMMIT_KEY = 'noor_dismissed_update_commit';
 const DISMISSED_SESSION_KEY = 'noor_update_banner_dismissed_session';
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const FETCH_TIMEOUT_MS = 8000; // 8 seconds
+
+export const DIRECT_APK_FALLBACK_URL = `https://github.com/${GITHUB_REPO}/releases/download/nightly/noor-connect-nightly.apk`;
+
+/**
+ * Guarantees the target download URL is the direct .apk asset URL,
+ * preventing any fallback to HTML release pages.
+ */
+export function resolveDirectApkUrl(apkUrl?: string | null): string {
+  if (apkUrl && typeof apkUrl === 'string') {
+    const trimmed = apkUrl.trim();
+    if (trimmed.toLowerCase().endsWith('.apk') && !trimmed.includes('/releases/tag/')) {
+      return trimmed;
+    }
+  }
+  return DIRECT_APK_FALLBACK_URL;
+}
+
+/**
+ * Safely copy text to clipboard using navigator.clipboard with textarea fallback.
+ */
+async function copyLinkToClipboard(url: string): Promise<boolean> {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      return true;
+    }
+  } catch {
+    // silent clipboard fallback - try execCommand
+  }
+
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = url;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '-9999px';
+    textArea.setAttribute('readonly', '');
+    document.body.appendChild(textArea);
+    textArea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch {
+    // silent clipboard fallback
+    return false;
+  }
+}
+
+/**
+ * Display a user-friendly toast when system browser launch fails.
+ */
+function showBrowserOpenFailureToast(url: string): void {
+  toast.error(`Could not open browser. Please open this link in Chrome: ${url}`, {
+    duration: 12000,
+    action: {
+      label: 'Copy Link',
+      onClick: async () => {
+        const copied = await copyLinkToClipboard(url);
+        if (copied) {
+          toast.success('Download link copied to clipboard');
+        } else {
+          toast.info('Please open Chrome and paste the URL', { description: url });
+        }
+      },
+    },
+  });
+}
 
 export interface NightlyReleaseInfo {
   tagName: string;
@@ -79,6 +147,7 @@ export function isRemoteNewer(remoteIso?: string | null, localIso?: string | nul
     const localTime = new Date(localIso).getTime();
     return !isNaN(remoteTime) && !isNaN(localTime) && remoteTime > localTime;
   } catch {
+    // silent date comparison fallback
     return false;
   }
 }
@@ -147,6 +216,7 @@ function readCache(): StoredCache | null {
     if (!raw) return null;
     return JSON.parse(raw) as StoredCache;
   } catch {
+    // silent storage read fallback
     return null;
   }
 }
@@ -162,35 +232,44 @@ function writeCache(release: NightlyReleaseInfo | null): void {
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
   } catch {
-    // Ignore storage quota or disabled storage
+    // silent storage quota fallback
   }
 }
 
 /**
- * Open the APK download URL in the system browser so Android's download manager handles it.
+ * Force download through the SYSTEM browser (Chrome) using Capacitor's Browser plugin
+ * with windowName: '_system'. Never uses an in-app browser, iframe, or WebView.
  */
 export async function downloadAndInstallUpdate(apkUrl?: string): Promise<void> {
-  const targetUrl = apkUrl || `https://github.com/${GITHUB_REPO}/releases/download/nightly/noor-connect-nightly.apk`;
+  const directApkUrl = resolveDirectApkUrl(apkUrl);
 
   try {
     if (Capacitor.isNativePlatform()) {
       try {
         const { Browser } = await import('@capacitor/browser');
-        await Browser.open({ url: targetUrl });
+        await Browser.open({ url: directApkUrl, windowName: '_system' });
         return;
       } catch (browserErr) {
-        console.warn('[UpdateChecker] Native Browser plugin fallback:', browserErr);
+        console.warn('[UpdateChecker] Native Browser.open({ windowName: "_system" }) failed:', browserErr);
+        showBrowserOpenFailureToast(directApkUrl);
+        return;
       }
     }
 
-    // Web or fallback
-    const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
-    if (!newWindow) {
-      window.location.href = targetUrl;
+    // Web / PWA fallback: open via Browser plugin with _system target
+    try {
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.open({ url: directApkUrl, windowName: '_system' });
+    } catch (webErr) {
+      console.warn('[UpdateChecker] Web Browser plugin fallback:', webErr);
+      const opened = window.open(directApkUrl, '_system');
+      if (!opened) {
+        showBrowserOpenFailureToast(directApkUrl);
+      }
     }
   } catch (err) {
     console.warn('[UpdateChecker] Failed to open download url:', err);
-    window.location.href = targetUrl;
+    showBrowserOpenFailureToast(directApkUrl);
   }
 }
 
@@ -255,18 +334,19 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     const publishedAt = data.published_at || data.created_at;
     const commitSha = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
 
-    // Locate APK download URL from release assets
-    let apkUrl = `https://github.com/${GITHUB_REPO}/releases/download/nightly/noor-connect-nightly.apk`;
+    // Locate direct APK download URL from release assets
+    let apkUrl = DIRECT_APK_FALLBACK_URL;
     let sizeBytes: number | undefined;
 
     if (Array.isArray(data.assets)) {
       const apkAsset = data.assets.find((a: any) =>
-        (typeof a.name === 'string' && a.name.toLowerCase().endsWith('.apk')) ||
-        a.content_type === 'application/vnd.android.package-archive'
+        (typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk')) ||
+        a?.content_type === 'application/vnd.android.package-archive' ||
+        (typeof a?.browser_download_url === 'string' && a.browser_download_url.toLowerCase().endsWith('.apk'))
       );
       if (apkAsset?.browser_download_url) {
         apkUrl = apkAsset.browser_download_url;
-        sizeBytes = apkAsset.size;
+        sizeBytes = typeof apkAsset.size === 'number' ? apkAsset.size : undefined;
       }
     }
 
@@ -275,7 +355,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       releaseName: data.name || 'Nightly Build',
       publishedAt,
       commitSha,
-      apkUrl,
+      apkUrl: resolveDirectApkUrl(apkUrl),
       htmlUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/nightly`,
       body: data.body,
       sizeBytes,
