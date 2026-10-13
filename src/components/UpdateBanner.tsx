@@ -29,8 +29,20 @@ export const UpdateBanner: React.FC = () => {
         // Safe silent fallback
       });
 
+    const handleUpdateResult = (e: CustomEvent<UpdateCheckResult>) => {
+      if (isMounted && e.detail) {
+        setUpdateInfo(e.detail);
+        if (e.detail.hasUpdate) {
+          setDismissed(false);
+        }
+      }
+    };
+
+    window.addEventListener('noor-update-check-result', handleUpdateResult as EventListener);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('noor-update-check-result', handleUpdateResult as EventListener);
     };
   }, []);
 

@@ -99,7 +99,8 @@ function showBrowserOpenFailureToast(url: string): void {
 export interface NightlyReleaseInfo {
   tagName: string;
   releaseName: string;
-  publishedAt: string; // ISO 8601 string
+  publishedAt: string; // ISO 8601 string (latest asset upload date or release date)
+  latestAssetUploadedAt?: string; // Upload timestamp of the latest .apk asset
   commitSha?: string;  // Extracted commit SHA
   apkUrl: string;
   htmlUrl: string;
@@ -181,30 +182,49 @@ export function extractCommitFromRelease(body?: string | null, targetCommitish?:
 
 /**
  * Evaluates whether an update is available:
- * - If both commit SHAs are present: true ONLY if they differ; false if they equal.
- * - If commit SHA is missing: falls back to comparing published_at against buildTime.
+ * - Compares the latest .apk asset uploaded_at/created_at timestamp against the app's build timestamp.
+ * - If commit SHAs are present and valid, checks whether running build commit equals release commit.
  */
 export function isUpdateAvailable(
-  release: { commitSha?: string | null; publishedAt?: string | null } | null,
+  release: {
+    commitSha?: string | null;
+    publishedAt?: string | null;
+    latestAssetUploadedAt?: string | null;
+  } | null,
   local: { commitSha?: string | null; buildTime?: string | null }
 ): boolean {
   if (!release) return false;
 
+  const appBuildTime = local.buildTime || null;
+  // Use the specific .apk asset's uploaded_at/updated_at/created_at date, NOT the release tag's published_at date
+  const latestAssetUploadedAt = release.latestAssetUploadedAt || release.publishedAt || null;
   const localCommit = local.commitSha?.trim().toLowerCase();
   const remoteCommit = release.commitSha?.trim().toLowerCase();
 
-  // 1. Primary: Compare by commit identity
+  let isAvailable = false;
+
+  // 1. Primary check: If both commit SHAs are present and valid
   if (localCommit && remoteCommit && localCommit !== 'unknown' && remoteCommit !== 'unknown') {
-    // Running build EQUALS release commit → NO update: hide banner entirely
     if (isSameCommit(localCommit, remoteCommit)) {
-      return false;
+      // Running build equals release commit → NO update (hide banner / up to date)
+      isAvailable = false;
+    } else {
+      // Commit SHAs differ → Update is available
+      isAvailable = true;
     }
-    // SHAs differ → Update available
-    return true;
+  } else {
+    // 2. Timestamp comparison: Compare latest .apk asset uploaded_at against app's buildTime
+    isAvailable = isRemoteNewer(latestAssetUploadedAt, appBuildTime);
   }
 
-  // 2. Fallback: published_at comparison only when SHA is missing
-  return isRemoteNewer(release.publishedAt, local.buildTime);
+  // TASK 3: Debugging log right before comparison/returning
+  console.log('Update Check:', {
+    appBuildTime,
+    latestAssetUploadedAt,
+    isUpdateAvailable: isAvailable,
+  });
+
+  return isAvailable;
 }
 
 /**
@@ -300,6 +320,13 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
         };
       }
     }
+  } else {
+    // Force check: explicitly clear stale cache from storage
+    try {
+      localStorage.removeItem(CACHE_KEY);
+    } catch {
+      // silent storage clear fallback
+    }
   }
 
   // 2. Fetch fresh release metadata with 8-second timeout
@@ -339,10 +366,11 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     const publishedAt = data.published_at || data.created_at;
     const commitSha = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
 
-    // Locate direct APK download URL from release assets
-    // Sort assets in descending order by updated_at / created_at / ID so the LATEST APK is always picked
+    // Locate direct APK download URL and extract uploaded timestamp from release assets
+    // Sort assets in descending order by uploaded_at / updated_at / created_at so the LATEST APK is always picked
     let apkUrl = DIRECT_APK_FALLBACK_URL;
     let sizeBytes: number | undefined;
+    let latestAssetUploadedAt: string | null = null;
 
     if (Array.isArray(data.assets)) {
       const apkAssets = data.assets.filter((a: any) =>
@@ -352,8 +380,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       );
 
       apkAssets.sort((a: any, b: any) => {
-        const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
-        const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
+        const dateA = new Date(a.uploaded_at || a.updated_at || a.created_at || 0).getTime();
+        const dateB = new Date(b.uploaded_at || b.updated_at || b.created_at || 0).getTime();
         const timeA = isNaN(dateA) ? 0 : dateA;
         const timeB = isNaN(dateB) ? 0 : dateB;
         if (timeA !== timeB) {
@@ -363,8 +391,11 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       });
 
       const latestApk = apkAssets[0];
-      if (latestApk?.browser_download_url) {
-        apkUrl = latestApk.browser_download_url;
+      if (latestApk) {
+        latestAssetUploadedAt = latestApk.uploaded_at || latestApk.updated_at || latestApk.created_at || null;
+        if (latestApk.browser_download_url) {
+          apkUrl = latestApk.browser_download_url;
+        }
         sizeBytes = typeof latestApk.size === 'number' ? latestApk.size : undefined;
       }
     }
@@ -372,7 +403,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     const releaseInfo: NightlyReleaseInfo = {
       tagName: data.tag_name || 'nightly',
       releaseName: data.name || 'Nightly Build',
-      publishedAt,
+      publishedAt: latestAssetUploadedAt || publishedAt,
+      latestAssetUploadedAt: latestAssetUploadedAt || publishedAt,
       commitSha,
       apkUrl: resolveDirectApkUrl(apkUrl),
       htmlUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/nightly`,
@@ -387,7 +419,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       buildTime: currentBuildTime,
     });
 
-    return {
+    const checkResult: UpdateCheckResult = {
       hasUpdate,
       currentBuildTime,
       currentBuildCommit,
@@ -395,6 +427,14 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       lastChecked: Date.now(),
       fromCache: false,
     };
+
+    try {
+      window.dispatchEvent(new CustomEvent('noor-update-check-result', { detail: checkResult }));
+    } catch {
+      // silent dispatch fallback
+    }
+
+    return checkResult;
   } catch (err: any) {
     const isTimeout = err?.name === 'AbortError';
     const message = isTimeout ? 'Request timed out (8s)' : (err?.message || 'Update check failed');

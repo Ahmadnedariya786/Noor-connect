@@ -49,9 +49,9 @@ export default defineConfig(({ mode }) => ({
     },
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',
+        drop_console: false,
         drop_debugger: mode === 'production',
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+        pure_funcs: [],
       },
       mangle: {
         safari10: true, // Better Safari 10+ compatibility

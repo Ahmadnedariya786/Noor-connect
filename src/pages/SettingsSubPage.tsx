@@ -166,7 +166,9 @@ const SettingsSubPage: React.FC = () => {
       setCrashLogs(getLastCrashes());
       checkNightlyUpdate(false)
         .then(setUpdateResult)
-        .catch(() => {});
+        .catch(() => {
+          // silent initial check fallback
+        });
     }
   }, [sectionId]);
 
@@ -187,6 +189,7 @@ const SettingsSubPage: React.FC = () => {
         });
       }
     } catch {
+      // silent manual check error fallback
       toast({
         title: 'Check Failed',
         description: 'Unable to connect to GitHub releases.',
