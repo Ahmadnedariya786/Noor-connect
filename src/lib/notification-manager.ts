@@ -908,6 +908,11 @@ export class NotificationManager {
     ]);
   }
 
+  // Check notifications (alias used on app resume / wake to catch any missed reminders)
+  async checkMissedNotifications(): Promise<void> {
+    return this.checkAllNotifications();
+  }
+
   // Start the notification service - runs outside React render cycle
   start(): void {
     // Prevent duplicate intervals

@@ -136,3 +136,10 @@ export const nativeAdhan = new NativeAdhanBridge();
 export async function checkAndRequestExactAlarms(force: boolean = false): Promise<boolean> {
   return nativeAdhan.ensureExactAlarmPermission(force);
 }
+
+/**
+ * Check whether exact alarm permission is granted.
+ */
+export async function isExactAlarmPermissionGranted(): Promise<boolean> {
+  return nativeAdhan.canScheduleExactAlarms();
+}
