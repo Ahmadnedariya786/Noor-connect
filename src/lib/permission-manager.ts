@@ -37,6 +37,8 @@ export interface PermissionRequestOptions {
 class PermissionManager {
   private platform: PlatformType;
   private permissionCache: Map<PermissionType, PermissionStatus> = new Map();
+  private permissionCheckTimestamp: Map<PermissionType, number> = new Map();
+  private inFlightChecks: Map<PermissionType, Promise<PermissionStatus>> = new Map();
   private subscribers: Set<() => void> = new Set();
 
   constructor() {
@@ -59,8 +61,13 @@ class PermissionManager {
   }
 
   private updateCache(type: PermissionType, status: PermissionStatus): void {
+    const prev = this.permissionCache.get(type);
     this.permissionCache.set(type, status);
-    this.notifySubscribers();
+    this.permissionCheckTimestamp.set(type, Date.now());
+    // Only notify if status actually transitioned to avoid re-render storms
+    if (prev !== status) {
+      this.notifySubscribers();
+    }
   }
 
   private notifySubscribers(): void {
@@ -121,27 +128,43 @@ class PermissionManager {
     return { type, ...permissionMap[type] };
   }
 
-  async getPermissionStatus(type: PermissionType): Promise<PermissionStatus> {
+  async getPermissionStatus(type: PermissionType, forceRefresh = false): Promise<PermissionStatus> {
+    const lastCheck = this.permissionCheckTimestamp.get(type) || 0;
     const cached = this.permissionCache.get(type);
-    if (cached && cached !== 'prompt') return cached;
 
-    try {
-      let status: PermissionStatus;
-
-      if (type === 'location') {
-        status = await this.checkLocationPermission();
-      } else if (type === 'notifications') {
-        status = await this.checkNotificationPermission();
-      } else {
-        status = 'not-supported';
-      }
-
-      this.updateCache(type, status);
-      return status;
-    } catch (error) {
-      this.updateCache(type, 'denied');
-      return 'denied';
+    // If checked recently (within 60s) and not forced, return cached status immediately
+    if (!forceRefresh && cached && (Date.now() - lastCheck < 60000)) {
+      return cached;
     }
+
+    if (this.inFlightChecks.has(type)) {
+      return this.inFlightChecks.get(type)!;
+    }
+
+    const checkPromise = (async () => {
+      try {
+        let status: PermissionStatus;
+
+        if (type === 'location') {
+          status = await this.checkLocationPermission();
+        } else if (type === 'notifications') {
+          status = await this.checkNotificationPermission();
+        } else {
+          status = 'not-supported';
+        }
+
+        this.updateCache(type, status);
+        return status;
+      } catch (error) {
+        this.updateCache(type, 'denied');
+        return 'denied';
+      } finally {
+        this.inFlightChecks.delete(type);
+      }
+    })();
+
+    this.inFlightChecks.set(type, checkPromise);
+    return checkPromise;
   }
 
   async requestPermission(type: PermissionType): Promise<boolean> {
@@ -208,11 +231,11 @@ class PermissionManager {
   }
 
   // Get all permissions status
-  async getAllPermissions(): Promise<PermissionInfo[]> {
+  async getAllPermissions(forceRefresh = false): Promise<PermissionInfo[]> {
     const permissions: PermissionInfo[] = [];
     
     for (const type of ['location', 'notifications'] as PermissionType[]) {
-      await this.getPermissionStatus(type);
+      await this.getPermissionStatus(type, forceRefresh);
       permissions.push(this.getPermissionInfo(type));
     }
 

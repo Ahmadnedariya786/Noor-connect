@@ -437,10 +437,10 @@ const SettingsSubPage: React.FC = () => {
 
             <Card className="p-4 space-y-3 rounded-2xl">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Madhab (Asr School of Jurisprudence)</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Button
                   variant={madhab === 'shafi' ? 'default' : 'outline'}
-                  className="flex-1 rounded-xl"
+                  className="w-full rounded-xl text-xs sm:text-sm min-h-10 h-auto py-2.5 px-3 break-words whitespace-normal text-center"
                   onClick={() => {
                     setMadhabState('shafi');
                     setMadhab('shafi');
@@ -452,7 +452,7 @@ const SettingsSubPage: React.FC = () => {
                 </Button>
                 <Button
                   variant={madhab === 'hanafi' ? 'default' : 'outline'}
-                  className="flex-1 rounded-xl"
+                  className="w-full rounded-xl text-xs sm:text-sm min-h-10 h-auto py-2.5 px-3 break-words whitespace-normal text-center"
                   onClick={() => {
                     setMadhabState('hanafi');
                     setMadhab('hanafi');
@@ -495,89 +495,97 @@ const SettingsSubPage: React.FC = () => {
         {/* NOTIFICATIONS SECTION */}
         {sectionId === 'notifications' && (
           <Card className="p-4 space-y-3 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800">
-            <div className="flex items-center justify-between pb-3">
-              <div>
+            <div className="flex items-center justify-between pb-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Friday Surah Al-Kahf Reminders</Label>
                 <p className="text-xs text-slate-400">Weekly reminder on Friday mornings</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.fridayKahfReminders}
                 onCheckedChange={(c) => handleNotificationToggle('fridayKahfReminders', c)}
               />
             </div>
 
-            <div className="flex items-center justify-between py-3">
-              <div>
+            <div className="flex items-center justify-between py-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Ramadan & Eid Reminders</Label>
                 <p className="text-xs text-slate-400">Countdown & event notifications</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.ramadanCountdowns}
                 onCheckedChange={(c) => handleNotificationToggle('ramadanCountdowns', c)}
               />
             </div>
 
-            <div className="flex items-center justify-between py-3">
-              <div>
+            <div className="flex items-center justify-between py-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Dhikr & Quran Verses</Label>
                 <p className="text-xs text-slate-400">Daily spiritual verse pushes</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.quranicVerses}
                 onCheckedChange={(c) => handleNotificationToggle('quranicVerses', c)}
               />
             </div>
 
-            <div className="flex items-center justify-between py-3">
-              <div>
+            <div className="flex items-center justify-between py-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Tahajjud & Night Prayer</Label>
                 <p className="text-xs text-slate-400">Pre-Fajr reminders during last third of night</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.tahajjudReminders ?? true}
                 onCheckedChange={(c) => handleNotificationToggle('tahajjudReminders', c)}
               />
             </div>
 
-            <div className="flex items-center justify-between py-3">
-              <div>
+            <div className="flex items-center justify-between py-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Salat al-Duha Reminders</Label>
                 <p className="text-xs text-slate-400">Mid-morning Duha prayer alerts</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.duhaReminders ?? true}
                 onCheckedChange={(c) => handleNotificationToggle('duhaReminders', c)}
               />
             </div>
 
-            <div className="flex items-center justify-between py-3">
-              <div>
+            <div className="flex items-center justify-between py-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Sunnah Fasting Alerts</Label>
                 <p className="text-xs text-slate-400">Monday & Thursday Sunnah fasting reminders</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.fastingDaysReminders ?? true}
                 onCheckedChange={(c) => handleNotificationToggle('fastingDaysReminders', c)}
               />
             </div>
 
-            <div className="flex items-center justify-between py-3">
-              <div>
+            <div className="flex items-center justify-between py-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Daily Quran Tilawat Goal</Label>
                 <p className="text-xs text-slate-400">Evening recitation reminder</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.quranTrackerReminders ?? true}
                 onCheckedChange={(c) => handleNotificationToggle('quranTrackerReminders', c)}
               />
             </div>
 
-            <div className="flex items-center justify-between py-3">
-              <div>
+            <div className="flex items-center justify-between py-3 gap-3">
+              <div className="min-w-0 flex-1">
                 <Label className="text-sm font-bold">Bedtime Sunnah Azkar</Label>
                 <p className="text-xs text-slate-400">Nightly Ayatul Kursi & protection dua alerts</p>
               </div>
               <Switch
+                className="shrink-0"
                 checked={notificationPrefs.bedtimeDuaReminders ?? true}
                 onCheckedChange={(c) => handleNotificationToggle('bedtimeDuaReminders', c)}
               />
@@ -638,19 +646,19 @@ const SettingsSubPage: React.FC = () => {
           <div className="space-y-4">
             <Card className="p-4 space-y-3 rounded-2xl">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Storage Usage</Label>
-              <div className="flex justify-between items-center text-sm font-semibold">
-                <span>Offline Quran Audio</span>
-                <span className="text-amber-600">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
+                <span className="text-slate-700 dark:text-slate-300">Offline Quran Audio</span>
+                <span className="text-amber-600 text-xs sm:text-sm font-medium">
                   {quranDownloads.reciters} reciter{quranDownloads.reciters !== 1 ? "s" : ""} • {quranDownloads.count} surah{quranDownloads.count !== 1 ? "s" : ""} • {formatFileSize(quranDownloads.size)}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-sm font-semibold">
-                <span>Downloaded E-books</span>
-                <span className="text-amber-600">{formatFileSize(storageStats.totalSize)}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
+                <span className="text-slate-700 dark:text-slate-300">Downloaded E-books</span>
+                <span className="text-amber-600 text-xs sm:text-sm font-medium">{formatFileSize(storageStats.totalSize)}</span>
               </div>
-              <div className="flex justify-between items-center text-sm font-semibold border-t border-slate-100 dark:border-slate-800 pt-2">
-                <span>Books Cached</span>
-                <span>{storageStats.totalBooks} files</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-slate-100 dark:border-slate-800 pt-2">
+                <span className="text-slate-700 dark:text-slate-300">Books Cached</span>
+                <span className="text-xs sm:text-sm text-slate-500 font-medium">{storageStats.totalBooks} files</span>
               </div>
             </Card>
 

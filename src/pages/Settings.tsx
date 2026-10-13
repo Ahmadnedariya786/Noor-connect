@@ -111,19 +111,19 @@ const Settings = () => {
 
           <div className="bg-card border border-border rounded-[28px] overflow-hidden">
             {/* Toggle: Animations */}
-            <div className="p-5 flex items-center justify-between border-b border-border/40">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center">
+            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-border/40 gap-3">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
                   <Zap className="w-5 h-5 text-foreground/70" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground font-serif italic text-lg">Fluid Animations</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Enable smooth UI transitions</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">Fluid Animations</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Enable smooth UI transitions</p>
                 </div>
               </div>
               <button 
                 onClick={toggleAnimation}
-                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
                   animationEnabled ? 'bg-[#C9860A]' : 'bg-muted'
                 }`}
               >
@@ -136,19 +136,19 @@ const Settings = () => {
             </div>
 
             {/* Toggle: Splash Greeting */}
-            <div className="p-5 flex items-center justify-between border-b border-border/40">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center">
+            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-border/40 gap-3">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
                   <Heart className="w-5 h-5 text-foreground/70" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground font-serif italic text-lg">Splash Welcome</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show "Islamic Companion" on launch</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">Splash Welcome</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Show "Islamic Companion" on launch</p>
                 </div>
               </div>
               <button 
                 onClick={toggleSplashGreeting}
-                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
                   splashGreetingEnabled ? 'bg-[#C9860A]' : 'bg-muted'
                 }`}
               >
@@ -161,19 +161,19 @@ const Settings = () => {
             </div>
 
             {/* Toggle: App Greeting (Salam) */}
-            <div className="p-5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center">
+            <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
                   <Sparkles className="w-5 h-5 text-foreground/70" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground font-serif italic text-lg">Home Greeting</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Show daily salam on home screen</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">Home Greeting</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Show daily salam on home screen</p>
                 </div>
               </div>
               <button 
                 onClick={toggleGreeting}
-                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
                   greetingEnabled ? 'bg-[#C9860A]' : 'bg-muted'
                 }`}
               >

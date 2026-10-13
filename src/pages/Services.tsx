@@ -90,14 +90,14 @@ export default function Services() {
                 <AppBar title={t("services") || "Services"} showBack={true} />
 
                 {/* Premium Featured Header Card */}
-                <div className="px-5 pt-4 mb-8">
+                <div className="px-4 sm:px-5 pt-4 mb-6 sm:mb-8">
                     <motion.div 
                         {...motionProps({
                             initial: { opacity: 0, scale: 0.95 },
                             animate: { opacity: 1, scale: 1 },
                             transition: { duration: 0.5 }
                         })}
-                        className="relative overflow-hidden rounded-[24px] bg-gradient-to-br p-8 shadow-2xl"
+                        className="relative overflow-hidden rounded-[24px] bg-gradient-to-br p-6 sm:p-8 shadow-2xl"
                         style={{ background: 'linear-gradient(145deg, #1A1E2E, #1E2438)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
                     >
                         {/* Elegant Light Gradients */}
@@ -109,10 +109,10 @@ export default function Services() {
                                 <Sparkles className="w-4 h-4" style={{ color: '#C9860A' }} />
                                 <span className="text-white/90 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>Islamic Hub</span>
                             </div>
-                            <h2 className="text-4xl font-bold text-white leading-tight tracking-tight mb-2" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
+                            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight tracking-tight mb-2" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
                                 Discover<br/>Resources
                             </h2>
-                            <p className="text-white/60 text-sm font-medium max-w-[85%] leading-relaxed">
+                            <p className="text-white/60 text-xs sm:text-sm font-medium max-w-[85%] leading-relaxed">
                                 Essential tools for your spiritual journey.
                             </p>
                         </div>
@@ -120,8 +120,8 @@ export default function Services() {
                 </div>
 
                 {/* Premium Services Grid */}
-                <div className="px-5 relative">
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="px-4 sm:px-5 relative">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <AnimatePresence>
                             {services.map((item, idx) => (
                                 <motion.button
@@ -133,15 +133,15 @@ export default function Services() {
                                         whileTap: { scale: 0.95 }
                                     })}
                                     onClick={() => navigate(item.path)}
-                                    className="group relative flex flex-col items-start p-5 bg-card border border-border rounded-[20px] overflow-hidden text-left"
+                                    className="group relative flex flex-col items-start p-4 sm:p-5 bg-card border border-border rounded-[20px] overflow-hidden text-left w-full min-w-0"
                                 >
                                     {/* Icon Box with Vibrant Gradient */}
-                                    <div className={`flex items-center justify-center w-12 h-12 rounded-[14px] bg-gradient-to-br ${item.gradient} shadow-sm mb-3 opacity-90 group-hover:opacity-100 transition-opacity`}>
+                                    <div className={`flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-[14px] bg-gradient-to-br ${item.gradient} shadow-sm mb-3 opacity-90 group-hover:opacity-100 transition-opacity shrink-0`}>
                                         <item.icon className="w-5 h-5 text-white" strokeWidth={2} />
                                     </div>
 
                                     {/* Title Container */}
-                                    <h3 className="font-semibold text-sm text-foreground leading-tight">
+                                    <h3 className="font-semibold text-xs sm:text-sm text-foreground leading-snug break-words w-full line-clamp-2">
                                         {item.title}
                                     </h3>
                                     

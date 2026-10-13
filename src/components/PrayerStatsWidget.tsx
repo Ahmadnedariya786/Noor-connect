@@ -1,9 +1,9 @@
-﻿/**
+/**
  * Prayer Stats Widget
  * Shows prayer tracking statistics and achievements
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -33,7 +33,16 @@ export function PrayerStatsWidget() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<RangeKey>("week");
 
-  const loadStats = useCallback(() => {
+  const lastStatsHashRef = useRef<string>("");
+  const lastRefreshTimeRef = useRef<number>(0);
+
+  const loadStats = useCallback((force = false) => {
+    const now = Date.now();
+    if (!force && lastRefreshTimeRef.current !== 0 && now - lastRefreshTimeRef.current < 60000) {
+      return;
+    }
+    lastRefreshTimeRef.current = now;
+
     try {
       const rangeDays = timeRange === "week" ? 7 : 30;
       const history = getPrayerHistory(rangeDays);
@@ -46,7 +55,7 @@ export function PrayerStatsWidget() {
 
       const salahStats = getSalahStats();
 
-      setStats({
+      const newStats: PrayerStatsSummary = {
         rangeKey: timeRange,
         rangeDays,
         completed,
@@ -56,7 +65,14 @@ export function PrayerStatsWidget() {
         currentStreak: salahStats.currentStreak,
         longestStreak: salahStats.longestStreak,
         todayCompleted: salahStats.todayCompleted,
-      });
+      };
+
+      const hash = JSON.stringify(newStats);
+      if (hash === lastStatsHashRef.current && lastStatsHashRef.current !== "") {
+        return;
+      }
+      lastStatsHashRef.current = hash;
+      setStats(newStats);
     } catch (error) {
       console.error('Error loading prayer stats:', error);
       setStats(null);
@@ -66,15 +82,17 @@ export function PrayerStatsWidget() {
   }, [timeRange]);
 
   useEffect(() => {
-    loadStats();
+    loadStats(true);
 
-    // Listen for prayer tracking updates
-    window.addEventListener('salah-updated', loadStats);
-    window.addEventListener('widget-refresh', loadStats);
+    const handleSalahUpdate = () => loadStats(true);
+    const handleWidgetRefresh = () => loadStats(false);
+
+    window.addEventListener('salah-updated', handleSalahUpdate);
+    window.addEventListener('widget-refresh', handleWidgetRefresh);
 
     return () => {
-      window.removeEventListener('salah-updated', loadStats);
-      window.removeEventListener('widget-refresh', loadStats);
+      window.removeEventListener('salah-updated', handleSalahUpdate);
+      window.removeEventListener('widget-refresh', handleWidgetRefresh);
     };
   }, [loadStats]);
 

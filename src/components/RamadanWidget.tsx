@@ -99,10 +99,11 @@ export function RamadanWidget({
   }, [isRamadan, fajrStart, maghribStart]);
 
   useEffect(() => {
+    if (!isRamadan) return;
     computeNext();
     const id = window.setInterval(computeNext, 1000);
     return () => window.clearInterval(id);
-  }, [computeNext]);
+  }, [isRamadan, computeNext]);
 
   const fastingProgress = useMemo(() => {
     if (!isRamadan || !fajrStart || !maghribStart) return null;

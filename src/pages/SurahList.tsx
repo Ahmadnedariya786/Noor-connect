@@ -27,9 +27,9 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
           ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
           : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
       }`}>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {/* Surah Number - Premium Octagonal Style */}
-            <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+            <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
               <div className="absolute inset-0 bg-primary/10 rotate-45 rounded-xl" />
               <div className="absolute inset-1 bg-primary/5 rotate-12 rounded-lg" />
               <span className="relative z-10 font-black text-primary text-xs tracking-tighter">{surah.number}</span>
@@ -37,23 +37,23 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
 
             {/* Center: Arabic + English */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h3 className="font-arabic text-2xl text-primary drop-shadow-sm leading-none">
+              <div className="flex items-center justify-between gap-3 min-w-0">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <h3 className="font-arabic text-xl sm:text-2xl text-primary drop-shadow-sm leading-none truncate">
                     {surah.name}
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-1.5 py-0.5 rounded-full bg-muted text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
                       {surah.revelationType}
                     </span>
-                    <span className="text-xs text-muted-foreground/60 font-bold uppercase tracking-widest">
+                    <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider shrink-0">
                       {surah.numberOfAyahs} Ayahs
                     </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">{surah.englishName}</p>
-                  <p className="text-xs text-muted-foreground/40 font-bold uppercase tracking-tighter mt-1">{surah.englishNameTranslation}</p>
+                <div className="text-right shrink-0 max-w-[45%] min-w-0">
+                  <p className="font-bold text-sm sm:text-base tracking-tight group-hover:text-primary transition-colors truncate">{surah.englishName}</p>
+                  <p className="text-[11px] text-muted-foreground/60 font-bold uppercase tracking-tighter mt-0.5 truncate">{surah.englishNameTranslation}</p>
                 </div>
               </div>
             </div>
@@ -131,31 +131,31 @@ export default function SurahList() {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
 
-          <div className="relative z-10 p-8 flex flex-col items-center text-center">
-            <div className="flex items-center gap-4 mb-6 w-full">
+          <div className="relative z-10 p-5 sm:p-8 flex flex-col items-center text-center">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6 w-full min-w-0">
               <button
                 onClick={() => goBackOrFallback(navigate, '/dashboard')}
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors shrink-0"
               >
-                <ChevronLeft className="w-6 h-6 text-white" />
+                <ChevronLeft className="w-5 h-5 text-white" />
               </button>
-              <h1 className="text-4xl sm:text-5xl font-arabic font-bold text-white flex-1">Al-Quran Al-Kareem</h1>
+              <h1 className="text-2xl sm:text-4xl font-arabic font-bold text-white flex-1 truncate">Al-Quran Al-Kareem</h1>
             </div>
 
-            <p className="text-white/60 text-xs font-medium max-w-[240px] leading-relaxed mb-8">
+            <p className="text-white/60 text-xs font-medium max-w-[240px] leading-relaxed mb-6 sm:mb-8">
               Read, listen, and contemplate the divine guidance
             </p>
 
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm">
               {[
                 { label: 'Surahs', value: '114' },
                 { label: 'Ayahs', value: '6,236' },
                 { label: 'Juz', value: '30' }
               ].map((stat, idx) => (
-                <div key={idx} className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-                  <p className="text-primary text-lg font-black tracking-tighter">{stat.value}</p>
-                  <p className="text-white/40 text-xs uppercase font-black tracking-widest mt-1">{stat.label}</p>
+                <div key={idx} className="bg-black/20 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-white/5">
+                  <p className="text-primary text-base sm:text-lg font-black tracking-tighter">{stat.value}</p>
+                  <p className="text-white/50 text-[10px] sm:text-xs uppercase font-bold tracking-wider mt-1 truncate">{stat.label}</p>
                 </div>
               ))}
             </div>

@@ -30,30 +30,28 @@ interface RamadanData {
   waterRemindersEnabled: boolean; // Water reminders after Iftar
 }
 
-interface NextEventCountdownProps {
+interface NextEventCountdownCardProps {
   enabled: boolean;
   suhoorTime: string;
   iftarTime: string;
-  onEventChange: (evt: { name: string; time: string; countdown: string } | null) => void;
 }
 
 /**
- * Self-contained countdown ticker.
- *
- * Owns its own 1/sec setInterval and only mutates `nextEvent`.  Previously
- * `RamadanMode` itself was re-rendering its ENTIRE body (cards, progress
- * bars, framer-motion variants, etc.) every second just because a 4-digit
- * number changed.  Memoizing this component isolates the 1/sec state
- * updates to just the countdown text — not the entire 12-card page.
+ * Self-contained countdown card.
+ * Owns its own interval and local state. Does NOT re-render the parent page.
  */
-const NextEventCountdownTicker = memo(function NextEventCountdownTicker({
+const NextEventCountdownCard = memo(function NextEventCountdownCard({
   enabled,
   suhoorTime,
   iftarTime,
-  onEventChange,
-}: NextEventCountdownProps) {
+}: NextEventCountdownCardProps) {
+  const [event, setEvent] = useState<{ name: string; time: string; countdown: string } | null>(null);
+
   useEffect(() => {
-    if (!enabled || !suhoorTime || !iftarTime) return;
+    if (!enabled || !suhoorTime || !iftarTime) {
+      setEvent(null);
+      return;
+    }
 
     const parseTimeToDate = (timeStr: string): Date => {
       const cleaned = timeStr.replace(/\s*\(.*?\)\s*/g, '').trim();
@@ -95,15 +93,40 @@ const NextEventCountdownTicker = memo(function NextEventCountdownTicker({
         };
       }
 
-      onEventChange(next);
+      setEvent(prev => {
+        if (!prev && !next) return null;
+        if (prev && next && prev.name === next.name && prev.time === next.time && prev.countdown === next.countdown) {
+          return prev;
+        }
+        return next;
+      });
     };
 
     update();
     const handle = setInterval(update, 1000);
     return () => clearInterval(handle);
-  }, [enabled, suhoorTime, iftarTime, onEventChange]);
+  }, [enabled, suhoorTime, iftarTime]);
 
-  return null;
+  if (!event) return null;
+
+  return (
+    <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-primary">{event.name}</p>
+            <p className="text-xs text-muted-foreground">in {event.countdown}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-lg font-bold text-primary">{event.time}</p>
+        </div>
+      </div>
+    </Card>
+  );
 });
 
 export default function RamadanMode() {
@@ -112,7 +135,6 @@ export default function RamadanMode() {
   const { toast } = useToast();
   const [suhoorTime, setSuhoorTime] = useState<string>("");
   const [iftarTime, setIftarTime] = useState<string>("");
-  const [nextEvent, setNextEvent] = useState<{ name: string; time: string; countdown: string } | null>(null);
   const [loadingTimes, setLoadingTimes] = useState(true);
   const [apiSource, setApiSource] = useState<'islamic' | 'aladhan' | 'fallback'>('islamic');
   const [fastingDuration, setFastingDuration] = useState<string>("");
@@ -187,9 +209,6 @@ export default function RamadanMode() {
             setDailyHadith(ramadanData.fullData.resource.hadith);
           }
 
-          // Get countdown to next event
-          await updateNextEventCountdown(todayFasting.time.sahur, todayFasting.time.iftar);
-
           // Schedule Ramadan notifications if it's Ramadan
           if (isRamadan && ramadanDay > 0) {
             const ramadanNotifications = RamadanNotifications.getInstance();
@@ -235,15 +254,6 @@ export default function RamadanMode() {
       setDailyDua(null);
       setDailyHadith(null);
 
-      // Get countdown to next event
-      const countdown = await AladhanAPI.getNextEventCountdown(
-        location.latitude,
-        location.longitude,
-        3,
-        true // Ramadan mode
-      );
-      setNextEvent(countdown);
-
       // Schedule Ramadan notifications if it's Ramadan
       if (isRamadan && ramadanDay > 0) {
         const ramadanNotifications = RamadanNotifications.getInstance();
@@ -276,43 +286,6 @@ export default function RamadanMode() {
     }
   };
 
-  // Helper function to update next event countdown
-  const updateNextEventCountdown = async (suhoor: string, iftar: string) => {
-    try {
-      const now = new Date();
-      const suhoorTime = parseTimeToDate(suhoor);
-      const iftarTime = parseTimeToDate(iftar);
-
-      let nextEvent: { name: string; time: string; countdown: string } | null = null;
-
-      // Check if Suhoor is next
-      if (suhoorTime > now) {
-        const diff = suhoorTime.getTime() - now.getTime();
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        nextEvent = {
-          name: 'Suhoor Ends',
-          time: suhoor,
-          countdown: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
-        };
-      }
-      // Check if Iftar is next
-      else if (iftarTime > now) {
-        const diff = iftarTime.getTime() - now.getTime();
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        nextEvent = {
-          name: 'Iftar Time',
-          time: iftar,
-          countdown: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
-        };
-      }
-
-      setNextEvent(nextEvent);
-    } catch (error) {
-      console.error('Failed to update countdown:', error);
-    }
-  };
 
   // Helper function to parse time string to Date
   const parseTimeToDate = (timeStr: string): Date => {
@@ -395,16 +368,6 @@ export default function RamadanMode() {
     }
   }, [location.latitude, location.longitude]);
 
-  // Stable reference passed to <NextEventCountdownTicker />.
-  // Because setNextEvent is a state setter (already identity-stable in React),
-  // useCallback with empty deps produces a fixed prop for the memoized ticker
-  // so its useEffect never re-subscribes unless inputs actually change.
-  const handleNextEventChange = useCallback(
-    (evt: { name: string; time: string; countdown: string } | null) => {
-      setNextEvent(evt);
-    },
-    [],
-  );
 
   const saveData = (newData: RamadanData) => {
     setData(newData);
@@ -681,24 +644,11 @@ export default function RamadanMode() {
             </Card>
 
             {/* Next Event Countdown */}
-            {nextEvent && (
-              <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-primary">{nextEvent.name}</p>
-                      <p className="text-xs text-muted-foreground">in {nextEvent.countdown}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-primary">{nextEvent.time}</p>
-                  </div>
-                </div>
-              </Card>
-            )}
+            <NextEventCountdownCard
+              enabled={isRamadan}
+              suhoorTime={suhoorTime}
+              iftarTime={iftarTime}
+            />
 
             {/* Refresh Button */}
             <Button
@@ -1087,18 +1037,6 @@ export default function RamadanMode() {
         </div>
       </div>
 
-      {/*
-        Memoized 1/sec countdown ticker.  Lives in its own component so its
-        setInterval-triggered setState only re-renders the countdown bits of
-        the page (the card that shows "Next Event: 3h 22m"), NOT the 12+
-        framer-motion cards that make up the rest of RamadanMode.
-      */}
-      <NextEventCountdownTicker
-        enabled={isRamadan}
-        suhoorTime={suhoorTime}
-        iftarTime={iftarTime}
-        onEventChange={handleNextEventChange}
-      />
     </LayoutManager>
   );
 }

@@ -2,7 +2,7 @@
  * Weekly Salah History Chart
  * Shows prayer completion over the past 7 days
  */
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Calendar } from "lucide-react";
 import { getPrayerHistory, type DailyPrayers } from "@/lib/salah-tracker";
@@ -38,7 +38,7 @@ function SimpleBarFallback({ chartData }: { chartData: ChartData[] }) {
   );
 }
 
-export function WeeklySalahChart() {
+export const WeeklySalahChart = memo(function WeeklySalahChart() {
   const { t: ti18n } = useI18n();
   const { animationEnabled } = useSettings();
   const { tier } = useAnimationTier();
@@ -47,12 +47,32 @@ export function WeeklySalahChart() {
   const [dataVersion, setDataVersion] = useState(0);
   const [weeklyStats, setWeeklyStats] = useState({ completed: 0, total: 0, percentage: 0 });
 
-  const refreshData = useCallback(() => {
-    const history = getPrayerHistory(7);
-    console.log('Prayer history data refreshed:', history);
+  const lastHistoryHashRef = useRef<string>("");
+  const lastRefreshTimeRef = useRef<number>(0);
 
-    // Reverse to show oldest first (left to right)
-    const data = history.reverse().map((day: DailyPrayers) => {
+  const refreshData = useCallback((force = false) => {
+    const now = Date.now();
+    // Throttle background widget-refresh to at most once per 60 seconds
+    if (!force && lastRefreshTimeRef.current !== 0 && now - lastRefreshTimeRef.current < 60000) {
+      return;
+    }
+    lastRefreshTimeRef.current = now;
+
+    const history = getPrayerHistory(7);
+    const historyHash = JSON.stringify(history);
+
+    // If data hasn't changed, skip re-calculation and don't re-render chart
+    if (historyHash === lastHistoryHashRef.current && lastHistoryHashRef.current !== "") {
+      return;
+    }
+    lastHistoryHashRef.current = historyHash;
+
+    if (import.meta.env.DEV && (window as any).__NOOR_DEBUG__) {
+      console.log('Prayer history data refreshed:', history);
+    }
+
+    // Do not mutate in place
+    const data = [...history].reverse().map((day: DailyPrayers) => {
       const completed = [day.fajr, day.dhuhr, day.asr, day.maghrib, day.isha].filter(Boolean).length;
       const date = new Date(day.date);
       return {
@@ -63,7 +83,6 @@ export function WeeklySalahChart() {
       };
     });
 
-    // Only show real data - no fake/sample data
     if (data.length === 0) {
       setChartData([]);
       setWeeklyStats({ completed: 0, total: 0, percentage: 0 });
@@ -71,7 +90,6 @@ export function WeeklySalahChart() {
       setChartData(data);
       setDataVersion(v => v + 1);
 
-      // Calculate weekly stats
       const totalCompleted = data.reduce((sum, d) => sum + d.completed, 0);
       const totalPossible = 7 * 5;
       setWeeklyStats({
@@ -83,14 +101,17 @@ export function WeeklySalahChart() {
   }, []);
 
   useEffect(() => {
-    refreshData();
+    refreshData(true);
 
-    // Listen for real-time updates
-    window.addEventListener('salah-updated', refreshData);
-    window.addEventListener('widget-refresh', refreshData);
+    // Listen for real-time updates (salah check-ins force check; background refreshes are throttled)
+    const handleSalahUpdate = () => refreshData(true);
+    const handleWidgetRefresh = () => refreshData(false);
+
+    window.addEventListener('salah-updated', handleSalahUpdate);
+    window.addEventListener('widget-refresh', handleWidgetRefresh);
     return () => {
-      window.removeEventListener('salah-updated', refreshData);
-      window.removeEventListener('widget-refresh', refreshData);
+      window.removeEventListener('salah-updated', handleSalahUpdate);
+      window.removeEventListener('widget-refresh', handleWidgetRefresh);
     };
   }, [refreshData]);
 
@@ -157,6 +178,6 @@ export function WeeklySalahChart() {
       </CardContent>
     </Card>
   );
-}
+});
 
 export default WeeklySalahChart;

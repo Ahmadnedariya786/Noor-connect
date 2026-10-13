@@ -114,31 +114,31 @@ const Quran = () => {
             {/* Glassmorphism Overlay */}
             <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-sm pointer-events-none" />
 
-            <div className="relative z-10 p-8 flex flex-col items-center text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
+            <div className="relative z-10 p-5 sm:p-8 flex flex-col items-center text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6 backdrop-blur-md">
                 <Sparkles className="w-3.5 h-3.5 text-[#C9860A]" />
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A]">
                   {ti18n('alQuranAlKareem')}
                 </span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl font-arabic font-bold text-white mb-4 drop-shadow-lg tracking-wide">
+              <h1 className="text-3xl sm:text-5xl font-arabic font-bold text-white mb-3 sm:mb-4 drop-shadow-lg tracking-wide">
                 {ti18n('theNobleQuran')}
               </h1>
-              <p className="text-white/50 text-xs font-medium max-w-[240px] leading-relaxed mb-8">
+              <p className="text-white/50 text-xs font-medium max-w-[240px] leading-relaxed mb-6 sm:mb-8">
                 {ti18n('readListenContemplate')}
               </p>
 
               {/* Quick Stats Grid with Glassmorphism */}
-              <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm">
                 {[
                   { label: ti18n('surahs'), value: '114' },
                   { label: ti18n('ayahs'), value: '6,236' },
                   { label: ti18n('juz'), value: '30' }
                 ].map((stat, idx) => (
-                  <div key={idx} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5 transition-colors">
-                    <p className="text-[#C9860A] text-lg font-bold font-serif italic tracking-tighter">{stat.value}</p>
-                    <p className="text-white/40 text-xs uppercase font-bold tracking-widest mt-1">{stat.label}</p>
+                  <div key={idx} className="bg-white/5 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-white/5 transition-colors">
+                    <p className="text-[#C9860A] text-base sm:text-lg font-bold font-serif italic tracking-tighter">{stat.value}</p>
+                    <p className="text-white/50 text-[10px] sm:text-xs uppercase font-bold tracking-wider mt-1 truncate">{stat.label}</p>
                   </div>
                 ))}
               </div>

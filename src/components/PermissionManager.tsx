@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Shield, ShieldCheck, ShieldOff, MapPin, Bell, BellOff, Smartphone, Globe, AlertTriangle, RefreshCw, Settings as SettingsIcon, Info } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, memo } from 'react';
+import { Shield, ShieldCheck, ShieldOff, MapPin, Bell, Smartphone, Globe, AlertTriangle, RefreshCw, Settings as SettingsIcon, Info } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Card } from '@/components/ui/card';
@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { permissionManager, type PermissionType, type PermissionInfo } from '@/lib/permission-manager';
 import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext-new';
 import { GeolocationService } from '@/lib/geolocation-service';
 import { nativeAdhan } from '@/lib/native-adhan';
 
@@ -17,46 +16,83 @@ interface PermissionManagerProps {
 
 const PermissionManager = ({ className }: PermissionManagerProps) => {
   const { toast } = useToast();
-  const { t } = useLanguage();
   const [permissions, setPermissions] = useState<Map<PermissionType, PermissionInfo>>(new Map());
   const [loading, setLoading] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'mobile' | 'web'>('web');
 
-  useEffect(() => {
-    setPlatform(Capacitor.isNativePlatform() ? 'mobile' : 'web');
-    loadPermissions();
+  const isCheckingRef = useRef(false);
+  const lastCheckTimeRef = useRef(0);
+  const mountedRef = useRef(true);
 
-    const unsubscribe = permissionManager.subscribe(() => {
-      loadPermissions();
-    });
+  const loadPermissions = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (isCheckingRef.current) return;
+    // Throttle background/resume checks to at most once per 20 seconds
+    if (!force && lastCheckTimeRef.current !== 0 && now - lastCheckTimeRef.current < 20000) {
+      return;
+    }
+    isCheckingRef.current = true;
+    lastCheckTimeRef.current = now;
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        loadPermissions();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', loadPermissions);
+    try {
+      const allPermissions = await permissionManager.getAllPermissions(force);
+      if (!mountedRef.current) return;
 
-    return () => {
-      unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', loadPermissions);
-    };
+      setPermissions((prev) => {
+        // Only update state if values actually changed to prevent render loops
+        let hasChanged = false;
+        if (prev.size !== allPermissions.length) {
+          hasChanged = true;
+        } else {
+          for (const p of allPermissions) {
+            const existing = prev.get(p.type);
+            if (!existing || existing.status !== p.status) {
+              hasChanged = true;
+              break;
+            }
+          }
+        }
+        if (!hasChanged && prev.size > 0) return prev;
+
+        const permissionMap = new Map<PermissionType, PermissionInfo>();
+        allPermissions.forEach((p) => permissionMap.set(p.type, p));
+        return permissionMap;
+      });
+    } catch (err) {
+      console.warn('Failed to load permissions:', err);
+    } finally {
+      isCheckingRef.current = false;
+    }
   }, []);
 
-  const loadPermissions = async () => {
-    const allPermissions = await permissionManager.getAllPermissions();
-    const permissionMap = new Map<PermissionType, PermissionInfo>();
-    allPermissions.forEach(p => permissionMap.set(p.type, p));
-    setPermissions(permissionMap);
-  };
+  useEffect(() => {
+    mountedRef.current = true;
+    setPlatform(Capacitor.isNativePlatform() ? 'mobile' : 'web');
+    loadPermissions(false);
+
+    // Throttle checks on app resume (max 1 check per page visit + on resume with 30s throttle)
+    const handleResume = () => {
+      if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        if (now - lastCheckTimeRef.current >= 30000) {
+          loadPermissions(true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleResume);
+
+    return () => {
+      mountedRef.current = false;
+      document.removeEventListener('visibilitychange', handleResume);
+    };
+  }, [loadPermissions]);
 
   const handleRequestPermission = async (type: PermissionType) => {
     setLoading(type);
     try {
       const success = await permissionManager.requestPermission(type);
-      
+
       if (success) {
         if (type === 'notifications' && Capacitor.isNativePlatform()) {
           await nativeAdhan.ensureExactAlarmPermission(true);
@@ -66,7 +102,6 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
           description: `The ${type} permission has been successfully granted.`,
         });
       } else {
-        // Additional handling for denied permissions
         if (type === 'location') {
           await GeolocationService.requestPermissions();
         } else if (type === 'notifications') {
@@ -93,41 +128,41 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
       });
     } finally {
       setLoading(null);
-      loadPermissions();
+      loadPermissions(true);
     }
   };
 
-  const handleOpenSettings = async (type: PermissionType) => {
+  const handleOpenSettings = (type: PermissionType) => {
     permissionManager.openSettings(type);
   };
 
   const getStatusIcon = (status: PermissionInfo['status']) => {
     switch (status) {
       case 'granted':
-        return <ShieldCheck className="w-5 h-5 text-green-500" />;
+        return <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />;
       case 'denied':
-        return <ShieldOff className="w-5 h-5 text-red-500" />;
+        return <ShieldOff className="w-4 h-4 text-rose-500 shrink-0" />;
       case 'prompt':
       case 'prompt-with-rationale':
-        return <Shield className="w-5 h-5 text-amber-500" />;
+        return <Shield className="w-4 h-4 text-amber-500 shrink-0" />;
       default:
-        return <AlertTriangle className="w-5 h-5 text-gray-400" />;
+        return <AlertTriangle className="w-4 h-4 text-muted-foreground shrink-0" />;
     }
   };
 
   const getStatusBadge = (status: PermissionInfo['status']) => {
     switch (status) {
       case 'granted':
-        return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Granted</Badge>;
+        return <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] px-2 py-0.5">Granted</Badge>;
       case 'denied':
-        return <Badge variant="destructive">Denied</Badge>;
+        return <Badge variant="destructive" className="text-[11px] px-2 py-0.5">Denied</Badge>;
       case 'prompt':
       case 'prompt-with-rationale':
-        return <Badge variant="outline" className="text-amber-600 border-amber-600">Action Needed</Badge>;
+        return <Badge variant="outline" className="text-amber-500 border-amber-500/50 bg-amber-500/10 text-[11px] px-2 py-0.5">Action Needed</Badge>;
       case 'not-supported':
-        return <Badge variant="secondary">Not Supported</Badge>;
+        return <Badge variant="secondary" className="text-[11px] px-2 py-0.5">Not Supported</Badge>;
       default:
-        return <Badge variant="secondary">Unknown</Badge>;
+        return <Badge variant="secondary" className="text-[11px] px-2 py-0.5">Unknown</Badge>;
     }
   };
 
@@ -135,319 +170,316 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
   const notificationPermission = permissions.get('notifications');
 
   return (
-    <Card className={`p-4 space-y-6 ${className}`}>
+    <Card className={`p-4 space-y-6 ${className || ''}`}>
       <div className="flex items-center gap-2 mb-2">
         <Shield className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold">Privacy & Permissions</h3>
+        <h3 className="text-lg font-semibold text-foreground">Privacy & Permissions</h3>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Noor Connect is privacy-first. We only request permissions necessary for core features like prayer times and notifications. All data stays on your device.
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Noor Connect is privacy-first. We only request permissions necessary for core features like prayer times and notifications. All data stays strictly on your device.
       </p>
 
       {/* Location Permission */}
-      <div className="space-y-3 p-3 rounded-lg border border-border/50">
+      <div className="p-4 rounded-2xl border border-border/70 bg-card/60 space-y-3.5">
+        {/* Row 1: Icon + Title + Description in a column */}
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-            <MapPin className="w-4 h-4 text-blue-600" />
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
+            <MapPin className="w-4 h-4 text-blue-500" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h4 className="font-medium text-sm">{locationPermission?.title}</h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {locationPermission?.description}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {getStatusIcon(locationPermission?.status || 'prompt')}
-                {getStatusBadge(locationPermission?.status || 'prompt')}
-              </div>
-            </div>
-
-            {locationPermission?.status === 'granted' && (
-              <div className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-md">
-                ✅ Accurate Prayer Times & Qibla Enabled
-              </div>
-            )}
-
-            {locationPermission?.status === 'denied' && (
-              <div className="space-y-2">
-                <div className="bg-red-50 text-red-700 text-xs px-2 py-1 rounded-md">
-                  ❌ Location Access Denied
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  <p className="font-medium mb-1">Why Location Needed:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-3">
-                    {locationPermission?.benefits.map((benefit, index) => (
-                      <li key={index}>{benefit}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {locationPermission?.status === 'prompt' && (
-              <div className="space-y-2">
-                <div className="bg-amber-50 text-amber-700 text-xs px-2 py-1 rounded-md">
-                  ⚠️ Location Needed
-                </div>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleRequestPermission('location')}
-                  disabled={loading === 'location'}
-                  className="w-full"
-                >
-                  {loading === 'location' ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 me-2 animate-spin" />
-                      Requesting...
-                    </>
-                  ) : (
-                    <>
-                      <MapPin className="w-4 h-4 me-2" />
-                      Enable Location
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+          <div className="flex-1 min-w-0 space-y-1">
+            <h4 className="font-semibold text-sm text-foreground leading-snug">
+              {locationPermission?.title || 'Location Access'}
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed break-words">
+              {locationPermission?.description || 'Access device location to calculate accurate prayer times and Qibla direction.'}
+            </p>
           </div>
         </div>
 
-        {/* Platform-specific instructions */}
+        {/* Row 2: Status badge in its own full-width row */}
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {getStatusIcon(locationPermission?.status || 'prompt')}
+            <span className="text-xs font-medium text-muted-foreground">Permission Status:</span>
+          </div>
+          {getStatusBadge(locationPermission?.status || 'prompt')}
+        </div>
+
+        {locationPermission?.status === 'granted' && (
+          <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+            <span>✅</span>
+            <span className="font-medium">Accurate Prayer Times & Qibla Enabled</span>
+          </div>
+        )}
+
         {locationPermission?.status === 'denied' && (
-          <div className="mt-3 p-3 bg-muted/50 rounded-md border border-border/50">
-            <div className="flex items-start gap-2 mb-2">
-              {platform === 'mobile' ? (
-                <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
-              ) : (
-                <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-              )}
-              <div className="flex-1">
-                <p className="text-xs font-medium text-muted-foreground">
-                  {platform === 'mobile' ? 'Mobile App Instructions:' : 'Browser Instructions:'}
-                </p>
-              </div>
+          <div className="space-y-2">
+            <div className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+              <span>❌</span>
+              <span className="font-medium">Location Access Denied</span>
             </div>
-            <div className="text-xs text-muted-foreground bg-background p-2 rounded border">
-              <strong>How to Fix:</strong> {locationPermission?.instructions?.[platform] || 'Check your device settings'}
+            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl border border-border/40 space-y-1.5">
+              <p className="font-medium text-foreground">Why Location Is Needed:</p>
+              <ul className="list-disc list-inside space-y-0.5 ml-1">
+                {locationPermission?.benefits.map((benefit, index) => (
+                  <li key={index} className="leading-relaxed">{benefit}</li>
+                ))}
+              </ul>
             </div>
-            <div className="flex flex-col gap-2 mt-2">
-              {platform === 'web' && (
+          </div>
+        )}
+
+        {locationPermission?.status === 'prompt' && (
+          <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+            <span>⚠️</span>
+            <span className="font-medium">Location Needed for Precise Prayer Calculations</span>
+          </div>
+        )}
+
+        {/* Row 3: Action button in its own full-width row */}
+        <div className="pt-1">
+          {locationPermission?.status === 'prompt' && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleRequestPermission('location')}
+              disabled={loading === 'location'}
+              className="w-full h-10 rounded-xl font-medium"
+            >
+              {loading === 'location' ? (
                 <>
+                  <RefreshCw className="w-4 h-4 me-2 animate-spin" />
+                  Requesting...
+                </>
+              ) : (
+                <>
+                  <MapPin className="w-4 h-4 me-2" />
+                  Enable Location
+                </>
+              )}
+            </Button>
+          )}
+
+          {locationPermission?.status === 'denied' && (
+            <div className="space-y-2.5">
+              <div className="p-3 bg-muted/40 rounded-xl border border-border/50 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  {platform === 'mobile' ? (
+                    <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
+                  ) : (
+                    <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                  )}
+                  <span>{platform === 'mobile' ? 'Mobile App Instructions:' : 'Browser Instructions:'}</span>
+                </div>
+                <div className="text-xs text-foreground bg-background p-2.5 rounded-lg border border-border/60 break-words leading-relaxed">
+                  <strong>How to Fix:</strong> {locationPermission?.instructions?.[platform] || 'Check device settings'}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                {platform === 'web' && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleRequestPermission('location')}
-                    className="w-full"
+                    className="w-full h-10 rounded-xl"
                   >
                     <MapPin className="w-4 h-4 me-2" />
                     Request Location Again
                   </Button>
-                </>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleOpenSettings('location')}
-                className="w-full"
-              >
-                <SettingsIcon className="w-4 h-4 me-2" />
-                Open {platform === 'mobile' ? 'App Settings' : 'Browser Settings'}
-              </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenSettings('location')}
+                  className="w-full h-10 rounded-xl"
+                >
+                  <SettingsIcon className="w-4 h-4 me-2" />
+                  Open {platform === 'mobile' ? 'App Settings' : 'Browser Settings'}
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {locationPermission?.status === 'granted' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleOpenSettings('location')}
+              className="w-full h-9 rounded-xl text-xs text-muted-foreground hover:text-foreground"
+            >
+              <SettingsIcon className="w-3.5 h-3.5 me-2" />
+              Manage in Device Settings
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Notification Permission */}
-      <div className="space-y-3 p-3 rounded-lg border border-border/50">
+      <div className="p-4 rounded-2xl border border-border/70 bg-card/60 space-y-3.5">
+        {/* Row 1: Icon + Title + Description in a column */}
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-            <Bell className="w-4 h-4 text-purple-600" />
+          <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
+            <Bell className="w-4 h-4 text-purple-500" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h4 className="font-medium text-sm">{notificationPermission?.title}</h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {notificationPermission?.description}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {getStatusIcon(notificationPermission?.status || 'prompt')}
-                {getStatusBadge(notificationPermission?.status || 'prompt')}
-              </div>
-            </div>
-
-            {notificationPermission?.status === 'granted' && (
-              <div className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-md">
-                ✅ Notifications Enabled
-              </div>
-            )}
-
-            {notificationPermission?.status === 'denied' && (
-              <div className="space-y-2">
-                <div className="bg-red-50 text-red-700 text-xs px-2 py-1 rounded-md">
-                  ❌ Notifications Denied
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  <p className="font-medium mb-1">Why Notifications Needed:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-3">
-                    {notificationPermission?.benefits.map((benefit, index) => (
-                      <li key={index}>{benefit}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {notificationPermission?.status === 'prompt' && (
-              <div className="space-y-2">
-                <div className="bg-amber-50 text-amber-700 text-xs px-2 py-1 rounded-md">
-                  ⚠️ Notifications Needed
-                </div>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleRequestPermission('notifications')}
-                  disabled={loading === 'notifications'}
-                  className="w-full"
-                >
-                  {loading === 'notifications' ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 me-2 animate-spin" />
-                      Requesting...
-                    </>
-                  ) : (
-                    <>
-                      <Bell className="w-4 h-4 me-2" />
-                      Enable Notifications
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-
-            {notificationPermission?.status === 'not-supported' && (
-              <div className="bg-gray-50 text-gray-700 text-xs px-2 py-1 rounded-md">
-                ❌ Notifications Not Supported
-              </div>
-            )}
+          <div className="flex-1 min-w-0 space-y-1">
+            <h4 className="font-semibold text-sm text-foreground leading-snug">
+              {notificationPermission?.title || 'Notification Access'}
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed break-words">
+              {notificationPermission?.description || 'Receive timely Adhan prayer alarms and Islamic reminders.'}
+            </p>
           </div>
         </div>
 
-        {/* Platform-specific instructions */}
+        {/* Row 2: Status badge in its own full-width row */}
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {getStatusIcon(notificationPermission?.status || 'prompt')}
+            <span className="text-xs font-medium text-muted-foreground">Permission Status:</span>
+          </div>
+          {getStatusBadge(notificationPermission?.status || 'prompt')}
+        </div>
+
+        {notificationPermission?.status === 'granted' && (
+          <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+            <span>✅</span>
+            <span className="font-medium">Adhan & Prayer Notifications Enabled</span>
+          </div>
+        )}
+
         {notificationPermission?.status === 'denied' && (
-          <div className="mt-3 p-3 bg-muted/50 rounded-md border border-border/50">
-            <div className="flex items-start gap-2 mb-2">
-              {platform === 'mobile' ? (
-                <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
-              ) : (
-                <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-              )}
-              <div className="flex-1">
-                <p className="text-xs font-medium text-muted-foreground">
-                  {platform === 'mobile' ? 'Mobile Notification Instructions:' : 'Web Notification Instructions:'}
-                </p>
-              </div>
+          <div className="space-y-2">
+            <div className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+              <span>❌</span>
+              <span className="font-medium">Notifications Denied</span>
             </div>
-            <div className="text-xs text-muted-foreground bg-background p-2 rounded border">
-              <strong>How to Fix:</strong> {notificationPermission?.instructions?.[platform] || 'Check your device settings'}
-            </div>
-            <div className="space-y-2 mt-2">
-              {platform === 'web' && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      handleRequestPermission('notifications');
-                    }}
-                    className="w-full"
-                  >
-                    <Bell className="w-4 h-4 mr-2" />
-                    Request Permission
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => permissionManager.openSettings('notifications')}
-                    className="w-full"
-                  >
-                    <SettingsIcon className="w-4 h-4 me-2" />
-                    Open Browser Settings
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // Test notification to show current status
-                      if ('Notification' in window) {
-                        const testNotification = new Notification('Test Notification', {
-                          body: 'This is a test notification from Noor Connect',
-                          icon: '/favicon.ico'
-                        });
-                        setTimeout(() => testNotification.close(), 3000);
-                        toast({
-                          title: 'Test Notification Sent',
-                          description: 'If you don\'t see this, please enable notifications in browser settings',
-                        });
-                      } else {
-                        toast({
-                          title: 'Notifications Not Supported',
-                          description: 'Your browser does not support notifications',
-                          variant: 'destructive'
-                        });
-                      }
-                    }}
-                    className="w-full"
-                  >
-                    <Bell className="w-4 h-4 mr-2" />
-                    Test Notification
-                  </Button>
-                </>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleOpenSettings('notifications')}
-                className="w-full"
-              >
-                <SettingsIcon className="w-4 h-4 mr-2" />
-                Open {platform === 'mobile' ? 'Notification Settings' : 'Browser Settings'}
-              </Button>
+            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl border border-border/40 space-y-1.5">
+              <p className="font-medium text-foreground">Why Notifications Are Needed:</p>
+              <ul className="list-disc list-inside space-y-0.5 ml-1">
+                {notificationPermission?.benefits.map((benefit, index) => (
+                  <li key={index} className="leading-relaxed">{benefit}</li>
+                ))}
+              </ul>
             </div>
           </div>
         )}
+
+        {notificationPermission?.status === 'prompt' && (
+          <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+            <span>⚠️</span>
+            <span className="font-medium">Notification Permission Needed for Adhan Alerts</span>
+          </div>
+        )}
+
+        {notificationPermission?.status === 'not-supported' && (
+          <div className="bg-muted text-muted-foreground text-xs px-3 py-2 rounded-xl">
+            Notifications Not Supported on this browser/environment
+          </div>
+        )}
+
+        {/* Row 3: Action button in its own full-width row */}
+        <div className="pt-1">
+          {notificationPermission?.status === 'prompt' && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleRequestPermission('notifications')}
+              disabled={loading === 'notifications'}
+              className="w-full h-10 rounded-xl font-medium"
+            >
+              {loading === 'notifications' ? (
+                <>
+                  <RefreshCw className="w-4 h-4 me-2 animate-spin" />
+                  Requesting...
+                </>
+              ) : (
+                <>
+                  <Bell className="w-4 h-4 me-2" />
+                  Enable Notifications
+                </>
+              )}
+            </Button>
+          )}
+
+          {notificationPermission?.status === 'denied' && (
+            <div className="space-y-2.5">
+              <div className="p-3 bg-muted/40 rounded-xl border border-border/50 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  {platform === 'mobile' ? (
+                    <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
+                  ) : (
+                    <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                  )}
+                  <span>{platform === 'mobile' ? 'Mobile App Instructions:' : 'Browser Instructions:'}</span>
+                </div>
+                <div className="text-xs text-foreground bg-background p-2.5 rounded-lg border border-border/60 break-words leading-relaxed">
+                  <strong>How to Fix:</strong> {notificationPermission?.instructions?.[platform] || 'Check device settings'}
+                </div>
+              </div>
+              <div className="space-y-2">
+                {platform === 'web' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRequestPermission('notifications')}
+                    className="w-full h-10 rounded-xl"
+                  >
+                    <Bell className="w-4 h-4 me-2" />
+                    Request Permission
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenSettings('notifications')}
+                  className="w-full h-10 rounded-xl"
+                >
+                  <SettingsIcon className="w-4 h-4 me-2" />
+                  Open {platform === 'mobile' ? 'Notification Settings' : 'Browser Settings'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {notificationPermission?.status === 'granted' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleOpenSettings('notifications')}
+              className="w-full h-9 rounded-xl text-xs text-muted-foreground hover:text-foreground"
+            >
+              <SettingsIcon className="w-3.5 h-3.5 me-2" />
+              Manage in Device Settings
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Overall Status */}
-      <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+      <div className="p-3.5 bg-muted/30 rounded-2xl border border-border/50">
         <div className="flex items-center gap-2 mb-2">
           <Info className="w-4 h-4 text-muted-foreground" />
-          <h4 className="font-medium text-sm">Permission Summary</h4>
+          <h4 className="font-semibold text-xs text-foreground uppercase tracking-wider">Permission Summary</h4>
         </div>
         <div className="grid grid-cols-1 gap-2 text-xs">
-          <div className="flex items-center justify-between p-2 bg-background rounded border">
-            <span>Platform:</span>
-            <span className="font-medium">{platform === 'mobile' ? 'Mobile App' : 'Web App'}</span>
+          <div className="flex items-center justify-between p-2.5 bg-background rounded-xl border border-border/60">
+            <span className="text-muted-foreground">Platform:</span>
+            <span className="font-medium text-foreground">{platform === 'mobile' ? 'Android Native' : 'Web Browser'}</span>
           </div>
-          <div className="flex items-center justify-between p-2 bg-background rounded border">
-            <span>Overall Status:</span>
-            <span className={`font-medium ${
-              Array.from(permissions.values()).every(p => p.status === 'granted') 
-                ? 'text-green-600' 
+          <div className="flex items-center justify-between p-2.5 bg-background rounded-xl border border-border/60">
+            <span className="text-muted-foreground">Overall Status:</span>
+            <span className={`font-semibold ${
+              Array.from(permissions.values()).every(p => p.status === 'granted')
+                ? 'text-emerald-500'
                 : Array.from(permissions.values()).some(p => p.status === 'denied')
-                ? 'text-red-600' 
-                : 'text-amber-600'
+                ? 'text-rose-500'
+                : 'text-amber-500'
             }`}>
-              {Array.from(permissions.values()).every(p => p.status === 'granted') 
-                ? 'All Permissions Granted' 
+              {Array.from(permissions.values()).every(p => p.status === 'granted')
+                ? 'All Permissions Granted'
                 : Array.from(permissions.values()).some(p => p.status === 'denied')
-                ? 'Some Permissions Denied' 
+                ? 'Some Permissions Denied'
                 : 'Action Needed'}
             </span>
           </div>
@@ -457,4 +489,5 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
   );
 };
 
-export default PermissionManager;
+export default memo(PermissionManager);
+

@@ -90,18 +90,18 @@ export function HadithCollections() {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
           
-          <div className="relative z-10 p-8">
+          <div className="relative z-10 p-4 sm:p-8">
             {dailyHadith ? (
               <>
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-4 h-4 text-primary-foreground/80" />
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                  <Sparkles className="w-4 h-4 text-primary-foreground/80 shrink-0" />
                   <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">
                     {dailyHadith.title}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="ml-auto h-7 w-7 rounded-full hover:bg-white/10"
+                    className="ml-auto h-7 w-7 rounded-full hover:bg-white/10 shrink-0"
                     onClick={() => {
                       getDailyHadithFromCollections().then(h => {
                         if (h) {
@@ -121,17 +121,17 @@ export function HadithCollections() {
                   </Button>
                 </div>
                 
-                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/5 mb-4">
+                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/5 mb-4">
                   {dailyHadith.arabic && (
-                    <p className="text-white/90 text-xl md:text-2xl font-arabic text-right leading-loose mb-4" dir="rtl">
+                    <p className="text-white/90 text-xl md:text-2xl font-arabic text-right leading-loose mb-4 break-words" dir="rtl">
                       {dailyHadith.arabic}
                     </p>
                   )}
-                  <p className="text-white/90 text-base font-medium leading-relaxed mb-4">
+                  <p className="text-white/90 text-sm sm:text-base font-medium leading-relaxed mb-4 break-words">
                     {dailyHadith.content}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-white/10 text-white/80 border-white/10 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className="bg-white/10 text-white/80 border-white/10 text-xs shrink-0">
                       {dailyHadith.subtitle}
                     </Badge>
                     <span className="text-white/50 text-xs font-medium">{dailyHadith.reference}</span>

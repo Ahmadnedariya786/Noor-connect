@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, RefreshCw, Share2, Volume2, Copy } from "lucide-react";
@@ -94,6 +95,7 @@ const AYAH_STORAGE_KEY = "enhanced-daily-ayah";
 const LAST_UPDATE_KEY = "ayah-last-update";
 
 export function EnhancedDailyAyah() {
+  const navigate = useNavigate();
   const [ayah, setAyah] = useState<Ayah | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -119,10 +121,14 @@ export function EnhancedDailyAyah() {
   }, []);
 
   const loadAyah = useCallback(() => {
-    setLoading(true);
     try {
       const selectedAyah = getDailyAyah();
-      setAyah(selectedAyah);
+      setAyah(prev => {
+        if (prev && prev.surahNumber === selectedAyah.surahNumber && prev.ayahNumber === selectedAyah.ayahNumber) {
+          return prev;
+        }
+        return selectedAyah;
+      });
     } catch (error) {
       console.error('Error loading ayah:', error);
       setAyah(ayahCollection[0]); // Fallback
@@ -221,22 +227,22 @@ export function EnhancedDailyAyah() {
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
       <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-primary/5 rounded-full blur-xl" />
       
-      <CardContent className="p-6 space-y-4 relative z-10">
+      <CardContent className="p-4 sm:p-6 space-y-4 relative z-10">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/20 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="p-2 rounded-xl bg-primary/20 shadow-sm shrink-0 mt-0.5">
               <BookOpen className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <h3 className="font-semibold text-primary">Daily Ayah</h3>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <h3 className="font-semibold text-primary text-sm sm:text-base leading-snug">Daily Ayah</h3>
+              <p className="text-xs text-muted-foreground truncate">
                 {ayah.surah} : {ayah.ayahNumber}
               </p>
             </div>
           </div>
           
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1 shrink-0 self-start sm:self-auto flex-wrap">
             <Button
               variant="ghost"
               size="icon"
@@ -269,14 +275,14 @@ export function EnhancedDailyAyah() {
 
         {/* Arabic Text */}
         <div className={`text-right space-y-2 transition-all duration-500 ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
-          <p className="text-2xl font-arabic leading-relaxed text-primary drop-shadow-sm">
+          <p className="text-xl sm:text-2xl font-arabic leading-relaxed text-primary drop-shadow-sm break-words" dir="rtl">
             {ayah.arabic}
           </p>
         </div>
 
         {/* Translation */}
         <div className={`space-y-2 transition-all duration-500 delay-100 ${isAnimating ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
-          <p className="text-base leading-relaxed text-foreground font-medium">
+          <p className="text-sm sm:text-base leading-relaxed text-foreground font-medium break-words">
             {ayah.translation}
           </p>
         </div>
@@ -284,25 +290,25 @@ export function EnhancedDailyAyah() {
         {/* Reflection */}
         {ayah.reflection && (
           <div className={`p-3 rounded-xl bg-primary/5 border border-primary/10 transition-all duration-500 delay-200 ${isAnimating ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
-            <p className="text-sm text-muted-foreground italic">
+            <p className="text-xs sm:text-sm text-muted-foreground italic leading-relaxed break-words">
               💭 {ayah.reflection}
             </p>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-primary/10">
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 rounded-xl border-primary/30 hover:bg-primary/10"
-            onClick={() => window.location.href = '/quran'}
+            className="gap-2 rounded-xl border-primary/30 hover:bg-primary/10 h-8 text-xs font-medium self-start sm:self-auto"
+            onClick={() => navigate('/quran')}
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-3.5 h-3.5" />
             Read Quran
           </Button>
           
-          <div className="text-xs text-muted-foreground">
+          <div className="text-[11px] text-muted-foreground self-start sm:self-auto font-medium">
             Updated daily at Fajr
           </div>
         </div>

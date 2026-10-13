@@ -88,16 +88,16 @@ export const PrayerMethodSelector = () => {
       <CardContent className="space-y-4">
         {/* Current Method Info */}
         <div className="p-3 rounded-lg bg-muted/30">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium">{selectedMethod.name}</h4>
+          <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+            <h4 className="font-medium text-sm sm:text-base leading-snug min-w-0 flex-1">{selectedMethod.name}</h4>
             {isRecommended && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs shrink-0">
                 <CheckCircle className="w-3 h-3 mr-1" />
                 Recommended
               </Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground mb-2">{selectedMethod.description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2 break-words">{selectedMethod.description}</p>
           <div className="flex gap-4 text-xs">
             <div className="flex items-center gap-1">
               <span className="font-medium">Fajr:</span>
