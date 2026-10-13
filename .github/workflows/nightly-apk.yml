@@ -141,6 +141,16 @@ jobs:
           echo "size=$FILE_SIZE" >> $GITHUB_OUTPUT
           echo "Prepared noor-connect-nightly.apk ($FILE_SIZE)"
 
+      - name: Delete old release assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ github.token }}
+          tag: nightly
+          fail-if-no-assets: false
+          assets: |
+            *.apk
+            build-info.json
+
       - name: Publish Nightly GitHub Release
         uses: softprops/action-gh-release@v2
         with:

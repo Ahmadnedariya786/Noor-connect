@@ -307,11 +307,16 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const res = await fetch(NIGHTLY_API_URL, {
+    // Add cache-busting parameter to prevent stale CDN / browser responses
+    const requestUrl = `${NIGHTLY_API_URL}?t=${Date.now()}`;
+    const res = await fetch(requestUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/vnd.github.v3+json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
       },
+      cache: 'no-store',
       signal: controller.signal,
     });
 
@@ -335,18 +340,32 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     const commitSha = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
 
     // Locate direct APK download URL from release assets
+    // Sort assets in descending order by updated_at / created_at / ID so the LATEST APK is always picked
     let apkUrl = DIRECT_APK_FALLBACK_URL;
     let sizeBytes: number | undefined;
 
     if (Array.isArray(data.assets)) {
-      const apkAsset = data.assets.find((a: any) =>
+      const apkAssets = data.assets.filter((a: any) =>
         (typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk')) ||
         a?.content_type === 'application/vnd.android.package-archive' ||
         (typeof a?.browser_download_url === 'string' && a.browser_download_url.toLowerCase().endsWith('.apk'))
       );
-      if (apkAsset?.browser_download_url) {
-        apkUrl = apkAsset.browser_download_url;
-        sizeBytes = typeof apkAsset.size === 'number' ? apkAsset.size : undefined;
+
+      apkAssets.sort((a: any, b: any) => {
+        const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
+        const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
+        const timeA = isNaN(dateA) ? 0 : dateA;
+        const timeB = isNaN(dateB) ? 0 : dateB;
+        if (timeA !== timeB) {
+          return timeB - timeA; // Descending: latest first
+        }
+        return (Number(b.id) || 0) - (Number(a.id) || 0);
+      });
+
+      const latestApk = apkAssets[0];
+      if (latestApk?.browser_download_url) {
+        apkUrl = latestApk.browser_download_url;
+        sizeBytes = typeof latestApk.size === 'number' ? latestApk.size : undefined;
       }
     }
 
