@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { markStartupStep, completeStartupStep } from '@/lib/startup-breadcrumb';
 
 const GREETING_ENABLED_KEY = 'greetingEnabled';
 const LEGACY_GREETING_ENABLED_KEY = 'salam-greeting-enabled';
@@ -43,9 +44,16 @@ export const SalamGreeting = ({ splashActive = false }: SalamGreetingProps) => {
       const isNative = Capacitor.isNativePlatform();
 
       const playGreeting = () => {
+        markStartupStep('greeting-audio-init');
         try {
-          if (hasPlayedRef.current) return;
-          if (sessionStorage.getItem(GREETING_PLAYED_KEY)) return;
+          if (hasPlayedRef.current) {
+            completeStartupStep('greeting-audio-init');
+            return;
+          }
+          if (sessionStorage.getItem(GREETING_PLAYED_KEY)) {
+            completeStartupStep('greeting-audio-init');
+            return;
+          }
 
           if (!audioRef.current) {
             audioRef.current = new Audio('/audio/salam-greeting.mp3');
@@ -57,11 +65,19 @@ export const SalamGreeting = ({ splashActive = false }: SalamGreetingProps) => {
 
           const playPromise = audioRef.current.play();
           if (playPromise !== undefined) {
-            playPromise.catch((error) => {
-              console.warn('Greeting audio playback fallback:', error);
-            });
+            playPromise
+              .then(() => {
+                completeStartupStep('greeting-audio-init');
+              })
+              .catch((error) => {
+                completeStartupStep('greeting-audio-init');
+                console.warn('Greeting audio playback fallback:', error);
+              });
+          } else {
+            completeStartupStep('greeting-audio-init');
           }
         } catch (err) {
+          completeStartupStep('greeting-audio-init');
           console.warn('Greeting audio error, falling back silently:', err);
         }
       };

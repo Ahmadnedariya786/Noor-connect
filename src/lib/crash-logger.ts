@@ -8,6 +8,8 @@ export interface CrashEntry {
   stack: string;
   time: string;
   route: string;
+  type?: string;
+  step?: string;
 }
 
 const CRASH_STORAGE_KEY = 'noor_last_crash';
@@ -37,6 +39,8 @@ export function recordCrash(entry: {
   stack?: string;
   route?: string;
   time?: string;
+  type?: string;
+  step?: string;
 }): void {
   try {
     const existing = getLastCrashes();
@@ -45,6 +49,8 @@ export function recordCrash(entry: {
       stack: extractFirstFiveStackLines(entry.stack),
       time: entry.time || new Date().toISOString(),
       route: entry.route || getSafeRoute(),
+      ...(entry.type ? { type: entry.type } : {}),
+      ...(entry.step ? { step: entry.step } : {}),
     };
 
     const updated = [cleanEntry, ...existing].slice(0, MAX_ENTRIES);

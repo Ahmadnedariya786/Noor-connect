@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense, lazy } from "react";
+import { markStartupStep, completeStartupStep } from "@/lib/startup-breadcrumb";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -337,9 +338,13 @@ function AppShell() {
     }
   }, []);
 
-  useEffect(() => {
-    // If splash is disabled, hide it immediately and ensure scroll is unlocked
-    if (!splashEnabled) {
+  const splashHandoffDoneRef = useRef(false);
+  const handleSplashComplete = useCallback(() => {
+    if (splashHandoffDoneRef.current) return;
+    splashHandoffDoneRef.current = true;
+
+    markStartupStep('splash-handoff');
+    try {
       setShowSplash(false);
       document.documentElement.classList.remove('splash-active');
       document.body.classList.remove('splash-active');
@@ -347,49 +352,81 @@ function AppShell() {
       document.body.style.overflow = '';
       document.documentElement.style.touchAction = '';
       document.body.style.touchAction = '';
+      document.documentElement.style.overscrollBehavior = '';
+      document.body.style.overscrollBehavior = '';
       const el = document.getElementById('static-splash');
       if (el) el.remove();
+    } catch (e) {
+      console.warn('Splash handoff error', e);
+    } finally {
+      completeStartupStep('splash-handoff');
     }
-  }, [splashEnabled]);
+  }, []);
+
+  // Safety fallback: ensure splash screen handoff always completes within 3.5s
+  useEffect(() => {
+    if (!splashEnabled) {
+      handleSplashComplete();
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (!splashHandoffDoneRef.current) {
+        console.warn('Splash handoff safety fallback triggered');
+        handleSplashComplete();
+      }
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [splashEnabled, handleSplashComplete]);
 
   // Initialize performance optimizations
   useEffect(() => {
-    preloadCriticalResources();
+    try {
+      preloadCriticalResources();
+    } catch (e) {
+      console.warn('preloadCriticalResources failed', e);
+    }
 
     // ── FPS monitor: DEV only ─────────────────────────────────────────────
-    // monitorFPS runs a lightweight rAF loop and fires its callback once per
-    // second with the current frame rate.  We only enable this in development
-    // so there is zero overhead in production APK builds.
     if (import.meta.env.DEV) {
-      const stopFPS = monitorFPS((fps: number) => {
-        // Colour-code: green ≥ 55, yellow 30–54, red < 30
-        const style =
-          fps >= 55
-            ? 'color:#4ade80;font-weight:bold'
-            : fps >= 30
-            ? 'color:#facc15;font-weight:bold'
-            : 'color:#f87171;font-weight:bold';
-        console.debug(`%c[FPS] ${fps}`, style);
-      });
-      return () => {
-        stopFPS();
-      };
+      try {
+        const stopFPS = monitorFPS((fps: number) => {
+          const style =
+            fps >= 55
+              ? 'color:#4ade80;font-weight:bold'
+              : fps >= 30
+              ? 'color:#facc15;font-weight:bold'
+              : 'color:#f87171;font-weight:bold';
+          console.debug(`%c[FPS] ${fps}`, style);
+        });
+        return () => {
+          stopFPS();
+        };
+      } catch {}
     }
   }, []);
 
   useEffect(() => {
+    markStartupStep('app-shell-mount');
+    completeStartupStep('app-shell-mount');
+
     // 1. Notification service init
+    markStartupStep('notification-service-init');
     try {
       notificationManager.start();
     } catch (e) {
       console.warn('Startup: notificationManager.start failed', e);
+    } finally {
+      completeStartupStep('notification-service-init');
     }
 
     // 2. Backup service init & auto snapshot
+    markStartupStep('backup-restore');
     try {
       initBackupService();
     } catch (e) {
       console.warn('Startup: initBackupService failed', e);
+    } finally {
+      completeStartupStep('backup-restore');
     }
     
     // 3. Safety clear for Ramadan notifications if it's not Ramadan
@@ -411,24 +448,39 @@ function AppShell() {
     }
 
     // 4. Schedule upcoming Islamic events
+    markStartupStep('islamic-events-init');
     try {
-      islamicEventsService.scheduleUpcomingEvents().catch(error => {
-        console.warn('Failed to schedule Islamic events:', error);
-      });
+      islamicEventsService.scheduleUpcomingEvents()
+        .catch(error => {
+          console.warn('Failed to schedule Islamic events:', error);
+        })
+        .finally(() => {
+          completeStartupStep('islamic-events-init');
+        });
     } catch (e) {
+      completeStartupStep('islamic-events-init');
       console.warn('Startup: islamicEventsService failed', e);
     }
 
     // 5. Service worker registration (PWA - web production only)
+    markStartupStep('service-worker-init');
     try {
       if (!Capacitor.isNativePlatform() && import.meta.env.PROD && typeof navigator !== 'undefined' && 'serviceWorker' in navigator && !navigator.serviceWorker.controller) {
-        serviceWorkerManager.register().catch(() => {});
+        serviceWorkerManager.register()
+          .catch(() => {})
+          .finally(() => {
+            completeStartupStep('service-worker-init');
+          });
+      } else {
+        completeStartupStep('service-worker-init');
       }
     } catch (e) {
+      completeStartupStep('service-worker-init');
       console.warn('Startup: serviceWorkerManager failed', e);
     }
 
     // 6. Widget auto-update initialization
+    markStartupStep('widget-auto-update-init');
     try {
       const savedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
       if (savedLocation) {
@@ -438,21 +490,43 @@ function AppShell() {
             WidgetService.startAutoUpdate(latitude, longitude, locationName);
           } catch (e) {
             console.warn('Failed to start widget auto-update', e);
+          } finally {
+            completeStartupStep('widget-auto-update-init');
           }
-        }).catch(err => console.warn('Failed to import widget-service', err));
+        }).catch(err => {
+          console.warn('Failed to import widget-service', err);
+          completeStartupStep('widget-auto-update-init');
+        });
+      } else {
+        completeStartupStep('widget-auto-update-init');
       }
     } catch (err) {
+      completeStartupStep('widget-auto-update-init');
       console.warn('Startup: widget auto-update failed', err);
     }
 
     // 7. Exact-alarm check on native (defensive)
+    markStartupStep('exact-alarm-check');
     try {
       if (Capacitor.isNativePlatform()) {
         import('@/lib/native-adhan').then(({ isExactAlarmPermissionGranted }) => {
-          isExactAlarmPermissionGranted?.().catch(() => {});
-        }).catch(() => {});
+          try {
+            isExactAlarmPermissionGranted?.()
+              .catch(() => {})
+              .finally(() => {
+                completeStartupStep('exact-alarm-check');
+              });
+          } catch {
+            completeStartupStep('exact-alarm-check');
+          }
+        }).catch(() => {
+          completeStartupStep('exact-alarm-check');
+        });
+      } else {
+        completeStartupStep('exact-alarm-check');
       }
     } catch (e) {
+      completeStartupStep('exact-alarm-check');
       console.warn('Startup: exact-alarm check failed', e);
     }
 
@@ -531,21 +605,7 @@ function AppShell() {
           <SplashScreen
             animationsEnabled={animationEnabled}
             showGreeting={splashGreetingEnabled}
-            onComplete={() => {
-              try {
-                setShowSplash(false);
-                document.documentElement.classList.remove('splash-active');
-                document.body.classList.remove('splash-active');
-                document.documentElement.style.overflow = '';
-                document.body.style.overflow = '';
-                document.documentElement.style.touchAction = '';
-                document.body.style.touchAction = '';
-                const el = document.getElementById('static-splash');
-                if (el) el.remove();
-              } catch (e) {
-                console.warn('Splash handoff error', e);
-              }
-            }}
+            onComplete={handleSplashComplete}
           />
         )}
       </AnimatePresence>

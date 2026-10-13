@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Smartphone } from "lucide-react";
 import logoMark from "@/assets/logo-mark.svg";
 import { getAnimationTier } from "@/lib/device-performance";
@@ -57,6 +57,7 @@ interface SplashScreenProps {
 export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: SplashScreenProps) {
     const [isFading, setIsFading] = useState(false);
     const [isMounted, setIsMounted] = useState(true);
+    const hasTriggeredCompletionRef = useRef(false);
 
     const prefersReducedMotion = useMemo(() => {
         if (typeof window === 'undefined') return false;
@@ -101,15 +102,25 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             if (el) el.remove();
         };
 
+        const triggerComplete = () => {
+            if (hasTriggeredCompletionRef.current) return;
+            hasTriggeredCompletionRef.current = true;
+            setIsMounted(false);
+            unlockScroll();
+            try {
+                onComplete();
+            } catch (e) {
+                console.warn('Splash onComplete callback error', e);
+            }
+        };
+
         // Snappy splash duration allowing the 200ms staggered entrance + subtle shimmer pulse
         const baseDuration = shouldAnimate ? 1100 : 100;
 
         const fadeTimer = setTimeout(() => {
             setIsFading(true);
             setTimeout(() => {
-                setIsMounted(false);
-                unlockScroll();
-                onComplete();
+                triggerComplete();
             }, 200);
         }, baseDuration);
 

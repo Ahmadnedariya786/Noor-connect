@@ -29,6 +29,8 @@ export function AutoBackupRestoreDialog() {
     let cancelled = false;
     checkForRestoreOpportunity().then(opp => {
       if (!cancelled && opp) setOpportunity(opp);
+    }).catch(err => {
+      console.warn('AutoBackupRestoreDialog: check failed', err);
     });
     return () => {
       cancelled = true;

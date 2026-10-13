@@ -24,13 +24,29 @@ import com.noorconnect.app.widgets.WidgetBridge;
 import com.noorconnect.app.widgets.WidgetForegroundService;
 
 public class MainActivity extends BridgeActivity {
+    private static final String TAG = "MainActivity";
     private static final int EXACT_ALARM_PERMISSION_REQUEST = 9001;
     private static final int BATTERY_OPTIMIZATION_REQUEST = 9002;
+
+    // Guard so setDataDirectorySuffix is called at most once per process lifetime
+    private static boolean sDataDirectorySuffixSet = false;
+
+    // Guard against multiple simultaneous renderer crash recovery attempts
+    private final java.util.concurrent.atomic.AtomicBoolean isHandlingRendererCrash =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // Versioned WebView data directory prevents cache corruption across installs/updates
-        WebView.setDataDirectorySuffix(BuildConfig.VERSION_NAME);
+        // Must only be called once per process and before any WebView initialization
+        if (!sDataDirectorySuffixSet) {
+            try {
+                WebView.setDataDirectorySuffix(BuildConfig.VERSION_NAME);
+                sDataDirectorySuffixSet = true;
+            } catch (Throwable t) {
+                Log.w(TAG, "WebView.setDataDirectorySuffix already configured or failed", t);
+            }
+        }
 
         registerPlugin(WidgetBridge.class);
         registerPlugin(NativeAdhanPlugin.class);
@@ -49,16 +65,22 @@ public class MainActivity extends BridgeActivity {
         }
 
         // Enable Motion Event Splitting and allow immediate audio playback on the WebView
-        WebView webView = this.getBridge().getWebView();
+        WebView webView = (this.getBridge() != null) ? this.getBridge().getWebView() : null;
         if (webView != null) {
             try {
                 webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
             } catch (Throwable t) {
-                Log.w("MainActivity", "Failed to set setMediaPlaybackRequiresUserGesture(false)", t);
+                Log.w(TAG, "Failed to set setMediaPlaybackRequiresUserGesture(false)", t);
             }
-            webView.setMotionEventSplittingEnabled(true);
-            installRenderProcessCrashHandler(webView);
+            try {
+                webView.setMotionEventSplittingEnabled(true);
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to set setMotionEventSplittingEnabled", t);
+            }
         }
+
+        // Install renderer process crash handler via Capacitor's bridge listener
+        installRenderProcessCrashHandler();
 
         // No persistent foreground service needed.
         // Adhan alarms use setAlarmClock() which is Doze-immune.
@@ -69,39 +91,89 @@ public class MainActivity extends BridgeActivity {
     /**
      * Register a render-process crash handler.
      *
-     * When the WebView renderer process dies (OOM, heavy JS, WebView bugs) the
-     * default behaviour is to tear down the whole app — the classic "app closes
-     * itself" crash. Returning {@code true} from onRenderProcessGone keeps the
-     * app alive; we then reload the page so the user lands back where they were
-     * instead of losing the session.
+     * When the WebView renderer process dies (OOM / low memory kill, heavy JS,
+     * or internal WebView bugs) the default Android behavior is to tear down the whole
+     * application — resulting in "Noor Connect keeps stopping" or a silent drop to launcher.
      *
-     * Capacitor's BridgeWebViewClient already forwards onRenderProcessGone to
-     * registered WebViewListeners, so we hook the Bridge's listener API instead
-     * of installing a custom WebViewClient (which would bypass Capacitor's
-     * local-server/intercept logic).
+     * By returning {@code true} from onRenderProcessGone, we signal to Android that the
+     * crash is handled and prevent the OS from terminating the application process.
+     *
+     * Once the renderer dies, the dead WebView instance can NEVER be reused. We cleanly
+     * detach and destroy the dead WebView, then recreate the Activity so that Capacitor
+     * instantiates a fresh Bridge and WebView cleanly from splash.
      */
-    private void installRenderProcessCrashHandler(WebView webView) {
+    private void installRenderProcessCrashHandler() {
         try {
+            if (getBridge() == null) {
+                Log.w(TAG, "Bridge is null; cannot install render process crash handler");
+                return;
+            }
+
             getBridge().addWebViewListener(new WebViewListener() {
                 @Override
                 public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
                     boolean didCrash = detail != null && detail.didCrash();
-                    Log.w("MainActivity", "WebView renderer gone. didCrash=" + didCrash
-                            + " — reloading instead of killing the app.");
-                    // The renderer process is dead; the WebView must be reloaded.
-                    view.post(() -> {
+                    int priority = -1;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && detail != null) {
                         try {
-                            view.loadUrl(getBridge().getLocalUrl());
-                        } catch (Exception e) {
-                            Log.e("MainActivity", "Failed to reload after renderer crash", e);
-                            view.reload();
-                        }
-                    });
-                    return true; // Handle it: keep the app process alive.
+                            priority = detail.rendererPriorityAtExit();
+                        } catch (Throwable ignored) {}
+                    }
+
+                    String reason = didCrash ? "RENDERER_CRASHED" : "KILLED_BY_SYSTEM_LOW_MEMORY";
+                    Log.w(TAG, "WebView renderer gone: " + reason + " (priority=" + priority + "). Recovering cleanly.");
+
+                    // If the Activity is already finishing or destroyed, nothing to recover
+                    if (isFinishing() || isDestroyed()) {
+                        return true;
+                    }
+
+                    // Guard against re-entrant calls or duplicate renderer termination events
+                    if (isHandlingRendererCrash.compareAndSet(false, true)) {
+                        runOnUiThread(() -> {
+                            try {
+                                // 1. Cleanly detach and destroy the dead WebView to prevent memory leaks and zombie calls
+                                if (view != null) {
+                                    try {
+                                        android.view.ViewParent parent = view.getParent();
+                                        if (parent instanceof android.view.ViewGroup) {
+                                            ((android.view.ViewGroup) parent).removeView(view);
+                                        }
+                                        view.destroy();
+                                    } catch (Throwable t) {
+                                        Log.w(TAG, "Error cleaning up dead WebView instance", t);
+                                    }
+                                }
+
+                                // 2. Recreate Activity so Capacitor rebuilds a fresh Bridge and WebView from splash
+                                Log.i(TAG, "Recreating MainActivity to restore WebView state after renderer termination");
+                                recreate();
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Failed to recreate activity after renderer termination", t);
+                                try {
+                                    // Fallback: try restarting the launcher intent
+                                    Intent restartIntent = getIntent();
+                                    finish();
+                                    startActivity(restartIntent);
+                                } catch (Throwable fallbackErr) {
+                                    Log.e(TAG, "Fallback activity restart also failed", fallbackErr);
+                                }
+                            } finally {
+                                // Reset the guard after a safe delay
+                                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                    isHandlingRendererCrash.set(false);
+                                }, 3000);
+                            }
+                        });
+                    }
+
+                    // CRITICAL: Returning true tells the Android framework that the crash was handled.
+                    // This is what suppresses "Noor Connect keeps stopping" and process kill.
+                    return true;
                 }
             });
         } catch (Throwable t) {
-            Log.w("MainActivity", "Could not install render process crash handler", t);
+            Log.w(TAG, "Could not install render process crash handler", t);
         }
     }
 
