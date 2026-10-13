@@ -54,18 +54,49 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
 
-      - name: Setup debug keystore
+      - name: Validate Release Signing Secrets
         run: |
-          mkdir -p ~/.android
-          if [ ! -f ~/.android/debug.keystore ]; then
-            keytool -genkeypair -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          MISSING_SECRETS=""
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_BASE64"
+          fi
+          if [ -z "${{ secrets.KEYSTORE_STORE_PASS }}" ]; then
+            MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_STORE_PASS"
+          fi
+          if [ -z "${{ secrets.KEYSTORE_KEY_PASS }}" ]; then
+            MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_KEY_PASS"
+          fi
+          if [ -z "${{ secrets.KEYSTORE_ALIAS }}" ]; then
+            MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_ALIAS"
           fi
 
-      - name: Build Android Debug APK
+          if [ -n "$MISSING_SECRETS" ]; then
+            echo "❌ ERROR: Missing required GitHub repository secrets for release signing:"
+            for s in $MISSING_SECRETS; do
+              echo "   - $s"
+            done
+            echo ""
+            echo "Please configure these secrets under Repository Settings -> Secrets and variables -> Actions."
+            echo "Refer to RELEASE_SETUP.md for values and setup instructions."
+            exit 1
+          fi
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p android/app
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+
+      - name: Build Android Release APK
+        env:
+          KEYSTORE_STORE_PASS: ${{ secrets.KEYSTORE_STORE_PASS }}
+          KEYSTORE_KEY_PASS: ${{ secrets.KEYSTORE_KEY_PASS }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
       - name: Prepare APK Asset & Metadata
         id: prep
@@ -84,14 +115,16 @@ jobs:
           }
           EOF
 
-          # Locate generated debug APK (flavor is foss, buildType is debug)
-          APK_FILE=$(find android/app/build/outputs/apk -type f -name "*debug.apk" | head -n 1)
+          # Locate generated release APK (finds either app-release.apk or app-foss-release.apk)
+          APK_FILE=$(find android/app/build/outputs/apk -type f -name "*release.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
-            echo "❌ Error: Could not find generated debug APK!"
+            echo "❌ Error: Could not find generated release APK!"
             exit 1
           fi
 
-          echo "Found debug APK at: $APK_FILE"
+          echo "Found release APK at: $APK_FILE"
+          mkdir -p android/app/build/outputs/apk/release
+          cp "$APK_FILE" android/app/build/outputs/apk/release/app-release.apk
           cp "$APK_FILE" noor-connect-nightly.apk
 
           FILE_SIZE=$(ls -lh noor-connect-nightly.apk | awk '{print $5}')

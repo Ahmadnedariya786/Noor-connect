@@ -30,10 +30,31 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    signingConfigs {
+        release {
+            def storePass = System.getenv("KEYSTORE_STORE_PASS")
+            def keyAliasName = System.getenv("KEYSTORE_ALIAS")
+            def keyPass = System.getenv("KEYSTORE_KEY_PASS")
+            def keystoreFile = file("release.keystore")
+
+            if (storePass && keyAliasName && keyPass && keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword storePass
+                keyAlias keyAliasName
+                keyPassword keyPass
+            } else {
+                // Fall back to debug signing config for local development
+                initWith signingConfigs.debug
+            }
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

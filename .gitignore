@@ -40,6 +40,10 @@ bun.lockb
 
 # Android
 android/app/noorconnectjks
+*.keystore
+keystore.txt
+android/app/release.keystore
+android/keystore/
 
 # Build artifacts
 dist/
