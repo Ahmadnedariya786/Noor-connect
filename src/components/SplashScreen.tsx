@@ -78,6 +78,29 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const shouldAnimate = animationsEnabled && !prefersReducedMotion && !tier.shouldReduceAnimations;
 
     useEffect(() => {
+        // Physically remove the pre-React static splash element from DOM so no gesture-swallowing layer remains
+        const staticSplash = document.getElementById("static-splash");
+        if (staticSplash) {
+            staticSplash.remove();
+        }
+
+        // Lock scroll while splash is active
+        document.documentElement.classList.add("splash-active");
+        document.body.classList.add("splash-active");
+
+        const unlockScroll = () => {
+            document.documentElement.classList.remove("splash-active");
+            document.body.classList.remove("splash-active");
+            document.documentElement.style.overflow = "";
+            document.body.style.overflow = "";
+            document.documentElement.style.touchAction = "";
+            document.body.style.touchAction = "";
+            document.documentElement.style.overscrollBehavior = "";
+            document.body.style.overscrollBehavior = "";
+            const el = document.getElementById("static-splash");
+            if (el) el.remove();
+        };
+
         // Snappy splash duration allowing the 200ms staggered entrance + subtle shimmer pulse
         const baseDuration = shouldAnimate ? 1100 : 100;
 
@@ -85,11 +108,15 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             setIsFading(true);
             setTimeout(() => {
                 setIsMounted(false);
+                unlockScroll();
                 onComplete();
             }, 200);
         }, baseDuration);
 
-        return () => clearTimeout(fadeTimer);
+        return () => {
+            clearTimeout(fadeTimer);
+            unlockScroll();
+        };
     }, [shouldAnimate, onComplete]);
 
     if (!isMounted) return null;

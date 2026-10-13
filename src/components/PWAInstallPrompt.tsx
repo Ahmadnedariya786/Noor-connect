@@ -30,18 +30,26 @@ export function PWAInstallPrompt() {
     return () => clearTimeout(timer);
   }, []);
 
+  const isDismissed = () => {
+    try {
+      return typeof sessionStorage !== 'undefined' && sessionStorage.getItem('pwa-install-dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  };
+
   const handleInstallClick = () => {
     window.open(FDROID_URL, '_blank', 'noopener,noreferrer');
     setShowPrompt(false);
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
+    try { sessionStorage.setItem('pwa-install-dismissed', 'true'); } catch {}
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
+    try { sessionStorage.setItem('pwa-install-dismissed', 'true'); } catch {}
   };
 
-  if (isNativeApp || isInstalled || !showPrompt || sessionStorage.getItem('pwa-install-dismissed')) {
+  if (isNativeApp || isInstalled || !showPrompt || isDismissed()) {
     return null;
   }
 

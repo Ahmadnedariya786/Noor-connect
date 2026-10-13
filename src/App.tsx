@@ -263,7 +263,7 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
     <MotionConfig reducedMotion={(!animationEnabled || reduceMotion) ? "always" : "never"}>
       <LazyMotionWrapper>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <div className="flex flex-col min-h-screen overflow-hidden">
+          <div className="flex flex-col min-h-screen overflow-x-hidden">
             <div className="flex-shrink-0">
               <Suspense fallback={null}>
                 <GlobalPrayerAlarm />
@@ -338,9 +338,17 @@ function AppShell() {
   }, []);
 
   useEffect(() => {
-    // If splash is disabled, hide it immediately
+    // If splash is disabled, hide it immediately and ensure scroll is unlocked
     if (!splashEnabled) {
       setShowSplash(false);
+      document.documentElement.classList.remove('splash-active');
+      document.body.classList.remove('splash-active');
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.documentElement.style.touchAction = '';
+      document.body.style.touchAction = '';
+      const el = document.getElementById('static-splash');
+      if (el) el.remove();
     }
   }, [splashEnabled]);
 
@@ -526,6 +534,14 @@ function AppShell() {
             onComplete={() => {
               try {
                 setShowSplash(false);
+                document.documentElement.classList.remove('splash-active');
+                document.body.classList.remove('splash-active');
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+                document.documentElement.style.touchAction = '';
+                document.body.style.touchAction = '';
+                const el = document.getElementById('static-splash');
+                if (el) el.remove();
               } catch (e) {
                 console.warn('Splash handoff error', e);
               }
