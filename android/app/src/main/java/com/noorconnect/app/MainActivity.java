@@ -27,6 +27,9 @@ public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
     private static final int EXACT_ALARM_PERMISSION_REQUEST = 9001;
     private static final int BATTERY_OPTIMIZATION_REQUEST = 9002;
+    private static final String PREFS_ONBOARDING = "noor_permission_flow_prefs";
+    private static final String KEY_EXACT_ALARM_REDIRECTED = "exact_alarm_redirected";
+    private static final String KEY_BATTERY_PROMPTED = "battery_whitelist_prompted";
 
     // Guard so setDataDirectorySuffix is called at most once per process lifetime
     private static boolean sDataDirectorySuffixSet = false;
@@ -56,11 +59,14 @@ public class MainActivity extends BridgeActivity {
         // Create default notification channel for Capacitor LocalNotifications
         createDefaultNotificationChannel();
 
-        // Request SCHEDULE_EXACT_ALARM permission on Android 12+ (API 31+)
+        // STEP 1: Check SCHEDULE_EXACT_ALARM permission on Android 12+ (API 31+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !canScheduleExactAlarms()) {
+            // If NOT granted, immediately redirect the user to system "Alarms & reminders" settings screen
             requestExactAlarmPermission();
+            // Do NOT ask for background execution yet; Step 1 must complete first
         } else {
-            // Request battery optimization whitelist for reliable widget updates
+            // STEP 2: Exact alarm is already granted (or Android < 12).
+            // Ask for Background execution / battery optimization dialog if not yet prompted
             requestBatteryOptimizationWhitelist();
         }
 
@@ -178,34 +184,48 @@ public class MainActivity extends BridgeActivity {
     }
 
     /**
-     * Request SCHEDULE_EXACT_ALARM permission on Android 12+ (API 31+).
-     * This is required for exact alarm scheduling used by prayer-time alarms.
+     * Step 1: Request SCHEDULE_EXACT_ALARM permission on Android 12+ (API 31+).
+     * If NOT granted, immediately redirect the user to system "Alarms & reminders" settings screen.
      */
     private void requestExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!canScheduleExactAlarms()) {
-                try {
-                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
-                    startActivityForResult(intent, EXACT_ALARM_PERMISSION_REQUEST);
-                } catch (Exception e) {
-                    Log.w("MainActivity", "Failed to launch ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent", e);
+                android.content.SharedPreferences prefs = getSharedPreferences(PREFS_ONBOARDING, MODE_PRIVATE);
+                boolean alreadyRedirected = prefs.getBoolean(KEY_EXACT_ALARM_REDIRECTED, false);
+                if (!alreadyRedirected) {
+                    prefs.edit().putBoolean(KEY_EXACT_ALARM_REDIRECTED, true).apply();
+                    try {
+                        Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                        intent.setData(Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed to launch ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent", e);
+                    }
                 }
             }
         }
     }
 
     /**
-     * Request battery optimization whitelist to prevent widget foreground service from being killed.
-     * Critical for step detection and location monitoring on Android 6+.
+     * Step 2: Once the user returns from settings (or exact alarm is granted),
+     * ask for the "Background execution" / battery optimization permission via standard dialog.
      */
     private void requestBatteryOptimizationWhitelist() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, BATTERY_OPTIMIZATION_REQUEST);
+            android.content.SharedPreferences prefs = getSharedPreferences(PREFS_ONBOARDING, MODE_PRIVATE);
+            boolean alreadyPrompted = prefs.getBoolean(KEY_BATTERY_PROMPTED, false);
+            if (!alreadyPrompted) {
+                PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                    prefs.edit().putBoolean(KEY_BATTERY_PROMPTED, true).apply();
+                    try {
+                        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                        intent.setData(Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed to launch ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS intent", e);
+                    }
+                }
             }
         }
     }
@@ -228,17 +248,18 @@ public class MainActivity extends BridgeActivity {
                     WidgetForegroundService.start(this);
                 }
             }
-            // Proceed to battery optimization check if needed
-            requestBatteryOptimizationWhitelist();
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Start widget foreground service once on resume if exact alarms are allowed
+        // Check if exact alarms are allowed
         if (canScheduleExactAlarms()) {
             WidgetForegroundService.start(this);
+            // Step 2: User returned from "Alarms & reminders" settings (or already granted).
+            // Now prompt for background execution if not yet prompted.
+            requestBatteryOptimizationWhitelist();
         }
     }
 

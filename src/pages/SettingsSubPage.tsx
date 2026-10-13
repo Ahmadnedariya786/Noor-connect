@@ -175,6 +175,13 @@ const SettingsSubPage: React.FC = () => {
   const handleManualCheckUpdate = async () => {
     setIsCheckingUpdate(true);
     try {
+      try {
+        localStorage.removeItem('noor_nightly_update_cache');
+        localStorage.removeItem('noor_update_last_checked');
+        localStorage.removeItem('noor_last_update_check');
+      } catch {
+        // silent storage cleanup fallback
+      }
       const res = await checkNightlyUpdate(true);
       setUpdateResult(res);
       if (res.hasUpdate) {

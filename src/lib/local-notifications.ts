@@ -90,6 +90,17 @@ export class LocalNotificationManager {
    */
   async requestPermissions(): Promise<boolean> {
     try {
+      // Step 1: On Android native, check if SCHEDULE_EXACT_ALARM is granted.
+      // If NOT, immediately redirect user to system "Alarms & reminders" settings.
+      if (Capacitor.isNativePlatform()) {
+        const canSchedule = await nativeAdhan.canScheduleExactAlarms();
+        if (!canSchedule) {
+          await nativeAdhan.ensureExactAlarmPermission(true);
+          return false;
+        }
+      }
+
+      // Step 2: Once exact alarms are granted, request notification permissions via standard dialog
       const permission = await LocalNotifications.requestPermissions();
 
       if (permission.display !== 'granted') {
@@ -98,12 +109,6 @@ export class LocalNotificationManager {
       }
 
       this.isInitialized = true;
-
-      // On Android native, ensure exact alarm permission so prayer notifications fire precisely on time
-      if (Capacitor.isNativePlatform()) {
-        await nativeAdhan.ensureExactAlarmPermission(true);
-      }
-
       return true;
     } catch (error) {
       console.error('Failed to request notification permissions:', error);

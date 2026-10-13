@@ -106,8 +106,12 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
           await GeolocationService.requestPermissions();
         } else if (type === 'notifications') {
           if (Capacitor.isNativePlatform()) {
-            await LocalNotifications.requestPermissions();
-            await nativeAdhan.ensureExactAlarmPermission(true);
+            const canSchedule = await nativeAdhan.canScheduleExactAlarms();
+            if (!canSchedule) {
+              await nativeAdhan.ensureExactAlarmPermission(true);
+            } else {
+              await LocalNotifications.requestPermissions();
+            }
           } else if ('Notification' in window) {
             await Notification.requestPermission();
           }

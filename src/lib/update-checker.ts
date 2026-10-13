@@ -182,7 +182,8 @@ export function extractCommitFromRelease(body?: string | null, targetCommitish?:
 
 /**
  * Evaluates whether an update is available:
- * - Compares the latest .apk asset uploaded_at/created_at timestamp against the app's build timestamp.
+ * - Compares the latest .apk asset uploaded_at timestamp (parsed as a Date object)
+ *   against the local VITE_BUILD_TIME (also parsed as Date).
  * - If commit SHAs are present and valid, checks whether running build commit equals release commit.
  */
 export function isUpdateAvailable(
@@ -195,18 +196,27 @@ export function isUpdateAvailable(
 ): boolean {
   if (!release) return false;
 
-  const appBuildTime = local.buildTime || null;
+  const appBuildTime = local.buildTime || BUILD_TIME;
   // Use the specific .apk asset's uploaded_at/updated_at/created_at date, NOT the release tag's published_at date
   const latestAssetUploadedAt = release.latestAssetUploadedAt || release.publishedAt || null;
   const localCommit = local.commitSha?.trim().toLowerCase();
   const remoteCommit = release.commitSha?.trim().toLowerCase();
+
+  // Parse Date objects explicitly
+  const assetDate = latestAssetUploadedAt ? new Date(latestAssetUploadedAt) : null;
+  const appBuildDate = appBuildTime ? new Date(appBuildTime) : null;
+
+  const assetTimeMs = assetDate && !isNaN(assetDate.getTime()) ? assetDate.getTime() : 0;
+  const appBuildTimeMs = appBuildDate && !isNaN(appBuildDate.getTime()) ? appBuildDate.getTime() : 0;
+
+  const isNew = assetTimeMs > appBuildTimeMs;
 
   let isAvailable = false;
 
   // 1. Primary check: If both commit SHAs are present and valid
   if (localCommit && remoteCommit && localCommit !== 'unknown' && remoteCommit !== 'unknown') {
     if (isSameCommit(localCommit, remoteCommit)) {
-      // Running build equals release commit → NO update (hide banner / up to date)
+      // Running build equals release commit → NO update
       isAvailable = false;
     } else {
       // Commit SHAs differ → Update is available
@@ -214,10 +224,31 @@ export function isUpdateAvailable(
     }
   } else {
     // 2. Timestamp comparison: Compare latest .apk asset uploaded_at against app's buildTime
-    isAvailable = isRemoteNewer(latestAssetUploadedAt, appBuildTime);
+    isAvailable = isNew;
   }
 
-  // TASK 3: Debugging log right before comparison/returning
+  // If commits are unknown or inconclusive, fallback to isNew
+  if (!isAvailable && isNew && (!localCommit || localCommit === 'unknown')) {
+    isAvailable = true;
+  }
+
+  // TASK 1: Detailed logging at every step
+  console.log('[UpdateChecker] Local build info:', {
+    currentBuildTime: appBuildTime,
+    appBuildDate: appBuildDate ? appBuildDate.toISOString() : null,
+    currentBuildCommit: localCommit || 'unknown',
+  });
+  console.log('[UpdateChecker] Latest APK asset uploaded_at:', {
+    latestAssetUploadedAt,
+    assetDate: assetDate ? assetDate.toISOString() : null,
+  });
+  console.log('[UpdateChecker] Comparison result (Is new?):', {
+    isNew: isNew ? 'Yes' : 'No',
+    isUpdateAvailable: isAvailable ? 'Yes' : 'No',
+    assetTimeMs,
+    appBuildTimeMs,
+    diffSeconds: Math.round((assetTimeMs - appBuildTimeMs) / 1000),
+  });
   console.log('Update Check:', {
     appBuildTime,
     latestAssetUploadedAt,
@@ -246,11 +277,13 @@ function readCache(): StoredCache | null {
  */
 function writeCache(release: NightlyReleaseInfo | null): void {
   try {
+    const now = Date.now();
     const data: StoredCache = {
-      lastChecked: Date.now(),
+      lastChecked: now,
       release,
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem('noor_update_last_checked', now.toString());
   } catch {
     // silent storage quota fallback
   }
@@ -300,6 +333,13 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
   const currentBuildTime = BUILD_TIME;
   const currentBuildCommit = BUILD_COMMIT;
 
+  // Log local app's build time/commit before checking
+  console.log('[UpdateChecker] Local app build info:', {
+    currentBuildTime,
+    currentBuildCommit,
+    forceCheck: force,
+  });
+
   // 1. Check cache first (unless force check requested)
   if (!force) {
     const cached = readCache();
@@ -321,9 +361,11 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       }
     }
   } else {
-    // Force check: explicitly clear stale cache from storage
+    // Force check: explicitly clear local "last checked" timestamp before fetching
     try {
       localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem('noor_update_last_checked');
+      localStorage.removeItem('noor_last_update_check');
     } catch {
       // silent storage clear fallback
     }
@@ -366,6 +408,15 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     const publishedAt = data.published_at || data.created_at;
     const commitSha = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
 
+    // Log fetched Release data (specifically the assets array)
+    console.log('[UpdateChecker] Fetched Release data:', {
+      tagName: data.tag_name,
+      releaseName: data.name,
+      targetCommitish: data.target_commitish,
+      assetsCount: Array.isArray(data.assets) ? data.assets.length : 0,
+      assets: data.assets,
+    });
+
     // Locate direct APK download URL and extract uploaded timestamp from release assets
     // Sort assets in descending order by uploaded_at / updated_at / created_at so the LATEST APK is always picked
     let apkUrl = DIRECT_APK_FALLBACK_URL;
@@ -398,6 +449,14 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
         }
         sizeBytes = typeof latestApk.size === 'number' ? latestApk.size : undefined;
       }
+
+      // Log the uploaded_at timestamp of the .apk asset
+      console.log('[UpdateChecker] APK asset selected:', {
+        name: latestApk?.name,
+        uploaded_at: latestAssetUploadedAt,
+        sizeBytes,
+        apkUrl,
+      });
     }
 
     const releaseInfo: NightlyReleaseInfo = {

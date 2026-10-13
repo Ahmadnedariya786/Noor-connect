@@ -63,12 +63,19 @@ export const usePrayerAlarm = () => {
   }, []);
 
   const enableAlarm = useCallback(async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      await Notification.requestPermission();
+    // Step 1: Check if SCHEDULE_EXACT_ALARM permission is granted on native.
+    // If NOT, immediately redirect user to system "Alarms & reminders" settings.
+    if (Capacitor.isNativePlatform()) {
+      const canSchedule = await nativeAdhan.canScheduleExactAlarms();
+      if (!canSchedule) {
+        await nativeAdhan.ensureExactAlarmPermission(true);
+        return;
+      }
     }
 
-    if (Capacitor.isNativePlatform()) {
-      await nativeAdhan.ensureExactAlarmPermission(true);
+    // Step 2: Once exact alarms are granted (or on web), request standard Notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
     }
 
     // Try to unlock audio playback from a user gesture context.
