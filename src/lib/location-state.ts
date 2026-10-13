@@ -217,6 +217,10 @@ export const useLocationState = () => {
     }
   }, [location.isDetecting]);
 
+  const cancelDetecting = useCallback(() => {
+    setLocationState(prev => ({ ...prev, isDetecting: false }));
+  }, []);
+
   const resetToDefault = useCallback(() => {
     const newLocation = { ...DEFAULT_LOCATION };
     setLocationState(newLocation);
@@ -227,11 +231,12 @@ export const useLocationState = () => {
     ...location,
     setLocation,
     detectLocation,
+    cancelDetecting,
     resetToDefault,
     coordinates: {
       lat: location.latitude,
       lng: location.longitude
     }
-  }), [location, setLocation, detectLocation, resetToDefault]);
+  }), [location, setLocation, detectLocation, cancelDetecting, resetToDefault]);
 };
 

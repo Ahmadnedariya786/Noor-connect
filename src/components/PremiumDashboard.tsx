@@ -1,6 +1,8 @@
 import React, { useState, useEffect, memo, lazy, Suspense } from "react";
 import { m } from "framer-motion";
-import { Bell, MapPin, ChevronRight, Activity, Compass, Grid3X3 } from "lucide-react";
+import { Bell, MapPin, ChevronRight, Activity, Compass, X } from "lucide-react";
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
@@ -201,6 +203,74 @@ function PremiumDashboardInner({
     return () => window.removeEventListener('time-format-changed', handleFormatChange as EventListener);
   }, []);
 
+  const handleCloseModal = React.useCallback(() => {
+    setLoadingAPI(false);
+    if (typeof location?.cancelDetecting === 'function') {
+      location.cancelDetecting();
+    }
+    setShowManualLocationDialog(false);
+  }, [location, setLoadingAPI, setShowManualLocationDialog]);
+
+  // Lock background scroll strictly while modal is open, with guaranteed cleanup
+  useEffect(() => {
+    if (!showManualLocationDialog) return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+
+    return () => {
+      // Guaranteed restoration on modal close or unmount
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, [showManualLocationDialog]);
+
+  // Intercept Android hardware back button and Escape key to close modal
+  useEffect(() => {
+    if (!showManualLocationDialog) return;
+
+    let backButtonHandle: { remove: () => void } | null = null;
+    let isSubscribed = true;
+
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('backButton', () => {
+        if (isSubscribed) {
+          handleCloseModal();
+        }
+      }).then(handle => {
+        if (isSubscribed) {
+          backButtonHandle = handle;
+        } else {
+          handle.remove();
+        }
+      }).catch(() => {
+        // silent fallback for back button listener
+      });
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      isSubscribed = false;
+      if (backButtonHandle) {
+        try {
+          backButtonHandle.remove();
+        } catch {
+          // silent fallback on listener cleanup
+        }
+      }
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showManualLocationDialog, handleCloseModal]);
+
   const motionProps = (props: any) => (animationEnabled && tier !== 'low' && tier !== 'minimal') ? props : {};
 
   return (
@@ -209,19 +279,37 @@ function PremiumDashboardInner({
     >
       {/* Manual Location Dialog */}
       {showManualLocationDialog && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCloseModal();
+            }
+          }}
+        >
           <m.div
             {...motionProps({ initial: { opacity: 0, scale: 0.95 }, animate: { opacity: 1, scale: 1 } })}
+            onClick={(e) => e.stopPropagation()}
             className="w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-card border border-border/40 shadow-2xl rounded-[32px] transition-colors"
           >
-            <div className="p-6 overflow-y-auto">
+            <div
+              className="p-6 overflow-y-auto overscroll-contain"
+              style={{
+                overscrollBehavior: 'contain',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y'
+              }}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-black text-foreground">Set Location</h3>
                 <button
-                  onClick={() => setShowManualLocationDialog(false)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all bg-muted text-muted-foreground hover:bg-muted/80"
+                  type="button"
+                  onClick={handleCloseModal}
+                  aria-label="Close location dialog"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground active:scale-95"
                 >
-                  <Grid3X3 className="w-4 h-4 rotate-45" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -244,7 +332,7 @@ function PremiumDashboardInner({
                         }
                         location.setLocation(matchedCity.lat, matchedCity.lon, `${matchedCity.city}, ${matchedCity.country}`, timezone);
                         await prayerTimesHook.setManualLocation(matchedCity.city, matchedCity.country);
-                        setShowManualLocationDialog(false);
+                        handleCloseModal();
                         toast({ title: "Location Updated", description: `Time adjusted to ${timezone}` });
                       } else {
                         toast({
@@ -285,7 +373,7 @@ function PremiumDashboardInner({
                       const result = await AladhanAPI.getTodaysPrayerTimes(coords.latitude, coords.longitude, 1);
                       location.setLocation(coords.latitude, coords.longitude, `${city}, ${country}`, result.timezone);
                       await prayerTimesHook.setManualLocation(city, country);
-                      setShowManualLocationDialog(false);
+                      handleCloseModal();
                       toast({ title: "Location Updated", description: `Time adjusted to ${result.timezone}` });
                     } catch (err) {
                       toast({ title: "Selection Failed", description: "Could not sync timezone. Please try again.", variant: "destructive" });
@@ -295,6 +383,15 @@ function PremiumDashboardInner({
                   }}
                   isLoading={prayerTimesHook.isLoading}
                 />
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseModal}
+                  className="w-full mt-2 h-11 rounded-2xl font-semibold text-muted-foreground hover:text-foreground border-border/60"
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
           </m.div>

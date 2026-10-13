@@ -116,7 +116,11 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card 
+      className="w-full max-w-md mx-auto overscroll-contain"
+      style={{ touchAction: 'pan-y' }}
+      onTouchMove={(e) => e.stopPropagation()}
+    >
       <CardContent className="p-6">
         <div className="text-center mb-6">
           <MapPin className="w-12 h-12 mx-auto mb-3 text-primary" />
@@ -144,7 +148,15 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
 
           {/* Suggestions Dropdown */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-50 w-full mt-1 bg-popover rounded-md border shadow-md max-h-[200px] overflow-auto">
+            <div 
+              className="absolute z-50 w-full mt-1 bg-popover rounded-md border shadow-md max-h-[200px] overflow-auto overscroll-contain"
+              style={{
+                overscrollBehavior: 'contain',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y'
+              }}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
               {suggestions.map((place, index) => (
                 <button
                   key={index}
@@ -176,7 +188,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
           </Button>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6" onTouchMove={(e) => e.stopPropagation()}>
           <p className="text-sm font-medium mb-3 text-center">Popular Cities</p>
 
           {/* Region Tabs */}
