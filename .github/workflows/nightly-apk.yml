@@ -55,18 +55,23 @@ jobs:
         run: npx cap sync android
 
       - name: Validate Release Signing Secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_STORE_PASS: ${{ secrets.KEYSTORE_STORE_PASS }}
+          KEYSTORE_KEY_PASS: ${{ secrets.KEYSTORE_KEY_PASS }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
         run: |
           MISSING_SECRETS=""
-          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+          if [ -z "$KEYSTORE_BASE64" ]; then
             MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_BASE64"
           fi
-          if [ -z "${{ secrets.KEYSTORE_STORE_PASS }}" ]; then
+          if [ -z "$KEYSTORE_STORE_PASS" ]; then
             MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_STORE_PASS"
           fi
-          if [ -z "${{ secrets.KEYSTORE_KEY_PASS }}" ]; then
+          if [ -z "$KEYSTORE_KEY_PASS" ]; then
             MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_KEY_PASS"
           fi
-          if [ -z "${{ secrets.KEYSTORE_ALIAS }}" ]; then
+          if [ -z "$KEYSTORE_ALIAS" ]; then
             MISSING_SECRETS="${MISSING_SECRETS} KEYSTORE_ALIAS"
           fi
 
