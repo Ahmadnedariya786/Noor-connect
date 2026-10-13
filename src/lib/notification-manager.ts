@@ -458,6 +458,7 @@ export class NotificationManager {
     }
 
     try {
+      const today = new Date();
       const { islamicCalendarService } = await import('@/lib/islamic-calendar-service');
       const calendarInfo = await islamicCalendarService.getIslamicCalendarInfo();
       const daysUntil = calendarInfo.daysUntilRamadan;
