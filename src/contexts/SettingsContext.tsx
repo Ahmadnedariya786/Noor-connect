@@ -5,6 +5,7 @@ import { Preferences } from '@capacitor/preferences';
 import { isLowEndDevice } from '@/lib/performance-optimizations';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
+export type TimeFormat = '12h' | '24h';
 
 interface SettingsContextProps {
   theme: ThemePreference;
@@ -23,6 +24,9 @@ interface SettingsContextProps {
   splashEnabled: boolean;
   setSplashEnabled: (enabled: boolean) => void;
   toggleSplash: () => void;
+  timeFormat: TimeFormat;
+  setTimeFormat: (format: TimeFormat) => void;
+  toggleTimeFormat: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextProps | undefined>(undefined);
@@ -33,6 +37,8 @@ const GREETING_KEY = 'greetingEnabled';
 const LEGACY_GREETING_KEY = 'salam-greeting-enabled';
 const SPLASH_GREETING_KEY = 'splash_greeting_enabled';
 const SPLASH_ENABLED_KEY = 'splash_enabled';
+const TIME_FORMAT_KEY = 'time_format';
+const LEGACY_TIME_FORMAT_KEY = 'time-format';
 
 const getSystemTheme = (): 'light' | 'dark' => {
   if (typeof window === 'undefined' || !window.matchMedia) return 'light';
@@ -137,6 +143,16 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   });
   const [splashGreetingEnabled, setSplashGreetingEnabledState] = useState<boolean>(true); // Will be loaded from Preferences
   const [splashEnabled, setSplashEnabledState] = useState<boolean>(true); // Will be loaded from Preferences
+  const [timeFormat, setTimeFormatState] = useState<TimeFormat>(() => {
+    try {
+      const stored = localStorage.getItem(TIME_FORMAT_KEY) || localStorage.getItem(LEGACY_TIME_FORMAT_KEY);
+      if (stored === '24h' || stored === '24') return '24h';
+      if (stored === '12h' || stored === '12') return '12h';
+    } catch {
+      // silent storage read fallback
+    }
+    return '12h';
+  });
 
   // Load settings from Capacitor Preferences on mount
   useEffect(() => {
@@ -173,6 +189,18 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       // Load splash enabled setting from Preferences
       const storedSplashEnabled = await getStoredBooleanFromPreferences(SPLASH_ENABLED_KEY, true);
       setSplashEnabledState(storedSplashEnabled);
+
+      // Load time format setting from Preferences
+      try {
+        const { value: storedTimeFormat } = await Preferences.get({ key: TIME_FORMAT_KEY });
+        if (storedTimeFormat === '24h' || storedTimeFormat === '12h') {
+          setTimeFormatState(storedTimeFormat as TimeFormat);
+        } else if (storedTimeFormat === '24' || storedTimeFormat === '12') {
+          setTimeFormatState(storedTimeFormat === '24' ? '24h' : '12h');
+        }
+      } catch {
+        // silent Preferences read fallback
+      }
 
       setIsLoaded(true);
     };
@@ -253,6 +281,24 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(SPLASH_ENABLED_KEY, splashEnabled.toString());
   }, [splashEnabled, isLoaded]);
 
+  // Persist time format changes to Preferences and localStorage
+  useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      Preferences.set({ key: TIME_FORMAT_KEY, value: timeFormat }).catch(() => {
+        // silent Preferences write fallback
+      });
+      localStorage.setItem(TIME_FORMAT_KEY, timeFormat);
+      const legacy = timeFormat === '24h' ? '24' : '12';
+      localStorage.setItem(LEGACY_TIME_FORMAT_KEY, legacy);
+      window.dispatchEvent(new CustomEvent('time-format-changed', {
+        detail: { format: legacy, timeFormat }
+      }));
+    } catch {
+      // silent storage write fallback
+    }
+  }, [timeFormat, isLoaded]);
+
   const setTheme = useCallback((nextTheme: ThemePreference) => {
     setThemeState(nextTheme);
     setEffectiveTheme(getEffectiveTheme(nextTheme));
@@ -272,6 +318,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const toggleSplashGreeting = useCallback(() => setSplashGreetingEnabledState((prev) => !prev), []);
   const setSplashEnabled = useCallback((enabled: boolean) => setSplashEnabledState(enabled), []);
   const toggleSplash = useCallback(() => setSplashEnabledState((prev) => !prev), []);
+  const setTimeFormat = useCallback((format: TimeFormat) => setTimeFormatState(format), []);
+  const toggleTimeFormat = useCallback(() => setTimeFormatState((prev) => (prev === '12h' ? '24h' : '12h')), []);
 
   // Memoize context value to prevent unnecessary re-renders.
   // All setters are wrapped in useCallback with stable references,
@@ -294,6 +342,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     splashEnabled,
     setSplashEnabled,
     toggleSplash,
+    timeFormat,
+    setTimeFormat,
+    toggleTimeFormat,
   }), [
     theme,
     effectiveTheme,
@@ -311,6 +362,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     splashEnabled,
     setSplashEnabled,
     toggleSplash,
+    timeFormat,
+    setTimeFormat,
+    toggleTimeFormat,
   ]);
 
   return (

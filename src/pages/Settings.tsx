@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
-import { ChevronLeft, Sun, Moon, Monitor, Sparkles, Zap, Heart, BookOpen, Moon as MoonIcon } from 'lucide-react';
+import { ChevronLeft, Sun, Moon, Monitor, Sparkles, Zap, Heart, BookOpen, Clock, Moon as MoonIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { goBackOrFallback } from "@/lib/navigation";
 import { getMadhab, setMadhab, isBeforeSleepEnabled, setBeforeSleepEnabled, getBedtimeHour, setBedtimeHour, getBedtimeMinute, setBedtimeMinute, type MadhabType } from '@/lib/storage';
@@ -16,6 +16,8 @@ const Settings = () => {
     toggleGreeting, 
     splashGreetingEnabled,
     toggleSplashGreeting,
+    timeFormat,
+    toggleTimeFormat,
     theme, 
     setTheme, 
     effectiveTheme 
@@ -161,7 +163,7 @@ const Settings = () => {
             </div>
 
             {/* Toggle: App Greeting (Salam) */}
-            <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
+            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-border/40 gap-3">
               <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                 <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
                   <Sparkles className="w-5 h-5 text-foreground/70" />
@@ -180,6 +182,31 @@ const Settings = () => {
                 <motion.div 
                   className="w-5 h-5 rounded-full bg-white shadow-sm"
                   animate={{ x: greetingEnabled ? 20 : 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              </button>
+            </div>
+
+            {/* Toggle: 24-Hour Time Format */}
+            <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-foreground/70" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">24-Hour Time Format</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Use 24-hour clock (17:30) instead of 12-hour (5:30 PM)</p>
+                </div>
+              </div>
+              <button 
+                onClick={toggleTimeFormat}
+                className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
+                  timeFormat === '24h' ? 'bg-[#C9860A]' : 'bg-muted'
+                }`}
+              >
+                <motion.div 
+                  className="w-5 h-5 rounded-full bg-white shadow-sm"
+                  animate={{ x: timeFormat === '24h' ? 20 : 0 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               </button>

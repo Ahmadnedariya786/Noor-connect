@@ -101,6 +101,8 @@ const SettingsSubPage: React.FC = () => {
     setSplashGreetingEnabled,
     splashEnabled,
     setSplashEnabled,
+    timeFormat,
+    setTimeFormat,
   } = useSettings();
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
@@ -370,6 +372,17 @@ const SettingsSubPage: React.FC = () => {
                 </div>
                 <Switch checked={splashEnabled} onCheckedChange={setSplashEnabled} />
               </div>
+
+              <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <div>
+                  <Label className="text-sm font-bold">24-Hour Time Format</Label>
+                  <p className="text-xs text-slate-400">Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
+                </div>
+                <Switch
+                  checked={timeFormat === '24h'}
+                  onCheckedChange={(checked) => setTimeFormat(checked ? '24h' : '12h')}
+                />
+              </div>
             </Card>
           </div>
         )}
@@ -430,6 +443,19 @@ const SettingsSubPage: React.FC = () => {
         {/* PRAYER SECTION */}
         {sectionId === 'prayer' && (
           <div className="space-y-4">
+            <Card className="p-4 space-y-3 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-bold">24-Hour Time Format</Label>
+                  <p className="text-xs text-slate-400">Display prayer times in 24-hour format (e.g. 17:30)</p>
+                </div>
+                <Switch
+                  checked={timeFormat === '24h'}
+                  onCheckedChange={(checked) => setTimeFormat(checked ? '24h' : '12h')}
+                />
+              </div>
+            </Card>
+
             <Card className="p-4 space-y-3 rounded-2xl">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Calculation Method</Label>
               <PrayerMethodSelector />

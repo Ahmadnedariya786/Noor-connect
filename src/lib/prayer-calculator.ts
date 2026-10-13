@@ -110,10 +110,11 @@ export const calculatePrayerTimes = (
 };
 
 // Format time based on user preference
-export const formatPrayerTime = (date: Date, format: '12' | '24' = '24'): string => {
-  if (format === '12') {
+export const formatPrayerTime = (date: Date, format: '12' | '24' | '12h' | '24h' = '12h'): string => {
+  const is12 = format === '12' || format === '12h';
+  if (is12) {
     return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+      hour: '2-digit', 
       minute: '2-digit', 
       hour12: true 
     });
@@ -130,7 +131,7 @@ export const getFormattedPrayerTimes = (
   latitude: number,
   longitude: number,
   date: Date = new Date(),
-  format: '12' | '24' = '24'
+  format: '12' | '24' | '12h' | '24h' = '12h'
 ): FormattedPrayerTimes => {
   const times = calculatePrayerTimes(latitude, longitude, date);
   

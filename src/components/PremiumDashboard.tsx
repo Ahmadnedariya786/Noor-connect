@@ -70,7 +70,7 @@ interface PremiumDashboardProps {
   toast: any;
 }
 
-function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabled: boolean; hijriDate: string; timeFormat: '12' | '24' }) {
+function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabled: boolean; hijriDate: string; timeFormat: '12' | '24' | '12h' | '24h' }) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -78,10 +78,11 @@ function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabl
     return () => globalTimerManager.removeCallback(timerId);
   }, []);
 
+  const is12 = timeFormat === '12' || timeFormat === '12h';
   const timeStr = time.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: timeFormat === '12',
+    hour12: is12,
   });
 
   return (
@@ -156,11 +157,10 @@ function PremiumDashboardInner({
   setLoadingAPI,
   toast,
 }: PremiumDashboardProps) {
-  const { animationEnabled } = useSettings();
+  const { animationEnabled, timeFormat } = useSettings();
   const { tier } = useAnimationTier();
   const { isRamadan, ramadanDay } = useIslamicCalendar();
   const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>([]);
-  const [timeFormat, setTimeFormat] = useState<'12' | '24'>(() => (localStorage.getItem('time-format') as '12' | '24') || '24');
 
   useEffect(() => {
     // Load config on mount
@@ -194,14 +194,6 @@ function PremiumDashboardInner({
       return prevWidgets;
     });
   }, [isRamadan]);
-
-  useEffect(() => {
-    const handleFormatChange = (e: CustomEvent) => {
-      if (e.detail?.format) setTimeFormat(e.detail.format as '12' | '24');
-    };
-    window.addEventListener('time-format-changed', handleFormatChange as EventListener);
-    return () => window.removeEventListener('time-format-changed', handleFormatChange as EventListener);
-  }, []);
 
   const handleCloseModal = React.useCallback(() => {
     setLoadingAPI(false);

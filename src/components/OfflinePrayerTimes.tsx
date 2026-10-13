@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, Calendar, Volume2 } from "lucide-react";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { useSettings } from "@/contexts/SettingsContext";
+import { formatTime } from "@/utils/formatTime";
 
 type LocationKey = "makkah" | "madinah";
 
@@ -28,6 +30,7 @@ const LOCATION_INFO = {
 export default function OfflinePrayerTimes({ location }: { location: LocationKey }) {
     const info = LOCATION_INFO[location];
     const { prayerTimes, isLoading } = usePrayerTimes();
+    const { timeFormat } = useSettings();
 
     if (isLoading) {
         return (
@@ -60,37 +63,37 @@ export default function OfflinePrayerTimes({ location }: { location: LocationKey
                             <div className="bg-background/50 rounded-lg p-3">
                                 <div className="font-medium text-primary">Fajr</div>
                                 <div className="text-lg font-bold">
-                                    {prayerTimes.fajr ? new Date(prayerTimes.fajr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                    {prayerTimes.fajr ? formatTime(new Date(prayerTimes.fajr), timeFormat) : '--:--'}
                                 </div>
                             </div>
                             <div className="bg-background/50 rounded-lg p-3">
                                 <div className="font-medium text-primary">Dhuhr</div>
                                 <div className="text-lg font-bold">
-                                    {prayerTimes.dhuhr ? new Date(prayerTimes.dhuhr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                    {prayerTimes.dhuhr ? formatTime(new Date(prayerTimes.dhuhr), timeFormat) : '--:--'}
                                 </div>
                             </div>
                             <div className="bg-background/50 rounded-lg p-3">
                                 <div className="font-medium text-primary">Asr</div>
                                 <div className="text-lg font-bold">
-                                    {prayerTimes.asr ? new Date(prayerTimes.asr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                    {prayerTimes.asr ? formatTime(new Date(prayerTimes.asr), timeFormat) : '--:--'}
                                 </div>
                             </div>
                             <div className="bg-background/50 rounded-lg p-3">
                                 <div className="font-medium text-primary">Maghrib</div>
                                 <div className="text-lg font-bold">
-                                    {prayerTimes.maghrib ? new Date(prayerTimes.maghrib).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                    {prayerTimes.maghrib ? formatTime(new Date(prayerTimes.maghrib), timeFormat) : '--:--'}
                                 </div>
                             </div>
                             <div className="bg-background/50 rounded-lg p-3">
                                 <div className="font-medium text-primary">Isha</div>
                                 <div className="text-lg font-bold">
-                                    {prayerTimes.isha ? new Date(prayerTimes.isha).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                    {prayerTimes.isha ? formatTime(new Date(prayerTimes.isha), timeFormat) : '--:--'}
                                 </div>
                             </div>
                             <div className="bg-background/50 rounded-lg p-3">
                                 <div className="font-medium text-primary">Sunrise</div>
                                 <div className="text-lg font-bold">
-                                    {prayerTimes.sunrise ? new Date(prayerTimes.sunrise).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                    {prayerTimes.sunrise ? formatTime(new Date(prayerTimes.sunrise), timeFormat) : '--:--'}
                                 </div>
                             </div>
                         </div>

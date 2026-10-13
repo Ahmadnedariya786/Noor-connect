@@ -23,7 +23,8 @@ import { FeatureCards } from "@/components/DashboardFeatureCards";
 
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
-import { getTimeFormat, formatTime } from "@/lib/time-formatter";
+import { useSettings } from "@/contexts/SettingsContext";
+import { formatTime } from "@/utils/formatTime";
 import { useLocationState } from "@/lib/location-state";
 import { CURRENT_APP_VERSION } from "@/lib/constants";
 import { AladhanAPI } from "@/lib/aladhan-api";
@@ -39,6 +40,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { t: ti18n } = useI18n();
+  const { timeFormat } = useSettings();
   const [minuteTick, setMinuteTick] = useState(0);
   const [greeting, setGreeting] = useState("");
   const [prayers, setPrayers] = useState<PrayerTime[]>([]);
@@ -46,7 +48,6 @@ export default function Dashboard() {
   // Use Islamic calendar hook for accurate Hijri dates
   const { hijriDate, isEidAlFitr, isEidAlAdha } = useIslamicCalendar();
   const isEid = isEidAlFitr || isEidAlAdha;
-  const [timeFormat, setTimeFormat] = useState<'12' | '24'>('24');
   const [nextPrayerName, setNextPrayerName] = useState<string>("");
   const [nextPrayerTime, setNextPrayerTime] = useState<string>("");
   const [loadingAPI, setLoadingAPI] = useState(false);
@@ -153,11 +154,6 @@ export default function Dashboard() {
   }, [location, prayerLocation]);
 
 
-  useEffect(() => {
-    const currentFormat = getTimeFormat();
-    setTimeFormat(currentFormat);
-  }, [setTimeFormat]);
-
   // Helper function to format time from API using global formatter
   const formatTimeFromAPI = useCallback((timeStr: string): string => {
     return formatTime(timeStr, timeFormat);
@@ -219,7 +215,7 @@ export default function Dashboard() {
       const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, 1, false);
       if (nextEvent) {
         setNextPrayerName(nextEvent.name);
-        setNextPrayerTime(nextEvent.time || "--:--");
+        setNextPrayerTime(nextEvent.time ? formatTimeFromAPI(nextEvent.time) : "--:--");
         if (nextEvent.targetDate) {
           setTargetTime(nextEvent.targetDate);
         }
@@ -294,37 +290,12 @@ export default function Dashboard() {
   };
 
 
-// Initialize prayer times when location changes
+// Initialize prayer times when location or time format changes
    useEffect(() => {
      if (location.latitude && location.longitude) {
        loadPrayerTimes();
      }
    }, [location.latitude, location.longitude, loadPrayerTimes]);
-
-// Listen for time format changes from settings
-   useEffect(() => {
-     const handleStorageChange = (e: StorageEvent) => {
-       if (e.key === 'time-format' && e.newValue) {
-         setTimeFormat(e.newValue as '12' | '24');
-         // Time formatting is a presentation concern - no API call needed
-       }
-     };
-
-     const handleCustomTimeFormatChange = (e: CustomEvent) => {
-       if (e.detail?.format) {
-         setTimeFormat(e.detail.format as '12' | '24');
-         // Time formatting is a presentation concern - no API call needed
-       }
-     };
-
-     window.addEventListener('storage', handleStorageChange);
-     window.addEventListener('time-format-changed', handleCustomTimeFormatChange as EventListener);
-
-     return () => {
-       window.removeEventListener('storage', handleStorageChange);
-       window.removeEventListener('time-format-changed', handleCustomTimeFormatChange as EventListener);
-     };
-   }, [setTimeFormat]);
 
   // Clear stale location data on mount to prevent ISTRES issue
   useEffect(() => {

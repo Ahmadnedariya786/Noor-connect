@@ -11,7 +11,7 @@ export interface RamadanWidgetProps {
   isRamadan: boolean;
   ramadanDay: number;
   prayerTimesWithEnd: PrayerTimesWithEnd | null;
-  timeFormat: "12" | "24";
+  timeFormat?: "12" | "24" | "12h" | "24h";
   timeZone?: string;
 }
 
