@@ -444,7 +444,11 @@ const SettingsSubPage: React.FC = () => {
                   onClick={() => {
                     setMadhabState('shafi');
                     setMadhab('shafi');
-                    try { localStorage.removeItem('cached_prayer_times'); } catch {}
+                    try {
+                      localStorage.removeItem('cached_prayer_times');
+                    } catch {
+                      // silent fallback - intentional, see stability hardening notes
+                    }
                     toast({ title: 'Madhab set to Shafi / Maliki / Hanbali' });
                   }}
                 >
@@ -456,7 +460,11 @@ const SettingsSubPage: React.FC = () => {
                   onClick={() => {
                     setMadhabState('hanafi');
                     setMadhab('hanafi');
-                    try { localStorage.removeItem('cached_prayer_times'); } catch {}
+                    try {
+                      localStorage.removeItem('cached_prayer_times');
+                    } catch {
+                      // silent fallback - intentional, see stability hardening notes
+                    }
                     toast({ title: 'Madhab set to Hanafi' });
                   }}
                 >

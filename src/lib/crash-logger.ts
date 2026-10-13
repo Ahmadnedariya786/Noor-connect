@@ -20,7 +20,9 @@ function getSafeRoute(): string {
     if (typeof window !== 'undefined' && window.location) {
       return (window.location.pathname || '/') + (window.location.search || '') + (window.location.hash || '');
     }
-  } catch {}
+  } catch {
+    // silent fallback - intentional, see stability hardening notes
+  }
   return '/';
 }
 
@@ -68,14 +70,18 @@ export function getLastCrashes(): CrashEntry[] {
     if (Array.isArray(parsed)) {
       return parsed.slice(0, MAX_ENTRIES);
     }
-  } catch {}
+  } catch {
+    // silent fallback - intentional, see stability hardening notes
+  }
   return [];
 }
 
 export function clearCrashes(): void {
   try {
     localStorage.removeItem(CRASH_STORAGE_KEY);
-  } catch {}
+  } catch {
+    // silent fallback - intentional, see stability hardening notes
+  }
 }
 
 let isInitialized = false;
@@ -94,7 +100,9 @@ export function initCrashLogger(): void {
         message: msg,
         stack,
       });
-    } catch {}
+    } catch {
+      // silent fallback - intentional, see stability hardening notes
+    }
 
     if (typeof originalOnError === 'function') {
       return originalOnError.apply(this, [event, source, lineno, colno, error]);
@@ -126,6 +134,8 @@ export function initCrashLogger(): void {
         message,
         stack,
       });
-    } catch {}
+    } catch {
+      // silent fallback - intentional, see stability hardening notes
+    }
   });
 }

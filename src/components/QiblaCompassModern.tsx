@@ -691,13 +691,21 @@ const QiblaCompassModern = () => {
       if (alignment.isAligned && !hapticFiredRef.current) {
         hapticFiredRef.current = true;
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-          try { navigator.vibrate([100, 50, 100]); } catch {}
+          try {
+            navigator.vibrate([100, 50, 100]);
+          } catch {
+            // silent fallback - intentional, see stability hardening notes
+          }
         }
       }
       // Gentle haptic when getting close (within 15 degrees)
       else if (deviation <= 15 && deviation > 8 && !hapticFiredRef.current) {
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-          try { navigator.vibrate(30); } catch {}
+          try {
+            navigator.vibrate(30);
+          } catch {
+            // silent fallback - intentional, see stability hardening notes
+          }
         }
       }
       // Reset when moving away from alignment
@@ -1185,7 +1193,9 @@ const QiblaCompassModern = () => {
                 if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
                   navigator.vibrate(50);
                 }
-              } catch {}
+              } catch {
+                // silent fallback - intentional, see stability hardening notes
+              }
               if (compassState === 'idle' || compassState === 'permission-required' || compassState === 'denied') {
                 void enableCompass();
               } else {

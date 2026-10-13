@@ -20,7 +20,9 @@ export const setSalamGreetingEnabled = (enabled: boolean): void => {
   try {
     localStorage.setItem(GREETING_ENABLED_KEY, enabled ? 'true' : 'false');
     localStorage.removeItem(LEGACY_GREETING_ENABLED_KEY);
-  } catch {}
+  } catch {
+    // silent fallback - intentional, see stability hardening notes
+  }
 };
 
 interface SalamGreetingProps {
@@ -95,7 +97,9 @@ export const SalamGreeting = ({ splashActive = false }: SalamGreetingProps) => {
           if (audioRef.current) {
             try {
               audioRef.current.pause();
-            } catch {}
+            } catch {
+              // silent fallback - intentional, see stability hardening notes
+            }
             audioRef.current = null;
           }
         };
@@ -124,7 +128,9 @@ export const SalamGreeting = ({ splashActive = false }: SalamGreetingProps) => {
         if (audioRef.current) {
           try {
             audioRef.current.pause();
-          } catch {}
+          } catch {
+            // silent fallback - intentional, see stability hardening notes
+          }
           audioRef.current = null;
         }
       };

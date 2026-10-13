@@ -401,7 +401,9 @@ function AppShell() {
         return () => {
           stopFPS();
         };
-      } catch {}
+      } catch {
+        // silent fallback - intentional, see stability hardening notes
+      }
     }
   }, []);
 
@@ -574,7 +576,9 @@ function AppShell() {
       resumeSubCleanup = () => {
         subPromise.then(handle => handle.remove?.()).catch(() => {});
       };
-    } catch {}
+    } catch {
+      // silent fallback - intentional, see stability hardening notes
+    }
 
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
