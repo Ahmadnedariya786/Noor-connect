@@ -73,6 +73,11 @@ class NativeAdhanBridge {
       return false;
     }
 
+    // Do not trigger background session prompt if first-launch onboarding sequence is pending
+    if (localStorage.getItem('onboarding_perms_v2_done') !== 'true') {
+      return false;
+    }
+
     const alreadyPrompted = sessionStorage.getItem(EXACT_ALARM_PROMPT_KEY);
     if (!alreadyPrompted) {
       sessionStorage.setItem(EXACT_ALARM_PROMPT_KEY, 'true');

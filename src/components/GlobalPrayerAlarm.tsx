@@ -83,7 +83,10 @@ export const GlobalPrayerAlarm = () => {
       if (Capacitor.isNativePlatform()) {
         const isAlarmEnabled = localStorage.getItem(STORAGE_KEY) === 'true';
         if (isAlarmEnabled) {
-          nativeAdhan.ensureExactAlarmPermission(false).catch(() => {});
+          nativeAdhan.ensureExactAlarmPermission(false).catch((err) => {
+            // Handled non-critical exact alarm check on startup
+            console.warn('Startup exact alarm check skipped:', err);
+          });
         }
       }
     }

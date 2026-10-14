@@ -28,6 +28,7 @@ import { useAutoBackup } from "@/hooks/useAutoBackup";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
 import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
+import { runFirstLaunchPermissionOnboarding } from "@/lib/onboarding-permissions";
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -462,7 +463,10 @@ function AppShell() {
     try {
       if (!Capacitor.isNativePlatform() && import.meta.env.PROD && typeof navigator !== 'undefined' && 'serviceWorker' in navigator && !navigator.serviceWorker.controller) {
         serviceWorkerManager.register()
-          .catch(() => {})
+          .catch((err) => {
+            // Handled service worker registration error
+            console.warn('Service worker registration failed:', err);
+          })
           .finally(() => {
             completeStartupStep('service-worker-init');
           });
@@ -500,29 +504,24 @@ function AppShell() {
       console.warn('Startup: widget auto-update failed', err);
     }
 
-    // 7. Exact-alarm check on native (defensive)
-    markStartupStep('exact-alarm-check');
+    // 7. First-launch permission onboarding sequence (Step A: background dialog -> Step B: exact alarm settings)
+    markStartupStep('onboarding-permissions-init');
     try {
       if (Capacitor.isNativePlatform()) {
-        import('@/lib/native-adhan').then(({ isExactAlarmPermissionGranted }) => {
-          try {
-            isExactAlarmPermissionGranted?.()
-              .catch(() => {})
-              .finally(() => {
-                completeStartupStep('exact-alarm-check');
-              });
-          } catch {
-            completeStartupStep('exact-alarm-check');
-          }
-        }).catch(() => {
-          completeStartupStep('exact-alarm-check');
-        });
+        runFirstLaunchPermissionOnboarding()
+          .catch((err) => {
+            // Handled non-critical error during first-launch permission onboarding
+            console.warn('Startup permission onboarding error:', err);
+          })
+          .finally(() => {
+            completeStartupStep('onboarding-permissions-init');
+          });
       } else {
-        completeStartupStep('exact-alarm-check');
+        completeStartupStep('onboarding-permissions-init');
       }
     } catch (e) {
-      completeStartupStep('exact-alarm-check');
-      console.warn('Startup: exact-alarm check failed', e);
+      completeStartupStep('onboarding-permissions-init');
+      console.warn('Startup: onboarding permissions failed', e);
     }
 
     // ── Defensive Resume Handler (idempotent, guarded) ──
@@ -531,10 +530,17 @@ function AppShell() {
       try {
         if (Capacitor.isNativePlatform()) {
           import('@/lib/native-adhan').then(({ isExactAlarmPermissionGranted }) => {
-            isExactAlarmPermissionGranted?.().catch(() => {});
-          }).catch(() => {});
+            isExactAlarmPermissionGranted?.().catch((err) => {
+              // Handled resume exact alarm verification error
+              console.warn('Resume exact alarm check skipped:', err);
+            });
+          }).catch((err) => {
+            // Handled resume native adhan import error
+            console.warn('Resume native-adhan import failed:', err);
+          });
         }
       } catch (e) {
+        // Handled resume handler exception
         console.warn('Resume: exact-alarm check error', e);
       }
 

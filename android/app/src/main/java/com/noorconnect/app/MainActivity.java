@@ -59,16 +59,8 @@ public class MainActivity extends BridgeActivity {
         // Create default notification channel for Capacitor LocalNotifications
         createDefaultNotificationChannel();
 
-        // STEP 1: Check SCHEDULE_EXACT_ALARM permission on Android 12+ (API 31+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !canScheduleExactAlarms()) {
-            // If NOT granted, immediately redirect the user to system "Alarms & reminders" settings screen
-            requestExactAlarmPermission();
-            // Do NOT ask for background execution yet; Step 1 must complete first
-        } else {
-            // STEP 2: Exact alarm is already granted (or Android < 12).
-            // Ask for Background execution / battery optimization dialog if not yet prompted
-            requestBatteryOptimizationWhitelist();
-        }
+        // First-launch permission sequence (Step A: background dialog -> Step B: exact alarm settings)
+        // is now explicitly coordinated by runFirstLaunchPermissionOnboarding() in the UI layer.
 
         // Enable Motion Event Splitting and allow immediate audio playback on the WebView
         WebView webView = (this.getBridge() != null) ? this.getBridge().getWebView() : null;
@@ -123,7 +115,9 @@ public class MainActivity extends BridgeActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && detail != null) {
                         try {
                             priority = detail.rendererPriorityAtExit();
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable ignored) {
+                            // Ignored: rendererPriorityAtExit may throw or be unsupported on custom ROMs
+                        }
                     }
 
                     String reason = didCrash ? "RENDERER_CRASHED" : "KILLED_BY_SYSTEM_LOW_MEMORY";
@@ -254,12 +248,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
-        // Check if exact alarms are allowed
+        // Start widget foreground service when exact alarms are allowed
         if (canScheduleExactAlarms()) {
             WidgetForegroundService.start(this);
-            // Step 2: User returned from "Alarms & reminders" settings (or already granted).
-            // Now prompt for background execution if not yet prompted.
-            requestBatteryOptimizationWhitelist();
         }
     }
 

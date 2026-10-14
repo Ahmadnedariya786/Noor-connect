@@ -34,6 +34,8 @@ import {
   checkNightlyUpdate,
   downloadAndInstallUpdate,
   formatReleaseDate,
+  formatDateTime,
+  formatCommit,
   type UpdateCheckResult,
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
@@ -166,8 +168,23 @@ const SettingsSubPage: React.FC = () => {
       setCrashLogs(getLastCrashes());
       checkNightlyUpdate(false)
         .then(setUpdateResult)
-        .catch(() => {
-          // silent initial check fallback
+        .catch((err) => {
+          // Handled initial background update check error
+          setUpdateResult({
+            hasUpdate: false,
+            status: 'Check failed',
+            statusReason: err?.message || 'Check failed',
+            installedCommit: BUILD_COMMIT,
+            installedBuildTime: BUILD_TIME,
+            currentBuildTime: BUILD_TIME,
+            currentBuildCommit: BUILD_COMMIT,
+            remoteCommit: undefined,
+            latestApkUploadedAt: undefined,
+            release: null,
+            lastChecked: Date.now(),
+            fromCache: false,
+            error: err?.message || 'Check failed',
+          });
         });
     }
   }, [sectionId]);
@@ -179,8 +196,9 @@ const SettingsSubPage: React.FC = () => {
         localStorage.removeItem('noor_nightly_update_cache');
         localStorage.removeItem('noor_update_last_checked');
         localStorage.removeItem('noor_last_update_check');
-      } catch {
-        // silent storage cleanup fallback
+      } catch (storageErr) {
+        // Handled storage cleanup fallback before manual update check
+        console.warn('Could not clear update cache before manual check:', storageErr);
       }
       const res = await checkNightlyUpdate(true);
       setUpdateResult(res);
@@ -189,17 +207,39 @@ const SettingsSubPage: React.FC = () => {
           title: 'Nightly Update Available',
           description: `Released ${formatReleaseDate(res.release?.publishedAt)}. Tap download to install.`,
         });
+      } else if (res.status === 'Check failed' || res.error) {
+        toast({
+          title: 'Check Failed',
+          description: res.statusReason || res.error || 'Unable to connect to GitHub releases.',
+          variant: 'destructive',
+        });
       } else {
         toast({
           title: 'Up to Date',
           description: 'You are running the latest build.',
         });
       }
-    } catch {
-      // silent manual check error fallback
+    } catch (manualErr: any) {
+      // Handled manual check error fallback
+      const errorMsg = manualErr?.message || 'Unable to connect to GitHub releases.';
+      setUpdateResult({
+        hasUpdate: false,
+        status: 'Check failed',
+        statusReason: errorMsg,
+        installedCommit: BUILD_COMMIT,
+        installedBuildTime: BUILD_TIME,
+        currentBuildTime: BUILD_TIME,
+        currentBuildCommit: BUILD_COMMIT,
+        remoteCommit: undefined,
+        latestApkUploadedAt: undefined,
+        release: null,
+        lastChecked: Date.now(),
+        fromCache: false,
+        error: errorMsg,
+      });
       toast({
         title: 'Check Failed',
-        description: 'Unable to connect to GitHub releases.',
+        description: errorMsg,
         variant: 'destructive',
       });
     } finally {
@@ -869,7 +909,53 @@ const SettingsSubPage: React.FC = () => {
                 </Button>
               </div>
 
-              {updateResult?.hasUpdate && updateResult.release ? (
+              {/* Always-visible build metadata lines for instant self-verifying diagnosis */}
+              <div className="space-y-1.5 p-3 rounded-xl bg-muted/40 text-xs">
+                {/* Line 1: Installed */}
+                <div className="flex items-baseline gap-1.5 truncate">
+                  <span className="font-semibold text-foreground/80 shrink-0">Installed:</span>
+                  <span className="font-mono text-[11px] text-muted-foreground truncate">
+                    {formatCommit(updateResult?.installedCommit || BUILD_COMMIT)} · {formatDateTime(updateResult?.installedBuildTime || BUILD_TIME)}
+                  </span>
+                </div>
+
+                {/* Line 2: Latest */}
+                <div className="flex items-baseline gap-1.5 truncate">
+                  <span className="font-semibold text-foreground/80 shrink-0">Latest:</span>
+                  <span className="font-mono text-[11px] text-muted-foreground truncate">
+                    {formatCommit(updateResult?.remoteCommit || updateResult?.release?.commitSha || 'unknown')} · {formatDateTime(updateResult?.latestApkUploadedAt || updateResult?.release?.latestAssetUploadedAt || updateResult?.release?.publishedAt || 'unknown')}
+                  </span>
+                </div>
+
+                {/* Line 3: Status */}
+                <div className="flex items-center gap-1.5 pt-0.5 min-w-0">
+                  <span className="font-semibold text-foreground/80 shrink-0">Status:</span>
+                  {isCheckingUpdate ? (
+                    <span className="text-amber-500 font-semibold text-[11px] flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                      Checking for updates...
+                    </span>
+                  ) : updateResult?.status === 'Update available' || updateResult?.hasUpdate ? (
+                    <span className="flex items-center gap-1 text-amber-500 font-semibold text-[11px]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                      Update available
+                    </span>
+                  ) : updateResult?.status === 'Check failed' || updateResult?.error ? (
+                    <span className="flex items-center gap-1 text-rose-500 font-semibold text-[11px] truncate">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      Check failed: {updateResult?.statusReason || updateResult?.error || 'Unable to connect'}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-emerald-500 font-semibold text-[11px]">
+                      <Check className="w-3.5 h-3.5 shrink-0" />
+                      Up to date
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Download update button when update is available */}
+              {updateResult?.hasUpdate && updateResult.release && (
                 <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 gap-3">
                   <div className="space-y-0.5 min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -890,19 +976,6 @@ const SettingsSubPage: React.FC = () => {
                     <Download className="w-3.5 h-3.5 mr-1" />
                     Download update
                   </Button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40 text-xs text-muted-foreground">
-                  <div className="truncate pr-2">
-                    <span>Installed: </span>
-                    <span className="font-mono text-[11px]">
-                      {BUILD_COMMIT !== 'unknown' ? `${BUILD_COMMIT.slice(0, 7)} · ` : ''}{formatReleaseDate(BUILD_TIME)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-emerald-500 font-medium shrink-0">
-                    <Check className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Up to date</span>
-                  </div>
                 </div>
               )}
             </Card>
