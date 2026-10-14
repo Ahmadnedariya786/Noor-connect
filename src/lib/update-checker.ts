@@ -5,11 +5,12 @@
  * https://api.github.com/repos/Ahmadnedariya786/Noor-connect/releases/tags/nightly
  *
  * Verdict rules:
- * UPDATE AVAILABLE if:
- *   (remoteCommit exists AND remoteCommit !== installedCommit)
- *   OR (latestApkUploadedAt parsed as Date is more than 60 seconds newer than installed build time).
- * Otherwise UP TO DATE.
- * If fetch or parse throws: verdict CHECK FAILED with the error message stored.
+ * 1. Read SHA from release body:
+ *    - If EQUAL to VITE_BUILD_COMMIT -> Up to date
+ *    - If DIFFERENT -> Update available
+ * 2. Only when SHA is missing, fall back to asset uploaded_at vs VITE_BUILD_TIME
+ *    with a 10-minute grace window so the same commit's own upload never counts as an update.
+ * If fetch or parse throws: verdict CHECK FAILED with specific error message.
  *
  * Privacy: Zero telemetry or analytics. Only a single public GET request to GitHub Releases.
  * Cache: Stores latest result in localStorage (max 1 check per 6 hours unless forced).
@@ -143,6 +144,32 @@ export function isSameCommit(shaA?: string | null, shaB?: string | null): boolea
 }
 
 /**
+ * Formats caught errors into distinct user-friendly status messages:
+ * - network/CORS TypeError => "Network error - check internet"
+ * - HTTP 403/429 => "GitHub rate limit - try later"
+ * - HTTP 404 => "Release not found"
+ * - abort => "Timed out"
+ * Never shows generic "Failed to fetch".
+ */
+export function formatUpdateError(err: any): string {
+  if (!err) return 'Network error - check internet';
+  if (err?.name === 'AbortError' || err?.message?.toLowerCase().includes('timeout') || err?.message?.toLowerCase().includes('abort')) {
+    return 'Timed out';
+  }
+  const msg = typeof err?.message === 'string' ? err.message : String(err);
+  if (msg.includes('rate limit') || msg.includes('403') || msg.includes('429')) {
+    return 'GitHub rate limit - try later';
+  }
+  if (msg.includes('Release not found') || msg.includes('404')) {
+    return 'Release not found';
+  }
+  if (err instanceof TypeError || /failed to fetch|network|load failed/i.test(msg)) {
+    return 'Network error - check internet';
+  }
+  return msg;
+}
+
+/**
  * Compare two ISO timestamps safely.
  * Returns true if remote ISO is newer than local ISO.
  */
@@ -186,11 +213,12 @@ export function extractCommitFromRelease(body?: string | null, targetCommitish?:
 }
 
 /**
- * Evaluates whether an update is available according to strict verdict rules:
- * UPDATE AVAILABLE if:
- *   (remoteCommit exists AND remoteCommit !== installedCommit)
- *   OR (latestApkUploadedAt parsed as Date is more than 60 seconds newer than installed build time).
- * Otherwise UP TO DATE.
+ * Evaluates whether an update is available according to strict SHA-first comparison rules:
+ * (1) Read SHA from release body:
+ *     - If EQUAL to installedCommit -> "Up to date" (false)
+ *     - If DIFFERENT -> "Update available" (true)
+ * (2) Only when SHA is missing, fall back to asset uploaded_at vs installedBuildTime
+ *     with a 10-minute grace window so the same commit's own upload never counts as an update.
  */
 export function isUpdateAvailable(
   release: {
@@ -207,43 +235,41 @@ export function isUpdateAvailable(
   const latestAssetUploadedAt = release.latestAssetUploadedAt || release.publishedAt || null;
   const remoteCommit = release.commitSha?.trim();
 
-  // Rule 1: remoteCommit exists AND remoteCommit !== installedCommit
-  const remoteCommitExists = Boolean(remoteCommit && remoteCommit.toLowerCase() !== 'unknown');
-  const commitDiffers = remoteCommitExists && !isSameCommit(remoteCommit, installedCommit);
+  let isAvailable = false;
+  let comparisonOrder = 'none';
 
-  // Rule 2: latestApkUploadedAt parsed as Date is more than 60 seconds newer than installed build time
-  const assetDate = latestAssetUploadedAt ? new Date(latestAssetUploadedAt) : null;
-  const appBuildDate = installedBuildTime ? new Date(installedBuildTime) : null;
-  const assetTimeMs = assetDate && !isNaN(assetDate.getTime()) ? assetDate.getTime() : 0;
-  const appBuildTimeMs = appBuildDate && !isNaN(appBuildDate.getTime()) ? appBuildDate.getTime() : 0;
+  // STEP 2 Comparison Order:
+  // (1) Read SHA from release body:
+  //     If EQUAL to VITE_BUILD_COMMIT -> show "Up to date" (false)
+  //     If DIFFERENT -> show "Update available" (true)
+  const hasValidRemoteSha = Boolean(remoteCommit && remoteCommit.toLowerCase() !== 'unknown' && remoteCommit.length >= 7);
+  const hasValidInstalledSha = Boolean(installedCommit && installedCommit.toLowerCase() !== 'unknown' && installedCommit.length >= 7);
 
-  let isTimeNewer = false;
-  if (assetTimeMs > 0 && appBuildTimeMs > 0) {
-    // More than 60 seconds newer
-    isTimeNewer = (assetTimeMs - appBuildTimeMs) > 60 * 1000;
+  if (hasValidRemoteSha && hasValidInstalledSha) {
+    comparisonOrder = 'sha_comparison';
+    const isSame = isSameCommit(remoteCommit, installedCommit);
+    isAvailable = !isSame;
+  } else {
+    // (2) Only when SHA is missing, fall back to asset uploaded_at vs VITE_BUILD_TIME with a 10-minute grace window
+    comparisonOrder = 'timestamp_fallback_10m_grace';
+    const assetDate = latestAssetUploadedAt ? new Date(latestAssetUploadedAt) : null;
+    const appBuildDate = installedBuildTime ? new Date(installedBuildTime) : null;
+    const assetTimeMs = assetDate && !isNaN(assetDate.getTime()) ? assetDate.getTime() : 0;
+    const appBuildTimeMs = appBuildDate && !isNaN(appBuildDate.getTime()) ? appBuildDate.getTime() : 0;
+
+    if (assetTimeMs > 0 && appBuildTimeMs > 0) {
+      // 10-minute grace window (600,000 ms) so the same commit's own upload never counts as an update
+      isAvailable = (assetTimeMs - appBuildTimeMs) > 10 * 60 * 1000;
+    } else {
+      isAvailable = false;
+    }
   }
 
-  const isAvailable = commitDiffers || isTimeNewer;
-
-  // TASK 1 & 2: Detailed logging at every step (retained)
-  console.log('[UpdateChecker] Local build info:', {
-    currentBuildTime: installedBuildTime,
-    appBuildDate: appBuildDate ? appBuildDate.toISOString() : null,
-    currentBuildCommit: installedCommit || 'unknown',
-  });
-  console.log('[UpdateChecker] Latest APK asset uploaded_at:', {
-    latestAssetUploadedAt,
-    assetDate: assetDate ? assetDate.toISOString() : null,
-  });
-  console.log('[UpdateChecker] Comparison result (Is new?):', {
-    isNew: isTimeNewer ? 'Yes' : 'No',
-    isUpdateAvailable: isAvailable ? 'Yes' : 'No',
-    assetTimeMs,
-    appBuildTimeMs,
-    diffSeconds: Math.round((assetTimeMs - appBuildTimeMs) / 1000),
-  });
-  console.log('Update Check:', {
-    appBuildTime: installedBuildTime,
+  console.log('[UpdateChecker] Comparison result:', {
+    comparisonOrder,
+    installedCommit,
+    remoteCommit: remoteCommit || 'none',
+    installedBuildTime,
     latestAssetUploadedAt,
     isUpdateAvailable: isAvailable,
   });
@@ -323,7 +349,7 @@ export async function downloadAndInstallUpdate(apkUrl?: string): Promise<void> {
 
 /**
  * Check for updates against GitHub Releases API with 8s timeout and 6h caching.
- * cache: 'no-store' AND ?t=<timestamp> applied to every network fetch.
+ * Plain fetch with Accept header only (CORS-safe inside Android WebView).
  * Manual check (force = true) clears stored cache first and always refetches.
  */
 export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResult> {
@@ -374,7 +400,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     }
   }
 
-  // 2. Fetch fresh release metadata with 8-second timeout, cache: 'no-store', and ?t=<timestamp>
+  // 2. Fetch fresh release metadata with 8-second timeout via AbortController
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -383,20 +409,21 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     const res = await fetch(requestUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
+        Accept: 'application/vnd.github+json',
       },
-      cache: 'no-store',
       signal: controller.signal,
     });
 
     if (!res.ok) {
+      if (res.status === 403 || res.status === 429) {
+        throw new Error('GitHub rate limit - try later');
+      }
       if (res.status === 404) {
-        writeCache(null);
         return {
           hasUpdate: false,
-          status: 'Up to date',
+          status: 'Check failed',
+          statusReason: 'Release not found',
+          error: 'Release not found',
           installedCommit: currentBuildCommit,
           installedBuildTime: currentBuildTime,
           currentBuildTime,
@@ -414,14 +441,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     const data = await res.json();
     const publishedAt = data.published_at || data.created_at;
 
-    // Parse remoteCommit: first match of regex /commit:\s*([0-9a-f]{7,40})/i in the release body (case-insensitive, allow missing)
-    let remoteCommit: string | undefined = undefined;
-    if (typeof data.body === 'string') {
-      const match = data.body.match(/commit:\s*([0-9a-f]{7,40})/i);
-      if (match && match[1]) {
-        remoteCommit = match[1].toLowerCase();
-      }
-    }
+    // Parse remoteCommit: first match of regex /commit:\s*([0-9a-f]{7,40})/i in the release body
+    const remoteCommit = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
 
     // Log fetched Release data (specifically the assets array)
     console.log('[UpdateChecker] Fetched Release data:', {
@@ -432,7 +453,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       assets: data.assets,
     });
 
-    // Parse latestApkUploadedAt: the MAX uploaded_at among assets whose name ends with .apk
+    // Parse latestApkUploadedAt: the MAX uploaded_at / updated_at / created_at among assets whose name ends with .apk
     let apkUrl = DIRECT_APK_FALLBACK_URL;
     let sizeBytes: number | undefined;
     let latestApkUploadedAt: string | null = null;
@@ -487,10 +508,10 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
 
     writeCache(releaseInfo);
 
-    // 3. Verdict rules:
-    // UPDATE AVAILABLE if (remoteCommit exists AND remoteCommit !== installedCommit)
-    //                OR (latestApkUploadedAt parsed as Date is more than 60 seconds newer than installed build time).
-    // Otherwise UP TO DATE.
+    // 3. Verdict rules (SHA-first comparison order):
+    // (1) If SHA in release body matches local build SHA -> "Up to date"
+    //     If SHA differs -> "Update available"
+    // (2) If SHA is missing -> fall back to asset uploaded_at vs buildTime with 10-minute grace window
     const hasUpdate = isUpdateAvailable(releaseInfo, {
       commitSha: currentBuildCommit,
       buildTime: currentBuildTime,
@@ -520,9 +541,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
 
     return checkResult;
   } catch (err: any) {
-    // If fetch or parse throws: verdict CHECK FAILED with the error message stored
-    const isTimeout = err?.name === 'AbortError';
-    const message = isTimeout ? 'Request timed out (8s)' : (err?.message || 'Update check failed');
+    // If fetch or parse throws: verdict CHECK FAILED with distinct error message
+    const message = formatUpdateError(err);
 
     console.warn('[UpdateChecker] Check failed:', message, err);
 
@@ -530,6 +550,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       hasUpdate: false,
       status: 'Check failed',
       statusReason: message,
+      error: message,
       installedCommit: currentBuildCommit,
       installedBuildTime: currentBuildTime,
       currentBuildTime,
@@ -539,7 +560,6 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       release: null,
       lastChecked: Date.now(),
       fromCache: false,
-      error: message,
     };
   } finally {
     clearTimeout(timer);

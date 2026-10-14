@@ -36,6 +36,7 @@ import {
   formatReleaseDate,
   formatDateTime,
   formatCommit,
+  formatUpdateError,
   type UpdateCheckResult,
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
@@ -170,10 +171,11 @@ const SettingsSubPage: React.FC = () => {
         .then(setUpdateResult)
         .catch((err) => {
           // Handled initial background update check error
+          const msg = formatUpdateError(err);
           setUpdateResult({
             hasUpdate: false,
             status: 'Check failed',
-            statusReason: err?.message || 'Check failed',
+            statusReason: msg,
             installedCommit: BUILD_COMMIT,
             installedBuildTime: BUILD_TIME,
             currentBuildTime: BUILD_TIME,
@@ -183,7 +185,7 @@ const SettingsSubPage: React.FC = () => {
             release: null,
             lastChecked: Date.now(),
             fromCache: false,
-            error: err?.message || 'Check failed',
+            error: msg,
           });
         });
     }
@@ -210,7 +212,7 @@ const SettingsSubPage: React.FC = () => {
       } else if (res.status === 'Check failed' || res.error) {
         toast({
           title: 'Check Failed',
-          description: res.statusReason || res.error || 'Unable to connect to GitHub releases.',
+          description: res.statusReason || res.error || 'Network error - check internet',
           variant: 'destructive',
         });
       } else {
@@ -221,7 +223,7 @@ const SettingsSubPage: React.FC = () => {
       }
     } catch (manualErr: any) {
       // Handled manual check error fallback
-      const errorMsg = manualErr?.message || 'Unable to connect to GitHub releases.';
+      const errorMsg = formatUpdateError(manualErr);
       setUpdateResult({
         hasUpdate: false,
         status: 'Check failed',
@@ -943,7 +945,7 @@ const SettingsSubPage: React.FC = () => {
                   ) : updateResult?.status === 'Check failed' || updateResult?.error ? (
                     <span className="flex items-center gap-1 text-rose-500 font-semibold text-[11px] truncate">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      Check failed: {updateResult?.statusReason || updateResult?.error || 'Unable to connect'}
+                      Check failed: {updateResult?.statusReason || updateResult?.error || 'Network error - check internet'}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 text-emerald-500 font-semibold text-[11px]">
