@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Eye, EyeOff } from 'lucide-react';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
+import { sanitizeUrl, isArchiveOrgUrl } from '@/lib/url-sanitizer';
 import PdfAudioPlayer from '@/components/PdfAudioPlayer';
 
 // Lazy load pdfjs-dist to reduce bundle size
@@ -209,7 +210,8 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
       }
 
       // Handle archive.org URLs - get direct download URL
-      if (pdfUrl.includes('archive.org')) {
+      // codeql[js/incomplete-url-substring-sanitization] "Checked via parsed hostname"
+      if (isArchiveOrgUrl(pdfUrl)) {
         const directUrl = getBetterViewerUrl(pdfUrl);
         if (directUrl !== pdfUrl) {
           console.log('Converted archive.org URL to direct download:', directUrl);
@@ -338,7 +340,10 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   const downloadPdf = () => {
     const source = resolvedPdfSource || url;
     if (source) {
-      window.open(source, '_blank');
+      const safe = sanitizeUrl(source);
+      if (safe) {
+        window.open(safe, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
@@ -408,33 +413,38 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
 
   // Helper to handle archive.org URLs and other external links
   const getBetterViewerUrl = (pdfUrl: string): string => {
-    if (pdfUrl.includes('archive.org')) {
-      // Try to get the direct PDF download URL from archive.org
-      const downloadMatch = pdfUrl.match(/archive\.org\/download\/([^/]+)\/.*\.pdf/);
-      if (downloadMatch?.[1]) {
-        // Keep the direct download URL for the PDF
-        return pdfUrl;
-      }
-      
-      // If it's a details page, try to construct the download URL
-      const detailsMatch = pdfUrl.match(/archive\.org\/details\/([^/]+)/);
-      if (detailsMatch?.[1]) {
-        // Try to get the first PDF file from the archive
-        // This assumes there's a PDF with the same name as the identifier
-        return `https://archive.org/download/${detailsMatch[1]}/${detailsMatch[1]}.pdf`;
-      }
-      
-      // If it's already a download URL, keep it as is
-      if (pdfUrl.includes('archive.org/download/')) {
-        return pdfUrl;
+    // codeql[js/incomplete-url-substring-sanitization] "Checked via parsed hostname"
+    if (isArchiveOrgUrl(pdfUrl)) {
+      try {
+        const parsed = new URL(pdfUrl);
+        // Try to get the direct PDF download URL from archive.org
+        const downloadMatch = parsed.pathname.match(/\/download\/([^/]+)\/.*\.pdf/);
+        if (downloadMatch?.[1]) {
+          return parsed.href;
+        }
+        
+        // If it's a details page, try to construct the download URL
+        const detailsMatch = parsed.pathname.match(/\/details\/([^/]+)/);
+        if (detailsMatch?.[1]) {
+          const item = encodeURIComponent(detailsMatch[1]);
+          return `https://archive.org/download/${item}/${item}.pdf`;
+        }
+        
+        // If it's already a download URL, keep it as is
+        if (parsed.pathname.startsWith('/download/')) {
+          return parsed.href;
+        }
+      } catch {
+        // Fallback to sanitized URL
       }
     }
-    return pdfUrl;
+    return sanitizeUrl(pdfUrl) || pdfUrl;
   };
 
   // External viewer mode (fallback for CORS-restricted PDFs)
   if (viewerMode === 'iframe') {
-    const viewerUrl = getBetterViewerUrl(url);
+    const rawViewerUrl = getBetterViewerUrl(url);
+    const viewerUrl = sanitizeUrl(rawViewerUrl);
 
     return (
       <div className="fixed inset-0 bg-background z-[1000] flex flex-col">
@@ -447,7 +457,11 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => window.open(viewerUrl, '_blank', 'noopener,noreferrer')}
+            onClick={() => {
+              if (viewerUrl) {
+                window.open(viewerUrl, '_blank', 'noopener,noreferrer');
+              }
+            }}
             title="Open in browser"
           >
             <ExternalLink className="w-4 h-4" />
@@ -457,7 +471,7 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
         {/* Content - Embedded PDF viewer using direct PDF URL */}
         <div className="flex-1 bg-muted/20">
           <iframe
-            src={`${viewerUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+            src={viewerUrl ? `${viewerUrl}#toolbar=0&navpanes=0&scrollbar=0` : 'about:blank'}
             title={title}
             className="w-full h-full border-0"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"

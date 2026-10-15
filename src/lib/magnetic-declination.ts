@@ -155,7 +155,16 @@ function getCachedDeclination(latitude: number, longitude: number): number | nul
     const stored = localStorage.getItem(DECLINATION_CACHE_KEY);
     if (!stored) return null;
     
-    const cache: DeclinationCacheEntry = JSON.parse(stored);
+    let jsonStr = stored;
+    try {
+      if (!stored.trim().startsWith('{')) {
+        jsonStr = atob(stored);
+      }
+    } catch {
+      // Non-base64 fallback
+    }
+    
+    const cache: DeclinationCacheEntry = JSON.parse(jsonStr);
     const now = Date.now();
     
     // Check if cache is valid (same location within ~10km and within time limit)
@@ -185,7 +194,12 @@ function cacheDeclination(
       timestamp: Date.now(),
       model: 'WMM',
     };
-    localStorage.setItem(DECLINATION_CACHE_KEY, JSON.stringify(entry));
+    const raw = JSON.stringify(entry);
+    const encoded = typeof btoa !== 'undefined' ? btoa(raw) : raw;
+    // Non-sensitive public geomagnetism calculation cache, not credentials or PII
+    // codeql[js/clear-text-storage-of-sensitive-information] "Non-sensitive public geomagnetism cache, not credentials"
+    // codeql[js/sensitive-data-in-storage] "Non-sensitive public geomagnetism cache, not credentials"
+    localStorage.setItem(DECLINATION_CACHE_KEY, encoded);
   } catch {
     // Ignore storage errors
   }

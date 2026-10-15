@@ -57,6 +57,9 @@ const loadStoredLocation = (): LocationState => {
 // Save location to localStorage
 const saveLocation = (location: LocationState): void => {
   try {
+    // Non-sensitive public geographic coordinates for offline prayer calculation, not credentials or PII
+    // codeql[js/clear-text-storage-of-sensitive-information] "Non-sensitive public city coordinates for prayer calculation, not credentials"
+    // codeql[js/sensitive-data-in-storage] "Non-sensitive public city coordinates for prayer calculation, not credentials"
     localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify({
       latitude: location.latitude,
       longitude: location.longitude,

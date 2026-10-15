@@ -433,6 +433,9 @@ export class IslamicRamadanAPI {
         method
       };
 
+      // Non-sensitive public Ramadan fasting calendar schedule cache (not user credentials)
+      // codeql[js/clear-text-storage-of-sensitive-information] "Non-sensitive public Ramadan fasting calendar cache, not credentials"
+      // codeql[js/sensitive-data-in-storage] "Non-sensitive public Ramadan fasting calendar cache, not credentials"
       sessionStorage.setItem(this.CACHE_KEY, JSON.stringify(cachedData));
     } catch (error) {
       console.error('Error saving Ramadan data to cache:', error);

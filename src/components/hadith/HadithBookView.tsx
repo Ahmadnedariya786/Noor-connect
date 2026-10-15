@@ -35,7 +35,7 @@ export function HadithBookView() {
           setRemoteCollectionData(metadata);
         }
       } catch (error) {
-        console.warn(`Failed to load metadata for ${collection}:`, error);
+        console.warn('Failed to load metadata for %s:', collection, error);
         if (isMounted) {
           setRemoteCollectionData(null);
         }

@@ -146,7 +146,7 @@ export function HadithBookContent() {
           setRemoteCollectionData(metadata);
         }
       } catch (error) {
-        console.warn(`Failed to load metadata for ${collection}:`, error);
+        console.warn('Failed to load metadata for %s:', collection, error);
         if (isMounted) {
           setRemoteCollectionData(null);
         }
@@ -177,7 +177,7 @@ export function HadithBookContent() {
           setHadithData(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.warn(`Failed to load hadith for ${collection}/${book}:`, error);
+        console.warn('Failed to load hadith for %s/%s:', collection, book, error);
         if (isMounted) {
           setHadithData([]);
         }

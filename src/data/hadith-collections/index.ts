@@ -70,7 +70,7 @@ async function fetchPublicJson<T>(url: string): Promise<T | null> {
       return await loadGzippedJson<T>(`${url}.gz`);
     } catch (err) {
       // No .gz variant (web deployment, legacy build) — fall through to plain JSON.
-      console.warn(`Gzip variant missing for ${url}:`, err);
+      console.warn('Gzip variant missing for %s:', url, err);
     }
   }
   try {
@@ -78,7 +78,7 @@ async function fetchPublicJson<T>(url: string): Promise<T | null> {
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch (err) {
-    console.warn(`Failed to fetch ${url}:`, err);
+    console.warn('Failed to fetch %s:', url, err);
     return null;
   }
 }

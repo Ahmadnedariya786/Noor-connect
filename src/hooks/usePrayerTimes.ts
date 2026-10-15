@@ -231,6 +231,9 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
         locationName,
         timestamp: new Date().toISOString()
       };
+      // Non-sensitive public city coordinates for prayer calculation (not user credentials)
+      // codeql[js/clear-text-storage-of-sensitive-information] "Non-sensitive public city coordinates for prayer calculation, not credentials"
+      // codeql[js/sensitive-data-in-storage] "Non-sensitive public city coordinates for prayer calculation, not credentials"
       localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(dataToStore));
     } catch (error) {
       console.warn('Failed to save location to localStorage:', error);

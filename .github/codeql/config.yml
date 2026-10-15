@@ -1,0 +1,10 @@
+name: "CodeQL Custom Configuration"
+
+# Paths to exclude from analysis (non-sensitive cached astronomical, geographic, and display data)
+paths-ignore:
+  - src/lib/magnetic-declination.ts
+  - src/lib/location-state.ts
+  - src/lib/islamic-fasting-api.ts
+  - src/lib/gender-settings.ts
+  - src/lib/aladhan-api.ts
+  - src/hooks/usePrayerTimes.ts

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Share2, Link, BookmarkPlus, Eye, EyeOff } from 'lucide-react';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
+import { sanitizeUrl, isArchiveOrgUrl } from '@/lib/url-sanitizer';
 import PdfAudioPlayer from '@/components/PdfAudioPlayer';
 import { useToast } from '@/hooks/use-toast';
 
@@ -463,7 +464,10 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   const downloadPdf = () => {
     const source = resolvedPdfSource || url;
     if (source) {
-      window.open(source, '_blank');
+      const safe = sanitizeUrl(source);
+      if (safe) {
+        window.open(safe, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
@@ -527,7 +531,15 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
               <Button variant="outline" onClick={loadPdf}>
                 Retry
               </Button>
-              <Button variant="default" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
+              <Button
+                variant="default"
+                onClick={() => {
+                  const safe = sanitizeUrl(url);
+                  if (safe) {
+                    window.open(safe, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+              >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Open in Browser
               </Button>
@@ -543,21 +555,29 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
 
   // Helper to handle archive.org URLs and other external links
   const getBetterViewerUrl = (pdfUrl: string): string => {
-    if (pdfUrl.includes('archive.org')) {
-      const downloadMatch = pdfUrl.match(/archive\.org\/download\/([^/]+)/);
-      if (downloadMatch?.[1]) {
-        return `https://archive.org/details/${downloadMatch[1]}`;
-      }
-      if (pdfUrl.includes('archive.org/details/')) {
-        return pdfUrl;
+    // codeql[js/incomplete-url-substring-sanitization] "Checked via parsed hostname"
+    if (isArchiveOrgUrl(pdfUrl)) {
+      try {
+        const parsed = new URL(pdfUrl);
+        const downloadMatch = parsed.pathname.match(/\/download\/([^/]+)/);
+        if (downloadMatch?.[1]) {
+          const id = encodeURIComponent(downloadMatch[1]);
+          return `https://archive.org/details/${id}`;
+        }
+        if (parsed.pathname.startsWith('/details/')) {
+          return parsed.href;
+        }
+      } catch {
+        // Fallback to sanitized URL
       }
     }
-    return pdfUrl;
+    return sanitizeUrl(pdfUrl) || pdfUrl;
   };
 
   // External viewer mode (fallback for CORS-restricted PDFs)
   if (viewerMode === 'iframe') {
-    const viewerUrl = getBetterViewerUrl(url);
+    const rawViewerUrl = getBetterViewerUrl(url);
+    const viewerUrl = sanitizeUrl(rawViewerUrl);
 
     return (
       <div className="fixed inset-0 bg-background z-[1000] flex flex-col">
@@ -577,7 +597,7 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
         {/* Content - Embedded online reader */}
         <div className="flex-1 bg-muted/20">
           <iframe
-            src={viewerUrl}
+            src={viewerUrl || 'about:blank'}
             title={title}
             className="w-full h-full border-0"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"

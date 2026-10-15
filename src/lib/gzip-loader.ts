@@ -99,7 +99,7 @@ export async function loadGzippedJson<T>(url: string): Promise<T> {
     } catch (error) {
       // Worker path failed (crash, timeout, unsupported) — fall through to the
       // inline implementation so loading still works everywhere.
-      console.warn(`Worker parse failed for ${url}, falling back inline:`, error);
+      console.warn('Worker parse failed for %s, falling back inline:', url, error);
     }
   }
 

@@ -35,8 +35,9 @@ registerRoute(
   })
 );
 
+// codeql[js/incomplete-url-substring-sanitization] "Checked via exact host equality and domain suffix"
 registerRoute(
-  ({ request, url }) => request.method === 'GET' && (url.pathname.startsWith('/api/') || url.hostname.includes('aladhan.com')),
+  ({ request, url }) => request.method === 'GET' && (url.pathname.startsWith('/api/') || url.hostname === 'aladhan.com' || url.hostname.endsWith('.aladhan.com')),
   new NetworkFirst({
     cacheName: API_CACHE_NAME,
     networkTimeoutSeconds: 5,
@@ -177,7 +178,21 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  const urlToOpen = event.notification.data?.url || '/';
+  const rawUrl = event.notification.data?.url;
+  let urlToOpen = '/';
+  if (typeof rawUrl === 'string' && rawUrl.startsWith('/') && !rawUrl.startsWith('//')) {
+    urlToOpen = rawUrl;
+  } else if (typeof rawUrl === 'string') {
+    try {
+      const parsed = new URL(rawUrl, self.location.origin);
+      if (parsed.origin === self.location.origin) {
+        urlToOpen = parsed.pathname + parsed.search + parsed.hash;
+      }
+    } catch {
+      // Invalid URL fallback to safe root
+      urlToOpen = '/';
+    }
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })

@@ -361,6 +361,9 @@ export class AladhanAPI {
    */
   static saveMonthlyData(data: AladhanMonthlyData): void {
     try {
+      // Non-sensitive public astronomical prayer times monthly calculation cache (not user credentials)
+      // codeql[js/clear-text-storage-of-sensitive-information] "Non-sensitive public monthly prayer times calculation cache, not user credentials"
+      // codeql[js/sensitive-data-in-storage] "Non-sensitive public monthly prayer times calculation cache, not user credentials"
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
       console.error('Failed to save monthly data:', error);
