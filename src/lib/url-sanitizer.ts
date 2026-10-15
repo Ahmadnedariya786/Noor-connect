@@ -37,6 +37,7 @@ export function sanitizeUrl(rawUrl: string): string {
   const cleaned = trimmed
     .replace(/javascript:/gi, '')
     .replace(/vbscript:/gi, '')
+    .replace(/data:/gi, '')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
