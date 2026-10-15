@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { showExactAlarmRationale } from '@/components/ExactAlarmPermissionDialog';
 
 export interface NativeAdhanAlarm {
   id: number;
@@ -43,24 +44,42 @@ class NativeAdhanBridge {
   }
 
   /**
-   * Fire ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent for Noor Connect
-   * Opens the exact system "Alarms & reminders" screen with the app focused.
+   * Show the in-app rationale modal, then (if the user taps Allow)
+   * fire ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent for Noor Connect
+   * which opens the system "Alarms & reminders" screen with the app focused.
    */
   async requestExactAlarmPermission(): Promise<boolean> {
+    if (!this.isNative()) return false;
+
+    // Show the in-app explanation FIRST; only proceed if user taps Allow.
+    const userAllowed = await showExactAlarmRationale();
+    if (!userAllowed) return false;
+
+    return this.openExactAlarmSettings();
+  }
+
+  /**
+   * Directly open the system "Alarms & reminders" settings WITHOUT showing the
+   * rationale modal first. Use this only when the rationale has already been
+   * shown via showExactAlarmRationale() and the user has tapped Allow.
+   */
+  async openExactAlarmSettings(): Promise<boolean> {
     if (!this.isNative()) return false;
 
     try {
       const res = await NativeAdhanPlugin.requestExactAlarmPermission();
       return res?.opened ?? false;
     } catch (error) {
-      console.warn('Failed to request exact alarm permission:', error);
+      console.warn('Failed to open exact alarm settings:', error);
       return false;
     }
   }
 
   /**
    * Check and ensure exact alarm permission politely.
-   * If not granted, opens system settings once per session/context to prevent nag loops.
+   * Always shows the in-app rationale modal first (via requestExactAlarmPermission),
+   * then opens system settings only if the user taps Allow.
+   * Uses a per-session flag to avoid nagging loops.
    */
   async ensureExactAlarmPermission(forcePrompt: boolean = false): Promise<boolean> {
     if (!this.isNative()) return true;
@@ -69,6 +88,7 @@ class NativeAdhanBridge {
     if (canSchedule) return true;
 
     if (forcePrompt) {
+      // requestExactAlarmPermission already shows rationale first
       await this.requestExactAlarmPermission();
       return false;
     }
@@ -81,6 +101,7 @@ class NativeAdhanBridge {
     const alreadyPrompted = sessionStorage.getItem(EXACT_ALARM_PROMPT_KEY);
     if (!alreadyPrompted) {
       sessionStorage.setItem(EXACT_ALARM_PROMPT_KEY, 'true');
+      // requestExactAlarmPermission already shows rationale first
       await this.requestExactAlarmPermission();
     }
 
@@ -147,4 +168,12 @@ export async function checkAndRequestExactAlarms(force: boolean = false): Promis
  */
 export async function isExactAlarmPermissionGranted(): Promise<boolean> {
   return nativeAdhan.canScheduleExactAlarms();
+}
+
+/**
+ * Open the system "Alarms & reminders" settings directly (no rationale modal).
+ * Only call this after the user has already confirmed via showExactAlarmRationale().
+ */
+export async function openExactAlarmSettings(): Promise<boolean> {
+  return nativeAdhan.openExactAlarmSettings();
 }

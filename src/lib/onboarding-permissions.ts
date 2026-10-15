@@ -1,27 +1,56 @@
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import BatteryOptimization from './battery-optimization';
-import { nativeAdhan } from './native-adhan';
+import { nativeAdhan, openExactAlarmSettings } from './native-adhan';
+import { toast } from '@/hooks/use-toast';
 
+export const ONBOARDING_STEP_A_KEY = 'onboarding_step_a_done';
+export const ONBOARDING_STEP_B_KEY = 'onboarding_step_b_done';
 export const ONBOARDING_PERMS_V2_KEY = 'onboarding_perms_v2_done';
 
 let isSequenceRunning = false;
 
+interface WaitForUserReturnOptions {
+  gracePeriodMs?: number;
+  timeoutMs?: number;
+}
+
 /**
  * Wait until the user returns to the app from an external system dialog or activity.
- * Listens to Capacitor resume / appStateChange, DOM visibilitychange, and window focus.
+ * 1. Attaches listeners BEFORE the intent is fired.
+ * 2. Enforces a 1000ms grace period so Android activity transition flaps (focus / visibilitychange) are ignored.
+ * 3. Enforces a ~75-second safety timeout fallback so a missed OEM lifecycle event never hangs the app forever.
  */
-function waitForUserReturn(): Promise<void> {
+function waitForUserReturn(options?: WaitForUserReturnOptions): Promise<void> {
+  const gracePeriodMs = options?.gracePeriodMs ?? 1000;
+  const timeoutMs = options?.timeoutMs ?? 75000;
+  const startTime = Date.now();
+
   return new Promise<void>((resolve) => {
     let resolved = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let cleanup: (() => void) | null = null;
 
     const onReturn = () => {
       if (resolved) return;
+      const elapsed = Date.now() - startTime;
+      if (elapsed < gracePeriodMs) {
+        // Ignore activity transition flaps during initial grace period
+        return;
+      }
       resolved = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       if (cleanup) cleanup();
       resolve();
     };
+
+    // Safety timeout fallback (75s) so a dropped OEM event never hangs the sequence forever
+    timeoutId = setTimeout(() => {
+      onReturn();
+    }, timeoutMs);
 
     // 1. Capacitor App lifecycle listeners
     const resumePromise = CapacitorApp.addListener('resume', () => {
@@ -47,11 +76,14 @@ function waitForUserReturn(): Promise<void> {
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     // 3. Window focus
-    window.addEventListener('focus', onReturn);
+    const onFocus = () => {
+      onReturn();
+    };
+    window.addEventListener('focus', onFocus);
 
     cleanup = () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onReturn);
+      window.removeEventListener('focus', onFocus);
       resumePromise.then((h) => h?.remove?.()).catch(() => {
         // Safe listener cleanup fallback
       });
@@ -63,17 +95,85 @@ function waitForUserReturn(): Promise<void> {
 }
 
 /**
- * ONE explicit first-launch onboarding sequence:
- * STEP A: OEM/system dialog "Let app always run in background?" (Allow/Deny) appears FIRST.
- * STEP B: Only AFTER user returns from STEP A, the app opens system "Alarms & reminders" settings.
- * Persists localStorage flag 'onboarding_perms_v2_done' so it runs only once and never loops.
+ * Executes STEP B only:
+ * 1. Attaches return listeners BEFORE firing the intent.
+ * 2. Opens the system "Alarms & reminders" settings page for Noor Connect.
+ * 3. Waits for the user to return from settings (with 1s grace period and 75s timeout).
+ * 4. Shows a small toast hint:
+ *    - Success hint if exact-alarm permission is now granted.
+ *    - Gentle hint ("you can enable this later in Settings") if not.
+ * 5. Sets onboarding_step_b_done and onboarding_perms_v2_done flags so it never repeats.
  */
-export async function runFirstLaunchPermissionOnboarding(): Promise<void> {
+export async function executeStepB(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) {
+    return true;
+  }
+
+  let granted = false;
+  try {
+    // Attach return listener BEFORE triggering settings intent
+    const returnPromise = waitForUserReturn({ gracePeriodMs: 1000, timeoutMs: 75000 });
+
+    // Directly open system "Alarms & reminders" settings screen
+    await openExactAlarmSettings();
+
+    // Wait until the user returns from settings (or 75s timeout fallback)
+    await returnPromise;
+
+    // Brief delay to allow Android activity transition and view focus to settle
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Verify whether exact alarm permission is now granted
+    granted = await nativeAdhan.canScheduleExactAlarms();
+
+    if (granted) {
+      toast({
+        title: 'Alarms & Reminders Enabled',
+        description: 'Exact prayer alarms are now configured to alert on time.',
+      });
+    } else {
+      toast({
+        title: 'Alarms Permission Not Enabled',
+        description: 'You can enable Alarms & reminders later in Settings > Privacy & Permissions.',
+      });
+    }
+  } catch (err) {
+    // Handled non-fatal error executing Step B
+    console.warn('Step B (exact alarms settings) error:', err);
+  } finally {
+    localStorage.setItem(ONBOARDING_STEP_B_KEY, 'true');
+    localStorage.setItem(ONBOARDING_PERMS_V2_KEY, 'true');
+  }
+
+  return granted;
+}
+
+/**
+ * Coordinated first-launch permission onboarding sequence:
+ * 1. FIRST LAUNCH ONLY, right after splash hands off to home:
+ *    OEM/system dialog "Let app always run in background?" (Allow/Deny) appears FIRST (Step A).
+ * 2. AFTER user answers that dialog and returns to the app:
+ *    The app THEN opens the system "Alarms & reminders" settings page for this app (Step B).
+ * 3. AFTER the user returns from that settings page:
+ *    Show a small toast - success hint if granted, or gentle reminder if not.
+ * 4. The sequence must NEVER loop or repeat on later launches (two-flag localStorage persistence),
+ *    and must never run on web.
+ */
+export async function runFirstLaunchPermissionOnboarding(force = false): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
     return;
   }
 
-  if (localStorage.getItem(ONBOARDING_PERMS_V2_KEY) === 'true') {
+  const stepADone = localStorage.getItem(ONBOARDING_STEP_A_KEY) === 'true';
+  const stepBDone = localStorage.getItem(ONBOARDING_STEP_B_KEY) === 'true';
+
+  // If already finished and not forced, return immediately
+  if (!force && stepADone && stepBDone) {
+    return;
+  }
+
+  // Also respect legacy flag if both steps aren't explicitly tracked
+  if (!force && !stepADone && !stepBDone && localStorage.getItem(ONBOARDING_PERMS_V2_KEY) === 'true') {
     return;
   }
 
@@ -83,42 +183,44 @@ export async function runFirstLaunchPermissionOnboarding(): Promise<void> {
   isSequenceRunning = true;
 
   try {
-    // Persist completion flag immediately to guarantee it never loops or prompts repeatedly
-    localStorage.setItem(ONBOARDING_PERMS_V2_KEY, 'true');
+    // ── STEP A: OEM Background / Battery Optimization Dialog ──
+    if (force || !stepADone) {
+      // Mark Step A done immediately before intent so it never repeats
+      localStorage.setItem(ONBOARDING_STEP_A_KEY, 'true');
 
-    // STEP A: OEM dialog "Let app always run in background?" (Allow/Deny) FIRST
-    try {
-      const status = await BatteryOptimization.isIgnoringBatteryOptimizations().catch(() => {
-        // Caught query failure: assume not yet whitelisted to attempt prompt
-        return { isIgnoring: false };
-      });
+      try {
+        const status = await BatteryOptimization.isIgnoringBatteryOptimizations().catch(() => {
+          // Fallback query failure: assume not yet whitelisted
+          return { isIgnoring: false };
+        });
 
-      if (!status?.isIgnoring) {
-        // Prepare resume/visibility listener BEFORE triggering intent to avoid race conditions
-        const userReturnPromise = waitForUserReturn();
+        if (!status?.isIgnoring) {
+          // Attach return listener BEFORE triggering intent to avoid race conditions
+          const returnPromise = waitForUserReturn({ gracePeriodMs: 1000, timeoutMs: 75000 });
 
-        await BatteryOptimization.requestIgnoreBatteryOptimizations();
+          await BatteryOptimization.requestIgnoreBatteryOptimizations();
 
-        // Wait until user answers STEP A and returns to app
-        await userReturnPromise;
+          // Wait until user answers Step A and returns to app
+          await returnPromise;
 
-        // Brief delay to allow Android activity transition and view focus to settle
-        await new Promise((resolve) => setTimeout(resolve, 600));
+          // Brief delay to allow Android activity transition and view focus to settle
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        }
+      } catch (stepAErr) {
+        // Step A unsupported on this device/ROM; log and continue to Step B
+        console.warn('Step A (battery optimization) unsupported or failed:', stepAErr);
       }
-    } catch (stepAErr) {
-      // Step A unsupported on this device; catch and proceed straight to Step B
-      console.warn('Step A (battery optimization) unsupported or failed:', stepAErr);
     }
 
-    // STEP B: Only AFTER user answers STEP A, check & open system "Alarms & reminders" settings
-    try {
+    // ── STEP B: Exact Alarm Settings ──
+    if (force || !stepBDone) {
       const canSchedule = await nativeAdhan.canScheduleExactAlarms();
       if (!canSchedule) {
-        await nativeAdhan.requestExactAlarmPermission();
+        await executeStepB();
+      } else {
+        localStorage.setItem(ONBOARDING_STEP_B_KEY, 'true');
+        localStorage.setItem(ONBOARDING_PERMS_V2_KEY, 'true');
       }
-    } catch (stepBErr) {
-      // Caught error requesting exact alarm permission; proceed safely
-      console.warn('Step B (exact alarm settings) failed:', stepBErr);
     }
   } catch (err) {
     // Global onboarding sequence error guard
@@ -126,4 +228,68 @@ export async function runFirstLaunchPermissionOnboarding(): Promise<void> {
   } finally {
     isSequenceRunning = false;
   }
+}
+
+/**
+ * On ANY later resume or next launch, if Step A is done but Step B is not done
+ * and the exact-alarm permission is still missing, run STEP B then.
+ * This guarantees STEP B happens even if the return event was missed.
+ */
+export async function checkPendingOnboardingStepB(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    return;
+  }
+  if (isSequenceRunning) {
+    return;
+  }
+
+  const stepADone = localStorage.getItem(ONBOARDING_STEP_A_KEY) === 'true';
+  const stepBDone = localStorage.getItem(ONBOARDING_STEP_B_KEY) === 'true';
+
+  if (stepADone && !stepBDone) {
+    try {
+      const canSchedule = await nativeAdhan.canScheduleExactAlarms();
+      if (!canSchedule) {
+        isSequenceRunning = true;
+        try {
+          await executeStepB();
+        } finally {
+          isSequenceRunning = false;
+        }
+      } else {
+        localStorage.setItem(ONBOARDING_STEP_B_KEY, 'true');
+        localStorage.setItem(ONBOARDING_PERMS_V2_KEY, 'true');
+      }
+    } catch (err) {
+      // Handled error checking pending Step B
+      console.warn('Error during pending Step B check:', err);
+    }
+  }
+}
+
+/**
+ * Debug trigger for testing:
+ * Clears onboarding flags and immediately runs the full sequence (native only).
+ */
+export async function rerunPermissionOnboarding(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    return;
+  }
+  localStorage.removeItem(ONBOARDING_STEP_A_KEY);
+  localStorage.removeItem(ONBOARDING_STEP_B_KEY);
+  localStorage.removeItem(ONBOARDING_PERMS_V2_KEY);
+  isSequenceRunning = false;
+  await runFirstLaunchPermissionOnboarding(true);
+}
+
+// Auto-attach lifecycle listener for Step B self-healing recovery on native resume
+if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+  CapacitorApp.addListener('resume', () => {
+    checkPendingOnboardingStepB().catch((err) => {
+      // Handled background resume Step B recovery error
+      console.warn('Resume Step B check failed:', err);
+    });
+  }).catch(() => {
+    // Handled platform where CapacitorApp listener registration is unavailable
+  });
 }

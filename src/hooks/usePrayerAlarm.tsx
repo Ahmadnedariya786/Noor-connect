@@ -63,13 +63,21 @@ export const usePrayerAlarm = () => {
   }, []);
 
   const enableAlarm = useCallback(async () => {
-    // Step 1: Check if SCHEDULE_EXACT_ALARM permission is granted on native.
-    // If NOT, immediately redirect user to system "Alarms & reminders" settings.
+    // Step 1: On Android native, show the in-app rationale modal FIRST.
+    // If the user taps "Allow", nativeAdhan opens "Alarms & reminders" settings.
+    // Only continue once we know the permission is (or was already) granted.
     if (Capacitor.isNativePlatform()) {
       const canSchedule = await nativeAdhan.canScheduleExactAlarms();
       if (!canSchedule) {
         await nativeAdhan.ensureExactAlarmPermission(true);
-        return;
+        // After the user returns from settings, re-check — inform them of outcome.
+        const nowGranted = await nativeAdhan.canScheduleExactAlarms();
+        if (!nowGranted) {
+          toast('Permission needed', {
+            description: 'Enable "Alarms & reminders" for Noor Connect in Settings to receive Adhan alerts.',
+          });
+          return;
+        }
       }
     }
 

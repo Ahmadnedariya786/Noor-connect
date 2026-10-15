@@ -76,7 +76,16 @@ export function AdhanControl({ className }: AdhanControlProps) {
   const toggleAdhan = async () => {
     const newEnabled = !config.enabled;
     if (newEnabled && isNativePlatform) {
-      await nativeAdhan.ensureExactAlarmPermission(true);
+      // Show in-app rationale modal first; only continue if user allowed AND permission is granted.
+      const canSchedule = await nativeAdhan.canScheduleExactAlarms();
+      if (!canSchedule) {
+        await nativeAdhan.ensureExactAlarmPermission(true);
+        const nowGranted = await nativeAdhan.canScheduleExactAlarms();
+        if (!nowGranted) {
+          // User dismissed or didn't grant — do not enable adhan silently
+          return;
+        }
+      }
     }
     const newConfig = { ...config, enabled: newEnabled };
     adhanService.saveAdhanConfig(newConfig);

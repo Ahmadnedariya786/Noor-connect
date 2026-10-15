@@ -29,6 +29,7 @@ import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
 import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
 import { runFirstLaunchPermissionOnboarding } from "@/lib/onboarding-permissions";
+import { ExactAlarmPermissionDialog } from "@/components/ExactAlarmPermissionDialog";
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -526,6 +527,24 @@ function AppShell() {
 
     // ── Defensive Resume Handler (idempotent, guarded) ──
     const handleResume = () => {
+      // Check pending onboarding Step B (if Step A completed but Step B was interrupted/missed)
+      try {
+        if (Capacitor.isNativePlatform()) {
+          import('@/lib/onboarding-permissions').then(({ checkPendingOnboardingStepB }) => {
+            checkPendingOnboardingStepB?.().catch((err) => {
+              // Handled resume pending onboarding check error
+              console.warn('Resume onboarding check error:', err);
+            });
+          }).catch((err) => {
+            // Handled onboarding-permissions import error
+            console.warn('Resume onboarding import failed:', err);
+          });
+        }
+      } catch (e) {
+        // Handled resume handler exception
+        console.warn('Resume: onboarding step B check error', e);
+      }
+
       // Re-check exact alarms
       try {
         if (Capacitor.isNativePlatform()) {
@@ -551,7 +570,9 @@ function AppShell() {
           const { latitude, longitude, locationName } = JSON.parse(loc);
           import('@/lib/widget-service').then(({ WidgetService }) => {
             WidgetService.startAutoUpdate?.(latitude, longitude, locationName);
-          }).catch(() => {});
+          }).catch(() => {
+            // Handled background widget resume update error
+          });
         }
       } catch (e) {
         console.warn('Resume: widget sync error', e);
@@ -603,6 +624,8 @@ function AppShell() {
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      {/* Exact-alarm rationale modal — singleton, shown before system settings */}
+      <ExactAlarmPermissionDialog />
       <AnimatePresence>
         {showSplash && splashEnabled && (
           <SplashScreen

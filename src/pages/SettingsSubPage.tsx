@@ -28,7 +28,10 @@ import {
   Activity,
   Download,
   RefreshCw,
+  RotateCcw,
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { rerunPermissionOnboarding } from '@/lib/onboarding-permissions';
 import { getLastCrashes, clearCrashes, type CrashEntry } from '@/lib/crash-logger';
 import {
   checkNightlyUpdate,
@@ -1067,6 +1070,36 @@ const SettingsSubPage: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              <div className="pt-2 border-t border-border/50">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-8 text-xs rounded-xl border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/10 text-amber-500 dark:text-amber-400 font-medium flex items-center justify-center gap-1.5"
+                  onClick={async () => {
+                    if (!Capacitor.isNativePlatform()) {
+                      toast({
+                        title: 'Native Only',
+                        description: 'Permission onboarding flow is only available on Android native app.',
+                      });
+                      return;
+                    }
+                    try {
+                      toast({
+                        title: 'Resetting Onboarding',
+                        description: 'Clearing flags and restarting permission sequence...',
+                      });
+                      await rerunPermissionOnboarding();
+                    } catch (err) {
+                      // Handled manual permission onboarding rerun error
+                      console.warn('Failed to rerun permission onboarding:', err);
+                    }
+                  }}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Re-run permission onboarding
+                </Button>
+              </div>
             </Card>
 
             {showChangelog && <Changelog onClose={() => setShowChangelog(false)} />}
