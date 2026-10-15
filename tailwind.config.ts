@@ -60,7 +60,8 @@ theme: {
 				}
 			},
 			fontFamily: {
-				arabic: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+				arabic: ['"Amiri"', '"Scheherazade New"', '"Traditional Arabic"', 'ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+				amiri: ['"Amiri"', '"Scheherazade New"', '"Traditional Arabic"', 'serif'],
 				sans: [
 					'ui-sans-serif',
 					'system-ui',

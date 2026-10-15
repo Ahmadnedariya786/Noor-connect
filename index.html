@@ -28,22 +28,26 @@
   <meta name="application-name" content="Noor Connect" />
   <meta name="msapplication-TileColor" content="#0E0B1E" />
   <meta name="theme-color" content="#0E0B1E" />
-  <!-- Content Security Policy: Self-contained for F-Droid -->
+  <!-- Content Security Policy: Self-contained for F-Droid with Google Fonts for Arabic Typography -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; script-src-attr 'none'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https: blob: http://localhost; connect-src 'self' https: wss: http: blob:; media-src 'self' https: blob: http:; frame-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+    content="default-src 'self'; script-src 'self'; script-src-attr 'none'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: blob: http://localhost; connect-src 'self' https: wss: http: blob:; media-src 'self' https: blob: http:; frame-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Noor Connect - Your Islamic Companion</title>
   <meta name="description"
     content="Noor Connect - Prayer times, Qur'an, Qibla, Tasbeeh, and Daily Hadith. Your complete Islamic companion app.">
   <meta name="author" content="Noor Connect" />
 
-  <!-- Localized SEO and performance - No external CDNs for F-Droid compliance -->
+  <!-- Preconnect and Load Google Fonts: Amiri for Authentic Arabic Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
   <link rel="dns-prefetch" href="https://api.aladhan.com">
 
-  <!-- System Font Stack - No external font dependencies -->
+  <!-- Font Stacks -->
   <style>
-    /* Using CSS custom property for system font stack - no web font downloads */
     :root {
       --font-noor-main: 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', sans-serif;
+      --font-arabic-amiri: 'Amiri', 'Traditional Arabic', 'Scheherazade New', 'ui-serif', Georgia, serif;
     }
   </style>
 
