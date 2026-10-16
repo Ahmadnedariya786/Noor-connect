@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Moon, Bell } from 'lucide-react';
 import { type ClockProps } from '@/types/clock';
 import { cn } from '@/lib/utils';
+import { getPrayerDisplayName } from '@/lib/prayer-utils';
 
 function parseTimeTo12hAngle(timeStr?: string, dateObj?: Date | null): number {
   if (dateObj instanceof Date && !isNaN(dateObj.getTime())) {
@@ -275,7 +276,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             letterSpacing="0.08em"
             fill="#FDE68A"
           >
-            {nextPrayer.name.toUpperCase()}
+            {getPrayerDisplayName(nextPrayer.name, now).toUpperCase()}
           </text>
           <text
             x={center}

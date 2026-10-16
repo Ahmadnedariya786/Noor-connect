@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPrayerDisplayName } from "@/lib/prayer-utils";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import {
@@ -121,40 +122,47 @@ function NextPrayerCountdownChip({ targetTime }: { targetTime?: Date | null }) {
 }
 
 function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
-  const [timeRemaining, setTimeRemaining] = useState("00:00:00");
+  const formatRemaining = React.useCallback((target?: Date | null): string => {
+    if (!target) return "--:--:--";
+    const diff = target.getTime() - Date.now();
+    if (diff <= 0) return "00:00:00";
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    return hours > 0
+      ? `${hours}h ${minutes}m ${seconds}s`
+      : `${minutes}m ${seconds}s`;
+  }, []);
+
+  const [timeRemaining, setTimeRemaining] = useState<string>(() => formatRemaining(targetTime));
 
   useEffect(() => {
     if (!targetTime) {
-      setTimeRemaining("00:00:00");
+      setTimeRemaining("--:--:--");
       return;
     }
 
     const updateDisplay = () => {
-      const now = new Date();
-      const diff = targetTime.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setTimeRemaining(prev => (prev === "00:00:00" ? prev : "00:00:00"));
-        return;
-      }
-
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      const countdownStr = hours > 0
-        ? `${hours}h ${minutes}m ${seconds}s`
-        : `${minutes}m ${seconds}s`;
-
-      setTimeRemaining(prev => (prev === countdownStr ? prev : countdownStr));
+      const formatted = formatRemaining(targetTime);
+      setTimeRemaining(prev => (prev === formatted ? prev : formatted));
     };
 
     updateDisplay();
     const timerId = globalTimerManager.addCallback(updateDisplay, 1000, 'premium-countdown');
     return () => globalTimerManager.removeCallback(timerId);
-  }, [targetTime]);
+  }, [targetTime, formatRemaining]);
 
-  return <span className="text-sm font-black font-mono tabular-nums" style={{ color: '#C9860A' }}>{timeRemaining}</span>;
+  return (
+    <span
+      key="countdown-value-node"
+      className="text-sm font-black font-mono tabular-nums inline-block select-none"
+      style={{ color: '#C9860A' }}
+    >
+      {timeRemaining}
+    </span>
+  );
 }
 
 function PremiumDashboardInner({
@@ -449,6 +457,7 @@ function PremiumDashboardInner({
 
         {/* ── Next Prayer Card (Azimuth dark style) ── */}
         <m.div
+          key="next-prayer-card"
           {...motionProps({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 } })}
           className="relative overflow-hidden rounded-[24px]"
           style={{ background: 'linear-gradient(145deg, #1A1E2E, #1E2438)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
@@ -464,11 +473,11 @@ function PremiumDashboardInner({
             </div>
             <div className="flex items-end justify-between mb-4">
               <p className="text-3xl font-bold text-white" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
-                {nextPrayer.name}
+                {getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime)}
               </p>
-              <div className="text-right">
+              <div className="text-right" key="next-prayer-countdown-container">
                 <p className="text-xs uppercase tracking-widest text-white/40 mb-0.5">In</p>
-                <LiveCountdown targetTime={nextPrayer.targetTime} />
+                <LiveCountdown key="next-prayer-live-countdown" targetTime={nextPrayer.targetTime} />
               </div>
             </div>
             <div className="flex justify-between items-center mb-2">
@@ -592,7 +601,7 @@ function PremiumDashboardInner({
                                   {/* Prayer Name + Checkmark for Most Recent Past */}
                                   <div className="flex items-center gap-1.5">
                                     <p className="font-bold text-sm leading-tight text-foreground truncate">
-                                      {prayer.name}
+                                      {getPrayerDisplayName(prayer.name, prayer.date)}
                                     </p>
                                     {isMostRecentPast && (
                                       <Check className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 stroke-[2.5]" />

@@ -281,8 +281,11 @@ async function checkIslamicEvents() {
 
 // Send prayer time notification
 async function sendPrayerNotification(prayer, config) {
-  const title = `${prayer.charAt(0).toUpperCase() + prayer.slice(1)} Adhan`;
-  const body = `It's time for ${prayer} prayer. Click to play Adhan.`;
+  const isFriday = new Date().getDay() === 5;
+  const isDhuhr = typeof prayer === 'string' && prayer.toLowerCase() === 'dhuhr';
+  const prayerDisplayName = isFriday && isDhuhr ? 'Jummah' : (prayer.charAt(0).toUpperCase() + prayer.slice(1));
+  const title = `${prayerDisplayName} Adhan`;
+  const body = `It's time for ${prayerDisplayName} prayer. Click to play Adhan.`;
 
   await showNotification({
     title,

@@ -35,6 +35,13 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GeocodingService } from "@/lib/geocoding";
 import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
+import { getPrayerDisplayName } from "@/lib/prayer-utils";
+
+// Persistent module-level cache so prayer times remain mounted across route transitions and clock style switches
+let cachedDashboardPrayers: PrayerTime[] = [];
+let cachedNextPrayerName: string = "";
+let cachedNextPrayerTime: string = "";
+let cachedTargetTime: Date | null = null;
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -43,17 +50,17 @@ export default function Dashboard() {
   const { timeFormat } = useSettings();
   const [minuteTick, setMinuteTick] = useState(0);
   const [greeting, setGreeting] = useState("");
-  const [prayers, setPrayers] = useState<PrayerTime[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [prayers, setPrayers] = useState<PrayerTime[]>(() => cachedDashboardPrayers);
+  const [loading, setLoading] = useState(() => cachedDashboardPrayers.length === 0);
   // Use Islamic calendar hook for accurate Hijri dates
   const { hijriDate, isEidAlFitr, isEidAlAdha } = useIslamicCalendar();
   const isEid = isEidAlFitr || isEidAlAdha;
-  const [nextPrayerName, setNextPrayerName] = useState<string>("");
-  const [nextPrayerTime, setNextPrayerTime] = useState<string>("");
+  const [nextPrayerName, setNextPrayerName] = useState<string>(() => cachedNextPrayerName);
+  const [nextPrayerTime, setNextPrayerTime] = useState<string>(() => cachedNextPrayerTime);
   const [loadingAPI, setLoadingAPI] = useState(false);
   const [timezone, setTimezone] = useState<string>("");
-  const [initialLoad, setInitialLoad] = useState(true);
-  const [targetTime, setTargetTime] = useState<Date | null>(null);
+  const [initialLoad, setInitialLoad] = useState(() => cachedDashboardPrayers.length === 0);
+  const [targetTime, setTargetTime] = useState<Date | null>(() => cachedTargetTime);
   const { toast } = useToast();
 
   // Memoized prayer icons
@@ -209,36 +216,49 @@ export default function Dashboard() {
         { name: "Isha", time: formatTimeFromAPI(timings.Isha), date: parseTimeToDate(timings.Isha) },
       ];
 
+      cachedDashboardPrayers = prayerList;
       setPrayers(prayerList);
 
       // Get next prayer countdown
       const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, 1, false);
       if (nextEvent) {
-        setNextPrayerName(nextEvent.name);
-        setNextPrayerTime(nextEvent.time ? formatTimeFromAPI(nextEvent.time) : "--:--");
+        const displayName = getPrayerDisplayName(nextEvent.name, nextEvent.targetDate);
+        cachedNextPrayerName = displayName;
+        setNextPrayerName(displayName);
+        const formattedTime = nextEvent.time ? formatTimeFromAPI(nextEvent.time) : "--:--";
+        cachedNextPrayerTime = formattedTime;
+        setNextPrayerTime(formattedTime);
         if (nextEvent.targetDate) {
+          cachedTargetTime = nextEvent.targetDate;
           setTargetTime(nextEvent.targetDate);
         }
       }
     } catch (error) {
       console.error('Failed to load API prayer times:', error);
       // Fallback to offline calculation
-      const { calculatePrayerTimes, formatPrayerTime } = await import('@/lib/prayer-calculator');
+      const { calculatePrayerTimes } = await import('@/lib/prayer-calculator');
       const times = calculatePrayerTimes(location.latitude, location.longitude, new Date());
 
-      setPrayers([
+      const fallbackPrayers: PrayerTime[] = [
         { name: "Fajr", time: formatTimeFromAPI(times.fajr.toTimeString().slice(0, 5)), date: times.fajr },
         { name: "Dhuhr", time: formatTimeFromAPI(times.dhuhr.toTimeString().slice(0, 5)), date: times.dhuhr },
         { name: "Asr", time: formatTimeFromAPI(times.asr.toTimeString().slice(0, 5)), date: times.asr },
         { name: "Maghrib", time: formatTimeFromAPI(times.maghrib.toTimeString().slice(0, 5)), date: times.maghrib },
         { name: "Isha", time: formatTimeFromAPI(times.isha.toTimeString().slice(0, 5)), date: times.isha },
-      ]);
+      ];
+      cachedDashboardPrayers = fallbackPrayers;
+      setPrayers(fallbackPrayers);
 
       const { getNextPrayer } = await import('@/lib/prayer-calculator');
       const nextPrayer = getNextPrayer(location.latitude, location.longitude);
       if (nextPrayer) {
-        setNextPrayerName(nextPrayer.name);
-        setNextPrayerTime(formatTimeFromAPI(nextPrayer.time.toTimeString().slice(0, 5)));
+        const displayName = getPrayerDisplayName(nextPrayer.name, nextPrayer.time);
+        cachedNextPrayerName = displayName;
+        setNextPrayerName(displayName);
+        const formattedTime = formatTimeFromAPI(nextPrayer.time.toTimeString().slice(0, 5));
+        cachedNextPrayerTime = formattedTime;
+        setNextPrayerTime(formattedTime);
+        cachedTargetTime = nextPrayer.time;
         setTargetTime(nextPrayer.time);
       }
     } finally {
@@ -350,9 +370,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
       description: result.message,
       variant: result.success ? "default" : "destructive",
     });
-  }, [toast, resolvePrayerTimes]);
-
-  const dashboardPrayers = useMemo(() => {
+  }, [toast, resolvePrayerTimes]);  const dashboardPrayers = useMemo(() => {
     void minuteTick;
     const now = new Date();
     return prayers.map(p => {
@@ -361,14 +379,8 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
       const pKey = p.name.toLowerCase() as PrayerName;
       const isCompleted = todayPrayers ? !!todayPrayers[pKey] : false;
 
-      // Check if it's Friday and handle Jummah logic
-      const isFriday = now.getDay() === 5;
-      const isAfter2PM = now.getHours() >= 14;
-      let displayName = p.name;
-
-      if (p.name === 'Dhuhr' && isFriday && !isAfter2PM) {
-        displayName = 'Jummah';
-      }
+      // Consistent Jummah on Fridays via shared display-name helper
+      const displayName = getPrayerDisplayName(p.name, prayerDate || now);
 
       return {
         name: displayName,
@@ -376,7 +388,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
         time: p.time,
         date: p.date,
         icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
-        isActive: nextPrayerName === p.name,
+        isActive: nextPrayerName === p.name || nextPrayerName === displayName,
         isUpcoming: isUpcoming,
         isCompleted,
         onCheckIn: () => handleCheckIn(pKey),
@@ -386,30 +398,41 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
 
   const previousPrayerInfo = useMemo(() => {
     if (prayers.length === 0) return { name: '', time: '--:--' };
-    const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
+    const nextIdx = prayers.findIndex(p =>
+      p.name === nextPrayerName ||
+      p.originalName === nextPrayerName ||
+      getPrayerDisplayName(p.name) === getPrayerDisplayName(nextPrayerName)
+    );
     if (nextIdx > 0) {
+      const p = prayers[nextIdx - 1];
       return {
-        name: prayers[nextIdx - 1].name,
-        time: prayers[nextIdx - 1].time,
-        date: prayers[nextIdx - 1].date,
+        name: getPrayerDisplayName(p.name, p.date),
+        time: p.time,
+        date: p.date,
       };
     }
     if (nextIdx === 0 && prayers.length > 0) {
+      const p = prayers[prayers.length - 1];
       return {
-        name: prayers[prayers.length - 1].name,
-        time: prayers[prayers.length - 1].time,
-        date: prayers[prayers.length - 1].date,
+        name: getPrayerDisplayName(p.name, p.date),
+        time: p.time,
+        date: p.date,
       };
     }
     return { name: '', time: '--:--' };
   }, [prayers, nextPrayerName]);
 
   const nextPrayerInfo = useMemo(() => {
-    const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
+    const nextIdx = prayers.findIndex(p =>
+      p.name === nextPrayerName ||
+      p.originalName === nextPrayerName ||
+      getPrayerDisplayName(p.name) === getPrayerDisplayName(nextPrayerName)
+    );
     const prevPrayer = nextIdx > 0 ? prayers[nextIdx - 1] : null;
     const prevDate = prevPrayer?.date;
+    const resolvedDisplayName = nextPrayerName ? getPrayerDisplayName(nextPrayerName, targetTime) : "Loading...";
     if (!prevDate || !targetTime) return {
-      name: nextPrayerName || "Loading...",
+      name: resolvedDisplayName,
       time: nextPrayerTime || "--:--",
       targetTime: targetTime,
       progress: 0,
@@ -420,19 +443,19 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
     void minuteTickRef.current;
     const now = Date.now();
     if (end <= start) return {
-      name: nextPrayerName || "Loading...",
+      name: resolvedDisplayName,
       time: nextPrayerTime || "--:--",
       targetTime: targetTime,
       progress: 0,
     };
     const progress = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
     return {
-      name: nextPrayerName || "Loading...",
+      name: resolvedDisplayName,
       time: nextPrayerTime || "--:--",
       targetTime: targetTime,
       progress,
     };
-}, [prayers, nextPrayerName, nextPrayerTime, targetTime]);
+  }, [prayers, nextPrayerName, nextPrayerTime, targetTime]);
 
   // Stable callbacks for PremiumDashboard props
   const onServiceClick = useCallback((route: string) => navigate(route), [navigate]);

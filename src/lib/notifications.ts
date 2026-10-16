@@ -5,6 +5,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { PRAYER_QUOTES } from './prayer-quotes';
+import { getPrayerDisplayName } from './prayer-utils';
 
 const NOTIFICATION_PERMISSION_KEY = 'prayer-notifications-enabled';
 
@@ -247,9 +248,11 @@ export const schedulePrayerNotification = (prayerName: string, prayerTime: Date)
 
   const randomQuote = PRAYER_QUOTES[Math.floor(Math.random() * PRAYER_QUOTES.length)];
 
+  const displayName = getPrayerDisplayName(prayerName, prayerTime);
+
   const timeoutId = window.setTimeout(() => {
-    showNotification(`${prayerName} Prayer Time`, {
-      body: `It's time for ${prayerName} prayer.\n${randomQuote}`,
+    showNotification(`${displayName} Prayer Time`, {
+      body: `It's time for ${displayName} prayer.\n${randomQuote}`,
       tag: `prayer-${prayerName.toLowerCase()}`,
     });
     activeTimeouts.delete(id);
@@ -281,9 +284,11 @@ export const schedulePrePrayerReminder = (
     clearTimeout(existingTimeout);
   }
 
+  const displayName = getPrayerDisplayName(prayerName, prayerTime);
+
   const timeoutId = window.setTimeout(() => {
-    showNotification(`${prayerName} in ${minutesBefore} minutes`, {
-      body: `Prepare for ${prayerName} prayer. Time remaining: ${minutesBefore} minutes.`,
+    showNotification(`${displayName} in ${minutesBefore} minutes`, {
+      body: `Prepare for ${displayName} prayer. Time remaining: ${minutesBefore} minutes.`,
       tag: `prayer-reminder-${prayerName.toLowerCase()}`,
     });
     activeTimeouts.delete(id);

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { type ClockProps } from '@/types/clock';
 import { cn } from '@/lib/utils';
+import { getPrayerDisplayName } from '@/lib/prayer-utils';
 
 export const MosqueLedClock: React.FC<ClockProps> = ({
   now,
@@ -121,7 +122,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
         <div className="w-full border-t border-amber-500/20 mt-2 pt-2 flex items-center justify-between text-[10px] sm:text-xs font-mono font-bold tracking-wider">
           <span className="text-amber-300/80 uppercase flex items-center gap-1 truncate">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
-            <span className="truncate">{nextPrayer.name || 'Prayer'}</span>
+            <span className="truncate">{getPrayerDisplayName(nextPrayer.name, now) || 'Prayer'}</span>
           </span>
           <span
             className="font-black text-amber-400 shrink-0 ml-2"

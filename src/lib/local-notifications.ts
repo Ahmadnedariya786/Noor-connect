@@ -11,6 +11,7 @@ import { getAdhanUrlForPrayer, type PrayerName } from './adhan-preferences';
 import { nativeAdhan, type NativeAdhanAlarm } from './native-adhan';
 import { adhanService, type AdhanConfig } from './adhan-service';
 import { PRAYER_QUOTES } from './prayer-quotes';
+import { getPrayerDisplayName } from './prayer-utils';
 
 // Task 2: Use SW registration for more robust "Native" notifications
 let swRegistration: ServiceWorkerRegistration | null = null;
@@ -39,12 +40,13 @@ type ServiceWorkerPrayerTimings = Record<string, { time: string }>;
 
 const PRAYER_NAMES = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
 
-const getPrayerNotificationMessage = (prayerName: string, prayerTime: string): { title: string; body: string } => {
+const getPrayerNotificationMessage = (prayerName: string, prayerTime: string, date?: Date): { title: string; body: string } => {
+  const displayName = getPrayerDisplayName(prayerName, date);
   const quotes = PRAYER_QUOTES[prayerName] || PRAYER_QUOTES['Default'];
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
   return {
-    title: `${prayerName} Prayer Time`,
-    body: `It's time for ${prayerName} prayer (${prayerTime}).\n${randomQuote}`,
+    title: `${displayName} Prayer Time`,
+    body: `It's time for ${displayName} prayer (${prayerTime}).\n${randomQuote}`,
   };
 };
 
@@ -385,10 +387,11 @@ export class LocalNotificationManager {
         if (prayer.date > now) {
           const notificationId = this.getNotificationId(prayer.name, prayer.date);
 
+          const displayName = getPrayerDisplayName(prayer.name, prayer.date);
           const notification = {
             id: notificationId,
-            title: `${prayer.name} Prayer Time`,
-            body: `It's time for ${prayer.name} prayer. ${prayer.time}`,
+            title: `${displayName} Prayer Time`,
+            body: `It's time for ${displayName} prayer. ${prayer.time}`,
             schedule: {
               at: prayer.date,
               allowWhileIdle: true, // Wake up device
@@ -399,7 +402,8 @@ export class LocalNotificationManager {
             largeIcon: 'ic_launcher',
             iconColor: '#1a4a4a',
             extra: {
-              prayerName: prayer.name,
+              prayerName: displayName,
+              originalPrayerName: prayer.name,
               prayerTime: prayer.time,
               type: 'prayer_reminder'
             }
@@ -489,12 +493,13 @@ export class LocalNotificationManager {
 
     try {
       const notificationId = this.getNotificationId(prayerName, prayerDate);
+      const displayName = getPrayerDisplayName(prayerName, prayerDate);
 
       await LocalNotifications.schedule({
         notifications: [{
           id: notificationId,
-          title: `${prayerName} Prayer Time`,
-          body: `It's time for ${prayerName} prayer. ${prayerTime}`,
+          title: `${displayName} Prayer Time`,
+          body: `It's time for ${displayName} prayer. ${prayerTime}`,
           schedule: {
             at: prayerDate,
             allowWhileIdle: true, // Wake up device
@@ -505,7 +510,8 @@ export class LocalNotificationManager {
           largeIcon: 'ic_launcher',
           iconColor: '#1a4a4a',
           extra: {
-            prayerName,
+            prayerName: displayName,
+            originalPrayerName: prayerName,
             prayerTime,
             type: 'prayer_reminder'
           }
@@ -514,10 +520,10 @@ export class LocalNotificationManager {
 
       this.scheduledNotifications.set(notificationId, {
         id: notificationId,
-        title: `${prayerName} Prayer Time`,
-        body: `It's time for ${prayerName} prayer. ${prayerTime}`,
+        title: `${displayName} Prayer Time`,
+        body: `It's time for ${displayName} prayer. ${prayerTime}`,
         scheduleTime: prayerDate,
-        prayerName
+        prayerName: displayName
       });
     } catch (error) {
       console.error(`Failed to schedule ${prayerName} notification:`, error);

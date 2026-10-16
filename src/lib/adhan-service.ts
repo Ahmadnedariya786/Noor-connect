@@ -3,6 +3,8 @@
  * Provides Adhan audio notifications for prayer times
  */
 
+import { getPrayerDisplayName as getSharedPrayerDisplayName } from './prayer-utils';
+
 export interface AdhanConfig {
   enabled: boolean;
   volume: number;
@@ -342,15 +344,7 @@ export class AdhanService {
    * Get display name for prayer
    */
   private getPrayerDisplayName(prayerName: string): string {
-    const prayerNames: { [key: string]: string } = {
-      'fajr': 'Fajr',
-      'dhuhr': 'Dhuhr',
-      'asr': 'Asr',
-      'maghrib': 'Maghrib',
-      'isha': 'Isha',
-      'jummah': 'Jummah'
-    };
-    return prayerNames[prayerName] || prayerName;
+    return getSharedPrayerDisplayName(prayerName, new Date());
   }
 
   /**

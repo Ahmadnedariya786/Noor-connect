@@ -5,6 +5,7 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PRAYER_QUOTES } from './prayer-quotes';
+import { getPrayerDisplayName } from './prayer-utils';
 
 export interface NotificationOptions {
   title: string;
@@ -316,13 +317,14 @@ class UnifiedNotificationService {
     }
 
     const randomQuote = PRAYER_QUOTES[Math.floor(Math.random() * PRAYER_QUOTES.length)];
+    const displayName = getPrayerDisplayName(prayerName, prayerTime);
 
     const notificationOptions: NotificationOptions = {
-      title: `🕌 ${prayerName} Prayer Time`,
-      body: `It's time for ${prayerName} prayer.\n${randomQuote}`,
+      title: `🕌 ${displayName} Prayer Time`,
+      body: `It's time for ${displayName} prayer.\n${randomQuote}`,
       tag: `prayer-${prayerName.toLowerCase()}`,
       requireInteraction: true,
-      data: { prayerName, url: '/' },
+      data: { prayerName: displayName, originalPrayerName: prayerName, url: '/' },
       ...options
     };
 

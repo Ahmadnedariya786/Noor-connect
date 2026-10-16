@@ -1,6 +1,7 @@
 import React, { useState, useEffect, memo } from 'react';
 import { useClockStyle } from '@/lib/clock-style';
 import { ClockRenderer } from './ClockRenderer';
+import { getPrayerDisplayName } from '@/lib/prayer-utils';
 
 interface ClockHeroProps {
   hijriDate: string;
@@ -68,22 +69,28 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
   const normalizedTimeFormat: '12h' | '24h' =
     timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
 
+  const nextDisplayName = getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime || now);
+  const prevDisplayName = previousPrayer?.name
+    ? getPrayerDisplayName(previousPrayer.name, previousPrayer.date || now)
+    : 'Previous Prayer';
+
   const normalizedNext = {
-    name: nextPrayer.name || 'Next Prayer',
+    name: nextDisplayName || 'Next Prayer',
     time: nextPrayer.time || '--:--',
     progress: nextPrayer.progress > 1 ? nextPrayer.progress / 100 : (nextPrayer.progress || 0),
     targetTime: nextPrayer.targetTime,
   };
 
   const normalizedPrev = {
-    name: previousPrayer?.name || 'Previous Prayer',
+    name: prevDisplayName,
     time: previousPrayer?.time || '--:--',
     date: previousPrayer?.date,
   };
 
   return (
-    <div className="w-full flex justify-center items-center">
+    <div className="w-full flex justify-center items-center" key="clock-hero-wrapper">
       <ClockRenderer
+        key={`clock-${clockStyle}`}
         styleId={clockStyle}
         now={now}
         timeFormat={normalizedTimeFormat}
