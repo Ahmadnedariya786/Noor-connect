@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
-import { ChevronLeft, Sun, Moon, Monitor, Sparkles, Zap, Heart, BookOpen, Clock, Moon as MoonIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sun, Moon, Monitor, Sparkles, Zap, Heart, BookOpen, Clock, Moon as MoonIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { goBackOrFallback } from "@/lib/navigation";
 import { getMadhab, setMadhab, isBeforeSleepEnabled, setBeforeSleepEnabled, getBedtimeHour, setBedtimeHour, getBedtimeMinute, setBedtimeMinute, type MadhabType } from '@/lib/storage';
 import { scheduleBedtimeNotification, cancelBedtimeNotification } from '@/lib/bedtime-notifications';
+import { useClockStyle } from '@/lib/clock-style';
+import { CLOCK_STYLES } from '@/types/clock';
+import { ClockStyleModal } from '@/components/clocks/ClockStyleModal';
 
 const Settings = () => {
   const { 
@@ -24,6 +27,9 @@ const Settings = () => {
   } = useSettings();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { clockStyle } = useClockStyle();
+  const [showClockModal, setShowClockModal] = useState(false);
+  const currentClockStyleName = CLOCK_STYLES.find(s => s.id === clockStyle)?.name || 'Digital Bold';
   const [madhab, setMadhabState] = useState<MadhabType>(() => getMadhab());
   const [bedtimeEnabled, setBedtimeEnabledState] = useState<boolean>(() => isBeforeSleepEnabled());
   const [bedtimeHour, setBedtimeHourState] = useState<number>(() => getBedtimeHour());
@@ -211,6 +217,30 @@ const Settings = () => {
                 />
               </button>
             </div>
+
+            {/* Row: Clock Style Picker */}
+            <div
+              onClick={() => setShowClockModal(true)}
+              className="p-4 sm:p-5 flex items-center justify-between border-t border-border/40 gap-3 cursor-pointer group hover:bg-muted/30 transition-colors"
+              role="button"
+              tabIndex={0}
+            >
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-foreground/70" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate group-hover:text-amber-500 transition-colors">Clock Style</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Choose home screen clock design</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#C9860A]/15 text-[#C9860A] border border-[#C9860A]/30">
+                  {currentClockStyleName}
+                </span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -337,6 +367,12 @@ const Settings = () => {
         </section>
 
       </div>
+
+      {/* Clock Style Picker Modal */}
+      <ClockStyleModal
+        open={showClockModal}
+        onClose={() => setShowClockModal(false)}
+      />
     </div>
   );
 };

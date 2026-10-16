@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo, lazy, Suspense } from "react";
 import { m } from "framer-motion";
-import { Bell, MapPin, ChevronRight, Activity, Compass, X } from "lucide-react";
+import { Bell, MapPin, ChevronRight, Activity, Compass, X, Check } from "lucide-react";
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 import { globalTimerManager } from "@/lib/timer-manager";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { UpdateBanner } from "@/components/UpdateBanner";
+import { ClockHero } from "@/components/clocks/ClockHero";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -35,7 +36,9 @@ const WidgetFallback = () => <div className="h-40 w-full rounded-2xl bg-card/40 
 
 interface PrayerTime {
   name: string;
+  originalName?: string;
   time: string;
+  date?: Date;
   icon: React.ReactNode;
   isActive?: boolean;
   isUpcoming?: boolean;
@@ -51,6 +54,11 @@ interface PremiumDashboardProps {
     targetTime?: Date | null;
     progress: number;
   };
+  previousPrayer?: {
+    name: string;
+    time: string;
+    date?: Date;
+  } | null;
   prayers: PrayerTime[];
   locationLabel: string;
   onServiceClick?: (route: string) => void;
@@ -70,35 +78,44 @@ interface PremiumDashboardProps {
   toast: any;
 }
 
-function LiveClock({ animationEnabled, hijriDate, timeFormat }: { animationEnabled: boolean; hijriDate: string; timeFormat: '12' | '24' | '12h' | '24h' }) {
-  const [time, setTime] = useState(new Date());
+function NextPrayerCountdownChip({ targetTime }: { targetTime?: Date | null }) {
+  const [countdownStr, setCountdownStr] = useState<string>('');
 
   useEffect(() => {
-    const timerId = globalTimerManager.addCallback(() => setTime(new Date()), 10000, 'premium-clock');
-    return () => globalTimerManager.removeCallback(timerId);
-  }, []);
+    if (!targetTime) {
+      setCountdownStr('');
+      return;
+    }
 
-  const is12 = timeFormat === '12' || timeFormat === '12h';
-  const timeStr = time.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: is12,
-  });
+    const update = () => {
+      const diff = targetTime.getTime() - Date.now();
+      if (diff <= 0) {
+        setCountdownStr('due now');
+        return;
+      }
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setCountdownStr(h > 0 ? `in ${h}h ${m}m` : `in ${m}m`);
+    };
+
+    update();
+    const timerId = setInterval(update, 10000);
+    return () => clearInterval(timerId);
+  }, [targetTime]);
+
+  if (!countdownStr) return null;
 
   return (
-    <div className="text-center pt-3 pb-4 flex flex-col justify-center items-center gap-1">
-      <h1
-        className="font-black leading-none tracking-tighter text-foreground"
-        style={{ fontSize: 'clamp(52px, 18vw, 96px)' }}
-      >
-        {timeStr}
-      </h1>
-      <p
-        className="text-sm md:text-base font-semibold tracking-wide text-primary px-4 text-center leading-tight"
-      >
-        {hijriDate}
-      </p>
-    </div>
+    <span
+      className="text-[10px] font-bold tracking-tight px-1.5 py-0.5 rounded-full"
+      style={{
+        background: 'rgba(201, 134, 10, 0.18)',
+        color: '#E5A93C',
+        border: '1px solid rgba(201, 134, 10, 0.35)',
+      }}
+    >
+      {countdownStr}
+    </span>
   );
 }
 
@@ -142,6 +159,7 @@ function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
 function PremiumDashboardInner({
   hijriDate,
   nextPrayer,
+  previousPrayer,
   prayers,
   locationLabel,
   onNotificationClick,
@@ -420,8 +438,13 @@ function PremiumDashboardInner({
         {/* ── Update Available Banner ── */}
         <UpdateBanner />
 
-        {/* ── Hero Time & Date ── */}
-        <LiveClock animationEnabled={animationEnabled} hijriDate={hijriDate} timeFormat={timeFormat} />
+        {/* ── Hero Time & Date / Clock Styles ── */}
+        <ClockHero
+          hijriDate={hijriDate}
+          timeFormat={timeFormat}
+          nextPrayer={nextPrayer}
+          previousPrayer={previousPrayer}
+        />
 
         {/* ── Next Prayer Card (Azimuth dark style) ── */}
         <m.div
@@ -468,7 +491,14 @@ function PremiumDashboardInner({
             .sort((a, b) => a.order - b.order)
             .map(widget => {
               switch (widget.id) {
-                case 'prayer-times':
+                case 'prayer-times': {
+                  const nextIdx = prayers.findIndex(p => p.isActive);
+                  const activeIdx = nextIdx !== -1 ? nextIdx : prayers.findIndex(p => p.name === nextPrayer.name || p.originalName === nextPrayer.name);
+                  const totalPrayers = prayers.length;
+                  const mostRecentPastIdx = activeIdx !== -1 && totalPrayers > 0
+                    ? (activeIdx - 1 + totalPrayers) % totalPrayers
+                    : -1;
+
                   return (
                     <m.section
                       key={widget.id}
@@ -490,52 +520,117 @@ function PremiumDashboardInner({
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
-                        {prayers.map((prayer, i) => (
-                          <m.div
-                            key={prayer.name}
-                            {...motionProps({
-                              initial: { opacity: 0, scale: 0.92 },
-                              animate: { opacity: 1, scale: 1 },
-                              transition: { delay: i * 0.05, type: 'spring', stiffness: 220, damping: 20 },
-                            })}
-                            className="relative overflow-hidden p-4 rounded-[20px] bg-card border border-border"
-                            style={prayer.isActive ? {
-                              borderColor: 'rgba(201,134,10,0.3)',
-                              boxShadow: '0 0 0 1px rgba(201,134,10,0.1)',
-                            } : {}}
-                          >
-                            <div className="relative z-10">
-                              <div className="flex items-center justify-between mb-3">
-                                <div
-                                  className="w-8 h-8 flex items-center justify-center rounded-xl"
-                                  style={prayer.isActive
-                                    ? { background: 'rgba(201,134,10,0.12)', color: '#C9860A' }
-                                    : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
-                                >
-                                  {prayer.icon}
-                                </div>
-                                {prayer.isUpcoming && (
-                                  <span
-                                    className="text-xs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
-                                    style={{ background: 'rgba(201,134,10,0.1)', color: '#C9860A' }}
+                        {prayers.map((prayer, i) => {
+                          const isNext = activeIdx !== -1 && i === activeIdx;
+                          const isMostRecentPast = !isNext && mostRecentPastIdx !== -1 && i === mostRecentPastIdx;
+                          const isOlderPast = !isNext && !isMostRecentPast && (
+                            activeIdx === 0
+                              ? (i >= 1 && i < totalPrayers - 1)
+                              : (activeIdx > 0 && i < activeIdx)
+                          );
+
+                          // Respect 12h / 24h format
+                          const is12 = timeFormat === '12' || timeFormat === '12h';
+                          const displayTime = prayer.date instanceof Date && !isNaN(prayer.date.getTime())
+                            ? prayer.date.toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: is12,
+                              })
+                            : prayer.time;
+
+                          return (
+                            <m.div
+                              key={prayer.name}
+                              {...motionProps({
+                                initial: { opacity: 0, scale: 0.92 },
+                                animate: { opacity: 1, scale: 1 },
+                                transition: { delay: i * 0.05, type: 'spring', stiffness: 220, damping: 20 },
+                              })}
+                              className={cn(
+                                "group relative overflow-hidden p-4 rounded-2xl transition-all duration-200 select-none",
+                                "border border-border/70 hover:border-amber-500/30 hover:shadow-md active:scale-[0.98]",
+                                isNext && "border-[#C9860A] shadow-[0_0_18px_rgba(201,134,10,0.32),inset_0_0_0_1px_rgba(201,134,10,0.4)]"
+                              )}
+                              style={{
+                                background: isNext
+                                  ? 'linear-gradient(180deg, rgba(201,134,10,0.12) 0%, rgba(26,30,44,0.95) 100%)'
+                                  : 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(20,24,36,0.95) 100%)',
+                                boxShadow: isNext
+                                  ? '0 0 18px rgba(201,134,10,0.32), inset 0 1px 0 0 rgba(255,255,255,0.1)'
+                                  : 'inset 0 1px 0 0 rgba(255,255,255,0.05)',
+                              }}
+                            >
+                              <div className="relative z-10 flex flex-col justify-between h-full">
+                                <div className="flex items-center justify-between mb-3">
+                                  {/* Existing Icon & Color */}
+                                  <div
+                                    className="w-8 h-8 flex items-center justify-center rounded-xl"
+                                    style={isNext
+                                      ? { background: 'rgba(201,134,10,0.18)', color: '#C9860A' }
+                                      : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
                                   >
-                                    NEXT
-                                  </span>
-                                )}
+                                    {prayer.icon}
+                                  </div>
+
+                                  {/* NEXT Badge + Live Countdown Chip */}
+                                  {isNext && (
+                                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                      <span
+                                        className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                                        style={{ background: 'rgba(201,134,10,0.18)', color: '#C9860A' }}
+                                      >
+                                        NEXT
+                                      </span>
+                                      <NextPrayerCountdownChip targetTime={nextPrayer.targetTime} />
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div>
+                                  {/* Prayer Name + Checkmark for Most Recent Past */}
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="font-bold text-sm leading-tight text-foreground truncate">
+                                      {prayer.name}
+                                    </p>
+                                    {isMostRecentPast && (
+                                      <Check className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 stroke-[2.5]" />
+                                    )}
+                                  </div>
+
+                                  {/* Prayer Time */}
+                                  <p
+                                    className={cn(
+                                      "text-sm mt-0.5 font-semibold transition-colors tabular-nums",
+                                      isNext && "text-[#C9860A] font-bold",
+                                      isOlderPast && "text-muted-foreground/45",
+                                      !isNext && !isOlderPast && "text-foreground/85"
+                                    )}
+                                  >
+                                    {displayTime}
+                                  </p>
+                                </div>
                               </div>
 
-                              <p className="font-bold text-sm leading-tight text-foreground">
-                                {prayer.name}
-                              </p>
-                              <p className="text-sm mt-0.5 font-semibold" style={{ color: prayer.isActive ? '#C9860A' : 'hsl(var(--muted-foreground))' }}>
-                                {prayer.time}
-                              </p>
-                            </div>
-                          </m.div>
-                        ))}
+                              {/* Most Recent Past Prayer: Thin Progress Bar at Card Bottom */}
+                              {isMostRecentPast && (
+                                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/[0.08] overflow-hidden rounded-b-2xl">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{
+                                      width: `${Math.min(100, Math.max(0, nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100))}%`,
+                                      background: 'linear-gradient(90deg, #C9860A, #E8A020)',
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </m.div>
+                          );
+                        })}
                       </div>
                     </m.section>
                   );
+                }
 
                 case 'salah-tracker':
                   return (

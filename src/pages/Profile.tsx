@@ -23,6 +23,7 @@ import {
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { CURRENT_APP_VERSION } from '@/lib/constants';
+import { CLOCK_STYLES } from '@/types/clock';
 
 interface SettingsRow {
   id: string;
@@ -57,6 +58,16 @@ const GROUPS: SettingsGroup[] = [
         iconColor: 'text-amber-600 dark:text-amber-400',
         route: '/settings/appearance',
         asyncKey: 'theme',
+      },
+      {
+        id: 'clock-style',
+        title: 'Clock Style',
+        subtitle: 'Choose home dashboard clock appearance',
+        icon: Clock,
+        gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
+        iconColor: 'text-amber-600 dark:text-amber-400',
+        route: '/settings/clock-style',
+        asyncKey: 'clockStyle',
       },
       {
         id: 'haptics',
@@ -234,7 +245,17 @@ const Profile: React.FC = () => {
           results['theme'] = 'System';
         }
       } catch {
+        // Fallback for theme storage error
         results['theme'] = null;
+      }
+
+      try {
+        const rawClock = localStorage.getItem('noor_clock_style') || 'digital-bold';
+        const found = CLOCK_STYLES.find(s => s.id === rawClock);
+        results['clockStyle'] = found ? found.name : 'Digital Bold';
+      } catch {
+        // Fallback for clock style storage error
+        results['clockStyle'] = 'Digital Bold';
       }
 
       try {

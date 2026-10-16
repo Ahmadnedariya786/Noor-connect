@@ -29,6 +29,7 @@ import {
   Download,
   RefreshCw,
   RotateCcw,
+  ChevronRight,
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { rerunPermissionOnboarding } from '@/lib/onboarding-permissions';
@@ -52,6 +53,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
+import { ClockStylePicker } from '@/components/clocks/ClockStylePicker';
+import { useClockStyle } from '@/lib/clock-style';
+import { CLOCK_STYLES } from '@/types/clock';
 
 import { getMadhab, setMadhab, type MadhabType } from '@/lib/storage';
 import { AladhanAPI } from '@/lib/aladhan-api';
@@ -74,6 +78,7 @@ import { AutoBackupCard } from '@/components/AutoBackupCard';
 
 const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
   appearance: { title: 'Theme & Appearance', subtitle: 'Display, animations & splash settings', icon: Palette },
+  'clock-style': { title: 'Clock Style', subtitle: 'Select home screen clock design', icon: Clock },
   haptics: { title: 'Haptic Feedback', subtitle: 'Vibration & tactile feedback settings', icon: Vibrate },
   personal: { title: 'Personal Information', subtitle: 'Gender, language & preferred currency', icon: User },
   prayer: { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock },
@@ -110,6 +115,9 @@ const SettingsSubPage: React.FC = () => {
     timeFormat,
     setTimeFormat,
   } = useSettings();
+
+  const { clockStyle } = useClockStyle();
+  const currentClockStyleName = CLOCK_STYLES.find(s => s.id === clockStyle)?.name || 'Digital Bold';
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
@@ -438,7 +446,32 @@ const SettingsSubPage: React.FC = () => {
                   onCheckedChange={(checked) => setTimeFormat(checked ? '24h' : '12h')}
                 />
               </div>
+
+              <div
+                className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3 cursor-pointer group"
+                onClick={() => navigate('/settings/clock-style')}
+                role="button"
+                tabIndex={0}
+              >
+                <div>
+                  <Label className="text-sm font-bold cursor-pointer group-hover:text-amber-500 transition-colors">Clock Style</Label>
+                  <p className="text-xs text-slate-400">Choose home screen clock appearance</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                    {currentClockStyleName}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
             </Card>
+          </div>
+        )}
+
+        {/* CLOCK STYLE SECTION */}
+        {sectionId === 'clock-style' && (
+          <div className="space-y-4">
+            <ClockStylePicker />
           </div>
         )}
 

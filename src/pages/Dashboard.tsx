@@ -374,6 +374,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
         name: displayName,
         originalName: p.name,
         time: p.time,
+        date: p.date,
         icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
         isActive: nextPrayerName === p.name,
         isUpcoming: isUpcoming,
@@ -382,6 +383,26 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
       };
     });
   }, [prayers, minuteTick, todayPrayers, nextPrayerName, handleCheckIn, prayerIcons]);
+
+  const previousPrayerInfo = useMemo(() => {
+    if (prayers.length === 0) return { name: '', time: '--:--' };
+    const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
+    if (nextIdx > 0) {
+      return {
+        name: prayers[nextIdx - 1].name,
+        time: prayers[nextIdx - 1].time,
+        date: prayers[nextIdx - 1].date,
+      };
+    }
+    if (nextIdx === 0 && prayers.length > 0) {
+      return {
+        name: prayers[prayers.length - 1].name,
+        time: prayers[prayers.length - 1].time,
+        date: prayers[prayers.length - 1].date,
+      };
+    }
+    return { name: '', time: '--:--' };
+  }, [prayers, nextPrayerName]);
 
   const nextPrayerInfo = useMemo(() => {
     const nextIdx = prayers.findIndex(p => p.name === nextPrayerName);
@@ -425,6 +446,7 @@ return (
       <PremiumDashboard
         hijriDate={hijriDate || ""}
         nextPrayer={nextPrayerInfo}
+        previousPrayer={previousPrayerInfo}
         prayers={dashboardPrayers}
         locationLabel={locationLabel}
         onServiceClick={onServiceClick}
