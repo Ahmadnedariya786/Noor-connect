@@ -13,7 +13,7 @@ const LS_LAST_SURAH = 'quran-reader-last-surah';
 const BOOKMARKS_KEY = 'quran-bookmarks';
 
 export default function QuranReader() {
-  const { theme, effectiveTheme } = useSettings();
+  const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
   const { surahName } = useParams<{ surahName: string }>();
@@ -131,13 +131,13 @@ export default function QuranReader() {
 
   return (
     <PageTransition>
-      <div className={`min-h-screen relative overflow-hidden ${isDark ? 'bg-[#000000]' : 'bg-[#F5F5F5]'}`}>
+      <div className="min-h-screen relative overflow-hidden bg-[var(--bg-base)]">
         {/* Top Bar */}
-        <div className={`sticky top-0 z-30 backdrop-blur-md border-b safe-top ${isDark ? 'bg-[#000000]/95 border-[#C9A84C]/20' : 'bg-[#F5F5F5]/95 border-[#C9A84C]/20'}`}>
+        <div className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)]">
           <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
             <button
               onClick={() => goBackOrFallback(navigate, '/quran')}
-              className={`p-2 rounded-full transition-colors ${isDark ? 'text-white/60 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'}`}
+              className="p-2 rounded-full transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -146,24 +146,20 @@ export default function QuranReader() {
               <button
                 onClick={goToPreviousSurah}
                 disabled={surahNum <= 1}
-                className={`p-1.5 rounded-full transition-colors disabled:opacity-20 disabled:cursor-default ${
-                  isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-                }`}
+                className="p-1.5 rounded-full transition-colors disabled:opacity-20 disabled:cursor-default text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
               <div className="text-center cursor-pointer" onClick={() => navigate('/quran')}>
-                <h1 className="text-lg font-bold text-[#C9A84C]">{surahInfo?.name}</h1>
-                <p className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-500'}`}>{surahInfo?.englishName} — Page {currentPage} of {totalSurahPages}</p>
+                <h1 className="text-lg font-bold text-[var(--accent-text)]">{surahInfo?.name}</h1>
+                <p className="text-xs text-[var(--text-secondary)]">{surahInfo?.englishName} — Page {currentPage} of {totalSurahPages}</p>
               </div>
 
               <button
                 onClick={goToNextSurah}
                 disabled={surahNum >= 114}
-                className={`p-1.5 rounded-full transition-colors disabled:opacity-20 disabled:cursor-default ${
-                  isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-                }`}
+                className="p-1.5 rounded-full transition-colors disabled:opacity-20 disabled:cursor-default text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -173,8 +169,8 @@ export default function QuranReader() {
               onClick={toggleBookmark}
               className={`p-2 rounded-full transition-colors ${
                 isBookmarked
-                  ? 'text-[#C9A84C] bg-[#C9A84C]/10'
-                  : isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200/50'
+                  ? 'text-[var(--accent-text)] bg-[var(--accent-soft)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
               }`}
             >
               <Star className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />

@@ -18,11 +18,18 @@ export const ClockStyleModal: React.FC<ClockStyleModalProps> = ({ open, onClose 
       }}
     >
       <div
-        className="w-full max-w-lg max-h-[90vh] bg-card border border-border/70 rounded-[28px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg max-h-[90vh] rounded-[28px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        style={{
+          backgroundColor: 'var(--surface)',
+          border: '1px solid var(--border)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-card/60 backdrop-blur-md">
+        <div
+          className="flex items-center justify-between px-5 py-4 backdrop-blur-md"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
           <div>
             <h3 className="text-base font-bold text-foreground">Clock Style</h3>
             <p className="text-xs text-muted-foreground">Select home dashboard clock</p>

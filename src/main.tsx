@@ -1,9 +1,17 @@
+import { initThemeEngine } from "@/lib/theme-engine";
 import { initCrashLogger } from "@/lib/crash-logger";
 import {
   checkAndRecordStartupCrash,
   markStartupStep,
   completeStartupStep,
 } from "@/lib/startup-breadcrumb";
+
+// 0. Initialize theme engine and apply tokens before React mounts
+try {
+  initThemeEngine();
+} catch (e) {
+  // Silent fallback for theme engine bootstrap
+}
 
 // 1. Initialize crash loggers and inspect breadcrumb from previous launch BEFORE anything else
 try {

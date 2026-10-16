@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, memo, useRef, startTransition, type CSSProperties } from "react";
+import { useState, useMemo, useEffect, memo, useRef, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, ChevronLeft, Sparkles, BookOpen, History, Filter, MapPin, Moon } from "lucide-react";
+import { Search, X, ChevronLeft, Sparkles, History, Filter, MapPin, Moon } from "lucide-react";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
 import { PageTransition } from "@/components/PageTransition";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -22,11 +22,7 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
       onClick={() => onClick(surah.number)}
       className="w-full text-left group outline-none active:scale-[0.98] transition-transform duration-150"
     >
-      <div className={`rounded-[24px] p-5 border transition-all duration-300 hover:scale-[1.02] ${
-        isDark
-          ? 'bg-[#111111] border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
-          : 'bg-white border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-md'
-      }`}>
+      <div className="rounded-[24px] p-5 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] transition-all duration-300 hover:scale-[1.02] hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent-glow)]">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {/* Surah Number - Premium Octagonal Style */}
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
@@ -71,7 +67,7 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
 });
 
 export default function SurahList() {
-  const { theme, effectiveTheme } = useSettings();
+  const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,9 +116,9 @@ export default function SurahList() {
 
   return (
     <PageTransition>
-      <div className={`min-h-screen relative overflow-hidden ${isDark ? 'bg-[#0D0D0D]' : 'bg-[#F5F5F5]'}`}>
+      <div className="min-h-screen relative overflow-hidden bg-[var(--bg-base)]">
         {/* Subtle Islamic geometric pattern on header */}
-        <div className="absolute top-0 left-0 right-0 h-48 opacity-[0.03] bg-[radial-gradient(circle_at_2px_2px,_#C9A84C_1px,_transparent_0)] bg-[length:32px_32px] pointer-events-none" />
+        <div className="absolute top-0 left-0 right-0 h-48 opacity-[0.03] bg-[radial-gradient(circle_at_2px_2px,_var(--accent)_1px,_transparent_0)] bg-[length:32px_32px] pointer-events-none" />
 
         {/* Premium Hero Section */}
         <div className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 mb-6 safe-top">
@@ -166,24 +162,18 @@ export default function SurahList() {
         <div className="max-w-2xl mx-auto px-4 space-y-4 mb-6">
           {/* Search Bar */}
           <div className="relative">
-            <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-white/40' : 'text-gray-400'}`} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]/50" />
             <input
               type="text"
               placeholder="Search surah..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full border rounded-xl py-3 pl-12 pr-12 focus:outline-none focus:border-primary/50 transition-colors ${
-                isDark
-                  ? 'bg-[#111111] border-white/10 text-white placeholder:text-white/30'
-                  : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400'
-              }`}
+              className="w-full border border-[var(--border)] rounded-xl py-3 pl-12 pr-12 focus:outline-none focus:border-[var(--accent)]/50 transition-colors bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
-                  isDark ? 'text-white/40 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200/50'
-                }`}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -202,10 +192,8 @@ export default function SurahList() {
                 onClick={() => setFilter(item.key as 'all' | 'meccan' | 'madinah')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
                   filter === item.key
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : isDark
-                      ? 'bg-white/5 text-white/60 hover:bg-white/10'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-lg shadow-[var(--accent-glow)]'
+                    : 'bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <item.icon className="w-3.5 h-3.5" />
@@ -226,15 +214,15 @@ export default function SurahList() {
                     navigate(`/quran/surah-${lastRead.number}`);
                   });
                 }}
-                className="w-full flex items-center p-4 bg-primary/10 border border-primary/20 rounded-2xl gap-4 hover:bg-primary/15 transition-all group active:scale-[0.98]"
+                className="w-full flex items-center p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl gap-4 hover:border-[var(--accent)]/40 transition-all group active:scale-[0.98]"
               >
-                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                  <History className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-[var(--accent)] text-[var(--on-accent)] rounded-xl flex items-center justify-center shadow-lg shadow-[var(--accent-glow)] group-hover:scale-110 transition-transform">
+                  <History className="w-6 h-6 text-[var(--on-accent)]" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Continue Reading</p>
-                  <h3 className="text-lg font-black">{lastRead.name}</h3>
-                  <p className="text-xs text-primary/60">{lastRead.englishName}</p>
+                  <p className="text-xs font-bold text-[var(--accent-text)] uppercase tracking-widest mb-1">Continue Reading</p>
+                  <h3 className="text-lg font-black text-[var(--text-primary)]">{lastRead.name}</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">{lastRead.englishName}</p>
                 </div>
               </button>
             </CSSOnlyTransition>

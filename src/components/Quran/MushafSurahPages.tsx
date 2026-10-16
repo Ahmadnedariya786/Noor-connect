@@ -52,14 +52,12 @@ function PageSlot({ page, isDark }: PageSlotProps) {
 
   return (
     <div
-      className={`w-full rounded-2xl overflow-hidden border ${
-        isDark ? 'border-[#C9A84C]/10 bg-[#111111]' : 'border-amber-200/40 bg-white/60'
-      }`}
+      className="w-full rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface)]"
     >
       <div className="relative w-full flex items-center justify-center overflow-hidden" style={{ aspectRatio: '212 / 325' }}>
         {!loaded && (
-          <div className={`absolute inset-0 w-full h-full z-10 ${isDark ? 'bg-[#111111]' : 'bg-amber-50/60'}`}>
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(201,168,76,0.15),transparent)] animate-[shimmer_1.5s_infinite]" />
+          <div className="absolute inset-0 w-full h-full z-10 bg-[var(--surface)]">
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,var(--accent-soft),transparent)] animate-[shimmer_1.5s_infinite]" />
           </div>
         )}
         <img

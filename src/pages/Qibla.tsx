@@ -26,7 +26,7 @@ const Qibla = () => {
                     </p>
                     <button
                       onClick={() => window.location.reload()}
-                      className="mt-2 px-4 py-2 rounded-xl bg-[#C9860A] text-white text-xs font-bold shadow-md hover:bg-[#E8A020] active:scale-95 transition-all"
+                      className="mt-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold shadow-md shadow-[var(--accent-glow)] active:scale-95 transition-all"
                     >
                       Retry Compass
                     </button>

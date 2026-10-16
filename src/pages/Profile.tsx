@@ -24,6 +24,8 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { CURRENT_APP_VERSION } from '@/lib/constants';
 import { CLOCK_STYLES } from '@/types/clock';
+import { THEMES } from '@/lib/theme-engine';
+import type { ThemeId } from '@/types/theme';
 
 interface SettingsRow {
   id: string;
@@ -238,15 +240,12 @@ const Profile: React.FC = () => {
       const results: Record<string, string | null> = {};
 
       try {
-        const rawTheme = localStorage.getItem('theme');
-        if (rawTheme) {
-          results['theme'] = rawTheme.charAt(0).toUpperCase() + rawTheme.slice(1);
-        } else {
-          results['theme'] = 'System';
-        }
+        const rawTheme = (localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
+        const currentThemeDef = THEMES[rawTheme] || THEMES['oxford-gold'];
+        results['theme'] = currentThemeDef.name;
       } catch {
         // Fallback for theme storage error
-        results['theme'] = null;
+        results['theme'] = 'Oxford Gold';
       }
 
       try {

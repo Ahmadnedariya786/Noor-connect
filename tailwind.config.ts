@@ -57,7 +57,19 @@ theme: {
 					border: 'var(--islamic-gold-border)',
 					glow: 'var(--islamic-gold-glow)',
 					shimmer: 'var(--islamic-gold-shimmer)'
-				}
+				},
+				'bg-base': 'var(--bg-base)',
+				'bg-elev': 'var(--bg-elev)',
+				'surface': 'var(--surface)',
+				'surface-2': 'var(--surface-2)',
+				'accent-token': 'var(--accent)',
+				'accent-text': 'var(--accent-text)',
+				'on-accent': 'var(--on-accent)',
+				'accent-soft': 'var(--accent-soft)',
+				'accent-glow': 'var(--accent-glow)',
+				'text-primary': 'var(--text-primary)',
+				'text-secondary': 'var(--text-secondary)',
+				'theme-border': 'var(--border)',
 			},
 			fontFamily: {
 				arabic: ['"Amiri"', '"Scheherazade New"', '"Traditional Arabic"', 'ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],

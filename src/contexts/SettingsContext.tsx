@@ -31,7 +31,6 @@ interface SettingsContextProps {
 
 const SettingsContext = createContext<SettingsContextProps | undefined>(undefined);
 
-const THEME_KEY = 'theme';
 const ANIMATION_KEY = 'animations_enabled';
 const GREETING_KEY = 'greetingEnabled';
 const LEGACY_GREETING_KEY = 'salam-greeting-enabled';
@@ -39,31 +38,6 @@ const SPLASH_GREETING_KEY = 'splash_greeting_enabled';
 const SPLASH_ENABLED_KEY = 'splash_enabled';
 const TIME_FORMAT_KEY = 'time_format';
 const LEGACY_TIME_FORMAT_KEY = 'time-format';
-
-const getSystemTheme = (): 'light' | 'dark' => {
-  if (typeof window === 'undefined' || !window.matchMedia) return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-};
-
-const getStoredTheme = async (): Promise<ThemePreference> => {
-  try {
-    const { value } = await Preferences.get({ key: THEME_KEY });
-    if (value === 'light' || value === 'dark' || value === 'system') {
-      return value as ThemePreference;
-    }
-  } catch (error) {
-    console.warn('Failed to read theme from Preferences, falling back to localStorage:', error);
-    const fallback = localStorage.getItem(THEME_KEY);
-    if (fallback === 'light' || fallback === 'dark') {
-      return fallback as ThemePreference;
-    }
-  }
-  return 'system';
-};
-
-const getEffectiveTheme = (themePreference: ThemePreference): 'light' | 'dark' => {
-  return themePreference === 'system' ? getSystemTheme() : themePreference;
-};
 
 const getStoredBoolean = (key: string, fallback = true): boolean => {
   const storedValue = localStorage.getItem(key);
@@ -120,8 +94,8 @@ const applyAnimationClass = (enabled: boolean) => {
 };
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setThemeState] = useState<ThemePreference>('system');
-  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>(() => getEffectiveTheme('system'));
+  const theme: ThemePreference = 'dark';
+  const effectiveTheme: 'light' | 'dark' = 'dark';
   const [isLoaded, setIsLoaded] = useState(false);
   const [animationEnabled, setAnimationEnabledState] = useState<boolean>(() => {
     // Default: respect prefers-reduced-motion and low-end device detection
@@ -157,11 +131,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   // Load settings from Capacitor Preferences on mount
   useEffect(() => {
     const loadSettings = async () => {
-      // Load theme
-      const storedTheme = await getStoredTheme();
-      setThemeState(storedTheme);
-      setEffectiveTheme(getEffectiveTheme(storedTheme));
-
       // Load animation setting from Preferences (with prefers-reduced-motion and low-end device fallback)
       const storedAnimation = await getStoredBooleanOrNullFromPreferences(ANIMATION_KEY);
       let finalAnimationValue: boolean;
@@ -207,45 +176,21 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     loadSettings();
   }, []);
 
-  // Apply effective theme to DOM
+  // Guarantee root dark class stays permanently active so Tailwind dark: variants always work
   useEffect(() => {
-    if (!isLoaded) return;
-    document.documentElement.classList.toggle('dark', effectiveTheme === 'dark');
-  }, [effectiveTheme, isLoaded]);
+    document.documentElement.classList.add('dark');
+  }, []);
 
-  // Sync native status bar icon style with theme (on app init and theme change)
+  // Force native status bar icon style to LightContent (Style.Dark) unconditionally
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       StatusBar.setStyle({
-        style: effectiveTheme === 'dark' ? Style.Dark : Style.Light,
-      }).catch((error) => {
-        console.warn('Failed to update status bar style:', error);
+        style: Style.Dark,
+      }).catch(() => {
+        // silent status bar fallback
       });
     }
-  }, [effectiveTheme]);
-
-  // Listen for system theme changes when using 'system' preference
-  useEffect(() => {
-    if (!isLoaded || theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      setEffectiveTheme(getSystemTheme());
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme, isLoaded]);
-
-  // Persist theme changes to Capacitor Preferences
-  useEffect(() => {
-    if (!isLoaded) return;
-    Preferences.set({ key: THEME_KEY, value: theme }).catch(error => {
-      console.error('Failed to save theme to Preferences:', error);
-      // Fallback to localStorage
-      localStorage.setItem(THEME_KEY, theme);
-    });
-  }, [theme, isLoaded]);
+  }, []);
 
   // Persist and apply animation changes
   useEffect(() => {
@@ -299,16 +244,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [timeFormat, isLoaded]);
 
-  const setTheme = useCallback((nextTheme: ThemePreference) => {
-    setThemeState(nextTheme);
-    setEffectiveTheme(getEffectiveTheme(nextTheme));
+  const setTheme = useCallback((_nextTheme: ThemePreference) => {
+    // Legacy theme toggle removed; full-app themes are managed via theme-engine
   }, []);
   const toggleTheme = useCallback(() => {
-    setEffectiveTheme((currentEffective) => {
-      const newTheme: ThemePreference = currentEffective === 'dark' ? 'light' : 'dark';
-      setThemeState(newTheme);
-      return newTheme;
-    });
+    // Legacy theme toggle removed; full-app themes are managed via theme-engine
   }, []);
   const setAnimationEnabled = useCallback((enabled: boolean) => setAnimationEnabledState(enabled), []);
   const toggleAnimation = useCallback(() => setAnimationEnabledState((prev) => !prev), []);

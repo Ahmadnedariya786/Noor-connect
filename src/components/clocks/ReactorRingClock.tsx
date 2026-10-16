@@ -58,8 +58,8 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
           isStaticPreview ? "w-28 h-28 sm:w-32 sm:h-32 shadow-md" : "w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] shadow-2xl"
         )}
         style={{
-          border: '1.5px solid rgba(255,255,255,0.1)',
-          background: 'radial-gradient(circle at 50% 50%, #151a24 0%, #0d111a 65%, #06080d 100%)',
+          border: '1.5px solid var(--border)',
+          background: 'radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)',
           boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.85)',
         }}
       >
@@ -70,7 +70,7 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
         >
           <defs>
             <filter id="reactorGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#F59E0B" floodOpacity="0.8" />
+              <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="var(--accent-glow)" floodOpacity="0.85" />
             </filter>
             <filter id="whiteHandShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.8" />
@@ -83,15 +83,15 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
             cy={center}
             r={ringRadius - 16}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="var(--accent-soft)"
             strokeWidth="1"
           />
 
           {/* 60 Radial Segments */}
           {segments.map(({ index, x1, y1, x2, y2, isCardinal, isElapsed }) => {
             const strokeColor = isElapsed
-              ? (isCardinal ? '#FBBF24' : '#E5A93C')
-              : (isCardinal ? '#475569' : '#1E293B');
+              ? (isCardinal ? 'var(--accent-text)' : 'var(--accent)')
+              : (isCardinal ? 'var(--text-secondary)' : 'var(--border)');
             const strokeWidth = isCardinal ? 2.5 : 1.5;
 
             return (
@@ -105,16 +105,16 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
                 strokeWidth={strokeWidth}
                 strokeLinecap="round"
                 filter={isElapsed ? 'url(#reactorGlow)' : undefined}
-                opacity={isElapsed ? 1 : 0.6}
+                opacity={isElapsed ? 1 : 0.4}
               />
             );
           })}
 
           {/* 4 Cardinal Tick Highlights (12, 3, 6, 9) */}
-          <circle cx={center} cy={center - ringRadius + 18} r="1.5" fill={minutes >= 0 ? '#FBBF24' : '#475569'} />
-          <circle cx={center + ringRadius - 18} cy={center} r="1.5" fill={minutes >= 15 ? '#FBBF24' : '#475569'} />
-          <circle cx={center} cy={center + ringRadius - 18} r="1.5" fill={minutes >= 30 ? '#FBBF24' : '#475569'} />
-          <circle cx={center - ringRadius + 18} cy={center} r="1.5" fill={minutes >= 45 ? '#FBBF24' : '#475569'} />
+          <circle cx={center} cy={center - ringRadius + 18} r="1.5" fill={minutes >= 0 ? 'var(--accent-text)' : 'var(--border)'} />
+          <circle cx={center + ringRadius - 18} cy={center} r="1.5" fill={minutes >= 15 ? 'var(--accent-text)' : 'var(--border)'} />
+          <circle cx={center} cy={center + ringRadius - 18} r="1.5" fill={minutes >= 30 ? 'var(--accent-text)' : 'var(--border)'} />
+          <circle cx={center - ringRadius + 18} cy={center} r="1.5" fill={minutes >= 45 ? 'var(--accent-text)' : 'var(--border)'} />
 
           {/* Slim White Hour Hand */}
           <g
@@ -156,7 +156,7 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
             />
           </g>
 
-          {/* Thin Gold Second Hand */}
+          {/* Thin Second Hand */}
           {!isStaticPreview && (
             <g
               style={{
@@ -169,7 +169,7 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
                 y1={center + 16}
                 x2={center}
                 y2={center - 86}
-                stroke="#F59E0B"
+                stroke="var(--accent-text)"
                 strokeWidth="1"
                 strokeLinecap="round"
               />
@@ -178,16 +178,16 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
 
           {/* Glowing Center Hub */}
           <circle cx={center} cy={center} r="4" fill="#FFFFFF" />
-          <circle cx={center} cy={center} r="2" fill="#F59E0B" />
+          <circle cx={center} cy={center} r="2" fill="var(--accent)" />
         </svg>
       </div>
 
       {!isStaticPreview && (
         <div className="mt-2 text-center">
-          <p className="text-xs font-semibold tracking-wide text-primary">
+          <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>
             {hijriDate}
           </p>
-          <p className="text-[11px] font-mono font-medium text-amber-400/80">
+          <p className="text-[11px] font-mono font-medium" style={{ color: 'var(--accent-text)' }}>
             {minutes}/60m elapsed
           </p>
         </div>

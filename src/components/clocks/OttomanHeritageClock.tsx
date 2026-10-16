@@ -71,9 +71,9 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
           isStaticPreview ? "w-28 h-28 sm:w-32 sm:h-32 shadow-md" : "w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] shadow-2xl"
         )}
         style={{
-          border: '2.5px solid #C9860A',
-          background: 'radial-gradient(circle at 50% 50%, #151b27 0%, #0d121c 60%, #06080e 100%)',
-          boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,0,0,0.85), 0 0 2px rgba(201,134,10,0.5)',
+          border: '2.5px solid var(--border)',
+          background: 'radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 60%, var(--bg-base) 100%)',
+          boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,0,0,0.85), 0 0 2px var(--accent-glow)',
         }}
       >
         <svg
@@ -83,9 +83,9 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
         >
           <defs>
             <linearGradient id="ottomanGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FDE68A" />
-              <stop offset="50%" stopColor="#C9860A" />
-              <stop offset="100%" stopColor="#784C02" />
+              <stop offset="0%" stopColor="var(--accent-text)" />
+              <stop offset="50%" stopColor="var(--accent)" />
+              <stop offset="100%" stopColor="var(--accent)" />
             </linearGradient>
             <filter id="ottomanShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.75" />
@@ -127,20 +127,20 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
             {/* 8-pointed star base */}
             <path
               d="M 0 -26 L 7 -18 L 18 -18 L 18 -7 L 26 0 L 18 7 L 18 18 L 7 18 L 0 26 L -7 18 L -18 18 L -18 7 L -26 0 L -18 -7 L -18 -18 L -7 -18 Z"
-              fill="rgba(201,134,10,0.12)"
+              fill="var(--accent-soft)"
               stroke="url(#ottomanGold)"
               strokeWidth="1.2"
             />
             {/* Inner rotated star */}
             <path
               d="M 0 -17 L 5 -12 L 12 -12 L 12 -5 L 17 0 L 12 5 L 12 12 L 5 12 L 0 17 L -5 12 L -12 12 L -12 5 L -17 0 L -12 -5 L -12 -12 L -5 -12 Z"
-              fill="rgba(201,134,10,0.18)"
+              fill="var(--accent-soft)"
               stroke="url(#ottomanGold)"
               strokeWidth="0.9"
               transform="rotate(22.5)"
             />
             {/* Central floral petals */}
-            <circle cx="0" cy="0" r="6" fill="rgba(201,134,10,0.25)" stroke="#FDE68A" strokeWidth="0.8" />
+            <circle cx="0" cy="0" r="6" fill="var(--accent-soft)" stroke="var(--accent-text)" strokeWidth="0.8" />
           </g>
 
           {/* Numerals & Intermediate Corner Ornaments */}
@@ -155,9 +155,9 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
                 fontFamily="'Traditional Arabic', 'Amiri', 'Scheherazade New', serif"
                 fontWeight="bold"
                 fontSize="17"
-                fill="#FDE68A"
+                fill="var(--accent-text)"
                 style={{
-                  textShadow: '0 0 6px rgba(201,134,10,0.5)',
+                  textShadow: '0 0 6px var(--accent-glow)',
                 }}
               >
                 {arabic}
@@ -196,7 +196,7 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
               fill="url(#ottomanGold)"
             />
             {/* Pierced spade center opening */}
-            <circle cx={center} cy={center - 38} r="3" fill="#0d121c" />
+            <circle cx={center} cy={center - 38} r="3" fill="var(--surface)" />
           </g>
 
           {/* Ornate Heritage Minute Hand */}
@@ -220,7 +220,7 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
               `}
               fill="url(#ottomanGold)"
             />
-            <circle cx={center} cy={center - 56} r="2.5" fill="#0d121c" />
+            <circle cx={center} cy={center - 56} r="2.5" fill="var(--surface)" />
           </g>
 
           {/* Slim Gold Second Hand */}
@@ -236,20 +236,20 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
                 y1={center + 18}
                 x2={center}
                 y2={center - 90}
-                stroke="#FDE68A"
+                stroke="var(--accent-text)"
                 strokeWidth="0.9"
               />
-              <circle cx={center} cy={center + 12} r="2.5" fill="#C9860A" />
+              <circle cx={center} cy={center + 12} r="2.5" fill="var(--accent)" />
             </g>
           )}
 
           {/* Center Medallion Cap */}
-          <circle cx={center} cy={center} r="5" fill="url(#ottomanGold)" stroke="#FFF" strokeWidth="0.8" />
+          <circle cx={center} cy={center} r="5" fill="url(#ottomanGold)" stroke="var(--accent-text)" strokeWidth="0.8" />
         </svg>
       </div>
 
       {!isStaticPreview && (
-        <p className="text-xs font-semibold tracking-wide text-primary mt-2 text-center">
+        <p className="text-xs font-semibold tracking-wide mt-2 text-center" style={{ color: 'var(--text-primary)' }}>
           {hijriDate}
         </p>
       )}

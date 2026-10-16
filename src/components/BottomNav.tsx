@@ -4,14 +4,9 @@ import { useLanguage } from "@/contexts/LanguageContext-new";
 import { memo, useEffect, useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 
-const AMBER = '#C9860A';
-const AMBER_DARK = '#E8A020';
-
 const BottomNav = memo(function BottomNav() {
   const { t } = useLanguage();
-  const { animationEnabled, effectiveTheme } = useSettings();
-  const isDark = effectiveTheme === 'dark';
-  const activeColor = isDark ? AMBER_DARK : AMBER;
+  const { animationEnabled } = useSettings();
   const location = useLocation();
 
   const [noBlur, setNoBlur] = useState<boolean>(() => {
@@ -54,15 +49,11 @@ const BottomNav = memo(function BottomNav() {
       <div
         className="w-full max-w-sm pointer-events-auto flex flex-row items-center justify-between h-[62px] px-3 rounded-[36px]"
         style={{
-          background: noBlur
-            ? (isDark ? 'rgb(28,32,48)' : 'rgb(255,255,255)')
-            : (isDark ? 'rgba(28,32,48,0.95)' : 'rgba(255,255,255,0.97)'),
+          background: 'var(--surface)',
           backdropFilter: noBlur ? 'none' : 'blur(28px)',
           WebkitBackdropFilter: noBlur ? 'none' : 'blur(28px)',
-          border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.05)',
-          boxShadow: isDark
-            ? '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)'
-            : '0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
         }}
       >
         {navItems.map((item) => (
@@ -81,12 +72,13 @@ const BottomNav = memo(function BottomNav() {
                 <div className="relative flex items-center justify-center w-10 h-8">
                   <div
                     className="absolute inset-0 rounded-xl transition-opacity duration-200"
-                    style={{ background: `${activeColor}18`, opacity: isActive ? 1 : 0 }}
+                    style={{ background: 'var(--accent-soft)', opacity: isActive ? 1 : 0 }}
                   />
                   <item.icon
                     className="w-[22px] h-[22px]"
                     style={{
-                      color: isActive ? activeColor : (isDark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.38)'),
+                      color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      opacity: isActive ? 1 : 0.7,
                       strokeWidth: isActive ? 2.5 : 1.8,
                       transition: 'color 0.2s, stroke-width 0.2s',
                     }}
@@ -95,7 +87,8 @@ const BottomNav = memo(function BottomNav() {
                 <span
                   className="text-xs font-semibold leading-none"
                   style={{
-                    color: isActive ? activeColor : (isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.38)'),
+                    color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
+                    opacity: isActive ? 1 : 0.7,
                     transition: 'color 0.2s',
                     letterSpacing: '0.01em',
                   }}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useLanguage } from '@/contexts/LanguageContext-new';
-import { ChevronLeft, ChevronRight, Sun, Moon, Monitor, Sparkles, Zap, Heart, BookOpen, Clock, Moon as MoonIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Zap, Heart, Clock, Moon as MoonIcon, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { goBackOrFallback } from "@/lib/navigation";
 import { getMadhab, setMadhab, isBeforeSleepEnabled, setBeforeSleepEnabled, getBedtimeHour, setBedtimeHour, getBedtimeMinute, setBedtimeMinute, type MadhabType } from '@/lib/storage';
@@ -10,6 +10,7 @@ import { scheduleBedtimeNotification, cancelBedtimeNotification } from '@/lib/be
 import { useClockStyle } from '@/lib/clock-style';
 import { CLOCK_STYLES } from '@/types/clock';
 import { ClockStyleModal } from '@/components/clocks/ClockStyleModal';
+import { useAppTheme } from '@/components/themes';
 
 const Settings = () => {
   const { 
@@ -21,11 +22,8 @@ const Settings = () => {
     toggleSplashGreeting,
     timeFormat,
     toggleTimeFormat,
-    theme, 
-    setTheme, 
-    effectiveTheme 
   } = useSettings();
-  const { t } = useLanguage();
+  const { currentTheme } = useAppTheme();
   const navigate = useNavigate();
   const { clockStyle } = useClockStyle();
   const [showClockModal, setShowClockModal] = useState(false);
@@ -82,33 +80,28 @@ const Settings = () => {
             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Appearance</h2>
           </div>
           
-          <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
-            {['light', 'system', 'dark'].map((tOption) => {
-              const isActive = theme === tOption;
-              const Icon = tOption === 'light' ? Sun : tOption === 'dark' ? Moon : Monitor;
-              return (
-                <button
-                  key={tOption}
-                  onClick={() => setTheme(tOption as any)}
-                  className={`flex-1 relative h-12 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 ${
-                    isActive ? 'text-foreground' : 'text-foreground/40 hover:text-foreground/70'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      {...motionProps({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.2 } })}
-                      className="absolute inset-0 bg-background rounded-2xl border border-border shadow-sm"
-                    />
-                  )}
-                  <Icon className="w-4 h-4 relative z-10" />
-                  <span className="text-sm font-bold capitalize relative z-10">{tOption}</span>
-                </button>
-              );
-            })}
+          <div 
+            onClick={() => navigate('/settings/app-theme')}
+            className="bg-card border border-border rounded-[28px] p-4 flex items-center justify-between cursor-pointer hover:border-border/80 transition-all"
+            role="button"
+            tabIndex={0}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
+                <Palette className="w-5 h-5 text-foreground/70" />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg">App Theme</h3>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Choose full-app color theme</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
+                {currentTheme.name}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </div>
           </div>
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
-            Currently using <span className="text-[#C9860A]">{effectiveTheme}</span> theme based on preferences.
-          </p>
         </section>
 
         {/* ── Preferences Section ── */}
@@ -132,7 +125,7 @@ const Settings = () => {
               <button 
                 onClick={toggleAnimation}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  animationEnabled ? 'bg-[#C9860A]' : 'bg-muted'
+                  animationEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
                 }`}
               >
                 <motion.div 
@@ -157,7 +150,7 @@ const Settings = () => {
               <button 
                 onClick={toggleSplashGreeting}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  splashGreetingEnabled ? 'bg-[#C9860A]' : 'bg-muted'
+                  splashGreetingEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
                 }`}
               >
                 <motion.div 
@@ -182,7 +175,7 @@ const Settings = () => {
               <button 
                 onClick={toggleGreeting}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  greetingEnabled ? 'bg-[#C9860A]' : 'bg-muted'
+                  greetingEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
                 }`}
               >
                 <motion.div 
@@ -207,7 +200,7 @@ const Settings = () => {
               <button 
                 onClick={toggleTimeFormat}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  timeFormat === '24h' ? 'bg-[#C9860A]' : 'bg-muted'
+                  timeFormat === '24h' ? 'bg-[var(--accent)]' : 'bg-muted'
                 }`}
               >
                 <motion.div 
@@ -230,12 +223,12 @@ const Settings = () => {
                   <Clock className="w-5 h-5 text-foreground/70" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate group-hover:text-amber-500 transition-colors">Clock Style</h3>
+                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate group-hover:text-[var(--accent-text)] transition-colors">Clock Style</h3>
                   <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Choose home screen clock design</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#C9860A]/15 text-[#C9860A] border border-[#C9860A]/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
                   {currentClockStyleName}
                 </span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
@@ -278,7 +271,7 @@ const Settings = () => {
             })}
           </div>
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
-            Determines Asr calculation. Currently using <span className="text-[#C9860A]">{madhab === 'hanafi' ? 'Hanafi' : 'Maliki, Shafi, Hanbali'}</span> school.
+            Determines Asr calculation. Currently using <span className="text-[var(--accent-text)]">{madhab === 'hanafi' ? 'Hanafi' : 'Maliki, Shafi, Hanbali'}</span> school.
           </p>
         </section>
 
@@ -308,7 +301,7 @@ const Settings = () => {
                   else cancelBedtimeNotification();
                 }}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
-                  bedtimeEnabled ? 'bg-[#C9860A]' : 'bg-muted'
+                  bedtimeEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
                 }`}
               >
                 <motion.div

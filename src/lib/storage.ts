@@ -96,14 +96,13 @@ export const storage = {
   },
 };
 
-// Theme
-export const getTheme = (): 'dark' | 'light' => {
-  return (localStorage.getItem(STORAGE_KEYS.THEME) as 'dark' | 'light') || 'light';
+// Theme (legacy stub: theme engine in theme-engine.ts manages all themes)
+export const getTheme = (): 'dark' => {
+  return 'dark';
 };
 
-export const setTheme = (theme: 'dark' | 'light'): void => {
-  localStorage.setItem(STORAGE_KEYS.THEME, theme);
-  document.documentElement.classList.toggle('dark', theme === 'dark');
+export const setTheme = (_theme: 'dark' | 'light'): void => {
+  document.documentElement.classList.add('dark');
 };
 
 // Madhab / Fiqh — simplified to the 2 options used by the app.

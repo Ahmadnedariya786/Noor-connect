@@ -82,12 +82,15 @@ export class ErrorBoundary extends Component<Props, State> {
       // Default error UI
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md border-border bg-card">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+              <div
+                className="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                style={{ backgroundColor: 'rgba(224, 122, 122, 0.15)', color: 'var(--danger)' }}
+              >
+                <AlertTriangle className="w-6 h-6" />
               </div>
-              <CardTitle className="text-red-600">Something went wrong</CardTitle>
+              <CardTitle style={{ color: 'var(--danger)' }}>Something went wrong</CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-4">
               <p className="text-sm text-muted-foreground">
@@ -107,7 +110,12 @@ export class ErrorBoundary extends Component<Props, State> {
               )}
               
               <div className="flex gap-2 justify-center">
-                <Button onClick={this.handleReset} size="sm" className="gap-2">
+                <Button
+                  onClick={this.handleReset}
+                  size="sm"
+                  className="gap-2"
+                  style={{ backgroundColor: 'var(--accent)', color: 'var(--on-accent)' }}
+                >
                   <RefreshCw className="w-4 h-4" />
                   Try Again
                 </Button>

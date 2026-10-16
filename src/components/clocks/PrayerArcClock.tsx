@@ -124,8 +124,8 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
           isStaticPreview ? "w-28 h-28 sm:w-32 sm:h-32 shadow-md" : "w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] shadow-2xl"
         )}
         style={{
-          border: '1.5px solid rgba(201, 134, 10, 0.4)',
-          background: 'radial-gradient(circle at 50% 50%, #151a25 0%, #0c1019 65%, #06080d 100%)',
+          border: '1.5px solid var(--border)',
+          background: 'radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)',
           boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,0,0,0.85)',
         }}
       >
@@ -136,12 +136,12 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
         >
           <defs>
             <linearGradient id="prayerArcGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FDE68A" />
-              <stop offset="50%" stopColor="#E8A020" />
-              <stop offset="100%" stopColor="#C9860A" />
+              <stop offset="0%" stopColor="var(--accent-text)" />
+              <stop offset="50%" stopColor="var(--accent)" />
+              <stop offset="100%" stopColor="var(--accent)" />
             </linearGradient>
             <filter id="arcGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#C9860A" floodOpacity="0.75" />
+              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="var(--accent-glow)" floodOpacity="0.8" />
             </filter>
           </defs>
 
@@ -161,7 +161,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
                 fontFamily="sans-serif"
                 fontWeight="600"
                 fontSize={hr % 3 === 0 ? '11' : '9.5'}
-                fill={hr % 3 === 0 ? '#94A3B8' : '#64748B'}
+                fill={hr % 3 === 0 ? 'var(--text-primary)' : 'var(--text-secondary)'}
               >
                 {hr}
               </text>
@@ -173,13 +173,13 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             <path
               d={backgroundArcPath}
               fill="none"
-              stroke="rgba(201, 134, 10, 0.18)"
+              stroke="var(--accent-soft)"
               strokeWidth="9"
               strokeLinecap="round"
             />
           )}
 
-          {/* Thick Glowing Gold Active Prayer Arc */}
+          {/* Thick Glowing Active Prayer Arc */}
           {filledArcPath && (
             <path
               d={filledArcPath}
@@ -197,15 +197,15 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
               cx="0"
               cy="0"
               r="7.5"
-              fill="#0F1420"
-              stroke="#C9860A"
+              fill="var(--surface)"
+              stroke="var(--accent)"
               strokeWidth="1.5"
-              filter="drop-shadow(0 0 4px rgba(201,134,10,0.5))"
+              filter="drop-shadow(0 0 4px var(--accent-glow))"
             />
             {/* Small Moon icon vector */}
             <path
               d="M 1.5 -3.5 A 3.8 3.8 0 1 0 1.5 3.5 A 2.8 2.8 0 0 1 1.5 -3.5 Z"
-              fill="#FDE68A"
+              fill="var(--accent-text)"
             />
           </g>
 
@@ -215,16 +215,16 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
               cx="0"
               cy="0"
               r="7.5"
-              fill="#0F1420"
-              stroke="#C9860A"
+              fill="var(--surface)"
+              stroke="var(--accent)"
               strokeWidth="1.5"
-              filter="drop-shadow(0 0 4px rgba(201,134,10,0.5))"
+              filter="drop-shadow(0 0 4px var(--accent-glow))"
             />
             {/* Small Bell icon vector */}
             <path
               d="M -2.5 1.5 C -2.5 -0.5, -1 -2, 0 -2.5 C 1 -2, 2.5 -0.5, 2.5 1.5 L 3.2 2.5 L -3.2 2.5 Z M -0.8 3 C -0.8 3.5, 0.8 3.5, 0.8 3"
-              fill="#FDE68A"
-              stroke="#FDE68A"
+              fill="var(--accent-text)"
+              stroke="var(--accent-text)"
               strokeWidth="0.5"
             />
           </g>
@@ -262,9 +262,9 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
           />
 
           {/* Center Hub */}
-          <circle cx={center} cy={center} r="3.5" fill="#C9860A" stroke="#FDE68A" strokeWidth="0.8" />
+          <circle cx={center} cy={center} r="3.5" fill="var(--accent)" stroke="var(--accent-text)" strokeWidth="0.8" />
 
-          {/* Center Info: Next Prayer Name + Live Countdown in small gold text */}
+          {/* Center Info: Next Prayer Name + Live Countdown */}
           <text
             x={center}
             y={center + 20}
@@ -274,7 +274,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             fontFamily="sans-serif"
             fontWeight="bold"
             letterSpacing="0.08em"
-            fill="#FDE68A"
+            fill="var(--accent-text)"
           >
             {getPrayerDisplayName(nextPrayer.name, now).toUpperCase()}
           </text>
@@ -286,7 +286,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             fontSize="8.5"
             fontFamily="monospace"
             fontWeight="600"
-            fill="#C9860A"
+            fill="var(--text-secondary)"
           >
             {countdownText}
           </text>
@@ -294,7 +294,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
       </div>
 
       {!isStaticPreview && (
-        <p className="text-xs font-semibold tracking-wide text-primary mt-2 text-center">
+        <p className="text-xs font-semibold tracking-wide mt-2 text-center" style={{ color: 'var(--accent-text)' }}>
           {hijriDate}
         </p>
       )}

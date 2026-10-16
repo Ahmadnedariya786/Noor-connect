@@ -111,9 +111,9 @@ function NextPrayerCountdownChip({ targetTime }: { targetTime?: Date | null }) {
     <span
       className="text-[10px] font-bold tracking-tight px-1.5 py-0.5 rounded-full"
       style={{
-        background: 'rgba(201, 134, 10, 0.18)',
-        color: '#E5A93C',
-        border: '1px solid rgba(201, 134, 10, 0.35)',
+        background: 'var(--accent-soft)',
+        color: 'var(--accent-text)',
+        border: '1px solid var(--border)',
       }}
     >
       {countdownStr}
@@ -158,7 +158,7 @@ function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
     <span
       key="countdown-value-node"
       className="text-sm font-black font-mono tabular-nums inline-block select-none"
-      style={{ color: '#C9860A' }}
+      style={{ color: 'var(--accent-text)' }}
     >
       {timeRemaining}
     </span>
@@ -426,9 +426,9 @@ function PremiumDashboardInner({
           <button
             onClick={onLocationClick}
             className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full transition-all active:scale-95 border"
-            style={{ background: 'rgba(201,134,10,0.08)', borderColor: 'rgba(201,134,10,0.22)' }}
+            style={{ background: 'var(--accent-soft)', borderColor: 'var(--border)' }}
           >
-            <MapPin className="w-3.5 h-3.5" style={{ color: '#C9860A' }} />
+            <MapPin className="w-3.5 h-3.5" style={{ color: 'var(--accent-text)' }} />
             <span className="text-xs font-semibold max-w-[130px] truncate text-foreground/85">
               {locationLabel}
             </span>
@@ -455,39 +455,43 @@ function PremiumDashboardInner({
           previousPrayer={previousPrayer}
         />
 
-        {/* ── Next Prayer Card (Azimuth dark style) ── */}
+        {/* ── Next Prayer Card ── */}
         <m.div
           key="next-prayer-card"
           {...motionProps({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 } })}
           className="relative overflow-hidden rounded-[24px]"
-          style={{ background: 'linear-gradient(145deg, #1A1E2E, #1E2438)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
+          style={{
+            background: 'linear-gradient(145deg, var(--surface), var(--surface-2))',
+            border: '1px solid var(--border)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+          }}
         >
           <div className="relative z-10 p-5">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>
+              <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent-text)' }}>
                 Next Prayer
               </p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
                 {locationLabel}
               </p>
             </div>
             <div className="flex items-end justify-between mb-4">
-              <p className="text-3xl font-bold text-white" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
+              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'inherit', fontStyle: 'italic' }}>
                 {getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime)}
               </p>
               <div className="text-right" key="next-prayer-countdown-container">
-                <p className="text-xs uppercase tracking-widest text-white/40 mb-0.5">In</p>
+                <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-secondary)' }}>In</p>
                 <LiveCountdown key="next-prayer-live-countdown" targetTime={nextPrayer.targetTime} />
               </div>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs text-white/40">at {nextPrayer.time}</span>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>at {nextPrayer.time}</span>
             </div>
-            {/* Amber progress bar */}
-            <div className="h-[3px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            {/* Progress bar */}
+            <div className="h-[3px] w-full rounded-full overflow-hidden" style={{ background: 'var(--accent-soft)' }}>
               <m.div
                 className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, #C9860A, #E8A020)' }}
+                style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-text))' }}
                 {...motionProps({ initial: { width: 0 }, animate: { width: `${nextPrayer.progress}%` }, transition: { duration: 1, ease: 'easeOut', delay: 0.4 } })}
               />
             </div>
@@ -559,16 +563,15 @@ function PremiumDashboardInner({
                               })}
                               className={cn(
                                 "group relative overflow-hidden p-4 rounded-2xl transition-all duration-200 select-none",
-                                "border border-border/70 hover:border-amber-500/30 hover:shadow-md active:scale-[0.98]",
-                                isNext && "border-[#C9860A] shadow-[0_0_18px_rgba(201,134,10,0.32),inset_0_0_0_1px_rgba(201,134,10,0.4)]"
+                                "border hover:shadow-md active:scale-[0.98]",
+                                isNext ? "ring-1 shadow-lg" : "border-border/70"
                               )}
                               style={{
+                                borderColor: isNext ? 'var(--accent)' : 'var(--border)',
+                                boxShadow: isNext ? '0 0 18px var(--accent-glow)' : undefined,
                                 background: isNext
-                                  ? 'linear-gradient(180deg, rgba(201,134,10,0.12) 0%, rgba(26,30,44,0.95) 100%)'
-                                  : 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(20,24,36,0.95) 100%)',
-                                boxShadow: isNext
-                                  ? '0 0 18px rgba(201,134,10,0.32), inset 0 1px 0 0 rgba(255,255,255,0.1)'
-                                  : 'inset 0 1px 0 0 rgba(255,255,255,0.05)',
+                                  ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
+                                  : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
                               }}
                             >
                               <div className="relative z-10 flex flex-col justify-between h-full">
@@ -577,8 +580,8 @@ function PremiumDashboardInner({
                                   <div
                                     className="w-8 h-8 flex items-center justify-center rounded-xl"
                                     style={isNext
-                                      ? { background: 'rgba(201,134,10,0.18)', color: '#C9860A' }
-                                      : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                                      ? { background: 'var(--accent-soft)', color: 'var(--accent-text)' }
+                                      : { background: 'var(--surface-2)', color: 'var(--text-secondary)' }}
                                   >
                                     {prayer.icon}
                                   </div>
@@ -588,7 +591,11 @@ function PremiumDashboardInner({
                                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
                                       <span
                                         className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-                                        style={{ background: 'rgba(201,134,10,0.18)', color: '#C9860A' }}
+                                        style={{
+                                          background: 'var(--accent-soft)',
+                                          color: 'var(--accent-text)',
+                                          border: '1px solid var(--border)',
+                                        }}
                                       >
                                         NEXT
                                       </span>
@@ -612,10 +619,10 @@ function PremiumDashboardInner({
                                   <p
                                     className={cn(
                                       "text-sm mt-0.5 font-semibold transition-colors tabular-nums",
-                                      isNext && "text-[#C9860A] font-bold",
                                       isOlderPast && "text-muted-foreground/45",
                                       !isNext && !isOlderPast && "text-foreground/85"
                                     )}
+                                    style={isNext ? { color: 'var(--accent-text)', fontWeight: 'bold' } : undefined}
                                   >
                                     {displayTime}
                                   </p>
@@ -629,7 +636,7 @@ function PremiumDashboardInner({
                                     className="h-full rounded-full transition-all duration-500"
                                     style={{
                                       width: `${Math.min(100, Math.max(0, nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100))}%`,
-                                      background: 'linear-gradient(90deg, #C9860A, #E8A020)',
+                                      background: 'linear-gradient(90deg, var(--accent), var(--accent-text))',
                                     }}
                                   />
                                 </div>
@@ -651,11 +658,14 @@ function PremiumDashboardInner({
                         animate: { opacity: 1, y: 0 },
                         transition: { duration: 0.4 }
                       })}
-                      className="p-5 rounded-[28px] bg-card/40 border border-border/40 backdrop-blur-md"
+                      className="p-5 rounded-[28px] bg-card/60 border border-border/70 backdrop-blur-md"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Daily Salah</h3>
-                        <div className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: 'rgba(201,134,10,0.1)', color: '#C9860A' }}>
+                        <div
+                          className="px-2 py-1 rounded-full text-xs font-bold"
+                          style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}
+                        >
                           {prayers.filter(p => p.isCompleted).length} / 5
                         </div>
                       </div>
@@ -669,8 +679,8 @@ function PremiumDashboardInner({
                             <div
                               className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
                               style={prayer.isCompleted
-                                ? { background: '#C9860A', color: 'white', boxShadow: '0 0 14px rgba(201,134,10,0.35)', transform: 'scale(1.1)' }
-                                : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(var(--border))' }}
+                                ? { background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 0 14px var(--accent-glow)', transform: 'scale(1.1)' }
+                                : { background: 'var(--surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                             >
                               {prayer.isCompleted ? (
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -680,7 +690,7 @@ function PremiumDashboardInner({
                                 prayer.icon
                               )}
                             </div>
-                            <span className="text-xs font-semibold" style={{ color: prayer.isCompleted ? '#C9860A' : 'hsl(var(--muted-foreground))' }}>
+                            <span className="text-xs font-semibold" style={{ color: prayer.isCompleted ? 'var(--accent-text)' : 'var(--text-secondary)' }}>
                               {prayer.name.slice(0, 3)}
                             </span>
                           </button>

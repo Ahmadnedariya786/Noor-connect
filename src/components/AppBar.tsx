@@ -25,13 +25,13 @@ export function AppBar({
 
   return (
     <header className={cn("sticky top-0 z-40 transition-all duration-300 safe-top", className)}
-      style={{ background: transparent ? 'transparent' : 'hsl(var(--background) / 0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(201,134,10,0.15)' }}
+      style={{ background: transparent ? 'transparent' : 'var(--bg-base)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)' }}
     >
       <div className="relative flex items-center h-[56px] px-4 max-w-lg mx-auto">
         {showBack && (
           <button
             onClick={() => { if (onBack) { onBack(); } else { goBackOrFallback(navigate, "/dashboard"); } }}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 border border-[#C9860A]/20 bg-card mr-3 hover:border-[#C9860A]/40"
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 border border-border bg-card mr-3 hover:border-accent"
           >
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>

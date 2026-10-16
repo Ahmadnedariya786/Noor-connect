@@ -56,6 +56,7 @@ import { useLanguage } from '@/contexts/LanguageContext-new';
 import { ClockStylePicker } from '@/components/clocks/ClockStylePicker';
 import { useClockStyle } from '@/lib/clock-style';
 import { CLOCK_STYLES } from '@/types/clock';
+import { ThemePicker, useAppTheme } from '@/components/themes';
 
 import { getMadhab, setMadhab, type MadhabType } from '@/lib/storage';
 import { AladhanAPI } from '@/lib/aladhan-api';
@@ -78,6 +79,7 @@ import { AutoBackupCard } from '@/components/AutoBackupCard';
 
 const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
   appearance: { title: 'Theme & Appearance', subtitle: 'Display, animations & splash settings', icon: Palette },
+  'app-theme': { title: 'App Theme', subtitle: 'Choose your full-app color theme', icon: Palette },
   'clock-style': { title: 'Clock Style', subtitle: 'Select home screen clock design', icon: Clock },
   haptics: { title: 'Haptic Feedback', subtitle: 'Vibration & tactile feedback settings', icon: Vibrate },
   personal: { title: 'Personal Information', subtitle: 'Gender, language & preferred currency', icon: User },
@@ -102,8 +104,6 @@ const SettingsSubPage: React.FC = () => {
   const { toast } = useToast();
   const { language, setLanguage } = useLanguage();
   const {
-    theme,
-    setTheme,
     animationEnabled,
     setAnimationEnabled,
     greetingEnabled,
@@ -118,6 +118,7 @@ const SettingsSubPage: React.FC = () => {
 
   const { clockStyle } = useClockStyle();
   const currentClockStyleName = CLOCK_STYLES.find(s => s.id === clockStyle)?.name || 'Digital Bold';
+  const { currentTheme } = useAppTheme();
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
@@ -377,69 +378,60 @@ const SettingsSubPage: React.FC = () => {
             </Card>
 
             <Card className="p-4 space-y-4 rounded-2xl">
-              <div className="flex items-center justify-between py-1">
+              <div
+                className="flex items-center justify-between py-1 cursor-pointer group"
+                onClick={() => navigate('/settings/app-theme')}
+                role="button"
+                tabIndex={0}
+              >
                 <div>
-                  <Label className="text-sm font-bold">App Theme</Label>
-                  <p className="text-xs text-slate-400">Switch between light & dark mode</p>
+                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">App Theme</Label>
+                  <p className="text-xs text-muted-foreground">Choose your full-app color theme</p>
                 </div>
-                <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                  <button
-                    onClick={() => setTheme('light')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${theme === 'light' ? 'bg-white dark:bg-slate-700 shadow text-amber-600' : 'text-slate-400'}`}
-                  >
-                    Light
-                  </button>
-                  <button
-                    onClick={() => setTheme('system')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${theme === 'system' ? 'bg-white dark:bg-slate-700 shadow text-amber-600' : 'text-slate-400'}`}
-                  >
-                    System
-                  </button>
-                  <button
-                    onClick={() => setTheme('dark')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${theme === 'dark' ? 'bg-white dark:bg-slate-700 shadow text-amber-400' : 'text-slate-400'}`}
-                  >
-                    Dark
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
+                    {currentTheme.name}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
                 <div>
                   <Label className="text-sm font-bold">Fluid Animations</Label>
-                  <p className="text-xs text-slate-400">Enable smooth UI transitions</p>
+                  <p className="text-xs text-muted-foreground">Enable smooth UI transitions</p>
                 </div>
                 <Switch checked={animationEnabled} onCheckedChange={setAnimationEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
                 <div>
                   <Label className="text-sm font-bold">Salam Greeting</Label>
-                  <p className="text-xs text-slate-400">Show daily salam on home screen</p>
+                  <p className="text-xs text-muted-foreground">Show daily salam on home screen</p>
                 </div>
                 <Switch checked={greetingEnabled} onCheckedChange={setGreetingEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
                 <div>
                   <Label className="text-sm font-bold">Splash Welcome</Label>
-                  <p className="text-xs text-slate-400">Show "Islamic Companion" on launch</p>
+                  <p className="text-xs text-muted-foreground">Show "Islamic Companion" on launch</p>
                 </div>
                 <Switch checked={splashGreetingEnabled} onCheckedChange={setSplashGreetingEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
                 <div>
                   <Label className="text-sm font-bold">Splash Screen</Label>
-                  <p className="text-xs text-slate-400">Enable app startup animation</p>
+                  <p className="text-xs text-muted-foreground">Enable app startup animation</p>
                 </div>
                 <Switch checked={splashEnabled} onCheckedChange={setSplashEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
                 <div>
                   <Label className="text-sm font-bold">24-Hour Time Format</Label>
-                  <p className="text-xs text-slate-400">Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
+                  <p className="text-xs text-muted-foreground">Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
                 </div>
                 <Switch
                   checked={timeFormat === '24h'}
@@ -448,23 +440,30 @@ const SettingsSubPage: React.FC = () => {
               </div>
 
               <div
-                className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3 cursor-pointer group"
+                className="flex items-center justify-between py-1 border-t border-border/40 pt-3 cursor-pointer group"
                 onClick={() => navigate('/settings/clock-style')}
                 role="button"
                 tabIndex={0}
               >
                 <div>
-                  <Label className="text-sm font-bold cursor-pointer group-hover:text-amber-500 transition-colors">Clock Style</Label>
-                  <p className="text-xs text-slate-400">Choose home screen clock appearance</p>
+                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">Clock Style</Label>
+                  <p className="text-xs text-muted-foreground">Choose home screen clock appearance</p>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
                     {currentClockStyleName}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
             </Card>
+          </div>
+        )}
+
+        {/* APP THEME SECTION */}
+        {sectionId === 'app-theme' && (
+          <div className="space-y-4">
+            <ThemePicker />
           </div>
         )}
 

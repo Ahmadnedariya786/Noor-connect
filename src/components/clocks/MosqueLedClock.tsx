@@ -58,24 +58,27 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
       <div
         className={cn(
           "w-full max-w-sm rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all",
-          "border border-amber-500/30",
           isStaticPreview ? "p-2.5 rounded-xl shadow-md" : "p-4 sm:p-5 shadow-2xl"
         )}
         style={{
-          background: 'linear-gradient(180deg, #0d0f14 0%, #06070a 100%)',
-          boxShadow: 'inset 0 0 25px rgba(0, 0, 0, 0.9), 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 1px rgba(245, 158, 11, 0.25)',
+          border: '1px solid var(--border)',
+          background: 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
+          boxShadow: 'inset 0 0 25px rgba(0, 0, 0, 0.9), 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 1px var(--accent-glow)',
         }}
       >
         {/* Top Mosque Header / Hijri Date */}
-        <div className="w-full flex items-center justify-between text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase mb-1.5 px-1 text-amber-500/80">
+        <div
+          className="w-full flex items-center justify-between text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase mb-1.5 px-1"
+          style={{ color: 'var(--accent-text)' }}
+        >
           <span className="truncate max-w-[65%]">{hijriDate}</span>
           {is12 && (
             <span
-              className="px-1.5 py-0.5 rounded text-[9px] font-black border border-amber-500/40"
+              className="px-1.5 py-0.5 rounded text-[9px] font-black"
               style={{
-                color: '#FFB800',
-                textShadow: '0 0 8px rgba(255, 184, 0, 0.8)',
-                background: 'rgba(255, 184, 0, 0.1)',
+                color: 'var(--on-accent)',
+                background: 'var(--accent)',
+                border: '1px solid var(--border)',
               }}
             >
               {ampm}
@@ -87,8 +90,10 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
         <div className="relative flex items-center justify-center my-0.5 sm:my-1">
           {/* Ghost unlit 88:88 segments */}
           <div
-            className="font-mono font-bold tracking-widest text-amber-500/[0.08] pointer-events-none select-none tabular-nums"
+            className="font-mono font-bold tracking-widest pointer-events-none select-none tabular-nums"
             style={{
+              color: 'var(--accent)',
+              opacity: 0.12,
               fontSize: isStaticPreview ? '22px' : 'clamp(38px, 12vw, 60px)',
               letterSpacing: '0.12em',
             }}
@@ -97,13 +102,14 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             {ghostTime}
           </div>
 
-          {/* Active Glowing Amber Digits */}
+          {/* Active Glowing Digits */}
           <div
-            className="absolute inset-0 flex items-center justify-center font-mono font-bold tracking-widest text-[#FFB800] tabular-nums"
+            className="absolute inset-0 flex items-center justify-center font-mono font-bold tracking-widest tabular-nums"
             style={{
+              color: 'var(--accent-text)',
               fontSize: isStaticPreview ? '22px' : 'clamp(38px, 12vw, 60px)',
               letterSpacing: '0.12em',
-              textShadow: '0 0 10px rgba(255, 184, 0, 0.85), 0 0 20px rgba(245, 158, 11, 0.5), 0 0 35px rgba(217, 119, 6, 0.3)',
+              textShadow: '0 0 10px var(--accent-glow), 0 0 20px var(--accent-glow)',
             }}
           >
             <span>{displayHours}</span>
@@ -112,21 +118,33 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             {!isStaticPreview && (
               <>
                 <span className="inline-block mx-0.5 animate-pulse">:</span>
-                <span className="text-amber-400/90">{displaySeconds}</span>
+                <span style={{ color: 'var(--accent-text)', opacity: 0.9 }}>{displaySeconds}</span>
               </>
             )}
           </div>
         </div>
 
         {/* Thin Divider & Next Prayer Live Countdown Banner */}
-        <div className="w-full border-t border-amber-500/20 mt-2 pt-2 flex items-center justify-between text-[10px] sm:text-xs font-mono font-bold tracking-wider">
-          <span className="text-amber-300/80 uppercase flex items-center gap-1 truncate">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+        <div
+          className="w-full mt-2 pt-2 flex items-center justify-between text-[10px] sm:text-xs font-mono font-bold tracking-wider"
+          style={{ borderTop: '1px solid var(--border)' }}
+        >
+          <span
+            className="uppercase flex items-center gap-1 truncate"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-ping inline-block"
+              style={{ background: 'var(--accent)' }}
+            />
             <span className="truncate">{getPrayerDisplayName(nextPrayer.name, now) || 'Prayer'}</span>
           </span>
           <span
-            className="font-black text-amber-400 shrink-0 ml-2"
-            style={{ textShadow: '0 0 6px rgba(255, 184, 0, 0.6)' }}
+            className="font-black shrink-0 ml-2"
+            style={{
+              color: 'var(--accent-text)',
+              textShadow: '0 0 6px var(--accent-glow)',
+            }}
           >
             IN {countdownText}
           </span>

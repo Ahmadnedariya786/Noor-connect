@@ -56,7 +56,7 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
         <div>
           <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
             Clock Display Styles
-            <Sparkles className="w-4 h-4 text-amber-500" />
+            <Sparkles className="w-4 h-4" style={{ color: 'var(--accent)' }} />
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Select a design for your home dashboard. Applied instantly.
@@ -83,15 +83,17 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
               }}
               className={cn(
                 "group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 cursor-pointer select-none text-left p-3 sm:p-3.5",
-                "bg-card/90 border backdrop-blur-sm",
+                "border backdrop-blur-sm",
                 isSelected
-                  ? "border-[#C9860A] ring-1 ring-[#C9860A] shadow-[0_0_18px_rgba(201,134,10,0.28)]"
-                  : "border-border/70 hover:border-amber-500/40 hover:bg-card active:scale-[0.98]"
+                  ? "ring-1 shadow-lg"
+                  : "border-border/70 hover:bg-card active:scale-[0.98]"
               )}
               style={{
+                borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
+                boxShadow: isSelected ? '0 0 16px var(--accent-glow)' : undefined,
                 background: isSelected
-                  ? 'linear-gradient(180deg, rgba(201,134,10,0.08) 0%, rgba(20,24,34,0.95) 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(15,19,28,0.9) 100%)',
+                  ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
+                  : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
               }}
             >
               {/* Top Row: Name and Active Badge */}
@@ -100,8 +102,9 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                   <h3
                     className={cn(
                       "text-xs sm:text-sm font-bold tracking-tight truncate",
-                      isSelected ? "text-amber-400" : "text-foreground group-hover:text-amber-300"
+                      isSelected ? "text-amber-400" : "text-foreground"
                     )}
+                    style={{ color: isSelected ? 'var(--accent-text)' : undefined }}
                   >
                     {style.name}
                   </h3>
@@ -111,12 +114,18 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                 </div>
 
                 {isSelected ? (
-                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#C9860A] text-white shrink-0 shadow-sm">
+                  <span
+                    className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black shrink-0 shadow-sm"
+                    style={{
+                      backgroundColor: 'var(--accent)',
+                      color: 'var(--on-accent)',
+                    }}
+                  >
                     <Check className="w-2.5 h-2.5 stroke-[3]" />
                     Active
                   </span>
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full border border-border/80 group-hover:border-amber-500/50 shrink-0 mt-0.5" />
+                  <div className="w-3.5 h-3.5 rounded-full border border-border/80 shrink-0 mt-0.5" />
                 )}
               </div>
 

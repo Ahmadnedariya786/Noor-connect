@@ -23,8 +23,9 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
       )}
     >
       <h1
-        className="font-black leading-none tracking-tighter text-foreground tabular-nums"
+        className="font-black leading-none tracking-tighter tabular-nums"
         style={{
+          color: 'var(--text-primary)',
           fontSize: isStaticPreview ? '28px' : 'clamp(52px, 18vw, 96px)',
           letterSpacing: '-0.03em',
         }}
@@ -33,9 +34,10 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
       </h1>
       <p
         className={cn(
-          "font-semibold tracking-wide text-primary px-3 text-center leading-tight",
-          isStaticPreview ? "text-[10px] text-primary/90 truncate max-w-[150px]" : "text-sm md:text-base"
+          "font-semibold tracking-wide px-3 text-center leading-tight",
+          isStaticPreview ? "text-[10px] truncate max-w-[150px]" : "text-sm md:text-base"
         )}
+        style={{ color: 'var(--accent-text)' }}
       >
         {hijriDate}
       </p>

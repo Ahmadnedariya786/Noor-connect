@@ -97,22 +97,22 @@ export default function Services() {
                             animate: { opacity: 1, scale: 1 },
                             transition: { duration: 0.5 }
                         })}
-                        className="relative overflow-hidden rounded-[24px] bg-gradient-to-br p-6 sm:p-8 shadow-2xl"
-                        style={{ background: 'linear-gradient(145deg, #1A1E2E, #1E2438)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
+                        className="relative overflow-hidden rounded-[24px] p-6 sm:p-8 shadow-2xl"
+                        style={{ background: 'linear-gradient(145deg, var(--surface), var(--surface-2))', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
                     >
                         {/* Elegant Light Gradients */}
-                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[20px] pointer-events-none" style={{ background: 'rgba(201,134,10,0.15)' }} />
-                        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-[20px] pointer-events-none" style={{ background: 'rgba(59,130,246,0.15)' }} />
+                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[20px] pointer-events-none" style={{ background: 'var(--accent-soft)' }} />
+                        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-[20px] pointer-events-none" style={{ background: 'var(--accent-glow)' }} />
                         
                         <div className="relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-4">
-                                <Sparkles className="w-4 h-4" style={{ color: '#C9860A' }} />
-                                <span className="text-white/90 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C9860A' }}>Islamic Hub</span>
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface-2)] backdrop-blur-md border border-[var(--border)] mb-4">
+                                <Sparkles className="w-4 h-4 text-[var(--accent-text)]" />
+                                <span className="text-[var(--accent-text)] text-xs font-bold uppercase tracking-[0.18em]">Islamic Hub</span>
                             </div>
-                            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight tracking-tight mb-2" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
+                            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] leading-tight tracking-tight mb-2" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
                                 Discover<br/>Resources
                             </h2>
-                            <p className="text-white/60 text-xs sm:text-sm font-medium max-w-[85%] leading-relaxed">
+                            <p className="text-[var(--text-secondary)] text-xs sm:text-sm font-medium max-w-[85%] leading-relaxed">
                                 Essential tools for your spiritual journey.
                             </p>
                         </div>
