@@ -2,6 +2,8 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { recordCrash } from '@/lib/crash-logger';
+import { BUILD_COMMIT } from '@/buildInfo';
 
 interface Props {
   children: ReactNode;
@@ -35,7 +37,22 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
+    try {
+      const commit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || 'unknown';
+      const componentStack = errorInfo?.componentStack || '';
+
+      recordCrash({
+        type: 'react-boundary',
+        message: error?.message || String(error),
+        stack: componentStack.slice(0, 500) || error?.stack || '',
+        time: new Date().toISOString(),
+        commit,
+      });
+    } catch {
+      // silent fallback for diagnostics recording inside ErrorBoundary
+    }
+
     this.setState({
       error,
       errorInfo,

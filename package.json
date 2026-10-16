@@ -8,6 +8,7 @@
     "build": "npm run version:sync && npm run build:widget-assets && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "typecheck": "node scripts/typecheck.cjs",
     "preview": "vite preview",
     "version:sync": "node scripts/sync-version.js",
     "import:hadith": "node scripts/import-hadith-data.js",

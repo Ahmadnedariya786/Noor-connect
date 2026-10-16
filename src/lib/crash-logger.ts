@@ -10,10 +10,11 @@ export interface CrashEntry {
   route: string;
   type?: string;
   step?: string;
+  commit?: string;
 }
 
 const CRASH_STORAGE_KEY = 'noor_last_crash';
-const MAX_ENTRIES = 3;
+const MAX_ENTRIES = 5;
 
 function getSafeRoute(): string {
   try {
@@ -43,16 +44,22 @@ export function recordCrash(entry: {
   time?: string;
   type?: string;
   step?: string;
+  commit?: string;
 }): void {
   try {
     const existing = getLastCrashes();
+    const formattedStack = entry.type === 'react-boundary'
+      ? (entry.stack ? entry.stack.trim().slice(0, 500) : '')
+      : extractFirstFiveStackLines(entry.stack);
+
     const cleanEntry: CrashEntry = {
       message: entry.message || 'Unknown error',
-      stack: extractFirstFiveStackLines(entry.stack),
+      stack: formattedStack,
       time: entry.time || new Date().toISOString(),
       route: entry.route || getSafeRoute(),
       ...(entry.type ? { type: entry.type } : {}),
       ...(entry.step ? { step: entry.step } : {}),
+      ...(entry.commit ? { commit: entry.commit } : {}),
     };
 
     const updated = [cleanEntry, ...existing].slice(0, MAX_ENTRIES);

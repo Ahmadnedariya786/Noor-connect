@@ -4,6 +4,7 @@ import { Bell, MapPin, ChevronRight, Activity, Compass, X, Check } from "lucide-
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import {
@@ -530,7 +531,7 @@ function PremiumDashboardInner({
                           );
 
                           // Respect 12h / 24h format
-                          const is12 = timeFormat === '12' || timeFormat === '12h';
+                          const is12 = (timeFormat as string) === '12' || timeFormat === '12h';
                           const displayTime = prayer.date instanceof Date && !isNaN(prayer.date.getTime())
                             ? prayer.date.toLocaleTimeString([], {
                                 hour: '2-digit',

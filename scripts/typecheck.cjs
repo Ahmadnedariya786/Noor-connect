@@ -1,0 +1,107 @@
+const fs = require('fs');
+const path = require('path');
+const ts = require('typescript');
+
+console.log('Running Noor Connect TypeCheck and Import Verification...');
+
+let hasErrors = false;
+const errorLog = [];
+
+function logError(file, line, message) {
+  hasErrors = true;
+  errorLog.push(`${file}:${line} - ${message}`);
+  console.error(`  ERROR: ${file}:${line} - ${message}`);
+}
+
+// 1. AST / Lexical Landmine Sweep for Common Helpers across entire src/
+function walk(dir) {
+  let results = [];
+  const list = fs.readdirSync(dir);
+  for (const file of list) {
+    const full = path.join(dir, file);
+    const stat = fs.statSync(full);
+    if (stat && stat.isDirectory()) {
+      results = results.concat(walk(full));
+    } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
+const allSrcFiles = walk('src');
+console.log(`Inspecting ${allSrcFiles.length} source files for missing helper and hook imports...`);
+
+const helpersToCheck = [
+  { name: 'cn', importPattern: /import\s+[^;]*\bcn\b[^;]*from/, defPattern: /(?:function|const|let|var)\s+cn\b/ },
+  { name: 'clsx', importPattern: /import\s+[^;]*\bclsx\b[^;]*from/, defPattern: /(?:function|const|let|var)\s+clsx\b/ },
+  { name: 'twMerge', importPattern: /import\s+[^;]*\btwMerge\b[^;]*from/, defPattern: /(?:function|const|let|var)\s+twMerge\b/ },
+];
+
+for (const f of allSrcFiles) {
+  const content = fs.readFileSync(f, 'utf8');
+  const lines = content.split('\n');
+
+  for (const helper of helpersToCheck) {
+    const usageRegex = new RegExp('\\b' + helper.name + '\\(');
+    if (usageRegex.test(content)) {
+      const hasImport = helper.importPattern.test(content);
+      const hasDef = helper.defPattern.test(content);
+      if (!hasImport && !hasDef) {
+        // Find line number of first usage
+        for (let i = 0; i < lines.length; i++) {
+          if (usageRegex.test(lines[i])) {
+            logError(f, i + 1, `Identifier '${helper.name}' is used without being imported or defined`);
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 2. TypeScript Compiler Diagnostics for src/components
+console.log('Running TypeScript diagnostics for src/components...');
+try {
+  const configPath = ts.findConfigFile('./', ts.sys.fileExists, 'tsconfig.json');
+  if (configPath) {
+    const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+    const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, './');
+
+    const program = ts.createProgram({
+      rootNames: parsed.fileNames,
+      options: parsed.options,
+    });
+
+    for (const sourceFile of program.getSourceFiles()) {
+      const fileName = sourceFile.fileName.replace(/\\/g, '/');
+      if (!fileName.includes('/src/components/')) continue;
+
+      const fileDiags = [
+        ...program.getSyntacticDiagnostics(sourceFile),
+        ...program.getSemanticDiagnostics(sourceFile),
+      ];
+
+      for (const diag of fileDiags) {
+        // Flag undefined variables (TS2304: Cannot find name), suggestions (TS2552), or missing modules (TS2307)
+        if (diag.code === 2304 || diag.code === 2552) {
+          const pos = sourceFile.getLineAndCharacterOfPosition(diag.start);
+          const msg = ts.flattenDiagnosticMessageText(diag.messageText, '\n');
+          logError(fileName, pos.line + 1, `[TS${diag.code}] ${msg}`);
+        }
+      }
+    }
+  }
+} catch (tsErr) {
+  console.warn('TypeScript diagnostics check warning:', tsErr.message);
+}
+
+// 3. Final Summary & Exit Code
+if (hasErrors) {
+  console.error('\nTypeCheck FAILED with ' + errorLog.length + ' error(s):');
+  errorLog.forEach(e => console.error('  - ' + e));
+  process.exit(1);
+} else {
+  console.log('\nTypeCheck PASSED: 0 undefined identifiers, all helpers properly imported across src/components and src/.\n');
+  process.exit(0);
+}

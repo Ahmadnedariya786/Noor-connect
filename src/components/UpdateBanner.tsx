@@ -1,39 +1,104 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sparkles, Download, X } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import {
   checkNightlyUpdate,
   downloadAndInstallUpdate,
   formatReleaseDate,
+  formatCommit,
   isBannerDismissed,
-  isCommitDismissed,
   dismissBanner,
   type UpdateCheckResult,
 } from '@/lib/update-checker';
+import { BUILD_COMMIT } from '@/buildInfo';
+
+const LAST_AUTO_CHECK_KEY = 'noor_last_auto_check';
+const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+
+// In-memory guard to ensure auto-check runs exactly once per app launch on Home mount
+let autoCheckedThisLaunch = false;
 
 export const UpdateBanner: React.FC = () => {
   const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
-  const [dismissed, setDismissed] = useState<boolean>(false);
+  const [dismissed, setDismissed] = useState<boolean>(() => isBannerDismissed());
+
+  const runSilentUpdateCheck = useCallback(async () => {
+    try {
+      localStorage.setItem(LAST_AUTO_CHECK_KEY, Date.now().toString());
+      // Silent cache-busted update check
+      const res = await checkNightlyUpdate(true);
+      if (res.hasUpdate && res.status === 'Update available') {
+        const localCommit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || '';
+        const remoteCommit = res.release?.commitSha || '';
+        // Verify release commit SHA differs from build commit
+        if (remoteCommit && localCommit && remoteCommit.toLowerCase().startsWith(localCommit.toLowerCase())) {
+          setUpdateInfo(null);
+          return;
+        }
+        setUpdateInfo(res);
+        setDismissed(isBannerDismissed());
+      } else {
+        setUpdateInfo(null);
+      }
+    } catch {
+      // Handled silent background update check failure - no toast, no banner
+      setUpdateInfo(null);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
-    checkNightlyUpdate(false)
-      .then((res) => {
-        if (isMounted) {
-          setUpdateInfo(res);
-          const isDismissed = isBannerDismissed(res.release?.commitSha) ||
-                              (res.release?.commitSha ? isCommitDismissed(res.release.commitSha) : false);
-          setDismissed(isDismissed);
-        }
-      })
-      .catch(() => {
-        // Safe silent fallback
-      });
 
+    // 1. Silent auto-check on Home mount once per app launch
+    if (!autoCheckedThisLaunch) {
+      autoCheckedThisLaunch = true;
+      runSilentUpdateCheck();
+    }
+
+    // 2. Resume-from-background check if older than 6 hours
+    const handleResume = () => {
+      if (!isMounted) return;
+      try {
+        const last = Number(localStorage.getItem(LAST_AUTO_CHECK_KEY) || '0');
+        if (Date.now() - last > SIX_HOURS_MS) {
+          runSilentUpdateCheck();
+        }
+      } catch {
+        // silent fallback for resume check timestamp read
+      }
+    };
+
+    // Listen to native app resume
+    let appStateHandle: { remove: () => void } | null = null;
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appStateChange', (state) => {
+        if (state.isActive) {
+          handleResume();
+        }
+      }).then((handle) => {
+        appStateHandle = handle;
+      }).catch(() => {
+        // silent fallback for capacitor appState listener
+      });
+    }
+
+    // Listen to web document visibility change
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        handleResume();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Also listen to any external check result (e.g. manual trigger in Settings)
     const handleUpdateResult = (e: CustomEvent<UpdateCheckResult>) => {
       if (isMounted && e.detail) {
-        setUpdateInfo(e.detail);
-        if (e.detail.hasUpdate) {
-          setDismissed(false);
+        if (e.detail.hasUpdate && e.detail.status === 'Update available') {
+          setUpdateInfo(e.detail);
+          setDismissed(isBannerDismissed());
+        } else {
+          setUpdateInfo(null);
         }
       }
     };
@@ -42,9 +107,17 @@ export const UpdateBanner: React.FC = () => {
 
     return () => {
       isMounted = false;
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('noor-update-check-result', handleUpdateResult as EventListener);
+      if (appStateHandle) {
+        try {
+          appStateHandle.remove();
+        } catch {
+          // silent fallback on listener cleanup
+        }
+      }
     };
-  }, []);
+  }, [runSilentUpdateCheck]);
 
   if (!updateInfo?.hasUpdate || dismissed) {
     return null;
@@ -56,9 +129,13 @@ export const UpdateBanner: React.FC = () => {
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dismissBanner(updateInfo.release?.commitSha);
+    dismissBanner();
     setDismissed(true);
   };
+
+  const subtitle = updateInfo.release?.publishedAt
+    ? `Nightly build · ${formatReleaseDate(updateInfo.release.publishedAt)}`
+    : (updateInfo.release?.commitSha ? `Commit: ${formatCommit(updateInfo.release.commitSha)}` : 'Nightly build');
 
   return (
     <div
@@ -71,11 +148,11 @@ export const UpdateBanner: React.FC = () => {
           handleInstall();
         }
       }}
-      className="relative overflow-hidden p-3.5 rounded-2xl border transition-all active:scale-[0.99] cursor-pointer flex items-center justify-between gap-3 text-left animate-in fade-in slide-in-from-top-2 duration-300 select-none shadow-lg"
+      className="relative overflow-hidden p-3.5 rounded-2xl border transition-all active:scale-[0.99] cursor-pointer flex items-center justify-between gap-3 text-left animate-in fade-in slide-in-from-top-2 duration-300 select-none shadow-lg mb-3"
       style={{
         background: 'linear-gradient(135deg, rgba(201,134,10,0.14) 0%, rgba(201,134,10,0.05) 100%)',
-        borderColor: 'rgba(201,134,10,0.32)',
-        boxShadow: '0 4px 18px rgba(201,134,10,0.09)',
+        borderColor: 'rgba(201,134,10,0.45)',
+        boxShadow: '0 4px 18px rgba(201,134,10,0.12), inset 0 0 0 1px rgba(201,134,10,0.2)',
       }}
       aria-label="Update available, tap to install"
     >
@@ -91,10 +168,10 @@ export const UpdateBanner: React.FC = () => {
         </div>
         <div className="min-w-0">
           <p className="text-xs font-bold text-amber-500 dark:text-amber-400 tracking-wide leading-tight">
-            Update available — tap to install
+            Update available
           </p>
           <p className="text-[11px] text-muted-foreground truncate pt-0.5">
-            Nightly build • {formatReleaseDate(updateInfo.release?.publishedAt)}
+            {subtitle}
           </p>
         </div>
       </div>
@@ -103,9 +180,9 @@ export const UpdateBanner: React.FC = () => {
         <div
           className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
           style={{
-            background: 'rgba(201,134,10,0.18)',
+            background: 'rgba(201,134,10,0.22)',
             color: '#F5C542',
-            border: '1px solid rgba(201,134,10,0.35)',
+            border: '1px solid rgba(201,134,10,0.4)',
           }}
         >
           <Download className="w-3 h-3" />

@@ -1065,13 +1065,20 @@ const SettingsSubPage: React.FC = () => {
                       <div key={idx} className="p-2.5 rounded-xl bg-muted/60 border border-border text-left space-y-1">
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                           <span className="font-mono">{new Date(entry.time).toLocaleTimeString()} · {new Date(entry.time).toLocaleDateString()}</span>
-                          <span className="font-semibold text-foreground/80 truncate max-w-[140px]">{entry.route}</span>
+                          <span className="font-semibold text-foreground/80 truncate max-w-[160px]">
+                            {entry.type ? `[${entry.type}]` : entry.route}
+                          </span>
                         </div>
                         <p className="text-xs font-semibold text-red-500 dark:text-red-400 break-words">
                           {entry.message}
                         </p>
+                        {entry.commit && (
+                          <p className="text-[10px] font-mono text-muted-foreground/75">
+                            Commit: {entry.commit.length > 7 ? entry.commit.slice(0, 7) : entry.commit}
+                          </p>
+                        )}
                         {entry.stack && (
-                          <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-hidden max-h-20 bg-background/50 p-1.5 rounded">
+                          <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-hidden max-h-24 bg-background/50 p-1.5 rounded">
                             {entry.stack}
                           </pre>
                         )}

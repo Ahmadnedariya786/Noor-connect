@@ -637,13 +637,13 @@ export function isCommitDismissed(commitSha?: string | null): boolean {
   }
 }
 
+let inMemoryBannerDismissed = false;
+
 /**
- * Check if the update banner was dismissed for this commit or session.
+ * Check if the update banner was dismissed for this launch.
  */
-export function isBannerDismissed(commitSha?: string | null): boolean {
-  if (commitSha && isCommitDismissed(commitSha)) {
-    return true;
-  }
+export function isBannerDismissed(_commitSha?: string | null): boolean {
+  if (inMemoryBannerDismissed) return true;
   try {
     return sessionStorage.getItem(DISMISSED_SESSION_KEY) === '1';
   } catch {
@@ -653,12 +653,11 @@ export function isBannerDismissed(commitSha?: string | null): boolean {
 }
 
 /**
- * Dismiss the update banner (persisting the commit SHA in localStorage).
+ * Dismiss the update banner for this launch only.
+ * Returns next launch while update is newer; once updated, SHA matches and banner never shows.
  */
-export function dismissBanner(commitSha?: string | null): void {
-  if (commitSha) {
-    dismissUpdateCommit(commitSha);
-  }
+export function dismissBanner(_commitSha?: string | null): void {
+  inMemoryBannerDismissed = true;
   try {
     sessionStorage.setItem(DISMISSED_SESSION_KEY, '1');
   } catch {

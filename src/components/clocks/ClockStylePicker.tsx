@@ -37,7 +37,7 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
   const { toast } = useToast();
 
   const normalizedTimeFormat: '12h' | '24h' =
-    timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
+    (timeFormat as string) === '24' || timeFormat === '24h' ? '24h' : '12h';
 
   const handleSelect = (styleId: ClockStyleId, styleName: string) => {
     setClockStyle(styleId);
