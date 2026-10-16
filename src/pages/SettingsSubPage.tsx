@@ -327,26 +327,26 @@ const SettingsSubPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-4">
+    <div className="min-h-screen bg-[var(--bg-base)] pb-4">
       {/* Header */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80 px-4 pb-3.5 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
+      <header className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bg-base)]/85 border-b border-[var(--border)] px-4 pb-3.5 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
         <div className="max-w-md mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/profile')}
-            className="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
+            className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-all"
             aria-label="Go back to Profile"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
+            <h1 className="text-base font-bold text-[var(--text-primary)] leading-tight">
               {meta.title}
             </h1>
-            <p className="text-[11px] text-slate-400 dark:text-slate-400">
+            <p className="text-[11px] text-[var(--text-secondary)]">
               {meta.subtitle}
             </p>
           </div>
-          <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
             <IconComponent className="w-4 h-4" />
           </div>
         </div>
@@ -358,7 +358,7 @@ const SettingsSubPage: React.FC = () => {
         {sectionId === 'appearance' && (
           <div className="space-y-4">
             <Card className="p-4 space-y-4 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-2">
                 <Globe className="w-4 h-4" />
                 Language
               </Label>
@@ -386,52 +386,52 @@ const SettingsSubPage: React.FC = () => {
               >
                 <div>
                   <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">App Theme</Label>
-                  <p className="text-xs text-muted-foreground">Choose your full-app color theme</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Choose your full-app color theme</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
                     {currentTheme.name}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
                   <Label className="text-sm font-bold">Fluid Animations</Label>
-                  <p className="text-xs text-muted-foreground">Enable smooth UI transitions</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Enable smooth UI transitions</p>
                 </div>
                 <Switch checked={animationEnabled} onCheckedChange={setAnimationEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
                   <Label className="text-sm font-bold">Salam Greeting</Label>
-                  <p className="text-xs text-muted-foreground">Show daily salam on home screen</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Show daily salam on home screen</p>
                 </div>
                 <Switch checked={greetingEnabled} onCheckedChange={setGreetingEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
                   <Label className="text-sm font-bold">Splash Welcome</Label>
-                  <p className="text-xs text-muted-foreground">Show "Islamic Companion" on launch</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Show "Islamic Companion" on launch</p>
                 </div>
                 <Switch checked={splashGreetingEnabled} onCheckedChange={setSplashGreetingEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
                   <Label className="text-sm font-bold">Splash Screen</Label>
-                  <p className="text-xs text-muted-foreground">Enable app startup animation</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Enable app startup animation</p>
                 </div>
                 <Switch checked={splashEnabled} onCheckedChange={setSplashEnabled} />
               </div>
 
-              <div className="flex items-center justify-between py-1 border-t border-border/40 pt-3">
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
                   <Label className="text-sm font-bold">24-Hour Time Format</Label>
-                  <p className="text-xs text-muted-foreground">Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
                 </div>
                 <Switch
                   checked={timeFormat === '24h'}
@@ -440,20 +440,20 @@ const SettingsSubPage: React.FC = () => {
               </div>
 
               <div
-                className="flex items-center justify-between py-1 border-t border-border/40 pt-3 cursor-pointer group"
+                className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3 cursor-pointer group"
                 onClick={() => navigate('/settings/clock-style')}
                 role="button"
                 tabIndex={0}
               >
                 <div>
                   <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">Clock Style</Label>
-                  <p className="text-xs text-muted-foreground">Choose home screen clock appearance</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Choose home screen clock appearance</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
                     {currentClockStyleName}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
             </Card>
@@ -768,18 +768,18 @@ const SettingsSubPage: React.FC = () => {
             <Card className="p-4 space-y-3 rounded-2xl">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Storage Usage</Label>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
-                <span className="text-slate-700 dark:text-slate-300">Offline Quran Audio</span>
-                <span className="text-amber-600 text-xs sm:text-sm font-medium">
+                <span className="text-[var(--text-primary)]">Offline Quran Audio</span>
+                <span className="text-[var(--accent)] text-xs sm:text-sm font-medium">
                   {quranDownloads.reciters} reciter{quranDownloads.reciters !== 1 ? "s" : ""} • {quranDownloads.count} surah{quranDownloads.count !== 1 ? "s" : ""} • {formatFileSize(quranDownloads.size)}
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
-                <span className="text-slate-700 dark:text-slate-300">Downloaded E-books</span>
-                <span className="text-amber-600 text-xs sm:text-sm font-medium">{formatFileSize(storageStats.totalSize)}</span>
+                <span className="text-[var(--text-primary)]">Downloaded E-books</span>
+                <span className="text-[var(--accent)] text-xs sm:text-sm font-medium">{formatFileSize(storageStats.totalSize)}</span>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-slate-100 dark:border-slate-800 pt-2">
-                <span className="text-slate-700 dark:text-slate-300">Books Cached</span>
-                <span className="text-xs sm:text-sm text-slate-500 font-medium">{storageStats.totalBooks} files</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
+                <span className="text-[var(--text-primary)]">Books Cached</span>
+                <span className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium">{storageStats.totalBooks} files</span>
               </div>
             </Card>
 
@@ -1218,30 +1218,30 @@ const SettingsSubPage: React.FC = () => {
 
                 <Button
                   variant="outline"
-                  className="w-full h-11 justify-center bg-white dark:bg-slate-900 hover:bg-emerald-500/10 hover:text-emerald-700 transition-all rounded-xl border-slate-200 dark:border-slate-800"
+                  className="w-full h-11 justify-center bg-[var(--surface-2)] text-[var(--text-primary)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] transition-all rounded-xl border border-[var(--border)]"
                   onClick={() => window.open('https://ubaid-ur-rehmanportfolio.vercel.app/', '_blank')}
                 >
-                  <ExternalLink className="w-4 h-4 mr-2 text-emerald-600" />
+                  <ExternalLink className="w-4 h-4 mr-2 text-[var(--accent)]" />
                   <span className="font-medium">View my work</span>
                 </Button>
 
                 <button
-                  className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 transition-colors p-2 rounded-xl border border-slate-100 dark:border-slate-800/60"
+                  className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors p-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
                   onClick={() => window.location.href = 'mailto:arifubaid0345@gmail.com'}
                 >
-                  <Mail className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <Mail className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">Gmail</span> — arifubaid0345@gmail.com
+                    <span className="font-semibold text-[var(--text-primary)]">Gmail</span> — arifubaid0345@gmail.com
                   </span>
                 </button>
 
                 <button
-                  className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 transition-colors p-2 rounded-xl border border-slate-100 dark:border-slate-800/60"
+                  className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors p-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
                   onClick={() => window.location.href = 'mailto:ubaid0345@proton.me'}
                 >
-                  <Mail className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <Mail className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>
-                    Other email: <span className="font-semibold text-slate-800 dark:text-slate-200">Proton</span> — ubaid0345@proton.me
+                    Other email: <span className="font-semibold text-[var(--text-primary)]">Proton</span> — ubaid0345@proton.me
                   </span>
                 </button>
               </div>

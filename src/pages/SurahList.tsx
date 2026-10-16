@@ -39,7 +39,7 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
                     {surah.name}
                   </h3>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="px-1.5 py-0.5 rounded-full bg-muted text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+                    <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] shrink-0">
                       {surah.revelationType}
                     </span>
                     <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider shrink-0">
@@ -125,20 +125,20 @@ export default function SurahList() {
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a4a] via-[#245a5a] to-[#2c6e6e]" />
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
-          <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
+          <div className="absolute inset-0 bg-emerald-950/20 backdrop-blur-[1px]" />
 
           <div className="relative z-10 p-5 sm:p-8 flex flex-col items-center text-center">
             <div className="flex items-center gap-3 mb-4 sm:mb-6 w-full min-w-0">
               <button
                 onClick={() => goBackOrFallback(navigate, '/dashboard')}
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors shrink-0"
+                className="p-2 rounded-full bg-emerald-950/40 border border-emerald-500/20 hover:bg-emerald-900/50 transition-colors shrink-0"
               >
                 <ChevronLeft className="w-5 h-5 text-white" />
               </button>
               <h1 className="text-2xl sm:text-4xl font-arabic font-bold text-white flex-1 truncate">Al-Quran Al-Kareem</h1>
             </div>
 
-            <p className="text-white/60 text-xs font-medium max-w-[240px] leading-relaxed mb-6 sm:mb-8">
+            <p className="text-emerald-100/70 text-xs font-medium max-w-[240px] leading-relaxed mb-6 sm:mb-8">
               Read, listen, and contemplate the divine guidance
             </p>
 
@@ -149,9 +149,9 @@ export default function SurahList() {
                 { label: 'Ayahs', value: '6,236' },
                 { label: 'Juz', value: '30' }
               ].map((stat, idx) => (
-                <div key={idx} className="bg-black/20 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-white/5">
-                  <p className="text-primary text-base sm:text-lg font-black tracking-tighter">{stat.value}</p>
-                  <p className="text-white/50 text-[10px] sm:text-xs uppercase font-bold tracking-wider mt-1 truncate">{stat.label}</p>
+                <div key={idx} className="bg-emerald-950/40 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-emerald-500/20">
+                  <p className="text-emerald-300 text-base sm:text-lg font-black tracking-tighter">{stat.value}</p>
+                  <p className="text-emerald-100/70 text-[10px] sm:text-xs uppercase font-bold tracking-wider mt-1 truncate">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -244,7 +244,7 @@ export default function SurahList() {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
-              <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
+              <div className="absolute inset-0 bg-emerald-950/20 backdrop-blur-[1px]" />
 
               <div className="relative z-10 p-8">
                 <div className="flex items-center gap-2 mb-4">
@@ -254,12 +254,12 @@ export default function SurahList() {
                   </span>
                 </div>
 
-                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/5 mb-4">
+                <div className="bg-emerald-950/30 backdrop-blur-md rounded-2xl p-6 border border-emerald-500/25 mb-4">
                   <p className="text-white/90 text-base font-medium leading-relaxed mb-4">
                     {dailyAyah?.content || 'Loading...'}
                   </p>
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-white/10 text-white/80 border-white/10 text-xs">
+                    <Badge className="bg-emerald-950/40 text-emerald-200 border border-emerald-500/30 text-xs font-semibold">
                       {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
                     </Badge>
                     <span className="text-white/50 text-xs font-medium">{dailyAyah?.reference || ''}</span>

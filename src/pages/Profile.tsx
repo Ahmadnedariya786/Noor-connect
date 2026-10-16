@@ -305,30 +305,30 @@ const Profile: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-4">
+    <div className="min-h-screen bg-[var(--bg-base)] pb-4">
       {/* Sticky Glassmorphic Navigation Bar */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80 px-4 pb-3.5 safe-top transition-all" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
+      <header className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bg-base)]/85 border-b border-[var(--border)] px-4 pb-3.5 safe-top transition-all" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
         <div className="max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
-              className="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
+              className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-all"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-none flex items-center gap-2">
+              <h1 className="text-lg font-bold text-[var(--text-primary)] leading-none flex items-center gap-2">
                 Settings
-                <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+                <Sparkles className="w-4 h-4 text-[var(--accent)] animate-pulse" />
               </h1>
-              <p className="text-[11px] font-medium tracking-wide text-slate-400 dark:text-slate-400 mt-0.5">
+              <p className="text-[11px] font-medium tracking-wide text-[var(--text-secondary)] mt-0.5">
                 Noor Connect • Mobile Control Hub
               </p>
             </div>
           </div>
 
-          <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shadow-sm">
             <SettingsIcon className="w-4 h-4" />
           </div>
         </div>
@@ -338,45 +338,45 @@ const Profile: React.FC = () => {
       <main className="max-w-md mx-auto px-4 pt-4 space-y-5">
 
         {/* Settings Hero Card */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-850 to-amber-950/40 p-4 text-white shadow-md border border-slate-800">
+        <div className="relative overflow-hidden rounded-2xl bg-[var(--surface)] p-4 text-[var(--text-primary)] shadow-md border border-[var(--border)]">
           <div className="relative z-10 flex items-center justify-between">
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 backdrop-blur-sm">
-                <CheckCircle2 className="w-3 h-3 text-amber-400" />
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] backdrop-blur-sm">
+                <CheckCircle2 className="w-3 h-3 text-[var(--accent)]" />
                 Performance Optimized
               </div>
-              <h2 className="text-base font-bold tracking-tight text-amber-100">
+              <h2 className="text-base font-bold tracking-tight text-[var(--text-primary)]">
                 Islamic Mobile Experience
               </h2>
-              <p className="text-xs text-slate-300 max-w-[240px]">
+              <p className="text-xs text-[var(--text-secondary)] max-w-[240px]">
                 Configure prayer alerts, themes, and notifications with zero lag.
               </p>
             </div>
 
-            <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-amber-400" />
+            <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] backdrop-blur-md items-center justify-center text-[var(--accent)]">
+              <ShieldCheck className="w-6 h-6 text-[var(--accent)]" />
             </div>
           </div>
 
           {/* Background Decorative Element */}
-          <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-[var(--accent-soft)] rounded-full blur-2xl pointer-events-none" />
         </div>
 
         {/* Group Cards */}
         {GROUPS.map((group) => (
           <section key={group.id} className="space-y-2">
             <div className="flex items-center justify-between px-1">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                 {group.title}
               </h2>
               {group.badge && (
-                <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
                   {group.badge}
                 </span>
               )}
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden divide-y divide-[var(--border)]">
               {group.rows.map((row) => {
                 const IconComponent = row.icon;
                 const hasAsyncKey = !!row.asyncKey;
@@ -386,7 +386,7 @@ const Profile: React.FC = () => {
                   <div
                     key={row.id}
                     onClick={() => navigate(row.route)}
-                    className="group flex items-center justify-between px-4 py-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-all duration-150 cursor-pointer"
+                    className="group flex items-center justify-between px-4 py-3.5 hover:bg-[var(--surface-2)] active:bg-[var(--surface-2)] transition-all duration-150 cursor-pointer"
                   >
                     <div className="flex items-center gap-3.5 min-w-0 flex-1">
                       <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${row.gradient} border flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
@@ -394,10 +394,10 @@ const Profile: React.FC = () => {
                       </div>
 
                       <div className="min-w-0 flex-1 pe-2">
-                        <div className="text-[14px] font-semibold text-slate-800 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors leading-tight">
+                        <div className="text-[14px] font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors leading-tight">
                           {row.title}
                         </div>
-                        <div className="text-[11px] font-normal text-slate-400 dark:text-slate-400 mt-0.5 truncate">
+                        <div className="text-[11px] font-normal text-[var(--text-secondary)] mt-0.5 truncate">
                           {row.subtitle}
                         </div>
                       </div>
@@ -406,14 +406,14 @@ const Profile: React.FC = () => {
                     <div className="flex items-center gap-2 flex-shrink-0 ms-2">
                       {hasAsyncKey && (
                         val === undefined ? (
-                          <div className="w-8 h-4 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
+                          <div className="w-8 h-4 bg-[var(--surface-2)] rounded-full animate-pulse" />
                         ) : val !== null ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
                             {val}
                           </span>
                         ) : null
                       )}
-                      <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform" />
+                      <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] opacity-50 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all" />
                     </div>
                   </div>
                 );
@@ -424,12 +424,12 @@ const Profile: React.FC = () => {
 
         {/* Privacy & Version Footer */}
         <div className="pt-4 text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-medium border border-emerald-500/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
             <Lock className="w-3 h-3" />
             100% Private • Local Data Security
           </div>
 
-          <p className="text-xs text-slate-400 dark:text-slate-400 font-medium">
+          <p className="text-xs text-[var(--text-secondary)] font-medium">
             Noor Connect v{CURRENT_APP_VERSION}
           </p>
         </div>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, ArrowRight, Target } from 'lucide-react';
@@ -57,7 +57,7 @@ export function HabitWidget({ className }: HabitWidgetProps) {
   const c = 2 * Math.PI * r;
 
   return (
-    <Card className={cn('overflow-hidden border-border/40', className ?? '')}>
+    <Card className={cn('overflow-hidden border border-[var(--border)] bg-[var(--surface)]', className ?? '')}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center gap-3">
           <div className="relative w-10 h-10 shrink-0">
@@ -68,7 +68,7 @@ export function HabitWidget({ className }: HabitWidgetProps) {
                 cy={20}
                 r={r}
                 fill="none"
-                stroke="rgba(201,134,10,0.95)"
+                stroke="var(--accent)"
                 strokeWidth={5}
                 strokeLinecap="round"
                 strokeDasharray={c}
@@ -82,7 +82,7 @@ export function HabitWidget({ className }: HabitWidgetProps) {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-xs font-semibold flex items-center gap-1">
-              <Target className="w-3 h-3 text-[#C9860A]" /> Habits
+              <Target className="w-3 h-3 text-[var(--accent)]" /> Habits
             </h4>
             <p className="text-[10px] text-muted-foreground">
               {completedCount}/{habits.length} done today
@@ -110,7 +110,7 @@ export function HabitWidget({ className }: HabitWidgetProps) {
                   {done && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
                 </span>
                 <span className="text-xs">{h.icon}</span>
-                <span className={cn('text-xs flex-1 truncate', done ? 'text-[#C9860A] font-medium' : 'text-foreground')}>
+                <span className={cn('text-xs flex-1 truncate', done ? 'text-[var(--accent)] font-medium' : 'text-foreground')}>
                   {h.name}
                 </span>
               </button>

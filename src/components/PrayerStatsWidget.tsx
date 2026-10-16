@@ -97,10 +97,10 @@ export function PrayerStatsWidget() {
   }, [loadStats]);
 
   const getStreakColor = (streak: number) => {
-    if (streak >= 30) return 'text-[#C9860A] bg-card border-[#C9860A]/50 shadow-[0_0_10px_rgba(201,134,10,0.2)]';
-    if (streak >= 14) return 'text-[#C9860A] bg-card border-[#C9860A]/40';
-    if (streak >= 7) return 'text-[#C9860A] bg-card border-[#C9860A]/30';
-    return 'text-[#C9860A] bg-card border-border/40';
+    if (streak >= 30) return 'text-[var(--accent)] bg-[var(--surface-2)] border-[var(--accent)]/50';
+    if (streak >= 14) return 'text-[var(--accent)] bg-[var(--surface-2)] border-[var(--accent)]/40';
+    if (streak >= 7) return 'text-[var(--accent)] bg-[var(--surface-2)] border-[var(--accent)]/30';
+    return 'text-[var(--accent)] bg-[var(--surface-2)] border-[var(--border)]';
   };
 
   const achievements = useMemo(() => {
@@ -135,13 +135,13 @@ export function PrayerStatsWidget() {
 
   if (loading) {
     return (
-      <Card className="p-4">
+      <Card className="p-4 bg-[var(--surface)] border border-[var(--border)]">
         <div className="space-y-4 animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/3" />
-          <div className="h-8 bg-muted rounded w-1/2" />
+          <div className="h-4 bg-[var(--surface-2)] rounded w-1/3" />
+          <div className="h-8 bg-[var(--surface-2)] rounded w-1/2" />
           <div className="grid grid-cols-2 gap-3">
-            <div className="h-12 bg-muted rounded" />
-            <div className="h-12 bg-muted rounded" />
+            <div className="h-12 bg-[var(--surface-2)] rounded" />
+            <div className="h-12 bg-[var(--surface-2)] rounded" />
           </div>
         </div>
       </Card>
@@ -153,22 +153,22 @@ export function PrayerStatsWidget() {
   const missed = Math.max(0, stats.totalPossible - stats.completed);
 
   return (
-    <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 transition-all duration-500 shadow-md">
+    <Card className="relative overflow-hidden bg-[var(--surface)] border border-[var(--border)] transition-all duration-500 shadow-md">
       {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
-      <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-2xl" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--accent)]/10 rounded-full blur-2xl" />
       
       <CardHeader className="pb-3 relative z-10">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
-            <TrendingUp className="w-4 h-4 text-[#C9860A]" />
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
+            <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
             Prayer Statistics
           </CardTitle>
           <div className="flex gap-1 relative z-10">
             <Button
               variant={timeRange === 'week' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-7 px-2 text-xs uppercase font-bold tracking-wider rounded-lg ${timeRange === 'week' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-7 px-2 text-xs uppercase font-bold tracking-wider rounded-lg ${timeRange === 'week' ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
               onClick={() => setTimeRange('week')}
             >
               Week
@@ -176,7 +176,7 @@ export function PrayerStatsWidget() {
             <Button
               variant={timeRange === 'month' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-7 px-2 text-xs uppercase font-bold tracking-wider rounded-lg ${timeRange === 'month' ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-7 px-2 text-xs uppercase font-bold tracking-wider rounded-lg ${timeRange === 'month' ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
               onClick={() => setTimeRange('month')}
             >
               Month
@@ -188,28 +188,28 @@ export function PrayerStatsWidget() {
       <CardContent className="space-y-4 relative z-10">
         {/* Main Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl bg-card/50 border border-border/40 backdrop-blur-sm">
+          <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="w-4 h-4 text-[#C9860A]" />
-              <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Completed</span>
+              <CheckCircle className="w-4 h-4 text-[var(--accent)]" />
+              <span className="text-xs uppercase tracking-wider font-bold text-[var(--text-secondary)]">Completed</span>
             </div>
-            <p className="text-2xl font-bold font-serif italic text-white">
+            <p className="text-2xl font-bold font-serif italic text-[var(--text-primary)]">
               {stats.completed}
             </p>
-            <p className="text-xs uppercase font-bold text-muted-foreground mt-1 tracking-wider">
+            <p className="text-xs uppercase font-bold text-[var(--text-secondary)] mt-1 tracking-wider">
               {stats.completionRate}% rate
             </p>
           </div>
           
-          <div className="p-3 rounded-xl bg-card/50 border border-border/40 backdrop-blur-sm">
+          <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-[#C9860A]" />
-              <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Remaining</span>
+              <Target className="w-4 h-4 text-[var(--accent)]" />
+              <span className="text-xs uppercase tracking-wider font-bold text-[var(--text-secondary)]">Remaining</span>
             </div>
-            <p className="text-2xl font-bold font-serif italic text-white">
+            <p className="text-2xl font-bold font-serif italic text-[var(--text-primary)]">
               {missed}
             </p>
-            <p className="text-xs uppercase font-bold text-muted-foreground mt-1 tracking-wider">
+            <p className="text-xs uppercase font-bold text-[var(--text-secondary)] mt-1 tracking-wider">
               of {stats.totalPossible}
             </p>
           </div>
@@ -219,16 +219,16 @@ export function PrayerStatsWidget() {
         <div className={`p-3 rounded-xl border backdrop-blur-sm ${getStreakColor(stats.currentStreak)}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-[#C9860A]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Current Streak</span>
+              <Award className="w-4 h-4 text-[var(--accent)]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Current Streak</span>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold font-serif italic text-white">{stats.currentStreak}</p>
-              <p className="text-xs font-bold uppercase text-muted-foreground">days</p>
+              <p className="text-2xl font-bold font-serif italic text-[var(--text-primary)]">{stats.currentStreak}</p>
+              <p className="text-xs font-bold uppercase text-[var(--text-secondary)]">days</p>
             </div>
           </div>
           {stats.longestStreak > stats.currentStreak && (
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-1">
               Longest: {stats.longestStreak} days
             </p>
           )}
@@ -236,25 +236,25 @@ export function PrayerStatsWidget() {
 
         {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
             <span>Completion Rate</span>
-            <span className="text-[#C9860A]">
+            <span className="text-[var(--accent)]">
               {stats.completionRate}%
             </span>
           </div>
           <Progress 
             value={stats.completionRate} 
-            className="h-2 bg-black/50"
+            className="h-2 bg-[var(--surface-2)] border border-[var(--border)]"
           />
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center pt-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] text-center pt-1">
             Avg {stats.averagePerDay}/5 per day • Today {stats.todayCompleted}/5
           </p>
         </div>
 
         {/* Achievements */}
         <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-muted-foreground">
-            <Trophy className="w-4 h-4 text-[#C9860A]" />
+          <h4 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-[var(--text-secondary)]">
+            <Trophy className="w-4 h-4 text-[var(--accent)]" />
             Recent Achievements
           </h4>
           <div className="space-y-2">
@@ -262,17 +262,17 @@ export function PrayerStatsWidget() {
               achievements.slice(0, 2).map((achievement) => (
                 <div
                   key={achievement.id}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-card/50 border border-border/40 backdrop-blur-sm"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] backdrop-blur-sm"
                 >
-                  <achievement.icon className="w-4 h-4 text-[#C9860A]" />
+                  <achievement.icon className="w-4 h-4 text-[var(--accent)]" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-white truncate">{achievement.title}</p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">{achievement.description}</p>
+                    <p className="text-xs font-bold text-[var(--text-primary)] truncate">{achievement.title}</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] truncate">{achievement.description}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground p-3 rounded-lg bg-card/50 border border-border/40 text-center">
+              <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-center">
                 Keep checking in your prayers to unlock achievements.
               </div>
             )}
@@ -283,7 +283,7 @@ export function PrayerStatsWidget() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full gap-2 border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
+          className="w-full gap-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] font-bold uppercase tracking-wider text-xs"
           onClick={() => navigate('/prayer-stats')}
         >
           <Calendar className="w-4 h-4" />

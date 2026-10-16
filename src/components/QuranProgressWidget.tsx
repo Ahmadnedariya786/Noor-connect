@@ -82,10 +82,10 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
 
   if (loading) {
     return (
-      <Card className={`bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md ${className || ''}`}>
+      <Card className={`bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-md ${className || ''}`}>
         <CardHeader>
-          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
-            <BookOpen className="w-5 h-5 text-[#C9860A]" />
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
+            <BookOpen className="w-5 h-5 text-[var(--accent-text)]" />
             Quran Progress
           </CardTitle>
         </CardHeader>
@@ -102,20 +102,20 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
 
   if (!progress) {
     return (
-      <Card className={`bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md ${className || ''}`}>
+      <Card className={`bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-md ${className || ''}`}>
         <CardHeader>
-          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
-            <BookOpen className="w-5 h-5 text-[#C9860A]" />
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
+            <BookOpen className="w-5 h-5 text-[var(--accent-text)]" />
             Quran Progress
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">No progress data available</p>
+            <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest">No progress data available</p>
             <Button
               variant="outline"
               size="sm"
-              className="mt-4 border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
+              className="mt-4 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text-primary)] font-bold uppercase tracking-wider text-xs rounded-xl"
               onClick={() => window.location.href = '/quran'}
             >
               Start Reading
@@ -130,13 +130,13 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   const motivationalMessage = getMotivationalMessage(progress.percentage);
 
   return (
-    <Card className={`relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md ${className || ''}`}>
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-[20px] pointer-events-none" />
+    <Card className={`relative overflow-hidden bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-md ${className || ''}`}>
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)]/50 to-transparent" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 rounded-full blur-[20px] pointer-events-none" />
 
       <CardHeader className="relative z-10">
-        <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
-          <BookOpen className="w-5 h-5 text-[#C9860A]" />
+        <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
+          <BookOpen className="w-5 h-5 text-[var(--accent-text)]" />
           Quran Progress
         </CardTitle>
       </CardHeader>
@@ -147,44 +147,44 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             <svg className="transform -rotate-90 w-24 h-24">
               <circle cx="48" cy="48" r="36" stroke="currentColor" strokeWidth="8" fill="none" className="text-muted/30" />
               <circle
-                cx="48" cy="48" r="36" stroke="#C9860A" strokeWidth="8" fill="none"
+                cx="48" cy="48" r="36" stroke="var(--accent)" strokeWidth="8" fill="none"
                 strokeDasharray={`${2 * Math.PI * 36}`}
                 strokeDashoffset={`${2 * Math.PI * 36 * (1 - progress.percentage / 100)}`}
                 style={{ transform: 'rotate(-90deg)', transformOrigin: '48px 48px', transition: 'stroke-dashoffset 0.5s ease' }}
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-2xl font-bold font-serif italic text-white">{Math.round(progress.percentage)}%</span>
+              <span className="text-2xl font-bold font-serif italic text-[var(--text-primary)]">{Math.round(progress.percentage)}%</span>
             </div>
           </div>
 
           <div className="space-y-1">
-            <p className="text-3xl font-bold font-serif italic text-[#C9860A]">
+            <p className="text-3xl font-bold font-serif italic text-[var(--accent-text)]">
               {progress.completedSurahs} / {progress.totalSurahs}
             </p>
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Surahs fully Completed</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">Surahs fully Completed</p>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-2">
-          <Progress value={progress.percentage} className="h-2 bg-black/50" />
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">
+          <Progress value={progress.percentage} className="h-2 bg-[var(--surface-2)]" />
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] text-center">
             {progress.pagesRead} / {progress.totalPages} Pages Read
           </p>
         </div>
 
         {/* Achievement Badge */}
         <div className="flex items-center justify-center">
-          <Badge className="bg-[#C9860A]/10 text-[#C9860A] border border-[#C9860A]/30 flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-widest">
+          <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-widest">
             <achievement.icon className="w-4 h-4" />
             {achievement.text}
           </Badge>
         </div>
 
         {/* Motivational Message */}
-        <div className="text-center p-3 bg-card/50 border border-border/40 rounded-lg">
-          <p className="text-xs font-medium text-foreground/80">{motivationalMessage}</p>
+        <div className="text-center p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
+          <p className="text-xs font-medium text-[var(--text-primary)]/90">{motivationalMessage}</p>
         </div>
 
         {/* Action Button */}
@@ -193,7 +193,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             variant="default"
             size="sm"
             onClick={() => window.location.href = '/quran'}
-            className="gap-2 bg-[#C9860A] text-white hover:bg-[#C9860A]/90 font-bold uppercase tracking-wider text-xs w-full"
+            className="gap-2 bg-[var(--accent)] text-[var(--on-accent)] hover:opacity-90 font-bold uppercase tracking-wider text-xs w-full rounded-xl"
           >
             <BookOpen className="w-4 h-4" />
             Continue Reading
@@ -202,7 +202,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             variant="outline"
             size="sm"
             onClick={() => window.location.href = '/quran-progress'}
-            className="gap-2 w-full border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
+            className="gap-2 w-full border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text-primary)] font-bold uppercase tracking-wider text-xs rounded-xl"
           >
             <TrendingUp className="w-4 h-4" />
             View Details

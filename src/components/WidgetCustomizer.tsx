@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -54,7 +54,7 @@ const getCategoryColor = (category: string) => {
     case "premium":
       return "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800";
     default:
-      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+      return "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]";
   }
 };
 
@@ -304,7 +304,7 @@ export function WidgetCustomizer() {
             <Button
               variant="outline"
               onClick={resetToDefault}
-              className="gap-2 w-full sm:w-auto rounded-xl border-slate-300 dark:border-slate-700"
+              className="gap-2 w-full sm:w-auto rounded-xl border border-[var(--border)]"
             >
               <RotateCcw className="w-4 h-4" /> Reset to Default
             </Button>

@@ -309,7 +309,7 @@ function PremiumDashboardInner({
           <m.div
             {...motionProps({ initial: { opacity: 0, scale: 0.95 }, animate: { opacity: 1, scale: 1 } })}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-card border border-border/40 shadow-2xl rounded-[32px] transition-colors"
+            className="w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-2xl rounded-[32px] transition-colors"
           >
             <div
               className="p-6 overflow-y-auto overscroll-contain"
@@ -321,12 +321,12 @@ function PremiumDashboardInner({
               onTouchMove={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-black text-foreground">Set Location</h3>
+                <h3 className="text-xl font-black text-[var(--text-primary)]">Set Location</h3>
                 <button
                   type="button"
                   onClick={handleCloseModal}
                   aria-label="Close location dialog"
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground active:scale-95"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] active:scale-95"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -378,9 +378,9 @@ function PremiumDashboardInner({
                 </Button>
 
                 <div className="flex items-center gap-3 py-2">
-                  <div className="flex-1 h-px bg-border" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">or search</span>
-                  <div className="flex-1 h-px bg-border" />
+                  <div className="flex-1 h-px bg-[var(--border)]" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">or search</span>
+                  <div className="flex-1 h-px bg-[var(--border)]" />
                 </div>
 
                 <LocationSearch
@@ -407,7 +407,7 @@ function PremiumDashboardInner({
                   type="button"
                   variant="outline"
                   onClick={handleCloseModal}
-                  className="w-full mt-2 h-11 rounded-2xl font-semibold text-muted-foreground hover:text-foreground border-border/60"
+                  className="w-full mt-2 h-11 rounded-2xl font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] bg-[var(--surface-2)]"
                 >
                   Cancel
                 </Button>
@@ -658,10 +658,10 @@ function PremiumDashboardInner({
                         animate: { opacity: 1, y: 0 },
                         transition: { duration: 0.4 }
                       })}
-                      className="p-5 rounded-[28px] bg-card/60 border border-border/70 backdrop-blur-md"
+                      className="p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Daily Salah</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">Daily Salah</h3>
                         <div
                           className="px-2 py-1 rounded-full text-xs font-bold"
                           style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}

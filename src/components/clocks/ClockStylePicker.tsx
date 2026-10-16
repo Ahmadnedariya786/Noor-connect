@@ -54,11 +54,11 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
     <div className={cn("space-y-4", className)}>
       <div className="flex items-center justify-between px-1">
         <div>
-          <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+          <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5">
             Clock Display Styles
             <Sparkles className="w-4 h-4" style={{ color: 'var(--accent)' }} />
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             Select a design for your home dashboard. Applied instantly.
           </p>
         </div>
@@ -86,7 +86,7 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                 "border backdrop-blur-sm",
                 isSelected
                   ? "ring-1 shadow-lg"
-                  : "border-border/70 hover:bg-card active:scale-[0.98]"
+                  : "hover:bg-[var(--surface-2)] active:scale-[0.98]"
               )}
               style={{
                 borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
@@ -102,13 +102,13 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                   <h3
                     className={cn(
                       "text-xs sm:text-sm font-bold tracking-tight truncate",
-                      isSelected ? "text-amber-400" : "text-foreground"
+                      isSelected ? "text-amber-400" : "text-[var(--text-primary)]"
                     )}
                     style={{ color: isSelected ? 'var(--accent-text)' : undefined }}
                   >
                     {style.name}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-[10px] text-[var(--text-secondary)] truncate">
                     {style.subtitle}
                   </p>
                 </div>
@@ -125,12 +125,12 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                     Active
                   </span>
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full border border-border/80 shrink-0 mt-0.5" />
+                  <div className="w-3.5 h-3.5 rounded-full border border-[var(--border)] shrink-0 mt-0.5" />
                 )}
               </div>
 
               {/* Static Preview Canvas Fixed at 10:08 (No live ticker) */}
-              <div className="w-full flex items-center justify-center py-2 px-1 min-h-[110px] sm:min-h-[120px] rounded-xl bg-background/50 border border-border/40 overflow-hidden pointer-events-none">
+              <div className="w-full flex items-center justify-center py-2 px-1 min-h-[110px] sm:min-h-[120px] rounded-xl bg-[var(--surface-2)] border border-[var(--border)] overflow-hidden pointer-events-none">
                 <ClockRenderer
                   styleId={style.id}
                   now={STATIC_PREVIEW_NOW}
@@ -143,7 +143,7 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
               </div>
 
               {/* Description Footer */}
-              <p className="text-[10px] text-muted-foreground/90 mt-2.5 line-clamp-2 leading-tight">
+              <p className="text-[10px] text-[var(--text-secondary)] mt-2.5 line-clamp-2 leading-tight">
                 {style.description}
               </p>
             </div>

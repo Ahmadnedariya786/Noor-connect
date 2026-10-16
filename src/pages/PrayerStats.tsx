@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppBar } from "@/components/AppBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -119,61 +119,61 @@ export default function PrayerStats() {
   }));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
       <AppBar title={t("prayerStatistics") || "Prayer Statistics"} showBack />
       
       <div className="max-w-lg mx-auto p-4 space-y-4">
         {/* Overview Card */}
-        <Card className="overflow-hidden bg-[#1A1A1A] text-white border border-[#C9860A]/30 shadow-xl">
-          <div className="bg-gradient-to-br from-[#C9860A]/20 via-[#C9860A]/5 to-transparent p-6 relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[20px] pointer-events-none" />
+        <Card className="overflow-hidden bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-xl">
+          <div className="bg-gradient-to-br from-[var(--accent)]/20 via-[var(--accent)]/5 to-transparent p-6 relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/15 rounded-full blur-[20px] pointer-events-none" />
             <div className="text-center relative z-10">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A] mb-2">30-Day Completion Rate</p>
-              <p className="text-6xl font-bold text-white font-serif italic mb-2 drop-shadow-md">{completionRate}%</p>
-              <p className="text-xs font-medium text-white/60">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)] mb-2">30-Day Completion Rate</p>
+              <p className="text-6xl font-bold text-[var(--text-primary)] font-serif italic mb-2 drop-shadow-md">{completionRate}%</p>
+              <p className="text-xs font-medium text-[var(--text-secondary)]">
                 {stats.completedPrayers} of {stats.totalPrayers} prayers
               </p>
             </div>
           </div>
-          <CardContent className="p-5 border-t border-[#C9860A]/10">
-            <Progress value={completionRate} className="h-2 bg-black/50" />
+          <CardContent className="p-5 border-t border-[var(--border)]">
+            <Progress value={completionRate} className="h-2 bg-[var(--surface-2)]" />
           </CardContent>
         </Card>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <Card className="p-5 bg-card border-border/40 shadow-sm">
-            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
+          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
+            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
               <TrendingUp className="w-4 h-4" />
               <span className="text-xs font-bold uppercase tracking-[0.2em]">Current Streak</span>
             </div>
-            <p className="text-3xl font-bold font-serif italic text-foreground">{stats.currentStreak} <span className="text-sm not-italic text-muted-foreground">days</span></p>
+            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{stats.currentStreak} <span className="text-sm not-italic text-[var(--text-secondary)]">days</span></p>
           </Card>
-          <Card className="p-5 bg-card border-border/40 shadow-sm">
-            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
+          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
+            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
               <Award className="w-4 h-4" />
               <span className="text-xs font-bold uppercase tracking-[0.2em]">Best Streak</span>
             </div>
-            <p className="text-3xl font-bold font-serif italic text-foreground">{stats.longestStreak} <span className="text-sm not-italic text-muted-foreground">days</span></p>
+            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{stats.longestStreak} <span className="text-sm not-italic text-[var(--text-secondary)]">days</span></p>
           </Card>
-          <Card className="p-5 bg-card border-border/40 shadow-sm">
-            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
+          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
+            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
               <Target className="w-4 h-4" />
               <span className="text-xs font-bold uppercase tracking-[0.2em]">Weekly Average</span>
             </div>
-            <p className="text-3xl font-bold font-serif italic text-foreground">{stats.weeklyAverage}<span className="text-sm not-italic text-muted-foreground">/5</span></p>
+            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{stats.weeklyAverage}<span className="text-sm not-italic text-[var(--text-secondary)]">/5</span></p>
           </Card>
-          <Card className="p-5 bg-card border-border/40 shadow-sm">
-            <div className="flex items-center gap-2 text-[#C9860A] mb-3">
+          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
+            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
               <Calendar className="w-4 h-4" />
               <span className="text-xs font-bold uppercase tracking-[0.2em]">Days Tracked</span>
             </div>
-            <p className="text-3xl font-bold font-serif italic text-foreground">{history.length}</p>
+            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{history.length}</p>
           </Card>
         </div>
 
         {/* Weekly Chart */}
-        <Card className="bg-card border-border/40 shadow-sm">
+        <Card className="bg-[var(--surface)] border border-[var(--border)] shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Weekly Progress</CardTitle>
           </CardHeader>
@@ -186,12 +186,13 @@ export default function PrayerStats() {
                   <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
+                      backgroundColor: 'var(--surface)',
+                      border: '1px solid var(--border)',
                       borderRadius: '8px',
+                      color: 'var(--text-primary)',
                     }}
                   />
-                  <Bar dataKey="completed" fill="#C9860A" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completed" fill="var(--accent)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -199,7 +200,7 @@ export default function PrayerStats() {
         </Card>
 
         {/* Prayer Breakdown */}
-        <Card className="bg-card border-border/40 shadow-sm">
+        <Card className="bg-[var(--surface)] border border-[var(--border)] shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Prayer Breakdown</CardTitle>
           </CardHeader>
@@ -233,7 +234,7 @@ export default function PrayerStats() {
                         style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                       />
                       <span className="text-sm font-medium flex-1 tracking-wide">{prayer.name}</span>
-                      <span className="text-lg font-bold font-serif italic text-[#C9860A]">{rate}%</span>
+                      <span className="text-lg font-bold font-serif italic text-[var(--accent)]">{rate}%</span>
                     </div>
                   );
                 })}
@@ -243,13 +244,13 @@ export default function PrayerStats() {
         </Card>
 
         {/* Recent History */}
-        <Card className="bg-card border-border/40 shadow-sm pb-8">
+        <Card className="bg-[var(--surface)] border border-[var(--border)] shadow-sm pb-8">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Recent History</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {history.slice(0, 7).map(day => (
-              <div key={day.date} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+              <div key={day.date} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
                 <span className="text-sm">
                   {new Date(day.date).toLocaleDateString('en', { 
                     weekday: 'short', 
@@ -265,7 +266,7 @@ export default function PrayerStats() {
                       className="w-6 h-6 rounded-full flex items-center justify-center"
                     >
                       {day[key] ? (
-                        <CheckCircle className="w-4 h-4 text-[#C9860A]" />
+                        <CheckCircle className="w-4 h-4 text-[var(--accent)]" />
                       ) : (
                         <Circle className="w-4 h-4 text-muted-foreground/30" />
                       )}

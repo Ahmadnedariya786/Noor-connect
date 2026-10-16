@@ -87,24 +87,24 @@ const LS_CALIBRATION_SHOWN = 'qibla-calibration-shown-v2';
 
 // ─── Colors ───────────────────────────────────────────────────
 const THEME = {
-  primary: '#C9860A',
-  primaryLight: '#E8A020',
-  accent: '#C9860A',
-  accentLight: '#E8A020',
-  cream: '#F2EDE4',
-  creamDark: '#EDE6D8',
-  white: '#ffffff',
-  offWhite: '#1a1a1a',
-  warmWhite: '#111111',
-  text: '#ffffff',
-  textLight: '#e5e5e5',
-  textMuted: '#a3a3a3',
+  primary: 'var(--accent)',
+  primaryLight: 'var(--accent)',
+  accent: 'var(--accent)',
+  accentLight: 'var(--accent)',
+  cream: 'var(--text-primary)',
+  creamDark: 'var(--text-secondary)',
+  white: 'var(--text-primary)',
+  offWhite: 'var(--surface-2)',
+  warmWhite: 'var(--surface)',
+  text: 'var(--text-primary)',
+  textLight: 'var(--text-primary)',
+  textMuted: 'var(--text-secondary)',
   success: '#10B981',
-  dark: '#0a0a0a',
-  darker: '#000000',
-  surface: '#141414',
-  surfaceLight: '#1f1f1f',
-  border: '#2a2a2a',        // ← was missing, caused `undefined` in border styles
+  dark: 'var(--bg-base)',
+  darker: 'var(--bg-base)',
+  surface: 'var(--surface)',
+  surfaceLight: 'var(--surface-2)',
+  border: 'var(--border)',
 };
 
 // Tick marks every 5 degrees
@@ -794,16 +794,16 @@ const QiblaCompassModern = () => {
 
           {/* Large Bearing Display */}
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-6xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
+            <span className="text-6xl font-bold text-[var(--text-primary)] tracking-tight" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
               {Math.round(qiblaResult.bearing)}°
             </span>
-            <span className="text-2xl font-bold text-[#C9860A]">
+            <span className="text-2xl font-bold text-[var(--accent-text)]">
               {qiblaResult.cardinalDirection}
             </span>
           </div>
 
           {/* Location Info */}
-          <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
+          <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)] text-sm">
             <MapPin className="h-3.5 w-3.5" />
             {cityName ? (
               <span>{cityName}</span>
@@ -818,7 +818,7 @@ const QiblaCompassModern = () => {
 
       {/* ── Calibration Hint ── */}
       {showCalibrationHint && (
-        <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full text-xs font-bold bg-card border border-border text-foreground/80 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg whitespace-nowrap">
+        <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full text-xs font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg whitespace-nowrap">
           📱 Move in figure-8 pattern for accuracy
         </div>
       )}
@@ -857,9 +857,7 @@ const QiblaCompassModern = () => {
           <div
             className="absolute inset-2 rounded-full transition-shadow duration-500"
             style={{
-              background: isDark 
-                ? `linear-gradient(145deg, ${THEME.surface} 0%, ${THEME.dark} 100%)`
-                : `linear-gradient(145deg, #ffffff 0%, #f4f4f5 100%)`,
+              background: 'linear-gradient(145deg, var(--surface) 0%, var(--bg-base) 100%)',
               boxShadow: isNative
                 ? (alignment?.isAligned && isLiveCompass ? `0 0 0 3px ${THEME.primary}` : `0 0 0 2px ${THEME.accent}30`)
                 : (alignment?.isAligned && isLiveCompass
@@ -871,7 +869,7 @@ const QiblaCompassModern = () => {
           >
             {/* Inner Ring Decoration */}
             <div
-              className="absolute inset-4 rounded-full border border-slate-600/10"
+              className="absolute inset-4 rounded-full border border-[var(--border)]"
               style={{ background: `radial-gradient(circle at 30% 30%, ${isDark ? THEME.surfaceLight : '#000000'}05 0%, transparent 50%)` }}
             />
 
@@ -992,7 +990,7 @@ const QiblaCompassModern = () => {
             <div className={cn(
               "flex items-center gap-2 px-5 py-2.5 rounded-full border animate-in fade-in zoom-in duration-300 shadow-sm",
               isDark 
-                ? "bg-[#141414] border-white/5 border-[#10B981]/50 text-white/70"
+                ? "bg-[var(--surface-2)] border border-emerald-500/50 text-emerald-400"
                 : "bg-emerald-50 border-emerald-200 text-emerald-800"
             )}>
               <Navigation className="h-4 w-4" />
@@ -1000,10 +998,10 @@ const QiblaCompassModern = () => {
             </div>
           ) : isLiveCompass && alignment?.instruction ? (
             <div className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm",
+              "flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] shadow-sm",
               isDark 
-                ? "bg-card/60 border-border/40 text-foreground/80"
-                : "bg-card border-border text-foreground/80"
+                ? "bg-[var(--surface-2)] text-[var(--text-primary)]"
+                : "bg-[var(--surface)] text-[var(--text-primary)]"
             )}>
               <Compass className="h-4 w-4" style={{ color: THEME.accent }} />
               <span className="text-sm">
@@ -1011,7 +1009,7 @@ const QiblaCompassModern = () => {
               </span>
             </div>
           ) : !compassUnavailable ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-muted-foreground text-sm">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-secondary)] text-sm">
               {compassState === 'permission-required' || compassState === 'idle' ? 'Tap Enable Compass below' :
                 compassState === 'denied' ? 'Compass permission denied' :
                   compassState === 'activating' ? 'Starting compass...' :
@@ -1025,43 +1023,43 @@ const QiblaCompassModern = () => {
           {/* Rich no-sensor fallback UI (visible only when the compass is unavailable) */}
           <div className={cn("row-start-1 col-start-1 w-full space-y-3", compassUnavailable && qiblaResult ? "visible" : "invisible")}>
             <div className="flex items-center justify-center gap-3 px-4 py-3 rounded-2xl border"
-              style={{ background: 'rgba(201,134,10,0.06)', borderColor: 'rgba(201,134,10,0.25)' }}>
-              <div className="w-9 h-9 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-600">
+              style={{ background: 'var(--accent-soft)', borderColor: 'var(--border)' }}>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--accent-soft)] text-[var(--accent-text)]">
                 <Compass className="w-4 h-4" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-sm font-bold" style={{ color: THEME.accent }}>No Sensor Detected</p>
-                <p className="text-xs text-muted-foreground leading-snug mt-0.5">Your device doesn't have a digital compass, but you can still find the Qibla!</p>
+                <p className="text-xs text-[var(--text-secondary)] leading-snug mt-0.5">Your device doesn't have a digital compass, but you can still find the Qibla!</p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-4">
-              <div className="text-center pb-4 border-b border-border/50">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-4">
+              <div className="text-center pb-4 border-b border-[var(--border)]">
+                <p className="text-xs text-[var(--text-secondary)] uppercase tracking-widest font-bold mb-1">Your Qibla Angle Is</p>
                 <div className="flex items-baseline justify-center gap-1.5">
                   <p className="text-4xl font-black" style={{ color: THEME.accent, fontFamily: 'inherit' }}>{Math.round(qiblaResult.bearing)}°</p>
-                  <p className="text-sm font-bold text-foreground/80">{qiblaResult.cardinalDirection}</p>
+                  <p className="text-sm font-bold text-[var(--text-primary)]">{qiblaResult.cardinalDirection}</p>
                 </div>
-                <p className="text-xs text-muted-foreground/70 mt-2 mx-auto max-w-[240px] leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)]/70 mt-2 mx-auto max-w-[240px] leading-relaxed">
                   This angle is a fixed geographic line from your city to Mecca. It will not change when you move your device.
                 </p>
               </div>
 
               <div className="space-y-3.5">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">How to use this number:</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">How to use this number:</p>
 
                 <div className="flex gap-3 text-left items-start">
-                  <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">1</div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    <strong className="text-foreground block mb-0.5">Using a real compass:</strong>
+                  <div className="w-5 h-5 mt-0.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center shrink-0 text-xs font-bold">1</div>
+                  <p className="text-xs text-[var(--text-primary)]/90 leading-relaxed">
+                    <strong className="text-[var(--text-primary)] block mb-0.5">Using a real compass:</strong>
                     Hold a plastic compass flat. Turn your body until you face the <strong>{Math.round(qiblaResult.bearing)}°</strong> mark.
                   </p>
                 </div>
 
                 <div className="flex gap-3 text-left items-start">
-                  <div className="w-5 h-5 mt-0.5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 text-xs font-bold">2</div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    <strong className="text-foreground block mb-0.5">Using Google Maps:</strong>
+                  <div className="w-5 h-5 mt-0.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center shrink-0 text-xs font-bold">2</div>
+                  <p className="text-xs text-[var(--text-primary)]/90 leading-relaxed">
+                    <strong className="text-[var(--text-primary)] block mb-0.5">Using Google Maps:</strong>
                     Open Maps. The top of your screen is always North (0°). Turn to face <strong>{qiblaResult.cardinalDirection}</strong>.
                   </p>
                 </div>
@@ -1072,29 +1070,29 @@ const QiblaCompassModern = () => {
           {/* Distance + Heading cards */}
           <div className={cn("row-start-1 col-start-1 space-y-3", compassUnavailable && qiblaResult ? "invisible" : "visible")}>
           {/* Enhanced Distance Card */}
-          <Card className={cn("overflow-hidden border-border", isNative ? "bg-card border shadow-sm" : "bg-card/80 backdrop-blur-md shadow-lg")}>
+          <Card className="overflow-hidden border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] shadow-sm">
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-6">
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.2em] flex items-center gap-1.5">
-                    <span className="p-1 rounded-md bg-muted">🕋</span>
+                  <p className="text-xs font-bold text-[var(--accent-text)] uppercase tracking-[0.2em] flex items-center gap-1.5">
+                    <span className="p-1 rounded-md bg-[var(--surface-2)]">🕋</span>
                     Distance to Baitullah
                   </p>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-4xl font-black text-foreground tracking-tighter">
+                    <span className="text-4xl font-black text-[var(--text-primary)] tracking-tighter">
                       {qiblaResult.formattedDistance.split(' ')[0]}
                     </span>
-                    <span className="text-lg font-bold text-muted-foreground">
+                    <span className="text-lg font-bold text-[var(--text-secondary)]">
                       {qiblaResult.formattedDistance.split(' ')[1] || 'km'}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-right space-y-1">
-                  <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest">
+                  <p className="text-xs font-bold text-[var(--accent-text)] uppercase tracking-widest">
                     Travel Mode
                   </p>
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted text-muted-foreground font-bold text-xs border border-border">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--surface-2)] text-[var(--text-secondary)] font-bold text-xs border border-[var(--border)]">
                     {qiblaResult.distanceKm < 5000 ? '🚗 Road' : '✈️ Air'}
                   </div>
                 </div>
@@ -1105,7 +1103,7 @@ const QiblaCompassModern = () => {
                 <div className="flex items-center w-full">
                   {/* Origin (Dynamic Emoji based on Distance) */}
                   <div className="flex flex-col items-center z-10">
-                    <div className="w-9 h-9 rounded-full bg-card border-border flex items-center justify-center border-2 border-[#10B981]/30 shadow-sm text-lg relative overflow-hidden group">
+                    <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-lg relative overflow-hidden group">
                       {qiblaResult.distanceKm < 50
                         ? '🥰' // Overjoyed (within Mecca)
                         : qiblaResult.distanceKm < 500
@@ -1120,15 +1118,15 @@ const QiblaCompassModern = () => {
                       {/* Subtle pulse effect for the emoji */}
                       <div className="absolute inset-0 bg-amber-200/40 rounded-full scale-0 group-hover:scale-100 transition-transform duration-500" />
                     </div>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">You</span>
+                    <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mt-2">You</span>
                   </div>
 
                   {/* Connective Line */}
                   <div className="flex-1 relative flex items-center justify-center mx-2">
-                    <div className="w-full border-t-2 border-dashed border-border"></div>
+                    <div className="w-full border-t-2 border-dashed border-[var(--border)]"></div>
 
                     {/* Floating Distance Badge */}
-                    <div className={cn("absolute px-3 py-1 rounded-full border border-border text-xs font-bold text-[#D4AF37] flex items-center gap-1.5 transform -translate-y-1/2", isNative ? "bg-card shadow-sm" : "bg-card/90 backdrop-blur-sm shadow-sm")}>
+                    <div className="absolute px-3 py-1 rounded-full border border-[var(--border)] text-xs font-bold text-[var(--accent-text)] flex items-center gap-1.5 transform -translate-y-1/2 bg-[var(--surface-2)] shadow-sm">
                       <span>{qiblaResult.distanceKm < 5000 ? '🚗' : '✈️'}</span>
                       <span>{Math.round(qiblaResult.distanceKm)} km</span>
                     </div>
@@ -1136,25 +1134,25 @@ const QiblaCompassModern = () => {
 
                   {/* Destination */}
                   <div className="flex flex-col items-center z-10">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#b48608] flex items-center justify-center shadow-md shadow-[#10B981]/20 border-2 border-white/50">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#b48608] flex items-center justify-center shadow-md shadow-[#10B981]/20 border border-[var(--border)]">
                       <span className="text-sm">🕋</span>
                     </div>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">Kaaba</span>
+                    <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mt-2">Kaaba</span>
                   </div>
                 </div>
 
                 {/* Bottom Journey Insight */}
-                <div className="mt-5 p-3 rounded-2xl bg-muted/55 border border-border/60 space-y-1.5 relative group overflow-hidden">
+                <div className="mt-5 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1.5 relative group overflow-hidden">
                   <div className="absolute top-0 right-0 p-2 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-45">
-                    <MapPin className="w-12 h-12 text-foreground" />
+                    <MapPin className="w-12 h-12 text-[var(--text-primary)]" />
                   </div>
 
-                  <p className="text-xs font-bold text-foreground flex items-center gap-2">
+                  <p className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#10B981] to-[#059669] animate-pulse" />
                     The Journey Estimate
                   </p>
 
-                  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-medium">
                     {qiblaResult.distanceKm < 100
                       ? `Subhanallah, you are extremely close! Just ${Math.round(qiblaResult.distanceKm * 1000)}m to the Holy Kaaba.`
                       : qiblaResult.distanceKm < 5000
@@ -1168,17 +1166,17 @@ const QiblaCompassModern = () => {
           </Card>
 
           {/* Heading Card */}
-          <div className={cn("rounded-2xl p-4 border border-border", isNative ? "bg-card shadow-sm" : "bg-card/60 backdrop-blur-sm shadow-sm")}>
-            <p className="text-muted-foreground/80 text-xs uppercase tracking-wider mb-1">Current Heading</p>
+          <div className="rounded-2xl p-4 border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+            <p className="text-[var(--text-secondary)] text-xs uppercase tracking-wider mb-1">Current Heading</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-xl font-bold text-[var(--text-primary)]">
                 {isLiveCompass ? `${Math.round(deviceHeading)}°` : '--'}
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-[var(--text-secondary)]">
                 {isLiveCompass ? getCardinalDirection(deviceHeading) : 'No compass'}
               </span>
             </div>
-            <p className="text-muted-foreground/70 text-xs mt-1">
+            <p className="text-[var(--text-secondary)]/70 text-xs mt-1">
               {isLiveCompass ? 'Device orientation' : 'Enable compass for direction'}
             </p>
           </div>
@@ -1206,11 +1204,11 @@ const QiblaCompassModern = () => {
               }
             }}
             disabled={compassState === 'activating' || isRefreshingLocation}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 shadow-sm cursor-pointer"
             style={{
-              background: (compassState === 'idle' || compassState === 'permission-required') ? `${THEME.primary}20` : 'transparent',
-              border: `1px solid ${(compassState === 'idle' || compassState === 'permission-required') ? THEME.primary : THEME.border}`,
-              color: (compassState === 'idle' || compassState === 'permission-required') ? THEME.primary : THEME.textMuted,
+              background: (compassState === 'idle' || compassState === 'permission-required') ? 'var(--accent-soft)' : 'var(--surface-2)',
+              border: `1px solid ${(compassState === 'idle' || compassState === 'permission-required') ? 'var(--accent)' : 'var(--border)'}`,
+              color: (compassState === 'idle' || compassState === 'permission-required') ? 'var(--accent-text)' : 'var(--text-secondary)',
             }}
           >
             {compassState === 'activating' || isRefreshingLocation ? (

@@ -1,4 +1,4 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import BatteryOptimization from './battery-optimization';
 import { nativeAdhan, openExactAlarmSettings } from './native-adhan';
@@ -53,19 +53,15 @@ function waitForUserReturn(options?: WaitForUserReturnOptions): Promise<void> {
     }, timeoutMs);
 
     // 1. Capacitor App lifecycle listeners
-    const resumePromise = CapacitorApp.addListener('resume', () => {
+    const resumePromise: Promise<PluginListenerHandle | null> = CapacitorApp.addListener('resume', () => {
       onReturn();
-    }).catch(() => {
-      // Listener error handled on platforms without App plugin
-    });
+    }).catch(() => null);
 
-    const statePromise = CapacitorApp.addListener('appStateChange', (state) => {
+    const statePromise: Promise<PluginListenerHandle | null> = CapacitorApp.addListener('appStateChange', (state) => {
       if (state.isActive) {
         onReturn();
       }
-    }).catch(() => {
-      // Listener error handled on platforms without App plugin
-    });
+    }).catch(() => null);
 
     // 2. DOM visibilitychange
     const onVisibilityChange = () => {
@@ -84,10 +80,10 @@ function waitForUserReturn(options?: WaitForUserReturnOptions): Promise<void> {
     cleanup = () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
-      resumePromise.then((h) => h?.remove?.()).catch(() => {
+      resumePromise.then((h) => h?.remove()).catch(() => {
         // Safe listener cleanup fallback
       });
-      statePromise.then((h) => h?.remove?.()).catch(() => {
+      statePromise.then((h) => h?.remove()).catch(() => {
         // Safe listener cleanup fallback
       });
     };

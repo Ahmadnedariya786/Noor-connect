@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Qaza (Missed Prayer) Tracker Component
  * Track and complete missed prayers
  */
@@ -83,10 +83,10 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
 
   if (compact) {
     return (
-      <Card className="bg-card border-border">
+      <Card className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)]">
         <CardHeader className="pb-2 pt-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               Qaza Prayers
             </CardTitle>
@@ -99,7 +99,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
         </CardHeader>
         <CardContent className="pb-4">
           {stats.total === 0 ? (
-            <p className="text-center text-xs text-muted-foreground py-2">
+            <p className="text-center text-xs text-[var(--text-secondary)] py-2">
               ✨ No Qaza prayers pending. Alhamdulillah!
             </p>
           ) : (
@@ -111,12 +111,12 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     disabled={prayers[prayer.id] === 0}
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all mx-auto ${prayers[prayer.id] > 0
                       ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]"
                       }`}
                   >
                     {prayers[prayer.id]}
                   </button>
-                  <span className="text-xs text-muted-foreground mt-1 block">
+                  <span className="text-xs text-[var(--text-secondary)] mt-1 block">
                     {prayer.label}
                   </span>
                 </div>
@@ -129,10 +129,10 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
   }
 
   return (
-    <Card className="bg-card border-border">
+    <Card className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)]">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+          <CardTitle className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-amber-500" />
             Qaza Prayer Tracker
           </CardTitle>
@@ -142,7 +142,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-[var(--text-secondary)]">
           Track and complete missed prayers
         </p>
       </CardHeader>
@@ -150,17 +150,17 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
         {prayerLabels.map((prayer) => (
           <div
             key={prayer.id}
-            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg group"
+            className="flex items-center justify-between p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg group"
           >
             <div className="flex items-center gap-3">
               <div className="text-center min-w-[40px]">
-                <span className={`text-xl font-bold ${prayers[prayer.id] > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                <span className={`text-xl font-bold ${prayers[prayer.id] > 0 ? 'text-destructive' : 'text-[var(--text-secondary)]'}`}>
                   {prayers[prayer.id]}
                 </span>
               </div>
               <div>
-                <p className="font-semibold text-sm">{t(prayer.id)}</p>
-                <p className="text-xs text-muted-foreground font-arabic">{prayer.arabicLabel}</p>
+                <p className="font-semibold text-sm text-[var(--text-primary)]">{t(prayer.id)}</p>
+                <p className="text-xs text-[var(--text-secondary)] font-arabic">{prayer.arabicLabel}</p>
               </div>
             </div>
 
@@ -172,10 +172,10 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     min="0"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    className="w-16 h-8 text-center text-sm font-bold"
+                    className="w-16 h-8 text-center text-sm font-bold bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)]"
                     autoFocus
                   />
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={handleEditSave}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-[var(--accent-text)]" onClick={handleEditSave}>
                     <Check className="w-4 h-4" />
                   </Button>
                 </div>
@@ -184,7 +184,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-muted-foreground hover:bg-muted-foreground/10"
+                    className="h-8 w-8 text-[var(--text-secondary)] hover:bg-[var(--surface)]"
                     onClick={() => handleEditStart(prayer.id)}
                   >
                     <span className="text-xs font-bold">#</span>
@@ -214,14 +214,14 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
           </div>
         ))}
 
-        <div className="pt-2 border-t border-border mt-4">
+        <div className="pt-2 border-t border-[var(--border)] mt-4">
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Quick Actions</p>
+            <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Quick Actions</p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 text-xs h-8 hover:bg-primary/5"
+                className="flex-1 text-xs h-8 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
                 onClick={() => {
                   prayerLabels.forEach(p => addQazaPrayer(p.id, 30));
                   refresh();
@@ -233,7 +233,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 text-xs h-8 hover:bg-primary/5"
+                className="flex-1 text-xs h-8 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
                 onClick={() => {
                   prayerLabels.forEach(p => addQazaPrayer(p.id, 365));
                   refresh();
@@ -251,10 +251,10 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
             <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
               <Check className="w-6 h-6" />
             </div>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
               Alhamdulillah!
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[var(--text-secondary)]">
               All your prayers are up to date.
             </p>
           </div>

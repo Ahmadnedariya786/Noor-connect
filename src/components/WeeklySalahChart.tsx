@@ -21,16 +21,16 @@ function SimpleBarFallback({ chartData }: { chartData: ChartData[] }) {
         const ratio = entry.total > 0 ? entry.completed / entry.total : 0;
         const height = Math.max(5, Math.round(ratio * 100));
         const color = entry.completed === 5
-          ? "#C9860A"
+          ? "var(--accent)"
           : entry.completed >= 3
-            ? "rgba(201,134,10,0.65)"
+            ? "var(--accent-soft)"
             : entry.completed >= 1
-              ? "rgba(201,134,10,0.35)"
-              : "rgba(255,255,255,0.08)";
+              ? "var(--surface-2)"
+              : "var(--surface-2)";
         return (
           <div key={index} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
             <div className="w-full max-w-[28px] rounded-t" style={{ height: `${height}%`, backgroundColor: color }} />
-            <span className="text-[10px] text-muted-foreground">{entry.day}</span>
+            <span className="text-[10px] text-[var(--text-secondary)]">{entry.day}</span>
           </div>
         );
       })}
@@ -116,23 +116,23 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
   }, [refreshData]);
 
   return (
-    <Card className="bg-[#1A1A1A] border border-[#C9860A]/30 overflow-hidden min-h-[200px] shadow-md">
+    <Card className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden min-h-[200px] shadow-md">
       <CardHeader className="pb-2 pt-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[#C9860A]" />
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-primary)] flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-[var(--accent)]" />
             {ti18n('weeklyProgress')}
           </CardTitle>
           <div className="flex items-center gap-1.5 text-xs">
-            <TrendingUp className="w-3 h-3 text-[#C9860A]" />
-            <span className="font-bold font-serif italic text-[#C9860A]">{weeklyStats.percentage}%</span>
+            <TrendingUp className="w-3 h-3 text-[var(--accent)]" />
+            <span className="font-bold font-serif italic text-[var(--accent-text)]">{weeklyStats.percentage}%</span>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pb-4">
         {/* Stats Summary */}
         <div className="flex items-center justify-between mb-3 text-xs font-bold uppercase tracking-widest">
-          <span className="text-muted-foreground">
+          <span className="text-[var(--text-secondary)]">
             {weeklyStats.completed} / {weeklyStats.total} {ti18n('prayersThisWeek')}
           </span>
         </div>
@@ -148,7 +148,7 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
               <SimpleBarFallback chartData={chartData} />
             )
           ) : (
-            <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground text-xs">
+            <div className="h-full w-full flex flex-col items-center justify-center text-[var(--text-secondary)] text-xs">
               <Calendar className="w-8 h-8 mb-2 opacity-50" />
               <p>{ti18n('noPrayerDataYet')}</p>
               <p className="text-xs mt-1">{ti18n('checkInPrayersToSeeProgress')}</p>
@@ -157,21 +157,21 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        <div className="flex items-center justify-center gap-4 mt-3 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-[#C9860A]" />
+            <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
             <span>5/5</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(201,134,10,0.65)' }} />
+            <div className="w-2 h-2 rounded-full bg-[var(--accent-soft)]" />
             <span>3-4</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(201,134,10,0.35)' }} />
+            <div className="w-2 h-2 rounded-full bg-[var(--surface-2)]" />
             <span>1-2</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-muted" />
+            <div className="w-2 h-2 rounded-full bg-[var(--surface-2)] border border-[var(--border)]" />
             <span>0</span>
           </div>
         </div>

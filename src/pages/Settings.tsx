@@ -61,45 +61,45 @@ const Settings = () => {
   const motionProps = (props: any) => animationEnabled ? props : {};
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground font-sans pb-4 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-[var(--bg-base)] text-[var(--text-primary)] font-sans pb-4 transition-colors duration-300">
       {/* ── Header ── */}
-      <div className="flex items-center px-6 pb-6 sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 1.5rem)' }}>
+      <div className="flex items-center px-6 pb-6 sticky top-0 z-10 bg-[var(--bg-base)]/80 backdrop-blur-xl border-b border-[var(--border)] safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 1.5rem)' }}>
         <button 
           onClick={() => goBackOrFallback(navigate, '/dashboard')}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-card hover:bg-card/80 transition-colors border border-border"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors border border-[var(--border)]"
         >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
+          <ChevronLeft className="w-5 h-5 text-[var(--text-primary)]" />
         </button>
-        <h1 className="text-2xl font-bold font-serif italic text-foreground ml-4 tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-bold font-serif italic text-[var(--text-primary)] ml-4 tracking-tight">Settings</h1>
       </div>
 
       <div className="px-6 py-4 space-y-8 max-w-lg mx-auto w-full">
         {/* ── Theme Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Appearance</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Appearance</h2>
           </div>
           
           <div 
             onClick={() => navigate('/settings/app-theme')}
-            className="bg-card border border-border rounded-[28px] p-4 flex items-center justify-between cursor-pointer hover:border-border/80 transition-all"
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-4 flex items-center justify-between cursor-pointer hover:border-[var(--accent)]/40 transition-all"
             role="button"
             tabIndex={0}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-                <Palette className="w-5 h-5 text-foreground/70" />
+              <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                <Palette className="w-5 h-5 text-[var(--accent-text)]" />
               </div>
               <div>
-                <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg">App Theme</h3>
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Choose full-app color theme</p>
+                <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg">App Theme</h3>
+                <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5">Choose full-app color theme</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
                 {currentTheme.name}
               </span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
             </div>
           </div>
         </section>
@@ -107,25 +107,25 @@ const Settings = () => {
         {/* ── Preferences Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Preferences</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Preferences</h2>
           </div>
 
-          <div className="bg-card border border-border rounded-[28px] overflow-hidden">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] overflow-hidden">
             {/* Toggle: Animations */}
-            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-border/40 gap-3">
+            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[var(--border)] gap-3">
               <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-                  <Zap className="w-5 h-5 text-foreground/70" />
+                <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                  <Zap className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">Fluid Animations</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Enable smooth UI transitions</p>
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate">Fluid Animations</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Enable smooth UI transitions</p>
                 </div>
               </div>
               <button 
                 onClick={toggleAnimation}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  animationEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
+                  animationEnabled ? 'bg-[var(--accent)]' : 'bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
                 <motion.div 
@@ -137,20 +137,20 @@ const Settings = () => {
             </div>
 
             {/* Toggle: Splash Greeting */}
-            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-border/40 gap-3">
+            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[var(--border)] gap-3">
               <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-                  <Heart className="w-5 h-5 text-foreground/70" />
+                <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                  <Heart className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">Splash Welcome</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Show "Islamic Companion" on launch</p>
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate">Splash Welcome</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Show "Islamic Companion" on launch</p>
                 </div>
               </div>
               <button 
                 onClick={toggleSplashGreeting}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  splashGreetingEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
+                  splashGreetingEnabled ? 'bg-[var(--accent)]' : 'bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
                 <motion.div 
@@ -162,20 +162,20 @@ const Settings = () => {
             </div>
 
             {/* Toggle: App Greeting (Salam) */}
-            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-border/40 gap-3">
+            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[var(--border)] gap-3">
               <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-foreground/70" />
+                <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">Home Greeting</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Show daily salam on home screen</p>
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate">Home Greeting</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Show daily salam on home screen</p>
                 </div>
               </div>
               <button 
                 onClick={toggleGreeting}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  greetingEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
+                  greetingEnabled ? 'bg-[var(--accent)]' : 'bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
                 <motion.div 
@@ -189,18 +189,18 @@ const Settings = () => {
             {/* Toggle: 24-Hour Time Format */}
             <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5 text-foreground/70" />
+                <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate">24-Hour Time Format</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Use 24-hour clock (17:30) instead of 12-hour (5:30 PM)</p>
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate">24-Hour Time Format</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Use 24-hour clock (17:30) instead of 12-hour (5:30 PM)</p>
                 </div>
               </div>
               <button 
                 onClick={toggleTimeFormat}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                  timeFormat === '24h' ? 'bg-[var(--accent)]' : 'bg-muted'
+                  timeFormat === '24h' ? 'bg-[var(--accent)]' : 'bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
                 <motion.div 
@@ -214,24 +214,24 @@ const Settings = () => {
             {/* Row: Clock Style Picker */}
             <div
               onClick={() => setShowClockModal(true)}
-              className="p-4 sm:p-5 flex items-center justify-between border-t border-border/40 gap-3 cursor-pointer group hover:bg-muted/30 transition-colors"
+              className="p-4 sm:p-5 flex items-center justify-between border-t border-[var(--border)] gap-3 cursor-pointer group hover:bg-[var(--surface-2)] transition-colors"
               role="button"
               tabIndex={0}
             >
               <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5 text-foreground/70" />
+                <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-foreground font-serif italic text-base sm:text-lg truncate group-hover:text-[var(--accent-text)] transition-colors">Clock Style</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">Choose home screen clock design</p>
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate group-hover:text-[var(--accent-text)] transition-colors">Clock Style</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Choose home screen clock design</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
                   {currentClockStyleName}
                 </span>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
           </div>
@@ -240,10 +240,10 @@ const Settings = () => {
         {/* ── Prayer / Fiqh Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Prayer Times</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Prayer Times</h2>
           </div>
 
-          <div className="bg-card border border-border rounded-[28px] p-2 flex gap-2 relative">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-2 flex gap-2 relative">
             {([
               { id: 'shafi',  label: 'Maliki, Shafi, Hanbali', short: 'Shafi' },
               { id: 'hanafi', label: 'Hanafi', short: 'Hanafi' },
@@ -256,13 +256,13 @@ const Settings = () => {
                   aria-pressed={isActive}
                   title={label}
                   className={`flex-1 relative h-12 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 ${
-                    isActive ? 'text-foreground' : 'text-foreground/40 hover:text-foreground/70'
+                    isActive ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]/50 hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       {...motionProps({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.2 } })}
-                      className="absolute inset-0 bg-background rounded-2xl border border-border shadow-sm"
+                      className="absolute inset-0 bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] shadow-sm"
                     />
                   )}
                   <span className="text-sm font-bold relative z-10">{short}</span>
@@ -270,7 +270,7 @@ const Settings = () => {
               );
             })}
           </div>
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 mt-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] px-4 mt-2">
             Determines Asr calculation. Currently using <span className="text-[var(--accent-text)]">{madhab === 'hanafi' ? 'Hanafi' : 'Maliki, Shafi, Hanbali'}</span> school.
           </p>
         </section>
@@ -278,18 +278,18 @@ const Settings = () => {
         {/* ── Bedtime Section ── */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Bedtime</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Bedtime</h2>
           </div>
 
-          <div className="bg-card border border-border rounded-[28px] overflow-hidden">
-            <div className="p-5 flex items-center justify-between border-b border-border/40">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] overflow-hidden">
+            <div className="p-5 flex items-center justify-between border-b border-[var(--border)]">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center">
-                  <MoonIcon className="w-5 h-5 text-foreground/70" />
+                <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center">
+                  <MoonIcon className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground font-serif italic text-lg">Bedtime Reminder</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">Get a gentle notification at bedtime</p>
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-lg">Bedtime Reminder</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5">Get a gentle notification at bedtime</p>
                 </div>
               </div>
               <button
@@ -301,7 +301,7 @@ const Settings = () => {
                   else cancelBedtimeNotification();
                 }}
                 className={`w-14 h-7 rounded-full p-1 transition-colors duration-300 ${
-                  bedtimeEnabled ? 'bg-[var(--accent)]' : 'bg-muted'
+                  bedtimeEnabled ? 'bg-[var(--accent)]' : 'bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
                 <motion.div
@@ -315,12 +315,12 @@ const Settings = () => {
             {bedtimeEnabled && (
               <div className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-foreground/70" />
+                  <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-[var(--accent-text)]" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground font-serif italic text-lg">Time</h3>
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">When to remind you</p>
+                    <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-lg">Time</h3>
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5">When to remind you</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -332,13 +332,13 @@ const Settings = () => {
                       setBedtimeHour(h);
                       if (bedtimeEnabled) scheduleBedtimeNotification();
                     }}
-                    className="bg-muted border border-border rounded-xl px-2 py-1.5 text-sm font-bold text-foreground"
+                    className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2 py-1.5 text-sm font-bold text-[var(--text-primary)]"
                   >
                     {Array.from({ length: 24 }, (_, i) => (
                       <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
                     ))}
                   </select>
-                  <span className="text-muted-foreground font-bold text-sm">:</span>
+                  <span className="text-[var(--text-secondary)] font-bold text-sm">:</span>
                   <select
                     value={bedtimeMinute}
                     onChange={(e) => {
@@ -347,7 +347,7 @@ const Settings = () => {
                       setBedtimeMinute(m);
                       if (bedtimeEnabled) scheduleBedtimeNotification();
                     }}
-                    className="bg-muted border border-border rounded-xl px-2 py-1.5 text-sm font-bold text-foreground"
+                    className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2 py-1.5 text-sm font-bold text-[var(--text-primary)]"
                   >
                     {Array.from({ length: 60 }, (_, i) => (
                       <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>

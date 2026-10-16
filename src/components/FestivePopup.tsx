@@ -144,7 +144,7 @@ export function FestivePopup() {
 
           {/* Special wishes for Eid */}
           {event.type === 'eid' && (
-            <div className="mt-4 p-3 bg-white/10 rounded-lg border border-white/20">
+            <div className="mt-4 p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
               <p className="text-xs text-center text-muted-foreground">
                 May Allah accept our good deeds and forgive our sins. 
                 Eid Mubarak to you and your families! 🌙✨

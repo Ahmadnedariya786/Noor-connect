@@ -359,19 +359,19 @@ export function EnhancedDailyAyah() {
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-lg bg-background/60 hover:bg-emerald-500/20 border border-border/50 hover:border-emerald-500/40 transition-all duration-200 active:scale-95 shadow-xs ${
-                isBookmarked ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/15" : "text-muted-foreground hover:text-emerald-400"
+              className={`h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 transition-all duration-200 active:scale-95 shadow-xs ${
+                isBookmarked ? "text-emerald-300 border-emerald-500/50 bg-emerald-500/20" : "text-emerald-400/80 hover:text-emerald-300"
               }`}
               onClick={toggleBookmark}
               title="Bookmark Ayah"
               aria-label="Bookmark ayah"
             >
-              <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-emerald-400 text-emerald-400" : ""}`} />
+              <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-emerald-400 text-emerald-300" : ""}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-background/60 hover:bg-emerald-500/20 border border-border/50 hover:border-emerald-500/40 text-muted-foreground hover:text-emerald-400 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400/80 hover:text-emerald-300 transition-all duration-200 active:scale-95 shadow-xs"
               onClick={copyAyah}
               title="Copy Ayah"
               aria-label="Copy ayah"
@@ -381,17 +381,17 @@ export function EnhancedDailyAyah() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-background/60 hover:bg-emerald-500/20 border border-border/50 hover:border-emerald-500/40 text-muted-foreground hover:text-emerald-400 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400/80 hover:text-emerald-300 transition-all duration-200 active:scale-95 shadow-xs"
               onClick={refreshAyah}
               title="Another Ayah"
               aria-label="Show another ayah"
             >
-              <RefreshCw className={`w-4 h-4 transition-transform duration-500 ${isAnimating ? "animate-spin text-emerald-400" : ""}`} />
+              <RefreshCw className={`w-4 h-4 transition-transform duration-500 ${isAnimating ? "animate-spin text-emerald-300" : ""}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-background/60 hover:bg-emerald-500/20 border border-border/50 hover:border-emerald-500/40 text-muted-foreground hover:text-emerald-400 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400/80 hover:text-emerald-300 transition-all duration-200 active:scale-95 shadow-xs"
               onClick={shareAyah}
               title="Share Ayah"
               aria-label="Share ayah"
@@ -403,7 +403,7 @@ export function EnhancedDailyAyah() {
 
         {/* Arabic Typography Section - Always shown in full */}
         <div className={`transition-all duration-300 ${isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
-          <div className="bg-background/40 rounded-xl p-3.5 sm:p-4 border border-border/40">
+          <div className="bg-emerald-950/25 rounded-xl p-3.5 sm:p-4 border border-emerald-500/30">
             <p
               className="font-amiri text-2xl sm:text-[26px] leading-[1.8] text-emerald-100/95 dark:text-emerald-100 text-right drop-shadow-sm select-text break-words"
               dir="rtl"

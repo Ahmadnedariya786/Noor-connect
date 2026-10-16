@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,11 +13,11 @@ type TasbeehPreset = {
 };
 
 const PRESETS: TasbeehPreset[] = [
-  { label: "SubhanAllah", arabic: "سُبْحَانَ اللَّهِ", accent: "from-[#C9860A] to-[#E8A020]" },
-  { label: "Alhamdulillah", arabic: "ٱلْحَمْدُ لِلَّٰهِ", accent: "from-[#C9860A] to-[#E8A020]" },
-  { label: "Allahu Akbar", arabic: "اللَّٰهُ أَكْبَرُ", accent: "from-[#C9860A] to-[#E8A020]" },
-  { label: "La ilaha", arabic: "لَا إِلَٰهَ إِلَّا", accent: "from-[#C9860A] to-[#E8A020]" },
-  { label: "Astagfirullah", arabic: "أَسْتَغْفُرُ ٱللَّٰهِ", accent: "from-[#C9860A] to-[#E8A020]" },
+  { label: "SubhanAllah", arabic: "سُبْحَانَ اللَّهِ", accent: "from-[var(--accent)]/20 to-[var(--accent)]/10" },
+  { label: "Alhamdulillah", arabic: "ٱلْحَمْدُ لِلَّٰهِ", accent: "from-[var(--accent)]/20 to-[var(--accent)]/10" },
+  { label: "Allahu Akbar", arabic: "اللَّٰهُ أَكْبَرُ", accent: "from-[var(--accent)]/20 to-[var(--accent)]/10" },
+  { label: "La ilaha", arabic: "لَا إِلَٰهَ إِلَّا", accent: "from-[var(--accent)]/20 to-[var(--accent)]/10" },
+  { label: "Astagfirullah", arabic: "أَسْتَغْفُرُ ٱللَّٰهِ", accent: "from-[var(--accent)]/20 to-[var(--accent)]/10" },
 ];
 
 const getTodayKey = () => new Date().toISOString().split('T')[0];
@@ -70,20 +70,20 @@ export function TasbeehQuickWidget() {
   }, [todayByLabel]);
 
   return (
-    <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
+    <Card className="relative overflow-hidden bg-[var(--surface)] border border-[var(--border)] shadow-md">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
 
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
-            <Sparkles className="w-4 h-4 text-[#C9860A]" />
+          <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
+            <Sparkles className="w-4 h-4 text-[var(--accent)]" />
             Tasbeeh
           </CardTitle>
 
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-3 rounded-xl text-[#C9860A] hover:text-[#E8A020] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
+            className="h-8 px-3 rounded-xl text-[var(--accent)] hover:bg-[var(--accent-soft)] font-bold uppercase tracking-wider text-xs"
             onClick={() => navigate("/tasbeeh")}
           >
             Open
@@ -92,10 +92,10 @@ export function TasbeehQuickWidget() {
         </div>
 
         <div className="flex items-center gap-2 text-xs uppercase font-bold tracking-widest">
-          <Badge variant="secondary" className="rounded-full bg-[#C9860A]/10 text-[#C9860A] border-none">
+          <Badge variant="secondary" className="rounded-full bg-[var(--accent-soft)] text-[var(--accent)] border-none">
             Today {todayTotal.toLocaleString()}
           </Badge>
-          <Badge variant="outline" className="rounded-full border-[#C9860A]/30 text-white/60">
+          <Badge variant="outline" className="rounded-full border-[var(--border)] text-[var(--text-secondary)]">
             All‑time {allTimeTotal.toLocaleString()}
           </Badge>
         </div>
@@ -111,18 +111,18 @@ export function TasbeehQuickWidget() {
                 key={preset.label}
                 type="button"
                 onClick={() => add(preset.label)}
-                className="relative overflow-hidden rounded-2xl border border-[#C9860A]/20 bg-card hover:border-[#C9860A]/40 transition-colors active:scale-[0.98] p-2 text-start group"
+                className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)]/40 transition-colors active:scale-[0.98] p-2 text-start group"
                 aria-label={`Add ${preset.label}`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${preset.accent} opacity-[0.02] group-hover:opacity-[0.05]`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${preset.accent} opacity-5 group-hover:opacity-10`} />
                 <div className="relative">
-                  <p className="text-[14px] font-arabic leading-snug text-white font-bold" dir="rtl">
+                  <p className="text-[14px] font-arabic leading-snug text-[var(--text-primary)] font-bold" dir="rtl">
                     {preset.arabic}
                   </p>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">
+                  <p className="mt-1 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] truncate">
                     {preset.label}
                   </p>
-                  <p className="mt-1 text-sm font-bold font-serif italic text-[#C9860A] tabular-nums">
+                  <p className="mt-1 text-sm font-bold font-serif italic text-[var(--accent)] tabular-nums">
                     {count.toLocaleString()}
                   </p>
                 </div>
@@ -132,15 +132,15 @@ export function TasbeehQuickWidget() {
         </div>
 
         {todayTopLabel && (
-          <div className="text-xs text-muted-foreground uppercase font-bold tracking-widest">
-            Most repeated today: <span className="font-bold text-[#C9860A]">{todayTopLabel}</span>
+          <div className="text-xs text-[var(--text-secondary)] uppercase font-bold tracking-widest">
+            Most repeated today: <span className="font-bold text-[var(--accent)]">{todayTopLabel}</span>
           </div>
         )}
 
         <Button
           variant="outline"
           size="sm"
-          className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] font-bold uppercase tracking-wider text-xs"
           onClick={() => navigate("/tasbeeh")}
         >
           Open Full Counter

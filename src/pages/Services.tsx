@@ -86,7 +86,7 @@ export default function Services() {
 
     return (
         <PageTransition>
-            <div className="min-h-screen bg-background pb-32 transition-colors duration-300">
+            <div className="min-h-screen bg-[var(--bg-base)] pb-32 transition-colors duration-300">
                 <AppBar title={t("services") || "Services"} showBack={true} />
 
                 {/* Premium Featured Header Card */}
@@ -133,7 +133,7 @@ export default function Services() {
                                         whileTap: { scale: 0.95 }
                                     })}
                                     onClick={() => navigate(item.path)}
-                                    className="group relative flex flex-col items-start p-4 sm:p-5 bg-card border border-border rounded-[20px] overflow-hidden text-left w-full min-w-0"
+                                    className="group relative flex flex-col items-start p-4 sm:p-5 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] rounded-[20px] overflow-hidden text-left w-full min-w-0 transition-colors shadow-sm"
                                 >
                                     {/* Icon Box with Vibrant Gradient */}
                                     <div className={`flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-[14px] bg-gradient-to-br ${item.gradient} shadow-sm mb-3 opacity-90 group-hover:opacity-100 transition-opacity shrink-0`}>
@@ -141,7 +141,7 @@ export default function Services() {
                                     </div>
 
                                     {/* Title Container */}
-                                    <h3 className="font-semibold text-xs sm:text-sm text-foreground leading-snug break-words w-full line-clamp-2">
+                                    <h3 className="font-semibold text-xs sm:text-sm text-[var(--text-primary)] leading-snug break-words w-full line-clamp-2">
                                         {item.title}
                                     </h3>
                                     
@@ -154,7 +154,7 @@ export default function Services() {
                 </div>
 
                 <div className="px-8 mt-12 text-center opacity-40 pb-8">
-                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground">
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
                         Noor Connect
                     </p>
                 </div>

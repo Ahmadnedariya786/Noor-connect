@@ -32,11 +32,11 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
     <div className={cn("space-y-4", className)}>
       <div className="flex items-center justify-between px-1">
         <div>
-          <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+          <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5">
             App Themes
-            <Sparkles className="w-4 h-4 text-amber-500" />
+            <Sparkles className="w-4 h-4 text-[var(--accent)]" />
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             Select a premium dark aesthetic. Applied instantly across the entire app.
           </p>
         </div>
@@ -61,15 +61,15 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
               }}
               className={cn(
                 "group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 cursor-pointer select-none text-left p-3 sm:p-3.5",
-                "bg-card/90 border backdrop-blur-sm",
+                "backdrop-blur-sm",
                 isSelected
-                  ? "border-[#C9860A] ring-1 ring-[#C9860A] shadow-[0_0_18px_rgba(201,134,10,0.28)]"
-                  : "border-border/70 hover:border-amber-500/40 hover:bg-card active:scale-[0.98]"
+                  ? "border border-[var(--accent)] ring-1 ring-[var(--accent)] shadow-[0_0_18px_var(--accent-glow)]"
+                  : "border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] active:scale-[0.98]"
               )}
               style={{
                 background: isSelected
-                  ? 'linear-gradient(180deg, rgba(201,134,10,0.08) 0%, rgba(20,24,34,0.95) 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(15,19,28,0.9) 100%)',
+                  ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
+                  : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
               }}
             >
               {/* Top Row: Name and Active Badge */}
@@ -78,23 +78,23 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   <h3
                     className={cn(
                       "text-xs sm:text-sm font-bold tracking-tight truncate",
-                      isSelected ? "text-amber-400" : "text-foreground group-hover:text-amber-300"
+                      isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)] group-hover:text-[var(--accent-text)]"
                     )}
                   >
                     {theme.name}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-[10px] text-[var(--text-secondary)] truncate">
                     {theme.subtitle}
                   </p>
                 </div>
 
                 {isSelected ? (
-                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#C9860A] text-white shrink-0 shadow-sm">
+                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[var(--accent)] text-[var(--on-accent)] shrink-0 shadow-sm">
                     <Check className="w-2.5 h-2.5 stroke-[3]" />
                     Active
                   </span>
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full border border-border/80 group-hover:border-amber-500/50 shrink-0 mt-0.5" />
+                  <div className="w-3.5 h-3.5 rounded-full border border-[var(--border)] group-hover:border-[var(--accent)]/50 shrink-0 mt-0.5" />
                 )}
               </div>
 

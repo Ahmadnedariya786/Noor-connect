@@ -85,27 +85,27 @@ export function DhikrReminder() {
   };
 
   return (
-    <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
+    <Card className="relative overflow-hidden bg-[var(--surface)] border border-[var(--border)] shadow-md">
       {/* Decorative top accent */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
-      <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9860A]/10 rounded-full blur-[20px] pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/10 rounded-full blur-[20px] pointer-events-none" />
       
       <CardContent className="p-4 space-y-3 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-[#C9860A]/20">
-              <Bell className="w-4 h-4 text-[#C9860A]" />
+            <div className="p-1.5 rounded-lg bg-[var(--accent-soft)]">
+              <Bell className="w-4 h-4 text-[var(--accent)]" />
             </div>
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-white">Dhikr Reminder</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-primary)]">Dhikr Reminder</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-xl hover:bg-[#C9860A]/10"
+              className="h-8 w-8 rounded-xl hover:bg-[var(--accent-soft)]"
               onClick={refreshDhikr}
             >
-              <RefreshCw className="w-4 h-4 text-muted-foreground" />
+              <RefreshCw className="w-4 h-4 text-[var(--text-secondary)]" />
             </Button>
             <Button
               variant={enabled ? "default" : "outline"}
@@ -113,8 +113,8 @@ export function DhikrReminder() {
               onClick={toggleReminder}
               className={`gap-1 rounded-xl font-bold uppercase tracking-wider text-xs ${
                 enabled
-                  ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90 border-none'
-                  : 'border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] hover:opacity-90 border-none'
+                  : 'border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]'
               }`}
             >
               {enabled ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
@@ -125,10 +125,10 @@ export function DhikrReminder() {
 
         {enabled && (
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-[#C9860A]" />
-            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Remind every</span>
+            <Clock className="w-4 h-4 text-[var(--accent)]" />
+            <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">Remind every</span>
             <Select value={interval} onValueChange={setInterval}>
-              <SelectTrigger className="w-24 h-8 rounded-lg bg-card/50 border-border/40 text-white text-xs font-bold">
+              <SelectTrigger className="w-24 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] text-xs font-bold">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -142,15 +142,15 @@ export function DhikrReminder() {
         )}
 
         {/* Dhikr card */}
-        <div className="bg-card/50 border border-[#C9860A]/20 p-4 rounded-xl text-center backdrop-blur-sm">
-          <p className="text-2xl font-arabic font-bold text-[#C9860A] mb-2" dir="rtl">
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-xl text-center backdrop-blur-sm">
+          <p className="text-2xl font-arabic font-bold text-[var(--accent)] mb-2" dir="rtl">
             {currentDhikr.arabic}
           </p>
-          <p className="text-sm font-bold text-white tracking-wide">{currentDhikr.transliteration}</p>
-          <p className="text-xs text-muted-foreground italic leading-relaxed mt-1">"{currentDhikr.translation}"</p>
+          <p className="text-sm font-bold text-[var(--text-primary)] tracking-wide">{currentDhikr.transliteration}</p>
+          <p className="text-xs text-[var(--text-secondary)] italic leading-relaxed mt-1">"{currentDhikr.translation}"</p>
           {currentDhikr.virtue && (
-            <div className="mt-3 pt-2 border-t border-[#C9860A]/20">
-              <p className="text-xs font-bold uppercase tracking-wider text-[#C9860A] flex items-center justify-center gap-1">
+            <div className="mt-3 pt-2 border-t border-[var(--border)]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent)] flex items-center justify-center gap-1">
                 <span className="text-base">✨</span> {currentDhikr.virtue}
               </p>
             </div>

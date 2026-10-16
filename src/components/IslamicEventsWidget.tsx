@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Islamic Events Widget
  * Displays upcoming Islamic events and today's special events
  */
@@ -100,7 +100,7 @@ export function IslamicEventsWidget() {
   };
 
   const getEventColor = (_type: string) => {
-    return 'bg-card/50 border border-[#C9860A]/20 backdrop-blur-sm';
+    return 'bg-[var(--surface-2)] border border-[var(--border)] backdrop-blur-sm';
   };
 
   const getEventIcon = (type: string) => {
@@ -114,25 +114,25 @@ export function IslamicEventsWidget() {
 
   if (loading) {
     return (
-      <Card className="p-4">
+      <Card className="p-4 bg-[var(--surface)] border border-[var(--border)]">
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-muted rounded w-3/4" />
-          <div className="h-3 bg-muted rounded w-1/2" />
-          <div className="h-3 bg-muted rounded w-2/3" />
+          <div className="h-4 bg-[var(--surface-2)] rounded w-3/4" />
+          <div className="h-3 bg-[var(--surface-2)] rounded w-1/2" />
+          <div className="h-3 bg-[var(--surface-2)] rounded w-2/3" />
         </div>
       </Card>
     );
   }
 
   return (
-    <Card className="relative overflow-hidden bg-[#1A1A1A] border border-[#C9860A]/30 shadow-md">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9860A]/50 to-transparent" />
-      <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9860A]/10 rounded-full blur-[20px] pointer-events-none" />
+    <Card className="relative overflow-hidden bg-[var(--surface)] border border-[var(--border)] shadow-md">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/10 rounded-full blur-[20px] pointer-events-none" />
 
       <CardHeader className="pb-3 relative z-10">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-white">
-            <Calendar className="w-4 h-4 text-[#C9860A]" />
+          <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
+            <Calendar className="w-4 h-4 text-[var(--accent)]" />
             Islamic Events
           </CardTitle>
 
@@ -140,13 +140,13 @@ export function IslamicEventsWidget() {
             variant="ghost"
             size="sm"
             onClick={scheduleNotifications}
-            className="h-8 px-3 rounded-xl gap-2 text-[#C9860A] hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
+            className="h-8 px-3 rounded-xl gap-2 text-[var(--accent)] hover:bg-[var(--accent-soft)] font-bold uppercase tracking-wider text-xs"
           >
             <Bell className="w-4 h-4" />
             Notify
           </Button>
         </div>
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">Upcoming holidays &amp; special days</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] mt-1">Upcoming holidays &amp; special days</p>
       </CardHeader>
 
       <CardContent className="space-y-4 relative z-10">
@@ -156,23 +156,23 @@ export function IslamicEventsWidget() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[#C9860A]">{getEventIcon(todayEvent.type)}</span>
-                  <p className="text-sm font-bold text-white truncate">{todayEvent.name}</p>
+                  <span className="text-[var(--accent)]">{getEventIcon(todayEvent.type)}</span>
+                  <p className="text-sm font-bold text-[var(--text-primary)] truncate">{todayEvent.name}</p>
                 </div>
-                <p className="font-arabic text-sm text-[#C9860A]/80 mt-1 truncate" dir="rtl">
+                <p className="font-arabic text-sm text-[var(--accent)]/80 mt-1 truncate" dir="rtl">
                   {todayEvent.arabicName}
                 </p>
               </div>
-              <Badge className="rounded-full text-xs uppercase tracking-widest font-bold bg-[#C9860A]/10 text-[#C9860A] border-none">
+              <Badge className="rounded-full text-xs uppercase tracking-widest font-bold bg-[var(--accent-soft)] text-[var(--accent)] border-none">
                 Today
               </Badge>
             </div>
-            <p className="text-xs font-medium text-muted-foreground mt-2">
+            <p className="text-xs font-medium text-[var(--text-secondary)] mt-2">
               {todayEvent.description}
             </p>
           </div>
         ) : (
-          <div className="p-3 rounded-2xl bg-card/50 border border-border/40 text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">
+          <div className="p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] text-center">
             No special events today.
           </div>
         )}
@@ -180,7 +180,7 @@ export function IslamicEventsWidget() {
         {/* Upcoming */}
         {upcomingEvents.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
               Next up
             </p>
             <div className="space-y-2">
@@ -192,14 +192,14 @@ export function IslamicEventsWidget() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#C9860A]">{getEventIcon(event.type)}</span>
-                        <p className="text-xs font-bold text-white truncate">{event.name}</p>
+                        <span className="text-[var(--accent)]">{getEventIcon(event.type)}</span>
+                        <p className="text-xs font-bold text-[var(--text-primary)] truncate">{event.name}</p>
                       </div>
-                      <p className="font-arabic text-xs text-[#C9860A]/70 mt-1 truncate" dir="rtl">
+                      <p className="font-arabic text-xs text-[var(--accent)]/70 mt-1 truncate" dir="rtl">
                         {event.arabicName}
                       </p>
                     </div>
-                    <Badge className="rounded-full text-xs uppercase tracking-widest font-bold bg-[#C9860A]/10 text-[#C9860A] border-none">
+                    <Badge className="rounded-full text-xs uppercase tracking-widest font-bold bg-[var(--accent-soft)] text-[var(--accent)] border-none">
                       {event.daysUntil === 1 ? "Tomorrow" : `${event.daysUntil}d`}
                     </Badge>
                   </div>
@@ -208,7 +208,7 @@ export function IslamicEventsWidget() {
             </div>
           </div>
         ) : (
-          <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">
+          <div className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] text-center">
             No upcoming events in the next 7 days.
           </div>
         )}
@@ -216,7 +216,7 @@ export function IslamicEventsWidget() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full rounded-xl border-[#C9860A]/30 text-white hover:bg-[#C9860A]/10 font-bold uppercase tracking-wider text-xs"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] font-bold uppercase tracking-wider text-xs"
           onClick={() => navigate("/calendar")}
         >
           View Calendar

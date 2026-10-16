@@ -9,19 +9,19 @@ const Qibla = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-20">
+      <div className="min-h-screen bg-[var(--bg-base)] pb-20">
         <AppBar title={t("qibla") || "Qibla"} />
         <div className="flex flex-col min-h-[calc(100vh-64px)]">
           <div className="flex-grow">
             <ErrorBoundary
               fallback={
                 <div className="flex flex-col items-center justify-center p-6 text-center my-8">
-                  <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm space-y-3">
-                    <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto text-xl">
+                  <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center mx-auto text-xl">
                       🧭
                     </div>
-                    <h3 className="text-base font-bold text-foreground">Qibla Temporarily Unavailable</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <h3 className="text-base font-bold text-[var(--text-primary)]">Qibla Temporarily Unavailable</h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       The compass sensor or location service encountered an issue. You can still determine Qibla using prayer times or tap below to reload.
                     </p>
                     <button
@@ -37,7 +37,7 @@ const Qibla = () => {
               <QiblaCompassModern />
             </ErrorBoundary>
           </div>
-          <p className="text-center text-xs text-muted-foreground/60 px-6 pb-8 italic">
+          <p className="text-center text-xs text-[var(--text-secondary)]/70 px-6 pb-8 italic">
             {t(
               "qiblaDisclaimerLine1",
               "The qibla feature is currently in development and may not be 100% accurate."

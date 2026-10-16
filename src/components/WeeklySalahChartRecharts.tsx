@@ -13,10 +13,10 @@ export interface ChartData {
 }
 
 function getBarColor(completed: number): string {
-  if (completed === 5) return "#C9860A";
-  if (completed >= 3) return "rgba(201,134,10,0.65)";
-  if (completed >= 1) return "rgba(201,134,10,0.35)";
-  return "rgba(255,255,255,0.08)";
+  if (completed === 5) return "var(--accent)";
+  if (completed >= 3) return "var(--accent-soft)";
+  if (completed >= 1) return "var(--surface-2)";
+  return "var(--surface-2)";
 }
 
 export function WeeklySalahChartRecharts({ chartData, dataVersion }: { chartData: ChartData[]; dataVersion: number }) {
@@ -27,7 +27,7 @@ export function WeeklySalahChartRecharts({ chartData, dataVersion }: { chartData
           dataKey="day"
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+          tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
         />
         <YAxis hide domain={[0, 5]} />
         <Bar
