@@ -71,7 +71,7 @@ export const QUIZ_CATEGORIES: QuizCategory[] = [
     id: 'pillars',
     name: 'Pillars of Islam',
     icon: '🏛️',
-    color: 'bg-emerald-500',
+    color: 'bg-[var(--accent)]',
     description: 'Test your knowledge of the five pillars',
     unlocked: true,
     masteryLevel: 0

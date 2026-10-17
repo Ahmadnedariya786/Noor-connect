@@ -377,7 +377,7 @@ function PremiumDashboardInner({
                     }
                   }}
                   disabled={location.isDetecting || loadingAPI}
-                  className="w-full h-12 rounded-2xl font-bold text-white gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 border-none hover:opacity-90 transition-opacity"
+                  className="w-full h-12 rounded-2xl font-bold text-[var(--on-accent)] gap-2 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] border-none hover:opacity-90 transition-opacity"
                 >
                   {location.isDetecting || loadingAPI ? <Activity className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
                   {location.isDetecting || loadingAPI ? "Detecting..." : "Auto-Detect (GPS/IP)"}

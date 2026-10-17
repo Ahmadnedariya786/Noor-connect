@@ -571,7 +571,7 @@ export default function EbooksModern() {
                     <p className="text-xs text-muted-foreground">In Progress</p>
                   </Card>
                   <Card className="p-3 text-center">
-                    <Star className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+                    <Star className="w-5 h-5 text-[var(--accent)] mx-auto mb-1" />
                     <p className="text-xl font-bold">{readingStats.completedBooks}</p>
                     <p className="text-xs text-muted-foreground">Completed</p>
                   </Card>
@@ -739,7 +739,7 @@ export default function EbooksModern() {
                           {progress > 0 && (
                             <div className="flex items-center gap-2 mt-1">
                               <Progress value={progress} className="h-1 flex-1 max-w-[100px]" />
-                              <span className="text-xs text-emerald-500">{progress}%</span>
+                              <span className="text-xs text-[var(--accent)]">{progress}%</span>
                             </div>
                           )}
                         </div>
@@ -834,7 +834,7 @@ export default function EbooksModern() {
               <Card className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center"><HardDrive className="w-5 h-5 text-emerald-500" /></div>
+                    <div className="w-10 h-10 rounded-full bg-[var(--accent-soft)] flex items-center justify-center"><HardDrive className="w-5 h-5 text-[var(--accent)]" /></div>
                     <div>
                       <p className="font-medium text-sm">Offline Storage</p>
                       <p className="text-xs text-muted-foreground">{storageUsed} used</p>
@@ -898,9 +898,9 @@ export default function EbooksModern() {
                               {userProgressPct > 0 && (
                                 <div className="flex items-center gap-2 mt-1">
                                   <div className="w-20 h-1 rounded-full bg-muted overflow-hidden">
-                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${userProgressPct}%` }} />
+                                    <div className="h-full bg-[var(--accent)] rounded-full" style={{ width: `${userProgressPct}%` }} />
                                   </div>
-                                  <span className="text-xs text-emerald-500 font-medium">
+                                  <span className="text-xs text-[var(--accent)] font-medium">
                                     {userProgress?.currentPage && userProgress?.totalPages
                                       ? `${userProgress.currentPage}/${userProgress.totalPages}`
                                       : `${userProgressPct}%`}

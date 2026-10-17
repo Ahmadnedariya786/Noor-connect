@@ -175,7 +175,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
   const getStatusIcon = (status: PermissionInfo['status']) => {
     switch (status) {
       case 'granted':
-        return <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />;
+        return <ShieldCheck className="w-4 h-4 text-[var(--success)] shrink-0" />;
       case 'denied':
         return <ShieldOff className="w-4 h-4 text-rose-500 shrink-0" />;
       case 'prompt':
@@ -189,7 +189,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
   const getStatusBadge = (status: PermissionInfo['status']) => {
     switch (status) {
       case 'granted':
-        return <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] px-2 py-0.5">Granted</Badge>;
+        return <Badge variant="default" className="bg-[var(--success)] hover:opacity-90 text-white text-[11px] px-2 py-0.5">Granted</Badge>;
       case 'denied':
         return <Badge variant="destructive" className="text-[11px] px-2 py-0.5">Denied</Badge>;
       case 'prompt':
@@ -243,7 +243,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         </div>
 
         {locationPermission?.status === 'granted' && (
-          <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+          <div className="bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
             <span>✅</span>
             <span className="font-medium">Accurate Prayer Times & Qibla Enabled</span>
           </div>
@@ -378,7 +378,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         </div>
 
         {notificationPermission?.status === 'granted' && (
-          <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+          <div className="bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
             <span>✅</span>
             <span className="font-medium">Adhan & Prayer Notifications Enabled</span>
           </div>
@@ -514,14 +514,14 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
           <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
             <div className="flex items-center gap-1.5 min-w-0">
               {exactAlarmGranted ? (
-                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[var(--success)] shrink-0" />
               ) : (
                 <ShieldOff className="w-4 h-4 text-amber-500 shrink-0" />
               )}
               <span className="text-xs font-medium text-muted-foreground">Permission Status:</span>
             </div>
             {exactAlarmGranted ? (
-              <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] px-2 py-0.5">
+              <Badge variant="default" className="bg-[var(--success)] hover:opacity-90 text-white text-[11px] px-2 py-0.5">
                 Granted
               </Badge>
             ) : (
@@ -532,7 +532,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
           </div>
 
           {exactAlarmGranted ? (
-            <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+            <div className="bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
               <span>✅</span>
               <span className="font-medium">Exact Prayer Alarms Enabled</span>
             </div>
@@ -604,7 +604,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
             <span className="text-muted-foreground">Overall Status:</span>
             <span className={`font-semibold ${
               Array.from(permissions.values()).every(p => p.status === 'granted') && (platform !== 'mobile' || exactAlarmGranted === true)
-                ? 'text-emerald-500'
+                ? 'text-[var(--success)]'
                 : Array.from(permissions.values()).some(p => p.status === 'denied') || (platform === 'mobile' && exactAlarmGranted === false)
                 ? 'text-rose-500'
                 : 'text-amber-500'

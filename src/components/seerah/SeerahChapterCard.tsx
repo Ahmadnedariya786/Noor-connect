@@ -11,7 +11,7 @@ interface SeerahChapterCardProps {
 const periodColors: Record<SeerahChapterSummary["period"], string> = {
   "pre-prophethood": "from-blue-500 to-blue-600",
   makkan: "from-amber-500 to-amber-600",
-  madinan: "from-emerald-500 to-emerald-600",
+  madinan: "from-teal-600 to-cyan-700",
   "final-days": "from-purple-500 to-purple-600",
 };
 

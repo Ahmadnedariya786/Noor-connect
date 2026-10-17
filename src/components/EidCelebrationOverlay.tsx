@@ -104,7 +104,7 @@ export function EidCelebrationOverlay() {
         >
           {/* Animated background glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#e0c097]/20 rounded-full blur-[20px]"></div>
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[20px] delay-700"></div>
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[var(--accent)]/10 rounded-full blur-[20px] delay-700"></div>
 
           <button 
             onClick={() => setIsVisible(false)}

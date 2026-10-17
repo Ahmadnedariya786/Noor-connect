@@ -132,9 +132,9 @@ export default function RadioStats() {
           </Card>
 
           {/* Avg Duration */}
-          <Card className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+          <Card className="p-4 bg-[var(--surface-2)] border-[var(--border)]">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-600" />
+              <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
               <p className="text-xs font-medium text-muted-foreground">Avg Session</p>
             </div>
             <p className="text-2xl font-black text-foreground">{formatDuration(avgSessionDuration)}</p>

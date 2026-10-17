@@ -130,7 +130,7 @@ export const CitySearch = ({ onCitySelect, showManualCoordinates = true }: CityS
          return <MapPin className="w-4 h-4 text-blue-500" />;
        }
        case 'town': {
-         return <MapPin className="w-4 h-4 text-green-500" />;
+         return <MapPin className="w-4 h-4 text-[var(--accent)]" />;
        }
        case 'village': {
          return <MapPin className="w-4 h-4 text-orange-500" />;

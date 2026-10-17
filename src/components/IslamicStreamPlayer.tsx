@@ -36,7 +36,7 @@ interface StreamState {
 }
 
 const LOCATION_META: Record<StreamLocation, { label: string; arabic: string; color: string }> = {
-  makkah: { label: 'Makkah', arabic: 'مكة المكرمة', color: '#10b981' },
+  makkah: { label: 'Makkah', arabic: 'مكة المكرمة', color: 'var(--accent)' },
   madinah: { label: 'Madinah', arabic: 'المدينة المنورة', color: '#6366f1' },
 };
 
@@ -424,7 +424,7 @@ export default function IslamicStreamPlayer() {
   return (
     <div
       ref={containerRef}
-      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-emerald-500/20 ${isFullscreen ? 'fixed top-0 left-0 rounded-none flex flex-col' : 'relative'}`}
+      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-[var(--border)] ${isFullscreen ? 'fixed top-0 left-0 rounded-none flex flex-col' : 'relative'}`}
       style={isFullscreen ? {
         position: 'fixed',
         top: 0,
@@ -441,7 +441,7 @@ export default function IslamicStreamPlayer() {
     >
       {/* ── Location Switcher ── */}
       <div className="flex items-center gap-1 p-3 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/6 backdrop-blur-md border border-emerald-500/20 flex-1">
+        <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/6 backdrop-blur-md border border-[var(--border)] flex-1">
           {(['makkah', 'madinah'] as StreamLocation[]).map(loc => {
             const m = LOCATION_META[loc];
             const active = activeTab === loc;
@@ -467,7 +467,7 @@ export default function IslamicStreamPlayer() {
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ml-2 transition-all ${
           current.isPlaying
             ? 'bg-red-500/20 border-red-500/40 text-red-400'
-            : 'bg-white/6 border-emerald-500/20 text-white/40'
+            : 'bg-white/6 border-[var(--border)] text-white/40'
         }`}>
           <span className={`w-2 h-2 rounded-full ${current.isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/20'}`} />
           LIVE
@@ -502,9 +502,9 @@ export default function IslamicStreamPlayer() {
         {current.isLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm">
             <div className="relative w-16 h-16">
-              <div className="absolute inset-0 rounded-full border-[3px] border-emerald-500/20" />
-              <div className="absolute inset-0 rounded-full border-[3px] border-t-emerald-400 animate-spin" />
-              <Radio className="absolute inset-0 m-auto w-6 h-6 text-emerald-400 animate-pulse" />
+              <div className="absolute inset-0 rounded-full border-[3px] border-[var(--accent)]/20" />
+              <div className="absolute inset-0 rounded-full border-[3px] border-t-[var(--accent)] animate-spin" />
+              <Radio className="absolute inset-0 m-auto w-6 h-6 text-[var(--accent)] animate-pulse" />
             </div>
             <p className="text-white/60 text-sm font-medium">Connecting to sacred stream…</p>
           </div>
@@ -513,8 +513,8 @@ export default function IslamicStreamPlayer() {
         {/* Buffering overlay */}
         {current.isBuffering && !current.isLoading && (
           <div className="absolute top-3 right-3">
-            <div className="bg-black/70 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-2 border border-emerald-500/20">
-              <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+            <div className="bg-black/70 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-2 border border-[var(--border)]">
+              <Loader2 className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
               <span className="text-xs text-white/70 font-medium">Buffering</span>
             </div>
           </div>
@@ -532,7 +532,7 @@ export default function IslamicStreamPlayer() {
             </div>
             <button
               onClick={e => { e.stopPropagation(); handleRetry(); }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--on-accent)] font-bold text-sm transition-opacity"
             >
               <RefreshCw className="w-4 h-4" />
               Retry
@@ -543,7 +543,7 @@ export default function IslamicStreamPlayer() {
         {/* Center play button — shows when paused and loaded */}
         {!current.isLoading && !current.error && !current.isPlaying && showControls && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-18 h-18 rounded-full bg-black/50 backdrop-blur-md border border-emerald-500/30 flex items-center justify-center w-20 h-20">
+            <div className="w-18 h-18 rounded-full bg-black/50 backdrop-blur-md border border-[var(--border)] flex items-center justify-center w-20 h-20">
               <Play className="w-9 h-9 text-white ml-1" />
             </div>
           </div>
@@ -552,8 +552,8 @@ export default function IslamicStreamPlayer() {
         {/* Channel name toast */}
         {current.channel?.name && current.isPlaying && showControls && (
           <div className="absolute top-3 left-3 pointer-events-none">
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-xl px-3 py-1.5 border border-emerald-500/20">
-              <MonitorPlay className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-xl px-3 py-1.5 border border-[var(--border)]">
+              <MonitorPlay className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span className="text-xs text-white/80 font-medium">{current.channel.name}</span>
             </div>
           </div>
@@ -597,7 +597,7 @@ export default function IslamicStreamPlayer() {
                     value={isMuted ? 0 : volume}
                     onChange={handleVolume}
                     onClick={e => e.stopPropagation()}
-                    className="w-20 h-1 accent-emerald-400 cursor-pointer"
+                    className="w-20 h-1 accent-[var(--accent)] cursor-pointer"
                   />
                 </div>
               </div>
@@ -607,10 +607,10 @@ export default function IslamicStreamPlayer() {
                 {levels.length > 1 && (
                   <div className="relative">
                     {showQualityMenu && (
-                      <div className="absolute bottom-full right-0 mb-2 w-32 bg-black/90 backdrop-blur-md rounded-xl border border-emerald-500/20 overflow-hidden flex flex-col z-50 py-1 shadow-2xl">
+                      <div className="absolute bottom-full right-0 mb-2 w-32 bg-black/90 backdrop-blur-md rounded-xl border border-[var(--border)] overflow-hidden flex flex-col z-50 py-1 shadow-2xl">
                         <button
                           onClick={e => { e.stopPropagation(); handleQualityChange(-1); }}
-                          className={`px-3 py-2 text-xs font-semibold text-left hover:bg-white/10 transition-colors ${currentLevel === -1 ? 'text-emerald-400' : 'text-white'}`}
+                          className={`px-3 py-2 text-xs font-semibold text-left hover:bg-white/10 transition-colors ${currentLevel === -1 ? 'text-[var(--accent)]' : 'text-white'}`}
                         >
                           Auto
                         </button>
@@ -618,7 +618,7 @@ export default function IslamicStreamPlayer() {
                           <button
                             key={l.id}
                             onClick={e => { e.stopPropagation(); handleQualityChange(l.id); }}
-                            className={`px-3 py-2 text-xs font-semibold text-left hover:bg-white/10 transition-colors ${currentLevel === l.id ? 'text-emerald-400' : 'text-white'}`}
+                            className={`px-3 py-2 text-xs font-semibold text-left hover:bg-white/10 transition-colors ${currentLevel === l.id ? 'text-[var(--accent)]' : 'text-white'}`}
                           >
                             {l.height ? `${l.height}p` : `${Math.round(l.bitrate / 1024)}kbps`}
                           </button>

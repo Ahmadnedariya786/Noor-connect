@@ -75,9 +75,9 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
               <div className="mt-4 bg-background/60 rounded-2xl p-4 text-sm text-foreground/70">
                 <p className="font-bold text-foreground mb-2">Required Actions:</p>
                 <ul className="space-y-2">
-                  <li className="flex gap-2 items-start"><CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> Perform Ghusl (ritual bath).</li>
-                  <li className="flex gap-2 items-start"><CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> Resume Salah with fresh Wudu for each prayer time.</li>
-                  <li className="flex gap-2 items-start"><CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> Resume fasting if in Ramadan.</li>
+                  <li className="flex gap-2 items-start"><CheckCircle className="w-4 h-4 text-[var(--success)] shrink-0 mt-0.5" /> Perform Ghusl (ritual bath).</li>
+                  <li className="flex gap-2 items-start"><CheckCircle className="w-4 h-4 text-[var(--success)] shrink-0 mt-0.5" /> Resume Salah with fresh Wudu for each prayer time.</li>
+                  <li className="flex gap-2 items-start"><CheckCircle className="w-4 h-4 text-[var(--success)] shrink-0 mt-0.5" /> Resume fasting if in Ramadan.</li>
                 </ul>
               </div>
             </div>
@@ -118,13 +118,13 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
       <div className="bg-card border border-border rounded-[32px] overflow-hidden shadow-lg">
         <div className={cn(
           "p-6 border-b border-border relative overflow-hidden",
-          fiqh.phase === "haidh" ? "bg-rose-500/10" : "bg-emerald-500/10"
+          fiqh.phase === "haidh" ? "bg-rose-500/10" : "bg-[var(--success)]/10"
         )}>
           <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">Current Status</h3>
           <div className="flex justify-between items-center relative z-10">
             <p className={cn(
               "text-2xl font-black",
-              fiqh.phase === "haidh" ? "text-rose-500" : "text-emerald-500"
+              fiqh.phase === "haidh" ? "text-rose-500" : "text-[var(--success)]"
             )}>
               {fiqh.label}
             </p>
@@ -144,15 +144,15 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center",
-                  rule.exempt ? "bg-rose-500/15" : "bg-emerald-500/15"
+                  rule.exempt ? "bg-rose-500/15" : "bg-[var(--success)]/15"
                 )}>
-                  <rule.icon className={cn("w-4 h-4", rule.exempt ? "text-rose-500" : "text-emerald-500")} />
+                  <rule.icon className={cn("w-4 h-4", rule.exempt ? "text-rose-500" : "text-[var(--success)]")} />
                 </div>
                 <span className="font-bold text-foreground">{rule.label}</span>
               </div>
               <span className={cn(
                 "text-sm font-black tracking-wider uppercase",
-                rule.exempt ? "text-rose-500" : "text-emerald-500"
+                rule.exempt ? "text-rose-500" : "text-[var(--success)]"
               )}>
                 {rule.exempt ? "Exempt" : "Active"}
               </span>
@@ -249,13 +249,13 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
       {/* Wellness tips */}
       <div className="bg-card border border-border rounded-[32px] p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Droplets className="w-4 h-4 text-emerald-500" />
+          <Droplets className="w-4 h-4 text-[var(--accent)]" />
           <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Wellness Tips</h3>
         </div>
         <ul className="space-y-3">
           {content.wellness.map((tip, i) => (
             <li key={i} className="flex gap-3 items-start text-sm text-foreground/80">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 shrink-0" />
               {tip}
             </li>
           ))}
@@ -322,7 +322,7 @@ export function HaidhIslamicTab({ data, fiqh }: Props) {
       {/* Verified Islamic Resources */}
       <div className="bg-card border border-border rounded-[32px] p-6">
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen className="w-4 h-4 text-emerald-500" />
+          <BookOpen className="w-4 h-4 text-[var(--accent)]" />
           <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Verified Islamic Resources</h3>
         </div>
         <p className="text-sm text-foreground/80 mb-4 leading-relaxed">

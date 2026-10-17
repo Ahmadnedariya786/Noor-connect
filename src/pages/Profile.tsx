@@ -112,8 +112,8 @@ const GROUPS: SettingsGroup[] = [
         title: 'Prayer Notifications',
         subtitle: 'Adhan reminders, daily alerts & scheduling',
         icon: Bell,
-        gradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20',
-        iconColor: 'text-emerald-600 dark:text-emerald-400',
+        gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
+        iconColor: 'text-[var(--accent)]',
         route: '/settings/notifications',
         asyncKey: 'notifications',
       },
@@ -157,8 +157,8 @@ const GROUPS: SettingsGroup[] = [
         title: 'Privacy & Security',
         subtitle: 'Local data isolation, zero tracking & permissions',
         icon: ShieldCheck,
-        gradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20',
-        iconColor: 'text-emerald-600 dark:text-emerald-400',
+        gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
+        iconColor: 'text-[var(--accent)]',
         route: '/settings/privacy',
       },
     ],
@@ -424,7 +424,7 @@ const Profile: React.FC = () => {
 
         {/* Privacy & Version Footer */}
         <div className="pt-4 text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] text-xs font-medium border border-[var(--border)]">
             <Lock className="w-3 h-3" />
             100% Private • Local Data Security
           </div>

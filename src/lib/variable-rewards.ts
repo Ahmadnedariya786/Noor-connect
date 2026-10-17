@@ -247,7 +247,7 @@ export class VariableRewardsSystem {
   getRarityColor(rarity: VariableReward['rarity']): string {
     const colors: Record<string, string> = {
       common: 'text-slate-500',
-      uncommon: 'text-green-500',
+      uncommon: 'text-[var(--accent)]',
       rare: 'text-blue-500',
       epic: 'text-purple-500'
     };
@@ -258,7 +258,7 @@ export class VariableRewardsSystem {
   getRarityBg(rarity: VariableReward['rarity']): string {
     const colors: Record<string, string> = {
       common: 'bg-slate-100',
-      uncommon: 'bg-green-100',
+      uncommon: 'bg-[var(--accent-soft)]',
       rare: 'bg-blue-100',
       epic: 'bg-purple-100'
     };

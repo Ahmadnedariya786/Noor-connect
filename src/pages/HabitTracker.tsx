@@ -123,7 +123,7 @@ interface CategoryMeta {
 }
 
 const CATEGORY_META: Record<string, CategoryMeta> = {
-  quran: { icon: "📖", color: "#10b981", soft: "bg-emerald-500/10" },
+  quran: { icon: "📖", color: "var(--accent)", soft: "bg-[var(--accent-soft)]" },
   prayer: { icon: "🕌", color: "#3b82f6", soft: "bg-blue-500/10" },
   dhikr: { icon: "📿", color: "#8b5cf6", soft: "bg-violet-500/10" },
   charity: { icon: "💝", color: "#ec4899", soft: "bg-pink-500/10" },
@@ -900,7 +900,7 @@ export default function HabitTrackerPage() {
           <StatCard
             label="30-day consistency"
             value={`${totals.rate}%`}
-            icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
+            icon={<TrendingUp className="w-4 h-4 text-[var(--accent)]" />}
           />
           <StatCard
             label="Deeds · last 30 days"

@@ -169,7 +169,7 @@ export default function QisasReader() {
         return (
           <div
             key={index}
-            className="my-4 p-4 bg-gradient-to-r from-[#D4AF37]/10 to-[#10B981]/10 border-l-4 border-[#D4AF37] rounded-r-lg cursor-pointer hover:from-[#D4AF37]/20 hover:to-[#10B981]/20 transition-all"
+            className="my-4 p-4 bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent-2)]/10 border-l-4 border-[var(--accent)] rounded-r-lg cursor-pointer hover:from-[var(--accent)]/20 hover:to-[var(--accent-2)]/20 transition-all"
             onClick={() => handleQuranRefClick(paragraph)}
           >
             <p className="font-arabic text-lg text-foreground" dir="rtl">
@@ -212,7 +212,7 @@ export default function QisasReader() {
       <div className="min-h-screen bg-background pb-24">
         <div className="fixed top-0 left-0 right-0 h-1 bg-background z-50">
           <div
-            className="h-full bg-gradient-to-r from-[#D4AF37] to-[#10B981] transition-all duration-150"
+            className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] transition-all duration-150"
             style={{ width: `${scrollProgress}%` }}
           />
         </div>
@@ -299,9 +299,9 @@ export default function QisasReader() {
 
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div
-            className="w-full h-20 rounded-xl bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center mb-4 shadow-lg"
+            className="w-full h-20 rounded-xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface)] border border-[var(--border)] flex items-center justify-center mb-4 shadow-sm"
           >
-            <span className="font-arabic text-3xl text-white" dir="rtl">
+            <span className="font-arabic text-3xl text-[var(--accent)]" dir="rtl">
               {prophet.arabicName}
             </span>
           </div>
@@ -315,7 +315,7 @@ export default function QisasReader() {
           </p>
 
           <div className="inline-flex items-center mb-4">
-            <span className="px-3 py-1 rounded-full text-sm font-medium text-white bg-[#10B981]">
+            <span className="px-3 py-1 rounded-full text-sm font-medium text-[var(--accent-text)] bg-[var(--accent-soft)] border border-[var(--border)]">
               {eraLabels[prophet.era]}
             </span>
           </div>

@@ -27,8 +27,8 @@ export default function LiveStreams() {
         {/* Info cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-4 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <Wifi className="w-4 h-4 text-emerald-600" />
+            <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center">
+              <Wifi className="w-4 h-4 text-[var(--accent)]" />
             </div>
             <p className="text-xs font-bold text-foreground">Live Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">

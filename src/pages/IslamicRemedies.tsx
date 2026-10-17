@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ const toCopyText = (item: MoodContent) =>
 
 const TYPE_STYLES: Record<string, { bg: string; icon: React.ReactNode }> = {
   surah: { bg: "bg-blue-500", icon: <BookOpen className="h-3 w-3" /> },
-  ayah: { bg: "bg-green-500", icon: <Quote className="h-3 w-3" /> },
+  ayah: { bg: "bg-[var(--accent)]", icon: <Quote className="h-3 w-3" /> },
   dua: { bg: "bg-purple-500", icon: <Heart className="h-3 w-3" /> },
   hadith: { bg: "bg-orange-500", icon: <Sparkles className="h-3 w-3" /> },
   dhikr: { bg: "bg-teal-500", icon: <Target className="h-3 w-3" /> },
@@ -201,12 +201,12 @@ export default function IslamicRemedies() {
 
             <m.div variants={viewerTextVariants} initial="hidden" animate="visible" className="flex flex-wrap gap-3 pt-2">
               {currentItem.type === "surah" && currentItem.surahNumber && (
-                <button onClick={handlePlaySurah} className="flex items-center gap-2 rounded-full px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition-colors shadow-lg shadow-green-600/20">
+                <button onClick={handlePlaySurah} className="flex items-center gap-2 rounded-full px-5 py-2.5 bg-[var(--accent)] hover:brightness-105 text-[var(--on-accent)] text-xs font-bold transition-all shadow-md shadow-black/20">
                   <Play className="w-3.5 h-3.5" /> Play Surah
                 </button>
               )}
               <button onClick={handleCopy} className="flex items-center gap-2 rounded-full px-5 py-2.5 border border-border bg-card hover:bg-muted text-xs font-bold text-foreground transition-colors">
-                {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[var(--success)]" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? "Copied!" : "Copy"}
               </button>
               <button onClick={handleNext} className="flex items-center gap-2 rounded-full px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors shadow-lg shadow-primary/20 ml-auto">

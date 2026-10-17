@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Changelog Component
  * Displays version history with beautiful UI
  */
@@ -156,9 +156,9 @@ export function Changelog({ onClose, showCloseButton = true, maxHeight = '60vh' 
         </div>
 
         {hasUnread && (
-          <div className="mt-3 p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span className="text-sm text-emerald-800">
+          <div className="mt-3 p-3 rounded-lg bg-[var(--accent-soft)] border border-[var(--border)] flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+            <span className="text-sm text-[var(--accent-text)]">
               New updates available! Check out what's changed.
             </span>
           </div>
@@ -210,7 +210,7 @@ export function ChangelogCompact({ onViewFull }: { onViewFull?: () => void }) {
             <div className="flex items-center gap-2 mb-1">
               <h4 className="font-semibold text-sm">Latest Update</h4>
               {hasUnread && (
-                <Badge variant="default" className="bg-emerald-500 text-white text-xs px-1.5 py-0 h-4">
+                <Badge variant="default" className="bg-[var(--accent)] text-[var(--on-accent)] text-xs px-1.5 py-0 h-4">
                   New
                 </Badge>
               )}

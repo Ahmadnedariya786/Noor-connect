@@ -94,7 +94,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
         {data.isActive ? (
           <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 dark:bg-rose-700/20 rounded-full blur-[20px] pointer-events-none" />
         ) : (
-          <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-[20px] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--accent)]/10 rounded-full blur-[20px] pointer-events-none" />
         )}
         <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-[20px] pointer-events-none" />
 
@@ -163,7 +163,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
               </Button>
               <Button
                 onClick={onEnd}
-                className="h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-bold text-white shadow-lg shadow-emerald-900/20 whitespace-nowrap"
+                className="h-12 rounded-2xl bg-[var(--accent)] hover:opacity-90 font-bold text-[var(--on-accent)] shadow-lg whitespace-nowrap"
               >
                 <CheckCircle className="w-4 h-4 mr-2 shrink-0" /> End Period
               </Button>
@@ -174,21 +174,21 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
             {/* Phase strip */}
             <div className="flex items-center gap-2 mb-8 w-full justify-center">
               <div className="h-1.5 w-1/4 rounded-full bg-border" />
-              <div className={cn("h-1.5 w-1/4 rounded-full", currentPhase === "tuhr" && "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]", currentPhase !== "tuhr" && "bg-border")} />
+              <div className={cn("h-1.5 w-1/4 rounded-full", currentPhase === "tuhr" && "bg-[var(--success)] shadow-[0_0_8px_rgba(16,185,129,0.5)]", currentPhase !== "tuhr" && "bg-border")} />
               <div className={cn("h-1.5 w-1/4 rounded-full", currentPhase === "fertile" && "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]", currentPhase !== "fertile" && "bg-border")} />
               <div className={cn("h-1.5 w-1/4 rounded-full", currentPhase === "premenstrual" && "bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]", currentPhase !== "premenstrual" && "bg-border")} />
             </div>
 
             <div className="w-24 h-24 mb-6 relative">
-              <div className="absolute inset-0 rounded-full bg-emerald-500/10 border border-emerald-500/15" />
-              <div className="absolute inset-2 rounded-full border border-emerald-500/20" />
+              <div className="absolute inset-0 rounded-full bg-[var(--success)]/10 border border-[var(--success)]/15" />
+              <div className="absolute inset-2 rounded-full border border-[var(--success)]/20" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Moon className="w-10 h-10 text-emerald-500" />
+                <Moon className="w-10 h-10 text-[var(--success)]" />
               </div>
             </div>
 
             <h2 className="text-4xl font-bold font-serif italic tracking-tight mb-2 text-foreground">Ṭuhr</h2>
-            <p className="text-emerald-600 dark:text-emerald-400 font-bold text-xs tracking-[0.2em] uppercase mb-6">Purity Phase</p>
+            <p className="text-[var(--success)] font-bold text-xs tracking-[0.2em] uppercase mb-6">Purity Phase</p>
 
             <div className="bg-card border border-border rounded-2xl p-4 w-full mb-6 shadow-sm">
               {nextPredicted ? (
@@ -253,13 +253,13 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
               <div key={item.label} className="flex items-center gap-3 min-w-0">
                 <div className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                  item.exempt ? "bg-rose-500/15 text-rose-500" : "bg-emerald-500/15 text-emerald-500"
+                  item.exempt ? "bg-rose-500/15 text-rose-500" : "bg-[var(--success)]/15 text-[var(--success)]"
                 )}>
                   <item.icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground font-medium truncate">{item.label}</p>
-                  <p className={cn("font-bold text-sm truncate", item.exempt ? "text-rose-500" : "text-emerald-500")}>
+                  <p className={cn("font-bold text-sm truncate", item.exempt ? "text-rose-500" : "text-[var(--success)]")}>
                     {item.exempt ? "Exempt" : "Active"}
                   </p>
                 </div>
@@ -297,7 +297,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
           <div className="flex items-center gap-2 mb-2">
             <span className={cn(
               "text-xs font-bold px-2.5 py-1 rounded-full",
-              regularity.score === "regular" && "bg-emerald-500/15 text-emerald-500",
+              regularity.score === "regular" && "bg-[var(--success)]/15 text-[var(--success)]",
               regularity.score === "slightly-irregular" && "bg-amber-500/15 text-amber-500",
               regularity.score === "irregular" && "bg-rose-500/15 text-rose-500",
             )}>
@@ -383,7 +383,7 @@ export function HaidhTodayTab({ data, fiqh, onStart, onEnd, onTabChange }: Props
                   }}
                   className={`flex-1 h-7 rounded-md transition-all ${
                     active
-                      ? lvl <= 3 ? 'bg-emerald-500/60' : lvl <= 6 ? 'bg-amber-500/60' : 'bg-rose-500/60'
+                      ? lvl <= 3 ? 'bg-[var(--success)]/60' : lvl <= 6 ? 'bg-amber-500/60' : 'bg-rose-500/60'
                       : 'bg-muted/40'
                   }`}
                 />

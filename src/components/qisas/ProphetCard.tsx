@@ -12,7 +12,7 @@ const eraColors: Record<ProphetSummary["era"], string> = {
   "beginning-of-creation": "from-slate-500 to-slate-600",
   "pre-flood": "from-cyan-500 to-cyan-600",
   patriarchal: "from-amber-500 to-amber-600",
-  israelite: "from-emerald-500 to-emerald-600",
+  israelite: "from-teal-600 to-cyan-700",
   "post-israelite": "from-purple-500 to-purple-600",
 };
 
@@ -38,10 +38,10 @@ export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-card rounded-[28px] p-5 cursor-pointer border border-border/50 hover:border-[#10B981]/30 transition-all duration-300"
+      className="bg-card rounded-[28px] p-5 cursor-pointer border border-border/50 hover:border-[var(--accent)]/30 transition-all duration-300"
     >
-      <div className="w-full h-16 rounded-xl bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center mb-4 shadow-lg">
-        <span className="font-arabic text-xl text-white" dir="rtl">
+      <div className="w-full h-16 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center mb-4 shadow-lg">
+        <span className="font-arabic text-xl text-[var(--on-accent)]" dir="rtl">
           {prophet.arabicName}
         </span>
       </div>

@@ -166,7 +166,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
             <Button
               onClick={handleClaim}
               disabled={claiming}
-              className="w-full h-16 text-lg font-bold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              className="w-full h-16 text-lg font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] hover:brightness-105 shadow-lg"
             >
               {claiming ? (
                 <>
@@ -191,7 +191,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
         {!rewardStatus.canClaimToday && (
           <Card className="bg-muted">
             <CardContent className="p-4 flex items-center gap-3">
-              <Check className="w-5 h-5 text-green-500" />
+              <Check className="w-5 h-5 text-[var(--success)]" />
               <div>
                 <p className="font-medium">Already Claimed Today!</p>
                 <p className="text-sm text-muted-foreground">
@@ -210,7 +210,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: -20 }}
             >
-              <Card className="border-2 border-green-500 bg-green-50 dark:bg-green-900/20">
+              <Card className="border-2 border-[var(--success)]/40 bg-[var(--success)]/10">
                 <CardContent className="p-6 text-center">
                   <motion.div
                     animate={{ rotate: [0, 10, -10, 0] }}
@@ -219,7 +219,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
                   >
                     🎉
                   </motion.div>
-                  <h3 className="font-bold text-lg text-green-700 dark:text-green-300">
+                  <h3 className="font-bold text-lg text-[var(--success)]">
                     Day {justClaimed.day} Reward Claimed!
                   </h3>
                   <div className="flex items-center justify-center gap-2 mt-3">
@@ -262,7 +262,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
                     whileHover={!isClaimed && !isFuture ? { scale: 1.05 } : {}}
                     className={`relative aspect-square rounded-lg flex flex-col items-center justify-center text-center p-2 ${
                       isClaimed
-                        ? 'bg-green-100 dark:bg-green-900/30 border-2 border-green-500'
+                        ? 'bg-[var(--success)]/10 border-2 border-[var(--success)]'
                         : isToday
                         ? 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-2 border-amber-500 animate-pulse'
                         : isFuture
@@ -272,7 +272,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
                   >
                     {/* Day Number */}
                     <span className={`text-xs font-bold ${
-                      isClaimed ? 'text-green-600' :
+                      isClaimed ? 'text-[var(--success)]' :
                       isToday ? 'text-amber-600' :
                       'text-muted-foreground'
                     }`}>
@@ -282,7 +282,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
                     {/* Reward Preview */}
                     <div className="mt-1">
                       {isClaimed ? (
-                        <Check className="w-4 h-4 text-green-500 mx-auto" />
+                        <Check className="w-4 h-4 text-[var(--success)] mx-auto" />
                       ) : reward.day === 7 ? (
                         <Sparkles className="w-4 h-4 text-purple-500 mx-auto" />
                       ) : reward.items ? (

@@ -172,7 +172,7 @@ export default function EnhancedEbooksWithUrlPage() {
                 {progress > 0 && (
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
                     <div 
-                      className="h-full bg-emerald-400 transition-all duration-500"
+                      className="h-full bg-[var(--accent)] transition-all duration-500"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -256,7 +256,7 @@ export default function EnhancedEbooksWithUrlPage() {
                       {category}
                     </span>
                     {isDownloaded && (
-                      <span className="flex items-center gap-1 text-green-600">
+                      <span className="flex items-center gap-1 text-[var(--success)]">
                         <Download className="w-3 h-3" />
                         Offline
                       </span>

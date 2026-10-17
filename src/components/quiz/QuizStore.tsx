@@ -155,7 +155,7 @@ export function QuizStore({ onClose }: QuizStoreProps) {
     switch (type) {
       case 'powerup': return <Zap className="w-4 h-4 text-yellow-500" />;
       case 'booster': return <TrendingUp className="w-4 h-4 text-blue-500" />;
-      case 'protection': return <Shield className="w-4 h-4 text-green-500" />;
+      case 'protection': return <Shield className="w-4 h-4 text-[var(--accent)]" />;
       case 'cosmetic': return <Sparkles className="w-4 h-4 text-pink-500" />;
       default: return <Package className="w-4 h-4" />;
     }
@@ -266,7 +266,7 @@ export function QuizStore({ onClose }: QuizStoreProps) {
                     >
                       <Card className={`overflow-hidden transition-all ${
                         !item.unlocked ? 'opacity-60' : ''
-                      } ${item.owned >= item.maxInventory ? 'ring-2 ring-green-500/50' : ''}`}>
+                      } ${item.owned >= item.maxInventory ? 'ring-2 ring-[var(--success)]/50' : ''}`}>
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
                             {/* Icon */}

@@ -68,7 +68,7 @@ export function OfflineIndicator({ className = '', showDetailedStatus = false }:
     if (!isOnline) return 'text-orange-500';
     if (isSyncing) return 'text-blue-500';
     if (cacheStatus.needsUpdate) return 'text-yellow-500';
-    return 'text-green-500';
+    return 'text-[var(--success)]';
   };
 
   const getStatusIcon = () => {
@@ -263,7 +263,7 @@ export function CompactOfflineIndicator({ className = '' }: { className?: string
     if (!isOnline) return 'bg-orange-500';
     if (isSyncing) return 'bg-blue-500';
     if (cacheStatus.needsUpdate) return 'bg-yellow-500';
-    return 'bg-green-500';
+    return 'bg-[var(--success)]';
   };
 
   return (

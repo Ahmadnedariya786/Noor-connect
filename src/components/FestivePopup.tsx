@@ -44,7 +44,7 @@ export function FestivePopup() {
       case 'eid':
         return <Star className="w-8 h-8 text-yellow-500 animate-pulse" />;
       case 'ramadan':
-        return <Heart className="w-8 h-8 text-green-500 animate-pulse" />;
+        return <Heart className="w-8 h-8 text-[var(--accent)] animate-pulse" />;
       case 'hajj':
         return <Sparkles className="w-8 h-8 text-blue-500 animate-pulse" />;
       default:
@@ -57,7 +57,7 @@ export function FestivePopup() {
       case 'eid':
         return 'from-yellow-400/20 to-orange-400/20 border-yellow-400/30';
       case 'ramadan':
-        return 'from-green-400/20 to-emerald-400/20 border-green-400/30';
+        return 'from-[var(--accent)]/20 to-[var(--accent-2)]/20 border-[var(--border)]';
       case 'hajj':
         return 'from-blue-400/20 to-cyan-400/20 border-blue-400/30';
       default:
@@ -156,7 +156,7 @@ export function FestivePopup() {
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden rounded-lg">
           <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-yellow-400/30 rounded-full animate-pulse" />
-          <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-green-400/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-[var(--accent)]/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
           <div className="absolute bottom-1/4 left-1/3 w-2 h-2 bg-blue-400/30 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
           <div className="absolute top-1/3 right-1/3 w-4 h-4 bg-purple-400/30 rounded-full animate-pulse" style={{ animationDelay: '1.5s' }} />
         </div>

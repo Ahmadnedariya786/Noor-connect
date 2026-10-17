@@ -288,7 +288,7 @@ export function EnhancedDailyHadith() {
 
   if (loading) {
     return (
-      <Card className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-amber-950/20 shadow-xl shadow-black/25">
+      <Card className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] shadow-xl shadow-black/25">
         <CardContent className="p-6">
           <div className="space-y-4 animate-pulse">
             <div className="h-4 bg-muted/60 rounded-md w-1/4" />
@@ -309,24 +309,24 @@ export function EnhancedDailyHadith() {
   const needsTruncation = isArabicLong || isEnglishLong;
 
   return (
-    <Card className="relative overflow-hidden rounded-2xl border border-amber-500/30 hover:border-amber-500/40 bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-amber-950/25 shadow-xl shadow-black/25 transition-all duration-300">
-      {/* Radiant Top Gold Accent Line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-80" />
+    <Card className="relative overflow-hidden rounded-2xl border border-[var(--border)] hover:border-[var(--accent)]/40 bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-[var(--surface-2)] shadow-xl shadow-black/25 transition-all duration-300">
+      {/* Radiant Top Accent Line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-80" />
       
       {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-12 -left-12 w-32 h-32 bg-amber-600/5 rounded-full blur-2xl" />
+      <div className="pointer-events-none absolute -top-12 -right-12 w-36 h-36 bg-[var(--accent)]/10 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-12 -left-12 w-32 h-32 bg-[var(--accent)]/5 rounded-full blur-2xl" />
 
       <CardContent className="p-4 sm:p-6 space-y-4 relative z-10">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-xs shrink-0">
-              <MessageCircle className="w-5 h-5 text-amber-400" />
+            <div className="p-2.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] text-[var(--accent)] shadow-xs shrink-0">
+              <MessageCircle className="w-5 h-5 text-[var(--accent)]" />
             </div>
             <div className="min-w-0 flex-1 space-y-0.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-amber-400">
+                <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[var(--accent)]">
                   Daily Wisdom
                 </span>
                 <Badge variant="outline" className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${getGradeBadgeClass(hadith.grade)}`}>
@@ -350,7 +350,7 @@ export function EnhancedDailyHadith() {
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-lg bg-amber-950/20 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-all duration-200 active:scale-95 shadow-xs ${hadith._collection && isBookmarked(hadith._collection, hadith._hadithNumber!) ? "text-amber-400 border-amber-500/60 bg-amber-500/20" : "text-amber-300/80"}`}
+              className={`h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all duration-200 active:scale-95 shadow-xs ${hadith._collection && isBookmarked(hadith._collection, hadith._hadithNumber!) ? "text-[var(--accent-text)] border-[var(--accent)]/50 bg-[var(--accent-soft)]" : "text-[var(--accent)] hover:text-[var(--accent-text)]"}`}
               onClick={() => {
                 if (hadith._collection && hadith._hadithNumber) {
                   toggleBookmark({
@@ -368,46 +368,46 @@ export function EnhancedDailyHadith() {
               title="Bookmark Hadith"
               aria-label="Bookmark hadith"
             >
-              <Bookmark className={`w-4 h-4 ${hadith._collection && isBookmarked(hadith._collection, hadith._hadithNumber!) ? "fill-amber-400 text-amber-400" : ""}`} />
+              <Bookmark className={`w-4 h-4 text-[var(--accent)] ${hadith._collection && isBookmarked(hadith._collection, hadith._hadithNumber!) ? "fill-[var(--accent)]" : ""}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-amber-950/20 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-300/80 hover:text-amber-300 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
               onClick={copyHadith}
               title="Copy Hadith"
               aria-label="Copy hadith"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-4 h-4 text-[var(--accent)]" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-amber-950/20 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-300/80 hover:text-amber-300 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
               onClick={refreshHadith}
               title="Another Hadith"
               aria-label="Show another hadith"
             >
-              <RefreshCw className={`w-4 h-4 transition-transform duration-500 ${isAnimating ? 'animate-spin text-amber-400' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-[var(--accent)] transition-transform duration-500 ${isAnimating ? 'animate-spin' : ''}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-amber-950/20 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-300/80 hover:text-amber-300 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
               onClick={shareHadith}
               title="Share Hadith"
               aria-label="Share hadith"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-4 h-4 text-[var(--accent)]" />
             </Button>
           </div>
         </div>
 
         {/* Arabic Typography Section */}
         <div className={`transition-all duration-300 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
-          <div className="bg-amber-950/25 rounded-xl p-3.5 sm:p-4 border border-amber-500/30">
+          <div className="bg-[var(--surface-2)] rounded-xl p-3.5 sm:p-4 border border-[var(--border)]">
             <p
-              className={`font-amiri text-2xl sm:text-[26px] leading-[1.8] text-amber-100/95 dark:text-amber-100 text-right drop-shadow-sm select-text break-words transition-all duration-300 ${
+              className={`font-amiri text-2xl sm:text-[26px] leading-[1.8] text-[var(--text-primary)] text-right drop-shadow-sm select-text break-words transition-all duration-300 ${
                 !isExpanded && isArabicLong ? "line-clamp-3 sm:line-clamp-4" : ""
               }`}
               dir="rtl"
@@ -420,9 +420,9 @@ export function EnhancedDailyHadith() {
 
         {/* Elegant Islamic Divider */}
         <div className="flex items-center gap-3 my-2 select-none">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-amber-500/10" />
-          <span className="text-amber-400/70 text-xs font-serif">✦</span>
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-amber-500/30 to-amber-500/10" />
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-[var(--accent)]/10" />
+          <span className="text-[var(--accent)] text-xs font-serif">✦</span>
+          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[var(--accent)]/30 to-[var(--accent)]/10" />
         </div>
 
         {/* English Translation Section */}
@@ -441,7 +441,7 @@ export function EnhancedDailyHadith() {
               <button
                 type="button"
                 onClick={() => setIsExpanded((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors py-1 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-text)] hover:text-[var(--accent)] transition-colors py-1 px-2.5 rounded-lg bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 border border-[var(--border)] active:scale-95 cursor-pointer"
                 aria-expanded={isExpanded}
               >
                 <span>{isExpanded ? "Show Less" : "Read Full Hadith"}</span>
@@ -462,46 +462,46 @@ export function EnhancedDailyHadith() {
 
         {/* Reflection (if available) */}
         {hadith.reflection && (
-          <div className="p-3 rounded-xl bg-amber-500/5 border-l-2 border-amber-500/80 text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed">
-            <span className="text-amber-400 font-semibold not-italic mr-1.5">Reflection:</span>
+          <div className="p-3 rounded-xl bg-[var(--surface-2)] border-l-2 border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed">
+            <span className="text-[var(--accent)] font-semibold not-italic mr-1.5">Reflection:</span>
             {hadith.reflection}
           </div>
         )}
 
         {/* Narrator and Source Pill Container */}
-        <div className="rounded-xl bg-amber-950/20 border border-amber-500/35 p-2.5 sm:p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-amber-200/80">
+        <div className="rounded-xl bg-[var(--surface-2)] border border-[var(--border)] p-2.5 sm:p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[var(--text-secondary)]">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-amber-400 font-semibold shrink-0">Narrator:</span>
-            <span className="text-amber-100 font-medium truncate">{hadith.narrator}</span>
+            <span className="text-[var(--accent)] font-semibold shrink-0">Narrator:</span>
+            <span className="text-[var(--text-primary)] font-medium truncate">{hadith.narrator}</span>
           </div>
-          <div className="inline-flex items-center gap-1 font-mono text-[11px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/35 shrink-0 self-start sm:self-auto font-medium">
+          <div className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--accent-text)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-md border border-[var(--border)] shrink-0 self-start sm:self-auto font-medium">
             <span>{hadith.source}</span>
           </div>
         </div>
 
         {/* Action Buttons & Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-amber-500/25">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-[var(--border)]">
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="gap-2 rounded-xl bg-amber-500/[0.14] border border-amber-500/[0.45] text-amber-300 hover:bg-amber-500/25 px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
+              className="gap-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface)] px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
               onClick={() => navigate('/hadith/bookmarks')}
             >
-              <Bookmark className="w-3.5 h-3.5 text-amber-400" />
+              <Bookmark className="w-3.5 h-3.5 text-[var(--accent)]" />
               Bookmarks
             </button>
             <button
               type="button"
-              className="gap-2 rounded-xl bg-amber-500/[0.14] border border-amber-500/[0.45] text-amber-300 hover:bg-amber-500/25 px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
+              className="gap-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface)] px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
               onClick={() => navigate('/hadith/collections')}
             >
-              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+              <BookOpen className="w-3.5 h-3.5 text-[var(--accent)]" />
               More Hadith
             </button>
           </div>
           
           <div className="text-[11px] text-[var(--text-secondary)] font-medium flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             Updated daily
           </div>
         </div>

@@ -45,7 +45,7 @@ export default function Services() {
         { title: "Salah Tracker", path: "/prayer-stats", icon: CheckCircle, gradient: 'from-[#C9860A] to-[#E8A020]' },
         { title: "Qaza Tracker", path: "/qaza", icon: AlertTriangle, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
         { title: "Quran Audio", path: "/quran-audio", icon: Headphones, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Nasheeds", path: "/nasheeds", icon: Music, gradient: 'from-[#10b981] to-[#047857]' },
+        { title: "Nasheeds", path: "/nasheeds", icon: Music, gradient: 'from-[var(--accent)] to-[var(--accent-2)]' },
         { title: "Live Mecca", path: "/live", icon: Tv, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
         { title: "Hadith", path: "/hadith/collections", icon: BookText, gradient: 'from-[#C9860A] to-[#E8A020]' },
         { title: t('seerah'), path: "/seerah", icon: BookOpen, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },

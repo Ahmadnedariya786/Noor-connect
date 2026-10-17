@@ -836,15 +836,15 @@ const SettingsSubPage: React.FC = () => {
                         <p className="text-sm font-medium text-foreground">Your data is safe:</p>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-sm">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
                             <span>Prayer records, bookmarks, qaza tracker</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
                             <span>Settings, preferences, habit tracker</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
                             <span>Auto backup snapshot</span>
                           </div>
                         </div>
@@ -893,8 +893,8 @@ const SettingsSubPage: React.FC = () => {
         {/* PRIVACY SECTION */}
         {sectionId === 'privacy' && (
           <div className="space-y-4">
-            <Card className="p-4 space-y-2 rounded-2xl bg-emerald-500/5 border-emerald-500/20">
-              <Label className="text-xs font-bold uppercase tracking-wider text-emerald-600">Privacy First Guarantee</Label>
+            <Card className="p-4 space-y-2 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border)]">
+              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--accent-text)]">Privacy First Guarantee</Label>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Noor Connect stores all your prayer history, bookmarks, and settings locally on your device. We do not track or sell user data.
               </p>
@@ -983,7 +983,7 @@ const SettingsSubPage: React.FC = () => {
                       Check failed: {updateResult?.statusReason || updateResult?.error || 'Network error - check internet'}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-emerald-500 font-semibold text-[11px]">
+                    <span className="flex items-center gap-1 text-[var(--success)] font-semibold text-[11px]">
                       <Check className="w-3.5 h-3.5 shrink-0" />
                       Up to date
                     </span>
@@ -1037,7 +1037,7 @@ const SettingsSubPage: React.FC = () => {
                     className="h-7 text-xs text-muted-foreground hover:text-foreground"
                     onClick={handleCopyDiagnostics}
                   >
-                    {copiedDiagnostics ? <Check className="w-3.5 h-3.5 mr-1 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                    {copiedDiagnostics ? <Check className="w-3.5 h-3.5 mr-1 text-[var(--success)]" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
                     {copiedDiagnostics ? 'Copied' : 'Copy'}
                   </Button>
                 )}
@@ -1057,7 +1057,7 @@ const SettingsSubPage: React.FC = () => {
               </div>
 
               {crashLogs.length === 0 ? (
-                <div className="flex items-center gap-2 py-3 px-3.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                <div className="flex items-center gap-2 py-3 px-3.5 rounded-xl bg-[var(--success)]/10 text-[var(--success)] text-xs font-medium">
                   <Check className="w-4 h-4 shrink-0" />
                   <span>No crashes recorded</span>
                 </div>
@@ -1196,10 +1196,10 @@ const SettingsSubPage: React.FC = () => {
         {/* CONTACT SECTION — Developer Info */}
         {sectionId === 'contact' && (
           <div className="space-y-4">
-            <Card className="p-5 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border-emerald-500/20 rounded-2xl overflow-hidden space-y-3">
+            <Card className="p-5 bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden space-y-3">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
-                  <Briefcase className="w-6 h-6 text-emerald-600" />
+                <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] flex items-center justify-center border border-[var(--border)] shrink-0">
+                  <Briefcase className="w-6 h-6 text-[var(--accent)]" />
                 </div>
                 <div>
                   <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">Love this app? I built it.</h3>
@@ -1213,7 +1213,11 @@ const SettingsSubPage: React.FC = () => {
 
               <div className="space-y-2.5 pt-2">
                 <Button
-                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all rounded-xl"
+                  className="w-full h-11 shadow-sm transition-all rounded-xl"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                    color: "var(--on-accent)",
+                  }}
                   onClick={() => window.open('https://wa.me/923352706540', '_blank')}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />

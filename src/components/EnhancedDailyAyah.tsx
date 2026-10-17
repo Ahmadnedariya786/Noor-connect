@@ -299,7 +299,7 @@ export function EnhancedDailyAyah() {
 
   if (loading) {
     return (
-      <Card className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-card/95 via-card/85 to-emerald-950/20 shadow-xl shadow-black/25">
+      <Card className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] shadow-xl shadow-black/25">
         <CardContent className="p-6">
           <div className="space-y-4 animate-pulse">
             <div className="h-4 bg-muted/60 rounded-md w-1/4" />
@@ -318,36 +318,36 @@ export function EnhancedDailyAyah() {
   const isReflectionLong = (ayah.reflection?.length || 0) > 80;
 
   return (
-    <Card className="relative overflow-hidden rounded-2xl border border-emerald-500/25 hover:border-emerald-500/40 bg-gradient-to-br from-card/95 via-card/90 to-emerald-950/25 shadow-xl shadow-black/25 transition-all duration-300">
-      {/* Radiant Top Emerald Accent Line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-80" />
+    <Card className="relative overflow-hidden rounded-2xl border border-[var(--border)] hover:border-[var(--accent)]/40 bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-[var(--surface-2)] shadow-xl shadow-black/25 transition-all duration-300">
+      {/* Radiant Top Accent Line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-80" />
       
       {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-12 -right-12 w-36 h-36 bg-emerald-500/10 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-600/5 rounded-full blur-2xl" />
+      <div className="pointer-events-none absolute -top-12 -right-12 w-36 h-36 bg-[var(--accent)]/10 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-12 -left-12 w-32 h-32 bg-[var(--accent)]/5 rounded-full blur-2xl" />
 
       <CardContent className="p-4 sm:p-6 space-y-4 relative z-10">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shadow-xs shrink-0">
-              <BookOpen className="w-5 h-5 text-emerald-400" />
+            <div className="p-2.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] text-[var(--accent)] shadow-xs shrink-0">
+              <BookOpen className="w-5 h-5 text-[var(--accent)]" />
             </div>
             <div className="min-w-0 flex-1 space-y-0.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-emerald-400">
+                <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[var(--accent)]">
                   Noble Quran
                 </span>
-                <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-semibold border border-emerald-500/30 text-emerald-300 bg-emerald-500/10">
+                <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-semibold border border-[var(--border)] text-[var(--accent-text)] bg-[var(--accent-soft)]">
                   {ayah.surah} • {ayah.ayahNumber}
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-foreground text-sm sm:text-base leading-snug">
+                <h3 className="font-bold text-[var(--text-primary)] text-sm sm:text-base leading-snug">
                   Daily Ayah
                 </h3>
-                <span className="text-muted-foreground/60 text-xs">•</span>
-                <span className="text-xs text-muted-foreground font-medium truncate">
+                <span className="text-[var(--text-secondary)]/60 text-xs">•</span>
+                <span className="text-xs text-[var(--text-secondary)] font-medium truncate">
                   Surah {ayah.surah}
                 </span>
               </div>
@@ -359,53 +359,53 @@ export function EnhancedDailyAyah() {
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 transition-all duration-200 active:scale-95 shadow-xs ${
-                isBookmarked ? "text-emerald-300 border-emerald-500/50 bg-emerald-500/20" : "text-emerald-400/80 hover:text-emerald-300"
+              className={`h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all duration-200 active:scale-95 shadow-xs ${
+                isBookmarked ? "text-[var(--accent-text)] border-[var(--accent)]/50 bg-[var(--accent-soft)]" : "text-[var(--accent)] hover:text-[var(--accent-text)]"
               }`}
               onClick={toggleBookmark}
               title="Bookmark Ayah"
               aria-label="Bookmark ayah"
             >
-              <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-emerald-400 text-emerald-300" : ""}`} />
+              <Bookmark className={`w-4 h-4 text-[var(--accent)] ${isBookmarked ? "fill-[var(--accent)]" : ""}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400/80 hover:text-emerald-300 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
               onClick={copyAyah}
               title="Copy Ayah"
               aria-label="Copy ayah"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-4 h-4 text-[var(--accent)]" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400/80 hover:text-emerald-300 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
               onClick={refreshAyah}
               title="Another Ayah"
               aria-label="Show another ayah"
             >
-              <RefreshCw className={`w-4 h-4 transition-transform duration-500 ${isAnimating ? "animate-spin text-emerald-300" : ""}`} />
+              <RefreshCw className={`w-4 h-4 text-[var(--accent)] transition-transform duration-500 ${isAnimating ? "animate-spin text-[var(--accent)]" : ""}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-emerald-950/20 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400/80 hover:text-emerald-300 transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
               onClick={shareAyah}
               title="Share Ayah"
               aria-label="Share ayah"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-4 h-4 text-[var(--accent)]" />
             </Button>
           </div>
         </div>
 
         {/* Arabic Typography Section - Always shown in full */}
         <div className={`transition-all duration-300 ${isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
-          <div className="bg-emerald-950/25 rounded-xl p-3.5 sm:p-4 border border-emerald-500/30">
+          <div className="bg-[var(--surface-2)] rounded-xl p-3.5 sm:p-4 border border-[var(--border)]">
             <p
-              className="font-amiri text-2xl sm:text-[26px] leading-[1.8] text-emerald-100/95 dark:text-emerald-100 text-right drop-shadow-sm select-text break-words"
+              className="font-amiri text-2xl sm:text-[26px] leading-[1.8] text-[var(--text-primary)] text-right drop-shadow-sm select-text break-words"
               dir="rtl"
               style={{ fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif" }}
             >
@@ -416,15 +416,15 @@ export function EnhancedDailyAyah() {
 
         {/* Elegant Islamic Divider */}
         <div className="flex items-center gap-3 my-2 select-none">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-emerald-500/10" />
-          <span className="text-emerald-400/70 text-xs font-serif">✦</span>
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-emerald-500/30 to-emerald-500/10" />
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-[var(--accent)]/10" />
+          <span className="text-[var(--accent)] text-xs font-serif">✦</span>
+          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[var(--accent)]/30 to-[var(--accent)]/10" />
         </div>
 
         {/* English Translation Section */}
         <div className={`space-y-2 transition-all duration-300 ${isAnimating ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"}`}>
           <p
-            className={`text-[15px] sm:text-base leading-[1.6] text-slate-200 dark:text-[#e5e7eb] font-normal break-words select-text transition-all duration-300 ${
+            className={`text-[15px] sm:text-base leading-[1.6] text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 ${
               !isTranslationExpanded && isTranslationLong ? "line-clamp-2" : ""
             }`}
           >
@@ -437,7 +437,7 @@ export function EnhancedDailyAyah() {
               <button
                 type="button"
                 onClick={() => setIsTranslationExpanded((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors py-1 px-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-text)] hover:text-[var(--accent)] transition-colors py-1 px-2.5 rounded-lg bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 border border-[var(--border)] active:scale-95 cursor-pointer"
                 aria-expanded={isTranslationExpanded}
               >
                 <span>{isTranslationExpanded ? "Show Less" : "Read More"}</span>
@@ -453,9 +453,9 @@ export function EnhancedDailyAyah() {
 
         {/* Reflection (if available) with optional truncation if >2 lines */}
         {ayah.reflection && (
-          <div className="p-3 rounded-xl bg-emerald-500/5 border-l-2 border-emerald-500/80 text-xs sm:text-sm text-muted-foreground italic leading-relaxed space-y-1.5">
+          <div className="p-3 rounded-xl bg-[var(--surface-2)] border-l-2 border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5">
             <div className="flex items-start gap-1.5">
-              <span className="text-emerald-400 font-semibold not-italic shrink-0">Reflection:</span>
+              <span className="text-[var(--accent)] font-semibold not-italic shrink-0">Reflection:</span>
               <p
                 className={`break-words select-text transition-all duration-300 ${
                   !isReflectionExpanded && isReflectionLong ? "line-clamp-2" : ""
@@ -468,7 +468,7 @@ export function EnhancedDailyAyah() {
               <button
                 type="button"
                 onClick={() => setIsReflectionExpanded((prev) => !prev)}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors py-0.5 px-2 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-text)] hover:text-[var(--accent)] transition-colors py-0.5 px-2 rounded bg-[var(--accent-soft)] border border-[var(--border)] active:scale-95 cursor-pointer"
                 aria-expanded={isReflectionExpanded}
               >
                 <span>{isReflectionExpanded ? "Show Less" : "Read More"}</span>
@@ -483,40 +483,40 @@ export function EnhancedDailyAyah() {
         )}
 
         {/* Revelation and Surah Info Pill */}
-        <div className="rounded-xl bg-emerald-950/20 border border-emerald-500/35 p-2.5 sm:p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-emerald-200/80">
+        <div className="rounded-xl bg-[var(--surface-2)] border border-[var(--border)] p-2.5 sm:p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[var(--text-secondary)]">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-emerald-400 font-semibold shrink-0">Revelation:</span>
-            <span className="text-emerald-100 font-medium truncate">
+            <span className="text-[var(--accent)] font-semibold shrink-0">Revelation:</span>
+            <span className="text-[var(--text-primary)] font-medium truncate">
               {ayah.surah} (Surah {ayah.surahNumber})
             </span>
           </div>
-          <div className="inline-flex items-center gap-1 font-mono text-[11px] text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/35 shrink-0 self-start sm:self-auto font-medium">
+          <div className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--accent-text)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-md border border-[var(--border)] shrink-0 self-start sm:self-auto font-medium">
             <span>Ayah {ayah.ayahNumber}</span>
           </div>
         </div>
 
         {/* Action Buttons & Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-emerald-500/25">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-[var(--border)]">
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-emerald-500 text-emerald-950 font-bold px-3 py-1.5 h-8 text-xs inline-flex items-center shadow-md shadow-emerald-950/40 hover:brightness-105 active:scale-95 transition-all duration-200 cursor-pointer"
+              className="gap-2 rounded-xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] font-bold px-3 py-1.5 h-8 text-xs inline-flex items-center shadow-md shadow-black/20 hover:brightness-105 active:scale-95 transition-all duration-200 cursor-pointer"
               onClick={() => navigate(`/quran/surah-${ayah.surahNumber}`)}
             >
-              <BookOpen className="w-3.5 h-3.5 text-emerald-950 stroke-[2.5]" />
+              <BookOpen className="w-3.5 h-3.5 text-[var(--on-accent)] stroke-[2.5]" />
               Read Surah
             </button>
             <button
               type="button"
-              className="gap-2 rounded-xl bg-emerald-500/[0.14] border border-emerald-500/[0.45] text-emerald-300 hover:bg-emerald-500/25 px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
+              className="gap-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface)] px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
               onClick={() => navigate("/quran")}
             >
               <span>All Surahs</span>
             </button>
           </div>
           
-          <div className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="text-[11px] text-[var(--text-secondary)] font-medium flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             Updated daily at Fajr
           </div>
         </div>

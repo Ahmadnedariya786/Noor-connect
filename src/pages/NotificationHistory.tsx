@@ -118,7 +118,7 @@ const NotificationHistory = () => {
       case 'prayer':
         return <Clock className="w-5 h-5 text-blue-500" />;
       case 'ramadan-countdown':
-        return <Calendar className="w-5 h-5 text-green-500" />;
+        return <Calendar className="w-5 h-5 text-[var(--accent)]" />;
       case 'eid':
         return <Heart className="w-5 h-5 text-red-500" />;
       case 'friday-kahf':
@@ -135,7 +135,7 @@ const NotificationHistory = () => {
       case 'prayer':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'ramadan-countdown':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-[var(--accent-soft)] text-[var(--accent-text)]';
       case 'eid':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'friday-kahf':
@@ -237,7 +237,7 @@ const NotificationHistory = () => {
             <div className="text-xs text-muted-foreground">Prayers</div>
           </Card>
           <Card className="p-3 text-center">
-            <div className="text-2xl font-bold text-green-500">
+            <div className="text-2xl font-bold text-[var(--accent)]">
               {notifications.filter(n => n.type === 'ramadan-countdown').length}
             </div>
             <div className="text-xs text-muted-foreground">Ramadan</div>
@@ -317,11 +317,11 @@ const NotificationHistory = () => {
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${unifiedNotifications.isRunningAsNativeApp() || serviceWorkerManager.getRegistrationStatus().isRegistered ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-2 h-2 rounded-full ${unifiedNotifications.isRunningAsNativeApp() || serviceWorkerManager.getRegistrationStatus().isRegistered ? 'bg-[var(--success)]' : 'bg-red-500'}`}></div>
               <span>{unifiedNotifications.isRunningAsNativeApp() ? 'Native Bridge' : 'Service Worker'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${notificationsSupported ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-2 h-2 rounded-full ${notificationsSupported ? 'bg-[var(--success)]' : 'bg-red-500'}`}></div>
               <span>Permissions</span>
             </div>
           </div>

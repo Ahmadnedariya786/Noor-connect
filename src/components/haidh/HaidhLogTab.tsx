@@ -183,10 +183,10 @@ export function HaidhLogTab({ data, onLog }: Props) {
     return (
       <div className="space-y-5 pb-24">
         {/* Confirmation card */}
-        <div className="rounded-[28px] bg-emerald-500/10 border border-emerald-500/30 p-6 text-center space-y-3 relative overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-            <PartyPopper className="w-8 h-8 text-emerald-500" />
+        <div className="rounded-[28px] bg-[var(--success)]/10 border border-[var(--success)]/30 p-6 text-center space-y-3 relative overflow-hidden">
+          <div className="absolute -top-8 -right-8 w-32 h-32 bg-[var(--success)]/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="w-16 h-16 mx-auto rounded-full bg-[var(--success)]/20 border border-[var(--success)]/40 flex items-center justify-center">
+            <PartyPopper className="w-8 h-8 text-[var(--success)]" />
           </div>
           <div>
             <p className="text-xl font-black text-foreground">Logged for {formattedDate}</p>
@@ -194,7 +194,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
               Your log is saved for today — you can log again tomorrow.
             </p>
           </div>
-          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-[var(--success)]">
             <Lock className="w-3 h-3" /> Locked until tomorrow
           </div>
         </div>
@@ -226,7 +226,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
             </span>
           </div>
           {ghusulCompleted && (
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--success)]">
               <Check className="w-3.5 h-3.5" /> Ghusl performed
             </div>
           )}
@@ -387,7 +387,7 @@ export function HaidhLogTab({ data, onLog }: Props) {
                   onClick={() => handlePain(lvl === painLevel ? 0 : lvl)}
                   className={`flex-1 h-7 rounded-md transition-all ${
                     active
-                      ? lvl <= 3 ? 'bg-emerald-500' : lvl <= 6 ? 'bg-amber-500' : 'bg-rose-500'
+                      ? lvl <= 3 ? 'bg-[var(--success)]' : lvl <= 6 ? 'bg-amber-500' : 'bg-rose-500'
                       : 'bg-muted'
                   }`}
                 />
@@ -460,13 +460,13 @@ export function HaidhLogTab({ data, onLog }: Props) {
             onClick={handleGhusul}
             className={cn(
               "w-full flex items-center justify-between p-4 rounded-2xl border transition-all",
-              ghusulCompleted ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400" : "bg-background border-border text-foreground"
+              ghusulCompleted ? "bg-[var(--success)]/15 border-[var(--success)]/30 text-[var(--success)]" : "bg-background border-border text-foreground"
             )}
           >
             <span className="font-bold text-sm">Performed Ghusl (Purification)</span>
             <div className={cn(
               "w-6 h-6 rounded-full flex items-center justify-center border",
-              ghusulCompleted ? "bg-emerald-500 border-emerald-500" : "border-border"
+              ghusulCompleted ? "bg-[var(--success)] border-[var(--success)]" : "border-border"
             )}>
               {ghusulCompleted && <Check className="w-4 h-4 text-white" />}
             </div>

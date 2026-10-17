@@ -14,7 +14,7 @@ interface Props {
 
 const COLORS = {
   rose: "#e11d48",
-  emerald: "#10b981",
+  success: "var(--success)",
   amber: "#f59e0b",
   violet: "#8b5cf6",
   muted: "#94a3b8",
@@ -191,7 +191,7 @@ export function HaidhAnalyticsTab({ data }: Props) {
                   <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Regularity</span>
                   <p className={cn(
                     "text-lg font-black mt-1",
-                    r.score === "regular" && "text-emerald-500",
+                    r.score === "regular" && "text-[var(--success)]",
                     r.score === "slightly-irregular" && "text-amber-500",
                     r.score === "irregular" && "text-rose-500",
                   )}>
@@ -294,8 +294,8 @@ export function HaidhAnalyticsTab({ data }: Props) {
           {moodCounts.length > 0 && (
             <div className="bg-card border border-border rounded-3xl p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Heart className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs font-black uppercase tracking-widest text-emerald-500">Mood Distribution</span>
+                <Heart className="w-4 h-4 text-[var(--accent)]" />
+                <span className="text-xs font-black uppercase tracking-widest text-[var(--accent)]">Mood Distribution</span>
               </div>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -312,7 +312,7 @@ export function HaidhAnalyticsTab({ data }: Props) {
                     labelLine={false}
                   >
                     {moodCounts.map((_, index) => (
-                      <Cell key={index} fill={[COLORS.rose, COLORS.emerald, COLORS.amber, COLORS.violet, "#3b82f6", "#a855f7"][index % 6]} />
+                      <Cell key={index} fill={[COLORS.rose, COLORS.success, COLORS.amber, COLORS.violet, "#3b82f6", "#a855f7"][index % 6]} />
                     ))}
                   </Pie>
                   <Tooltip

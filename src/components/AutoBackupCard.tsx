@@ -270,7 +270,7 @@ export function AutoBackupCard() {
                   isBusy
                     ? 'bg-primary/10'
                     : hasBackup
-                      ? 'bg-emerald-500/10'
+                      ? 'bg-[var(--success)]/10'
                       : 'bg-amber-500/10'
                 }
               `}
@@ -278,17 +278,17 @@ export function AutoBackupCard() {
               {busy === 'now' ? (
                 <Loader2 className="w-5 h-5 text-primary animate-spin" />
               ) : showBackupSuccess ? (
-                <Check className="w-5 h-5 text-emerald-500" />
+                <Check className="w-5 h-5 text-[var(--success)]" />
               ) : hasBackup ? (
-                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                <ShieldCheck className="w-5 h-5 text-[var(--success)]" />
               ) : (
                 <CloudOff className="w-5 h-5 text-amber-500" />
               )}
             </div>
             {hasBackup && !isBusy && (
               <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-40" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--success)] opacity-40" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--success)]" />
               </span>
             )}
           </div>
@@ -302,7 +302,7 @@ export function AutoBackupCard() {
                   transition-colors duration-300
                   ${
                     hasBackup
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                      ? 'bg-[var(--success)]/10 text-[var(--success)]'
                       : 'bg-primary/10 text-primary'
                   }
                 `}
@@ -342,7 +342,7 @@ export function AutoBackupCard() {
             shadow-[0_2px_8px_hsl(var(--primary)/0.25)]
             hover:shadow-[0_4px_16px_hsl(var(--primary)/0.35)]
             disabled:shadow-none disabled:active:scale-100
-            ${showBackupSuccess ? 'bg-emerald-500 hover:bg-emerald-500/90' : ''}
+            ${showBackupSuccess ? 'bg-[var(--success)] hover:bg-[var(--success)]/90 text-white' : ''}
           `}
         >
           {busy === 'now' ? (
@@ -375,7 +375,7 @@ export function AutoBackupCard() {
               hover:border-primary/40 hover:bg-primary/5
               active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none
               text-foreground/80 hover:text-foreground
-              ${showExportSuccess ? 'border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400' : 'border-input'}
+              ${showExportSuccess ? 'border-[var(--success)]/40 bg-[var(--success)]/5 text-[var(--success)]' : 'border-input'}
             `}
           >
             {busy === 'export' ? (
@@ -446,8 +446,8 @@ export function AutoBackupCard() {
             {/* 1. Auto Backup on Device */}
             <div className="rounded-xl bg-muted/40 p-4 space-y-2">
               <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--success)]/10">
+                  <ShieldCheck className="w-4 h-4 text-[var(--success)]" />
                 </div>
                 <h4 className="text-xs font-bold text-foreground">
                   {t('infoAutoBackupTitle') || 'Automatic Device Backup'}

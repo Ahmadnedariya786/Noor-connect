@@ -116,13 +116,13 @@ export const BookDetailModal = ({
               <span>{formatFileSize(parseInt(book.size))}</span>
             </div>
             {progress > 0 && (
-              <div className="flex items-center gap-1.5 text-emerald-500">
+              <div className="flex items-center gap-1.5 text-[var(--accent)]">
                 <BookOpen className="w-4 h-4" />
                 <span>{progress}% read</span>
               </div>
             )}
             {isDownloaded && (
-              <div className="flex items-center gap-1.5 text-emerald-500">
+              <div className="flex items-center gap-1.5 text-[var(--success)]">
                 <CheckCircle className="w-4 h-4" />
                 <span>Downloaded</span>
               </div>

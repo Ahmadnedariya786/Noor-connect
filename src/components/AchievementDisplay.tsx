@@ -58,7 +58,7 @@ export function AchievementDisplay({ showUnlocked = false }: AchievementDisplayP
     if (points >= 500) return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white';
     if (points >= 300) return 'bg-gradient-to-r from-purple-400 to-pink-500 text-white';
     if (points >= 200) return 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white';
-    if (points >= 100) return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white';
+    if (points >= 100) return 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)]';
     return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
   };
 
@@ -114,7 +114,7 @@ export function AchievementDisplay({ showUnlocked = false }: AchievementDisplayP
                   <CardTitle className="text-sm flex items-center gap-2">
                     {achievement.name}
                     {achievement.unlocked ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <CheckCircle className="w-4 h-4 text-[var(--success)]" />
                     ) : (
                       <Lock className="w-4 h-4 text-muted-foreground" />
                     )}

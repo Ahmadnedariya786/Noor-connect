@@ -191,7 +191,7 @@ export default function QuranProgress() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-muted/30 rounded-lg">
-                  <p className="text-2xl font-bold text-green-600">{streak?.totalDaysRead || 0}</p>
+                  <p className="text-2xl font-bold text-[var(--accent)]">{streak?.totalDaysRead || 0}</p>
                   <p className="text-sm text-muted-foreground">Total Days Read</p>
                 </div>
                 <div className="text-center p-4 bg-muted/30 rounded-lg">

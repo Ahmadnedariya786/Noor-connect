@@ -48,7 +48,7 @@ const TrackRow = memo(function TrackRow({
         <div
             className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer ${
                 isCurrentTrack
-                    ? 'bg-emerald-500/10 dark:bg-emerald-500/15 ring-1 ring-emerald-500/20'
+                    ? 'bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]/30'
                     : 'hover:bg-muted/60 active:opacity-80'
             }`}
             onClick={() => onPlay(track)}
@@ -56,7 +56,7 @@ const TrackRow = memo(function TrackRow({
             style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 60px' }}
         >
             {/* Play / number indicator */}
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 relative overflow-hidden bg-muted/40 group-hover:bg-emerald-500/10 transition-colors">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 relative overflow-hidden bg-muted/40 group-hover:bg-[var(--accent-soft)] transition-colors">
                 {isCurrentlyPlaying ? (
                     <Equalizer
                         bars={3}
@@ -64,16 +64,16 @@ const TrackRow = memo(function TrackRow({
                         durationBase={700}
                         durationStep={100}
                         heightPercent={(i) => 40 + i * 20}
-                        className="text-emerald-600 dark:text-emerald-400 scale-[0.7]"
+                        className="text-[var(--accent)] scale-[0.7]"
                     />
                 ) : isCurrentTrack ? (
-                    <Play className="w-4 h-4 fill-emerald-600 text-emerald-600 dark:fill-emerald-400 dark:text-emerald-400 ml-0.5" />
+                    <Play className="w-4 h-4 fill-[var(--accent)] text-[var(--accent)] ml-0.5" />
                 ) : (
                     <>
                         <span className="text-[11px] font-bold text-muted-foreground group-hover:opacity-0 transition-opacity select-none">
                             {index + 1}
                         </span>
-                        <Play className="w-4 h-4 fill-emerald-600 text-emerald-600 absolute opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
+                        <Play className="w-4 h-4 fill-[var(--accent)] text-[var(--accent)] absolute opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
                     </>
                 )}
             </div>
@@ -81,7 +81,7 @@ const TrackRow = memo(function TrackRow({
             {/* Track Info */}
             <div className="flex-1 min-w-0">
                 <p className={`font-semibold text-[14px] truncate tracking-tight transition-colors leading-tight ${
-                    isCurrentTrack ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground'
+                    isCurrentTrack ? 'text-[var(--accent)] font-bold' : 'text-foreground'
                 }`}>
                     {track.title}
                 </p>
@@ -94,7 +94,7 @@ const TrackRow = memo(function TrackRow({
             <div className="flex items-center gap-0.5">
                 {isCached && (
                     <button
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-emerald-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors shrink-0"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--success)] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors shrink-0"
                         onClick={(e) => { e.stopPropagation(); onDeleteCache(track.url); }}
                         title="Remove from offline cache"
                     >
@@ -241,31 +241,31 @@ export default function NasheedPlayer() {
 
                 <div className="px-4 pt-4 pb-6 space-y-4">
                     {/* ── Hero Card ────────────────────────────────────────── */}
-                    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-950 via-teal-950 to-zinc-900 text-white shadow-xl">
+                    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] border border-[var(--border)] shadow-xl">
                         {/* Decorative glows */}
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 w-28 h-28 bg-teal-500/8 rounded-full blur-xl -ml-6 -mb-6 pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)]/10 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-28 h-28 bg-[var(--accent-2)]/8 rounded-full blur-xl -ml-6 -mb-6 pointer-events-none" />
 
                         <div className="relative z-10 p-5">
                             <div className="flex items-start justify-between mb-4">
-                                <div className="bg-emerald-950/40 p-2.5 rounded-2xl border border-emerald-500/30">
-                                    <Music2 className="w-6 h-6 text-emerald-300" />
+                                <div className="bg-[var(--accent-soft)] p-2.5 rounded-2xl border border-[var(--border)]">
+                                    <Music2 className="w-6 h-6 text-[var(--accent)]" />
                                 </div>
-                                <div className="flex items-center gap-1.5 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">
-                                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                                    <span className="text-xs font-bold text-emerald-300">{allTracks.length} Tracks</span>
+                                <div className="flex items-center gap-1.5 bg-[var(--accent-soft)] px-3 py-1 rounded-full border border-[var(--border)]">
+                                    <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full" />
+                                    <span className="text-xs font-bold text-[var(--accent-text)]">{allTracks.length} Tracks</span>
                                 </div>
                             </div>
 
-                            <h2 className="text-xl font-extrabold mb-1 tracking-tight">Copyright Free Nasheeds</h2>
-                            <p className="text-emerald-200/60 text-sm mb-4 leading-relaxed max-w-[260px]">
+                            <h2 className="text-xl font-extrabold mb-1 tracking-tight" style={{ color: 'var(--text-primary)' }}>Copyright Free Nasheeds</h2>
+                            <p className="text-sm mb-4 leading-relaxed max-w-[260px]" style={{ color: 'var(--text-secondary)' }}>
                                 Beautiful vocals-only nasheeds for your spiritual journey
                             </p>
 
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handlePlayAll}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 active:bg-emerald-600 text-white font-bold rounded-full h-10 text-sm transition-colors"
+                                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] active:opacity-90 text-[var(--on-accent)] font-bold rounded-full h-10 text-sm transition-opacity"
                                 >
                                     <Play className="w-4 h-4 fill-current" />
                                     Play All
@@ -274,8 +274,8 @@ export default function NasheedPlayer() {
                                     onClick={toggleShuffle}
                                     className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
                                         isShuffled
-                                            ? 'text-emerald-400 border-emerald-500/50 bg-emerald-500/20'
-                                            : 'text-emerald-200/70 border-emerald-500/30 bg-emerald-950/30'
+                                            ? 'text-[var(--accent)] border-[var(--accent)] bg-[var(--accent-soft)]'
+                                            : 'text-[var(--text-secondary)] border-[var(--border)] bg-[var(--surface-2)]'
                                     }`}
                                 >
                                     <Shuffle className="w-4 h-4" />
@@ -300,7 +300,7 @@ export default function NasheedPlayer() {
                             href={nasheedsData?.attribution?.website ?? '#'}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs bg-emerald-600 active:bg-emerald-700 px-3 py-1.5 rounded-full text-white font-medium shrink-0 transition-colors"
+                            className="flex items-center gap-1.5 text-xs bg-[var(--accent)] active:opacity-90 px-3 py-1.5 rounded-full text-[var(--on-accent)] font-medium shrink-0 transition-opacity"
                         >
                             Visit <ExternalLink className="w-3 h-3" />
                         </a>
@@ -325,7 +325,7 @@ export default function NasheedPlayer() {
                     {/* ── Cache Status ─────────────────────────────────────── */}
                     {cachedUrls.size > 0 && (
                         <div className="flex items-center justify-between text-[11px] font-medium px-1">
-                            <span className="text-emerald-500 flex items-center gap-1">
+                            <span className="text-[var(--success)] flex items-center gap-1">
                                 <CheckCircle2 className="w-3 h-3" />
                                 {cachedUrls.size} cached for offline
                             </span>

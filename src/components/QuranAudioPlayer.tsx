@@ -728,12 +728,12 @@ export function QuranAudioPlayer({
               className="relative"
             >
               {adhanEnabled ? (
-                <Bell className="w-4 h-4 text-green-500" />
+                <Bell className="w-4 h-4 text-[var(--accent)]" />
               ) : (
                 <BellOff className="w-4 h-4 text-gray-400" />
               )}
               {adhanEnabled && (
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--accent)] rounded-full"></div>
               )}
             </Button>
             <Button variant="ghost" size="icon" onClick={onClose}>

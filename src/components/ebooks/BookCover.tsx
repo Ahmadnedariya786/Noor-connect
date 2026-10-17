@@ -1,4 +1,4 @@
-﻿
+
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -95,7 +95,7 @@ export const BookCover = memo(({
         {showProgress && progress > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
             <div 
-              className="h-full bg-emerald-400 transition-all duration-500"
+              className="h-full bg-[var(--accent)] transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>

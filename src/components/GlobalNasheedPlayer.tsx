@@ -384,7 +384,7 @@ export function GlobalNasheedPlayer() {
                 <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
                     {/* Plain div with inline style — guaranteed dark regardless of light/dark theme */}
                     <div
-                        className="w-full max-w-lg mx-auto backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden border border-emerald-500/25"
+                        className="w-full max-w-lg mx-auto backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden border border-[var(--border)]"
                         style={{ background: 'rgba(24,24,27,0.97)', color: '#fff' }}
                     >
                         {/* Progress bar — clickable to seek */}
@@ -406,7 +406,7 @@ export function GlobalNasheedPlayer() {
                             <div className="absolute inset-y-[-8px] inset-x-0" />
                             <div
                                 ref={progressBarRef}
-                                className="h-full bg-emerald-500 group-hover:bg-emerald-400 relative"
+                                className="h-full bg-[var(--accent)] relative"
                                 style={{ width: '0%', transition: 'none' }}
                             >
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-sm translate-x-1/2 transition-opacity" />
@@ -420,15 +420,15 @@ export function GlobalNasheedPlayer() {
                                 onClick={() => setIsExpanded(true)}
                             >
                                 <div
-                                    className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border border-emerald-500/25`}
-                                    style={{ background: isError ? 'rgba(239,68,68,0.2)' : isPlaying && !showSpinner ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)' }}
+                                    className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border border-[var(--border)]`}
+                                    style={{ background: isError ? 'rgba(239,68,68,0.2)' : isPlaying && !showSpinner ? 'var(--accent-soft)' : 'rgba(255,255,255,0.05)' }}
                                 >
                                     {showSpinner ? (
-                                        <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent animate-spin rounded-full" />
+                                        <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent animate-spin rounded-full" />
                                     ) : isError ? (
                                         <WifiOff className="w-4 h-4 text-red-400" />
                                     ) : (
-                                        <Music className="w-4 h-4 text-emerald-400" />
+                                        <Music className="w-4 h-4 text-[var(--accent)]" />
                                     )}
                                 </div>
                                 <div className="min-w-0">
@@ -446,7 +446,7 @@ export function GlobalNasheedPlayer() {
                                 </Button>
                                 <Button size="icon" variant="ghost" onClick={togglePlayback} className="hover:bg-white/10 rounded-full w-9 h-9" style={{ color: '#fff' }}>
                                     {showSpinner ? (
-                                        <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent animate-spin rounded-full" />
+                                        <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent animate-spin rounded-full" />
                                     ) : isPlaying ? (
                                         <Pause className="w-4 h-4 fill-current" />
                                     ) : (
@@ -476,7 +476,7 @@ export function GlobalNasheedPlayer() {
                 onClick={() => setIsExpanded(false)}
             >
                 <div
-                    className="w-full max-w-md shadow-2xl animate-in slide-in-from-bottom-4 duration-300 rounded-3xl overflow-hidden border border-emerald-500/25"
+                    className="w-full max-w-md shadow-2xl animate-in slide-in-from-bottom-4 duration-300 rounded-3xl overflow-hidden border border-[var(--border)]"
                     style={{ background: '#18181b', color: '#fff' }}
                     onClick={e => e.stopPropagation()}
                 >
@@ -484,7 +484,7 @@ export function GlobalNasheedPlayer() {
                     <div className="flex items-center justify-between px-5 pt-5 pb-3">
                         <div>
                             <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-bold mb-1">Now Playing</p>
-                            <p className="text-xs text-emerald-400 font-medium">
+                            <p className="text-xs text-[var(--accent)] font-medium">
                                 {currentIndex + 1} / {queue.length} tracks
                             </p>
                         </div>
@@ -495,12 +495,12 @@ export function GlobalNasheedPlayer() {
 
                     {/* Album Art */}
                     <div className="mx-5 mb-5">
-                        <div className="aspect-square bg-gradient-to-br from-emerald-900 via-teal-900 to-zinc-900 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner border border-emerald-500/20">
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,_rgba(16,185,129,0.2)_0%,_transparent_60%)]" />
+                        <div className="aspect-square bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner border border-[var(--border)]">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,_var(--accent-soft)_0%,_transparent_60%)]" />
 
                             {showSpinner ? (
                                 <div className="flex flex-col items-center gap-3">
-                                    <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 animate-spin rounded-full" />
+                                    <div className="w-12 h-12 border-4 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin rounded-full" />
                                     <p className="text-xs text-zinc-400 animate-pulse">
                                         {isBuffering ? 'Buffering… slow connection detected' : 'Loading…'}
                                     </p>
@@ -516,12 +516,12 @@ export function GlobalNasheedPlayer() {
                                 </div>
                             ) : (
                                 <>
-                                    <Music className={`w-28 h-28 ${isPlaying ? 'text-emerald-500/50' : 'text-emerald-500/30'}`} />
+                                    <Music className={`w-28 h-28 ${isPlaying ? 'text-[var(--accent)]/50' : 'text-[var(--accent)]/30'}`} />
                                     {isPlaying && (
                                         <Equalizer
                                             bars={5}
                                             barWidth="w-1.5"
-                                            barColor="bg-emerald-400"
+                                            barColor="bg-[var(--accent)]"
                                             heightClass="h-8"
                                             gapClass="gap-1"
                                             className="absolute bottom-4"
@@ -539,7 +539,7 @@ export function GlobalNasheedPlayer() {
                     {/* Track Info */}
                     <div className="px-5 mb-4">
                         <h3 className="font-bold text-xl text-white truncate leading-tight">{currentTrack.title}</h3>
-                        <p className="text-sm text-emerald-400 font-medium mt-0.5 truncate">{currentTrack.artist}</p>
+                        <p className="text-sm text-[var(--accent)] font-medium mt-0.5 truncate">{currentTrack.artist}</p>
                     </div>
 
                     {/* Seek Bar */}
@@ -561,7 +561,7 @@ export function GlobalNasheedPlayer() {
                                 setProgress(v);
                                 setSeekValue(v);
                             }}
-                            className="cursor-pointer [&_[role=slider]]:bg-emerald-400 [&_[role=slider]]:border-0"
+                            className="cursor-pointer [&_[role=slider]]:bg-[var(--accent)] [&_[role=slider]]:border-0"
                         />
                         <div className="flex justify-between text-xs font-mono text-zinc-500">
                             <span>{formatTime(seekValue)}</span>
@@ -573,19 +573,19 @@ export function GlobalNasheedPlayer() {
                     <div className="px-5 mb-4">
                         <div className="flex items-center justify-between">
                             <Button variant="ghost" size="icon" onClick={toggleShuffle}
-                                className={`rounded-full w-10 h-10 transition-all ${isShuffled ? 'text-emerald-400 bg-emerald-500/20' : 'text-zinc-500 hover:text-white hover:bg-white/10'}`}>
+                                className={`rounded-full w-10 h-10 transition-all ${isShuffled ? 'text-[var(--accent)] bg-[var(--accent-soft)]' : 'text-zinc-500 hover:text-white hover:bg-white/10'}`}>
                                 <Shuffle className="w-4 h-4" />
                             </Button>
 
                             <Button size="icon" variant="ghost" onClick={prevTrack} disabled={!hasPrev}
-                                className="text-white hover:text-emerald-400 hover:bg-white/10 rounded-full w-12 h-12 disabled:opacity-30">
+                                className="text-white hover:text-[var(--accent)] hover:bg-white/10 rounded-full w-12 h-12 disabled:opacity-30">
                                 <SkipBack className="w-6 h-6 fill-current" />
                             </Button>
 
                             <Button size="icon" onClick={togglePlayback}
-                                className="h-16 w-16 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform bg-emerald-500 hover:bg-emerald-400 text-white border-0">
+                                className="h-16 w-16 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform bg-[var(--accent)] text-[var(--on-accent)] border-0">
                                 {showSpinner ? (
-                                    <div className="w-6 h-6 border-4 border-emerald-100 border-t-transparent animate-spin rounded-full" />
+                                    <div className="w-6 h-6 border-4 border-white/30 border-t-white animate-spin rounded-full" />
                                 ) : isPlaying ? (
                                     <Pause className="w-8 h-8 fill-current" />
                                 ) : (
@@ -594,12 +594,12 @@ export function GlobalNasheedPlayer() {
                             </Button>
 
                             <Button size="icon" variant="ghost" onClick={nextTrack} disabled={!hasNext}
-                                className="text-white hover:text-emerald-400 hover:bg-white/10 rounded-full w-12 h-12 disabled:opacity-30">
+                                className="text-white hover:text-[var(--accent)] hover:bg-white/10 rounded-full w-12 h-12 disabled:opacity-30">
                                 <SkipForward className="w-6 h-6 fill-current" />
                             </Button>
 
                             <Button variant="ghost" size="icon" onClick={cycleRepeat}
-                                className={`rounded-full w-10 h-10 transition-all ${repeatActive ? 'text-emerald-400 bg-emerald-500/20' : 'text-zinc-500 hover:text-white hover:bg-white/10'}`}>
+                                className={`rounded-full w-10 h-10 transition-all ${repeatActive ? 'text-[var(--accent)] bg-[var(--accent-soft)]' : 'text-zinc-500 hover:text-white hover:bg-white/10'}`}>
                                 <RepeatIcon className="w-4 h-4" />
                             </Button>
                         </div>

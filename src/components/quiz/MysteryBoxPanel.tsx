@@ -67,7 +67,7 @@ export function MysteryBoxPanel({ onClose }: MysteryBoxPanelProps) {
       case 'legendary': return 'from-purple-500 to-pink-500';
       case 'epic': return 'from-amber-500 to-orange-500';
       case 'rare': return 'from-blue-500 to-cyan-500';
-      case 'xp': return 'from-green-500 to-emerald-500';
+      case 'xp': return 'from-[var(--accent)] to-[var(--accent-2)]';
       default: return 'from-slate-500 to-slate-400';
     }
   };
@@ -92,8 +92,8 @@ export function MysteryBoxPanel({ onClose }: MysteryBoxPanelProps) {
         </div>
 
         {/* Daily Free Box */}
-        <Card className={`overflow-hidden ${canClaimDaily ? 'ring-2 ring-green-500' : ''}`}>
-          <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-4 text-white">
+        <Card className={`overflow-hidden ${canClaimDaily ? 'ring-2 ring-[var(--accent)]' : ''}`}>
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] p-4 text-[var(--on-accent)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="text-3xl">🎁</div>
@@ -105,7 +105,7 @@ export function MysteryBoxPanel({ onClose }: MysteryBoxPanelProps) {
                 </div>
               </div>
               {canClaimDaily && (
-                <Badge className="bg-white text-green-600 animate-pulse">FREE</Badge>
+                <Badge className="bg-white text-[var(--accent-text)] animate-pulse font-bold">FREE</Badge>
               )}
             </div>
           </div>

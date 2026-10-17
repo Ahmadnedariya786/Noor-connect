@@ -97,7 +97,7 @@ const initialsOf = (name: string, nameEn: string): string => {
 
 const avatarPalette = [
   "from-[#C9860A] to-[#8B5E0A]", "from-amber-600 to-orange-800", "from-[#E8A020] to-[#B8780A]",
-  "from-[#C9860A] to-[#713f12]", "from-amber-700 to-[#3f5136]", "from-lime-700 to-emerald-900",
+  "from-[#C9860A] to-[#713f12]", "from-amber-700 to-[#3f5136]", "from-amber-800 to-stone-900",
   "from-stone-600 to-stone-900", "from-[#a16207] to-[#713f12]",
 ];
 
@@ -544,9 +544,9 @@ const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ catego
     translation: "from-amber-600 to-[#713f12]",
     surah: "from-[#E8A020] to-[#713f12]",
     stories: "from-[#a16207] to-[#713f12]",
-    adhkar: "from-lime-700 to-emerald-900",
+    adhkar: "from-amber-700 to-stone-900",
     fatwa: "from-stone-500 to-stone-800",
-    biography: "from-[#C9860A] to-[#14532d]",
+    biography: "from-[#C9860A] to-stone-900",
   };
   const iconMap: Record<string, React.ReactNode> = {
     mosque: <Landmark className="w-9 h-9 text-white/90" />,

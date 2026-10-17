@@ -282,7 +282,7 @@ export default function SeerahHome() {
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-500">
+                <div className="text-2xl font-bold text-[var(--accent)]">
                   {chapters.filter((chapter) => chapter.period === "madinan").length}
                 </div>
                 <div className="text-sm text-muted-foreground">

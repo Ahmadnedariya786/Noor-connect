@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SafeWidgetPreview
  * Rich, accurate mini-previews for every dashboard widget.
  * Wraps everything in an ErrorBoundary so a crash in a preview never
@@ -84,18 +84,18 @@ const PrayerTimesPreview = () => {
 
 // ── Daily Ayah ────────────────────────────────────────────────
 const DailyAyahPreview = () => (
-  <div className="rounded-xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/80 to-emerald-50/20 dark:from-emerald-950/30 dark:to-emerald-950/10 p-3 space-y-2">
+  <div className="rounded-xl border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] p-3 space-y-2">
     <div className="flex items-center gap-2 mb-1">
-      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Daily Ayah</span>
-      <Badge variant="outline" className="text-xs border-emerald-300 text-emerald-600 dark:text-emerald-400">Al-Baqarah</Badge>
+      <span className="text-xs font-bold text-[var(--accent)]">Daily Ayah</span>
+      <Badge variant="outline" className="text-xs border-[var(--border)] text-[var(--accent-text)] bg-[var(--accent-soft)]">Al-Baqarah</Badge>
     </div>
-    <p className="text-right text-base font-arabic leading-relaxed text-emerald-900 dark:text-emerald-200 line-clamp-2">
+    <p className="text-right text-base font-arabic leading-relaxed text-[var(--text-primary)] line-clamp-2">
       ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ
     </p>
     <p className="text-xs text-muted-foreground line-clamp-2">
       "Allah — there is no deity except Him, the Ever-Living, the Sustainer of existence."
     </p>
-    <p className="text-xs text-emerald-600 dark:text-emerald-400 text-right italic">— Ayat al-Kursi (2:255)</p>
+    <p className="text-xs text-[var(--text-secondary)] text-right italic">— Ayat al-Kursi (2:255)</p>
   </div>
 );
 
@@ -160,19 +160,19 @@ const TasbeehPreview = () => {
 
 // ── Ramadan ───────────────────────────────────────────────────
 const RamadanPreview = () => (
-  <div className="rounded-xl border border-emerald-300/60 bg-gradient-to-br from-emerald-600/10 to-emerald-600/5 dark:from-emerald-900/30 dark:to-emerald-900/10 p-3 space-y-2">
+  <div className="rounded-xl border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] p-3 space-y-2">
     <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">🌙 Ramadan</span>
-      <Badge variant="outline" className="text-xs border-emerald-400 text-emerald-700">Day 15</Badge>
+      <span className="text-xs font-bold text-[var(--accent)]">🌙 Ramadan</span>
+      <Badge variant="outline" className="text-xs border-[var(--border)] bg-[var(--accent-soft)] text-[var(--accent-text)]">Day 15</Badge>
     </div>
     <div className="grid grid-cols-2 gap-2">
-      <div className="rounded-lg bg-emerald-100/60 dark:bg-emerald-900/30 p-2 text-center">
+      <div className="rounded-lg bg-[var(--surface-2)] border border-[var(--border)] p-2 text-center">
         <p className="text-xs text-muted-foreground">Suhoor ends</p>
-        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">04:48 AM</p>
+        <p className="text-sm font-bold text-[var(--accent)]">04:48 AM</p>
       </div>
-      <div className="rounded-lg bg-emerald-100/60 dark:bg-emerald-900/30 p-2 text-center">
+      <div className="rounded-lg bg-[var(--surface-2)] border border-[var(--border)] p-2 text-center">
         <p className="text-xs text-muted-foreground">Iftar at</p>
-        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">06:52 PM</p>
+        <p className="text-sm font-bold text-[var(--accent)]">06:52 PM</p>
       </div>
     </div>
     <Progress value={60} className="h-1.5" />
@@ -237,10 +237,10 @@ const WeeklyChartPreview = () => {
 
 // ── Quran Progress ────────────────────────────────────────────
 const QuranProgressPreview = () => (
-  <div className="rounded-xl border border-green-200/60 bg-gradient-to-br from-green-50/80 to-green-50/20 dark:from-green-950/30 dark:to-green-950/10 p-3 space-y-2">
+  <div className="rounded-xl border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] p-3 space-y-2">
     <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-green-700 dark:text-green-300">Quran Progress</span>
-      <Badge variant="outline" className="text-xs border-green-300 text-green-600">42%</Badge>
+      <span className="text-xs font-bold text-[var(--accent)]">Quran Progress</span>
+      <Badge variant="outline" className="text-xs border-[var(--border)] text-[var(--accent-text)] bg-[var(--accent-soft)]">42%</Badge>
     </div>
     <div className="flex items-center gap-3">
       {/* Mini circular progress */}
@@ -250,9 +250,9 @@ const QuranProgressPreview = () => (
           <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3"
             strokeDasharray={`${2 * Math.PI * 14}`}
             strokeDashoffset={`${2 * Math.PI * 14 * (1 - 0.42)}`}
-            className="text-green-500 transition-all" />
+            className="text-[var(--accent)] transition-all" />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">42%</div>
+        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[var(--text-primary)]">42%</div>
       </div>
       <div>
         <p className="text-sm font-bold text-foreground">48 / 114</p>
@@ -270,7 +270,7 @@ const IslamicEventsPreview = () => (
     <div className="space-y-1.5">
       {[
         { n: 'Laylat al-Qadr', d: '3 days', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300' },
-        { n: 'Eid al-Fitr', d: '12 days', color: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' },
+        { n: 'Eid al-Fitr', d: '12 days', color: 'bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]' },
       ].map(e => (
         <div key={e.n} className={`flex justify-between items-center rounded-lg px-2 py-1.5 ${e.color}`}>
           <span className="text-xs font-medium">{e.n}</span>
@@ -349,27 +349,27 @@ const DhikrReminderPreview = () => (
 
 // ── Quran Radio ─────────────────────────────────────────────
 const QuranRadioPreview = () => (
-  <div className="rounded-xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/80 to-emerald-50/20 dark:from-emerald-950/30 dark:to-emerald-950/10 p-3 space-y-2">
+  <div className="rounded-xl border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] p-3 space-y-2">
     <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Quran Radio</span>
-      <Badge variant="outline" className="text-xs border-emerald-300 text-emerald-600">Live</Badge>
+      <span className="text-xs font-bold text-[var(--accent)]">Quran Radio</span>
+      <Badge variant="outline" className="text-xs border-[var(--border)] text-[var(--accent-text)] bg-[var(--accent-soft)]">Live</Badge>
     </div>
     <div className="flex items-center gap-3">
-       <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm">
-         <div className="w-0 h-0 border-l-[10px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
+       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center shadow-sm text-[var(--on-accent)]">
+         <div className="w-0 h-0 border-l-[10px] border-l-[var(--on-accent)] border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
        </div>
        <div className="flex-1 min-w-0">
          <p className="text-sm font-bold text-foreground truncate">Surah Al-Baqarah</p>
          <p className="text-xs text-muted-foreground truncate">Mishary Rashid Alafasy</p>
        </div>
     </div>
-    <div className="flex justify-between items-center bg-emerald-100/50 dark:bg-emerald-900/30 rounded-lg px-2 py-1">
-      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-      <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">BUFFERING STREAM...</span>
+    <div className="flex justify-between items-center bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-2 py-1">
+      <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-pulse" />
+      <span className="text-xs font-medium text-[var(--accent-text)]">BUFFERING STREAM...</span>
       <div className="flex gap-1">
-        <div className="w-0.5 h-2 bg-emerald-400" />
-        <div className="w-0.5 h-3 bg-emerald-500" />
-        <div className="w-0.5 h-2.5 bg-emerald-400" />
+        <div className="w-0.5 h-2 bg-[var(--accent)]/60" />
+        <div className="w-0.5 h-3 bg-[var(--accent)]" />
+        <div className="w-0.5 h-2.5 bg-[var(--accent)]/60" />
       </div>
     </div>
   </div>

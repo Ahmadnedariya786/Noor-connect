@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Droplets, Hand, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { markGhusulComplete, getTodayLog, type HaidhTrackerData } from "@/lib/haidh-tracker";
@@ -45,13 +45,13 @@ export function HaidhGhuslChecklist({ data }: { data: HaidhTrackerData }) {
   return (
     <div className={cn(
       "rounded-3xl border p-5 transition-colors",
-      allDone ? "bg-emerald-500/10 border-emerald-500/30" : "bg-card border-border"
+      allDone ? "bg-[var(--success)]/10 border-[var(--success)]/30" : "bg-card border-border"
     )}>
       <div className="flex items-center gap-2 mb-4">
-        <Droplets className={cn("w-4 h-4", allDone ? "text-emerald-500" : "text-rose-500")} />
+        <Droplets className={cn("w-4 h-4", allDone ? "text-[var(--success)]" : "text-rose-500")} />
         <h3 className={cn(
           "text-xs font-black uppercase tracking-widest",
-          allDone ? "text-emerald-500" : "text-muted-foreground"
+          allDone ? "text-[var(--success)]" : "text-muted-foreground"
         )}>
           {allDone ? "Purification Complete" : "Complete Your Ghusl"}
         </h3>
@@ -66,25 +66,25 @@ export function HaidhGhuslChecklist({ data }: { data: HaidhTrackerData }) {
               className={cn(
                 "w-full flex items-center gap-3 p-3 rounded-2xl border transition-all text-left",
                 checked
-                  ? "bg-emerald-500/15 border-emerald-500/30"
+                  ? "bg-[var(--success)]/15 border-[var(--success)]/30"
                   : "bg-background/50 border-border hover:bg-muted/50"
               )}
             >
               <div className={cn(
                 "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
-                checked ? "bg-emerald-500/20 text-emerald-500" : "bg-muted text-muted-foreground"
+                checked ? "bg-[var(--success)]/20 text-[var(--success)]" : "bg-muted text-muted-foreground"
               )}>
                 <Icon className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={cn("font-bold text-sm", checked ? "text-emerald-600 dark:text-emerald-400" : "text-foreground")}>
+                <p className={cn("font-bold text-sm", checked ? "text-[var(--success)]" : "text-foreground")}>
                   {label}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">{sub}</p>
               </div>
               <div className={cn(
                 "w-6 h-6 rounded-full flex items-center justify-center border shrink-0",
-                checked ? "bg-emerald-500 border-emerald-500" : "border-border"
+                checked ? "bg-[var(--success)] border-[var(--success)]" : "border-border"
               )}>
                 {checked && <Check className="w-4 h-4 text-white" />}
               </div>
@@ -93,7 +93,7 @@ export function HaidhGhuslChecklist({ data }: { data: HaidhTrackerData }) {
         })}
       </div>
       {allDone && (
-        <p className="text-center text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-4">
+        <p className="text-center text-sm font-medium text-[var(--success)] mt-4">
           Māshā’Allāh — your ʿibādah is at full strength again.
         </p>
       )}

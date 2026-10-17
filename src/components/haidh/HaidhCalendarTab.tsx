@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Droplets } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -27,7 +27,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 // Status → cell base style (the day's actual phase).
 const STATUS_BASE: Record<DayStatus, string> = {
   haidh:     "bg-rose-500/25 text-rose-600 dark:text-rose-300",
-  tuhr:      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+  tuhr:      "bg-[var(--success)]/10 text-[var(--success)]",
   predicted: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
   fertile:   "bg-violet-500/15 text-violet-600 dark:text-violet-300",
   ovulation: "bg-yellow-400/30 text-yellow-600 dark:text-yellow-300 ring-2 ring-yellow-400/50",
@@ -64,8 +64,8 @@ export function HaidhCalendarTab({ data }: Props) {
     `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
   const legend = [
-    { label: "Ḥaidh", cls: "bg-rose-500/40" },
-    { label: "Ṭuhr", cls: "bg-emerald-500/30" },
+    {label: "Ḥaidh", cls: "bg-rose-500/40" },
+    { label: "Ṭuhr", cls: "bg-[var(--success)]/30" },
     { label: "Fertile", cls: "bg-violet-500/40" },
     { label: "Ovulation", cls: "bg-yellow-400/50" },
     { label: "Predicted", cls: "bg-amber-500/40" },

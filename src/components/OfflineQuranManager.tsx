@@ -111,7 +111,7 @@ export function OfflineQuranManager() {
     if (!isOnline) return <WifiOff className="h-5 w-5 text-orange-500" />;
     if (isSyncing) return <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />;
     if (cacheStatus.needsUpdate) return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-    return <CheckCircle className="h-5 w-5 text-green-500" />;
+    return <CheckCircle className="h-5 w-5 text-[var(--success)]" />;
   };
 
   const getSyncStatusText = () => {
@@ -147,7 +147,7 @@ export function OfflineQuranManager() {
                 <p className="text-sm font-medium">Connection</p>
                 <p className="text-2xl font-bold">{isOnline ? 'Online' : 'Offline'}</p>
               </div>
-              {isOnline ? <Wifi className="h-8 w-8 text-green-500" /> : <WifiOff className="h-8 w-8 text-orange-500" />}
+              {isOnline ? <Wifi className="h-8 w-8 text-[var(--success)]" /> : <WifiOff className="h-8 w-8 text-orange-500" />}
             </div>
           </CardContent>
         </Card>
@@ -159,7 +159,7 @@ export function OfflineQuranManager() {
                 <p className="text-sm font-medium">Cached Verses</p>
                 <p className="text-2xl font-bold">{verses.length}</p>
               </div>
-              <CheckCircle className={`h-8 w-8 ${cacheStatus.versesCached ? 'text-green-500' : 'text-gray-400'}`} />
+              <CheckCircle className={`h-8 w-8 ${cacheStatus.versesCached ? 'text-[var(--success)]' : 'text-gray-400'}`} />
             </div>
           </CardContent>
         </Card>
@@ -183,7 +183,7 @@ export function OfflineQuranManager() {
                 <p className="text-sm font-medium">Storage</p>
                 <p className="text-2xl font-bold">{Math.round(percentage)}%</p>
               </div>
-              <HardDrive className={`h-8 w-8 ${isLowSpace ? 'text-red-500' : isNearLimit ? 'text-yellow-500' : 'text-green-500'}`} />
+              <HardDrive className={`h-8 w-8 ${isLowSpace ? 'text-red-500' : isNearLimit ? 'text-yellow-500' : 'text-[var(--success)]'}`} />
             </div>
           </CardContent>
         </Card>

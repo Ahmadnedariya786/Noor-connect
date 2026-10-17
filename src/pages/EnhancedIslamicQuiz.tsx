@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppBar } from '@/components/AppBar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -690,7 +690,7 @@ export default function EnhancedIslamicQuiz() {
                     
                     if (gameState.showResult) {
                       if (index === question.correctAnswer) {
-                        buttonClass += " bg-green-100 border-green-500 text-green-700";
+                        buttonClass += " bg-[var(--success)]/15 border-[var(--success)] text-[var(--success)]";
                       } else if (index === gameState.selectedAnswer && index !== question.correctAnswer) {
                         buttonClass += " bg-red-100 border-red-500 text-red-700";
                       }
@@ -710,7 +710,7 @@ export default function EnhancedIslamicQuiz() {
                           </span>
                           <span>{option}</span>
                           {gameState.showResult && index === question.correctAnswer && (
-                            <CheckCircle className="w-4 h-4 ms-auto text-green-600" />
+                            <CheckCircle className="w-4 h-4 ms-auto text-[var(--success)]" />
                           )}
                           {gameState.showResult && index === gameState.selectedAnswer && index !== question.correctAnswer && (
                             <XCircle className="w-4 h-4 ms-auto text-red-600" />
@@ -980,10 +980,10 @@ function QuizMenu({
             <Button 
               onClick={onOpenDailyRewards} 
               variant="outline" 
-              className={`w-full ${canClaimDaily ? 'animate-pulse bg-gradient-to-r from-green-50 to-emerald-50' : ''}`}
+              className={`w-full ${canClaimDaily ? 'animate-pulse bg-[var(--accent-soft)] border-[var(--accent)]/40' : ''}`}
             >
-              <Calendar className={`w-4 h-4 mr-1 ${canClaimDaily ? 'text-green-500' : ''}`} />
-              <span className={canClaimDaily ? 'text-green-700 font-semibold text-xs' : 'text-xs'}>
+              <Calendar className={`w-4 h-4 mr-1 ${canClaimDaily ? 'text-[var(--accent)]' : ''}`} />
+              <span className={canClaimDaily ? 'text-[var(--accent-text)] font-semibold text-xs' : 'text-xs'}>
                 {canClaimDaily ? 'Daily!' : 'Daily'}
               </span>
             </Button>
@@ -1080,7 +1080,7 @@ function QuizResults({
           const isCorrect = ua?.correct;
           const selectedIdx = ua?.selectedAnswer;
           return (
-            <Card key={q.id} className={`border-l-4 ${isCorrect ? 'border-l-green-500' : 'border-l-red-500'}`}>
+            <Card key={q.id} className={`border-l-4 ${isCorrect ? 'border-l-[var(--success)]' : 'border-l-red-500'}`}>
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-muted-foreground">Q{idx + 1}</span>
@@ -1091,7 +1091,7 @@ function QuizResults({
                 <p className="text-sm font-medium">{q.question}</p>
                 {q.options.map((opt: string, oi: number) => {
                   let cls = "text-xs p-2 rounded-md ";
-                  if (oi === q.correctAnswer) cls += "bg-green-100 text-green-700";
+                  if (oi === q.correctAnswer) cls += "bg-[var(--success)]/15 text-[var(--success)] font-medium";
                   else if (oi === selectedIdx && oi !== q.correctAnswer) cls += "bg-red-100 text-red-700";
                   else cls += "text-muted-foreground";
                   return <div key={oi} className={cls}>{String.fromCharCode(65 + oi)}. {opt}</div>;
@@ -1129,7 +1129,7 @@ function QuizResults({
               <span>+{xpEarned} XP</span>
             </div>
             <div className="flex items-center gap-1">
-              <TrendingUp className="w-4 h-4 text-green-500" />
+              <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
               <span>{accuracy}% Accuracy</span>
             </div>
           </div>

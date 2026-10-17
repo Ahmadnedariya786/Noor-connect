@@ -58,25 +58,24 @@ export function FitranaCalculatorNotification() {
         transition={{ duration: 0.3 }}
         className="fixed top-20 left-4 right-4 z-50 max-w-sm mx-auto"
       >
-        <Card className="bg-gradient-to-r from-green-500 to-emerald-500 border-0 shadow-lg">
-          <CardContent className="p-4 text-white">
+        <Card className="bg-gradient-to-r from-[var(--surface)] to-[var(--surface-2)] border border-[var(--border)] shadow-xl">
+          <CardContent className="p-4 text-[var(--text-primary)]">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 flex-1">
-                <div className="p-2 bg-white/20 rounded-full">
+                <div className="p-2 bg-[var(--accent-soft)] rounded-full text-[var(--accent)] border border-[var(--border)]">
                   <Calculator className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-1 mb-1">
-                    <Sparkles className="w-4 h-4" />
-                    <h3 className="font-semibold text-sm">Fitrana Calculator</h3>
+                    <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                    <h3 className="font-semibold text-sm text-[var(--text-primary)]">Fitrana Calculator</h3>
                   </div>
-                  <p className="text-xs text-white/90 leading-relaxed">
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                     Calculate your Zakat al-Fitr accurately with our enhanced calculator.
                   </p>
                   <Button
                     size="sm"
-                    variant="secondary"
-                    className="mt-2 bg-emerald-950/20 hover:bg-emerald-950/30 text-white border border-emerald-200/40"
+                    className="mt-2 bg-[var(--accent)] hover:brightness-105 text-[var(--on-accent)] font-bold shadow-sm"
                     onClick={handleNavigate}
                   >
                     Calculate Now
@@ -86,7 +85,7 @@ export function FitranaCalculatorNotification() {
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-white/80 hover:text-white hover:bg-white/10 p-1"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] p-1"
                 onClick={handleDismiss}
               >
                 <X className="w-4 h-4" />

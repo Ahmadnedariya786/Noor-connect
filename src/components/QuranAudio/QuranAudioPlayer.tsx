@@ -290,27 +290,27 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
       transition={{ duration: 0.5 }}
       className="w-full max-w-4xl mx-auto"
     >
-      <Card className="relative overflow-hidden border-0 shadow-[var(--elevation-6)] bg-gradient-to-br from-emerald-50/80 via-teal-50/80 to-cyan-50/80 dark:from-emerald-950/40 dark:via-teal-950/40 dark:to-cyan-950/40 backdrop-blur-xl">
+      <Card className="relative overflow-hidden border border-[var(--border)] shadow-[var(--elevation-6)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] backdrop-blur-xl">
         {/* Animated Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-transparent to-cyan-500/5 animate-pulse" />
-        <div className="absolute top-[-100px] right-[-100px] w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-[var(--accent)]/5 via-transparent to-[var(--accent-2)]/5 animate-pulse" />
+        <div className="absolute top-[-100px] right-[-100px] w-80 h-80 bg-[var(--accent)]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 bg-[var(--accent-2)]/10 rounded-full blur-3xl" />
         
         {/* Glassmorphism Overlay */}
-        <div className="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-white/5 dark:bg-black/10 backdrop-blur-sm" />
         
         {/* Content */}
         <CardContent className="relative z-10 p-8 space-y-8">
           {/* Premium Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg border border-emerald-400/30">
-                <BookOpen className="w-8 h-8 text-white" />
+              <div className="p-4 bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] rounded-2xl shadow-lg border border-[var(--accent)]/30">
+                <BookOpen className="w-8 h-8 text-[var(--on-accent)]" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Quran Audio Player</h2>
-                <p className="text-slate-600 dark:text-slate-400 text-sm flex items-center gap-2 mt-1">
-                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Quran Audio Player</h2>
+                <p className="text-sm flex items-center gap-2 mt-1" style={{ color: "var(--text-secondary)" }}>
+                  <Sparkles className="w-4 h-4 text-[var(--accent)]" />
                   Premium Divine Recitations
                 </p>
               </div>
@@ -320,10 +320,10 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="flex items-center gap-2 px-3 py-1 bg-emerald-500/20 rounded-full"
+                  className="flex items-center gap-2 px-3 py-1 bg-[var(--accent-soft)] rounded-full"
                 >
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Playing</span>
+                  <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
+                  <span className="text-xs font-medium text-[var(--accent-text)]">Playing</span>
                 </motion.div>
               )}
             </div>
@@ -334,8 +334,8 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
             {/* Reciter Selection */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <label className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Reciter</label>
+                <User className="w-4 h-4 text-[var(--accent)]" />
+                <label className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-primary)" }}>Reciter</label>
               </div>
               <Select value={selectedReciter?.id?.toString() || ""} onValueChange={handleReciterChange}>
                 <SelectTrigger
@@ -406,22 +406,22 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3 }}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-sm border border-emerald-500/20 p-6"
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] backdrop-blur-sm border border-[var(--border)] p-6"
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 to-transparent opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--accent)]/5 to-transparent opacity-50" />
                 <div className="relative z-10 text-center space-y-4">
                   <div className="flex items-center justify-center gap-3">
-                    <div className="p-2 bg-emerald-500/20 rounded-xl backdrop-blur-sm">
-                      <Heart className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="p-2 bg-[var(--accent-soft)] rounded-xl backdrop-blur-sm">
+                      <Heart className="w-5 h-5 text-[var(--accent)]" />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
                       {currentSurahInfo?.name?.latin?.short || `Surah ${selectedSurah}`}
                     </h3>
                   </div>
-                  <p className="text-lg text-emerald-700 dark:text-emerald-300 font-arabic">
+                  <p className="text-lg font-arabic" style={{ color: "var(--text-primary)" }}>
                     {currentSurahInfo?.name?.arabic?.short || ''}
                   </p>
-                  <div className="flex items-center justify-center gap-6 text-sm text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center justify-center gap-6 text-sm" style={{ color: "var(--text-secondary)" }}>
                     <div className="flex items-center gap-1">
                       <BookOpen className="w-4 h-4" />
                       <span>{currentAudio.ayahCount} Verses</span>
@@ -436,10 +436,10 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                     </div>
                   </div>
                   <div className="flex items-center justify-center gap-2">
-                    <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
+                    <Badge variant="outline" className="bg-[var(--accent-soft)] border-[var(--border)] text-[var(--accent-text)]">
                       {currentAudio.recitation.reciterName}
                     </Badge>
-                    <Badge variant="outline" className="bg-teal-500/10 border-teal-500/30 text-teal-700 dark:text-teal-300">
+                    <Badge variant="outline" className="bg-[var(--surface-2)] border-[var(--border)]" style={{ color: "var(--text-secondary)" }}>
                       {currentAudio.type?.latin}
                     </Badge>
                   </div>
@@ -452,14 +452,14 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
           <div className="space-y-6">
             {/* Progress Bar */}
             <div className="space-y-3">
-              <div className="flex justify-between text-sm font-medium text-slate-700 dark:text-slate-300">
+              <div className="flex justify-between text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
               <div className="relative">
-                <div className="w-full bg-slate-200/50 dark:bg-slate-700/50 rounded-full h-3 backdrop-blur-sm">
+                <div className="w-full bg-[var(--surface-2)] rounded-full h-3 backdrop-blur-sm border border-[var(--border)]">
                   <motion.div 
-                    className="bg-gradient-to-r from-emerald-500 to-teal-500 h-3 rounded-full shadow-lg"
+                    className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] h-3 rounded-full shadow-lg"
                     style={{ width: `${(currentTime / duration) * 100 || 0}%` }}
                     initial={{ width: 0 }}
                     animate={{ width: `${(currentTime / duration) * 100 || 0}%` }}
@@ -467,7 +467,7 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                   />
                 </div>
                 <div 
-                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-emerald-500 cursor-pointer"
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[var(--surface)] rounded-full shadow-lg border-2 border-[var(--accent)] cursor-pointer"
                   style={{ left: `calc(${(currentTime / duration) * 100 || 0}% - 8px)` }}
                   onClick={(e) => {
                     const rect = e.currentTarget.parentElement?.getBoundingClientRect();
@@ -575,7 +575,7 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                   size="sm"
                   onClick={handleDownload}
                   disabled={!currentAudio}
-                  className="bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                  className="bg-[var(--accent-soft)] border-[var(--border)] text-[var(--accent-text)] hover:opacity-90"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Download

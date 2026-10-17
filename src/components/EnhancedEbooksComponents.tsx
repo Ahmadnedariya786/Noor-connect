@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import {
   Search, Book, Download, Plus, X, Trash2, CheckCircle, Clock,
   BookOpen, Bookmark, BookmarkCheck, ArrowUpDown, HardDrive,
@@ -190,7 +190,7 @@ const EnhancedBookCover = memo(({
                 </div>
                 <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-emerald-400 transition-all duration-500"
+                    className="h-full bg-[var(--accent)] transition-all duration-500"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -315,7 +315,7 @@ const EnhancedBookCard = memo(({
                     {category}
                   </span>
                   {isDownloaded && (
-                    <span className="flex items-center gap-1 text-green-600">
+                    <span className="flex items-center gap-1 text-[var(--success)]">
                       <Download className="w-3 h-3" />
                       Offline
                     </span>

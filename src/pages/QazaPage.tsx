@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Minus, Target, TrendingUp, Calendar, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -145,7 +145,7 @@ export default function QazaPage() {
             <div className="text-xs text-muted-foreground">Total Qaza</div>
           </Card>
           <Card className="p-3 text-center">
-            <div className="text-2xl font-bold text-green-500">{todayCompleted}</div>
+            <div className="text-2xl font-bold text-[var(--success)]">{todayCompleted}</div>
             <div className="text-xs text-muted-foreground">Today</div>
           </Card>
           <Card className="p-3 text-center">
@@ -289,7 +289,7 @@ export default function QazaPage() {
                   <div 
                     className={`h-8 rounded flex items-center justify-center text-xs font-medium ${
                       count >= dailyGoal 
-                        ? 'bg-green-500 text-white' 
+                        ? 'bg-[var(--success)] text-white' 
                         : count > 0 
                           ? 'bg-primary/20 text-primary' 
                           : 'bg-muted'

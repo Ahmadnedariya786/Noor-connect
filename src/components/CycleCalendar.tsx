@@ -77,7 +77,7 @@ export function CycleCalendar({ cycleLength, onDateSelect }: CycleCalendarProps)
   const getPhaseColor = (phase: CycleDay['phase']) => {
     switch (phase) {
       case 'menstrual': return 'bg-rose-500 text-white';
-      case 'follicular': return 'bg-emerald-500 text-white';
+      case 'follicular': return 'bg-teal-500 text-white';
       case 'ovulatory': return 'bg-blue-500 text-white';
       case 'luteal': return 'bg-purple-500 text-white';
       case 'premenstrual': return 'bg-orange-500 text-white';
@@ -260,7 +260,7 @@ export function CycleCalendar({ cycleLength, onDateSelect }: CycleCalendarProps)
             <span>Menstrual</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-emerald-500" />
+            <div className="w-3 h-3 rounded bg-teal-500" />
             <span>Follicular</span>
           </div>
           <div className="flex items-center gap-2">

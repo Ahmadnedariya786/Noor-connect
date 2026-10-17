@@ -609,9 +609,9 @@ export const moods: Mood[] = [
         id: "lonely",
         label: "Lonely",
         icon: Shield,
-        color: "text-emerald-500",
-        gradient: "from-emerald-500/20 via-emerald-500/10 to-transparent",
-        glow: "shadow-emerald-500/20",
+        color: "text-[var(--accent)]",
+        gradient: "from-[var(--accent)]/20 via-[var(--accent)]/10 to-transparent",
+        glow: "shadow-[var(--accent)]/20",
         description: "Find companionship and comfort",
         content: [
             {

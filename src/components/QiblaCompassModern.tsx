@@ -99,7 +99,7 @@ const THEME = {
   text: 'var(--text-primary)',
   textLight: 'var(--text-primary)',
   textMuted: 'var(--text-secondary)',
-  success: '#10B981',
+  success: 'var(--success)',
   dark: 'var(--bg-base)',
   darker: 'var(--bg-base)',
   surface: 'var(--surface)',
@@ -989,9 +989,7 @@ const QiblaCompassModern = () => {
           {alignment?.isAligned ? (
             <div className={cn(
               "flex items-center gap-2 px-5 py-2.5 rounded-full border animate-in fade-in zoom-in duration-300 shadow-sm",
-              isDark 
-                ? "bg-[var(--surface-2)] border border-emerald-500/50 text-emerald-400"
-                : "bg-emerald-50 border-emerald-200 text-emerald-800"
+              "bg-[var(--success)]/10 border-[var(--success)]/30 text-[var(--success)]"
             )}>
               <Navigation className="h-4 w-4" />
               <span className="font-semibold text-sm tracking-wide">FACING QIBLA</span>
@@ -1134,7 +1132,7 @@ const QiblaCompassModern = () => {
 
                   {/* Destination */}
                   <div className="flex flex-col items-center z-10">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#b48608] flex items-center justify-center shadow-md shadow-[#10B981]/20 border border-[var(--border)]">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#b48608] flex items-center justify-center shadow-md shadow-[var(--accent)]/20 border border-[var(--border)]">
                       <span className="text-sm">🕋</span>
                     </div>
                     <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mt-2">Kaaba</span>
@@ -1148,7 +1146,7 @@ const QiblaCompassModern = () => {
                   </div>
 
                   <p className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#10B981] to-[#059669] animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
                     The Journey Estimate
                   </p>
 

@@ -160,7 +160,7 @@ export default function SeerahReader() {
         return (
           <div
             key={index}
-            className="my-4 p-4 bg-gradient-to-r from-[#D4AF37]/10 to-[#10B981]/10 border-l-4 border-[#D4AF37] rounded-r-lg"
+            className="my-4 p-4 bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent-2)]/10 border-l-4 border-[var(--accent)] rounded-r-lg"
           >
             <p className="font-arabic text-lg text-foreground" dir="rtl">
               {paragraph}
@@ -200,7 +200,7 @@ export default function SeerahReader() {
       <div className="min-h-screen bg-background pb-24">
         <div className="fixed top-0 left-0 right-0 h-1 bg-background z-50">
           <div
-            className="h-full bg-gradient-to-r from-[#D4AF37] to-[#10B981] transition-all duration-150"
+            className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] transition-all duration-150"
             style={{ width: `${scrollProgress}%` }}
           />
         </div>

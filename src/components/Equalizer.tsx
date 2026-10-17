@@ -16,7 +16,7 @@ interface EqualizerProps {
 export function Equalizer({
     bars = 4,
     barWidth = 'w-1',
-    barColor = 'bg-emerald-500',
+    barColor = 'bg-[var(--accent)]',
     heightClass = 'h-4',
     gapClass = 'gap-0.5',
     className = '',

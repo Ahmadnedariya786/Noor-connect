@@ -7,15 +7,15 @@ interface ReciterInfoProps {
 
 export function ReciterInfo({ reciter }: ReciterInfoProps) {
   return (
-    <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+    <Card className="bg-gradient-to-r from-[var(--surface)] to-[var(--surface-2)] border border-[var(--border)]">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-            <span className="text-green-600 font-bold text-lg">🎵</span>
+          <div className="w-12 h-12 bg-[var(--accent-soft)] rounded-full flex items-center justify-center border border-[var(--border)]">
+            <span className="text-[var(--accent)] font-bold text-lg">🎵</span>
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold text-green-900">{reciter.name}</h4>
-            <p className="text-sm text-green-700">{reciter.arabicName}</p>
+            <h4 className="font-semibold text-[var(--text-primary)]">{reciter.name}</h4>
+            <p className="text-sm text-[var(--text-secondary)]">{reciter.arabicName}</p>
           </div>
         </div>
       </CardContent>

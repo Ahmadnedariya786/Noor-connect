@@ -201,7 +201,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                   <Button
                     size="icon"
                     variant="default"
-                    className="h-9 w-9 rounded-full shadow-sm bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30"
+                    className="h-9 w-9 rounded-full shadow-sm bg-[var(--accent)] hover:opacity-90 text-[var(--on-accent)] disabled:opacity-30"
                     onClick={() => handleComplete(prayer.id)}
                     disabled={prayers[prayer.id] === 0}
                     title="Mark 1 as complete"

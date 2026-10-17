@@ -735,7 +735,7 @@ export default function FitranaCalculator() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-black" style={{ color: "var(--text-primary)" }}>{record.year}</span>
                         <div className={`px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ${
-                          record.paid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'
+                          record.paid ? 'bg-[var(--success)]/15 text-[var(--success)]' : 'bg-yellow-500/20 text-yellow-400'
                         }`}>
                           {record.paid ? 'Paid' : 'Pending'}
                         </div>

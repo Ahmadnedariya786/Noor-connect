@@ -10,7 +10,7 @@ interface HabitWidgetProps {
 }
 
 const CATEGORY_COLOR: Record<string, string> = {
-  quran: '#10b981',
+  quran: 'var(--accent)',
   prayer: '#3b82f6',
   dhikr: '#8b5cf6',
   charity: '#ec4899',

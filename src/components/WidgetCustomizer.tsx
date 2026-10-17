@@ -315,7 +315,7 @@ export function WidgetCustomizer() {
       {/* ── Active widgets ──────────────────────────── */}
       <section className="space-y-4">
         <div className="flex items-center gap-3 px-1">
-          <Check className="w-4 h-4 text-emerald-500" />
+          <Check className="w-4 h-4 text-[var(--accent)]" />
           <h3 className="font-bold text-lg text-foreground tracking-tight">Active Widgets</h3>
           <Badge variant="secondary" className="rounded-full px-2 py-0.5">{visibleWidgets.length}</Badge>
         </div>

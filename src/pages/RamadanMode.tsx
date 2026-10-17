@@ -487,14 +487,14 @@ export default function RamadanMode() {
           {/* Ramadan Status */}
           {!islamicLoading && (
             <>
-              <Card className={`p-4 ${isRamadan ? 'bg-gradient-to-br from-green-500/20 to-green-600/5 border-green-500/20' : 'bg-muted/30'}`}>
+              <Card className={`p-4 ${isRamadan ? 'bg-[var(--accent-soft)] border border-[var(--border)]' : 'bg-muted/30'}`}>
                 <div className="text-center space-y-2">
                                     
                   {isRamadan ? (
                     <>
                       <div className="flex items-center justify-center gap-2">
-                        <Moon className="w-5 h-5 text-green-500" />
-                        <p className="font-semibold text-green-600 dark:text-green-400">Ramadan Active</p>
+                        <Moon className="w-5 h-5 text-[var(--accent)]" />
+                        <p className="font-semibold text-[var(--accent-text)]">Ramadan Active</p>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Day {ramadanDay} of 30
@@ -621,14 +621,14 @@ export default function RamadanMode() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    apiSource === 'islamic' ? 'bg-green-500' : 
+                    apiSource === 'islamic' ? 'bg-[var(--success)]' : 
                     apiSource === 'aladhan' ? 'bg-blue-500' : 'bg-orange-500'
                   }`} />
                   <span className="text-sm font-medium">Data Source</span>
                 </div>
                 <div className="text-right">
                   <span className={`text-xs capitalize block ${
-                    apiSource === 'islamic' ? 'text-green-600' : 
+                    apiSource === 'islamic' ? 'text-[var(--success)]' : 
                     apiSource === 'aladhan' ? 'text-blue-600' : 'text-orange-600'
                   }`}>
                     {apiSource === 'islamic' ? 'Islamic API' : 
@@ -698,7 +698,7 @@ export default function RamadanMode() {
                   <div
                     key={i}
                     className={`aspect-square rounded flex items-center justify-center text-xs font-medium ${isFasted
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-[var(--success)] text-white'
                       : isToday
                         ? 'bg-primary/20 text-primary border-2 border-primary'
                         : 'bg-muted'
@@ -728,15 +728,15 @@ export default function RamadanMode() {
 
           {/* Daily Dua */}
           {dailyDua && (
-            <Card className="p-4 space-y-4 bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
+            <Card className="p-4 space-y-4 bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface)] border border-[var(--border)]">
               <div className="flex items-center gap-2 mb-3">
-                <BookOpen className="w-5 h-5 text-green-600" />
-                <span className="font-medium text-green-600">Daily Dua</span>
+                <BookOpen className="w-5 h-5 text-[var(--accent)]" />
+                <span className="font-medium text-[var(--accent)]">Daily Dua</span>
               </div>
               
               <div className="space-y-3">
                 <div>
-                  <h4 className="text-sm font-semibold text-green-700 mb-2">{dailyDua.title}</h4>
+                  <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">{dailyDua.title}</h4>
                   <p className="text-right text-lg arabic-text leading-loose mb-2" dir="rtl">
                     {dailyDua.arabic}
                   </p>
@@ -866,13 +866,13 @@ export default function RamadanMode() {
 
           {/* Charity & Good Deeds */}
           <div className="grid grid-cols-2 gap-3">
-            <Card className="p-4 bg-gradient-to-br from-green-500/20 to-green-600/5 border-green-500/20">
+            <Card className="p-4 bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface)] border border-[var(--border)]">
               <div className="flex items-center gap-2 mb-3">
-                <Heart className="w-5 h-5 text-green-500" />
-                <span className="font-medium text-green-600 dark:text-green-400">Charity</span>
+                <Heart className="w-5 h-5 text-[var(--accent)]" />
+                <span className="font-medium text-[var(--accent)]">Charity</span>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">${data.charityAmount}</p>
+                <p className="text-2xl font-bold text-[var(--text-primary)]">${data.charityAmount}</p>
                 <p className="text-xs text-muted-foreground mb-3">total given</p>
                 <div className="flex gap-1">
                   <Button variant="outline" size="sm" onClick={() => addCharity(-10)} disabled={data.charityAmount < 10}>
@@ -954,7 +954,7 @@ export default function RamadanMode() {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">
+                <div className="text-2xl font-bold text-[var(--accent)]">
                   {Math.round((data.fastingDays.length / 30) * 100)}%
                 </div>
                 <p className="text-xs text-muted-foreground">Fasting</p>
@@ -1015,7 +1015,7 @@ export default function RamadanMode() {
                   <div
                     key={i}
                     className={`aspect-square rounded-full flex items-center justify-center text-xs ${isFasted
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-[var(--success)] text-white'
                       : isToday
                         ? 'bg-primary text-primary-foreground'
                         : i + 1 < currentDay

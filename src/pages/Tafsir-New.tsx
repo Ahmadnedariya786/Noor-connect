@@ -468,42 +468,42 @@ const Tafsir = () => {
           {!selectedSurah && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Modern Header Hero */}
-              <div className="relative rounded-[2.5rem] bg-gradient-to-br from-[#115E59] via-[#0D9488] to-[#0891B2] p-8 shadow-2xl shadow-emerald-900/20 overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+              <div className="relative rounded-[2.5rem] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] p-8 border border-[var(--border)] shadow-xl overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-[var(--accent)]/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-950/30 backdrop-blur-md flex items-center justify-center border border-emerald-400/30">
-                      <BookOpen className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] backdrop-blur-md flex items-center justify-center border border-[var(--border)]">
+                      <BookOpen className="w-6 h-6 text-[var(--accent)]" />
                     </div>
                     <div>
-                      <h1 className="text-2xl font-bold text-white tracking-tight">{t('holyTafsir')}</h1>
-                      <p className="text-emerald-100/70 text-sm font-medium">{t('exploreDepthsQuran')}</p>
+                      <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">{t('holyTafsir')}</h1>
+                      <p className="text-[var(--text-secondary)] text-sm font-medium">{t('exploreDepthsQuran')}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       onClick={() => setActiveTab("history")}
-                      className="bg-emerald-950/25 hover:bg-emerald-950/40 backdrop-blur-sm rounded-2xl p-3 border border-emerald-400/25 transition-all text-left group"
+                      className="bg-[var(--surface)] hover:bg-[var(--surface-2)] backdrop-blur-sm rounded-2xl p-3 border border-[var(--border)] transition-all text-left group"
                     >
-                      <History className="w-4 h-4 text-emerald-200 mb-2 group-hover:scale-110 transition-transform" />
-                      <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-60">{t('history')}</p>
-                      <p className="text-white text-lg font-black">{tafsirHistory.length}</p>
+                      <History className="w-4 h-4 text-[var(--accent)] mb-2 group-hover:scale-110 transition-transform" />
+                      <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-tighter">{t('history')}</p>
+                      <p className="text-[var(--text-primary)] text-lg font-black">{tafsirHistory.length}</p>
                     </button>
                     <button
                       onClick={() => setActiveTab("bookmarks")}
-                      className="bg-emerald-950/25 hover:bg-emerald-950/40 backdrop-blur-sm rounded-2xl p-3 border border-emerald-400/25 transition-all text-left group"
+                      className="bg-[var(--surface)] hover:bg-[var(--surface-2)] backdrop-blur-sm rounded-2xl p-3 border border-[var(--border)] transition-all text-left group"
                     >
-                      <Bookmark className="w-4 h-4 text-emerald-200 mb-2 group-hover:scale-110 transition-transform" />
-                      <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-60">{t('saved')}</p>
-                      <p className="text-white text-lg font-black">{bookmarks.length}</p>
+                      <Bookmark className="w-4 h-4 text-[var(--accent)] mb-2 group-hover:scale-110 transition-transform" />
+                      <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-tighter">{t('saved')}</p>
+                      <p className="text-[var(--text-primary)] text-lg font-black">{bookmarks.length}</p>
                     </button>
-                    <div className="bg-emerald-950/25 backdrop-blur-sm rounded-2xl p-3 border border-emerald-400/25 text-left">
-                      <Edit3 className="w-4 h-4 text-emerald-200 mb-2" />
-                      <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-60">{t('notes')}</p>
-                      <p className="text-white text-lg font-black">{Object.keys(personalNotes).length}</p>
+                    <div className="bg-[var(--surface)] backdrop-blur-sm rounded-2xl p-3 border border-[var(--border)] text-left">
+                      <Edit3 className="w-4 h-4 text-[var(--accent)] mb-2" />
+                      <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-tighter">{t('notes')}</p>
+                      <p className="text-[var(--text-primary)] text-lg font-black">{Object.keys(personalNotes).length}</p>
                     </div>
                   </div>
                 </div>

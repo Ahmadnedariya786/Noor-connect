@@ -130,7 +130,7 @@ export function AdhanControl({ className }: AdhanControlProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {config.enabled ? (
-              <Bell className="w-5 h-5 text-green-500" />
+              <Bell className="w-5 h-5 text-[var(--accent)]" />
             ) : (
               <BellOff className="w-5 h-5 text-gray-400" />
             )}
@@ -176,9 +176,9 @@ export function AdhanControl({ className }: AdhanControlProps) {
         {/* Status */}
         {config.enabled && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <User className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-300">
+            <div className="flex items-center gap-2 p-2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+              <User className="w-4 h-4 text-[var(--accent)]" />
+              <span className="text-sm font-medium text-[var(--text-primary)]">
                 {selectedMuezzin?.name || 'Unknown Muezzin'}
               </span>
               <Badge variant="outline" className="text-xs">

@@ -401,7 +401,7 @@ export default function ZakatCalculator() {
                     Current Nisab ({nisabStandard}): Gold {formatMoney(nisabGold)} | Silver {formatMoney(nisabSilver)}
                   </p>
                   {metalPrices?.nisabData && (
-                    <p className="text-xs text-green-600 font-medium">
+                    <p className="text-xs text-[var(--success)] font-medium">
                       ✓ Using Islamic API data ({metalPrices.nisabData.calculation_standard} standard)
                     </p>
                   )}
@@ -499,7 +499,7 @@ export default function ZakatCalculator() {
                       className="bg-muted"
                     />
                     {metalPrices?.source === 'api' && (
-                      <div className="w-2 h-2 bg-green-500 rounded-full" title="Live price" />
+                      <div className="w-2 h-2 bg-[var(--success)] rounded-full" title="Live price" />
                     )}
                   </div>
                 </div>
@@ -513,7 +513,7 @@ export default function ZakatCalculator() {
                       className="bg-muted"
                     />
                     {metalPrices?.source === 'api' && (
-                      <div className="w-2 h-2 bg-green-500 rounded-full" title="Live price" />
+                      <div className="w-2 h-2 bg-[var(--success)] rounded-full" title="Live price" />
                     )}
                   </div>
                 </div>
@@ -530,7 +530,7 @@ export default function ZakatCalculator() {
                         </span>
                         <div className="flex items-center gap-1.5 justify-end mt-0.5">
                           {exchangeRateData.source === 'api' ? (
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                            <div className="w-1.5 h-1.5 bg-[var(--success)] rounded-full" />
                           ) : (
                             <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
                           )}
@@ -543,7 +543,7 @@ export default function ZakatCalculator() {
                   )}
                   <div className="flex justify-between">
                     <span>Price Source:</span>
-                    <span className={`capitalize ${metalPrices.source === 'fallback' ? 'text-orange-500 font-medium' : 'text-green-500'}`}>
+                    <span className={`capitalize ${metalPrices.source === 'fallback' ? 'text-orange-500 font-medium' : 'text-[var(--success)]'}`}>
                       {metalPrices.source === 'api' ? 'Live Market' : 'Market Fallback'}
                     </span>
                   </div>
@@ -561,7 +561,7 @@ export default function ZakatCalculator() {
                     <>
                       <div className="flex justify-between">
                         <span>Nisab Standard:</span>
-                        <span className="text-green-600 capitalize">{metalPrices.nisabData.calculation_standard}</span>
+                        <span className="text-[var(--accent)] capitalize">{metalPrices.nisabData.calculation_standard}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Nisab Updated:</span>

@@ -26,30 +26,30 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {/* Surah Number - Premium Octagonal Style */}
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
-              <div className="absolute inset-0 bg-primary/10 rotate-45 rounded-xl" />
-              <div className="absolute inset-1 bg-primary/5 rotate-12 rounded-lg" />
-              <span className="relative z-10 font-black text-primary text-xs tracking-tighter">{surah.number}</span>
+              <div className="absolute inset-0 bg-[var(--accent-soft)] rotate-45 rounded-xl" />
+              <div className="absolute inset-1 bg-[var(--accent-soft)]/50 rotate-12 rounded-lg" />
+              <span className="relative z-10 font-black text-[var(--accent)] text-xs tracking-tighter">{surah.number}</span>
             </div>
 
             {/* Center: Arabic + English */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-3 min-w-0">
                 <div className="space-y-0.5 min-w-0 flex-1">
-                  <h3 className="font-arabic text-xl sm:text-2xl text-primary drop-shadow-sm leading-none truncate">
+                  <h3 className="font-arabic text-xl sm:text-2xl text-[var(--text-primary)] drop-shadow-sm leading-none truncate">
                     {surah.name}
                   </h3>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--accent)]/20 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] shrink-0">
+                    <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] shrink-0">
                       {surah.revelationType}
                     </span>
-                    <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider shrink-0">
+                    <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-wider shrink-0">
                       {surah.numberOfAyahs} Ayahs
                     </span>
                   </div>
                 </div>
                 <div className="text-right shrink-0 max-w-[45%] min-w-0">
-                  <p className="font-bold text-sm sm:text-base tracking-tight group-hover:text-primary transition-colors truncate">{surah.englishName}</p>
-                  <p className="text-[11px] text-muted-foreground/60 font-bold uppercase tracking-tighter mt-0.5 truncate">{surah.englishNameTranslation}</p>
+                  <p className="font-bold text-sm sm:text-base tracking-tight group-hover:text-[var(--accent)] transition-colors truncate">{surah.englishName}</p>
+                  <p className="text-[11px] text-[var(--text-secondary)]/60 font-bold uppercase tracking-tighter mt-0.5 truncate">{surah.englishNameTranslation}</p>
                 </div>
               </div>
             </div>
@@ -121,24 +121,22 @@ export default function SurahList() {
         <div className="absolute top-0 left-0 right-0 h-48 opacity-[0.03] bg-[radial-gradient(circle_at_2px_2px,_var(--accent)_1px,_transparent_0)] bg-[length:32px_32px] pointer-events-none" />
 
         {/* Premium Hero Section */}
-        <div className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 mb-6 safe-top">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a4a] via-[#245a5a] to-[#2c6e6e]" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
-          <div className="absolute inset-0 bg-emerald-950/20 backdrop-blur-[1px]" />
+        <div className="relative overflow-hidden rounded-[32px] border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)] shadow-xl mb-6 safe-top">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/5 rounded-full blur-[30px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[var(--accent)]/5 rounded-full blur-[30px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
           <div className="relative z-10 p-5 sm:p-8 flex flex-col items-center text-center">
             <div className="flex items-center gap-3 mb-4 sm:mb-6 w-full min-w-0">
               <button
                 onClick={() => goBackOrFallback(navigate, '/dashboard')}
-                className="p-2 rounded-full bg-emerald-950/40 border border-emerald-500/20 hover:bg-emerald-900/50 transition-colors shrink-0"
+                className="p-2 rounded-full bg-[var(--surface-2)] border border-[var(--border)] hover:bg-[var(--surface)] transition-colors shrink-0"
               >
-                <ChevronLeft className="w-5 h-5 text-white" />
+                <ChevronLeft className="w-5 h-5 text-[var(--text-primary)]" />
               </button>
-              <h1 className="text-2xl sm:text-4xl font-arabic font-bold text-white flex-1 truncate">Al-Quran Al-Kareem</h1>
+              <h1 className="text-2xl sm:text-4xl font-arabic font-bold text-[var(--text-primary)] flex-1 truncate">Al-Quran Al-Kareem</h1>
             </div>
 
-            <p className="text-emerald-100/70 text-xs font-medium max-w-[240px] leading-relaxed mb-6 sm:mb-8">
+            <p className="text-[var(--text-secondary)] text-xs font-medium max-w-[240px] leading-relaxed mb-6 sm:mb-8">
               Read, listen, and contemplate the divine guidance
             </p>
 
@@ -149,9 +147,9 @@ export default function SurahList() {
                 { label: 'Ayahs', value: '6,236' },
                 { label: 'Juz', value: '30' }
               ].map((stat, idx) => (
-                <div key={idx} className="bg-emerald-950/40 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-emerald-500/20">
-                  <p className="text-emerald-300 text-base sm:text-lg font-black tracking-tighter">{stat.value}</p>
-                  <p className="text-emerald-100/70 text-[10px] sm:text-xs uppercase font-bold tracking-wider mt-1 truncate">{stat.label}</p>
+                <div key={idx} className="bg-[var(--surface)] backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-[var(--border)]">
+                  <p className="text-[var(--accent)] text-base sm:text-lg font-black tracking-tighter">{stat.value}</p>
+                  <p className="text-[var(--text-secondary)] text-[10px] sm:text-xs uppercase font-bold tracking-wider mt-1 truncate">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -233,7 +231,7 @@ export default function SurahList() {
         <div className="max-w-2xl mx-auto px-4 py-6">
           <CSSOnlyTransition hoverScale={0.98} tapScale={0.96} duration={150}>
             <div
-              className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 cursor-pointer active:scale-[0.98] transition-transform"
+              className="relative overflow-hidden rounded-[32px] bg-[var(--surface)] border border-[var(--border)] shadow-xl cursor-pointer active:scale-[0.98] transition-transform group"
               onClick={() => {
                 if ('vibrate' in navigator) navigator.vibrate(15);
                 startTransition(() => {
@@ -241,32 +239,29 @@ export default function SurahList() {
                 });
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
-              <div className="absolute inset-0 bg-emerald-950/20 backdrop-blur-[1px]" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/5 rounded-full blur-[30px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-[var(--accent)]/10 transition-colors" />
 
               <div className="relative z-10 p-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-4 h-4 text-[#e0c097]" />
-                  <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">
+                  <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--accent)]">
                     {dailyAyah?.title || 'Verse of the Day'}
                   </span>
                 </div>
 
-                <div className="bg-emerald-950/30 backdrop-blur-md rounded-2xl p-6 border border-emerald-500/25 mb-4">
-                  <p className="text-white/90 text-base font-medium leading-relaxed mb-4">
+                <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)] mb-4 shadow-sm">
+                  <p className="text-[var(--text-primary)] text-base font-medium leading-relaxed mb-4">
                     {dailyAyah?.content || 'Loading...'}
                   </p>
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-emerald-950/40 text-emerald-200 border border-emerald-500/30 text-xs font-semibold">
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] text-xs font-semibold">
                       {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
                     </Badge>
-                    <span className="text-white/50 text-xs font-medium">{dailyAyah?.reference || ''}</span>
+                    <span className="text-[var(--text-secondary)] text-xs font-medium">{dailyAyah?.reference || ''}</span>
                   </div>
                 </div>
 
-                <p className="text-white/60 text-sm italic">
+                <p className="text-[var(--text-secondary)] text-sm italic">
                   {dailyAyah?.reflection || ''}
                 </p>
               </div>

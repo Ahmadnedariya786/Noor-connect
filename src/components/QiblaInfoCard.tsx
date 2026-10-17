@@ -67,12 +67,12 @@ const QiblaInfoCard = ({
       </Card>
 
       {/* Qibla Direction Card */}
-      <Card className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border-emerald-200 dark:border-emerald-700">
+      <Card className="bg-gradient-to-r from-[var(--surface)] to-[var(--surface-2)] border-[var(--border)]">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <Compass className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-10 h-10 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+                <Compass className="w-5 h-5 text-[var(--accent)]" />
               </div>
               <div>
                 <p className="font-semibold text-foreground">Qibla Direction</p>
@@ -82,7 +82,7 @@ const QiblaInfoCard = ({
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              <p className="text-2xl font-bold text-[var(--accent)]">
                 {qiblaDirection.toFixed(1)}°
               </p>
               <p className="text-xs text-muted-foreground">from North</p>

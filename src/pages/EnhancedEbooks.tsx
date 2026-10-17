@@ -218,7 +218,7 @@ export default function EnhancedEbooksPage() {
   const getCollections = () => {
     const stored = localStorage.getItem('book-collections');
     return stored ? JSON.parse(stored) : [
-      { id: '1', name: 'Ramadan Reading', description: 'Books for Ramadan', books: [], color: 'from-emerald-500 to-emerald-700', icon: '🌙' },
+      { id: '1', name: 'Ramadan Reading', description: 'Books for Ramadan', books: [], color: 'from-amber-600 to-amber-800', icon: '🌙' },
       { id: '2', name: 'Favorites', description: 'My favorite books', books: [], color: 'from-rose-500 to-rose-700', icon: '❤️' }
     ];
   };
@@ -335,8 +335,8 @@ export default function EnhancedEbooksPage() {
           <Card className="border-border/50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <Download className="w-5 h-5 text-green-500" />
+                <div className="w-10 h-10 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center">
+                  <Download className="w-5 h-5 text-[var(--accent)]" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{downloadedBooks.length + userBooks.length}</p>

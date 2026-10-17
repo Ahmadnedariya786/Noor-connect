@@ -46,7 +46,7 @@ export const DEFAULT_HABITS: Habit[] = [
     description: 'Read from the Holy Quran',
     category: 'quran',
     icon: '📖',
-    color: 'bg-green-500',
+    color: 'bg-[var(--accent)]',
     targetCount: 1,
     unit: 'page'
   },

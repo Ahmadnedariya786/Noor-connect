@@ -101,7 +101,7 @@ export function EnhancedMoodSelector() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'surah': return 'bg-blue-500';
-      case 'ayah': return 'bg-green-500';
+      case 'ayah': return 'bg-[var(--accent)]';
       case 'dua': return 'bg-purple-500';
       case 'hadith': return 'bg-orange-500';
       case 'dhikr': return 'bg-teal-500';
@@ -225,13 +225,13 @@ export function EnhancedMoodSelector() {
 
           <div className="flex flex-wrap gap-3">
             {currentItem.type === "surah" && currentItem.surahNumber && (
-              <Button size="sm" className="rounded-full px-4 py-2 h-auto bg-green-600 hover:bg-green-700" onClick={handlePlaySurah}>
+              <Button size="sm" className="rounded-full px-4 py-2 h-auto bg-[var(--accent)] hover:brightness-105 text-[var(--on-accent)] font-bold shadow-sm" onClick={handlePlaySurah}>
                 <Play className="me-2 h-4 w-4" />
                 Play Surah
               </Button>
             )}
-            <Button size="sm" variant="outline" className="rounded-full px-4 py-2 h-auto border-border/60 hover:bg-blue-50 hover:border-blue-200" onClick={handleCopy}>
-              {copied ? <Check className="me-2 h-4 w-4 text-green-600" /> : <Copy className="me-2 h-4 w-4" />}
+            <Button size="sm" variant="outline" className="rounded-full px-4 py-2 h-auto border-border/60 hover:bg-muted" onClick={handleCopy}>
+              {copied ? <Check className="me-2 h-4 w-4 text-[var(--success)]" /> : <Copy className="me-2 h-4 w-4" />}
               {copied ? "Copied!" : "Copy"}
             </Button>
             <Button size="sm" className="rounded-full px-4 py-2 h-auto bg-primary hover:bg-primary/90 ml-auto" onClick={handleNext}>

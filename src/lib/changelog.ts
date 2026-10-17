@@ -328,7 +328,7 @@ export function getChangeTypeLabel(type: ChangeType): string {
 export function getChangeTypeColor(type: ChangeType): string {
   switch (type) {
     case 'feature':
-      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      return 'bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--border)]';
     case 'fix':
       return 'bg-red-100 text-red-800 border-red-200';
     case 'improvement':

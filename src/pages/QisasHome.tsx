@@ -146,23 +146,23 @@ export default function QisasHome() {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <Card
-                    className="p-4 cursor-pointer hover:bg-muted/50 transition-colors border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent"
+                    className="p-4 cursor-pointer hover:bg-muted/50 transition-colors border-[var(--border)] bg-gradient-to-r from-[var(--surface-2)] to-transparent"
                     onClick={() => handleProphetClick(lastReadProphet.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-emerald-500/10">
-                        <BookOpen className="w-5 h-5 text-emerald-500" />
+                      <div className="p-2 rounded-xl bg-[var(--accent-soft)]">
+                        <BookOpen className="w-5 h-5 text-[var(--accent)]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-muted-foreground mb-0.5">Continue Reading</p>
                         <p className="text-sm font-semibold truncate">{lastReadProphet.name}</p>
                         {progress > 0 && (
                           <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                            <div className="h-full bg-[var(--accent)] rounded-full transition-all" style={{ width: `${progress}%` }} />
                           </div>
                         )}
                       </div>
-                      <BookOpen className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <BookOpen className="w-4 h-4 text-[var(--accent)] shrink-0" />
                     </div>
                   </Card>
                 </motion.div>
@@ -175,41 +175,41 @@ export default function QisasHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-900/20 mb-8"
+            className="relative overflow-hidden rounded-[32px] border border-[var(--border)] shadow-xl mb-8"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#10B981]/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
-            <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface)] to-[var(--surface-2)]" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[var(--accent-2)]/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute inset-0 bg-[var(--surface)]/10 backdrop-blur-[1px]" />
 
             <div className="relative z-10 p-8">
               <div className="flex items-center gap-2 mb-4">
-                <Users className="w-4 h-4 text-[#e0c097]" />
-                <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">
+                <Users className="w-4 h-4 text-[var(--accent)]" />
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--accent)]">
                   {t("qisas")}
                 </span>
               </div>
 
-              <h2 className="text-3xl font-bold text-white mb-2">
+              <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
                 {metadata?.title}
               </h2>
-              <p className="font-arabic text-2xl text-white/90 mb-4" dir="rtl">
+              <p className="font-arabic text-2xl text-[var(--text-secondary)] mb-4" dir="rtl">
                 {metadata?.arabicTitle}
               </p>
 
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-white/60 text-sm">{metadata?.author}</span>
-                <span className="text-white/40 text-sm">•</span>
-                <span className="text-white/60 text-sm">{metadata?.arabicAuthor}</span>
+                <span className="text-[var(--text-secondary)] text-sm">{metadata?.author}</span>
+                <span className="text-muted-foreground text-sm">•</span>
+                <span className="text-[var(--text-secondary)] text-sm">{metadata?.arabicAuthor}</span>
               </div>
 
-              <p className="text-white/70 text-sm mb-6">{metadata?.description}</p>
+              <p className="text-[var(--text-secondary)] text-sm mb-6">{metadata?.description}</p>
 
               <div className="flex items-center gap-4">
-                <Badge className="bg-emerald-950/40 text-emerald-200 border border-emerald-500/30">
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
                   {metadata?.totalProphets} {t("qisasProphets")}
                 </Badge>
-                <Badge className="bg-emerald-950/40 text-emerald-200 border border-emerald-500/30">
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
                   {metadata?.language}
                 </Badge>
               </div>
@@ -235,7 +235,7 @@ export default function QisasHome() {
                 onClick={() => setEraFilter(era)}
                 className={
                   eraFilter === era
-                    ? "bg-[#10B981] text-white border-[#10B981]"
+                    ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]"
                     : ""
                 }
               >
@@ -266,7 +266,7 @@ export default function QisasHome() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-[#10B981]">
+                <div className="text-2xl font-bold text-[var(--accent)]">
                   {metadata?.totalProphets}
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -298,7 +298,7 @@ export default function QisasHome() {
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-500">
+                <div className="text-2xl font-bold text-[var(--accent)]">
                   {prophets.filter((prophet) => prophet.era === "israelite").length}
                 </div>
                 <div className="text-sm text-muted-foreground">

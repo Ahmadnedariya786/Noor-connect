@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { moods, type Mood, type MoodContent } from "@/data/mood-data";
 import { Card } from "./ui/card";
 import { Play, Copy, Check, Sparkles, BookOpen, Quote, Heart, Target, ArrowRight } from "lucide-react";
@@ -214,12 +214,12 @@ export function MoodSelector() {
 
           <div className="flex flex-wrap gap-2">
             {currentItem.type === "surah" && currentItem.surahNumber && (
-              <button onClick={handlePlaySurah} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition-colors">
+              <button onClick={handlePlaySurah} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-[var(--accent)] hover:brightness-105 text-[var(--on-accent)] text-xs font-bold transition-all shadow-sm">
                 <Play className="h-3 w-3" /> Play
               </button>
             )}
             <button onClick={handleCopy} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 border border-border/60 bg-card hover:bg-muted text-xs font-bold text-foreground transition-colors">
-              {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+              {copied ? <Check className="h-3 w-3 text-[var(--success)]" /> : <Copy className="h-3 w-3" />}
               {copied ? "Copied" : "Copy"}
             </button>
             <button onClick={handleAnotherRemedy} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors ml-auto">

@@ -67,9 +67,9 @@ export const PrayerAlarmControl = () => {
         <div className="flex flex-col gap-3">
           {isEnabled ? (
             <>
-              <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                <Bell className="h-5 w-5 text-green-500" />
-                <span className="text-sm text-green-600 dark:text-green-400">
+              <div className="flex items-center gap-2 p-3 bg-[var(--success)]/10 rounded-lg border border-[var(--success)]/20">
+                <Bell className="h-5 w-5 text-[var(--success)]" />
+                <span className="text-sm text-[var(--success)] font-medium">
                   Adhan alarm is active
                 </span>
               </div>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,7 +91,7 @@ export default function RemedyFavorites() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'surah': return 'bg-blue-500';
-      case 'ayah': return 'bg-green-500';
+      case 'ayah': return 'bg-[var(--accent)]';
       case 'dua': return 'bg-purple-500';
       case 'hadith': return 'bg-orange-500';
       case 'dhikr': return 'bg-teal-500';

@@ -1,4 +1,4 @@
-﻿
+
 import { memo } from "react";
 import { 
   BookOpen, Download, CheckCircle, 
@@ -83,7 +83,7 @@ export const BookCard = memo(({
               <div className="text-lg font-bold">{downloadProgress}%</div>
               <div className="w-20 h-1.5 bg-white/20 rounded-full mt-1 overflow-hidden">
                 <div 
-                  className="h-full bg-emerald-400 rounded-full transition-all"
+                  className="h-full bg-[var(--accent)] rounded-full transition-all"
                   style={{ width: `${downloadProgress}%` }}
                 />
               </div>
@@ -94,7 +94,7 @@ export const BookCard = memo(({
         {/* Downloaded badge */}
         {isDownloaded && (
           <div className="absolute top-2 right-2">
-            <div className="w-6 h-6 rounded-full bg-emerald-500/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+            <div className="w-6 h-6 rounded-full bg-[var(--success)]/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
               <CheckCircle className="w-3.5 h-3.5 text-white" />
             </div>
           </div>
@@ -143,7 +143,7 @@ export const BookCard = memo(({
         <div className="flex items-center justify-between mt-1">
           <span className="text-xs text-muted-foreground">{category}</span>
           {readProgress > 0 && (
-            <span className="text-xs text-emerald-500 font-medium" title={`Page ${readProgressData?.currentPage ?? '?'} of ${readProgressData?.totalPages ?? '?'}`}>
+            <span className="text-xs text-[var(--accent)] font-medium" title={`Page ${readProgressData?.currentPage ?? '?'} of ${readProgressData?.totalPages ?? '?'}`}>
               {readProgressData?.currentPage && readProgressData?.totalPages
                 ? `${readProgressData.currentPage}/${readProgressData.totalPages}`
                 : `${readProgress}%`}
