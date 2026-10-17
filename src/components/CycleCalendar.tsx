@@ -163,7 +163,7 @@ export function CycleCalendar({ cycleLength, onDateSelect }: CycleCalendarProps)
           className={`p-3 rounded-lg border cursor-pointer transition-colors ${
             isToday ? 'ring-2 ring-primary' : ''
           } ${isSelected ? 'bg-primary text-primary-foreground' : ''} ${
-            day.phase !== 'unknown' ? 'border-opacity-50' : 'border-gray-200'
+            day.phase !== 'unknown' ? 'border-opacity-50' : 'border-[var(--border)]'
           }`}
         >
           <div className="flex items-center justify-between mb-2">

@@ -217,7 +217,7 @@ const { t } = useLanguage();
  
                   {/* Source */}
                   {hadith.book && (
-                    <div className="pt-6 mt-4 border-t border-white/10 text-center">
+                    <div className="pt-6 mt-4 border-t border-[#C9860A]/25 text-center">
                       <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
                         {hadith.number ? `Reference: ${hadith.book} #${hadith.number}` : hadith.book}
                       </p>

@@ -12,10 +12,12 @@ export interface ThemeTokens {
   '--surface-2': string;
   '--border': string;
   '--accent': string;
+  '--accent-2': string;
   '--accent-text': string;
   '--on-accent': string;
   '--accent-soft': string;
   '--accent-glow': string;
+  '--card-sheen': string;
   '--text-primary': string;
   '--text-secondary': string;
   '--success': string;

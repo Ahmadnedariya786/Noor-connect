@@ -462,7 +462,7 @@ const Tafsir = () => {
 
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-950/30 backdrop-blur-md flex items-center justify-center border border-emerald-400/30">
                       <BookOpen className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -474,7 +474,7 @@ const Tafsir = () => {
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       onClick={() => setActiveTab("history")}
-                      className="bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10 transition-all text-left group"
+                      className="bg-emerald-950/25 hover:bg-emerald-950/40 backdrop-blur-sm rounded-2xl p-3 border border-emerald-400/25 transition-all text-left group"
                     >
                       <History className="w-4 h-4 text-emerald-200 mb-2 group-hover:scale-110 transition-transform" />
                       <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-60">{t('history')}</p>
@@ -482,13 +482,13 @@ const Tafsir = () => {
                     </button>
                     <button
                       onClick={() => setActiveTab("bookmarks")}
-                      className="bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10 transition-all text-left group"
+                      className="bg-emerald-950/25 hover:bg-emerald-950/40 backdrop-blur-sm rounded-2xl p-3 border border-emerald-400/25 transition-all text-left group"
                     >
                       <Bookmark className="w-4 h-4 text-emerald-200 mb-2 group-hover:scale-110 transition-transform" />
                       <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-60">{t('saved')}</p>
                       <p className="text-white text-lg font-black">{bookmarks.length}</p>
                     </button>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10 text-left">
+                    <div className="bg-emerald-950/25 backdrop-blur-sm rounded-2xl p-3 border border-emerald-400/25 text-left">
                       <Edit3 className="w-4 h-4 text-emerald-200 mb-2" />
                       <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-60">{t('notes')}</p>
                       <p className="text-white text-lg font-black">{Object.keys(personalNotes).length}</p>

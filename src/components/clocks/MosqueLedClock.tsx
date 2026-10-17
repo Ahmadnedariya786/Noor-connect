@@ -62,7 +62,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
         )}
         style={{
           border: '1px solid var(--border)',
-          background: 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
+          background: 'radial-gradient(ellipse 90% 60% at 50% 20%, var(--card-sheen) 0%, var(--surface) 50%, var(--bg-base) 100%)',
           boxShadow: 'inset 0 0 25px rgba(0, 0, 0, 0.9), 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 1px var(--accent-glow)',
         }}
       >
@@ -77,7 +77,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               className="px-1.5 py-0.5 rounded text-[9px] font-black"
               style={{
                 color: 'var(--on-accent)',
-                background: 'var(--accent)',
+                background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
                 border: '1px solid var(--border)',
               }}
             >

@@ -2,13 +2,18 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, style, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] shadow-[var(--card-premium-shadow)] transition-all duration-300 hover:shadow-[var(--card-premium-shadow-hover)]",
+      "rounded-2xl border border-[var(--border)] text-[var(--text-primary)] shadow-[var(--card-premium-shadow)] transition-all duration-300 hover:shadow-[var(--card-premium-shadow-hover)]",
       className
     )}
+    style={{
+      background: 'linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%)',
+      boxShadow: 'inset 0 1px 0 0 var(--card-sheen)',
+      ...style,
+    }}
     {...props}
   />
 ));

@@ -304,7 +304,7 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
           {/* Premium Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg border border-white/20">
+              <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg border border-emerald-400/30">
                 <BookOpen className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -488,7 +488,7 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                   size="lg"
                   onClick={togglePlayPause}
                   disabled={!currentAudio || isLoading}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl border-2 border-white/20 dark:border-white/10"
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl border-2 border-emerald-400/30"
                 >
                   {isLoading ? (
                     <Loader2 className="w-8 h-8 animate-spin text-white" />

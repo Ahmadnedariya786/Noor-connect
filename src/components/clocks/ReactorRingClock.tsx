@@ -59,7 +59,7 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
         )}
         style={{
           border: '1.5px solid var(--border)',
-          background: 'radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)',
+          background: 'radial-gradient(circle at 50% 50%, var(--card-sheen) 0%, var(--surface-2) 35%, var(--surface) 70%, var(--bg-base) 100%)',
           boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.85)',
         }}
       >
@@ -69,6 +69,10 @@ export const ReactorRingClock: React.FC<ClockProps> = ({
           style={{ overflow: 'visible' }}
         >
           <defs>
+            <linearGradient id="reactorAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--accent)" />
+              <stop offset="100%" stopColor="var(--accent-2)" />
+            </linearGradient>
             <filter id="reactorGlow" x="-30%" y="-30%" width="160%" height="160%">
               <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="var(--accent-glow)" floodOpacity="0.85" />
             </filter>

@@ -10,13 +10,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_2px_8px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_12px_hsl(var(--primary)/0.4)]",
+        default: "bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] hover:brightness-105 shadow-[0_4px_18px_var(--accent-glow)] active:scale-[0.98]",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[0_2px_8px_hsl(var(--destructive)/0.3)]",
         outline: "border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] hover:bg-[var(--surface-2)] shadow-xs",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        premium: "bg-gradient-to-r from-primary via-primary-glow to-primary text-primary-foreground hover:brightness-110 shadow-[0_4px_16px_hsl(var(--primary)/0.4)] hover:shadow-[0_6px_24px_hsl(var(--primary)/0.5)] border border-primary/20",
+        premium: "bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] hover:brightness-110 shadow-[0_4px_18px_var(--accent-glow)] border border-[var(--accent)]/30 active:scale-[0.98]",
         glass: "glass-card text-foreground hover:bg-white/80 dark:hover:bg-black/60",
       },
       size: {

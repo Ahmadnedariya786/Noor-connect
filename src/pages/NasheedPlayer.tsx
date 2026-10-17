@@ -248,7 +248,7 @@ export default function NasheedPlayer() {
 
                         <div className="relative z-10 p-5">
                             <div className="flex items-start justify-between mb-4">
-                                <div className="bg-white/10 p-2.5 rounded-2xl border border-white/10">
+                                <div className="bg-emerald-950/40 p-2.5 rounded-2xl border border-emerald-500/30">
                                     <Music2 className="w-6 h-6 text-emerald-300" />
                                 </div>
                                 <div className="flex items-center gap-1.5 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">
@@ -275,7 +275,7 @@ export default function NasheedPlayer() {
                                     className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
                                         isShuffled
                                             ? 'text-emerald-400 border-emerald-500/50 bg-emerald-500/20'
-                                            : 'text-white/60 border-white/20 bg-white/5'
+                                            : 'text-emerald-200/70 border-emerald-500/30 bg-emerald-950/30'
                                     }`}
                                 >
                                     <Shuffle className="w-4 h-4" />

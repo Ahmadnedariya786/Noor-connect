@@ -72,7 +72,7 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
         )}
         style={{
           border: '2.5px solid var(--border)',
-          background: 'radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 60%, var(--bg-base) 100%)',
+          background: 'radial-gradient(circle at 50% 50%, var(--card-sheen) 0%, var(--surface-2) 35%, var(--surface) 70%, var(--bg-base) 100%)',
           boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,0,0,0.85), 0 0 2px var(--accent-glow)',
         }}
       >
@@ -83,9 +83,8 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
         >
           <defs>
             <linearGradient id="ottomanGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--accent-text)" />
-              <stop offset="50%" stopColor="var(--accent)" />
-              <stop offset="100%" stopColor="var(--accent)" />
+              <stop offset="0%" stopColor="var(--accent)" />
+              <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
             <filter id="ottomanShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.75" />

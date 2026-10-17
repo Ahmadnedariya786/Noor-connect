@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, RotateCcw, Sparkles, History, ChevronRight, Volume2, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -245,7 +245,7 @@ const Tasbeeh = () => {
                 className="relative w-[210px] h-[210px] rounded-full bg-card shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-border/10 flex flex-col items-center justify-center group active:scale-[0.9] transition-all duration-150"
               >
                 {/* Background reflection */}
-                <div className="absolute inset-4 border border-white/5 rounded-full" />
+                <div className="absolute inset-4 border border-[var(--card-sheen)] rounded-full" />
 
                 <span className="text-xs font-bold text-[#C9860A] uppercase tracking-[0.2em] mb-1">{t('count')}</span>
                 <motion.span

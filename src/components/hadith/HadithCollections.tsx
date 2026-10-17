@@ -121,7 +121,7 @@ export function HadithCollections() {
                   </Button>
                 </div>
                 
-                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/5 mb-4">
+                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-amber-500/25 mb-4">
                   {dailyHadith.arabic && (
                     <p className="text-white/90 text-xl md:text-2xl font-arabic text-right leading-loose mb-4 break-words" dir="rtl">
                       {dailyHadith.arabic}
@@ -131,7 +131,7 @@ export function HadithCollections() {
                     {dailyHadith.content}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className="bg-white/10 text-white/80 border-white/10 text-xs shrink-0">
+                    <Badge className="bg-amber-950/40 text-amber-200 border border-amber-500/30 text-xs shrink-0 font-semibold">
                       {dailyHadith.subtitle}
                     </Badge>
                     <span className="text-white/50 text-xs font-medium">{dailyHadith.reference}</span>
@@ -144,7 +144,7 @@ export function HadithCollections() {
               </>
             ) : (
               <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
               </div>
             )}
           </div>

@@ -469,37 +469,35 @@ export function EnhancedDailyHadith() {
         )}
 
         {/* Narrator and Source Pill Container */}
-        <div className="rounded-xl bg-amber-950/20 border border-amber-500/25 p-2.5 sm:p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[var(--text-secondary)]">
+        <div className="rounded-xl bg-amber-950/20 border border-amber-500/35 p-2.5 sm:p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-amber-200/80">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-amber-400 font-semibold shrink-0">Narrator:</span>
-            <span className="text-[var(--text-primary)] font-medium truncate">{hadith.narrator}</span>
+            <span className="text-amber-100 font-medium truncate">{hadith.narrator}</span>
           </div>
-          <div className="inline-flex items-center gap-1 font-mono text-[11px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 shrink-0 self-start sm:self-auto font-medium">
+          <div className="inline-flex items-center gap-1 font-mono text-[11px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/35 shrink-0 self-start sm:self-auto font-medium">
             <span>{hadith.source}</span>
           </div>
         </div>
 
         {/* Action Buttons & Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-amber-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-amber-500/25">
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 rounded-xl border border-amber-500/30 hover:border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 h-8 text-xs font-semibold text-amber-200 transition-all duration-200"
+            <button
+              type="button"
+              className="gap-2 rounded-xl bg-amber-500/[0.14] border border-amber-500/[0.45] text-amber-300 hover:bg-amber-500/25 px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
               onClick={() => navigate('/hadith/bookmarks')}
             >
               <Bookmark className="w-3.5 h-3.5 text-amber-400" />
               Bookmarks
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 rounded-xl border border-amber-500/30 hover:border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 h-8 text-xs font-semibold text-amber-200 transition-all duration-200"
+            </button>
+            <button
+              type="button"
+              className="gap-2 rounded-xl bg-amber-500/[0.14] border border-amber-500/[0.45] text-amber-300 hover:bg-amber-500/25 px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
               onClick={() => navigate('/hadith/collections')}
             >
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
               More Hadith
-            </Button>
+            </button>
           </div>
           
           <div className="text-[11px] text-[var(--text-secondary)] font-medium flex items-center gap-1.5">

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Daily Rewards Component
  * 7-day login reward system with streak tracking
  */
@@ -173,7 +173,7 @@ export function DailyRewards({ onClose }: DailyRewardsProps) {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
+                    className="w-5 h-5 border-2 border-current border-t-transparent rounded-full mr-2"
                   />
                   Claiming...
                 </>

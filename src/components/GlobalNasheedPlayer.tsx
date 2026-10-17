@@ -384,7 +384,7 @@ export function GlobalNasheedPlayer() {
                 <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
                     {/* Plain div with inline style — guaranteed dark regardless of light/dark theme */}
                     <div
-                        className="w-full max-w-lg mx-auto backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden border border-white/10"
+                        className="w-full max-w-lg mx-auto backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden border border-emerald-500/25"
                         style={{ background: 'rgba(24,24,27,0.97)', color: '#fff' }}
                     >
                         {/* Progress bar — clickable to seek */}
@@ -420,7 +420,7 @@ export function GlobalNasheedPlayer() {
                                 onClick={() => setIsExpanded(true)}
                             >
                                 <div
-                                    className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border border-white/10`}
+                                    className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border border-emerald-500/25`}
                                     style={{ background: isError ? 'rgba(239,68,68,0.2)' : isPlaying && !showSpinner ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)' }}
                                 >
                                     {showSpinner ? (
@@ -476,7 +476,7 @@ export function GlobalNasheedPlayer() {
                 onClick={() => setIsExpanded(false)}
             >
                 <div
-                    className="w-full max-w-md shadow-2xl animate-in slide-in-from-bottom-4 duration-300 rounded-3xl overflow-hidden border border-white/10"
+                    className="w-full max-w-md shadow-2xl animate-in slide-in-from-bottom-4 duration-300 rounded-3xl overflow-hidden border border-emerald-500/25"
                     style={{ background: '#18181b', color: '#fff' }}
                     onClick={e => e.stopPropagation()}
                 >
@@ -495,7 +495,7 @@ export function GlobalNasheedPlayer() {
 
                     {/* Album Art */}
                     <div className="mx-5 mb-5">
-                        <div className="aspect-square bg-gradient-to-br from-emerald-900 via-teal-900 to-zinc-900 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner border border-white/5">
+                        <div className="aspect-square bg-gradient-to-br from-emerald-900 via-teal-900 to-zinc-900 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner border border-emerald-500/20">
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,_rgba(16,185,129,0.2)_0%,_transparent_60%)]" />
 
                             {showSpinner ? (
@@ -585,7 +585,7 @@ export function GlobalNasheedPlayer() {
                             <Button size="icon" onClick={togglePlayback}
                                 className="h-16 w-16 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform bg-emerald-500 hover:bg-emerald-400 text-white border-0">
                                 {showSpinner ? (
-                                    <div className="w-6 h-6 border-4 border-white border-t-transparent animate-spin rounded-full" />
+                                    <div className="w-6 h-6 border-4 border-emerald-100 border-t-transparent animate-spin rounded-full" />
                                 ) : isPlaying ? (
                                     <Pause className="w-8 h-8 fill-current" />
                                 ) : (

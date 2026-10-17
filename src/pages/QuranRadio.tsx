@@ -278,9 +278,9 @@ const QuranRadio = () => {
         ) : (
           <>
             {/* ── Hero banner ── */}
-            <section className="relative overflow-hidden rounded-3xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-lg">
+            <section className="relative overflow-hidden rounded-3xl bg-[#1A1A1A] border border-[#C9860A]/30 mb-6 shadow-lg">
               {/* Full-cover sheen — static gradient, no filters */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" aria-hidden="true" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#C9860A]/10 to-transparent pointer-events-none" aria-hidden="true" />
 
 <div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
                  <div className="min-w-0">
@@ -413,7 +413,7 @@ const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => v
     aria-selected={active}
     className={`shrink-0 min-h-[38px] px-4 rounded-full text-xs font-semibold transition-colors ${
       active
-        ? "bg-primary text-primary-foreground shadow-sm"
+        ? "bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-[0_4px_18px_var(--accent-glow)]"
         : "bg-muted text-muted-foreground hover:bg-primary/10"
     }`}
   >
@@ -546,8 +546,8 @@ const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect 
           Live
         </span>
       ) : isPending ? (
-        <span className="absolute top-2.5 end-2.5 w-7 h-7 rounded-full bg-black/60 border border-white/25 flex items-center justify-center" aria-hidden="true">
-          <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin motion-reduce:animate-none" />
+        <span className="absolute top-2.5 end-2.5 w-7 h-7 rounded-full bg-black/60 border border-[var(--accent)]/30 flex items-center justify-center" aria-hidden="true">
+          <span className="w-3.5 h-3.5 rounded-full border-2 border-amber-400 border-t-transparent animate-spin motion-reduce:animate-none" />
         </span>
       ) : null}
 
@@ -556,7 +556,7 @@ const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect 
         className={`absolute bottom-2.5 end-2.5 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-opacity duration-200 ${
           isPlaying
             ? "bg-primary text-primary-foreground border-primary/60 opacity-100"
-            : "bg-black/55 border-white/25 text-white opacity-85"
+            : "bg-black/55 border-[#C9860A]/35 text-white opacity-85"
         }`}
         aria-hidden="true"
       >
@@ -685,7 +685,7 @@ const StationTile = memo<GridTileProps>(({ station, isPlaying, isPending, onSele
         </span>
       ) : isPending ? (
         <span className="absolute top-2 end-2" aria-hidden="true">
-          <span className="block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin motion-reduce:animate-none" />
+          <span className="block w-4 h-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin motion-reduce:animate-none" />
         </span>
       ) : null}
 
@@ -694,7 +694,7 @@ const StationTile = memo<GridTileProps>(({ station, isPlaying, isPending, onSele
         className={`absolute bottom-2 end-2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-opacity duration-200 ${
           isPlaying
             ? "bg-primary text-primary-foreground border-primary/60"
-            : "bg-black/55 border-white/25 text-white opacity-85 group-hover:opacity-100"
+            : "bg-black/55 border-[#C9860A]/35 text-white opacity-85 group-hover:opacity-100"
         }`}
         aria-hidden="true"
       >

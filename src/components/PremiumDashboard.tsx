@@ -113,7 +113,8 @@ function NextPrayerCountdownChip({ targetTime }: { targetTime?: Date | null }) {
       style={{
         background: 'var(--accent-soft)',
         color: 'var(--accent-text)',
-        border: '1px solid var(--border)',
+        border: '1px solid var(--accent)',
+        boxShadow: '0 2px 8px var(--accent-glow)',
       }}
     >
       {countdownStr}
@@ -463,7 +464,7 @@ function PremiumDashboardInner({
           style={{
             background: 'linear-gradient(145deg, var(--surface), var(--surface-2))',
             border: '1px solid var(--border)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            boxShadow: '0 8px 30px var(--accent-glow), 0 4px 24px rgba(0,0,0,0.35)',
           }}
         >
           <div className="relative z-10 p-5">
@@ -568,7 +569,7 @@ function PremiumDashboardInner({
                               )}
                               style={{
                                 borderColor: isNext ? 'var(--accent)' : 'var(--border)',
-                                boxShadow: isNext ? '0 0 18px var(--accent-glow)' : undefined,
+                                boxShadow: isNext ? '0 4px 22px var(--accent-glow), 0 0 12px var(--accent-glow)' : undefined,
                                 background: isNext
                                   ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
                                   : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
@@ -592,9 +593,10 @@ function PremiumDashboardInner({
                                       <span
                                         className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
                                         style={{
-                                          background: 'var(--accent-soft)',
-                                          color: 'var(--accent-text)',
-                                          border: '1px solid var(--border)',
+                                          background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                                          color: 'var(--on-accent)',
+                                          border: '1px solid var(--accent)',
+                                          boxShadow: '0 2px 10px var(--accent-glow)',
                                         }}
                                       >
                                         NEXT

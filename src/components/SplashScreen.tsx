@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { Smartphone } from "lucide-react";
-import logoMark from "@/assets/logo-mark.svg";
+import noorLogo from "@/assets/noor-logo.png";
 import { getAnimationTier } from "@/lib/device-performance";
 
 interface NavigatorWithStandalone extends Navigator {
@@ -141,9 +141,9 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
     return (
         <div
-            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0E0B1E] overflow-hidden transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#150D2E] overflow-hidden transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}
             style={{
-                background: "radial-gradient(ellipse at center, #181335 0%, #0E0B1E 60%, #080612 100%)",
+                background: "radial-gradient(ellipse at center, #24164c 0%, #150D2E 60%, #0a0618 100%)",
                 willChange: "opacity",
                 transform: "translateZ(0)",
             }}
@@ -151,60 +151,35 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             {/* Stars Background */}
             <FloatingStars enabled={shouldAnimate} />
 
-            {/* Main Content: Logo + Staggered Wordmark */}
-            <div className="relative z-10 flex flex-col items-center justify-center space-y-5 px-6">
+            {/* Main Content: Logo + Tagline */}
+            <div className="relative z-10 flex flex-col items-center justify-center space-y-4 px-6">
                 
-                {/* 1. Logo Emblem */}
+                {/* 1. Logo Emblem with Integrated Wordmark */}
                 <div className="relative">
-                    {/* Subtle ambient gold glow behind logo */}
+                    {/* Subtle ambient gold/purple glow behind logo */}
                     <div
                         className={`absolute inset-0 rounded-3xl pointer-events-none ${
                             shouldAnimate ? 'animate-pulse opacity-50' : 'opacity-30'
                         }`}
                         style={{
-                            background: "radial-gradient(circle, rgba(245, 197, 66, 0.4) 0%, transparent 70%)",
-                            filter: "blur(24px)",
+                            background: "radial-gradient(circle, rgba(229, 184, 60, 0.4) 0%, transparent 70%)",
+                            filter: "blur(28px)",
                             transform: "scale(1.3)",
                         }}
                     />
 
                     <img
-                        src={logoMark}
+                        src={noorLogo}
                         alt="Noor Connect Logo"
-                        className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-[0_12px_32px_rgba(245,197,66,0.28)]"
+                        className="w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 object-contain relative z-10 drop-shadow-[0_12px_32px_rgba(229,184,60,0.35)] rounded-3xl"
                     />
                 </div>
 
-                {/* 2. Wordmark "Noor Connect" + Tagline */}
-                <div className="relative flex flex-col items-center justify-center space-y-1.5">
-                    {/* Subtle golden shimmer pulse glow */}
-                    <div
-                        className={`absolute -inset-3 rounded-full pointer-events-none ${
-                            shouldAnimate ? 'animate-pulse opacity-40' : 'opacity-20'
-                        }`}
-                        style={{
-                            background: "radial-gradient(circle, rgba(245, 197, 66, 0.25) 0%, transparent 75%)",
-                            filter: "blur(16px)",
-                        }}
-                    />
-
-                    <h1
-                        className="text-2xl sm:text-3xl md:text-4xl font-extrabold uppercase tracking-[0.24em] text-center select-none relative z-10"
-                        style={{
-                            background: "linear-gradient(135deg, #FDE68A 0%, #F5C542 35%, #E8A317 70%, #D48F0E 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            backgroundClip: "text",
-                            fontFamily: "system-ui, -apple-system, 'Montserrat', 'Poppins', 'Segoe UI', sans-serif",
-                            letterSpacing: "0.22em",
-                        }}
-                    >
-                        Noor Connect
-                    </h1>
-
+                {/* 2. Tagline (Wordmark already in logo) */}
+                <div className="relative flex flex-col items-center justify-center pt-1">
                     {showGreeting && (
                         <p
-                            className="text-xs uppercase tracking-[0.32em] font-semibold text-[#D4AF37]/80 text-center select-none relative z-10"
+                            className="text-xs uppercase tracking-[0.32em] font-semibold text-[#E5B83C]/90 text-center select-none relative z-10"
                         >
                             Islamic Companion
                         </p>

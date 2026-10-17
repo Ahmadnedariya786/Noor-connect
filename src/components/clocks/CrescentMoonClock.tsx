@@ -57,7 +57,7 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
           background: `
             linear-gradient(135deg, transparent 20%, rgba(255,255,255,0.02) 28%, var(--accent-soft) 30%, transparent 34%),
             linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.015) 43%, var(--accent-soft) 46%, transparent 50%),
-            radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)
+            radial-gradient(circle at 50% 50%, var(--card-sheen) 0%, var(--surface-2) 35%, var(--surface) 70%, var(--bg-base) 100%)
           `,
           boxShadow: '0 12px 36px rgba(0,0,0,0.65), inset 0 0 25px rgba(0,0,0,0.8), inset 0 0 3px var(--accent-glow)',
         }}
@@ -70,9 +70,8 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
           <defs>
             {/* Theme Accented Gradients */}
             <linearGradient id="crescentGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--accent-text)" />
-              <stop offset="50%" stopColor="var(--accent)" />
-              <stop offset="100%" stopColor="var(--accent)" />
+              <stop offset="0%" stopColor="var(--accent)" />
+              <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
             <linearGradient id="moonGlow" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#FFF9E6" />

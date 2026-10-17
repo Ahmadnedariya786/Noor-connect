@@ -1,4 +1,4 @@
-﻿import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AppBar } from "@/components/AppBar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -853,7 +853,7 @@ export default function ZakatCalculator() {
           {/* Results */}
           <Card className={`relative overflow-hidden border-2 shadow-xl ${isZakatDue ? 'border-[#C9860A]/40 bg-[#1A1A1A] text-white' : 'border-border/40'}`}>
             {isZakatDue && <div className="absolute inset-0 bg-gradient-to-br from-[#C9860A]/10 to-transparent pointer-events-none" />}
-            <CardHeader className="pb-3 border-b border-white/5 relative z-10">
+            <CardHeader className="pb-3 border-b border-[#C9860A]/15 relative z-10">
               <CardTitle className="text-xs uppercase tracking-[0.2em] font-bold flex items-center gap-2 text-[#C9860A]">
                 <Calculator className="w-3.5 h-3.5" />
                 Zakat Calculation

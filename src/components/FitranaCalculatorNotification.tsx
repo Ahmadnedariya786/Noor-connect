@@ -76,7 +76,7 @@ export function FitranaCalculatorNotification() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="mt-2 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                    className="mt-2 bg-emerald-950/20 hover:bg-emerald-950/30 text-white border border-emerald-200/40"
                     onClick={handleNavigate}
                   >
                     Calculate Now

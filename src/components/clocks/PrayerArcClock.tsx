@@ -125,7 +125,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
         )}
         style={{
           border: '1.5px solid var(--border)',
-          background: 'radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)',
+          background: 'radial-gradient(circle at 50% 50%, var(--card-sheen) 0%, var(--surface-2) 35%, var(--surface) 70%, var(--bg-base) 100%)',
           boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,0,0,0.85)',
         }}
       >
@@ -136,9 +136,8 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
         >
           <defs>
             <linearGradient id="prayerArcGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--accent-text)" />
-              <stop offset="50%" stopColor="var(--accent)" />
-              <stop offset="100%" stopColor="var(--accent)" />
+              <stop offset="0%" stopColor="var(--accent)" />
+              <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
             <filter id="arcGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="var(--accent-glow)" floodOpacity="0.8" />
@@ -274,7 +273,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             fontFamily="sans-serif"
             fontWeight="bold"
             letterSpacing="0.08em"
-            fill="var(--accent-text)"
+            fill="url(#prayerArcGold)"
           >
             {getPrayerDisplayName(nextPrayer.name, now).toUpperCase()}
           </text>
@@ -286,7 +285,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             fontSize="8.5"
             fontFamily="monospace"
             fontWeight="600"
-            fill="var(--text-secondary)"
+            fill="url(#prayerArcGold)"
           >
             {countdownText}
           </text>

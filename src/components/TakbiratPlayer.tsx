@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Music, Volume2, SkipForward, X, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,7 +86,7 @@ export function TakbiratPlayer() {
           </div>
 
           {/* Scrolling Arabic Text if playing */}
-          <div className="bg-white/5 rounded-2xl p-4 h-20 flex items-center justify-center overflow-hidden border border-white/5 relative">
+          <div className="bg-black/25 rounded-2xl p-4 h-20 flex items-center justify-center overflow-hidden border border-[#e0c097]/20 relative">
             <AnimatePresence mode="wait">
               {isPlaying ? (
                 <motion.div

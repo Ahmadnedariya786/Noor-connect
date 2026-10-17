@@ -39,7 +39,7 @@ const SurahCard = memo(function SurahCard({ surah, index, isDark, onClick }: Sur
                     {surah.name}
                   </h3>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] shrink-0">
+                    <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--accent)]/20 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] shrink-0">
                       {surah.revelationType}
                     </span>
                     <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider shrink-0">
@@ -192,7 +192,7 @@ export default function SurahList() {
                 onClick={() => setFilter(item.key as 'all' | 'meccan' | 'madinah')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
                   filter === item.key
-                    ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-lg shadow-[var(--accent-glow)]'
+                    ? 'bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-[0_4px_18px_var(--accent-glow)]'
                     : 'bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
                 }`}
               >

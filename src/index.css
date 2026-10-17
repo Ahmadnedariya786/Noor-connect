@@ -66,10 +66,12 @@
     --surface-2: #1D2D4A;
     --border: rgba(252,163,17,0.22);
     --accent: #FCA311;
+    --accent-2: #FFD34D;
     --accent-text: #FFB84D;
     --on-accent: #000000;
     --accent-soft: rgba(252,163,17,0.16);
     --accent-glow: rgba(252,163,17,0.35);
+    --card-sheen: rgba(255,211,77,0.05);
     --text-primary: #FFFFFF;
     --text-secondary: #B9C2D0;
     --success: #6FD69A;
@@ -215,10 +217,12 @@
     --surface-2: #1D2D4A;
     --border: rgba(252,163,17,0.22);
     --accent: #FCA311;
+    --accent-2: #FFD34D;
     --accent-text: #FFB84D;
     --on-accent: #000000;
     --accent-soft: rgba(252,163,17,0.16);
     --accent-glow: rgba(252,163,17,0.35);
+    --card-sheen: rgba(255,211,77,0.05);
     --text-primary: #FFFFFF;
     --text-secondary: #B9C2D0;
     --success: #6FD69A;
@@ -251,10 +255,12 @@
     --surface-2: #235347;
     --border: rgba(142,182,155,0.22);
     --accent: #8EB69B;
+    --accent-2: #3E7A5E;
     --accent-text: #A8CCB4;
     --on-accent: #051F20;
     --accent-soft: rgba(142,182,155,0.16);
     --accent-glow: rgba(142,182,155,0.35);
+    --card-sheen: rgba(142,182,155,0.05);
     --text-primary: #DAF1DE;
     --text-secondary: #9FC4AE;
     --success: #7FD6A4;
@@ -287,10 +293,12 @@
     --surface-2: #4A0055;
     --border: rgba(199,148,14,0.25);
     --accent: #C7940E;
+    --accent-2: #E5B83C;
     --accent-text: #DDB04A;
     --on-accent: #1F0035;
     --accent-soft: rgba(199,148,14,0.16);
     --accent-glow: rgba(199,148,14,0.35);
+    --card-sheen: rgba(229,184,60,0.05);
     --text-primary: #F7F0E3;
     --text-secondary: #C9B8D8;
     --success: #8FD6A8;
@@ -323,10 +331,12 @@
     --surface-2: #3A1418;
     --border: rgba(139,13,26,0.35);
     --accent: #C24552;
+    --accent-2: #E0707E;
     --accent-text: #D9666F;
     --on-accent: #F5F2ED;
     --accent-soft: rgba(139,13,26,0.22);
     --accent-glow: rgba(194,69,82,0.35);
+    --card-sheen: rgba(224,112,126,0.05);
     --text-primary: #F5F2ED;
     --text-secondary: #C9BEB9;
     --success: #8FD6A8;
@@ -359,10 +369,12 @@
     --surface-2: #583714;
     --border: rgba(255,235,151,0.22);
     --accent: #FFEB97;
+    --accent-2: #E3C26A;
     --accent-text: #FFEB97;
     --on-accent: #1B0F08;
     --accent-soft: rgba(255,235,151,0.14);
     --accent-glow: rgba(255,235,151,0.30);
+    --card-sheen: rgba(255,235,151,0.05);
     --text-primary: #F7EFD8;
     --text-secondary: #CBB98F;
     --success: #A8D69A;
@@ -520,8 +532,21 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Lit page background: subtle vertical gradient var(--bg-base) to var(--bg-elev)
+     PLUS soft radial accent glow at top center (var(--accent-glow) at 10-14% opacity, large radius) */
+  body,
+  .bg-background,
+  div[class*="min-h-screen"][class*="bg-[var(--bg-base)]"] {
+    background-color: var(--bg-base);
+    background-image:
+      radial-gradient(ellipse 100% 55% at 50% -8%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%),
+      linear-gradient(180deg, var(--bg-base) 0%, var(--bg-elev) 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-family: var(--lang-font-family);
     overflow-x: hidden;
     overflow-y: auto;

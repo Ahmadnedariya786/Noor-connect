@@ -82,7 +82,7 @@ export function EidChecklistNotification() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="mt-2 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                    className="mt-2 bg-amber-950/20 hover:bg-amber-950/30 text-white border border-amber-200/40"
                     onClick={handleNavigate}
                   >
                     View Checklist

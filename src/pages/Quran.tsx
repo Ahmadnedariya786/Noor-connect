@@ -170,7 +170,7 @@ const Quran = () => {
                   {dailyAyah?.content || 'Loading...'}
                 </p>
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] text-xs tracking-wider uppercase font-bold px-2 py-1">
+                  <Badge className="bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/30 text-xs tracking-wider uppercase font-bold px-2 py-1">
                     {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
                   </Badge>
                   <span className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest">{dailyAyah?.reference || ''}</span>
@@ -268,7 +268,7 @@ const Quran = () => {
                             {surah.englishNameTranslation}
                           </p>
                           <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                            <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] shrink-0">
+                            <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--accent)]/20 text-[9px] font-bold uppercase tracking-widest text-[var(--accent-text)] shrink-0">
                               {surah.revelationType}
                             </span>
                             <span className="text-[9px] text-[var(--text-secondary)] font-bold uppercase tracking-[0.2em] shrink-0">

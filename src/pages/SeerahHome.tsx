@@ -162,10 +162,10 @@ export default function SeerahHome() {
               <p className="text-white/70 text-sm mb-6">{metadata?.description}</p>
 
               <div className="flex items-center gap-4">
-                <Badge className="bg-white/10 text-white/80 border-white/10">
+                <Badge className="bg-blue-950/40 text-blue-200 border border-blue-500/30">
                   {metadata?.totalChapters} {t("seerahChapters")}
                 </Badge>
-                <Badge className="bg-white/10 text-white/80 border-white/10">
+                <Badge className="bg-blue-950/40 text-blue-200 border border-blue-500/30">
                   {metadata?.language}
                 </Badge>
               </div>

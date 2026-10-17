@@ -206,10 +206,10 @@ export default function QisasHome() {
               <p className="text-white/70 text-sm mb-6">{metadata?.description}</p>
 
               <div className="flex items-center gap-4">
-                <Badge className="bg-white/10 text-white/80 border-white/10">
+                <Badge className="bg-emerald-950/40 text-emerald-200 border border-emerald-500/30">
                   {metadata?.totalProphets} {t("qisasProphets")}
                 </Badge>
-                <Badge className="bg-white/10 text-white/80 border-white/10">
+                <Badge className="bg-emerald-950/40 text-emerald-200 border border-emerald-500/30">
                   {metadata?.language}
                 </Badge>
               </div>

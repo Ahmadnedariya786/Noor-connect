@@ -100,7 +100,7 @@ export function EidCelebrationOverlay() {
           initial={{ scale: 0.8, y: 50, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           transition={{ type: "spring", damping: 15 }}
-          className="relative w-full max-w-sm bg-gradient-to-br from-[#1a237e] via-[#0d1b40] to-black rounded-[40px] p-8 border border-white/10 shadow-2xl text-center overflow-hidden"
+          className="relative w-full max-w-sm bg-gradient-to-br from-[#1a237e] via-[#0d1b40] to-black rounded-[40px] p-8 border border-[#e0c097]/25 shadow-2xl text-center overflow-hidden"
         >
           {/* Animated background glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#e0c097]/20 rounded-full blur-[20px]"></div>
@@ -175,7 +175,7 @@ export function EidCelebrationOverlay() {
                     }).catch(console.error);
                   }
                 }}
-                className="text-white/60 hover:text-white hover:bg-white/5 h-12 rounded-2xl border border-white/5"
+                className="text-white/60 hover:text-white hover:bg-white/5 h-12 rounded-2xl border border-[#e0c097]/20"
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 Spread the Joy (Share)

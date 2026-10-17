@@ -35,7 +35,7 @@ export function GenderSelection({ onComplete }: GenderSelectionProps) {
       label: "Prefer not to say",
       description: "Privacy-focused option",
       icon: UserX,
-      color: "from-gray-500/20 to-gray-600/10 border-gray-500/20",
+      color: "from-slate-500/20 to-slate-600/10 border-slate-500/20",
     },
   ];
 

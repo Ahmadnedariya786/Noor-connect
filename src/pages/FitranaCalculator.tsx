@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -267,7 +267,7 @@ export default function FitranaCalculator() {
           <AppBar title={t("fitranaCalculator") || "Fitrana Calculator"} showBack={true} />
           
           <div className="max-w-lg mx-auto p-4 sm:p-5">
-            <div className="relative overflow-hidden rounded-[24px] p-8 text-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-900/5 min-h-[50vh] flex flex-col items-center justify-center">
+            <div className="relative overflow-hidden rounded-[24px] p-8 text-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-[var(--border)] shadow-xl shadow-slate-900/5 min-h-[50vh] flex flex-col items-center justify-center">
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
               
               <div className="flex flex-col items-center space-y-5">
@@ -317,7 +317,7 @@ export default function FitranaCalculator() {
           </div>
 
           {/* Calculator Settings */}
-          <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-900/5 group">
+          <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-[var(--border)] shadow-xl shadow-slate-900/5 group">
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-colors duration-500 pointer-events-none" />
             
             <div className="relative z-10 space-y-5">
@@ -389,7 +389,7 @@ export default function FitranaCalculator() {
           </div>
 
           {/* Family Members */}
-          <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-900/5 group">
+          <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-[var(--border)] shadow-xl shadow-slate-900/5 group">
             <div className="absolute -top-10 -left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors duration-500 pointer-events-none" />
             
             <div className="relative z-10 space-y-4">
@@ -507,7 +507,7 @@ export default function FitranaCalculator() {
               <div className="text-5xl font-black tracking-tight drop-shadow-md py-2">
                 {formatCurrency(totalFitrana)}
               </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/20 backdrop-blur-md rounded-full mt-2 border border-white/10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/20 backdrop-blur-md rounded-full mt-2 border border-emerald-300/30">
                 <Users className="w-3.5 h-3.5" />
                 <p className="text-xs font-bold uppercase tracking-wider">
                   For {fitranaData.familyMembers.length} person(s)
@@ -536,7 +536,7 @@ export default function FitranaCalculator() {
           </div>
 
           {/* Premium FAQ Section */}
-          <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-900/5">
+          <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-[var(--border)] shadow-xl shadow-slate-900/5">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700">
                 <Info className="w-5 h-5" strokeWidth={2.5} />
@@ -584,7 +584,7 @@ export default function FitranaCalculator() {
 
           {/* Payment History */}
           {fitranaData.paymentHistory.length > 0 && (
-            <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-900/5">
+            <div className="relative overflow-hidden rounded-[24px] p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-[var(--border)] shadow-xl shadow-slate-900/5">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700">
                   <History className="w-5 h-5" strokeWidth={2.5} />

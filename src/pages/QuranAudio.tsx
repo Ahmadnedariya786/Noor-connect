@@ -459,12 +459,12 @@ export default function QuranAudio() {
 
         <div className="max-w-lg mx-auto px-5 py-4 space-y-6">
           {/* ── Dark hero card ── */}
-          <section className="relative overflow-hidden rounded-[24px] bg-[#1A1A1A] border border-white/10 shadow-xl">
+          <section className="relative overflow-hidden rounded-[24px] bg-[#1A1A1A] border border-[#C9860A]/30 shadow-xl">
             <div className="absolute top-0 end-0 w-64 h-64 bg-[#C9860A]/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 start-0 w-48 h-48 bg-[#C9860A]/5 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
             <div className="relative z-10 p-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C9860A]/10 border border-[#C9860A]/30 mb-4">
                 <Sparkles className="w-3.5 h-3.5 text-[#C9860A]" />
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A]">Premium Audio</span>
               </div>
@@ -488,7 +488,7 @@ export default function QuranAudio() {
 
               {/* Now Playing / Start listening */}
               {currentSurah ? (
-                <div className="mt-5 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+                <div className="mt-5 rounded-2xl bg-black/40 border border-[#C9860A]/20 overflow-hidden">
                   <div className="flex items-center gap-3 p-3">
                     <button
                       onClick={heroPlay}

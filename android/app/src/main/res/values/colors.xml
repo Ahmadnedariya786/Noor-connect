@@ -59,6 +59,6 @@
     <!-- Pattern overlay -->
     <color name="widget_pattern_overlay">#0C10B981</color>
 
-    <!-- Splash retained (matches web splash base #0E0B1E) -->
-    <color name="splash_background">#FF0E0B1E</color>
+    <!-- Splash retained (matches web splash base #150D2E) -->
+    <color name="splash_background">#FF150D2E</color>
 </resources>
