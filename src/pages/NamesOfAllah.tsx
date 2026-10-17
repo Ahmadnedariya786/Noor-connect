@@ -141,7 +141,7 @@ export default function NamesOfAllah() {
   };
 
   const filteredNames = useMemo(() => {
-    return namesOfAllah.filter(name => {
+    return namesOfAllah.filter((name) => {
       const matchesSearch =
         name.transliteration.toLowerCase().includes(searchQuery.toLowerCase()) ||
         name.meaning.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -156,46 +156,95 @@ export default function NamesOfAllah() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-20">
+      <div className="min-h-screen pb-20" style={{ background: "var(--bg-base)" }}>
         <AppBar title={t("namesOfAllahFull") || "99 Names of Allah"} showBack />
 
         <div className="max-w-lg mx-auto px-5 pt-4 space-y-6">
           {/* Premium Hero Card */}
-          <div className="relative overflow-hidden rounded-[32px] bg-[#1A1A1A] p-8 text-white border-2 border-[#C9860A]/40 shadow-xl">
-            <div className="absolute top-0 end-0 w-48 h-48 bg-[#C9860A]/20 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            <div className="absolute bottom-0 start-0 w-32 h-32 bg-[#C9860A]/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+          <div
+            className="relative overflow-hidden rounded-[32px] p-8 shadow-xl border"
+            style={{
+              background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
+              borderColor: "var(--border)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+            }}
+          >
+            <div
+              className="absolute top-0 end-0 w-48 h-48 rounded-full blur-[24px] -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-30"
+              style={{ background: "var(--accent)" }}
+            />
+            <div
+              className="absolute bottom-0 start-0 w-32 h-32 rounded-full blur-[24px] translate-y-1/2 -translate-x-1/2 pointer-events-none opacity-20"
+              style={{ background: "var(--accent-2)" }}
+            />
 
-            <div className="relative z-10 text-center space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#C9860A]/10 rounded-full text-xs font-bold uppercase tracking-[0.2em] border border-[#C9860A]/20 text-[#C9860A]">
-                <Sparkles className="w-3 h-3" />
+            <div className="relative z-10 text-center flex flex-col items-center">
+              <div
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-[0.2em] border mb-3 shadow-xs"
+                style={{
+                  background: "var(--accent-soft)",
+                  borderColor: "var(--border)",
+                  color: "var(--accent)",
+                }}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
                 Asma'ul Husna
               </div>
-              <h1 className="text-4xl font-arabic font-bold leading-tight mt-2 text-white drop-shadow-md">أَسْمَاءُ اللهِ الْحُسْنَى</h1>
-              <p className="text-[#C9860A]/80 font-serif italic text-sm tracking-wide">
+              <h1
+                className="text-4xl font-arabic font-bold leading-tight mt-1 drop-shadow-sm"
+                style={{ color: "var(--text-primary)" }}
+              >
+                أَسْمَاءُ اللهِ الْحُسْنَى
+              </h1>
+              <p
+                className="font-serif italic text-sm tracking-wide mt-2"
+                style={{ color: "var(--text-secondary)" }}
+              >
                 Memorize and reflect upon the beautiful attributes of the Creator.
               </p>
             </div>
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="flex gap-3 sticky top-[4.5rem] z-30 bg-background/80 backdrop-blur-xl py-2 -mx-5 px-5">
+          <div
+            className="flex gap-3 sticky top-[4.5rem] z-30 py-2 -mx-5 px-5 backdrop-blur-xl"
+            style={{ background: "var(--bg-base)" }}
+          >
             <div className="relative flex-1 group">
-              <div className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-[#C9860A] transition-colors">
+              <div
+                className="absolute start-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none"
+                style={{ color: "var(--text-secondary)" }}
+              >
                 <Search className="w-4 h-4" />
               </div>
               <Input
                 placeholder="Search by name or meaning..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="ps-11 h-12 bg-card border-border/40 rounded-2xl focus-visible:ring-[#C9860A]/50 transition-all shadow-sm font-medium"
+                className="ps-11 h-12 rounded-2xl transition-all shadow-sm font-medium"
+                style={{
+                  background: "var(--bg-elev)",
+                  borderColor: "var(--border)",
+                  color: "var(--text-primary)",
+                }}
               />
             </div>
             <Button
-              variant={showFavoritesOnly ? "default" : "outline"}
-              className={`h-12 w-12 rounded-2xl transition-all shadow-sm ${showFavoritesOnly ? 'bg-[#C9860A] text-white hover:bg-[#C9860A]/90 border-0' : 'bg-card border-border/40'}`}
+              variant="outline"
+              className="h-12 w-12 rounded-2xl transition-all shadow-sm border"
+              style={{
+                background: showFavoritesOnly
+                  ? "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)"
+                  : "var(--bg-elev)",
+                borderColor: showFavoritesOnly ? "transparent" : "var(--border)",
+                color: showFavoritesOnly ? "var(--on-accent)" : "var(--text-secondary)",
+              }}
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             >
-              <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-white' : 'text-[#C9860A]'}`} />
+              <Heart
+                className={`w-5 h-5 transition-transform ${showFavoritesOnly ? "fill-current scale-110" : ""}`}
+                style={{ color: showFavoritesOnly ? "var(--on-accent)" : "var(--text-secondary)" }}
+              />
             </Button>
           </div>
 
@@ -208,10 +257,15 @@ export default function NamesOfAllah() {
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2, delay: index % 10 * 0.03 }}
+                  transition={{ duration: 0.2, delay: (index % 10) * 0.03 }}
                 >
                   <Card
-                    className="overflow-hidden border-border/40 hover:border-[#C9860A]/40 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer active:scale-[0.98] bg-card"
+                    className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer active:scale-[0.98] border"
+                    style={{
+                      background: "var(--surface)",
+                      borderColor: "var(--border)",
+                      boxShadow: "inset 0 1px 0 var(--card-sheen), 0 8px 24px rgba(0,0,0,0.2)",
+                    }}
                     onClick={() => setSelectedName(name)}
                   >
                     <CardContent className="p-0">
@@ -219,20 +273,35 @@ export default function NamesOfAllah() {
                         {/* Left Info Section */}
                         <div className="flex-1 p-5 flex flex-col justify-center">
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="text-xs font-bold text-[#C9860A] bg-[#C9860A]/10 w-6 h-6 rounded-lg flex items-center justify-center font-serif italic">
+                            <span
+                              className="text-xs font-bold w-6 h-6 rounded-lg flex items-center justify-center font-serif italic"
+                              style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+                            >
                               {name.number}
                             </span>
-                            <h3 className="font-bold text-lg font-serif group-hover:text-[#C9860A] transition-colors">
+                            <h3
+                              className="font-bold text-lg font-serif transition-colors"
+                              style={{ color: "var(--text-primary)" }}
+                            >
                               {name.transliteration}
                             </h3>
                           </div>
-                          <p className="text-muted-foreground text-xs font-medium leading-tight">
+                          <p
+                            className="text-xs font-medium leading-tight mt-1"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
                             {name.meaning}
                           </p>
                         </div>
 
                         {/* Right Arabic Section */}
-                        <div className="w-[120px] bg-muted/30 flex flex-col items-center justify-center p-4 relative overflow-hidden group-hover:bg-[#C9860A]/5 transition-colors">
+                        <div
+                          className="w-[120px] flex flex-col items-center justify-center p-4 relative overflow-hidden transition-colors"
+                          style={{
+                            background: "var(--surface-2)",
+                            borderInlineStart: "1px solid var(--border)",
+                          }}
+                        >
                           <div className="absolute top-2 end-2 z-20">
                             <Button
                               variant="ghost"
@@ -240,13 +309,23 @@ export default function NamesOfAllah() {
                               className="h-8 w-8 hover:bg-transparent"
                               onClick={(e) => toggleFavorite(e, name.number)}
                             >
-                              <Heart className={`w-4 h-4 transition-all ${favorites.includes(name.number) ? 'fill-[#C9860A] text-[#C9860A] scale-110' : 'text-muted-foreground'}`} />
+                              <Heart
+                                className={`w-4 h-4 transition-all ${
+                                  favorites.includes(name.number)
+                                    ? "fill-[var(--accent)] text-[var(--accent)] scale-110"
+                                    : "text-[var(--text-secondary)]"
+                                }`}
+                              />
                             </Button>
                           </div>
-                          <div className="absolute -start-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                            <Sparkles className="w-16 h-16 text-[#C9860A]" />
+                          <div className="absolute -start-4 -bottom-4 opacity-[0.05] group-hover:opacity-15 transition-opacity">
+                            <Sparkles className="w-16 h-16" style={{ color: "var(--accent)" }} />
                           </div>
-                          <span className="text-3xl font-arabic font-bold text-foreground group-hover:text-[#C9860A] transition-colors drop-shadow-sm" dir="rtl">
+                          <span
+                            className="text-3xl font-arabic font-bold transition-colors drop-shadow-xs"
+                            dir="rtl"
+                            style={{ color: "var(--text-primary)" }}
+                          >
                             {name.arabic}
                           </span>
                         </div>
@@ -260,13 +339,19 @@ export default function NamesOfAllah() {
 
           {filteredNames.length === 0 && (
             <div className="text-center py-20 animate-fade-in">
-              <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-muted-foreground" />
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border"
+                style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
+              >
+                <Search className="w-8 h-8" style={{ color: "var(--text-secondary)" }} />
               </div>
-              <p className="text-muted-foreground font-medium">No matches found for your search.</p>
+              <p className="font-medium" style={{ color: "var(--text-secondary)" }}>
+                No matches found for your search.
+              </p>
               <Button
                 variant="link"
-                className="mt-2 text-[#C9860A] font-bold"
+                className="mt-2 font-bold"
+                style={{ color: "var(--accent)" }}
                 onClick={() => setSearchQuery("")}
               >
                 Clear all filters
@@ -290,46 +375,106 @@ export default function NamesOfAllah() {
                 initial={{ opacity: 0, y: 100, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                className="relative w-full max-w-sm bg-card rounded-[32px] overflow-hidden shadow-2xl z-[210] border-2 border-[#C9860A]/20"
+                className="relative w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl z-[210] border"
+                style={{
+                  background: "var(--surface)",
+                  borderColor: "var(--border)",
+                  boxShadow: "inset 0 1px 0 var(--card-sheen), 0 20px 50px rgba(0,0,0,0.5)",
+                }}
               >
-                <div className="bg-[#1A1A1A] p-10 flex items-center justify-center text-center relative overflow-hidden border-b border-[#C9860A]/20">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9860A]/20 rounded-full blur-[20px] pointer-events-none" />
+                <div
+                  className="p-10 flex items-center justify-center text-center relative overflow-hidden border-b"
+                  style={{
+                    background: "var(--surface-2)",
+                    borderColor: "var(--border)",
+                  }}
+                >
+                  <div
+                    className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[20px] pointer-events-none opacity-20"
+                    style={{ background: "var(--accent)" }}
+                  />
                   <div className="absolute inset-0 opacity-10 animate-spin-slow">
-                    <Sparkles className="w-full h-full text-[#C9860A]" />
+                    <Sparkles className="w-full h-full" style={{ color: "var(--accent)" }} />
                   </div>
-                  <h2 className="text-6xl font-arabic font-bold text-[#C9860A] relative z-10 drop-shadow-sm" dir="rtl">
+                  <h2
+                    className="text-6xl font-arabic font-bold relative z-10 drop-shadow-sm"
+                    dir="rtl"
+                    style={{ color: "var(--accent)" }}
+                  >
                     {selectedName.arabic}
                   </h2>
                 </div>
 
                 <div className="p-8 space-y-6">
                   <div className="text-center">
-                    <span className="text-xs font-bold tracking-[0.2em] text-[#C9860A] uppercase mb-2 block">Attribute {selectedName.number}</span>
-                    <h3 className="text-4xl font-bold font-serif italic text-foreground">{selectedName.transliteration}</h3>
-                    <p className="text-muted-foreground font-bold text-sm tracking-wide mt-2">{selectedName.meaning}</p>
+                    <span
+                      className="text-xs font-bold tracking-[0.2em] uppercase mb-2 block"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      Attribute {selectedName.number}
+                    </span>
+                    <h3
+                      className="text-4xl font-bold font-serif italic"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {selectedName.transliteration}
+                    </h3>
+                    <p
+                      className="font-bold text-sm tracking-wide mt-2"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {selectedName.meaning}
+                    </p>
                   </div>
 
-                  <div className="bg-muted/30 border border-border/50 p-5 rounded-2xl relative shadow-sm">
-                    <Info className="absolute top-4 right-4 w-4 h-4 text-[#C9860A] opacity-50" />
-                    <p className="text-sm leading-relaxed text-foreground/80 font-medium">
+                  <div
+                    className="border p-5 rounded-2xl relative shadow-sm"
+                    style={{
+                      background: "var(--bg-elev)",
+                      borderColor: "var(--border)",
+                    }}
+                  >
+                    <Info
+                      className="absolute top-4 right-4 w-4 h-4 opacity-50"
+                      style={{ color: "var(--accent)" }}
+                    />
+                    <p
+                      className="text-sm leading-relaxed font-medium"
+                      style={{ color: "var(--text-primary)" }}
+                    >
                       {selectedName.description}
                     </p>
                   </div>
 
                   <div className="flex gap-3">
                     <Button
-                      className="flex-1 h-12 rounded-2xl gap-2 font-bold bg-card border border-border/50 hover:bg-muted text-foreground"
+                      className="flex-1 h-12 rounded-2xl gap-2 font-bold border transition-colors"
                       variant="outline"
+                      style={{
+                        background: "var(--surface-2)",
+                        borderColor: "var(--border)",
+                        color: "var(--text-primary)",
+                      }}
                       onClick={() => setSelectedName(null)}
                     >
                       Close
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-12 w-12 rounded-2xl border-border/50 hover:bg-muted bg-card"
+                      className="h-12 w-12 rounded-2xl border transition-colors"
+                      style={{
+                        background: "var(--surface-2)",
+                        borderColor: "var(--border)",
+                      }}
                       onClick={(e) => toggleFavorite(e, selectedName.number)}
                     >
-                      <Heart className={`w-5 h-5 ${favorites.includes(selectedName.number) ? 'fill-[#C9860A] text-[#C9860A]' : 'text-muted-foreground'}`} />
+                      <Heart
+                        className={`w-5 h-5 ${
+                          favorites.includes(selectedName.number)
+                            ? "fill-[var(--accent)] text-[var(--accent)]"
+                            : "text-[var(--text-secondary)]"
+                        }`}
+                      />
                     </Button>
                   </div>
                 </div>

@@ -185,7 +185,8 @@ export default function EnhancedEbooksWithUrlPage() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="h-8 w-8 p-0 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white"
+                    className="h-8 w-8 p-0 rounded-full border shadow-sm"
+                    style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-primary)" }}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleBookmark(book, e as React.MouseEvent);
@@ -202,7 +203,8 @@ export default function EnhancedEbooksWithUrlPage() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="h-8 w-8 p-0 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white"
+                    className="h-8 w-8 p-0 rounded-full border shadow-sm"
+                    style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-primary)" }}
                     onClick={async (e) => {
                       e.stopPropagation();
                       const result = await shareEbook();
@@ -222,7 +224,8 @@ export default function EnhancedEbooksWithUrlPage() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="h-8 w-8 p-0 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white"
+                    className="h-8 w-8 p-0 rounded-full border shadow-sm"
+                    style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-primary)" }}
                     onClick={async (e) => {
                       e.stopPropagation();
                       const result = await copyDirectLink();

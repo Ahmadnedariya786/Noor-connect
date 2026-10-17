@@ -81,12 +81,13 @@ const ReciterAvatar = memo<ReciterAvatarProps>(({ id, name, active, fav, onSelec
           onClick={() => onSelect(id)}
           aria-pressed={active}
           aria-label={`Select reciter ${displayName}`}
-          className="block rounded-full outline-none group-focus-visible:ring-2 focus-visible:ring-[#C9860A]"
+          className="block rounded-full outline-none group-focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           <span
-            className={`w-16 h-16 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md transition-transform duration-200 motion-safe:group-active:scale-95 ${
-              active ? "ring-2 ring-[#C9860A] ring-offset-2 ring-offset-background" : ""
+            className={`w-16 h-16 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md transition-transform duration-200 motion-safe:group-active:scale-95 border ${
+              active ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-background" : ""
             }`}
+            style={{ borderColor: active ? 'var(--accent)' : 'var(--border)' }}
             aria-hidden="true"
           >
             <span className="text-base font-bold text-white/95 tracking-wide">{initialsOf(name)}</span>
@@ -97,18 +98,19 @@ const ReciterAvatar = memo<ReciterAvatarProps>(({ id, name, active, fav, onSelec
           aria-pressed={fav}
           aria-label={fav ? `Remove ${displayName} from favourites` : `Add ${displayName} to favourites`}
           title={fav ? "Remove from favourites" : "Add to favourites"}
-          className={`absolute -top-1 -end-1 w-6 h-6 rounded-full flex items-center justify-center border shadow-sm transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[#C9860A] ${
-            fav
-              ? "bg-[#C9860A] border-[#C9860A] text-white"
-              : "bg-card border-border text-muted-foreground hover:text-[#C9860A] hover:border-[#C9860A]/40"
-          }`}
+          className="absolute -top-1 -end-1 w-6 h-6 rounded-full flex items-center justify-center border shadow-sm transition-colors duration-150 outline-none"
+          style={{
+            background: fav ? 'var(--accent)' : 'var(--surface)',
+            borderColor: fav ? 'var(--accent)' : 'var(--border)',
+            color: fav ? 'var(--on-accent)' : 'var(--text-secondary)',
+          }}
         >
           <Heart className={`w-3 h-3 ${fav ? "fill-current" : ""}`} />
         </button>
       </div>
       <span
         className={`w-full text-center text-[11px] leading-tight line-clamp-2 ${
-          active ? "text-[#C9860A] font-bold" : "text-muted-foreground font-medium"
+          active ? "text-[var(--accent-text)] font-bold" : "text-muted-foreground font-medium"
         }`}
       >
         {displayName}
@@ -148,11 +150,14 @@ const SurahRow = memo<SurahRowProps>(({ surah, index, isCurrent, isPlaying, avai
   return (
     <div
       className={`animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both w-full flex items-center gap-2 p-3 pe-3.5 rounded-2xl border shadow-sm transition-colors duration-150 ${
-        isCurrent
-          ? "border-[#C9860A]/50 bg-[#C9860A]/5"
-          : "border-border bg-card hover:bg-muted/20"
+        isCurrent ? "border-[var(--accent)]" : "hover:bg-[var(--surface-2)]"
       } ${!available ? "opacity-40" : ""}`}
-      style={{ animationDelay: `${Math.min(index * 15, 240)}ms` }}
+      style={{
+        background: isCurrent ? 'var(--accent-soft)' : 'var(--surface)',
+        borderColor: isCurrent ? 'var(--accent)' : 'var(--border)',
+        boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+        animationDelay: `${Math.min(index * 15, 240)}ms`,
+      }}
     >
       <button
         onClick={handleClick}
@@ -525,19 +530,24 @@ export default function QuranAudio() {
           {/* ── Search ── */}
           <div className="sticky top-[4.5rem] z-30 bg-background/90 backdrop-blur-xl py-2 -mx-5 px-5">
             <div className="relative group">
-              <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-[#C9860A] transition-colors pointer-events-none" />
+              <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-[var(--accent)] transition-colors pointer-events-none" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search surah by name or number…"
                 aria-label="Search surah by name or number"
-                className="ps-11 pe-10 h-11 bg-card border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-[#C9860A]/50 focus:ring-1 focus:ring-[#C9860A]/50 transition-all shadow-sm"
+                className="ps-11 pe-10 h-11 rounded-xl transition-all shadow-sm border"
+                style={{
+                  background: 'var(--surface)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
+                }}
               />
               {search && (
                 <button
                   onClick={() => setSearch("")}
                   aria-label="Clear search"
-                  className="absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                  className="absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-[var(--surface-2)] transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -548,10 +558,10 @@ export default function QuranAudio() {
           {/* ── Reciters carousel ── */}
           <section aria-label="Reciters">
             <div className="flex items-center gap-2 mb-3">
-              <Mic className="w-4 h-4 text-[#C9860A]" aria-hidden="true" />
+              <Mic className="w-4 h-4 text-[var(--accent)]" aria-hidden="true" />
               <h2 className="text-base font-bold text-foreground">Reciters</h2>
               {favReciters.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-[#C9860A]/10 text-[11px] font-semibold text-[#C9860A] flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full bg-[var(--accent-soft)] text-[11px] font-semibold text-[var(--accent-text)] flex items-center gap-1 border border-[var(--border)]">
                   <Heart className="w-3 h-3 fill-current" aria-hidden="true" />
                   {favReciters.length}
                 </span>
@@ -570,13 +580,18 @@ export default function QuranAudio() {
                 onChange={(e) => setReciterSearch(e.target.value)}
                 placeholder="Search reciters…"
                 aria-label="Search reciters"
-                className="ps-9 pe-9 h-10 rounded-xl bg-card"
+                className="ps-9 pe-9 h-10 rounded-xl border text-sm"
+                style={{
+                  background: 'var(--surface)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
+                }}
               />
               {reciterSearch && (
                 <button
                   onClick={() => setReciterSearch("")}
                   aria-label="Clear search"
-                  className="absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                  className="absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-[var(--surface-2)] transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>

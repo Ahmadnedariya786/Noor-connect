@@ -234,7 +234,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             y1={center}
             x2={center}
             y2={center - 46}
-            stroke="#CBD5E1"
+            stroke="var(--text-primary)"
             strokeWidth="2.5"
             strokeLinecap="round"
             style={{
@@ -250,7 +250,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             y1={center}
             x2={center}
             y2={center - 64}
-            stroke="#CBD5E1"
+            stroke="var(--text-primary)"
             strokeWidth="1.8"
             strokeLinecap="round"
             style={{
@@ -293,9 +293,21 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
       </div>
 
       {!isStaticPreview && (
-        <p className="text-xs font-semibold tracking-wide mt-2 text-center" style={{ color: 'var(--accent-text)' }}>
-          {hijriDate}
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-2 select-none">
+          <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+          <p
+            className="text-xs font-semibold tracking-[0.06em] text-center"
+            style={{
+              background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              filter: 'drop-shadow(0 0 10px var(--accent-glow))',
+            }}
+          >
+            {hijriDate}
+          </p>
+          <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+        </div>
       )}
     </div>
   );

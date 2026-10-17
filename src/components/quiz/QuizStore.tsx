@@ -178,9 +178,12 @@ export function QuizStore({ onClose }: QuizStoreProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen pb-20" style={{ background: "var(--bg-base)" }}>
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b safe-top">
+      <div
+        className="sticky top-0 z-50 backdrop-blur-md border-b safe-top"
+        style={{ background: "var(--bg-base)", borderColor: "var(--border)" }}
+      >
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

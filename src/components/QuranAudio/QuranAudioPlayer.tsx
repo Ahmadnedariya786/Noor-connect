@@ -338,18 +338,24 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                 <label className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Reciter</label>
               </div>
               <Select value={selectedReciter?.id?.toString() || ""} onValueChange={handleReciterChange}>
-                <SelectTrigger className="h-12 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-emerald-200 dark:border-emerald-700 rounded-xl">
+                <SelectTrigger
+                  className="h-12 backdrop-blur-sm rounded-xl border"
+                  style={{ background: "var(--bg-elev)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+                >
                   <div className="flex items-center gap-3">
-                    <Headphones className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <Headphones className="w-4 h-4" style={{ color: "var(--accent)" }} />
                     <SelectValue placeholder="Select Master Reciter" />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-sm border-emerald-200 dark:border-emerald-700">
+                <SelectContent
+                  className="backdrop-blur-sm border"
+                  style={{ background: "var(--bg-elev)", borderColor: "var(--border)" }}
+                >
                   {reciterList.map((reciter) => (
                     <SelectItem key={reciter.id} value={reciter.id.toString()}>
                       <div className="flex flex-col">
-                        <span className="font-medium">{reciter.name}</span>
-                        <span className="text-xs text-muted-foreground">Expert Recitation</span>
+                        <span className="font-medium" style={{ color: "var(--text-primary)" }}>{reciter.name}</span>
+                        <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Expert Recitation</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -360,17 +366,23 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
             {/* Surah Selection */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <label className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Surah</label>
+                <BookOpen className="w-4 h-4" style={{ color: "var(--accent)" }} />
+                <label className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-primary)" }}>Surah</label>
               </div>
               <Select value={selectedSurah.toString()} onValueChange={handleSurahChange}>
-                <SelectTrigger className="h-12 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-emerald-200 dark:border-emerald-700 rounded-xl">
+                <SelectTrigger
+                  className="h-12 backdrop-blur-sm rounded-xl border"
+                  style={{ background: "var(--bg-elev)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+                >
                   <div className="flex items-center gap-3">
-                    <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <BookOpen className="w-4 h-4" style={{ color: "var(--accent)" }} />
                     <SelectValue placeholder="Select Divine Surah" />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="max-h-80 backdrop-blur-sm border-emerald-200 dark:border-emerald-700">
+                <SelectContent
+                  className="max-h-80 backdrop-blur-sm border"
+                  style={{ background: "var(--bg-elev)", borderColor: "var(--border)" }}
+                >
                   {surahList.map((surah) => (
                     <SelectItem key={surah.sequence} value={surah.sequence.toString()}>
                       <div className="flex flex-col">
@@ -477,7 +489,12 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                   size="sm"
                   onClick={playPreviousSurah}
                   disabled={selectedSurah <= 1 || isLoading}
-                  className="w-12 h-12 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-emerald-200 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                  className="w-12 h-12 rounded-full border transition-all"
+                  style={{
+                    background: "var(--surface-2)",
+                    borderColor: "var(--border)",
+                    color: "var(--text-primary)",
+                  }}
                 >
                   <SkipBack className="w-5 h-5" />
                 </Button>
@@ -488,7 +505,13 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                   size="lg"
                   onClick={togglePlayPause}
                   disabled={!currentAudio || isLoading}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl border-2 border-emerald-400/30"
+                  className="w-20 h-20 rounded-full shadow-lg hover:shadow-xl border"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                    color: "var(--on-accent)",
+                    borderColor: "transparent",
+                    boxShadow: "0 8px 24px var(--accent-glow)",
+                  }}
                 >
                   {isLoading ? (
                     <Loader2 className="w-8 h-8 animate-spin text-white" />
@@ -506,7 +529,12 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                   size="sm"
                   onClick={playNextSurah}
                   disabled={selectedSurah >= 114 || isLoading}
-                  className="w-12 h-12 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-emerald-200 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                  className="w-12 h-12 rounded-full border transition-all"
+                  style={{
+                    background: "var(--surface-2)",
+                    borderColor: "var(--border)",
+                    color: "var(--text-primary)",
+                  }}
                 >
                   <SkipForward className="w-5 h-5" />
                 </Button>
@@ -514,9 +542,15 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
             </div>
             
             {/* Advanced Controls */}
-            <div className="flex items-center justify-between p-4 bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm rounded-xl border border-emerald-200 dark:border-emerald-700">
+            <div
+              className="flex items-center justify-between p-4 rounded-xl border"
+              style={{
+                background: "var(--surface-2)",
+                borderColor: "var(--border)",
+              }}
+            >
               <div className="flex items-center gap-3">
-                <Volume2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <Volume2 className="w-5 h-5" style={{ color: "var(--accent)" }} />
                 <Slider
                   value={[volume * 100]}
                   onValueChange={(v) => {
@@ -530,7 +564,7 @@ export function QuranAudioPlayer({ className }: QuranAudioPlayerProps) {
                   step={1}
                   className="w-32"
                 />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 w-10">
+                <span className="text-sm font-medium w-10" style={{ color: "var(--text-secondary)" }}>
                   {Math.round(volume * 100)}%
                 </span>
               </div>

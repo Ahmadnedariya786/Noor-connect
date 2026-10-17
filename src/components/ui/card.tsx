@@ -11,7 +11,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     )}
     style={{
       background: 'linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%)',
-      boxShadow: 'inset 0 1px 0 0 var(--card-sheen)',
+      boxShadow: 'inset 0 1px 0 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
       ...style,
     }}
     {...props}

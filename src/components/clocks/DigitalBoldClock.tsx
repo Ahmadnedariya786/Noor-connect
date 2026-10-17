@@ -32,15 +32,24 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
       >
         {timeStr}
       </h1>
-      <p
-        className={cn(
-          "font-semibold tracking-wide px-3 text-center leading-tight",
-          isStaticPreview ? "text-[10px] truncate max-w-[150px]" : "text-sm md:text-base"
-        )}
-        style={{ color: 'var(--accent-text)' }}
-      >
-        {hijriDate}
-      </p>
+      <div className="flex items-center justify-center gap-2 mt-1 select-none">
+        <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+        <p
+          className={cn(
+            "font-semibold tracking-[0.06em] px-1 text-center leading-tight",
+            isStaticPreview ? "text-[10px] truncate max-w-[140px]" : "text-xs sm:text-sm md:text-base"
+          )}
+          style={{
+            background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0 0 10px var(--accent-glow))',
+          }}
+        >
+          {hijriDate}
+        </p>
+        <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+      </div>
     </div>
   );
 };

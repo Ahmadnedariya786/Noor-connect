@@ -379,7 +379,7 @@ const Tafsir = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F8FAF9] pb-20 dark:bg-slate-950">
+      <div className="min-h-screen pb-20" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
         <AppBar
           title={currentSurahTafsir ? currentSurahTafsir.englishName : selectedSurah ? selectedSurah.englishName : t("tafsir") || "Tafsir"}
           showBack={true}
@@ -388,26 +388,32 @@ const Tafsir = () => {
             <div className="flex items-center gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-emerald-700">
+                  <Button variant="ghost" size="icon" style={{ color: 'var(--accent)' }}>
                     <SettingsIcon className="w-5 h-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuContent align="end" className="w-72" style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
                   <div className="p-2">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 px-2 uppercase tracking-wider">{t('appearance')}</p>
+                    <p className="text-xs font-semibold mb-2 px-2 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{t('appearance')}</p>
                     <div className="flex items-center justify-between px-2 py-1">
-                      <span className="text-sm">{t('fontSize')}</span>
+                      <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{t('fontSize')}</span>
                       <div className="flex gap-1">
                         {(['sm', 'base', 'lg', 'xl'] as const).map((size) => (
                           <button
                             key={size}
                             onClick={() => setFontSize(size)}
                             className={cn(
-                              "w-8 h-8 rounded flex items-center justify-center text-xs font-bold border transition-all",
-                              fontSize === size
-                                ? "bg-emerald-600 text-white border-emerald-600"
-                                : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300"
+                              "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border transition-all"
                             )}
+                            style={fontSize === size ? {
+                              background: 'var(--accent)',
+                              color: 'var(--on-accent)',
+                              borderColor: 'var(--accent)',
+                            } : {
+                              background: 'var(--surface-2)',
+                              color: 'var(--text-secondary)',
+                              borderColor: 'var(--border)',
+                            }}
                           >
                             {size.toUpperCase()}
                           </button>
@@ -415,9 +421,9 @@ const Tafsir = () => {
                       </div>
                     </div>
                   </div>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator style={{ background: 'var(--border)' }} />
                   <div className="p-2">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 px-2 uppercase tracking-wider">{t('tafsirEdition')}</p>
+                    <p className="text-xs font-semibold mb-2 px-2 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{t('tafsirEdition')}</p>
                     {TAFSIR_EDITIONS.map((edition) => (
                       <DropdownMenuItem
                         key={edition.id}
@@ -425,13 +431,19 @@ const Tafsir = () => {
                           setSelectedEdition(edition.id);
                           if (selectedSurah) handleSurahSelect(selectedSurah);
                         }}
-                        className={cn("flex items-center justify-between", selectedEdition === edition.id && "bg-emerald-50 text-emerald-700")}
+                        className="flex items-center justify-between rounded-xl py-2 px-2.5 cursor-pointer"
+                        style={selectedEdition === edition.id ? {
+                          background: 'var(--accent-soft)',
+                          color: 'var(--accent-text)',
+                        } : {
+                          color: 'var(--text-primary)',
+                        }}
                       >
-                        <div className="flex flex-col">
+                        <div className="flex flex-col text-left">
                           <div className="flex items-center gap-2">
-                            <span>{edition.name}</span>
+                            <span className="font-semibold text-sm">{edition.name}</span>
                             {OFFLINE_EDITIONS.includes(edition.id) && (
-                              <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                              <Badge className="text-[10px] px-1.5 py-0.5 flex items-center gap-1" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}>
                                 <Download className="w-2.5 h-2.5" />
                                 Offline
                               </Badge>
@@ -441,7 +453,7 @@ const Tafsir = () => {
                             <span className="text-xs opacity-70">by {edition.author}</span>
                           )}
                         </div>
-                        <span className="text-xs opacity-50">{edition.language}</span>
+                        <span className="text-xs opacity-60 ml-2">{edition.language}</span>
                       </DropdownMenuItem>
                     ))}
                   </div>
@@ -500,27 +512,39 @@ const Tafsir = () => {
               {/* Search Section */}
               <div className="sticky top-20 z-20 transition-all duration-300 space-y-4">
                 <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)] group-focus-within:text-[var(--accent)] transition-colors" />
                   <Input
                     placeholder={t('searchBySurahNameOrNumber')}
-                    className="h-14 pl-12 rounded-2xl border-none bg-white shadow-xl shadow-slate-200/50 focus-visible:ring-emerald-500/30 text-base"
+                    className="h-14 pl-12 rounded-2xl border text-base"
+                    style={{
+                      background: 'var(--bg-elev)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-primary)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    }}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-[var(--surface-2)] transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4 text-slate-400 rotate-180" />
+                      <ArrowLeft className="w-4 h-4 text-[var(--text-secondary)] rotate-180" />
                     </button>
                   )}
                 </div>
 
                 {/* Tafsir Author Selector - Visible UI */}
-                <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col gap-3">
-                  <div className="flex items-center gap-2 text-slate-800 font-bold">
-                    <Languages className="w-5 h-5 text-emerald-600" />
+                <div
+                  className="rounded-3xl p-5 shadow-sm border flex flex-col gap-3"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 font-bold" style={{ color: 'var(--text-primary)' }}>
+                    <Languages className="w-5 h-5" style={{ color: 'var(--accent)' }} />
                     <span>{t('selectTafsirAuthor')}</span>
                   </div>
                   <Select
@@ -530,28 +554,40 @@ const Tafsir = () => {
                       if (selectedSurah) handleSurahSelect(selectedSurah);
                     }}
                   >
-                    <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-100 text-slate-700">
+                    <SelectTrigger className="h-12 rounded-xl">
                       <SelectValue placeholder={t('chooseTafsir')} />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl max-h-80 overflow-y-auto">
                       {TAFSIR_EDITIONS.map((edition) => (
-                        <SelectItem key={edition.id} value={edition.id} className="rounded-lg py-3">
-                          <div className="flex flex-col text-left">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-800">{edition.name}</span>
+                        <SelectItem key={edition.id} value={edition.id} className="rounded-xl py-3 px-3">
+                          <div className="flex flex-col gap-1 w-full text-left">
+                            <span className="font-bold text-sm text-[var(--text-primary)] leading-tight">{edition.name}</span>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <span
+                                className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                                style={{
+                                  background: 'var(--accent-soft)',
+                                  color: 'var(--accent-text)',
+                                  border: '1px solid var(--border)',
+                                }}
+                              >
+                                {edition.language}
+                              </span>
                               {OFFLINE_EDITIONS.includes(edition.id) && (
-                                <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                                <span
+                                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                                  style={{
+                                    background: 'var(--accent-soft)',
+                                    color: 'var(--accent-text)',
+                                    border: '1px solid var(--border)',
+                                  }}
+                                >
                                   <Download className="w-3 h-3" />
                                   Offline
-                                </Badge>
+                                </span>
                               )}
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-100">
-                                {edition.language}
-                              </Badge>
                               {edition.author && (
-                                <span className="text-xs text-slate-400">by {edition.author}</span>
+                                <span className="text-xs text-[var(--text-secondary)]">by {edition.author}</span>
                               )}
                             </div>
                           </div>
@@ -564,10 +600,25 @@ const Tafsir = () => {
 
               {/* Navigation Tabs */}
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-                <TabsList className="w-full bg-slate-200/50 p-1 rounded-xl h-12">
-                  <TabsTrigger value="surahs" className="flex-1 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">{t('allSurahs')}</TabsTrigger>
-                  <TabsTrigger value="bookmarks" className="flex-1 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">{t('bookmarks')}</TabsTrigger>
-                  <TabsTrigger value="history" className="flex-1 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">{t('history')}</TabsTrigger>
+                <TabsList className="w-full p-1 rounded-xl h-12" style={{ background: 'var(--bg-elev)', border: '1px solid var(--border)' }}>
+                  <TabsTrigger
+                    value="surahs"
+                    className="flex-1 rounded-lg text-xs font-bold transition-all data-[state=active]:bg-[var(--accent-soft)] data-[state=active]:text-[var(--accent-text)] text-[var(--text-secondary)]"
+                  >
+                    {t('allSurahs')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="bookmarks"
+                    className="flex-1 rounded-lg text-xs font-bold transition-all data-[state=active]:bg-[var(--accent-soft)] data-[state=active]:text-[var(--accent-text)] text-[var(--text-secondary)]"
+                  >
+                    {t('bookmarks')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="history"
+                    className="flex-1 rounded-lg text-xs font-bold transition-all data-[state=active]:bg-[var(--accent-soft)] data-[state=active]:text-[var(--accent-text)] text-[var(--text-secondary)]"
+                  >
+                    {t('history')}
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="surahs" className="mt-6 space-y-3">
@@ -575,34 +626,49 @@ const Tafsir = () => {
                     {loading ? (
                       // Skeleton loader
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="h-20 bg-slate-100 animate-pulse rounded-3xl border border-slate-50" />
+                        <div key={i} className="h-20 animate-pulse rounded-2xl border" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }} />
                       ))
                     ) : filteredSurahs.length === 0 ? (
-                      <div className="text-center py-12 px-6 bg-white rounded-3xl border border-dashed border-slate-200">
-                        <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
-                          <Search className="w-8 h-8 text-slate-300" />
+                      <div className="text-center py-12 px-6 rounded-3xl border border-dashed" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)' }}>
+                          <Search className="w-8 h-8" style={{ color: 'var(--text-secondary)' }} />
                         </div>
-                        <h3 className="font-bold text-slate-800">{t('noSurahsFound')}</h3>
-                        <p className="text-sm text-slate-500 mt-2">{t('tryAdjustingSearch')}</p>
+                        <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t('noSurahsFound')}</h3>
+                        <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>{t('tryAdjustingSearch')}</p>
                       </div>
                     ) : (
                       filteredSurahs.map((surah) => (
                         <button
                           key={surah.number}
                           onClick={() => handleSurahSelect(surah)}
-                          className="group relative flex items-center p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 hover:border-emerald-100 transition-all text-left"
+                          className="group relative flex items-center p-5 rounded-2xl border transition-all text-left active:scale-[0.99]"
+                          style={{
+                            background: 'var(--surface)',
+                            borderColor: 'var(--border)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                          }}
                         >
-                          <div className="relative w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-700 font-black group-hover:bg-emerald-600 group-hover:text-white transition-all overflow-hidden">
+                          <div
+                            className="relative w-12 h-12 rounded-xl flex items-center justify-center font-black transition-all overflow-hidden shrink-0"
+                            style={{
+                              background: 'var(--accent-soft)',
+                              color: 'var(--accent-text)',
+                              border: '1px solid var(--border)',
+                            }}
+                          >
                             <span className="relative z-10">{surah.number}</span>
-                            <div className="absolute inset-0 opacity-10 font-arabic text-3xl flex items-center justify-center translate-x-2 translate-y-2 select-none">{surah.name}</div>
                           </div>
-                          <div className="ml-5 flex-1">
-                            <h3 className="font-bold text-lg text-slate-800 group-hover:text-emerald-700 transition-colors">{surah.englishName}</h3>
-                            <p className="text-sm text-slate-400 font-medium">{surah.englishNameTranslation} • {surah.numberOfAyahs} {t('ayahs')}</p>
+                          <div className="ml-4 flex-1 min-w-0">
+                            <h3 className="font-bold text-base truncate transition-colors" style={{ color: 'var(--text-primary)' }}>
+                              {surah.englishName}
+                            </h3>
+                            <p className="text-xs font-medium truncate mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                              {surah.englishNameTranslation} • {surah.numberOfAyahs} {t('ayahs')}
+                            </p>
                           </div>
-                          <div className="text-right flex flex-col items-end">
-                            <span className="font-arabic text-xl text-emerald-600 font-bold">{surah.name}</span>
-                            <span className="text-xs text-slate-400 uppercase font-bold tracking-tighter">{surah.revelationType}</span>
+                          <div className="text-right flex flex-col items-end shrink-0 ml-3">
+                            <span className="font-arabic text-lg font-bold" style={{ color: 'var(--accent-text)' }}>{surah.name}</span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--text-secondary)' }}>{surah.revelationType}</span>
                           </div>
                         </button>
                       ))
@@ -612,12 +678,12 @@ const Tafsir = () => {
 
                 <TabsContent value="bookmarks" className="mt-6">
                   {bookmarks.length === 0 ? (
-                    <div className="text-center py-12 px-6 bg-white rounded-3xl border border-dashed border-slate-200">
-                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
-                        <Bookmark className="w-8 h-8 text-slate-300" />
+                    <div className="text-center py-12 px-6 rounded-3xl border border-dashed" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)' }}>
+                        <Bookmark className="w-8 h-8" style={{ color: 'var(--text-secondary)' }} />
                       </div>
-                      <h3 className="font-bold text-slate-800">No bookmarks yet</h3>
-                      <p className="text-sm text-slate-500 max-w-[200px] mx-auto mt-2">Save surahs you read frequently for quick access.</p>
+                      <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>No bookmarks yet</h3>
+                      <p className="text-sm max-w-[200px] mx-auto mt-2" style={{ color: 'var(--text-secondary)' }}>Save surahs you read frequently for quick access.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-3">
@@ -628,16 +694,28 @@ const Tafsir = () => {
                             const s = surahs.find(x => x.number === bookmark.surah);
                             if (s) handleSurahSelect(s);
                           }}
-                          className="flex items-center p-4 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left"
+                          className="flex items-center p-4 rounded-2xl border transition-all text-left"
+                          style={{
+                            background: 'var(--surface)',
+                            borderColor: 'var(--border)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                          }}
                         >
-                          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0"
+                            style={{
+                              background: 'var(--accent-soft)',
+                              color: 'var(--accent-text)',
+                              border: '1px solid var(--border)',
+                            }}
+                          >
                             {bookmark.surah}
                           </div>
                           <div className="ml-4 flex-1">
-                            <h3 className="font-bold text-slate-800">{bookmark.surahName}</h3>
-                            <p className="text-xs text-slate-400">{t('bookmarked')}</p>
+                            <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{bookmark.surahName}</h3>
+                            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('bookmarked')}</p>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-slate-300" />
+                          <ChevronRight className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
                         </button>
                       ))}
                     </div>
@@ -646,12 +724,12 @@ const Tafsir = () => {
 
                 <TabsContent value="history" className="mt-6">
                   {tafsirHistory.length === 0 ? (
-                    <div className="text-center py-12 px-6 bg-white rounded-3xl border border-dashed border-slate-200">
-                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
-                        <History className="w-8 h-8 text-slate-300" />
+                    <div className="text-center py-12 px-6 rounded-3xl border border-dashed" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)' }}>
+                        <History className="w-8 h-8" style={{ color: 'var(--text-secondary)' }} />
                       </div>
-                      <h3 className="font-bold text-slate-800">{t('noHistoryAvailable')}</h3>
-                      <p className="text-sm text-slate-500 max-w-[200px] mx-auto mt-2">{t('startExploringTafsir')}</p>
+                      <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t('noHistoryAvailable')}</h3>
+                      <p className="text-sm max-w-[200px] mx-auto mt-2" style={{ color: 'var(--text-secondary)' }}>{t('startExploringTafsir')}</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-3">
@@ -662,16 +740,28 @@ const Tafsir = () => {
                             const s = surahs.find(x => x.number === item.surah);
                             if (s) handleSurahSelect(s);
                           }}
-                          className="flex items-center p-4 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left"
+                          className="flex items-center p-4 rounded-2xl border transition-all text-left"
+                          style={{
+                            background: 'var(--surface)',
+                            borderColor: 'var(--border)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                          }}
                         >
-                          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0"
+                            style={{
+                              background: 'var(--surface-2)',
+                              color: 'var(--text-secondary)',
+                              border: '1px solid var(--border)',
+                            }}
+                          >
                             {item.surah}
                           </div>
                           <div className="ml-4 flex-1">
-                            <h3 className="font-bold text-slate-800">{item.surahName}</h3>
-                            <p className="text-xs text-slate-400">{new Date(item.timestamp).toLocaleDateString()}</p>
+                            <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{item.surahName}</h3>
+                            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{new Date(item.timestamp).toLocaleDateString()}</p>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-slate-300" />
+                          <ChevronRight className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
                         </button>
                       ))}
                     </div>
@@ -685,34 +775,50 @@ const Tafsir = () => {
           {selectedSurah && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-6">
               {/* Reader Header Card */}
-              <div className="relative rounded-[2.5rem] bg-white p-6 shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div
+                className="relative rounded-3xl p-6 overflow-hidden border"
+                style={{
+                  background: 'var(--surface)',
+                  borderColor: 'var(--border)',
+                  boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
+                }}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white font-black shadow-lg shadow-emerald-600/20">
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center font-black shadow-lg"
+                      style={{
+                        background: 'var(--accent)',
+                        color: 'var(--on-accent)',
+                        boxShadow: '0 4px 16px var(--accent-glow)',
+                      }}
+                    >
                       {selectedSurah.number}
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-slate-800">{selectedSurah.englishName}</h2>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{selectedSurah.revelationType} • {selectedSurah.numberOfAyahs} {t('ayahs')}</p>
+                      <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{selectedSurah.englishName}</h2>
+                      <p className="text-xs font-bold uppercase tracking-widest mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                        {selectedSurah.revelationType} • {selectedSurah.numberOfAyahs} {t('ayahs')}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn("rounded-xl transition-all", isBookmarked && "bg-emerald-50 text-emerald-600")}
+                      className="rounded-xl transition-all"
+                      style={isBookmarked ? { background: 'var(--accent-soft)', color: 'var(--accent-text)' } : { color: 'var(--text-secondary)' }}
                       onClick={handleBookmark}
                     >
                       <Bookmark className={cn("w-5 h-5", isBookmarked && "fill-current")} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="rounded-xl">
+                    <Button variant="ghost" size="icon" className="rounded-xl" style={{ color: 'var(--text-secondary)' }}>
                       <Share2 className="w-5 h-5" />
                     </Button>
                   </div>
                 </div>
 
-                <Separator className="bg-slate-100 mb-4" />
+                <Separator className="mb-4" style={{ background: 'var(--border)' }} />
 
                 <div className="flex flex-wrap items-center gap-3">
                   <DropdownMenu>
@@ -720,14 +826,27 @@ const Tafsir = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="rounded-xl h-10 px-4 bg-slate-50 border-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
+                        className="rounded-xl h-10 px-4"
+                        style={{
+                          background: 'var(--bg-elev)',
+                          borderColor: 'var(--border)',
+                          color: 'var(--text-primary)',
+                        }}
                       >
-                        <Languages className="w-4 h-4 mr-2" />
+                        <Languages className="w-4 h-4 mr-2" style={{ color: 'var(--accent)' }} />
                         {TAFSIR_EDITIONS.find(e => e.id === selectedEdition)?.name.split(' ')[0] || "Author"}
                         <ChevronDown className="w-3 h-3 ml-2 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-72 rounded-2xl max-h-80 overflow-y-auto">
+                    <DropdownMenuContent
+                      align="start"
+                      className="w-72 rounded-2xl max-h-80 overflow-y-auto"
+                      style={{
+                        background: 'var(--bg-elev)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
                       {TAFSIR_EDITIONS.map((edition) => (
                         <DropdownMenuItem
                           key={edition.id}
@@ -735,13 +854,19 @@ const Tafsir = () => {
                             setSelectedEdition(edition.id);
                             if (selectedSurah) handleSurahSelect(selectedSurah);
                           }}
-                          className={cn("flex items-center justify-between py-3 rounded-xl", selectedEdition === edition.id && "bg-emerald-50 text-emerald-700")}
+                          className="flex items-center justify-between py-2.5 px-3 rounded-xl cursor-pointer"
+                          style={selectedEdition === edition.id ? {
+                            background: 'var(--accent-soft)',
+                            color: 'var(--accent-text)',
+                          } : {
+                            color: 'var(--text-primary)',
+                          }}
                         >
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold">{edition.name}</span>
+                              <span className="font-bold text-sm">{edition.name}</span>
                               {OFFLINE_EDITIONS.includes(edition.id) && (
-                                <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                                <Badge className="text-[10px] flex items-center gap-1" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}>
                                   <Download className="w-2.5 h-2.5" />
                                   Offline
                                 </Badge>
@@ -751,17 +876,22 @@ const Tafsir = () => {
                               <span className="text-xs opacity-70">by {edition.author}</span>
                             )}
                           </div>
-                          <Badge variant="outline" className="text-xs">{edition.language}</Badge>
+                          <Badge variant="outline" className="text-xs" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{edition.language}</Badge>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
 
                   <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
                     <Input
                       placeholder="Search in Tafsir..."
-                      className="h-10 pl-9 rounded-xl border-none bg-slate-50 focus-visible:ring-emerald-500/20 text-sm"
+                      className="h-10 pl-9 rounded-xl border text-sm"
+                      style={{
+                        background: 'var(--bg-elev)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text-primary)',
+                      }}
                       value={searchTafsirQuery}
                       onChange={(e) => setSearchTafsirQuery(e.target.value)}
                     />
@@ -774,16 +904,16 @@ const Tafsir = () => {
               {tafsirLoading && (
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full border-4 border-emerald-100 border-t-emerald-600 animate-spin" />
-                    <BookOpen className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-emerald-600" />
+                    <div className="w-16 h-16 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--accent-soft)', borderTopColor: 'var(--accent)' }} />
+                    <BookOpen className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6" style={{ color: 'var(--accent)' }} />
                   </div>
                   <div className="text-center">
-                    <p className="text-lg font-bold text-slate-800">{t('fetchingWisdom')}</p>
-                    <p className="text-sm text-slate-500">{t('loadingComprehensiveTafsir')} {selectedSurah.englishName}...</p>
+                    <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{t('fetchingWisdom')}</p>
+                    <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{t('loadingComprehensiveTafsir')} {selectedSurah.englishName}...</p>
                     {loadingFromOffline && (
                       <div className="flex items-center justify-center gap-2 mt-2">
-                        <Download className="w-4 h-4 text-emerald-600" />
-                        <p className="text-xs text-emerald-600 font-medium">Loading from offline storage</p>
+                        <Download className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                        <p className="text-xs font-medium" style={{ color: 'var(--accent-text)' }}>Loading from offline storage</p>
                       </div>
                     )}
                   </div>
@@ -791,47 +921,73 @@ const Tafsir = () => {
               )}
 
               {/* Tafsir Content List */}
-              <div className="space-y-12">
+              <div className="space-y-8">
                 {filteredTafsirs.map((tafsir: TafsirData, idx) => {
                   const noteKey = `${tafsir.surah}:${tafsir.ayah}`;
                   const hasNote = personalNotes[noteKey];
                   const cardContent = (
                     <>
                       <div className="group relative">
-                        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+                        <div
+                          className="rounded-3xl border overflow-hidden"
+                          style={{
+                            background: 'var(--surface)',
+                            borderColor: 'var(--border)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
+                          }}
+                        >
                           {/* Ayah Reference Badge */}
-                          <div className="flex items-center justify-between px-8 py-5 bg-slate-50/50 border-b border-slate-100">
+                          <div
+                            className="flex items-center justify-between px-6 py-4 border-b"
+                            style={{
+                              background: 'var(--surface-2)',
+                              borderColor: 'var(--border)',
+                            }}
+                          >
                             <div className="flex items-center gap-3">
-                              <span className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-emerald-600/20">
+                              <span
+                                className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md"
+                                style={{
+                                  background: 'var(--accent)',
+                                  color: 'var(--on-accent)',
+                                }}
+                              >
                                 {tafsir.ayah}
                               </span>
-                              <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{t('ayah')} {tafsir.ayah}</span>
+                              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>{t('ayah')} {tafsir.ayah}</span>
                             </div>
                             <div className="flex gap-2">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className={cn("h-10 w-10 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors", hasNote && "bg-blue-50 text-blue-600")}
+                                className="h-9 w-9 rounded-xl transition-colors"
+                                style={hasNote ? { background: 'var(--accent-soft)', color: 'var(--accent-text)' } : { color: 'var(--text-secondary)' }}
                                 onClick={() => handleNote(tafsir.surah, tafsir.ayah)}
                               >
-                                <Edit3 className="w-5 h-5" />
+                                <Edit3 className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>
 
-                          <div className="p-8 md:p-10 space-y-10">
+                          <div className="p-6 md:p-8 space-y-8">
                             {/* Arabic Text Section */}
                             {tafsir.arabic && (
                               <div className="space-y-4">
                                 <p
-                                  className="text-3xl md:text-4xl text-right leading-[2.5] text-slate-800 font-arabic"
+                                  className="text-2xl md:text-3xl text-right leading-[2.4] font-arabic"
                                   dir="rtl"
-                                  style={{ fontFamily: 'inherit' }}
+                                  style={{ color: 'var(--text-primary)', fontFamily: 'inherit' }}
                                 >
                                   {tafsir.arabic}
                                 </p>
                                 {tafsir.translation && (
-                                  <p className="text-lg md:text-xl text-slate-500 italic leading-relaxed border-l-2 border-emerald-100 pl-4 py-1">
+                                  <p
+                                    className="text-base md:text-lg italic leading-relaxed pl-4 py-1.5"
+                                    style={{
+                                      color: 'var(--text-secondary)',
+                                      borderLeft: '3px solid var(--accent)',
+                                    }}
+                                  >
                                     {tafsir.translation}
                                   </p>
                                 )}
@@ -839,32 +995,50 @@ const Tafsir = () => {
                             )}
 
                             {/* Tafsir Commentary Section */}
-                            <div className="space-y-6">
+                            <div className="space-y-5">
                               <div className="flex items-center gap-2">
-                                <Separator className="flex-1" />
-                                <Badge variant="outline" className="text-xs uppercase tracking-widest text-slate-400 font-bold border-slate-200">
+                                <Separator className="flex-1" style={{ background: 'var(--border)' }} />
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] uppercase tracking-widest font-bold px-3 py-1"
+                                  style={{
+                                    color: 'var(--accent-text)',
+                                    borderColor: 'var(--border)',
+                                    background: 'var(--surface-2)',
+                                  }}
+                                >
                                   {t('tafsirCommentary')}
                                 </Badge>
-                                <Separator className="flex-1" />
+                                <Separator className="flex-1" style={{ background: 'var(--border)' }} />
                               </div>
 
-                              <div className={cn(
-                                "text-slate-700 text-justify",
-                                fontSizeClasses[fontSize as keyof typeof fontSizeClasses] || fontSizeClasses.base
-                              )}>
+                              <div
+                                className={cn(
+                                  "text-justify leading-relaxed",
+                                  fontSizeClasses[fontSize as keyof typeof fontSizeClasses] || fontSizeClasses.base
+                                )}
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 {tafsir.text}
                               </div>
                             </div>
 
                             {/* Personal Note Section */}
                             {hasNote && (
-                              <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100 space-y-3 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-                                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider relative z-10">
-                                  <MessageSquare className="w-3 h-3" />
+                              <div
+                                className="p-5 rounded-2xl border space-y-2 relative overflow-hidden"
+                                style={{
+                                  background: 'var(--surface-2)',
+                                  borderColor: 'var(--border)',
+                                }}
+                              >
+                                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--accent-text)' }}>
+                                  <MessageSquare className="w-3.5 h-3.5" />
                                   {t('myReflection')}
                                 </div>
-                                <p className="text-base text-blue-800/80 italic leading-relaxed relative z-10">{personalNotes[noteKey]}</p>
+                                <p className="text-sm italic leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                                  {personalNotes[noteKey]}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -891,12 +1065,12 @@ const Tafsir = () => {
 
               {/* No Results in Search */}
               {!tafsirLoading && filteredTafsirs.length === 0 && (
-                <div className="text-center py-12 px-6 bg-white rounded-3xl border border-dashed border-slate-200">
-                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-slate-300" />
+                <div className="text-center py-12 px-6 rounded-3xl border border-dashed" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)' }}>
+                    <Search className="w-8 h-8" style={{ color: 'var(--text-secondary)' }} />
                   </div>
-                  <h3 className="font-bold text-slate-800">No matches found</h3>
-                  <p className="text-sm text-slate-500 mt-2">Try searching for different keywords within this Tafsir.</p>
+                  <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>No matches found</h3>
+                  <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>Try searching for different keywords within this Tafsir.</p>
                 </div>
               )}
             </div>
@@ -904,26 +1078,31 @@ const Tafsir = () => {
 
           {/* Note Editor Dialog */}
           <Dialog open={showNotesEditor} onOpenChange={setShowNotesEditor}>
-            <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
+            <DialogContent className="sm:max-w-[425px] rounded-[2rem]" style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <DialogTitle className="flex items-center gap-2 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
                     <Edit3 className="w-5 h-5" />
                   </div>
                   Ayah Note
                 </DialogTitle>
               </DialogHeader>
               <div className="py-4 space-y-4">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Source Verse</p>
-                  <p className="text-sm text-slate-600 font-medium line-clamp-2">
+                <div className="p-3 rounded-xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-secondary)' }}>Source Verse</p>
+                  <p className="text-sm font-medium line-clamp-2" style={{ color: 'var(--text-primary)' }}>
                     {currentAyahForNote && currentSurahTafsir?.tafsirs.find(t => t.ayah === currentAyahForNote.ayah)?.text}
                   </p>
                 </div>
                 <Textarea
                   placeholder="Reflect on this ayah..."
                   defaultValue={currentAyahForNote ? personalNotes[`${currentAyahForNote.surah}:${currentAyahForNote.ayah}`] || "" : ""}
-                  className="min-h-[150px] rounded-2xl border-slate-200 focus-visible:ring-emerald-500/20 text-base"
+                  className="min-h-[150px] rounded-2xl text-base"
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
                   autoFocus
                 />
               </div>
@@ -932,6 +1111,7 @@ const Tafsir = () => {
                   variant="ghost"
                   onClick={() => setShowNotesEditor(false)}
                   className="rounded-xl"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   Cancel
                 </Button>
@@ -940,7 +1120,11 @@ const Tafsir = () => {
                     const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
                     if (textarea) saveNote(textarea.value);
                   }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-600/20"
+                  className="rounded-xl font-bold"
+                  style={{
+                    background: 'var(--accent)',
+                    color: 'var(--on-accent)',
+                  }}
                 >
                   Save Reflection
                 </Button>

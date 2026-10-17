@@ -222,38 +222,69 @@ const QuranRadio = () => {
   const heroPlaying = globalRadio.isPlaying;
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen pb-32" style={{ background: "var(--bg-base)" }}>
       {/* ── Functional sticky bar ── */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b safe-top">
+      <div
+        className="sticky top-0 z-40 backdrop-blur-md border-b safe-top"
+        style={{
+          background: "var(--bg-base)",
+          borderColor: "var(--border)",
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/")}
+              className="rounded-full"
+              style={{ color: "var(--text-primary)" }}
+            >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold text-foreground leading-tight">Quran Radio</h1>
-              <p className="text-xs text-muted-foreground">Live Quran recitation 24/7</p>
+              <h1 className="text-lg font-bold leading-tight" style={{ color: "var(--text-primary)" }}>
+                Quran Radio
+              </h1>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                Live Quran recitation 24/7
+              </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => navigate("/radio-stats")} className="rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/radio-stats")}
+              className="rounded-full"
+              style={{ color: "var(--text-primary)" }}
+            >
               <BarChart3 className="w-5 h-5" />
             </Button>
           </div>
 
           {/* Search */}
           <div className="mt-2.5 relative">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Search
+              className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+              style={{ color: "var(--text-secondary)" }}
+            />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search reciter or station…"
-              className="ps-9 pe-9 h-10 rounded-full"
+              className="ps-9 pe-9 h-10 rounded-full border transition-all"
+              style={{
+                background: "var(--bg-elev)",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
               aria-label="Search reciter or station"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
-                className="absolute end-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                className="absolute end-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                style={{ color: "var(--text-secondary)" }}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -278,31 +309,60 @@ const QuranRadio = () => {
         ) : (
           <>
             {/* ── Hero banner ── */}
-            <section className="relative overflow-hidden rounded-3xl bg-[#1A1A1A] border border-[#C9860A]/30 mb-6 shadow-lg">
-              {/* Full-cover sheen — static gradient, no filters */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#C9860A]/10 to-transparent pointer-events-none" aria-hidden="true" />
+            <section
+              className="relative overflow-hidden rounded-3xl border mb-6 shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
+                borderColor: "var(--border)",
+                boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+              }}
+            >
+              <div
+                className="absolute inset-0 bg-gradient-to-tr from-transparent via-[var(--accent)]/10 to-transparent pointer-events-none"
+                aria-hidden="true"
+              />
 
-<div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
-                 <div className="min-w-0">
-                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-[#C9860A]/20 border border-[#C9860A]/40">
-                     <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
-                     Live
-                   </span>
-                   <h2 className="mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight text-white">
-                     Listen to the Quran,
-                     <br />
-                     <span className="text-[#C9860A]">anytime.</span>
-                   </h2>
-                   <p className="mt-1.5 text-sm text-white/70" lang="ar" dir="rtl">
-                     بث مباشر على مدار الساعة
-                   </p>
-                 </div>
+              <div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
+                <div className="min-w-0">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
+                    style={{
+                      background: "var(--accent-soft)",
+                      borderColor: "var(--border)",
+                      color: "var(--accent)",
+                    }}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
+                    Live
+                  </span>
+                  <h2
+                    className="mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    Listen to the Quran,
+                    <br />
+                    <span style={{ color: "var(--accent)" }}>anytime.</span>
+                  </h2>
+                  <p
+                    className="mt-1.5 text-sm"
+                    style={{ color: "var(--text-secondary)" }}
+                    lang="ar"
+                    dir="rtl"
+                  >
+                    بث مباشر على مدار الساعة
+                  </p>
+                </div>
 
-                 <button
-                   onClick={handleHeroPlay}
-                   aria-label={heroPlaying ? "Pause radio" : "Start listening"}
-                   className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#C9860A] text-white flex items-center justify-center shadow-xl transition-transform duration-150 active:scale-95 motion-safe:hover:scale-105"
-                 >
+                <button
+                  onClick={handleHeroPlay}
+                  aria-label={heroPlaying ? "Pause radio" : "Start listening"}
+                  className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-xl transition-transform duration-150 active:scale-95 motion-safe:hover:scale-105"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                    color: "var(--on-accent)",
+                    boxShadow: "0 8px 24px var(--accent-glow)",
+                  }}
+                >
                   {heroPlaying
                     ? <Pause className="w-7 h-7 md:w-8 md:h-8 fill-current" aria-hidden="true" />
                     : <Play className="w-7 h-7 md:w-8 md:h-8 fill-current ms-1" aria-hidden="true" />}
@@ -411,11 +471,21 @@ const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => v
     onClick={onClick}
     role="tab"
     aria-selected={active}
-    className={`shrink-0 min-h-[38px] px-4 rounded-full text-xs font-semibold transition-colors ${
+    style={
       active
-        ? "bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-[0_4px_18px_var(--accent-glow)]"
-        : "bg-muted text-muted-foreground hover:bg-primary/10"
-    }`}
+        ? {
+            background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+            color: "var(--on-accent)",
+            boxShadow: "0 4px 18px var(--accent-glow)",
+            borderColor: "transparent",
+          }
+        : {
+            background: "var(--surface-2)",
+            color: "var(--text-secondary)",
+            borderColor: "var(--border)",
+          }
+    }
+    className="shrink-0 min-h-[38px] px-4 rounded-full text-xs font-semibold transition-all border"
   >
     {children}
   </button>

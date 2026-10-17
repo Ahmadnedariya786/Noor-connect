@@ -214,7 +214,7 @@ export function GameModeSelector({ onSelectMode, onBack }: GameModeSelectorProps
                 <CardContent className="relative p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 shadow-sm ${mode.color}`}>
+                      <div className={`p-3 rounded-xl shadow-sm border border-[var(--border)] bg-[var(--surface-2)] ${mode.color}`}>
                         {mode.icon}
                       </div>
                       <div>

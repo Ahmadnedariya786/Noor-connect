@@ -1007,7 +1007,11 @@ const SettingsSubPage: React.FC = () => {
                   </div>
                   <Button
                     size="sm"
-                    className="rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-8 px-3 shrink-0"
+                    className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
+                    style={{
+                      background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                      color: "var(--on-accent)",
+                    }}
                     onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
                   >
                     <Download className="w-3.5 h-3.5 mr-1" />
@@ -1155,30 +1159,30 @@ const SettingsSubPage: React.FC = () => {
               </p>
 
               <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
                   <div>
-                    <span className="text-xs font-bold">Bitcoin (BTC)</span>
-                    <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{BITCOIN_ADDRESS}</p>
+                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>Bitcoin (BTC)</span>
+                    <p className="text-[10px] truncate max-w-[200px]" style={{ color: "var(--text-secondary)" }}>{BITCOIN_ADDRESS}</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => handleCopy('Bitcoin', BITCOIN_ADDRESS)}>
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
                   <div>
-                    <span className="text-xs font-bold">Solana (SOL)</span>
-                    <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{SOLANA_ADDRESS}</p>
+                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>Solana (SOL)</span>
+                    <p className="text-[10px] truncate max-w-[200px]" style={{ color: "var(--text-secondary)" }}>{SOLANA_ADDRESS}</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => handleCopy('Solana', SOLANA_ADDRESS)}>
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
                   <div>
-                    <span className="text-xs font-bold">BNB Chain</span>
-                    <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{BNB_ADDRESS}</p>
+                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>BNB Chain</span>
+                    <p className="text-[10px] truncate max-w-[200px]" style={{ color: "var(--text-secondary)" }}>{BNB_ADDRESS}</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => handleCopy('BNB', BNB_ADDRESS)}>
                     <Copy className="w-4 h-4" />

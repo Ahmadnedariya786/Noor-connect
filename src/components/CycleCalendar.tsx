@@ -81,7 +81,7 @@ export function CycleCalendar({ cycleLength, onDateSelect }: CycleCalendarProps)
       case 'ovulatory': return 'bg-blue-500 text-white';
       case 'luteal': return 'bg-purple-500 text-white';
       case 'premenstrual': return 'bg-orange-500 text-white';
-      default: return 'bg-gray-200 text-gray-600';
+      default: return 'bg-[var(--surface-2)] text-[var(--text-secondary)]';
     }
   };
 
@@ -136,7 +136,7 @@ export function CycleCalendar({ cycleLength, onDateSelect }: CycleCalendarProps)
           className={`h-10 rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
             isToday ? 'ring-2 ring-primary' : ''
           } ${isSelected ? 'bg-primary text-primary-foreground' : ''} ${
-            cycleDay ? getPhaseColor(cycleDay.phase) : 'bg-gray-100'
+            cycleDay ? getPhaseColor(cycleDay.phase) : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]'
           }`}
         >
           <span className="text-sm font-medium">{day}</span>

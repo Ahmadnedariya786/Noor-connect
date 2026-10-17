@@ -248,9 +248,21 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
       </div>
 
       {!isStaticPreview && (
-        <p className="text-xs font-semibold tracking-wide mt-2 text-center" style={{ color: 'var(--text-primary)' }}>
-          {hijriDate}
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-2 select-none">
+          <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+          <p
+            className="text-xs font-semibold tracking-[0.06em] text-center"
+            style={{
+              background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              filter: 'drop-shadow(0 0 10px var(--accent-glow))',
+            }}
+          >
+            {hijriDate}
+          </p>
+          <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+        </div>
       )}
     </div>
   );

@@ -4,7 +4,7 @@ import { DigitalBoldClock } from './DigitalBoldClock';
 import { MosqueLedClock } from './MosqueLedClock';
 import { CrescentMoonClock } from './CrescentMoonClock';
 import { OttomanHeritageClock } from './OttomanHeritageClock';
-import { ReactorRingClock } from './ReactorRingClock';
+import { HourWedgeClock } from './HourWedgeClock';
 import { PrayerArcClock } from './PrayerArcClock';
 
 export interface ClockRendererProps extends ClockProps {
@@ -19,8 +19,8 @@ export const ClockRenderer: React.FC<ClockRendererProps> = ({ styleId, ...clockP
       return <CrescentMoonClock {...clockProps} />;
     case 'ottoman-heritage':
       return <OttomanHeritageClock {...clockProps} />;
-    case 'reactor-ring':
-      return <ReactorRingClock {...clockProps} />;
+    case 'hour-wedge':
+      return <HourWedgeClock {...clockProps} />;
     case 'prayer-arc':
       return <PrayerArcClock {...clockProps} />;
     case 'digital-bold':

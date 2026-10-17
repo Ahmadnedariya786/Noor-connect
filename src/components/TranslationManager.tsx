@@ -145,7 +145,10 @@ export function TranslationManager() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">English (Reference)</label>
-                <div className="p-3 bg-gray-50 rounded border">
+                <div
+                  className="p-3 rounded border font-medium text-sm"
+                  style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+                >
                   {translations.en[selectedKey]}
                 </div>
               </div>

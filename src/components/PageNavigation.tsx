@@ -68,7 +68,8 @@ export function PageNavigation({
           size="icon"
           onClick={handleFirstPage}
           disabled={currentPage <= 1 || isLoading}
-          className="h-10 w-10 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+          className="h-10 w-10 rounded-xl border"
+          style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
           title="First Page"
         >
           <ChevronsLeft className="w-5 h-5" />
@@ -78,7 +79,8 @@ export function PageNavigation({
           size="icon"
           onClick={handlePrevPage}
           disabled={!prev || isLoading}
-          className="h-10 w-10 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+          className="h-10 w-10 rounded-xl border"
+          style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
           title="Previous Page"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -91,15 +93,19 @@ export function PageNavigation({
           <DialogTrigger asChild>
             <Button
               variant="outline"
-              className="gap-2 h-10 px-4 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 font-bold"
+              className="gap-2 h-10 px-4 rounded-xl border font-bold"
+              style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
             >
-              <Hash className="w-4 h-4" />
+              <Hash className="w-4 h-4" style={{ color: "var(--accent)" }} />
               Page {currentPage}
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-xs border-4 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30">
+          <DialogContent
+            className="sm:max-w-xs border shadow-2xl"
+            style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+          >
             <DialogHeader>
-              <DialogTitle className="text-amber-900 dark:text-amber-100">Jump to Page</DialogTitle>
+              <DialogTitle style={{ color: "var(--text-primary)" }}>Jump to Page</DialogTitle>
             </DialogHeader>
             <div className="flex gap-2">
               <Input
@@ -109,17 +115,22 @@ export function PageNavigation({
                 value={jumpPage}
                 onChange={(e) => setJumpPage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleJumpToPage()}
-                className="h-10 border-2 border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40"
+                className="h-10 border"
+                style={{ background: "var(--bg-elev)", borderColor: "var(--border)", color: "var(--text-primary)" }}
                 placeholder="Page #"
               />
               <Button
                 onClick={handleJumpToPage}
-                className="h-10 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white border-2 border-amber-300"
+                className="h-10 font-bold shadow-sm"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                  color: "var(--on-accent)",
+                }}
               >
                 Go
               </Button>
             </div>
-            <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+            <p className="text-xs text-center" style={{ color: "var(--text-secondary)" }}>
               Enter a page number (1-{totalPages})
             </p>
           </DialogContent>
@@ -129,15 +140,19 @@ export function PageNavigation({
           <DialogTrigger asChild>
             <Button
               variant="outline"
-              className="gap-2 h-10 px-4 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 font-bold"
+              className="gap-2 h-10 px-4 rounded-xl border font-bold"
+              style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
             >
-              <BookOpen className="w-4 h-4" />
+              <BookOpen className="w-4 h-4" style={{ color: "var(--accent)" }} />
               Surah
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md border-4 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 max-h-[80vh] overflow-hidden">
+          <DialogContent
+            className="sm:max-w-md border shadow-2xl max-h-[80vh] overflow-hidden"
+            style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+          >
             <DialogHeader>
-              <DialogTitle className="text-amber-900 dark:text-amber-100">Jump to Surah</DialogTitle>
+              <DialogTitle style={{ color: "var(--text-primary)" }}>Jump to Surah</DialogTitle>
             </DialogHeader>
             <ScrollArea className="h-[60vh]">
               <div className="space-y-2 p-1">
@@ -147,20 +162,24 @@ export function PageNavigation({
                     <button
                       key={surah.number}
                       onClick={() => handleJumpToSurah(surah.number)}
-                      className="w-full flex items-center justify-between p-3 rounded-xl border-2 border-amber-200 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all"
+                      className="w-full flex items-center justify-between p-3 rounded-xl border transition-all"
+                      style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-200 to-orange-200 dark:from-amber-800 dark:to-orange-800 flex items-center justify-center font-bold text-sm text-amber-900 dark:text-amber-100 border border-amber-300 dark:border-amber-600">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border"
+                          style={{ background: "var(--accent-soft)", borderColor: "var(--border)", color: "var(--accent)" }}
+                        >
                           {surah.number}
                         </div>
                         <div className="text-left">
-                          <p className="font-bold text-amber-900 dark:text-amber-100">{surah.englishName}</p>
-                          <p className="text-xs text-amber-600 dark:text-amber-400">{surah.englishNameTranslation}</p>
+                          <p className="font-bold" style={{ color: "var(--text-primary)" }}>{surah.englishName}</p>
+                          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{surah.englishNameTranslation}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-arabic text-lg text-amber-900 dark:text-amber-100">{surah.name}</p>
-                        <p className="text-xs text-amber-500 dark:text-amber-500">Page {pageNum}</p>
+                        <p className="font-arabic text-lg" style={{ color: "var(--text-primary)" }}>{surah.name}</p>
+                        <p className="text-xs" style={{ color: "var(--accent)" }}>Page {pageNum}</p>
                       </div>
                     </button>
                   );
@@ -178,7 +197,8 @@ export function PageNavigation({
           size="icon"
           onClick={handleNextPage}
           disabled={!next || isLoading}
-          className="h-10 w-10 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+          className="h-10 w-10 rounded-xl border"
+          style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
           title="Next Page"
         >
           <ChevronRight className="w-5 h-5" />
@@ -188,7 +208,8 @@ export function PageNavigation({
           size="icon"
           onClick={handleLastPage}
           disabled={currentPage >= totalPages || isLoading}
-          className="h-10 w-10 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+          className="h-10 w-10 rounded-xl border"
+          style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
           title="Last Page"
         >
           <ChevronsRight className="w-5 h-5" />

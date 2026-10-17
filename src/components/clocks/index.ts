@@ -3,7 +3,7 @@ export * from './DigitalBoldClock';
 export * from './MosqueLedClock';
 export * from './CrescentMoonClock';
 export * from './OttomanHeritageClock';
-export * from './ReactorRingClock';
+export * from './HourWedgeClock';
 export * from './PrayerArcClock';
 export * from './ClockRenderer';
 export * from './ClockHero';

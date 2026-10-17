@@ -156,15 +156,16 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 
                 {/* 1. Logo Emblem with Integrated Wordmark */}
                 <div className="relative">
-                    {/* Subtle ambient gold/purple glow behind logo */}
+                    {/* Soft pulsing glow behind the logo (accent-glow, 2s ease-in-out infinite), disabled when Fluid Animations is OFF */}
                     <div
                         className={`absolute inset-0 rounded-3xl pointer-events-none ${
-                            shouldAnimate ? 'animate-pulse opacity-50' : 'opacity-30'
+                            shouldAnimate ? 'animate-pulse' : 'opacity-25'
                         }`}
                         style={{
-                            background: "radial-gradient(circle, rgba(229, 184, 60, 0.4) 0%, transparent 70%)",
+                            background: "radial-gradient(circle, var(--accent-glow, rgba(229, 184, 60, 0.4)) 0%, transparent 70%)",
                             filter: "blur(28px)",
-                            transform: "scale(1.3)",
+                            transform: "scale(1.35)",
+                            animationDuration: shouldAnimate ? '2s' : 'none',
                         }}
                     />
 

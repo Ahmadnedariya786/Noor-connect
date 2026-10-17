@@ -264,10 +264,22 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
       {/* Subtle Lunar & Hijri subtitle when not in preview */}
       {!isStaticPreview && (
         <div className="mt-2 text-center">
-          <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>
-            {hijriDate}
-          </p>
-          <p className="text-[11px] font-medium tracking-wider" style={{ color: 'var(--accent-text)' }}>
+          <div className="flex items-center justify-center gap-2 select-none">
+            <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+            <p
+              className="text-xs font-semibold tracking-[0.06em] text-center"
+              style={{
+                background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 0 10px var(--accent-glow))',
+              }}
+            >
+              {hijriDate}
+            </p>
+            <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+          </div>
+          <p className="text-[11px] font-medium tracking-wider mt-0.5" style={{ color: 'var(--accent-text)' }}>
             {moonInfo.phaseName} • {Math.round(moonInfo.fraction * 100)}%
           </p>
         </div>

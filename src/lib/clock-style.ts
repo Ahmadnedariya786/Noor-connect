@@ -10,6 +10,10 @@ const VALID_STYLE_IDS = new Set<string>(CLOCK_STYLES.map(s => s.id));
 export function getClockStyle(): ClockStyleId {
   try {
     const val = localStorage.getItem(STORAGE_KEY);
+    if (val === 'reactor-ring') {
+      localStorage.setItem(STORAGE_KEY, 'hour-wedge');
+      return 'hour-wedge';
+    }
     if (val && VALID_STYLE_IDS.has(val)) {
       return val as ClockStyleId;
     }

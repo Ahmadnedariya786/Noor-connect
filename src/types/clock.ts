@@ -3,7 +3,7 @@ export type ClockStyleId =
   | 'mosque-led'
   | 'crescent-moon'
   | 'ottoman-heritage'
-  | 'reactor-ring'
+  | 'hour-wedge'
   | 'prayer-arc';
 
 export interface ClockPrayerInfo {
@@ -65,10 +65,10 @@ export const CLOCK_STYLES: ClockStyleDefinition[] = [
     description: 'Arabic-Indic numerals with ornate Arabesque centerpiece',
   },
   {
-    id: 'reactor-ring',
-    name: 'Reactor Ring',
-    subtitle: '60-Minute Radial',
-    description: 'Minimalist dial with 60 luminous gold minute segments',
+    id: 'hour-wedge',
+    name: 'Hour Wedge',
+    subtitle: 'Minimal Slice Dial',
+    description: 'Matte dial with glowing hour wedge slice and ultra-thin hands',
   },
   {
     id: 'prayer-arc',

@@ -158,8 +158,13 @@ function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
   return (
     <span
       key="countdown-value-node"
-      className="text-sm font-black font-mono tabular-nums inline-block select-none"
-      style={{ color: 'var(--accent-text)' }}
+      className="text-sm sm:text-base font-black font-mono tabular-nums inline-block select-none tracking-wider"
+      style={{
+        background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        filter: 'drop-shadow(0 0 8px var(--accent-glow))',
+      }}
     >
       {timeRemaining}
     </span>
@@ -462,11 +467,20 @@ function PremiumDashboardInner({
           {...motionProps({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 } })}
           className="relative overflow-hidden rounded-[24px]"
           style={{
-            background: 'linear-gradient(145deg, var(--surface), var(--surface-2))',
-            border: '1px solid var(--border)',
-            boxShadow: '0 8px 30px var(--accent-glow), 0 4px 24px rgba(0,0,0,0.35)',
+            background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)',
+            border: '1px solid var(--accent-glow)',
+            boxShadow: '0 0 0 1px var(--accent-glow), 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen)',
           }}
         >
+          {/* Corner radial accent glow at 10 percent */}
+          <div
+            className="absolute top-0 right-0 w-48 h-48 pointer-events-none rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 100% 0%, var(--accent) 0%, transparent 70%)',
+              opacity: 0.10,
+            }}
+          />
+
           <div className="relative z-10 p-5">
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent-text)' }}>
@@ -477,7 +491,7 @@ function PremiumDashboardInner({
               </p>
             </div>
             <div className="flex items-end justify-between mb-4">
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'inherit', fontStyle: 'italic' }}>
+              <p className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'inherit', fontStyle: 'italic' }}>
                 {getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime)}
               </p>
               <div className="text-right" key="next-prayer-countdown-container">
@@ -485,16 +499,25 @@ function PremiumDashboardInner({
                 <LiveCountdown key="next-prayer-live-countdown" targetTime={nextPrayer.targetTime} />
               </div>
             </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>at {nextPrayer.time}</span>
+            <div className="flex justify-between items-center mb-2.5">
+              <span className="text-xs tracking-wide" style={{ color: 'var(--text-secondary)' }}>at {nextPrayer.time}</span>
             </div>
-            {/* Progress bar */}
-            <div className="h-[3px] w-full rounded-full overflow-hidden" style={{ background: 'var(--accent-soft)' }}>
+            {/* Progress bar as accent gradient with a glowing round thumb at the progress end */}
+            <div className="relative h-1.5 w-full rounded-full overflow-visible" style={{ background: 'var(--accent-soft)' }}>
               <m.div
-                className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-text))' }}
-                {...motionProps({ initial: { width: 0 }, animate: { width: `${nextPrayer.progress}%` }, transition: { duration: 1, ease: 'easeOut', delay: 0.4 } })}
-              />
+                className="relative h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)' }}
+                {...motionProps({ initial: { width: 0 }, animate: { width: `${Math.min(100, Math.max(0, nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100))}%` }, transition: { duration: 1, ease: 'easeOut', delay: 0.4 } })}
+              >
+                <span
+                  className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 rounded-full"
+                  style={{
+                    background: 'var(--accent-2)',
+                    boxShadow: '0 0 8px var(--accent-glow), 0 0 2px #fff',
+                    border: '1.5px solid var(--surface)',
+                  }}
+                />
+              </m.div>
             </div>
           </div>
         </m.div>
@@ -525,7 +548,13 @@ function PremiumDashboardInner({
                       className="w-full"
                     >
                       <div className="flex items-center justify-between px-1 mb-4">
-                        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Prayer Times</h2>
+                        <div>
+                          <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Prayer Times</h2>
+                          <div
+                            className="w-6 h-[3px] rounded-full mt-1.5"
+                            style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
+                          />
+                        </div>
                         <button
                           onClick={onLocationClick}
                           className="text-xs font-semibold uppercase tracking-widest transition-all text-muted-foreground hover:text-foreground"
@@ -663,7 +692,13 @@ function PremiumDashboardInner({
                       className="p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">Daily Salah</h3>
+                        <div>
+                          <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">Daily Salah</h3>
+                          <div
+                            className="w-6 h-[3px] rounded-full mt-1.5"
+                            style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
+                          />
+                        </div>
                         <div
                           className="px-2 py-1 rounded-full text-xs font-bold"
                           style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}
