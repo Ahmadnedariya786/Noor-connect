@@ -68,11 +68,18 @@ export default function Dashboard() {
   const [timezone, setTimezone] = useState<string>("");
   const [initialLoad, setInitialLoad] = useState(() => cachedDashboardPrayers.length === 0);
   const [targetTime, setTargetTime] = useState<Date | null>(() => cachedTargetTime);
+  const [suhoorIftaar, setSuhoorIftaar] = useState<{
+    suhoorTime: string;
+    suhoorLabel: string;
+    iftaarTime: string;
+    iftaarLabel: string;
+  } | undefined>(undefined);
   const { toast } = useToast();
 
   // Memoized prayer icons
   const prayerIcons = useMemo((): Record<string, React.ReactNode> => ({
     Fajr: <Moon className="w-5 h-5 text-indigo-400" />,
+    Sunrise: <Sun className="w-5 h-5 text-amber-300" />,
     Dhuhr: <Sun className="w-5 h-5 text-amber-400" />,
     Asr: <Cloud className="w-5 h-5 text-blue-400" />,
     Maghrib: <Sunset className="w-5 h-5 text-orange-400" />,
@@ -217,6 +224,7 @@ export default function Dashboard() {
 
       const prayerList: PrayerTime[] = [
         { name: "Fajr", time: formatTimeFromAPI(timings.Fajr), date: parseTimeToDate(timings.Fajr) },
+        { name: "Sunrise", time: formatTimeFromAPI(timings.Sunrise), date: parseTimeToDate(timings.Sunrise) },
         { name: "Dhuhr", time: formatTimeFromAPI(timings.Dhuhr), date: parseTimeToDate(timings.Dhuhr) },
         { name: "Asr", time: formatTimeFromAPI(timings.Asr), date: parseTimeToDate(timings.Asr) },
         { name: "Maghrib", time: formatTimeFromAPI(timings.Maghrib), date: parseTimeToDate(timings.Maghrib) },
@@ -225,6 +233,17 @@ export default function Dashboard() {
 
       cachedDashboardPrayers = prayerList;
       setPrayers(prayerList);
+
+      // Suhoor & Iftaar times derived strictly from calculation output per Guard 1
+      const sTime = timings.Imsak ? formatTimeFromAPI(timings.Imsak) : formatTimeFromAPI(timings.Fajr);
+      const sLabel = timings.Imsak ? "Suhoor (Imsak)" : "Suhoor ends";
+      const iTime = formatTimeFromAPI(timings.Maghrib);
+      setSuhoorIftaar({
+        suhoorTime: sTime,
+        suhoorLabel: sLabel,
+        iftaarTime: iTime,
+        iftaarLabel: "Iftaar",
+      });
 
       // Get next prayer countdown
       const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, 1, false);
@@ -248,6 +267,7 @@ export default function Dashboard() {
 
       const fallbackPrayers: PrayerTime[] = [
         { name: "Fajr", time: formatTimeFromAPI(times.fajr.toTimeString().slice(0, 5)), date: times.fajr },
+        { name: "Sunrise", time: formatTimeFromAPI(times.sunrise.toTimeString().slice(0, 5)), date: times.sunrise },
         { name: "Dhuhr", time: formatTimeFromAPI(times.dhuhr.toTimeString().slice(0, 5)), date: times.dhuhr },
         { name: "Asr", time: formatTimeFromAPI(times.asr.toTimeString().slice(0, 5)), date: times.asr },
         { name: "Maghrib", time: formatTimeFromAPI(times.maghrib.toTimeString().slice(0, 5)), date: times.maghrib },
@@ -255,6 +275,14 @@ export default function Dashboard() {
       ];
       cachedDashboardPrayers = fallbackPrayers;
       setPrayers(fallbackPrayers);
+
+      // Offline Suhoor & Iftaar per Guard 1
+      setSuhoorIftaar({
+        suhoorTime: formatTimeFromAPI(times.fajr.toTimeString().slice(0, 5)),
+        suhoorLabel: "Suhoor ends",
+        iftaarTime: formatTimeFromAPI(times.maghrib.toTimeString().slice(0, 5)),
+        iftaarLabel: "Iftaar",
+      });
 
       const { getNextPrayer } = await import('@/lib/prayer-calculator');
       const nextPrayer = getNextPrayer(location.latitude, location.longitude);
@@ -383,8 +411,10 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
     return prayers.map(p => {
       const prayerDate = p.date;
       const isUpcoming = prayerDate && prayerDate > now;
-      const pKey = p.name.toLowerCase() as PrayerName;
-      const isCompleted = todayPrayers ? !!todayPrayers[pKey] : false;
+      const lower = p.name.toLowerCase();
+      const isObligatory = lower !== 'sunrise';
+      const pKey = lower as PrayerName;
+      const isCompleted = isObligatory && todayPrayers ? !!todayPrayers[pKey] : false;
 
       // Consistent Jummah on Fridays via shared display-name helper
       const displayName = getPrayerDisplayName(p.name, prayerDate || now);
@@ -398,7 +428,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
         isActive: nextPrayerName === p.name || nextPrayerName === displayName,
         isUpcoming: isUpcoming,
         isCompleted,
-        onCheckIn: () => handleCheckIn(pKey),
+        onCheckIn: isObligatory ? () => handleCheckIn(pKey) : undefined,
       };
     });
   }, [prayers, minuteTick, todayPrayers, nextPrayerName, handleCheckIn, prayerIcons]);
@@ -494,6 +524,7 @@ return (
         loadingAPI={loadingAPI}
         setLoadingAPI={setLoadingAPI}
         toast={toast}
+        suhoorIftaar={suhoorIftaar}
       />
     </PageTransition>
   );

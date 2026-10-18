@@ -18,6 +18,7 @@ import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { UpdateBanner } from "@/components/UpdateBanner";
 import { ClockHero } from "@/components/clocks/ClockHero";
 import { hasHomeEntranceCompleted } from "@/lib/home-entrance";
+import { PrayerTimesSection } from "@/components/PrayerTimesSection";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -64,6 +65,12 @@ interface PremiumDashboardProps {
   } | null;
   prayers: PrayerTime[];
   locationLabel: string;
+  suhoorIftaar?: {
+    suhoorTime: string;
+    suhoorLabel: string;
+    iftaarTime: string;
+    iftaarLabel: string;
+  };
   onServiceClick?: (route: string) => void;
   onVerseClick?: () => void;
   onHadithClick?: () => void;
@@ -81,103 +88,13 @@ interface PremiumDashboardProps {
   toast: any;
 }
 
-function NextPrayerCountdownChip({ targetTime }: { targetTime?: Date | null }) {
-  const [countdownStr, setCountdownStr] = useState<string>('');
-
-  useEffect(() => {
-    if (!targetTime) {
-      setCountdownStr('');
-      return;
-    }
-
-    const update = () => {
-      const diff = targetTime.getTime() - Date.now();
-      if (diff <= 0) {
-        setCountdownStr('due now');
-        return;
-      }
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      setCountdownStr(h > 0 ? `in ${h}h ${m}m` : `in ${m}m`);
-    };
-
-    update();
-    const timerId = setInterval(update, 10000);
-    return () => clearInterval(timerId);
-  }, [targetTime]);
-
-  if (!countdownStr) return null;
-
-  return (
-    <span
-      className="text-[10px] font-bold tracking-tight px-1.5 py-0.5 rounded-full"
-      style={{
-        background: 'var(--accent-soft)',
-        color: 'var(--accent-text)',
-        border: '1px solid var(--accent)',
-        boxShadow: '0 2px 8px var(--accent-glow)',
-      }}
-    >
-      {countdownStr}
-    </span>
-  );
-}
-
-function LiveCountdown({ targetTime }: { targetTime?: Date | null }) {
-  const formatRemaining = React.useCallback((target?: Date | null): string => {
-    if (!target) return "--:--:--";
-    const diff = target.getTime() - Date.now();
-    if (diff <= 0) return "00:00:00";
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    return hours > 0
-      ? `${hours}h ${minutes}m ${seconds}s`
-      : `${minutes}m ${seconds}s`;
-  }, []);
-
-  const [timeRemaining, setTimeRemaining] = useState<string>(() => formatRemaining(targetTime));
-
-  useEffect(() => {
-    if (!targetTime) {
-      setTimeRemaining("--:--:--");
-      return;
-    }
-
-    const updateDisplay = () => {
-      const formatted = formatRemaining(targetTime);
-      setTimeRemaining(prev => (prev === formatted ? prev : formatted));
-    };
-
-    updateDisplay();
-    const timerId = globalTimerManager.addCallback(updateDisplay, 1000, 'premium-countdown');
-    return () => globalTimerManager.removeCallback(timerId);
-  }, [targetTime, formatRemaining]);
-
-  return (
-    <span
-      key="countdown-value-node"
-      className="text-sm sm:text-base font-black font-mono tabular-nums inline-block select-none tracking-wider"
-      style={{
-        background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        filter: 'drop-shadow(0 0 8px var(--accent-glow))',
-      }}
-    >
-      {timeRemaining}
-    </span>
-  );
-}
-
 function PremiumDashboardInner({
   hijriDate,
   nextPrayer,
   previousPrayer,
   prayers,
   locationLabel,
+  suhoorIftaar,
   onNotificationClick,
   onLocationClick,
   showManualLocationDialog,
@@ -464,67 +381,6 @@ function PremiumDashboardInner({
           previousPrayer={previousPrayer}
         />
 
-        {/* ── Next Prayer Card ── */}
-        <m.div
-          key="next-prayer-card"
-          {...motionProps({ initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.2, ease: 'easeOut' } })}
-          className="relative overflow-hidden rounded-[24px]"
-          style={{
-            background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)',
-            border: '1px solid var(--accent-glow)',
-            boxShadow: '0 0 0 1px var(--accent-glow), 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen)',
-          }}
-        >
-          {/* Corner radial accent glow at 10 percent */}
-          <div
-            className="absolute top-0 right-0 w-48 h-48 pointer-events-none rounded-full"
-            style={{
-              background: 'radial-gradient(circle at 100% 0%, var(--accent) 0%, transparent 70%)',
-              opacity: 0.10,
-            }}
-          />
-
-          <div className="relative z-10 p-5">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent-text)' }}>
-                Next Prayer
-              </p>
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                {locationLabel}
-              </p>
-            </div>
-            <div className="flex items-end justify-between mb-4">
-              <p className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'inherit', fontStyle: 'italic' }}>
-                {getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime)}
-              </p>
-              <div className="text-right" key="next-prayer-countdown-container">
-                <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-secondary)' }}>In</p>
-                <LiveCountdown key="next-prayer-live-countdown" targetTime={nextPrayer.targetTime} />
-              </div>
-            </div>
-            <div className="flex justify-between items-center mb-2.5">
-              <span className="text-xs tracking-wide" style={{ color: 'var(--text-secondary)' }}>at {nextPrayer.time}</span>
-            </div>
-            {/* Progress bar as accent gradient with a glowing round thumb at the progress end */}
-            <div className="relative h-1.5 w-full rounded-full overflow-visible" style={{ background: 'var(--accent-soft)' }}>
-              <m.div
-                className="relative h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)' }}
-                {...motionProps({ initial: { width: 0 }, animate: { width: `${Math.min(100, Math.max(0, nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100))}%` }, transition: { duration: 0.25, ease: 'easeOut' } })}
-              >
-                <span
-                  className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 rounded-full"
-                  style={{
-                    background: 'var(--accent-2)',
-                    boxShadow: '0 0 8px var(--accent-glow), 0 0 2px #fff',
-                    border: '1.5px solid var(--surface)',
-                  }}
-                />
-              </m.div>
-            </div>
-          </div>
-        </m.div>
-
         {/* ── Dynamic Widgets Container ── */}
         <div className="space-y-6">
           {widgets
@@ -533,13 +389,6 @@ function PremiumDashboardInner({
             .map(widget => {
               switch (widget.id) {
                 case 'prayer-times': {
-                  const nextIdx = prayers.findIndex(p => p.isActive);
-                  const activeIdx = nextIdx !== -1 ? nextIdx : prayers.findIndex(p => p.name === nextPrayer.name || p.originalName === nextPrayer.name);
-                  const totalPrayers = prayers.length;
-                  const mostRecentPastIdx = activeIdx !== -1 && totalPrayers > 0
-                    ? (activeIdx - 1 + totalPrayers) % totalPrayers
-                    : -1;
-
                   return (
                     <m.section
                       key={widget.id}
@@ -550,135 +399,14 @@ function PremiumDashboardInner({
                       })}
                       className="w-full"
                     >
-                      <div className="flex items-center justify-between px-1 mb-4">
-                        <div>
-                          <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Prayer Times</h2>
-                          <div
-                            className="w-6 h-[3px] rounded-full mt-1.5"
-                            style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
-                          />
-                        </div>
-                        <button
-                          onClick={onLocationClick}
-                          className="text-xs font-semibold uppercase tracking-widest transition-all text-muted-foreground hover:text-foreground"
-                        >
-                          Change City
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        {prayers.map((prayer, i) => {
-                          const isNext = activeIdx !== -1 && i === activeIdx;
-                          const isMostRecentPast = !isNext && mostRecentPastIdx !== -1 && i === mostRecentPastIdx;
-                          const isOlderPast = !isNext && !isMostRecentPast && (
-                            activeIdx === 0
-                              ? (i >= 1 && i < totalPrayers - 1)
-                              : (activeIdx > 0 && i < activeIdx)
-                          );
-
-                          // Respect 12h / 24h format
-                          const is12 = (timeFormat as string) === '12' || timeFormat === '12h';
-                          const displayTime = prayer.date instanceof Date && !isNaN(prayer.date.getTime())
-                            ? prayer.date.toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: is12,
-                              })
-                            : prayer.time;
-
-                          return (
-                            <m.div
-                              key={prayer.name}
-                              {...motionProps({
-                                initial: { opacity: 0, scale: 0.95 },
-                                animate: { opacity: 1, scale: 1 },
-                                transition: { delay: Math.min(i * 0.01, 0.04), duration: 0.2, ease: 'easeOut' },
-                              })}
-                              className={cn(
-                                "group relative overflow-hidden p-4 rounded-2xl transition-all duration-200 select-none",
-                                "border hover:shadow-md active:scale-[0.98]",
-                                isNext ? "ring-1 shadow-lg" : "border-border/70"
-                              )}
-                              style={{
-                                borderColor: isNext ? 'var(--accent)' : 'var(--border)',
-                                boxShadow: isNext ? '0 4px 22px var(--accent-glow), 0 0 12px var(--accent-glow)' : undefined,
-                                background: isNext
-                                  ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
-                                  : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
-                              }}
-                            >
-                              <div className="relative z-10 flex flex-col justify-between h-full">
-                                <div className="flex items-center justify-between mb-3">
-                                  {/* Existing Icon & Color */}
-                                  <div
-                                    className="w-8 h-8 flex items-center justify-center rounded-xl"
-                                    style={isNext
-                                      ? { background: 'var(--accent-soft)', color: 'var(--accent-text)' }
-                                      : { background: 'var(--surface-2)', color: 'var(--text-secondary)' }}
-                                  >
-                                    {prayer.icon}
-                                  </div>
-
-                                  {/* NEXT Badge + Live Countdown Chip */}
-                                  {isNext && (
-                                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                                      <span
-                                        className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-                                        style={{
-                                          background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-                                          color: 'var(--on-accent)',
-                                          border: '1px solid var(--accent)',
-                                          boxShadow: '0 2px 10px var(--accent-glow)',
-                                        }}
-                                      >
-                                        NEXT
-                                      </span>
-                                      <NextPrayerCountdownChip targetTime={nextPrayer.targetTime} />
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div>
-                                  {/* Prayer Name + Checkmark for Most Recent Past */}
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="font-bold text-sm leading-tight text-foreground truncate">
-                                      {getPrayerDisplayName(prayer.name, prayer.date)}
-                                    </p>
-                                    {isMostRecentPast && (
-                                      <Check className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 stroke-[2.5]" />
-                                    )}
-                                  </div>
-
-                                  {/* Prayer Time */}
-                                  <p
-                                    className={cn(
-                                      "text-sm mt-0.5 font-semibold transition-colors tabular-nums",
-                                      isOlderPast && "text-muted-foreground/45",
-                                      !isNext && !isOlderPast && "text-foreground/85"
-                                    )}
-                                    style={isNext ? { color: 'var(--accent-text)', fontWeight: 'bold' } : undefined}
-                                  >
-                                    {displayTime}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Most Recent Past Prayer: Thin Progress Bar at Card Bottom */}
-                              {isMostRecentPast && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/[0.08] overflow-hidden rounded-b-2xl">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-500"
-                                    style={{
-                                      width: `${Math.min(100, Math.max(0, nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100))}%`,
-                                      background: 'linear-gradient(90deg, var(--accent), var(--accent-text))',
-                                    }}
-                                  />
-                                </div>
-                              )}
-                            </m.div>
-                          );
-                        })}
-                      </div>
+                      <PrayerTimesSection
+                        nextPrayer={nextPrayer}
+                        previousPrayer={previousPrayer}
+                        prayers={prayers}
+                        suhoorIftaar={suhoorIftaar}
+                        onLocationClick={onLocationClick}
+                        locationLabel={locationLabel}
+                      />
                     </m.section>
                   );
                 }
@@ -706,11 +434,11 @@ function PremiumDashboardInner({
                           className="px-2 py-1 rounded-full text-xs font-bold"
                           style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}
                         >
-                          {prayers.filter(p => p.isCompleted).length} / 5
+                          {prayers.filter(p => (p.originalName || p.name) !== 'Sunrise' && p.isCompleted).length} / 5
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        {prayers.map((prayer) => (
+                        {prayers.filter(p => (p.originalName || p.name) !== 'Sunrise').map((prayer) => (
                           <button
                             key={`tracker-${prayer.name}`}
                             onClick={() => prayer.onCheckIn?.()}
