@@ -316,21 +316,28 @@ export default function IslamicCalendar() {
             boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
           }}
         >
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg" style={{ color: 'var(--text-primary)' }}>
-                <Moon className="h-5 w-5" style={{ color: 'var(--accent)' }} />
-                {hijriMonthHeader || (
-                  <span className="inline-block h-5 w-40 rounded animate-pulse" style={{ background: 'var(--surface-2)' }} />
-                )}
-                {" AH"}
-              </CardTitle>
-              <div className="flex items-center gap-2">
+          <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
+              {/* Title block left with max 2 lines (font one step smaller, line-height 1.2) */}
+              <div className="flex items-start gap-2 min-w-0 max-w-full sm:max-w-[calc(100%-140px)]">
+                <Moon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
+                <CardTitle
+                  className="text-sm sm:text-base font-bold leading-[1.2] line-clamp-2"
+                  style={{ color: 'var(--text-primary)', lineHeight: '1.2' }}
+                >
+                  {hijriMonthHeader ? `${hijriMonthHeader} AH` : (
+                    <span className="inline-block h-4 w-32 rounded animate-pulse" style={{ background: 'var(--surface-2)' }} />
+                  )}
+                </CardTitle>
+              </div>
+
+              {/* Controls right in a single row vertically centered; on narrow widths wrap below title, never overlap */}
+              <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleToday}
-                  className="rounded-xl font-bold text-xs"
+                  className="rounded-xl font-bold text-[11px] h-7 px-2.5"
                   style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 >
                   Today
@@ -339,36 +346,38 @@ export default function IslamicCalendar() {
                   variant="outline"
                   size="icon"
                   onClick={handlePreviousMonth}
-                  className="rounded-xl h-8 w-8"
+                  aria-label="Previous month"
+                  className="rounded-xl h-7 w-7 p-0"
                   style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={handleNextMonth}
-                  className="rounded-xl h-8 w-8"
+                  aria-label="Next month"
+                  className="rounded-xl h-7 w-7 p-0"
                   style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
-            <CardDescription style={{ color: 'var(--text-secondary)' }}>
+            <CardDescription className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
               {monthData && `${monthData.gregorian.month.en} ${monthData.gregorian.year}`}
               {!monthData && (
-                <span className="inline-block h-4 w-28 rounded animate-pulse" style={{ background: 'var(--surface-2)' }} />
+                <span className="inline-block h-3 w-24 rounded animate-pulse" style={{ background: 'var(--surface-2)' }} />
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent style={{ contentVisibility: "auto", containIntrinsicSize: "800px" }}>
+          <CardContent className="p-2 sm:p-5 pt-0" style={{ contentVisibility: "auto", containIntrinsicSize: "800px" }}>
             <div className="w-full">
-              {/* Single CSS grid: 7 columns, fixed min cell height, no overlapping layers */}
-              <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+              {/* Single CSS grid: 7 columns, fixed min-height 56px, no overlapping layers */}
+              <div className="grid grid-cols-7 gap-1 sm:gap-1.5 w-full">
                 {/* Day headers */}
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="text-center font-bold text-xs p-1" style={{ color: 'var(--text-secondary)' }}>
+                  <div key={day} className="text-center font-bold text-[11px] py-1 truncate" style={{ color: 'var(--text-secondary)' }}>
                     {day}
                   </div>
                 ))}
@@ -378,82 +387,106 @@ export default function IslamicCalendar() {
                   Array.from({ length: 35 }).map((_, index) => (
                     <div
                       key={`cal-skel-${index}`}
-                      className="rounded-xl p-2 border min-h-[64px] sm:min-h-[72px]"
+                      className="rounded-xl p-1 border min-h-[56px] flex flex-col justify-between items-center"
                       style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
                     >
-                      <div className="flex flex-col h-full justify-between">
-                        <div className="h-3 w-4 rounded animate-pulse bg-white/10" />
-                        <div className="h-3 w-8 rounded animate-pulse bg-white/10" />
-                      </div>
+                      <div className="h-3 w-4 rounded animate-pulse bg-white/10 mt-1" />
+                      <div className="h-3 w-6 rounded animate-pulse bg-white/10 mb-1" />
                     </div>
                   ))
                 )}
 
-                {/* Calendar days normal flow: Day number on top, Hijri number below */}
-                {!loading && calendarDays.map((day, index) => (
-                  <div
-                    key={index}
-                    className={`
-                      min-w-0 p-1.5 sm:p-2 border rounded-xl min-h-[64px] sm:min-h-[72px] flex flex-col justify-between transition-colors
-                      ${!day.isCurrentMonth ? 'opacity-25 cursor-default' : 'cursor-pointer hover:border-[var(--accent)] active:scale-[0.98]'}
-                    `}
-                    style={{
-                      background: day.isToday
-                        ? 'var(--accent-soft)'
-                        : day.isCurrentMonth ? 'var(--surface)' : 'transparent',
-                      borderColor: day.isToday ? 'var(--accent)' : 'var(--border)',
-                      boxShadow: day.isToday ? '0 0 14px var(--accent-glow)' : 'inset 0 1px 0 var(--card-sheen)',
-                    }}
-                    onClick={() => day.isCurrentMonth && handleDateClick(day)}
-                  >
-                    {day.isCurrentMonth ? (
-                      <div className="flex flex-col h-full justify-between min-w-0">
-                        {/* Line 1: Gregorian day number + today indicator dot */}
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="text-xs sm:text-sm font-bold tabular-nums"
-                            style={{ color: day.isToday ? 'var(--accent-text)' : 'var(--text-primary)' }}
-                          >
-                            {day.gregorianDate.split(' ')[0] || day.gregorianDate}
-                          </span>
-                          {day.isToday && (
-                            <span
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ background: 'var(--accent)', boxShadow: '0 0 6px var(--accent)' }}
-                            />
-                          )}
-                        </div>
+                {/* Calendar days normal flow: Day number on top, Hijri number below, centered, min-h-[56px] */}
+                {!loading && calendarDays.map((day, index) => {
+                  const isFriday = (index % 7 === 5);
+                  return (
+                    <div
+                      key={index}
+                      className={`
+                        min-w-0 p-1 border rounded-xl min-h-[56px] flex flex-col items-center justify-between text-center overflow-hidden transition-colors select-none
+                        ${!day.isCurrentMonth ? 'opacity-25 cursor-default' : 'cursor-pointer hover:border-[var(--accent)] active:scale-[0.98]'}
+                      `}
+                      style={{
+                        background: day.isToday
+                          ? 'var(--accent-soft)'
+                          : day.isCurrentMonth ? 'var(--surface)' : 'transparent',
+                        borderColor: day.isToday ? 'var(--accent)' : 'var(--border)',
+                        boxShadow: day.isToday ? '0 0 12px var(--accent-glow)' : 'inset 0 1px 0 var(--card-sheen)',
+                      }}
+                      onClick={() => day.isCurrentMonth && handleDateClick(day)}
+                    >
+                      {day.isCurrentMonth ? (
+                        <div className="flex flex-col h-full w-full justify-between items-center min-w-0 overflow-hidden">
+                          {/* Line 1: Gregorian day number centered with fixed line-height + optional today dot + Friday marker */}
+                          <div className="flex flex-col items-center justify-center w-full min-w-0">
+                            <div className="flex items-center justify-center gap-1 w-full">
+                              <span
+                                className="text-xs font-bold tabular-nums leading-4 text-center truncate"
+                                style={{
+                                  color: day.isToday ? 'var(--accent-text)' : 'var(--text-primary)',
+                                  lineHeight: '16px',
+                                }}
+                              >
+                                {day.gregorianDate.split(' ')[0] || day.gregorianDate}
+                              </span>
+                              {day.isToday && (
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                                  style={{ background: 'var(--accent)', boxShadow: '0 0 6px var(--accent)' }}
+                                />
+                              )}
+                            </div>
 
-                        {/* Line 2: Hijri number below in normal flow */}
-                        <div className="mt-auto pt-1">
-                          <span
-                            className="text-[11px] sm:text-xs font-semibold tabular-nums block"
-                            style={{ color: 'var(--accent-text)' }}
-                          >
-                            {day.hijriDay}
-                            {day.hijriDay === 1 && (
-                              <span className="text-[9px] uppercase font-bold ml-1 opacity-70">
-                                {day.hijriMonth.en.substring(0, 3)}
+                            {/* Friday marker: 3-letter chip with font-size 9px, padding 1px 4px, max-width 100%, overflow hidden */}
+                            {isFriday && (
+                              <span
+                                className="text-[9px] font-bold leading-none rounded uppercase tracking-tight max-w-full overflow-hidden text-ellipsis whitespace-nowrap block mt-0.5"
+                                style={{
+                                  fontSize: '9px',
+                                  padding: '1px 4px',
+                                  background: 'var(--accent-soft)',
+                                  color: 'var(--accent-text)',
+                                  border: '1px solid var(--accent)',
+                                  maxWidth: '100%',
+                                  overflow: 'hidden',
+                                  lineHeight: '10px',
+                                }}
+                              >
+                                JUM
                               </span>
                             )}
-                          </span>
-                          {day.holidays.length > 0 && (
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
-                              <span className="text-[9px] truncate" style={{ color: 'var(--text-secondary)' }}>
-                                {day.holidays[0]}
-                              </span>
-                            </div>
-                          )}
+                          </div>
+
+                          {/* Line 2: Hijri number below centered with fixed line-height */}
+                          <div className="w-full flex flex-col items-center justify-center min-w-0 mt-auto pt-0.5">
+                            <span
+                              className="text-[11px] font-semibold tabular-nums text-center leading-[14px] truncate block max-w-full"
+                              style={{ color: 'var(--accent-text)', lineHeight: '14px', fontSize: '11px' }}
+                            >
+                              {day.hijriDay}
+                              {day.hijriDay === 1 && (
+                                <span className="text-[9px] uppercase font-bold ml-0.5 opacity-70">
+                                  {day.hijriMonth.en.substring(0, 3)}
+                                </span>
+                              )}
+                            </span>
+                            {day.holidays.length > 0 && (
+                              <span
+                                className="w-1.5 h-1.5 rounded-full shrink-0 mt-0.5"
+                                style={{ background: 'var(--accent)' }}
+                                title={day.holidays[0]}
+                              />
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.3 }}>—</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      ) : (
+                        <div className="flex items-center justify-center h-full w-full">
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.3 }}>—</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </CardContent>

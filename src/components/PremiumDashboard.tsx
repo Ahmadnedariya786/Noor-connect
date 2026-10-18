@@ -17,6 +17,7 @@ import { globalTimerManager } from "@/lib/timer-manager";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { UpdateBanner } from "@/components/UpdateBanner";
 import { ClockHero } from "@/components/clocks/ClockHero";
+import { hasHomeEntranceCompleted } from "@/lib/home-entrance";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -296,7 +297,9 @@ function PremiumDashboardInner({
     };
   }, [showManualLocationDialog, handleCloseModal]);
 
-  const motionProps = (props: any) => (animationEnabled && tier !== 'low' && tier !== 'minimal') ? props : {};
+  const isFirstMountRef = React.useRef(!hasHomeEntranceCompleted());
+  const shouldAnimateEntrance = animationEnabled && tier !== 'low' && tier !== 'minimal' && isFirstMountRef.current;
+  const motionProps = (props: any) => shouldAnimateEntrance ? props : {};
 
   return (
     <div
@@ -464,7 +467,7 @@ function PremiumDashboardInner({
         {/* ── Next Prayer Card ── */}
         <m.div
           key="next-prayer-card"
-          {...motionProps({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 } })}
+          {...motionProps({ initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.2, ease: 'easeOut' } })}
           className="relative overflow-hidden rounded-[24px]"
           style={{
             background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)',
@@ -507,7 +510,7 @@ function PremiumDashboardInner({
               <m.div
                 className="relative h-full rounded-full"
                 style={{ background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)' }}
-                {...motionProps({ initial: { width: 0 }, animate: { width: `${Math.min(100, Math.max(0, nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100))}%` }, transition: { duration: 1, ease: 'easeOut', delay: 0.4 } })}
+                {...motionProps({ initial: { width: 0 }, animate: { width: `${Math.min(100, Math.max(0, nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100))}%` }, transition: { duration: 0.25, ease: 'easeOut' } })}
               >
                 <span
                   className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 rounded-full"
@@ -541,9 +544,9 @@ function PremiumDashboardInner({
                     <m.section
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                       className="w-full"
                     >
@@ -587,9 +590,9 @@ function PremiumDashboardInner({
                             <m.div
                               key={prayer.name}
                               {...motionProps({
-                                initial: { opacity: 0, scale: 0.92 },
+                                initial: { opacity: 0, scale: 0.95 },
                                 animate: { opacity: 1, scale: 1 },
-                                transition: { delay: i * 0.05, type: 'spring', stiffness: 220, damping: 20 },
+                                transition: { delay: Math.min(i * 0.01, 0.04), duration: 0.2, ease: 'easeOut' },
                               })}
                               className={cn(
                                 "group relative overflow-hidden p-4 rounded-2xl transition-all duration-200 select-none",
@@ -685,9 +688,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                       className="p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md"
                     >
@@ -741,9 +744,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><EnhancedDailyAyah /></Suspense>
@@ -755,9 +758,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><EnhancedDailyHadith /></Suspense>
@@ -769,9 +772,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><QiblaQuickWidget /></Suspense>
@@ -783,9 +786,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><TasbeehQuickWidget /></Suspense>
@@ -797,9 +800,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}>
@@ -818,9 +821,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><WeeklySalahChart /></Suspense>
@@ -832,9 +835,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><QuranProgressWidget /></Suspense>
@@ -846,9 +849,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><IslamicEventsWidget /></Suspense>
@@ -860,9 +863,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><PrayerStatsWidget /></Suspense>
@@ -874,9 +877,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><QazaTracker compact={true} /></Suspense>
@@ -888,9 +891,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><DhikrReminder /></Suspense>
@@ -902,9 +905,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><QuranRadio /></Suspense>
@@ -916,9 +919,9 @@ function PremiumDashboardInner({
                     <m.div
                       key={widget.id}
                       {...motionProps({
-                        initial: { opacity: 0, y: 12 },
+                        initial: { opacity: 0, y: 8 },
                         animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.4 }
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       })}
                     >
                       <Suspense fallback={<WidgetFallback />}><MoodSelector /></Suspense>

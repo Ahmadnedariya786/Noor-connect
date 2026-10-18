@@ -5,6 +5,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 interface PageTransitionProps {
     children: ReactNode;
     className?: string;
+    skipTransition?: boolean;
 }
 
 const pageVariants = {
@@ -19,13 +20,13 @@ const pageVariants = {
 const pageTransition = {
     type: "tween",
     ease: "easeOut",
-    duration: 0.05,
+    duration: 0.15,
 } as const;
 
-export const PageTransition = ({ children, className = "" }: PageTransitionProps) => {
+export const PageTransition = ({ children, className = "", skipTransition = false }: PageTransitionProps) => {
     const { animationEnabled } = useSettings();
 
-    if (!animationEnabled) {
+    if (!animationEnabled || skipTransition) {
         return <div className={`w-full h-full ${className}`}>{children}</div>;
     }
 

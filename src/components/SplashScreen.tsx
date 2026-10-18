@@ -141,7 +141,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
     return (
         <div
-            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#150D2E] overflow-hidden transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#150D2E] overflow-hidden transition-opacity duration-200 ${isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
             style={{
                 background: "radial-gradient(ellipse at center, #24164c 0%, #150D2E 60%, #0a0618 100%)",
                 willChange: "opacity",

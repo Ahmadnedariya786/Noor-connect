@@ -37,6 +37,8 @@ import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { getPrayerDisplayName } from "@/lib/prayer-utils";
 
+import { hasHomeEntranceCompleted, markHomeEntranceCompleted } from "@/lib/home-entrance";
+
 // Persistent module-level cache so prayer times remain mounted across route transitions and clock style switches
 let cachedDashboardPrayers: PrayerTime[] = [];
 let cachedNextPrayerName: string = "";
@@ -47,7 +49,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { t: ti18n } = useI18n();
-  const { timeFormat } = useSettings();
+  const { timeFormat, animationEnabled } = useSettings();
+  const isFirstMount = !hasHomeEntranceCompleted();
+
+  useEffect(() => {
+    markHomeEntranceCompleted();
+  }, []);
   const [minuteTick, setMinuteTick] = useState(0);
   const [greeting, setGreeting] = useState("");
   const [prayers, setPrayers] = useState<PrayerTime[]>(() => cachedDashboardPrayers);
@@ -465,7 +472,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
   const onLocationClick = useCallback(() => setShowManualLocationDialog(true), [setShowManualLocationDialog]);
 
 return (
-    <PageTransition>
+    <PageTransition skipTransition={!isFirstMount || !animationEnabled}>
       <PremiumDashboard
         hijriDate={hijriDate || ""}
         nextPrayer={nextPrayerInfo}

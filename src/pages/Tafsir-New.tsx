@@ -21,7 +21,8 @@ import {
   Info,
   Download,
   Wifi,
-  WifiOff
+  WifiOff,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -128,8 +129,29 @@ const Tafsir = () => {
   const [activeTab, setActiveTab] = useState<"surahs" | "bookmarks" | "history">("surahs");
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg" | "xl">("base");
   const [loadingFromOffline, setLoadingFromOffline] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { animationEnabled } = useSettings();
+
+  const [isAuthorDropdownOpen, setIsAuthorDropdownOpen] = useState(false);
+  const authorCardRef = useRef<HTMLDivElement>(null);
+
+  const currentEdition = useMemo(() => {
+    return TAFSIR_EDITIONS.find((e) => e.id === selectedEdition) || TAFSIR_EDITIONS[0];
+  }, [selectedEdition]);
+
+  useEffect(() => {
+    if (!isAuthorDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (authorCardRef.current && !authorCardRef.current.contains(e.target as Node)) {
+        setIsAuthorDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isAuthorDropdownOpen]);
 
   const fontSizeClasses = {
     sm: "text-base leading-relaxed",
@@ -535,66 +557,144 @@ const Tafsir = () => {
                   )}
                 </div>
 
-                {/* Tafsir Author Selector - Visible UI */}
+                {/* Tafsir Author Selector Card - Rebuilt 4-row flex column */}
                 <div
-                  className="rounded-3xl p-5 shadow-sm border flex flex-col gap-3"
+                  ref={authorCardRef}
+                  className="rounded-3xl p-5 shadow-sm border flex flex-col"
                   style={{
+                    gap: '12px',
                     background: 'var(--surface)',
                     borderColor: 'var(--border)',
                   }}
                 >
+                  {/* Row 1: translate icon + Select Tafsir Author label */}
                   <div className="flex items-center gap-2 font-bold" style={{ color: 'var(--text-primary)' }}>
-                    <Languages className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                    <span>{t('selectTafsirAuthor')}</span>
+                    <Languages className="w-5 h-5 shrink-0" style={{ color: 'var(--accent)' }} />
+                    <span className="text-sm font-bold tracking-tight">{t('selectTafsirAuthor')}</span>
                   </div>
-                  <Select
-                    value={selectedEdition}
-                    onValueChange={(value) => {
-                      setSelectedEdition(value);
-                      if (selectedSurah) handleSurahSelect(selectedSurah);
-                    }}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl">
-                      <SelectValue placeholder={t('chooseTafsir')} />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl max-h-80 overflow-y-auto">
-                      {TAFSIR_EDITIONS.map((edition) => (
-                        <SelectItem key={edition.id} value={edition.id} className="rounded-xl py-3 px-3">
-                          <div className="flex flex-col gap-1 w-full text-left">
-                            <span className="font-bold text-sm text-[var(--text-primary)] leading-tight">{edition.name}</span>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              <span
-                                className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                                style={{
-                                  background: 'var(--accent-soft)',
-                                  color: 'var(--accent-text)',
-                                  border: '1px solid var(--border)',
-                                }}
-                              >
-                                {edition.language}
-                              </span>
-                              {OFFLINE_EDITIONS.includes(edition.id) && (
+
+                  {/* Row 2: full-width select button (single line, ellipsis, chevron at right) */}
+                  <div className="relative w-full">
+                    <button
+                      type="button"
+                      onClick={() => setIsAuthorDropdownOpen(prev => !prev)}
+                      className="w-full h-11 px-3.5 rounded-xl flex items-center justify-between text-left transition-all border outline-none active:scale-[0.99]"
+                      style={{
+                        background: 'var(--bg-elev)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
+                      <span className="truncate text-sm font-semibold pr-2">
+                        {currentEdition?.name || t('chooseTafsir')}
+                      </span>
+                      <ChevronDown
+                        className={cn("w-4 h-4 shrink-0 transition-transform duration-200", isAuthorDropdownOpen && "rotate-180")}
+                        style={{ color: 'var(--text-secondary)' }}
+                      />
+                    </button>
+
+                    {/* Dropdown panel opens below the select button (absolute, z-20) */}
+                    {isAuthorDropdownOpen && (
+                      <div
+                        className="absolute top-[calc(100%+6px)] left-0 right-0 z-20 rounded-2xl shadow-2xl border p-1.5 max-h-72 overflow-y-auto"
+                        style={{
+                          background: 'var(--bg-elev)',
+                          borderColor: 'var(--border)',
+                        }}
+                      >
+                        {TAFSIR_EDITIONS.map((edition) => {
+                          const isSelected = edition.id === selectedEdition;
+                          return (
+                            <button
+                              key={edition.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedEdition(edition.id);
+                                setIsAuthorDropdownOpen(false);
+                                if (selectedSurah) handleSurahSelect(selectedSurah);
+                              }}
+                              className={cn(
+                                "w-full text-left p-3 rounded-xl transition-colors flex flex-col gap-1.5",
+                                isSelected ? "bg-[var(--accent-soft)]" : "hover:bg-[var(--surface-2)]"
+                              )}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span className="font-bold text-sm leading-tight text-[var(--text-primary)]">
+                                  {edition.name}
+                                </span>
+                                {isSelected && (
+                                  <Check className="w-4 h-4 shrink-0 text-[var(--accent)]" />
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1.5">
                                 <span
-                                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                                   style={{
-                                    background: 'var(--accent-soft)',
+                                    background: 'var(--surface-2)',
                                     color: 'var(--accent-text)',
                                     border: '1px solid var(--border)',
                                   }}
                                 >
-                                  <Download className="w-3 h-3" />
-                                  Offline
+                                  {edition.language}
                                 </span>
-                              )}
-                              {edition.author && (
-                                <span className="text-xs text-[var(--text-secondary)]">by {edition.author}</span>
-                              )}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                                {OFFLINE_EDITIONS.includes(edition.id) && (
+                                  <span
+                                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                                    style={{
+                                      background: 'var(--surface-2)',
+                                      color: 'var(--accent-text)',
+                                      border: '1px solid var(--border)',
+                                    }}
+                                  >
+                                    <Download className="w-2.5 h-2.5" />
+                                    Offline
+                                  </span>
+                                )}
+                                {edition.author && (
+                                  <span className="text-xs text-[var(--text-secondary)]">by {edition.author}</span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Row 3: chips row (language chip, offline chip) with gap, wrapping allowed */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                      style={{
+                        background: 'var(--accent-soft)',
+                        color: 'var(--accent-text)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      {currentEdition?.language || 'English'}
+                    </span>
+                    {OFFLINE_EDITIONS.includes(selectedEdition) && (
+                      <span
+                        className="text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1"
+                        style={{
+                          background: 'var(--accent-soft)',
+                          color: 'var(--accent-text)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Offline
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Row 4: byline caption in var(--text-secondary) in normal flow */}
+                  {currentEdition?.author && (
+                    <p className="text-xs leading-normal m-0" style={{ color: 'var(--text-secondary)' }}>
+                      by {currentEdition.author}
+                    </p>
+                  )}
                 </div>
               </div>
 
