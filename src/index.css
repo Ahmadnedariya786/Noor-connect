@@ -249,41 +249,41 @@
   }
 
   [data-theme="madinah-emerald"] {
-    --bg-base: #051F20;
-    --bg-elev: #0B2B26;
-    --surface: #163832;
-    --surface-2: #235347;
-    --border: rgba(142,182,155,0.22);
-    --accent: #8EB69B;
-    --accent-2: #3E7A5E;
-    --accent-text: #A8CCB4;
-    --on-accent: #051F20;
-    --accent-soft: rgba(142,182,155,0.16);
-    --accent-glow: rgba(142,182,155,0.35);
-    --card-sheen: rgba(142,182,155,0.05);
-    --text-primary: #DAF1DE;
-    --text-secondary: #9FC4AE;
-    --success: #7FD6A4;
+    --bg-base: #03150E;
+    --bg-elev: #06231A;
+    --surface: #0A2E22;
+    --surface-2: #124332;
+    --border: rgba(52,211,153,0.25);
+    --accent: #34D399;
+    --accent-2: #D4AF37;
+    --accent-text: #6EE7B7;
+    --on-accent: #03150E;
+    --accent-soft: rgba(52,211,153,0.16);
+    --accent-glow: rgba(52,211,153,0.35);
+    --card-sheen: rgba(236,253,245,0.05);
+    --text-primary: #ECFDF5;
+    --text-secondary: #A7C9B8;
+    --success: #6EE7B7;
     --warning: #E8C07A;
     --danger: #E08A8A;
 
-    --background: 183 73% 7%;
-    --foreground: 130 50% 90%;
-    --card: 169 44% 15%;
-    --card-foreground: 130 50% 90%;
-    --popover: 169 44% 15%;
-    --popover-foreground: 130 50% 90%;
-    --primary: 140 21% 64%;
-    --primary-foreground: 183 73% 7%;
-    --primary-glow: 140 25% 74%;
-    --secondary: 166 40% 24%;
-    --secondary-foreground: 130 50% 90%;
-    --muted: 166 40% 24%;
-    --muted-foreground: 144 24% 70%;
+    --background: 157 75% 5%;
+    --foreground: 152 81% 96%;
+    --card: 160 64% 11%;
+    --card-foreground: 152 81% 96%;
+    --popover: 160 64% 11%;
+    --popover-foreground: 152 81% 96%;
+    --primary: 158 64% 52%;
+    --primary-foreground: 157 75% 5%;
+    --primary-glow: 156 72% 67%;
+    --secondary: 159 58% 17%;
+    --secondary-foreground: 152 81% 96%;
+    --muted: 159 58% 17%;
+    --muted-foreground: 150 24% 72%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 169 30% 25%;
-    --ring: 140 21% 64%;
+    --input: 160 40% 20%;
+    --ring: 158 64% 52%;
   }
 
   [data-theme="imperial-violet"] {
@@ -363,41 +363,41 @@
   }
 
   [data-theme="desert-scroll"] {
-    --bg-base: #1B0F08;
-    --bg-elev: #2A1A0C;
-    --surface: #3A2412;
-    --surface-2: #583714;
-    --border: rgba(255,235,151,0.22);
-    --accent: #FFEB97;
-    --accent-2: #E3C26A;
-    --accent-text: #FFEB97;
-    --on-accent: #1B0F08;
-    --accent-soft: rgba(255,235,151,0.14);
-    --accent-glow: rgba(255,235,151,0.30);
-    --card-sheen: rgba(255,235,151,0.05);
-    --text-primary: #F7EFD8;
-    --text-secondary: #CBB98F;
+    --bg-base: #140B04;
+    --bg-elev: #241407;
+    --surface: #33200D;
+    --surface-2: #4A2E12;
+    --border: rgba(245,200,107,0.28);
+    --accent: #F5C86B;
+    --accent-2: #C77B3F;
+    --accent-text: #FFD98A;
+    --on-accent: #140B04;
+    --accent-soft: rgba(245,200,107,0.16);
+    --accent-glow: rgba(245,200,107,0.35);
+    --card-sheen: rgba(251,243,228,0.05);
+    --text-primary: #FBF3E4;
+    --text-secondary: #D6BE9A;
     --success: #A8D69A;
-    --warning: #FFEB97;
+    --warning: #FFD98A;
     --danger: #E09A8A;
 
-    --background: 22 56% 7%;
-    --foreground: 44 65% 91%;
-    --card: 27 51% 15%;
-    --card-foreground: 44 65% 91%;
-    --popover: 27 51% 15%;
-    --popover-foreground: 44 65% 91%;
-    --primary: 49 100% 79%;
-    --primary-foreground: 22 56% 7%;
-    --primary-glow: 49 100% 85%;
-    --secondary: 32 63% 21%;
-    --secondary-foreground: 44 65% 91%;
-    --muted: 32 63% 21%;
-    --muted-foreground: 42 34% 68%;
+    --background: 26 67% 5%;
+    --foreground: 39 74% 94%;
+    --card: 30 59% 13%;
+    --card-foreground: 39 74% 94%;
+    --popover: 30 59% 13%;
+    --popover-foreground: 39 74% 94%;
+    --primary: 40 87% 69%;
+    --primary-foreground: 26 67% 5%;
+    --primary-glow: 41 100% 77%;
+    --secondary: 30 61% 18%;
+    --secondary-foreground: 39 74% 94%;
+    --muted: 30 61% 18%;
+    --muted-foreground: 36 42% 72%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 32 40% 25%;
-    --ring: 49 100% 79%;
+    --input: 30 40% 22%;
+    --ring: 40 87% 69%;
   }
 
   .dark {

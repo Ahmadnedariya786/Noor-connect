@@ -102,16 +102,17 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
               <div
                 className="w-full rounded-xl overflow-hidden p-2 sm:p-2.5 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] pointer-events-none border"
                 style={{
-                  background: `linear-gradient(180deg, ${theme.tokens['--bg-base']} 0%, ${theme.tokens['--bg-elev']} 100%)`,
+                  background: `radial-gradient(ellipse 100% 60% at 50% -10%, ${theme.tokens['--accent-soft']} 0%, transparent 70%), linear-gradient(180deg, ${theme.tokens['--bg-base']} 0%, ${theme.tokens['--bg-elev']} 100%)`,
                   borderColor: theme.tokens['--border'],
                 }}
               >
                 {/* Sample Card */}
                 <div
-                  className="rounded-lg p-2 flex flex-col justify-between flex-1 border shadow-xs"
+                  className="rounded-lg p-2 flex flex-col justify-between flex-1 border"
                   style={{
                     background: theme.tokens['--surface'],
                     borderColor: theme.tokens['--border'],
+                    boxShadow: `inset 0 1px 0 ${theme.tokens['--card-sheen']}, 0 4px 14px rgba(0,0,0,0.35)`,
                   }}
                 >
                   {/* Card Header Line */}
@@ -157,14 +158,17 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                     >
                       <div
                         className="h-full rounded-full w-3/5"
-                        style={{ background: theme.tokens['--accent'] }}
+                        style={{
+                          background: `linear-gradient(90deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
+                        }}
                       />
                     </div>
                     <span
-                      className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0 shadow-xs"
+                      className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0"
                       style={{
-                        background: theme.tokens['--accent'],
+                        background: `linear-gradient(135deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
                         color: theme.tokens['--on-accent'],
+                        boxShadow: `0 2px 8px ${theme.tokens['--accent-glow']}`,
                       }}
                     >
                       VIEW
