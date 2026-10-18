@@ -14,7 +14,7 @@ import { islamicEventsService } from "@/lib/islamic-events-service";
 import { LayoutManager } from "@/components/LayoutManager";
 import { SplashScreen, forceReleaseSplashScrollLock } from "@/components/SplashScreen";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
-import { AnimatePresence, MotionConfig } from "framer-motion";
+import { AnimatePresence, MotionConfig, m } from "framer-motion";
 import { LazyMotionWrapper } from "@/components/LazyMotionWrapper";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n-new";
@@ -174,6 +174,7 @@ function AnimationInitializer() {
 
 function AppRoutes() {
   const location = useLocation();
+  const { animationEnabled } = useSettings();
   const { t } = useTranslation(undefined, { i18n });
 
   // Scroll to top on navigation — single pass, no repeated layout thrashing
@@ -200,59 +201,128 @@ function AppRoutes() {
         </div>
       </div>
     }>
-      <Routes location={location}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard-widgets" element={<DashboardWidgets />} />
-        {/* Widget deep-link targets (WidgetDeeplink.kt) that have no dedicated page */}
-        <Route path="/prayers" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/quran/reading" element={<Navigate to="/quran-progress" replace />} />
-        <Route path="/quran" element={<SurahList />} />
-        <Route path="/quran-reader/:surahNumber" element={<Navigate to="/quran" replace />} />
-        <Route path="/quran/:surahName" element={<QuranReader />} />
-        <Route path="/quran-progress" element={<QuranProgress />} />
-        <Route path="/tasbeeh" element={<Tasbeeh />} />
-        <Route path="/qibla" element={<Qibla />} />
-        <Route path="/duas" element={<Duas />} />
-        <Route path="/hadith" element={<Hadith />} />
-        <Route path="/hadith/collections" element={<HadithCollections />} />
-        <Route path="/hadith/collections/:collection" element={<HadithBook />} />
-        <Route path="/hadith/collections/:collection/:book" element={<HadithBookContent />} />
-        <Route path="/hadith/collections/:collection/:book/:hadithNumber" element={<HadithDetail />} />
-        <Route path="/hadith/bookmarks" element={<HadithBookmarksPage />} />
-        <Route path="/seerah" element={<SeerahHome />} />
-        <Route path="/seerah/:chapterId" element={<SeerahReader />} />
-        <Route path="/qisas" element={<QisasHome />} />
-        <Route path="/qisas/:prophetId" element={<QisasReader />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/calendar" element={<IslamicCalendar />} />
-        <Route path="/ebooks" element={<Ebooks />} />
-        <Route path="/qaza" element={<QazaPage />} />
-        <Route path="/ramadan" element={<RamadanMode />} />
-        <Route path="/menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
-        <Route path="/enhanced-menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
-        <Route path="/noor-cycle" element={<HaidhTracker />} />
-        <Route path="/notification-history" element={<NotificationHistory />} />
-        <Route path="/zakat" element={<ZakatCalculator />} />
-        <Route path="/names-of-allah" element={<NamesOfAllah />} />
-        <Route path="/quiz" element={<IslamicQuiz />} />
-        <Route path="/prayer-stats" element={<PrayerStats />} />
-        <Route path="/habit-tracker" element={<HabitTracker />} />
-        <Route path="/quran-radio" element={<QuranRadio />} />
-        <Route path="/quran-audio" element={<QuranAudio />} />
-        <Route path="/nasheeds" element={<NasheedPlayer />} />
-        <Route path="/live" element={<LiveStreams />} />
-        <Route path="/radio-stats" element={<RadioStats />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/islamic-remedies" element={<IslamicRemedies />} />
-        <Route path="/remedy-favorites" element={<RemedyFavorites />} />
-        <Route path="/tafsir" element={<Tafsir />} />
-        <Route path="/eid-checklist" element={<EidChecklist />} />
-        <Route path="/fitrana-calculator" element={<FitranaCalculator />} />
-        <Route path="/settings" element={<Navigate to="/profile" replace />} />
-        <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AnimatePresence mode="wait" initial={false}>
+        {animationEnabled ? (
+          <m.div
+            key={location.pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.11, ease: "easeInOut" }}
+            className="w-full h-full"
+          >
+            <Routes location={location}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard-widgets" element={<DashboardWidgets />} />
+              {/* Widget deep-link targets (WidgetDeeplink.kt) that have no dedicated page */}
+              <Route path="/prayers" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/quran/reading" element={<Navigate to="/quran-progress" replace />} />
+              <Route path="/quran" element={<SurahList />} />
+              <Route path="/quran-reader/:surahNumber" element={<Navigate to="/quran" replace />} />
+              <Route path="/quran/:surahName" element={<QuranReader />} />
+              <Route path="/quran-progress" element={<QuranProgress />} />
+              <Route path="/tasbeeh" element={<Tasbeeh />} />
+              <Route path="/qibla" element={<Qibla />} />
+              <Route path="/duas" element={<Duas />} />
+              <Route path="/hadith" element={<Hadith />} />
+              <Route path="/hadith/collections" element={<HadithCollections />} />
+              <Route path="/hadith/collections/:collection" element={<HadithBook />} />
+              <Route path="/hadith/collections/:collection/:book" element={<HadithBookContent />} />
+              <Route path="/hadith/collections/:collection/:book/:hadithNumber" element={<HadithDetail />} />
+              <Route path="/hadith/bookmarks" element={<HadithBookmarksPage />} />
+              <Route path="/seerah" element={<SeerahHome />} />
+              <Route path="/seerah/:chapterId" element={<SeerahReader />} />
+              <Route path="/qisas" element={<QisasHome />} />
+              <Route path="/qisas/:prophetId" element={<QisasReader />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/calendar" element={<IslamicCalendar />} />
+              <Route path="/ebooks" element={<Ebooks />} />
+              <Route path="/qaza" element={<QazaPage />} />
+              <Route path="/ramadan" element={<RamadanMode />} />
+              <Route path="/menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
+              <Route path="/enhanced-menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
+              <Route path="/noor-cycle" element={<HaidhTracker />} />
+              <Route path="/notification-history" element={<NotificationHistory />} />
+              <Route path="/zakat" element={<ZakatCalculator />} />
+              <Route path="/names-of-allah" element={<NamesOfAllah />} />
+              <Route path="/quiz" element={<IslamicQuiz />} />
+              <Route path="/prayer-stats" element={<PrayerStats />} />
+              <Route path="/habit-tracker" element={<HabitTracker />} />
+              <Route path="/quran-radio" element={<QuranRadio />} />
+              <Route path="/quran-audio" element={<QuranAudio />} />
+              <Route path="/nasheeds" element={<NasheedPlayer />} />
+              <Route path="/live" element={<LiveStreams />} />
+              <Route path="/radio-stats" element={<RadioStats />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/islamic-remedies" element={<IslamicRemedies />} />
+              <Route path="/remedy-favorites" element={<RemedyFavorites />} />
+              <Route path="/tafsir" element={<Tafsir />} />
+              <Route path="/eid-checklist" element={<EidChecklist />} />
+              <Route path="/fitrana-calculator" element={<FitranaCalculator />} />
+              <Route path="/settings" element={<Navigate to="/profile" replace />} />
+              <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </m.div>
+        ) : (
+          <div key={location.pathname} className="w-full h-full">
+            <Routes location={location}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard-widgets" element={<DashboardWidgets />} />
+              {/* Widget deep-link targets (WidgetDeeplink.kt) that have no dedicated page */}
+              <Route path="/prayers" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/quran/reading" element={<Navigate to="/quran-progress" replace />} />
+              <Route path="/quran" element={<SurahList />} />
+              <Route path="/quran-reader/:surahNumber" element={<Navigate to="/quran" replace />} />
+              <Route path="/quran/:surahName" element={<QuranReader />} />
+              <Route path="/quran-progress" element={<QuranProgress />} />
+              <Route path="/tasbeeh" element={<Tasbeeh />} />
+              <Route path="/qibla" element={<Qibla />} />
+              <Route path="/duas" element={<Duas />} />
+              <Route path="/hadith" element={<Hadith />} />
+              <Route path="/hadith/collections" element={<HadithCollections />} />
+              <Route path="/hadith/collections/:collection" element={<HadithBook />} />
+              <Route path="/hadith/collections/:collection/:book" element={<HadithBookContent />} />
+              <Route path="/hadith/collections/:collection/:book/:hadithNumber" element={<HadithDetail />} />
+              <Route path="/hadith/bookmarks" element={<HadithBookmarksPage />} />
+              <Route path="/seerah" element={<SeerahHome />} />
+              <Route path="/seerah/:chapterId" element={<SeerahReader />} />
+              <Route path="/qisas" element={<QisasHome />} />
+              <Route path="/qisas/:prophetId" element={<QisasReader />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/calendar" element={<IslamicCalendar />} />
+              <Route path="/ebooks" element={<Ebooks />} />
+              <Route path="/qaza" element={<QazaPage />} />
+              <Route path="/ramadan" element={<RamadanMode />} />
+              <Route path="/menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
+              <Route path="/enhanced-menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
+              <Route path="/noor-cycle" element={<HaidhTracker />} />
+              <Route path="/notification-history" element={<NotificationHistory />} />
+              <Route path="/zakat" element={<ZakatCalculator />} />
+              <Route path="/names-of-allah" element={<NamesOfAllah />} />
+              <Route path="/quiz" element={<IslamicQuiz />} />
+              <Route path="/prayer-stats" element={<PrayerStats />} />
+              <Route path="/habit-tracker" element={<HabitTracker />} />
+              <Route path="/quran-radio" element={<QuranRadio />} />
+              <Route path="/quran-audio" element={<QuranAudio />} />
+              <Route path="/nasheeds" element={<NasheedPlayer />} />
+              <Route path="/live" element={<LiveStreams />} />
+              <Route path="/radio-stats" element={<RadioStats />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/islamic-remedies" element={<IslamicRemedies />} />
+              <Route path="/remedy-favorites" element={<RemedyFavorites />} />
+              <Route path="/tafsir" element={<Tafsir />} />
+              <Route path="/eid-checklist" element={<EidChecklist />} />
+              <Route path="/fitrana-calculator" element={<FitranaCalculator />} />
+              <Route path="/settings" element={<Navigate to="/profile" replace />} />
+              <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        )}
+      </AnimatePresence>
     </Suspense>
   );
 }

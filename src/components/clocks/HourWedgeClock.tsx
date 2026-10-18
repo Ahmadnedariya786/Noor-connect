@@ -139,9 +139,9 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
               <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
 
-            {/* Soft shadow under hands */}
-            <filter id="wedgeHandShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.6" />
+            {/* Soft radial shadow under hands for consistent 360-degree depth */}
+            <filter id="wedgeHandShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#000000" floodOpacity="0.8" />
             </filter>
           </defs>
 
@@ -172,8 +172,9 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
             />
           ))}
 
-          {/* ── Hour Wedge: 30° pie slice rotating on hour change with 0.6s ease ── */}
+          {/* ── Hour Wedge: 30° pie slice rotating on hour change with 0.6s ease (rendered below hands) ── */}
           <g
+            id="wedge-layer"
             style={{
               transform: `rotate(${wedgeAngle}deg)`,
               transformOrigin: `${center}px ${center}px`,
@@ -222,78 +223,105 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
             </g>
           </g>
 
-          {/* ── Hour Hand: Short thick rounded bar in var(--text-primary) ── */}
-          <line
-            x1={center}
-            y1={center + 6}
-            x2={center}
-            y2={center - 46}
-            stroke="var(--text-primary)"
-            strokeWidth={isStaticPreview ? "4" : "5.5"}
-            strokeLinecap="round"
-            filter="url(#wedgeHandShadow)"
-            style={{
-              transform: `rotate(${hourAngle}deg)`,
-              transformOrigin: `${center}px ${center}px`,
-              transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2, 0.55, 0.44)',
-            }}
-          />
+          {/* ── Hands Layer: Rendered strictly ABOVE the wedge layer (z-order) ── */}
+          <g id="hands-layer">
+            {/* Hour Hand: Short thick rounded bar in var(--text-primary) with dark casing for crisp contrast over the wedge */}
+            <g
+              filter="url(#wedgeHandShadow)"
+              style={{
+                transform: `rotate(${hourAngle}deg)`,
+                transformOrigin: `${center}px ${center}px`,
+                transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2, 0.55, 0.44)',
+              }}
+            >
+              {/* Outer dark casing so hour hand remains starkly delineated even when resting directly on top of the bright accent wedge */}
+              <line
+                x1={center}
+                y1={center + 6}
+                x2={center}
+                y2={center - 46}
+                stroke="rgba(0, 0, 0, 0.75)"
+                strokeWidth={isStaticPreview ? "5.5" : "7.5"}
+                strokeLinecap="round"
+              />
+              {/* Core hour hand in var(--text-primary) */}
+              <line
+                x1={center}
+                y1={center + 6}
+                x2={center}
+                y2={center - 46}
+                stroke="var(--text-primary)"
+                strokeWidth={isStaticPreview ? "4" : "5.5"}
+                strokeLinecap="round"
+              />
+            </g>
 
-          {/* ── Minute Hand: Longer medium bar in var(--text-primary) with a var(--accent) tip dot ── */}
-          <g
-            style={{
-              transform: `rotate(${minuteAngle}deg)`,
-              transformOrigin: `${center}px ${center}px`,
-              transition: isStaticPreview ? 'none' : 'transform 0.15s cubic-bezier(0.4, 2, 0.55, 0.44)',
-            }}
-            filter="url(#wedgeHandShadow)"
-          >
-            <line
-              x1={center}
-              y1={center + 8}
-              x2={center}
-              y2={center - 74}
-              stroke="var(--text-primary)"
-              strokeWidth={isStaticPreview ? "2.5" : "3.5"}
-              strokeLinecap="round"
-            />
-            {/* Distinct var(--accent) tip dot */}
+            {/* Minute Hand: Longer medium bar in var(--text-primary) with a var(--accent) tip dot */}
+            <g
+              filter="url(#wedgeHandShadow)"
+              style={{
+                transform: `rotate(${minuteAngle}deg)`,
+                transformOrigin: `${center}px ${center}px`,
+                transition: isStaticPreview ? 'none' : 'transform 0.15s cubic-bezier(0.4, 2, 0.55, 0.44)',
+              }}
+            >
+              {/* Outer dark casing for crisp visibility across the dial and wedge */}
+              <line
+                x1={center}
+                y1={center + 8}
+                x2={center}
+                y2={center - 74}
+                stroke="rgba(0, 0, 0, 0.75)"
+                strokeWidth={isStaticPreview ? "4" : "5"}
+                strokeLinecap="round"
+              />
+              <line
+                x1={center}
+                y1={center + 8}
+                x2={center}
+                y2={center - 74}
+                stroke="var(--text-primary)"
+                strokeWidth={isStaticPreview ? "2.5" : "3.5"}
+                strokeLinecap="round"
+              />
+              {/* Distinct var(--accent) tip dot */}
+              <circle
+                cx={center}
+                cy={center - 80}
+                r={isStaticPreview ? "2.5" : "3.5"}
+                fill="var(--accent)"
+                stroke="var(--surface-2)"
+                strokeWidth="0.75"
+              />
+            </g>
+
+            {/* Second Hand: 1px var(--accent), omitted in static preview */}
+            {!isStaticPreview && (
+              <line
+                x1={center}
+                y1={center + 16}
+                x2={center}
+                y2={center - 90}
+                stroke="var(--accent)"
+                strokeWidth="1"
+                strokeLinecap="round"
+                style={{
+                  transform: `rotate(${secondAngle}deg)`,
+                  transformOrigin: `${center}px ${center}px`,
+                }}
+              />
+            )}
+
+            {/* Center Cap (var(--accent)) */}
             <circle
               cx={center}
-              cy={center - 80}
-              r={isStaticPreview ? "2.5" : "3.5"}
+              cy={center}
+              r="4"
               fill="var(--accent)"
               stroke="var(--surface-2)"
-              strokeWidth="0.75"
+              strokeWidth="1"
             />
           </g>
-
-          {/* ── Second Hand: 1px var(--accent), omitted in static preview ── */}
-          {!isStaticPreview && (
-            <line
-              x1={center}
-              y1={center + 16}
-              x2={center}
-              y2={center - 90}
-              stroke="var(--accent)"
-              strokeWidth="1"
-              strokeLinecap="round"
-              style={{
-                transform: `rotate(${secondAngle}deg)`,
-                transformOrigin: `${center}px ${center}px`,
-              }}
-            />
-          )}
-
-          {/* Center Cap (var(--accent)) */}
-          <circle
-            cx={center}
-            cy={center}
-            r="4"
-            fill="var(--accent)"
-            stroke="var(--surface-2)"
-            strokeWidth="1"
-          />
         </svg>
       </div>
 
