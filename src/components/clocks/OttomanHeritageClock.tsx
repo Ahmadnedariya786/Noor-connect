@@ -32,9 +32,31 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
   const secondAngle = seconds * 6;
 
   const center = 120;
-  const numeralRadius = 82;
+  const dialRadius = 108;
+  const numeralRadius = 84;
 
-  // 12 hour positions
+  // 60-Minute Chapter Ring Ticks
+  const chapterTicks = useMemo(() => {
+    const ticks = [];
+    for (let i = 0; i < 60; i++) {
+      const isHour = i % 5 === 0;
+      const len = isHour ? 6 : 3;
+      const rOuter = dialRadius - 2;
+      const rInner = rOuter - len;
+      const rad = ((i * 6 - 90) * Math.PI) / 180;
+      ticks.push({
+        id: i,
+        x1: (center + rInner * Math.cos(rad)).toFixed(2),
+        y1: (center + rInner * Math.sin(rad)).toFixed(2),
+        x2: (center + rOuter * Math.cos(rad)).toFixed(2),
+        y2: (center + rOuter * Math.sin(rad)).toFixed(2),
+        isHour,
+      });
+    }
+    return ticks;
+  }, [center, dialRadius]);
+
+  // 12 Arabic-Indic numeral positions
   const numerals = useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => {
       const hr = i === 0 ? 12 : i;
@@ -44,8 +66,8 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
 
       // Midpoint angle for ornament between numerals
       const midAngle = ((i * 30 + 15) * Math.PI) / 180;
-      const ox = center + numeralRadius * Math.sin(midAngle);
-      const oy = center - numeralRadius * Math.cos(midAngle);
+      const ox = center + (numeralRadius + 14) * Math.sin(midAngle);
+      const oy = center - (numeralRadius + 14) * Math.cos(midAngle);
 
       return {
         hour: hr,
@@ -56,7 +78,7 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
         oy,
       };
     });
-  }, []);
+  }, [center, numeralRadius]);
 
   return (
     <div
@@ -65,84 +87,86 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
         isStaticPreview ? "py-1" : "pt-2 pb-3"
       )}
     >
+      {/* ── Double Metallic Bezel Dial ── */}
       <div
         className={cn(
           "relative rounded-full transition-all flex items-center justify-center",
-          isStaticPreview ? "w-28 h-28 sm:w-32 sm:h-32 shadow-md" : "w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] shadow-2xl"
+          isStaticPreview
+            ? "w-28 h-28 sm:w-32 sm:h-32 shadow-md"
+            : "w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] shadow-2xl"
         )}
         style={{
-          border: '2.5px solid var(--border)',
-          background: 'radial-gradient(circle at 50% 50%, var(--card-sheen) 0%, var(--surface-2) 35%, var(--surface) 70%, var(--bg-base) 100%)',
-          boxShadow: '0 12px 36px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,0,0,0.85), 0 0 2px var(--accent-glow)',
+          border: '2px solid var(--border)',
+          background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 40%, var(--bg-base) 85%)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.7), inset 0 1px 0 var(--card-sheen)',
         }}
       >
         <svg
           viewBox="0 0 240 240"
           className="w-full h-full"
-          style={{ overflow: 'visible' }}
+          style={{ overflow: 'visible', isolation: 'isolate' }}
         >
           <defs>
             <linearGradient id="ottomanGold" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="var(--accent)" />
               <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
-            <filter id="ottomanShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.75" />
-            </filter>
+            {!isStaticPreview && (
+              <filter id="ottomanHandShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.75" />
+              </filter>
+            )}
           </defs>
 
-          {/* Double Decorative Concentric Gold Rings */}
+          {/* ── Layer 1: Inner Accent Bezel Ring ── */}
           <circle
             cx={center}
             cy={center}
-            r="108"
+            r={dialRadius}
             fill="none"
-            stroke="url(#ottomanGold)"
-            strokeWidth="1.2"
-            strokeDasharray="2 3"
-            opacity="0.6"
-          />
-          <circle
-            cx={center}
-            cy={center}
-            r="104"
-            fill="none"
-            stroke="url(#ottomanGold)"
-            strokeWidth="0.8"
-            opacity="0.4"
-          />
-          <circle
-            cx={center}
-            cy={center}
-            r="58"
-            fill="none"
-            stroke="url(#ottomanGold)"
-            strokeWidth="0.8"
-            opacity="0.35"
+            stroke="var(--accent)"
+            strokeWidth="1"
+            opacity="0.45"
           />
 
-          {/* Center Gold Ornamental Arabesque Motif (Islamic 8-Point Star Rosette) */}
-          <g transform={`translate(${center}, ${center})`} opacity="0.85">
-            {/* 8-pointed star base */}
+          {/* ── Layer 2: Multi-Layered Rub el Hizb / Ottoman Rosette (Behind Numerals) ── */}
+          <g transform={`translate(${center}, ${center})`} opacity="0.28">
+            {/* Outer 8-point star */}
             <path
-              d="M 0 -26 L 7 -18 L 18 -18 L 18 -7 L 26 0 L 18 7 L 18 18 L 7 18 L 0 26 L -7 18 L -18 18 L -18 7 L -26 0 L -18 -7 L -18 -18 L -7 -18 Z"
-              fill="var(--accent-soft)"
-              stroke="url(#ottomanGold)"
+              d="M 0 -34 L 10 -24 L 24 -24 L 24 -10 L 34 0 L 24 10 L 24 24 L 10 24 L 0 34 L -10 24 L -24 24 L -24 10 L -34 0 L -24 -10 L -24 -24 L -10 -24 Z"
+              fill="none"
+              stroke="var(--accent)"
               strokeWidth="1.2"
             />
-            {/* Inner rotated star */}
+            {/* Interlaced 45-deg rotated 8-point star */}
             <path
-              d="M 0 -17 L 5 -12 L 12 -12 L 12 -5 L 17 0 L 12 5 L 12 12 L 5 12 L 0 17 L -5 12 L -12 12 L -12 5 L -17 0 L -12 -5 L -12 -12 L -5 -12 Z"
-              fill="var(--accent-soft)"
-              stroke="url(#ottomanGold)"
+              d="M 0 -34 L 10 -24 L 24 -24 L 24 -10 L 34 0 L 24 10 L 24 24 L 10 24 L 0 34 L -10 24 L -24 24 L -24 10 L -34 0 L -24 -10 L -24 -24 L -10 -24 Z"
+              fill="none"
+              stroke="var(--accent)"
               strokeWidth="0.9"
               transform="rotate(22.5)"
             />
-            {/* Central floral petals */}
-            <circle cx="0" cy="0" r="6" fill="var(--accent-soft)" stroke="var(--accent-text)" strokeWidth="0.8" />
+            {/* Delicate inner filigree circle */}
+            <circle cx="0" cy="0" r="18" fill="none" stroke="var(--accent)" strokeWidth="0.8" strokeDasharray="3 2" />
+            <circle cx="0" cy="0" r="12" fill="none" stroke="var(--accent)" strokeWidth="0.6" />
           </g>
 
-          {/* Numerals & Intermediate Corner Ornaments */}
+          {/* ── Layer 3: 60-Minute Perimeter Chapter Ring Ticks ── */}
+          {chapterTicks.map((t) => (
+            <line
+              key={`tick-${t.id}`}
+              x1={t.x1}
+              y1={t.y1}
+              x2={t.x2}
+              y2={t.y2}
+              stroke={t.isHour ? "var(--accent)" : "var(--border)"}
+              strokeWidth={t.isHour ? "1.8" : "1"}
+              opacity={t.isHour ? "0.85" : "0.35"}
+              strokeLinecap="round"
+            />
+          ))}
+
+          {/* ── Layer 4: Arabic-Indic Numerals & Inter-Numeral Pips ── */}
           {numerals.map(({ arabic, x, y, ox, oy }, idx) => (
             <React.Fragment key={`num-group-${idx}`}>
               {/* Arabic-Indic Digit */}
@@ -153,7 +177,7 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
                 dominantBaseline="middle"
                 fontFamily="'Traditional Arabic', 'Amiri', 'Scheherazade New', serif"
                 fontWeight="bold"
-                fontSize="17"
+                fontSize="17.5"
                 fill="var(--accent-text)"
                 style={{
                   textShadow: '0 0 6px var(--accent-glow)',
@@ -162,88 +186,111 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
                 {arabic}
               </text>
 
-              {/* Small Gold Diamond/Fleuron Ornament Between Numerals */}
-              <g transform={`translate(${ox}, ${oy})`}>
-                <polygon
-                  points="0,-2.5 2,0 0,2.5 -2,0"
-                  fill="url(#ottomanGold)"
-                  opacity="0.75"
-                />
-              </g>
+              {/* Small Gold Fleuron Diamond between Numerals */}
+              <polygon
+                points={`${ox},${oy - 2.5} ${ox + 2},${oy} ${ox},${oy + 2.5} ${ox - 2},${oy}`}
+                fill="url(#ottomanGold)"
+                opacity="0.6"
+              />
             </React.Fragment>
           ))}
 
-          {/* Ornate Heritage Hour Hand */}
-          <g
-            style={{
-              transform: `rotate(${hourAngle}deg)`,
-              transformOrigin: `${center}px ${center}px`,
-              transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
-            }}
-            filter="url(#ottomanShadow)"
-          >
-            {/* Ornate spade silhouette */}
-            <path
-              d={`
-                M ${center - 2.5} ${center + 12}
-                L ${center - 2} ${center - 24}
-                C ${center - 7} ${center - 34}, ${center - 5} ${center - 48}, ${center} ${center - 58}
-                C ${center + 5} ${center - 48}, ${center + 7} ${center - 34}, ${center + 2} ${center - 24}
-                L ${center + 2.5} ${center + 12}
-                Z
-              `}
-              fill="url(#ottomanGold)"
-            />
-            {/* Pierced spade center opening */}
-            <circle cx={center} cy={center - 38} r="3" fill="var(--surface)" />
-          </g>
-
-          {/* Ornate Heritage Minute Hand */}
-          <g
-            style={{
-              transform: `rotate(${minuteAngle}deg)`,
-              transformOrigin: `${center}px ${center}px`,
-              transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
-            }}
-            filter="url(#ottomanShadow)"
-          >
-            {/* Pierced lancet hand */}
-            <path
-              d={`
-                M ${center - 2} ${center + 14}
-                L ${center - 1.5} ${center - 40}
-                C ${center - 5} ${center - 54}, ${center - 4} ${center - 70}, ${center} ${center - 82}
-                C ${center + 4} ${center - 70}, ${center + 5} ${center - 54}, ${center + 1.5} ${center - 40}
-                L ${center + 2} ${center + 14}
-                Z
-              `}
-              fill="url(#ottomanGold)"
-            />
-            <circle cx={center} cy={center - 56} r="2.5" fill="var(--surface)" />
-          </g>
-
-          {/* Slim Gold Second Hand */}
-          {!isStaticPreview && (
+          {/* ── Layer 5 (TOP): Watchmaker Hands + Center Jewel Cap ── */}
+          <g id="ottoman-hands" filter={!isStaticPreview ? "url(#ottomanHandShadow)" : undefined}>
+            {/* Tapered Sword Hour Hand with Luminous Spine */}
             <g
               style={{
-                transform: `rotate(${secondAngle}deg)`,
+                transform: `rotate(${hourAngle}deg)`,
                 transformOrigin: `${center}px ${center}px`,
+                transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
               }}
             >
+              <path
+                d={`M ${center - 3.5} ${center + 10} L ${center - 2} ${center - 46} L ${center} ${center - 54} L ${center + 2} ${center - 46} L ${center + 3.5} ${center + 10} Z`}
+                fill="var(--text-primary)"
+              />
               <line
                 x1={center}
-                y1={center + 18}
+                y1={center + 8}
                 x2={center}
-                y2={center - 90}
+                y2={center - 50}
                 stroke="var(--accent-text)"
-                strokeWidth="0.9"
+                strokeWidth="1.2"
               />
-              <circle cx={center} cy={center + 12} r="2.5" fill="var(--accent)" />
             </g>
-          )}
 
-          {/* Center Medallion Cap */}
-          <circle cx={center} cy={center} r="5" fill="url(#ottomanGold)" stroke="var(--accent-text)" strokeWidth="0.8" />
+            {/* Tapered Sword Minute Hand with Luminous Spine */}
+            <g
+              style={{
+                transform: `rotate(${minuteAngle}deg)`,
+                transformOrigin: `${center}px ${center}px`,
+                transition: isStaticPreview ? 'none' : 'transform 0.15s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
+              }}
+            >
+              <path
+                d={`M ${center - 2.8} ${center + 12} L ${center - 1.5} ${center - 70} L ${center} ${center - 78} L ${center + 1.5} ${center - 70} L ${center + 2.8} ${center + 12} Z`}
+                fill="var(--text-primary)"
+              />
+              <line
+                x1={center}
+                y1={center + 10}
+                x2={center}
+                y2={center - 74}
+                stroke="var(--accent-text)"
+                strokeWidth="1"
+              />
+            </g>
+
+            {/* Sweeping Thin Second Hand with Counterbalance Tail */}
+            {!isStaticPreview && (
+              <g
+                style={{
+                  transform: `rotate(${secondAngle}deg)`,
+                  transformOrigin: `${center}px ${center}px`,
+                }}
+              >
+                <line
+                  x1={center}
+                  y1={center + 18}
+                  x2={center}
+                  y2={center - 90}
+                  stroke="var(--accent)"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx={center}
+                  cy={center + 12}
+                  r="2.8"
+                  fill="var(--accent)"
+                  stroke="var(--bg-base)"
+                  strokeWidth="0.8"
+                />
+              </g>
+            )}
+
+            {/* 3-Layer Center Jewel Cap */}
+            <circle
+              cx={center}
+              cy={center}
+              r="4.8"
+              fill="var(--accent)"
+              stroke="var(--border)"
+              strokeWidth="0.8"
+            />
+            <circle
+              cx={center}
+              cy={center}
+              r="3"
+              fill="var(--bg-base)"
+            />
+            <circle
+              cx={center}
+              cy={center}
+              r="1.4"
+              fill="var(--accent-text)"
+            />
+          </g>
         </svg>
       </div>
 

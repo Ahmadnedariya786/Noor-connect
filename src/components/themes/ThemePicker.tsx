@@ -63,13 +63,16 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                 "group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 cursor-pointer select-none text-left p-3 sm:p-3.5",
                 "backdrop-blur-sm",
                 isSelected
-                  ? "border border-[var(--accent)] ring-1 ring-[var(--accent)] shadow-[0_0_18px_var(--accent-glow)]"
+                  ? "border border-[var(--accent)] ring-1 ring-[var(--accent)]"
                   : "border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] active:scale-[0.98]"
               )}
               style={{
                 background: isSelected
                   ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
                   : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
+                boxShadow: isSelected
+                  ? '0 0 18px var(--accent-glow), inset 0 1px 0 var(--card-sheen)'
+                  : 'inset 0 1px 0 var(--card-sheen)',
               }}
             >
               {/* Top Row: Name and Active Badge */}
@@ -77,13 +80,13 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                 <div className="min-w-0 flex-1">
                   <h3
                     className={cn(
-                      "text-xs sm:text-sm font-bold tracking-tight truncate",
+                      "text-xs sm:text-sm font-bold tracking-tight leading-snug",
                       isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)] group-hover:text-[var(--accent-text)]"
                     )}
                   >
                     {theme.name}
                   </h3>
-                  <p className="text-[10px] text-[var(--text-secondary)] truncate">
+                  <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1">
                     {theme.subtitle}
                   </p>
                 </div>

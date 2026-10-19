@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import { type ClockStyleId, CLOCK_STYLES } from '@/types/clock';
 import { useClockStyle } from '@/lib/clock-style';
@@ -90,7 +90,9 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
               )}
               style={{
                 borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
-                boxShadow: isSelected ? '0 0 16px var(--accent-glow)' : undefined,
+                boxShadow: isSelected
+                  ? '0 0 16px var(--accent-glow), inset 0 1px 0 var(--card-sheen)'
+                  : 'inset 0 1px 0 var(--card-sheen)',
                 background: isSelected
                   ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
                   : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
@@ -101,14 +103,14 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                 <div className="min-w-0 flex-1">
                   <h3
                     className={cn(
-                      "text-xs sm:text-sm font-bold tracking-tight truncate",
+                      "text-xs sm:text-sm font-bold tracking-tight leading-snug",
                       isSelected ? "text-amber-400" : "text-[var(--text-primary)]"
                     )}
                     style={{ color: isSelected ? 'var(--accent-text)' : undefined }}
                   >
                     {style.name}
                   </h3>
-                  <p className="text-[10px] text-[var(--text-secondary)] truncate">
+                  <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1">
                     {style.subtitle}
                   </p>
                 </div>

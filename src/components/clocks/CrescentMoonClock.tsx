@@ -22,23 +22,47 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
 
   // ViewBox: 240 x 240
   const center = 120;
-  const radius = 104;
-  const moonWindowY = 66;
-  const moonRadius = 14;
+  const dialRadius = 108;
+  const moonWindowY = 72; // cx=50%, cy=30% of 240
+  const moonRadius = 13;
 
-  // Generate 12 hour positions
-  const hourPositions = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const angle = (i * 30 * Math.PI) / 180;
-      const r = 90;
-      return {
-        hour: i === 0 ? 12 : i,
-        x: center + r * Math.sin(angle),
-        y: center - r * Math.cos(angle),
+  // 60-Minute Chapter Ring Ticks
+  const chapterTicks = useMemo(() => {
+    const ticks = [];
+    for (let i = 0; i < 60; i++) {
+      const isHour = i % 5 === 0;
+      const len = isHour ? 6 : 3;
+      const rOuter = dialRadius - 2;
+      const rInner = rOuter - len;
+      const rad = ((i * 6 - 90) * Math.PI) / 180;
+      ticks.push({
+        id: i,
+        x1: (center + rInner * Math.cos(rad)).toFixed(2),
+        y1: (center + rInner * Math.sin(rad)).toFixed(2),
+        x2: (center + rOuter * Math.cos(rad)).toFixed(2),
+        y2: (center + rOuter * Math.sin(rad)).toFixed(2),
+        isHour,
+      });
+    }
+    return ticks;
+  }, [center, dialRadius]);
+
+  // 12 Faceted Hour Markers
+  const hourMarkers = useMemo(() => {
+    const markers = [];
+    const r = dialRadius - 14;
+    for (let i = 0; i < 12; i++) {
+      const hr = i === 0 ? 12 : i;
+      const rad = ((i * 30 - 90) * Math.PI) / 180;
+      markers.push({
+        hr,
+        x: center + r * Math.cos(rad),
+        y: center + r * Math.sin(rad),
         isCardinal: i % 3 === 0,
-      };
-    });
-  }, []);
+      });
+    }
+    return markers;
+  }, [center, dialRadius]);
 
   return (
     <div
@@ -47,28 +71,26 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
         isStaticPreview ? "py-1" : "pt-2 pb-3"
       )}
     >
+      {/* ── Double Metallic Bezel Dial ── */}
       <div
         className={cn(
           "relative rounded-full transition-all flex items-center justify-center",
-          isStaticPreview ? "w-28 h-28 sm:w-32 sm:h-32 shadow-md" : "w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] shadow-2xl"
+          isStaticPreview
+            ? "w-28 h-28 sm:w-32 sm:h-32 shadow-md"
+            : "w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] shadow-2xl"
         )}
         style={{
           border: '2px solid var(--border)',
-          background: `
-            linear-gradient(135deg, transparent 20%, rgba(255,255,255,0.02) 28%, var(--accent-soft) 30%, transparent 34%),
-            linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.015) 43%, var(--accent-soft) 46%, transparent 50%),
-            radial-gradient(circle at 50% 50%, var(--card-sheen) 0%, var(--surface-2) 35%, var(--surface) 70%, var(--bg-base) 100%)
-          `,
-          boxShadow: '0 12px 36px rgba(0,0,0,0.65), inset 0 0 25px rgba(0,0,0,0.8), inset 0 0 3px var(--accent-glow)',
+          background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 40%, var(--bg-base) 85%)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.65), inset 0 1px 0 var(--card-sheen)',
         }}
       >
         <svg
           viewBox="0 0 240 240"
           className="w-full h-full"
-          style={{ overflow: 'visible' }}
+          style={{ overflow: 'visible', isolation: 'isolate' }}
         >
           <defs>
-            {/* Theme Accented Gradients */}
             <linearGradient id="crescentGold" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="var(--accent)" />
               <stop offset="100%" stopColor="var(--accent-2)" />
@@ -77,40 +99,47 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
               <stop offset="0%" stopColor="#FFF9E6" />
               <stop offset="100%" stopColor="#E2C98A" />
             </linearGradient>
-            {/* Hand Drop Shadow */}
-            <filter id="handShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.7" />
-            </filter>
+            {!isStaticPreview && (
+              <filter id="crescentHandShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.75" />
+              </filter>
+            )}
           </defs>
 
-          {/* Minute track: 60 subtle dots */}
-          {Array.from({ length: 60 }).map((_, i) => {
-            if (i % 5 === 0) return null; // Hour marker handles these
-            const a = (i * 6 * Math.PI) / 180;
-            const x = center + radius * Math.sin(a);
-            const y = center - radius * Math.cos(a);
-            return (
-              <circle
-                key={`dot-${i}`}
-                cx={x}
-                cy={y}
-                r="1"
-                fill="var(--accent)"
-                opacity="0.3"
-              />
-            );
-          })}
+          {/* ── Layer 1: Inner Accent Bezel Ring ── */}
+          <circle
+            cx={center}
+            cy={center}
+            r={dialRadius}
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth="1"
+            opacity="0.45"
+          />
 
-          {/* Hour markers & Numerals */}
-          {hourPositions.map(({ hour, x, y, isCardinal }) => {
-            if (hour === 12) {
-              // Leave space for the moon window at 12
+          {/* ── Layer 2: 60-Minute Perimeter Chapter Ring ── */}
+          {chapterTicks.map((t) => (
+            <line
+              key={`tick-${t.id}`}
+              x1={t.x1}
+              y1={t.y1}
+              x2={t.x2}
+              y2={t.y2}
+              stroke={t.isHour ? "var(--accent)" : "var(--border)"}
+              strokeWidth={t.isHour ? "1.8" : "1"}
+              opacity={t.isHour ? "0.85" : "0.35"}
+              strokeLinecap="round"
+            />
+          ))}
+
+          {/* 12 Faceted Hour Markers */}
+          {hourMarkers.map(({ hr, x, y, isCardinal }) => {
+            if (hr === 12) {
+              // Subtle diamond pip at 12 to frame the aperture
               return (
-                <circle
-                  key={`hr-${hour}`}
-                  cx={x}
-                  cy={y + 16}
-                  r="2"
+                <polygon
+                  key={`hr-${hr}`}
+                  points={`${x},${y - 3} ${x + 2.5},${y} ${x},${y + 3} ${x - 2.5},${y}`}
                   fill="url(#crescentGold)"
                 />
               );
@@ -118,152 +147,162 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
             if (isCardinal) {
               return (
                 <text
-                  key={`num-${hour}`}
+                  key={`num-${hr}`}
                   x={x}
                   y={y + 4}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontFamily="serif"
+                  fontFamily="'Cinzel', serif, Georgia"
                   fontWeight="bold"
-                  fontSize="13"
+                  fontSize="12.5"
                   fill="var(--accent-text)"
                 >
-                  {hour}
+                  {hr}
                 </text>
               );
             }
             return (
-              <circle
-                key={`hr-${hour}`}
-                cx={x}
-                cy={y}
-                r="2.2"
-                fill="url(#crescentGold)"
+              <polygon
+                key={`hr-${hr}`}
+                points={`${x},${y - 2.5} ${x + 2},${y} ${x},${y + 2.5} ${x - 2},${y}`}
+                fill="var(--accent)"
+                opacity="0.85"
               />
             );
           })}
 
-          {/* Top-Center Moon Phase Aperture Window */}
+          {/* ── Layer 3: Recessed Moon-Phase Aperture Window (cx=50%, cy=30%) ── */}
           <g transform={`translate(${center}, ${moonWindowY})`}>
-            {/* Window Outer Rim */}
+            {/* Window Outer Recessed Bezel */}
             <circle
               cx="0"
               cy="0"
-              r={moonRadius + 3}
+              r={moonRadius + 3.5}
               fill="var(--surface)"
-              stroke="url(#crescentGold)"
-              strokeWidth="1.5"
-              filter="drop-shadow(0 0 4px var(--accent-glow))"
+              stroke="var(--accent)"
+              strokeWidth="1.2"
+              opacity="0.9"
             />
-            {/* Starfield dots inside moon window */}
-            <circle cx="-8" cy="-6" r="0.6" fill="rgba(255,255,255,0.7)" />
-            <circle cx="9" cy="-5" r="0.8" fill="rgba(255,255,255,0.8)" />
-            <circle cx="-6" cy="7" r="0.7" fill="rgba(255,255,255,0.6)" />
-            <circle cx="7" cy="8" r="0.5" fill="rgba(255,255,255,0.7)" />
-            <circle cx="2" cy="-9" r="0.6" fill="rgba(255,255,255,0.9)" />
+            {/* Deep Night-Sky Inner Fill */}
+            <circle cx="0" cy="0" r={moonRadius + 2} fill="#040814" />
 
-            {/* Dark unlit moon background disc */}
-            <circle cx="0" cy="0" r={moonRadius} fill="var(--bg-base)" />
+            {/* Tiny Star Dots in Night Sky */}
+            <circle cx="-7" cy="-5" r="0.6" fill="#FFFFFF" opacity="0.8" />
+            <circle cx="8" cy="-4" r="0.7" fill="#FFFFFF" opacity="0.85" />
+            <circle cx="-5" cy="6" r="0.5" fill="#FFFFFF" opacity="0.6" />
+            <circle cx="6" cy="6" r="0.6" fill="#FFFFFF" opacity="0.75" />
+            <circle cx="1" cy="-7" r="0.5" fill="#FFFFFF" opacity="0.9" />
 
-            {/* Computed Illuminated Moon Phase Surface */}
+            {/* Computed Illuminated Moon Phase Disc */}
             <path
               d={getMoonSvgPath(moonInfo.phase, moonRadius)}
               fill="url(#moonGlow)"
-              filter="drop-shadow(0 0 3px rgba(255, 245, 200, 0.4))"
+              filter={!isStaticPreview ? "drop-shadow(0 0 3px rgba(255, 245, 200, 0.5))" : undefined}
             />
           </g>
 
-          {/* Hour Hand */}
-          <g
-            style={{
-              transform: `rotate(${hourAngle}deg)`,
-              transformOrigin: `${center}px ${center}px`,
-              transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
-            }}
-            filter="url(#handShadow)"
-          >
-            {/* Hour sword hand */}
-            <path
-              d={`M ${center - 3.5} ${center + 12} L ${center - 2} ${center - 54} L ${center} ${center - 62} L ${center + 2} ${center - 54} L ${center + 3.5} ${center + 12} Z`}
-              fill="url(#crescentGold)"
-            />
-            <line
-              x1={center}
-              y1={center + 10}
-              x2={center}
-              y2={center - 58}
-              stroke="var(--accent-text)"
-              strokeWidth="0.8"
-            />
-          </g>
-
-          {/* Minute Hand */}
-          <g
-            style={{
-              transform: `rotate(${minuteAngle}deg)`,
-              transformOrigin: `${center}px ${center}px`,
-              transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
-            }}
-            filter="url(#handShadow)"
-          >
-            {/* Minute lancet hand */}
-            <path
-              d={`M ${center - 2.5} ${center + 14} L ${center - 1.5} ${center - 76} L ${center} ${center - 85} L ${center + 1.5} ${center - 76} L ${center + 2.5} ${center + 14} Z`}
-              fill="url(#crescentGold)"
-            />
-            <line
-              x1={center}
-              y1={center + 12}
-              x2={center}
-              y2={center - 80}
-              stroke="var(--accent-text)"
-              strokeWidth="0.8"
-            />
-          </g>
-
-          {/* Thin Gold Second Hand */}
-          {!isStaticPreview && (
+          {/* ── Layer 4 (TOP): Watchmaker Hands + Center Jewel Cap ── */}
+          <g id="crescent-hands" filter={!isStaticPreview ? "url(#crescentHandShadow)" : undefined}>
+            {/* Tapered Sword Hour Hand with Luminous Spine */}
             <g
               style={{
-                transform: `rotate(${secondAngle}deg)`,
+                transform: `rotate(${hourAngle}deg)`,
                 transformOrigin: `${center}px ${center}px`,
+                transition: isStaticPreview ? 'none' : 'transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
               }}
             >
+              <path
+                d={`M ${center - 3.5} ${center + 10} L ${center - 2} ${center - 48} L ${center} ${center - 56} L ${center + 2} ${center - 48} L ${center + 3.5} ${center + 10} Z`}
+                fill="var(--text-primary)"
+              />
               <line
                 x1={center}
-                y1={center + 22}
+                y1={center + 8}
                 x2={center}
-                y2={center - 92}
+                y2={center - 52}
                 stroke="var(--accent-text)"
                 strokeWidth="1"
               />
-              {/* Counterweight circle */}
-              <circle
-                cx={center}
-                cy={center + 14}
-                r="3"
-                fill="var(--accent)"
+            </g>
+
+            {/* Tapered Sword Minute Hand with Luminous Spine */}
+            <g
+              style={{
+                transform: `rotate(${minuteAngle}deg)`,
+                transformOrigin: `${center}px ${center}px`,
+                transition: isStaticPreview ? 'none' : 'transform 0.15s cubic-bezier(0.4, 2.08, 0.55, 0.44)',
+              }}
+            >
+              <path
+                d={`M ${center - 2.8} ${center + 12} L ${center - 1.5} ${center - 70} L ${center} ${center - 78} L ${center + 1.5} ${center - 70} L ${center + 2.8} ${center + 12} Z`}
+                fill="var(--text-primary)"
+              />
+              <line
+                x1={center}
+                y1={center + 10}
+                x2={center}
+                y2={center - 74}
                 stroke="var(--accent-text)"
-                strokeWidth="0.8"
+                strokeWidth="1"
               />
             </g>
-          )}
 
-          {/* Center Pivot Cap */}
-          <circle
-            cx={center}
-            cy={center}
-            r="4.5"
-            fill="url(#crescentGold)"
-            stroke="var(--accent-text)"
-            strokeWidth="1"
-          />
+            {/* Sweeping Thin Second Hand with Counterbalance Tail */}
+            {!isStaticPreview && (
+              <g
+                style={{
+                  transform: `rotate(${secondAngle}deg)`,
+                  transformOrigin: `${center}px ${center}px`,
+                }}
+              >
+                <line
+                  x1={center}
+                  y1={center + 20}
+                  x2={center}
+                  y2={center - 90}
+                  stroke="var(--accent)"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx={center}
+                  cy={center + 14}
+                  r="2.8"
+                  fill="var(--accent)"
+                  stroke="var(--bg-base)"
+                  strokeWidth="0.8"
+                />
+              </g>
+            )}
+
+            {/* 3-Layer Center Jewel Cap */}
+            <circle
+              cx={center}
+              cy={center}
+              r="4.8"
+              fill="var(--accent)"
+              stroke="var(--border)"
+              strokeWidth="0.8"
+            />
+            <circle
+              cx={center}
+              cy={center}
+              r="3"
+              fill="var(--bg-base)"
+            />
+            <circle
+              cx={center}
+              cy={center}
+              r="1.4"
+              fill="var(--accent-text)"
+            />
+          </g>
         </svg>
       </div>
 
       {/* Subtle Lunar & Hijri subtitle when not in preview */}
       {!isStaticPreview && (
-        <div className="mt-2 text-center">
+        <div className="mt-2 text-center select-none">
           <div className="flex items-center justify-center gap-2 select-none">
             <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
             <p

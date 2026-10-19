@@ -220,8 +220,16 @@ function PremiumDashboardInner({
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300"
+      className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden"
     >
+      {/* ── Ambient Top Radial Aura across all 5 themes ── */}
+      <div
+        className="pointer-events-none absolute top-0 left-0 right-0 h-[380px] z-0 select-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 0%, var(--accent-soft) 0%, transparent 65%)',
+        }}
+        aria-hidden="true"
+      />
       {/* Manual Location Dialog */}
       {showManualLocationDialog && (
         <div
