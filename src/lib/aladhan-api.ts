@@ -438,11 +438,7 @@ export class AladhanAPI {
 
           return {
             name: prayer.name,
-            time: prayer.time.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            }),
+            time: prayer.time.toTimeString().slice(0, 5),
             countdown: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
             targetDate: prayer.time // Return the Date object directly
           };
@@ -465,15 +461,12 @@ export class AladhanAPI {
 
       return {
         name: 'Fajr (Tomorrow)',
-        time: firstPrayerTime.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        }),
+        time: firstPrayerTime.toTimeString().slice(0, 5),
         countdown: `${hours}h ${minutes}m`,
         targetDate: firstPrayerTime
       };
     } catch {
+      // Silently return null on error to let caller fall back to offline calculation
       return null;
     }
   }

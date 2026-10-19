@@ -472,25 +472,38 @@ function PremiumDashboardInner({
                       </div>
 
                       {/* 5 Prayer Vertical Glass Pods */}
-                      <div className="grid grid-cols-5 gap-2">
+                      <div
+                        className="grid"
+                        style={{
+                          gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+                          gap: '6px',
+                        }}
+                      >
                         {validPrayers.map((prayer) => {
                           const displayName = getPrayerDisplayName(prayer.originalName || prayer.name, prayer.date || new Date());
                           return (
                             <button
                               key={`tracker-${prayer.name}`}
+                              type="button"
                               onClick={() => prayer.onCheckIn?.()}
-                              className="flex flex-col items-center justify-between gap-2 p-[10px_4px] rounded-[14px] transition-all duration-300 group relative"
-                              style={prayer.isCompleted ? {
-                                background: 'var(--surface-2)',
-                                border: '1px solid var(--accent)',
-                                boxShadow: '0 0 14px var(--accent-glow)',
-                              } : {
-                                background: 'var(--surface-2)',
-                                border: '1px solid var(--border)',
+                              className="flex flex-col items-center justify-between gap-2 rounded-[14px] transition-all duration-300 group relative"
+                              style={{
+                                minWidth: 0,
+                                width: '100%',
+                                boxSizing: 'border-box',
+                                padding: '10px 2px',
+                                ...(prayer.isCompleted ? {
+                                  background: 'var(--surface-2)',
+                                  border: '1px solid var(--accent)',
+                                  boxShadow: '0 0 14px var(--accent-glow)',
+                                } : {
+                                  background: 'var(--surface-2)',
+                                  border: '1px solid var(--border)',
+                                }),
                               }}
                             >
                               <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 relative"
+                                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 relative shrink-0"
                                 style={prayer.isCompleted
                                   ? { background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 0 10px var(--accent-glow)' }
                                   : { background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
@@ -514,11 +527,13 @@ function PremiumDashboardInner({
                                 )}
                               </div>
                               <span
-                                className="font-semibold truncate max-w-full text-center"
+                                className="font-semibold text-center"
                                 style={{
-                                  fontSize: '0.76rem',
+                                  fontSize: 'clamp(0.64rem, 2.6vw, 0.70rem)',
                                   fontWeight: 600,
+                                  letterSpacing: '-0.01em',
                                   whiteSpace: 'nowrap',
+                                  textAlign: 'center',
                                   color: prayer.isCompleted ? 'var(--accent-text)' : 'var(--text-secondary)',
                                 }}
                               >

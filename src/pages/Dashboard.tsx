@@ -251,7 +251,9 @@ export default function Dashboard() {
         const displayName = getPrayerDisplayName(nextEvent.name, nextEvent.targetDate);
         cachedNextPrayerName = displayName;
         setNextPrayerName(displayName);
-        const formattedTime = nextEvent.time ? formatTimeFromAPI(nextEvent.time) : "--:--";
+        const formattedTime = nextEvent.targetDate
+          ? formatTime(nextEvent.targetDate, timeFormat)
+          : (nextEvent.time ? formatTimeFromAPI(nextEvent.time) : "--:--");
         cachedNextPrayerTime = formattedTime;
         setNextPrayerTime(formattedTime);
         if (nextEvent.targetDate) {
@@ -466,9 +468,12 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
     const prevPrayer = nextIdx > 0 ? prayers[nextIdx - 1] : (nextIdx === 0 && prayers.length > 0 ? prayers[prayers.length - 1] : null);
     const prevDate = prevPrayer?.date;
     const resolvedDisplayName = nextPrayerName ? getPrayerDisplayName(nextPrayerName, targetTime) : "Loading...";
+    const matchingPrayer = nextIdx !== -1 ? prayers[nextIdx] : null;
+    const resolvedTime = matchingPrayer?.time || (targetTime ? formatTime(targetTime, timeFormat) : (nextPrayerTime || "--:--"));
+
     if (!prevDate || !targetTime) return {
       name: resolvedDisplayName,
-      time: nextPrayerTime || "--:--",
+      time: resolvedTime,
       targetTime: targetTime,
       progress: 0,
     };
@@ -479,18 +484,18 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
     const now = Date.now();
     if (end <= start) return {
       name: resolvedDisplayName,
-      time: nextPrayerTime || "--:--",
+      time: resolvedTime,
       targetTime: targetTime,
       progress: 0,
     };
     const progress = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
     return {
       name: resolvedDisplayName,
-      time: nextPrayerTime || "--:--",
+      time: resolvedTime,
       targetTime: targetTime,
       progress,
     };
-  }, [prayers, nextPrayerName, nextPrayerTime, targetTime]);
+  }, [prayers, nextPrayerName, nextPrayerTime, targetTime, timeFormat]);
 
   // Stable callbacks for PremiumDashboard props
   const onServiceClick = useCallback((route: string) => navigate(route), [navigate]);

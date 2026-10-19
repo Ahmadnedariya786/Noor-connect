@@ -313,6 +313,18 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     return getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime || new Date());
   }, [nextPrayer.name, nextPrayer.targetTime]);
 
+  // Match prayer time with the floating prayer list row to guarantee 100% AM/PM consistency
+  const matchingPrayer = useMemo(() => {
+    return prayers.find(
+      (p) =>
+        isMatchingPrayer(p.name, nextPrayer.name) ||
+        isMatchingPrayer(p.originalName, nextPrayer.name) ||
+        isMatchingPrayer(getPrayerDisplayName(p.name, p.date), resolvedNextDisplayName)
+    );
+  }, [prayers, nextPrayer.name, resolvedNextDisplayName]);
+
+  const heroDisplayTime = matchingPrayer?.time || nextPrayer.time || '--:--';
+
   // Dynamic progress clamping between 5% and 100%
   const progressPercent = useMemo(() => {
     const raw = nextPrayer.progress > 1 ? nextPrayer.progress : nextPrayer.progress * 100;
@@ -416,7 +428,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 fontWeight: 700,
               }}
             >
-              {nextPrayer.time || '--:--'}
+              {heroDisplayTime}
             </span>
           </div>
 

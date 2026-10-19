@@ -8,7 +8,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { BookOpen, TrendingUp, Award, Calendar } from 'lucide-react';
 import { quranFeaturesService } from '@/lib/quran-features';
 import { useToast } from '@/hooks/use-toast';
@@ -281,25 +280,89 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         </div>
 
         {/* Action Buttons with 0ms SPA Router Navigation */}
-        <div className="grid grid-cols-2 gap-2.5 pt-1">
-          <Button
-            variant="default"
-            size="sm"
+        <div
+          className="pt-1"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '10px',
+          }}
+        >
+          <button
+            type="button"
             onClick={() => navigate('/quran')}
-            className="gap-1.5 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] hover:opacity-90 font-bold uppercase tracking-wider text-[11px] h-9 rounded-xl shadow-md active:scale-95 transition-all"
+            style={{
+              minWidth: 0,
+              width: '100%',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '11px 10px',
+              borderRadius: '12px',
+              fontSize: 'clamp(0.68rem, 2.8vw, 0.74rem)',
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              whiteSpace: 'nowrap',
+              textTransform: 'uppercase',
+              background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+              color: 'var(--on-accent)',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px var(--accent-glow)',
+            }}
+            className="hover:opacity-95 active:scale-95 transition-all"
           >
-            <BookOpen className="w-3.5 h-3.5 stroke-[2.5]" />
-            Continue Reading
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
+            <BookOpen
+              className="shrink-0 stroke-[2.5]"
+              style={{
+                width: '15px',
+                height: '15px',
+                flexShrink: 0,
+                color: 'var(--on-accent)',
+              }}
+            />
+            <span>Continue Reading</span>
+          </button>
+          <button
+            type="button"
             onClick={() => navigate('/quran-progress')}
-            className="gap-1.5 border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface)] text-[var(--text-primary)] font-bold uppercase tracking-wider text-[11px] h-9 rounded-xl active:scale-95 transition-all"
+            style={{
+              minWidth: 0,
+              width: '100%',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '11px 10px',
+              borderRadius: '12px',
+              fontSize: 'clamp(0.68rem, 2.8vw, 0.74rem)',
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              whiteSpace: 'nowrap',
+              textTransform: 'uppercase',
+              background: 'var(--surface-2)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+            }}
+            className="hover:bg-[var(--surface)] active:scale-95 transition-all"
           >
-            <TrendingUp className="w-3.5 h-3.5 text-[var(--accent)] stroke-[2.5]" />
-            View Details
-          </Button>
+            <TrendingUp
+              className="shrink-0 stroke-[2.5]"
+              style={{
+                width: '15px',
+                height: '15px',
+                flexShrink: 0,
+                color: 'var(--accent-text)',
+              }}
+            />
+            <span>View Details</span>
+          </button>
         </div>
       </CardContent>
     </Card>

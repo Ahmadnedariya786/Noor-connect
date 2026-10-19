@@ -31,13 +31,25 @@ export function formatTime(
     const cleaned = time.replace(/\s*\(.*?\)\s*/g, '').trim();
     if (!cleaned) return '--:--';
 
-    const parts = cleaned.split(':');
-    const hours = parseInt(parts[0], 10);
+    const isPM = /pm/i.test(cleaned);
+    const isAM = /am/i.test(cleaned);
+
+    // Remove AM/PM and any non-digit/colon characters for splitting
+    const numericPart = cleaned.replace(/\s*[ap]m/i, '').trim();
+    const parts = numericPart.split(':');
+    let hours = parseInt(parts[0], 10);
     const minutes = parseInt(parts[1], 10);
     const seconds = parts[2] ? parseInt(parts[2], 10) : 0;
 
     if (isNaN(hours) || isNaN(minutes)) {
       return time; // Fallback to raw string if unparseable
+    }
+
+    // Convert 12h AM/PM strings to 24h hours before constructing Date
+    if (isPM && hours < 12) {
+      hours += 12;
+    } else if (isAM && hours === 12) {
+      hours = 0;
     }
 
     date = new Date();

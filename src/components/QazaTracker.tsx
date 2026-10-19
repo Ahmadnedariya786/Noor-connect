@@ -121,15 +121,25 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
           </div>
         </CardHeader>
         <CardContent className="pb-4 px-5 pt-1">
-          <div className="grid grid-cols-5 gap-2">
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+              gap: '6px',
+            }}
+          >
             {prayerLabels.map((prayer) => {
               const count = prayers[prayer.id] || 0;
               const hasPending = count > 0;
               return (
                 <div
                   key={prayer.id}
-                  className="flex flex-col items-center justify-between gap-1.5 p-[10px_4px] rounded-[14px] transition-all duration-300 group"
+                  className="flex flex-col items-center justify-between gap-1.5 rounded-[14px] transition-all duration-300 group"
                   style={{
+                    minWidth: 0,
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '10px 2px',
                     background: 'var(--surface-2)',
                     border: hasPending ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border)',
                     boxShadow: hasPending ? '0 4px 12px rgba(239, 68, 68, 0.15)' : 'none',
@@ -139,7 +149,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     onClick={() => handleComplete(prayer.id)}
                     disabled={!hasPending}
                     title={hasPending ? `Mark 1 ${prayer.label} Qaza as prayed` : `All ${prayer.label} prayers completed`}
-                    className="w-10 h-10 rounded-full flex flex-col items-center justify-center font-bold text-sm transition-all duration-300 relative group/btn"
+                    className="w-10 h-10 rounded-full flex flex-col items-center justify-center font-bold text-sm transition-all duration-300 relative group/btn shrink-0"
                     style={hasPending ? {
                       background: 'rgba(239, 68, 68, 0.15)',
                       color: '#ef4444',
@@ -161,9 +171,13 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     )}
                   </button>
                   <span
-                    className="font-semibold truncate max-w-full text-center"
+                    className="font-semibold text-center"
                     style={{
-                      fontSize: '0.76rem',
+                      fontSize: 'clamp(0.64rem, 2.6vw, 0.70rem)',
+                      fontWeight: 600,
+                      letterSpacing: '-0.01em',
+                      whiteSpace: 'nowrap',
+                      textAlign: 'center',
                       color: hasPending ? 'var(--text-primary)' : 'var(--text-secondary)',
                     }}
                   >
