@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { recordBreadcrumb } from '@/lib/diagnostics-engine';
 
 /**
  * Resolves the deterministic parent route for any given pathname.
@@ -148,11 +149,18 @@ export function HardwareBackButtonHandler() {
       }
       lastHandledTimeRef.current = now;
 
+      const currentPath = locationRef.current.pathname;
+      const historyLen = typeof window !== 'undefined' ? window.history.length : 1;
+
       // Case 1: Modal / Sheet / Overlay is currently open -> dismiss it and stay on current page
       const activeModal = document.querySelector(
         '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [data-radix-portal] [role="dialog"], .fixed.inset-0.z-50'
       );
       if (activeModal) {
+        recordBreadcrumb(
+          'BACK_BUTTON',
+          `path=${currentPath}, historyLen=${historyLen}, action=dismiss_modal`
+        );
         // Dispatch Escape key event to close active Radix modal/sheet
         const escapeEvent = new KeyboardEvent('keydown', {
           key: 'Escape',
@@ -178,16 +186,23 @@ export function HardwareBackButtonHandler() {
         return;
       }
 
-      const currentPath = locationRef.current.pathname;
       const parent = getParentRoute(currentPath);
 
       if (parent) {
         // Case 2 & Case 3: Sub-screen or non-home tab -> Navigate directly to parent root tab with replace
+        recordBreadcrumb(
+          'BACK_BUTTON',
+          `path=${currentPath}, historyLen=${historyLen}, action=navigate_${parent.replace('/', '') || 'home'}`
+        );
         navigateRef.current(parent, { replace: true });
         return;
       }
 
       // Case 4: On Home screen ('/' or '/dashboard') with no modals -> Close/exit app immediately
+      recordBreadcrumb(
+        'BACK_BUTTON',
+        `path=${currentPath}, historyLen=${historyLen}, action=exit_app`
+      );
       await exitAndroidApp();
     };
 

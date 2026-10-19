@@ -7,6 +7,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { GeolocationService } from '@/lib/geolocation-service';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
 import { findNearestOfflineCity, type CityData } from '@/data/cities';
+import { recordBreadcrumb } from '@/lib/diagnostics-engine';
 
 export { FALLBACK_LOCATIONS } from '@/lib/location-config';
 
@@ -70,6 +71,10 @@ const saveLocation = (location: LocationState): void => {
       timestamp: location.lastUpdated,
       source: location.isIpBased ? 'ip' : 'stored'
     }));
+    recordBreadcrumb(
+      'CITY_CHANGE',
+      `City set to: ${location.locationName} (${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)})`
+    );
   } catch (error) {
     console.error('Failed to save location to storage:', error);
   }

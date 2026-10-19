@@ -2,7 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { recordCrash } from '@/lib/crash-logger';
+import { recordDiagnosticEvent } from '@/lib/diagnostics-engine';
 import { BUILD_COMMIT } from '@/buildInfo';
 
 interface Props {
@@ -42,10 +42,12 @@ export class ErrorBoundary extends Component<Props, State> {
       const commit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || 'unknown';
       const componentStack = errorInfo?.componentStack || '';
 
-      recordCrash({
+      recordDiagnosticEvent({
+        category: 'REACT_CRASH',
         type: 'react-boundary',
         message: error?.message || String(error),
-        stack: componentStack.slice(0, 500) || error?.stack || '',
+        stack: error?.stack || '',
+        componentStack,
         time: new Date().toISOString(),
         commit,
       });

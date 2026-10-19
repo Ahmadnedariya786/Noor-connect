@@ -29,10 +29,28 @@ import {
   RefreshCw,
   RotateCcw,
   ChevronRight,
+  ChevronDown,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  Terminal,
+  Sparkles,
+  Shield,
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { rerunPermissionOnboarding } from '@/lib/onboarding-permissions';
-import { getLastCrashes, clearCrashes, type CrashEntry } from '@/lib/crash-logger';
+import {
+  getDiagnosticEntries,
+  getRecentBreadcrumbs,
+  clearDiagnostics,
+  runDeepSystemHealthScan,
+  generateAiDiagnosticReport,
+  subscribeDiagnostics,
+  recordBreadcrumb,
+  type DiagnosticEvent,
+  type FlightBreadcrumb,
+  type DeepHealthScanReport,
+} from '@/lib/diagnostics-engine';
 import {
   checkNightlyUpdate,
   downloadAndInstallUpdate,
@@ -171,14 +189,31 @@ const SettingsSubPage: React.FC = () => {
   const meta = SECTION_TITLES[sectionId] || { title: 'Settings', subtitle: 'Noor Connect Preferences', icon: Palette };
   const IconComponent = meta.icon;
 
-  const [crashLogs, setCrashLogs] = useState<CrashEntry[]>([]);
+  const [diagnosticEvents, setDiagnosticEvents] = useState<DiagnosticEvent[]>([]);
+  const [flightBreadcrumbs, setFlightBreadcrumbs] = useState<FlightBreadcrumb[]>([]);
+  const [healthScanReport, setHealthScanReport] = useState<DeepHealthScanReport | null>(null);
+  const [isScanningHealth, setIsScanningHealth] = useState(false);
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
+  const [copiedEventId, setCopiedEventId] = useState<string | null>(null);
+
+  const [isChecklistExpanded, setIsChecklistExpanded] = useState(false);
+  const [isEventsExpanded, setIsEventsExpanded] = useState(false);
+  const [isBreadcrumbsExpanded, setIsBreadcrumbsExpanded] = useState(false);
+  const [expandedCheckId, setExpandedCheckId] = useState<string | null>(null);
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
   useEffect(() => {
     if (sectionId === 'about') {
-      setCrashLogs(getLastCrashes());
+      const refreshData = () => {
+        setDiagnosticEvents(getDiagnosticEntries());
+        setFlightBreadcrumbs(getRecentBreadcrumbs());
+      };
+      refreshData();
+      const unsubscribe = subscribeDiagnostics(refreshData);
+
       checkNightlyUpdate(false)
         .then(setUpdateResult)
         .catch((err) => {
@@ -200,10 +235,15 @@ const SettingsSubPage: React.FC = () => {
             error: msg,
           });
         });
+
+      return () => {
+        unsubscribe();
+      };
     }
   }, [sectionId]);
 
   const handleManualCheckUpdate = async () => {
+    recordBreadcrumb('UPDATE_CHECK', 'Manual check triggered in Settings > About');
     setIsCheckingUpdate(true);
     try {
       try {
@@ -261,29 +301,89 @@ const SettingsSubPage: React.FC = () => {
     }
   };
 
-  const handleCopyDiagnostics = () => {
+  const handleRunHealthScan = async () => {
+    setIsScanningHealth(true);
     try {
-      const payload = {
-        build: {
-          commit: BUILD_COMMIT,
-          commitShort: BUILD_COMMIT !== 'unknown' ? BUILD_COMMIT.slice(0, 7) : 'dev',
-          builtAt: BUILD_TIME,
-          appVersion: CURRENT_APP_VERSION,
-        },
-        crashes: crashLogs.length > 0 ? crashLogs : 'No crashes recorded',
-      };
-      const text = JSON.stringify(payload, null, 2);
-      navigator.clipboard?.writeText(text);
+      const report = await runDeepSystemHealthScan();
+      setHealthScanReport(report);
+      setIsChecklistExpanded(true);
+      toast({
+        title: 'Health Scan Complete',
+        description: `${report.passedCount}/${report.totalChecks} Subsystems Passed (${report.warnCount} warnings, ${report.failCount} failed).`,
+      });
+    } catch (err) {
+      toast({
+        title: 'Health Scan Failed',
+        description: String(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsScanningHealth(false);
+    }
+  };
+
+  const handleCopyAiReport = async () => {
+    try {
+      const reportMarkdown = await generateAiDiagnosticReport(healthScanReport);
+      await navigator.clipboard?.writeText(reportMarkdown);
       setCopiedDiagnostics(true);
       toast({
-        title: 'Copied to clipboard',
-        description: 'Diagnostics & build info copied for troubleshooting.',
+        title: 'Report Copied!',
+        description: 'Full diagnostic report copied! Paste it to AI.',
       });
-      setTimeout(() => setCopiedDiagnostics(false), 2000);
+      setTimeout(() => setCopiedDiagnostics(false), 2500);
     } catch {
       toast({
-        title: 'Failed to copy',
-        description: 'Could not access clipboard.',
+        title: 'Copy Failed',
+        description: 'Could not access clipboard to copy diagnostic report.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleTestErrorCapture = () => {
+    try {
+      console.error('[DIAGNOSTIC_TEST] Controlled verification error captured by diagnostics engine');
+      recordBreadcrumb('TEST', 'User triggered test error capture');
+      toast({
+        title: 'Test Error Logged',
+        description: 'Captured 1 test event in diagnostics buffer.',
+      });
+      setIsEventsExpanded(true);
+    } catch (err) {
+      toast({
+        title: 'Test Error Failed',
+        description: String(err),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleClearDiagnostics = () => {
+    clearDiagnostics();
+    setDiagnosticEvents([]);
+    setFlightBreadcrumbs([]);
+    setHealthScanReport(null);
+    toast({
+      title: 'Diagnostics Cleared',
+      description: 'Error log buffer and flight breadcrumbs have been reset.',
+    });
+  };
+
+  const handleCopySingleEvent = (ev: DiagnosticEvent) => {
+    try {
+      const text = JSON.stringify(ev, null, 2);
+      navigator.clipboard?.writeText(text);
+      setCopiedEventId(ev.id);
+      toast({
+        title: 'Error Copied',
+        description: 'Individual error details copied to clipboard.',
+      });
+      setTimeout(() => setCopiedEventId(null), 2000);
+    } catch {
+      toast({
+        title: 'Copy Failed',
+        description: 'Could not copy error to clipboard.',
         variant: 'destructive',
       });
     }
@@ -1021,99 +1121,418 @@ const SettingsSubPage: React.FC = () => {
               )}
             </Card>
 
-            {/* Diagnostics Black Box */}
-            <Card className="p-4 space-y-3 rounded-2xl border border-border">
+            {/* Diagnostics Black Box & Flight Recorder */}
+            <Card className="p-4 space-y-3.5 rounded-2xl border border-border bg-card">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-500" />
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Diagnostics
-                  </Label>
+                  <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
+                      Deep X-Ray Diagnostics
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground/80">
+                      6-layer diagnostic engine & flight recorder
+                    </span>
+                  </div>
                 </div>
-                {crashLogs.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                    onClick={handleCopyDiagnostics}
-                  >
-                    {copiedDiagnostics ? <Check className="w-3.5 h-3.5 mr-1 text-[var(--success)]" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                    {copiedDiagnostics ? 'Copied' : 'Copy'}
-                  </Button>
-                )}
+                <div className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/25">
+                  Active
+                </div>
               </div>
 
-              {/* Installed Build Identity */}
-              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-foreground/80">Commit:</span>
+              {/* Installed Build & Environment Identity (No-collision pills with gap-2) */}
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+                {/* Pill 1: Commit */}
+                <div className="px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60 flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-[10px]">Commit:</span>
                   <span className="font-bold text-amber-500 dark:text-amber-400">
                     {BUILD_COMMIT !== 'unknown' ? BUILD_COMMIT.slice(0, 7) : 'dev'}
                   </span>
                 </div>
-                <div className="text-[10px] text-muted-foreground">
-                  Built: {new Date(BUILD_TIME).toLocaleDateString()} {new Date(BUILD_TIME).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+
+                {/* Pill 2: Built */}
+                <div className="px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60 flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-[10px]">Built:</span>
+                  <span className="font-semibold text-foreground/80 text-[10px]">
+                    {new Date(BUILD_TIME).toLocaleDateString()} {new Date(BUILD_TIME).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+
+                {/* Pill 3: Platform & Viewport */}
+                <div className="px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60 flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-[10px]">Device:</span>
+                  <span className="font-semibold text-foreground/80 text-[10px]">
+                    {Capacitor.isNativePlatform() ? 'Android' : 'Web'} • {typeof window !== 'undefined' ? `${window.innerWidth}×${window.innerHeight}` : '360×800'}
+                  </span>
                 </div>
               </div>
 
-              {crashLogs.length === 0 ? (
-                <div className="flex items-center gap-2 py-3 px-3.5 rounded-xl bg-[var(--success)]/10 text-[var(--success)] text-xs font-medium">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>No crashes recorded</span>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    {crashLogs.map((entry, idx) => (
-                      <div key={idx} className="p-2.5 rounded-xl bg-muted/60 border border-border text-left space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                          <span className="font-mono">{new Date(entry.time).toLocaleTimeString()} · {new Date(entry.time).toLocaleDateString()}</span>
-                          <span className="font-semibold text-foreground/80 truncate max-w-[160px]">
-                            {entry.type ? `[${entry.type}]` : entry.route}
-                          </span>
-                        </div>
-                        <p className="text-xs font-semibold text-red-500 dark:text-red-400 break-words">
-                          {entry.message}
-                        </p>
-                        {entry.commit && (
-                          <p className="text-[10px] font-mono text-muted-foreground/75">
-                            Commit: {entry.commit.length > 7 ? entry.commit.slice(0, 7) : entry.commit}
-                          </p>
-                        )}
-                        {entry.stack && (
-                          <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-hidden max-h-24 bg-background/50 p-1.5 rounded">
-                            {entry.stack}
-                          </pre>
-                        )}
+              {/* Live Health Summary Counters */}
+              {(() => {
+                const errorCount = diagnosticEvents.filter(
+                  (e) => e.category === 'REACT_CRASH' || e.category === 'RUNTIME_ERROR' || e.category === 'CONSOLE_ERROR'
+                ).length;
+                const warningCount = diagnosticEvents.filter(
+                  (e) => e.category === 'CONSOLE_WARN' || e.category === 'PROMISE_REJECTION'
+                ).length;
+
+                return (
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Crashes & Errors */}
+                    <div className="p-2.5 rounded-xl bg-muted/30 border border-border/50 text-center flex flex-col justify-center items-center">
+                      <div className={`text-base font-bold font-mono ${errorCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
+                        {errorCount}
                       </div>
-                    ))}
+                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                        {errorCount === 1 ? 'Error' : 'Errors'}
+                      </div>
+                    </div>
+
+                    {/* Warnings */}
+                    <div className="p-2.5 rounded-xl bg-muted/30 border border-border/50 text-center flex flex-col justify-center items-center">
+                      <div className={`text-base font-bold font-mono ${warningCount > 0 ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+                        {warningCount}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                        {warningCount === 1 ? 'Warning' : 'Warnings'}
+                      </div>
+                    </div>
+
+                    {/* 8-Point Health Checks */}
+                    <div className="p-2.5 rounded-xl bg-muted/30 border border-border/50 text-center flex flex-col justify-center items-center">
+                      <div className={`text-base font-bold font-mono ${
+                        healthScanReport
+                          ? healthScanReport.failCount > 0
+                            ? 'text-[var(--danger)]'
+                            : healthScanReport.warnCount > 0
+                            ? 'text-[var(--warning)]'
+                            : 'text-[var(--success)]'
+                          : 'text-amber-500'
+                      }`}>
+                        {healthScanReport ? `${healthScanReport.passedCount}/${healthScanReport.totalChecks}` : '8 Ready'}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                        Health Scan
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center pt-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs rounded-lg"
-                      onClick={handleCopyDiagnostics}
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy to Clipboard
-                    </Button>
+                );
+              })()}
+
+              {/* Interactive Action Buttons */}
+              <div className="space-y-2 pt-1">
+                {/* Button 1: Run Deep Health Scan (Primary Accent Gradient) */}
+                <Button
+                  size="sm"
+                  className="w-full h-9 rounded-xl font-semibold text-xs shadow-sm flex items-center justify-center gap-2"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2, var(--accent)) 100%)",
+                    color: "var(--on-accent, #000000)",
+                  }}
+                  onClick={handleRunHealthScan}
+                  disabled={isScanningHealth}
+                >
+                  {isScanningHealth ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Scanning 8 Subsystems...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Run Deep Health Scan</span>
+                    </>
+                  )}
+                </Button>
+
+                {/* Button 2: Copy Full AI Diagnostic Report (Secondary Glass Pill) */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-8 rounded-xl border-border/80 bg-muted/20 hover:bg-muted/40 text-xs font-medium flex items-center justify-center gap-1.5"
+                  onClick={handleCopyAiReport}
+                >
+                  {copiedDiagnostics ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-[var(--success)]" />
+                      <span className="text-[var(--success)] font-semibold">Diagnostic Report Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>Copy Full AI Diagnostic Report</span>
+                    </>
+                  )}
+                </Button>
+
+                {/* Mini Action Row */}
+                <div className="flex items-center justify-between gap-1.5 pt-1 text-xs">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground rounded-lg"
+                    onClick={handleTestErrorCapture}
+                  >
+                    <AlertCircle className="w-3 h-3 mr-1 text-amber-500" />
+                    Test Capture
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {diagnosticEvents.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground rounded-lg"
+                        onClick={() => setIsEventsExpanded(!isEventsExpanded)}
+                      >
+                        <Terminal className="w-3 h-3 mr-1" />
+                        {isEventsExpanded ? 'Hide Logs' : `Logs (${diagnosticEvents.length})`}
+                      </Button>
+                    )}
+
+                    {flightBreadcrumbs.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground rounded-lg"
+                        onClick={() => setIsBreadcrumbsExpanded(!isBreadcrumbsExpanded)}
+                      >
+                        <Activity className="w-3 h-3 mr-1 text-sky-500" />
+                        {isBreadcrumbsExpanded ? 'Hide Trail' : `Trail (${flightBreadcrumbs.length})`}
+                      </Button>
+                    )}
+
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-xs text-muted-foreground hover:text-red-500 rounded-lg"
-                      onClick={() => {
-                        clearCrashes();
-                        setCrashLogs([]);
-                        toast({ title: 'Diagnostics cleared' });
-                      }}
+                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-red-500 rounded-lg"
+                      onClick={handleClearDiagnostics}
                     >
+                      <Trash2 className="w-3 h-3 mr-1" />
                       Clear
                     </Button>
                   </div>
                 </div>
+              </div>
+
+              {/* Zero Crashes / Errors Empty State Banner */}
+              {diagnosticEvents.length === 0 && (
+                <div className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--success)]/10 text-[var(--success)] text-xs font-medium border border-[var(--success)]/20">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>0 crashes or errors recorded in buffer</span>
+                </div>
               )}
 
+              {/* 8-Point Health Scan Expandable Checklist */}
+              {healthScanReport && (
+                <div className="pt-2 border-t border-border/50 space-y-2">
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between p-2 rounded-xl bg-muted/30 hover:bg-muted/50 border border-border/60 text-left transition-colors"
+                    onClick={() => setIsChecklistExpanded(!isChecklistExpanded)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Shield className={`w-3.5 h-3.5 ${
+                        healthScanReport.overallStatus === 'PASS'
+                          ? 'text-[var(--success)]'
+                          : healthScanReport.overallStatus === 'WARN'
+                          ? 'text-[var(--warning)]'
+                          : 'text-[var(--danger)]'
+                      }`} />
+                      <span className="text-xs font-semibold text-foreground">
+                        8 Subsystem Checks ({healthScanReport.passedCount}/{healthScanReport.totalChecks} Passed)
+                      </span>
+                    </div>
+                    {isChecklistExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                  </button>
+
+                  {isChecklistExpanded && (
+                    <div className="space-y-1.5 pl-0.5 pr-0.5">
+                      {healthScanReport.checks.map((chk, i) => {
+                        const isExpanded = expandedCheckId === chk.id;
+                        return (
+                          <div
+                            key={chk.id}
+                            className="p-2.5 rounded-xl bg-muted/40 border border-border/60 space-y-1.5 text-left"
+                          >
+                            <div
+                              className="flex items-center justify-between cursor-pointer"
+                              onClick={() => setExpandedCheckId(isExpanded ? null : chk.id)}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-[11px] font-mono text-muted-foreground shrink-0">{i + 1}.</span>
+                                <span className="text-xs font-medium text-foreground truncate">{chk.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                    chk.status === 'PASS'
+                                      ? 'bg-[var(--success)]/15 text-[var(--success)] border border-[var(--success)]/30'
+                                      : chk.status === 'WARN'
+                                      ? 'bg-[var(--warning)]/15 text-[var(--warning)] border border-[var(--warning)]/30'
+                                      : 'bg-[var(--danger)]/15 text-[var(--danger)] border border-[var(--danger)]/30'
+                                  }`}
+                                >
+                                  {chk.status === 'PASS' ? '✓ PASS' : chk.status === 'WARN' ? '⚠ WARN' : '✕ FAIL'}
+                                </span>
+                                {isExpanded ? (
+                                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground leading-snug">
+                              {chk.summary}
+                            </p>
+                            {isExpanded && chk.details && (
+                              <pre className="text-[10px] font-mono p-2 rounded-lg bg-background/80 border border-border/40 text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-36">
+                                {chk.details}
+                              </pre>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Captured Diagnostic Events Inspector */}
+              {isEventsExpanded && diagnosticEvents.length > 0 && (
+                <div className="pt-2 border-t border-border/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Recorded Events ({diagnosticEvents.length})
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">Tap message for details</span>
+                  </div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {diagnosticEvents.map((entry) => {
+                      const isExpanded = expandedEventId === entry.id;
+                      const isCopied = copiedEventId === entry.id;
+                      const badgeColor =
+                        entry.category === 'REACT_CRASH'
+                          ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                          : entry.category === 'RUNTIME_ERROR'
+                          ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                          : entry.category === 'PROMISE_REJECTION'
+                          ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
+                          : entry.category === 'CONSOLE_ERROR'
+                          ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                          : 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+
+                      return (
+                        <div
+                          key={entry.id}
+                          className="p-2.5 rounded-xl bg-muted/60 border border-border text-left space-y-1.5"
+                        >
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`px-1.5 py-0.5 rounded font-mono font-bold text-[9px] border ${badgeColor}`}>
+                                {entry.category.replace('_', ' ')}
+                              </span>
+                              <span className="font-mono">
+                                {new Date(entry.time).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <span className="font-semibold text-foreground/80 truncate max-w-[120px]">
+                              {entry.route}
+                            </span>
+                          </div>
+
+                          <p
+                            className="text-xs font-semibold text-foreground/90 break-words cursor-pointer hover:text-amber-400 transition-colors"
+                            onClick={() => setExpandedEventId(isExpanded ? null : entry.id)}
+                          >
+                            {entry.message}
+                          </p>
+
+                          {entry.filename && (
+                            <p className="text-[10px] font-mono text-muted-foreground truncate">
+                              {entry.filename}{entry.lineno !== undefined ? `:${entry.lineno}:${entry.colno}` : ''}
+                            </p>
+                          )}
+
+                          {isExpanded && (
+                            <div className="space-y-1.5 pt-1">
+                              {entry.componentStack && (
+                                <div>
+                                  <span className="text-[9px] font-mono text-muted-foreground">React Component Stack:</span>
+                                  <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-24 bg-background/80 p-1.5 rounded border border-border/40">
+                                    {entry.componentStack}
+                                  </pre>
+                                </div>
+                              )}
+                              {entry.stack && (
+                                <div>
+                                  <span className="text-[9px] font-mono text-muted-foreground">Stack Trace:</span>
+                                  <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-28 bg-background/80 p-1.5 rounded border border-border/40">
+                                    {entry.stack}
+                                  </pre>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between pt-1 border-t border-border/30 text-[10px]">
+                            <span className="text-muted-foreground/80 font-mono text-[9px]">
+                              {entry.commit ? `Commit: ${entry.commit.slice(0, 7)}` : ''}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                              onClick={() => handleCopySingleEvent(entry)}
+                            >
+                              {isCopied ? <Check className="w-2.5 h-2.5 mr-1 text-[var(--success)]" /> : <Copy className="w-2.5 h-2.5 mr-1" />}
+                              {isCopied ? 'Copied' : 'Copy'}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Flight Recorder Breadcrumbs Inspector */}
+              {isBreadcrumbsExpanded && flightBreadcrumbs.length > 0 && (
+                <div className="pt-2 border-t border-border/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Flight Recorder Trail ({flightBreadcrumbs.length})
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">Last 35 actions</span>
+                  </div>
+                  <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                    {flightBreadcrumbs.map((crumb) => (
+                      <div
+                        key={crumb.id}
+                        className="px-2 py-1.5 rounded-lg bg-muted/30 border border-border/40 flex items-start gap-2 text-[10px]"
+                      >
+                        <span className="font-mono text-muted-foreground shrink-0 text-[9px] pt-0.5">
+                          {new Date(crumb.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[9px] bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                          {crumb.type}
+                        </span>
+                        <span className="text-muted-foreground break-words flex-1">
+                          {crumb.message}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Keep Re-run permission onboarding Button Intact */}
               <div className="pt-2 border-t border-border/50">
                 <Button
                   size="sm"

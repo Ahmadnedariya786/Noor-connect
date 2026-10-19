@@ -31,10 +31,32 @@ import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-perfo
 import { runFirstLaunchPermissionOnboarding } from "@/lib/onboarding-permissions";
 import { ExactAlarmPermissionDialog } from "@/components/ExactAlarmPermissionDialog";
 import { HardwareBackButtonHandler } from "@/components/HardwareBackButtonHandler";
+import { recordBreadcrumb } from "@/lib/diagnostics-engine";
+
+/**
+ * RouteBreadcrumbTracker — automatically logs timestamped breadcrumbs on every route change.
+ */
+function RouteBreadcrumbTracker() {
+  const location = useLocation();
+  const prevPathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const current = (location.pathname || '/') + (location.search || '') + (location.hash || '');
+    if (prevPathRef.current !== null && prevPathRef.current !== current) {
+      recordBreadcrumb('ROUTE_CHANGE', `${prevPathRef.current} -> ${current}`);
+    } else if (prevPathRef.current === null) {
+      recordBreadcrumb('ROUTE_INITIAL', current);
+    }
+    prevPathRef.current = current;
+  }, [location]);
+
+  return null;
+}
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
  * and routes them through React Router. Must live inside <BrowserRouter> so useNavigate works.
+
  *
  * Handles both cold start (Capacitor delivers the launch URL on appUrlOpen) and warm start
  * (MainActivity.onNewIntent forwards the intent to the App plugin). No-op on web.
@@ -353,6 +375,7 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
             <LayoutManager>
               <ErrorBoundary>
                 <HardwareBackButtonHandler />
+                <RouteBreadcrumbTracker />
                 <DeepLinkListener />
                 <AppRoutes />
               </ErrorBoundary>

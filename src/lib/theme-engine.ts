@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { type ThemeId, type ThemeTokens, type AppTheme } from '@/types/theme';
+import { recordBreadcrumb } from './diagnostics-engine';
 
 export const THEME_STORAGE_KEY = 'noor_theme';
 export const LEGACY_THEME_KEY = 'theme';
@@ -218,6 +219,7 @@ export function setTheme(newThemeId: ThemeId): void {
   }
 
   applyThemeToDOM(validId);
+  recordBreadcrumb('THEME_CHANGE', `Theme set to: ${validId}`);
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(THEME_CHANGED_EVENT, { detail: validId }));

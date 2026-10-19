@@ -1,7 +1,17 @@
 /**
  * Crash Logger & Diagnostics ("Black Box")
- * Captures uncaught errors and unhandled promise rejections, persisting the last 3 entries to localStorage.
+ * Bridges backwards-compatible crash APIs to the new Deep X-Ray Diagnostics Engine.
  */
+
+import {
+  recordDiagnosticEvent,
+  getDiagnosticEntries,
+  clearDiagnostics,
+  initDiagnosticsEngine,
+  getSafeRoute,
+  type DiagnosticCategory,
+  type DiagnosticEvent,
+} from './diagnostics-engine';
 
 export interface CrashEntry {
   message: string;
@@ -13,29 +23,15 @@ export interface CrashEntry {
   commit?: string;
 }
 
-const CRASH_STORAGE_KEY = 'noor_last_crash';
-const MAX_ENTRIES = 5;
-
-function getSafeRoute(): string {
-  try {
-    if (typeof window !== 'undefined' && window.location) {
-      return (window.location.pathname || '/') + (window.location.search || '') + (window.location.hash || '');
-    }
-  } catch {
-    // silent fallback - intentional, see stability hardening notes
-  }
-  return '/';
-}
-
-function extractFirstFiveStackLines(stack?: string): string {
-  if (!stack || typeof stack !== 'string') return '';
-  return stack
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
-    .slice(0, 5)
-    .join('\n');
-}
+export {
+  recordDiagnosticEvent,
+  getDiagnosticEntries,
+  clearDiagnostics,
+  initDiagnosticsEngine,
+  getSafeRoute,
+  type DiagnosticCategory,
+  type DiagnosticEvent,
+};
 
 export function recordCrash(entry: {
   message: string;
@@ -46,103 +42,47 @@ export function recordCrash(entry: {
   step?: string;
   commit?: string;
 }): void {
-  try {
-    const existing = getLastCrashes();
-    const formattedStack = entry.type === 'react-boundary'
-      ? (entry.stack ? entry.stack.trim().slice(0, 500) : '')
-      : extractFirstFiveStackLines(entry.stack);
+  const category: DiagnosticCategory =
+    entry.type === 'react-boundary' ? 'REACT_CRASH' : 'RUNTIME_ERROR';
 
-    const cleanEntry: CrashEntry = {
-      message: entry.message || 'Unknown error',
-      stack: formattedStack,
-      time: entry.time || new Date().toISOString(),
-      route: entry.route || getSafeRoute(),
-      ...(entry.type ? { type: entry.type } : {}),
-      ...(entry.step ? { step: entry.step } : {}),
-      ...(entry.commit ? { commit: entry.commit } : {}),
-    };
-
-    const updated = [cleanEntry, ...existing].slice(0, MAX_ENTRIES);
-    localStorage.setItem(CRASH_STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.warn('Failed to record crash diagnostics:', err);
-  }
+  recordDiagnosticEvent({
+    category,
+    message: entry.message || 'Unknown error',
+    stack: entry.stack,
+    route: entry.route,
+    time: entry.time,
+    commit: entry.commit,
+    type: entry.type,
+    step: entry.step,
+  });
 }
 
 export function getLastCrashes(): CrashEntry[] {
-  try {
-    const raw = localStorage.getItem(CRASH_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed.slice(0, MAX_ENTRIES);
-    }
-  } catch {
-    // silent fallback - intentional, see stability hardening notes
-  }
-  return [];
+  const events = getDiagnosticEntries();
+  return events
+    .filter(
+      (e) =>
+        e.category === 'REACT_CRASH' ||
+        e.category === 'RUNTIME_ERROR' ||
+        e.type === 'startup-crash'
+    )
+    .slice(0, 5)
+    .map((e) => ({
+      message: e.message,
+      stack: e.stack || '',
+      time: e.time,
+      route: e.route,
+      ...(e.type ? { type: e.type } : {}),
+      ...(e.step ? { step: e.step } : {}),
+      ...(e.commit ? { commit: e.commit } : {}),
+    }));
 }
 
 export function clearCrashes(): void {
-  try {
-    localStorage.removeItem(CRASH_STORAGE_KEY);
-  } catch {
-    // silent fallback - intentional, see stability hardening notes
-  }
+  clearDiagnostics();
 }
-
-let isInitialized = false;
 
 export function initCrashLogger(): void {
-  if (isInitialized || typeof window === 'undefined') return;
-  isInitialized = true;
-
-  // Global uncaught JS exceptions
-  const originalOnError = window.onerror;
-  window.onerror = function (event, source, lineno, colno, error) {
-    try {
-      const msg = typeof event === 'string' ? event : error?.message || 'Script error';
-      const stack = error?.stack || (source ? `at ${source}:${lineno}:${colno}` : '');
-      recordCrash({
-        message: msg,
-        stack,
-      });
-    } catch {
-      // silent fallback - intentional, see stability hardening notes
-    }
-
-    if (typeof originalOnError === 'function') {
-      return originalOnError.apply(this, [event, source, lineno, colno, error]);
-    }
-    return false;
-  };
-
-  // Global unhandled promise rejections
-  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-    try {
-      const reason = event.reason;
-      let message = 'Unhandled Promise Rejection';
-      let stack = '';
-
-      if (reason instanceof Error) {
-        message = reason.message || 'Error in Promise';
-        stack = reason.stack || '';
-      } else if (typeof reason === 'string') {
-        message = reason;
-      } else if (reason && typeof reason === 'object') {
-        try {
-          message = JSON.stringify(reason);
-        } catch {
-          message = String(reason);
-        }
-      }
-
-      recordCrash({
-        message,
-        stack,
-      });
-    } catch {
-      // silent fallback - intentional, see stability hardening notes
-    }
-  });
+  initDiagnosticsEngine();
 }
+

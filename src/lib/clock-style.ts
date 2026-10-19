@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { type ClockStyleId, CLOCK_STYLES } from '@/types/clock';
+import { recordBreadcrumb } from './diagnostics-engine';
 
 const STORAGE_KEY = 'noor_clock_style';
 export const CLOCK_STYLE_CHANGED_EVENT = 'noor-clock-style-changed';
@@ -27,6 +28,7 @@ export function setClockStyle(style: ClockStyleId): void {
   try {
     const validStyle = VALID_STYLE_IDS.has(style) ? style : DEFAULT_CLOCK_STYLE;
     localStorage.setItem(STORAGE_KEY, validStyle);
+    recordBreadcrumb('CLOCK_CHANGE', `Clock style set to: ${validStyle}`);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(CLOCK_STYLE_CHANGED_EVENT, { detail: validStyle }));
     }

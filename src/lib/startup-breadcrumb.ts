@@ -17,6 +17,7 @@
  */
 
 import { recordCrash } from './crash-logger';
+import { recordBreadcrumb } from './diagnostics-engine';
 
 export const STARTUP_STEP_KEY = 'noor_startup_step';
 export const STARTUP_STEP_DONE = 'done';
@@ -32,18 +33,22 @@ export function markStartupStep(stepName: string): void {
   } catch {
     // localStorage may fail in extreme private-mode or quota-exceeded cases
   }
+  recordBreadcrumb('STARTUP', `Step started: ${stepName}`);
 }
 
 /**
  * Cheap, synchronous marker written after an initialization step completes.
  */
-export function completeStartupStep(_stepName?: string): void {
+export function completeStartupStep(stepName?: string): void {
   try {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(STARTUP_STEP_KEY, STARTUP_STEP_DONE);
     }
   } catch {
     // Silently ignore
+  }
+  if (stepName) {
+    recordBreadcrumb('STARTUP', `Step completed: ${stepName}`);
   }
 }
 
