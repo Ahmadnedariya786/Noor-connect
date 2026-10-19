@@ -419,7 +419,9 @@ function PremiumDashboardInner({
                   );
                 }
 
-                case 'salah-tracker':
+                case 'salah-tracker': {
+                  const validPrayers = prayers.filter(p => (p.originalName || p.name) !== 'Sunrise');
+                  const completedCount = validPrayers.filter(p => p.isCompleted).length;
                   return (
                     <m.div
                       key={widget.id}
@@ -428,9 +430,12 @@ function PremiumDashboardInner({
                         animate: { opacity: 1, y: 0 },
                         transition: { duration: 0.2, ease: 'easeOut' }
                       })}
-                      className="p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md"
+                      className="p-5 rounded-[22px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md relative overflow-hidden"
+                      style={{
+                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen)',
+                      }}
                     >
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center justify-between mb-2">
                         <div>
                           <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">Daily Salah</h3>
                           <div
@@ -439,41 +444,93 @@ function PremiumDashboardInner({
                           />
                         </div>
                         <div
-                          className="px-2 py-1 rounded-full text-xs font-bold"
+                          className="px-2.5 py-1 rounded-full text-xs font-bold"
                           style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}
                         >
-                          {prayers.filter(p => (p.originalName || p.name) !== 'Sunrise' && p.isCompleted).length} / 5
+                          {completedCount} / 5
                         </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        {prayers.filter(p => (p.originalName || p.name) !== 'Sunrise').map((prayer) => (
-                          <button
-                            key={`tracker-${prayer.name}`}
-                            onClick={() => prayer.onCheckIn?.()}
-                            className="flex flex-col items-center gap-2 group"
-                          >
+
+                      {/* 5-Segment Horizontal Progress Bar */}
+                      <div className="grid grid-cols-5 gap-1.5 mb-4">
+                        {[0, 1, 2, 3, 4].map((idx) => {
+                          const isFilled = idx < completedCount;
+                          return (
                             <div
-                              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
-                              style={prayer.isCompleted
-                                ? { background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 0 14px var(--accent-glow)', transform: 'scale(1.1)' }
-                                : { background: 'var(--surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                              key={idx}
+                              className="h-1.5 rounded-full overflow-hidden transition-all duration-300"
+                              style={{
+                                background: isFilled
+                                  ? 'linear-gradient(90deg, var(--accent), var(--accent-2))'
+                                  : 'var(--surface-2)',
+                                border: isFilled ? 'none' : '1px solid var(--border)',
+                                boxShadow: isFilled ? '0 0 8px var(--accent-glow)' : 'none',
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* 5 Prayer Vertical Glass Pods */}
+                      <div className="grid grid-cols-5 gap-2">
+                        {validPrayers.map((prayer) => {
+                          const displayName = getPrayerDisplayName(prayer.originalName || prayer.name, prayer.date || new Date());
+                          return (
+                            <button
+                              key={`tracker-${prayer.name}`}
+                              onClick={() => prayer.onCheckIn?.()}
+                              className="flex flex-col items-center justify-between gap-2 p-[10px_4px] rounded-[14px] transition-all duration-300 group relative"
+                              style={prayer.isCompleted ? {
+                                background: 'var(--surface-2)',
+                                border: '1px solid var(--accent)',
+                                boxShadow: '0 0 14px var(--accent-glow)',
+                              } : {
+                                background: 'var(--surface-2)',
+                                border: '1px solid var(--border)',
+                              }}
                             >
-                              {prayer.isCompleted ? (
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                              ) : (
-                                prayer.icon
-                              )}
-                            </div>
-                            <span className="text-xs font-semibold" style={{ color: prayer.isCompleted ? 'var(--accent-text)' : 'var(--text-secondary)' }}>
-                              {prayer.name.slice(0, 3)}
-                            </span>
-                          </button>
-                        ))}
+                              <div
+                                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 relative"
+                                style={prayer.isCompleted
+                                  ? { background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 0 10px var(--accent-glow)' }
+                                  : { background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                              >
+                                {prayer.isCompleted ? (
+                                  <Check className="w-5 h-5 stroke-[2.8]" />
+                                ) : (
+                                  prayer.icon
+                                )}
+                                {prayer.isCompleted && (
+                                  <span
+                                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+                                    style={{
+                                      background: 'var(--accent)',
+                                      border: '1.5px solid var(--surface-2)',
+                                      boxShadow: '0 0 6px var(--accent-glow)',
+                                    }}
+                                  >
+                                    <Check className="w-2.5 h-2.5 stroke-[3] text-[var(--on-accent)]" />
+                                  </span>
+                                )}
+                              </div>
+                              <span
+                                className="font-semibold truncate max-w-full text-center"
+                                style={{
+                                  fontSize: '0.76rem',
+                                  fontWeight: 600,
+                                  whiteSpace: 'nowrap',
+                                  color: prayer.isCompleted ? 'var(--accent-text)' : 'var(--text-secondary)',
+                                }}
+                              >
+                                {displayName}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </m.div>
                   );
+                }
 
                 case 'daily-ayah':
                   return (

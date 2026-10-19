@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +8,7 @@ import { Calculator, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function FitranaCalculatorNotification() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { islamicInfo, isLoading } = useIslamicCalendar();
   const [dismissed, setDismissed] = useState(false);
@@ -42,7 +44,7 @@ export function FitranaCalculatorNotification() {
   };
 
   const handleNavigate = () => {
-    window.location.href = '/services';
+    navigate('/services');
   };
 
   if (!shouldShow || dismissed) {

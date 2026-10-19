@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Sparkles, Heart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,7 @@ interface FestiveEvent {
 }
 
 export function FestivePopup() {
+  const navigate = useNavigate();
   const [event, setEvent] = useState<FestiveEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -134,7 +136,7 @@ export function FestivePopup() {
                 className="flex-1 border-primary/30 hover:bg-primary/10"
                 onClick={() => {
                   // Navigate to prayers or special Eid section
-                  window.location.href = '/prayer-times';
+                  navigate('/prayer-times');
                 }}
               >
                 View Prayer Times

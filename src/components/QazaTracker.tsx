@@ -7,7 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext-new";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, AlertCircle, Check } from "lucide-react";
+import { Plus, AlertCircle, Check } from "lucide-react";
 import {
   getQazaPrayers,
   addQazaPrayer,
@@ -83,46 +83,105 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
 
   if (compact) {
     return (
-      <Card className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)]">
-        <CardHeader className="pb-2 pt-4">
+      <Card
+        className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] rounded-[22px] overflow-hidden backdrop-blur-md relative"
+        style={{
+          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen)',
+        }}
+      >
+        <CardHeader className="pb-2 pt-4 px-5">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-500" />
+            <CardTitle className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-secondary)] flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
               Qaza Prayers
             </CardTitle>
-            {stats.total > 0 && (
-              <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-full font-medium">
+            {stats.total > 0 ? (
+              <span
+                className="text-xs px-2.5 py-1 rounded-full font-bold"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                }}
+              >
                 {stats.total} to make up
+              </span>
+            ) : (
+              <span
+                className="text-xs px-2.5 py-1 rounded-full font-bold"
+                style={{
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent-text)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                0 pending
               </span>
             )}
           </div>
         </CardHeader>
-        <CardContent className="pb-4">
-          {stats.total === 0 ? (
-            <p className="text-center text-xs text-[var(--text-secondary)] py-2">
-              ✨ No Qaza prayers pending. Alhamdulillah!
-            </p>
-          ) : (
-            <div className="grid grid-cols-5 gap-2">
-              {prayerLabels.map((prayer) => (
-                <div key={prayer.id} className="text-center">
+        <CardContent className="pb-4 px-5 pt-1">
+          <div className="grid grid-cols-5 gap-2">
+            {prayerLabels.map((prayer) => {
+              const count = prayers[prayer.id] || 0;
+              const hasPending = count > 0;
+              return (
+                <div
+                  key={prayer.id}
+                  className="flex flex-col items-center justify-between gap-1.5 p-[10px_4px] rounded-[14px] transition-all duration-300 group"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: hasPending ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border)',
+                    boxShadow: hasPending ? '0 4px 12px rgba(239, 68, 68, 0.15)' : 'none',
+                  }}
+                >
                   <button
                     onClick={() => handleComplete(prayer.id)}
-                    disabled={prayers[prayer.id] === 0}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all mx-auto ${prayers[prayer.id] > 0
-                      ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
-                      : "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]"
-                      }`}
+                    disabled={!hasPending}
+                    title={hasPending ? `Mark 1 ${prayer.label} Qaza as prayed` : `All ${prayer.label} prayers completed`}
+                    className="w-10 h-10 rounded-full flex flex-col items-center justify-center font-bold text-sm transition-all duration-300 relative group/btn"
+                    style={hasPending ? {
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      color: '#ef4444',
+                      border: '1.5px solid #ef4444',
+                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.25)',
+                    } : {
+                      background: 'var(--surface)',
+                      color: 'var(--text-secondary)',
+                      border: '1px solid var(--border)',
+                    }}
                   >
-                    {prayers[prayer.id]}
+                    {hasPending ? (
+                      <>
+                        <span className="group-hover/btn:hidden text-xs font-bold leading-none">{count}</span>
+                        <span className="hidden group-hover/btn:inline text-[10px] font-black tracking-tighter leading-none">-1</span>
+                      </>
+                    ) : (
+                      <Check className="w-4 h-4 stroke-[2.5] text-[var(--accent-text)]" />
+                    )}
                   </button>
-                  <span className="text-xs text-[var(--text-secondary)] mt-1 block">
+                  <span
+                    className="font-semibold truncate max-w-full text-center"
+                    style={{
+                      fontSize: '0.76rem',
+                      color: hasPending ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    }}
+                  >
                     {prayer.label}
                   </span>
+                  {hasPending ? (
+                    <span className="text-[9px] text-destructive/80 font-medium tracking-tight">
+                      tap -1
+                    </span>
+                  ) : (
+                    <span className="text-[9px] text-[var(--accent-text)] font-medium tracking-tight">
+                      done
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
     );

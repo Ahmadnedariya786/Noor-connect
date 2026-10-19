@@ -318,19 +318,30 @@ export function EnhancedDailyAyah() {
   const isReflectionLong = (ayah.reflection?.length || 0) > 80;
 
   return (
-    <Card className="relative overflow-hidden rounded-2xl border border-[var(--border)] hover:border-[var(--accent)]/40 bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-[var(--surface-2)] shadow-xl shadow-black/25 transition-all duration-300">
+    <Card
+      className="relative overflow-hidden rounded-[22px] border border-[var(--border)] transition-all duration-300"
+      style={{
+        background: 'linear-gradient(145deg, var(--surface) 0%, var(--surface-2) 100%)',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen)',
+      }}
+    >
       {/* Radiant Top Accent Line */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-80" />
       
-      {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-12 -right-12 w-36 h-36 bg-[var(--accent)]/10 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-12 -left-12 w-32 h-32 bg-[var(--accent)]/5 rounded-full blur-2xl" />
+      {/* Ambient Top-Right Emerald/Gold Radial Aura */}
+      <div
+        className="pointer-events-none absolute -top-10 -right-10 w-44 h-44 rounded-full blur-3xl"
+        style={{
+          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, var(--accent-soft) 50%, transparent 75%)',
+        }}
+      />
+      <div className="pointer-events-none absolute -bottom-10 -left-10 w-36 h-36 bg-[var(--accent)]/5 rounded-full blur-2xl" />
 
-      <CardContent className="p-4 sm:p-6 space-y-4 relative z-10">
-        {/* Header Section */}
+      <CardContent className="p-4 sm:p-[18px] space-y-4 relative z-10">
+        {/* Header Section & Action Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] text-[var(--accent)] shadow-xs shrink-0">
+            <div className="p-2.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] text-[var(--accent-text)] shadow-xs shrink-0">
               <BookOpen className="w-5 h-5 text-[var(--accent)]" />
             </div>
             <div className="min-w-0 flex-1 space-y-0.5">
@@ -348,64 +359,78 @@ export function EnhancedDailyAyah() {
                 </h3>
                 <span className="text-[var(--text-secondary)]/60 text-xs">•</span>
                 <span className="text-xs text-[var(--text-secondary)] font-medium truncate">
-                  Surah {ayah.surah}
+                  Surah {ayah.surah} • Ayah {ayah.ayahNumber}
                 </span>
               </div>
             </div>
           </div>
           
-          {/* Quick Action Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+          {/* Compact Glass Pill Action Toolbar (34px × 34px rounded hit targets) */}
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-[var(--surface-2)]/80 border border-[var(--border)] backdrop-blur-sm shrink-0 self-start sm:self-auto shadow-xs">
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all duration-200 active:scale-95 shadow-xs ${
-                isBookmarked ? "text-[var(--accent-text)] border-[var(--accent)]/50 bg-[var(--accent-soft)]" : "text-[var(--accent)] hover:text-[var(--accent-text)]"
+              className={`h-[34px] w-[34px] rounded-full transition-all duration-200 active:scale-95 ${
+                isBookmarked
+                  ? "text-[var(--accent-text)] bg-[var(--accent-soft)] shadow-sm shadow-[var(--accent-glow)]"
+                  : "text-[var(--text-secondary)] hover:text-[var(--accent-text)] hover:bg-[var(--surface)]"
               }`}
               onClick={toggleBookmark}
               title="Bookmark Ayah"
               aria-label="Bookmark ayah"
             >
-              <Bookmark className={`w-4 h-4 text-[var(--accent)] ${isBookmarked ? "fill-[var(--accent)]" : ""}`} />
+              <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-[var(--accent)] text-[var(--accent)]" : ""}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-[34px] w-[34px] rounded-full text-[var(--text-secondary)] hover:text-[var(--accent-text)] hover:bg-[var(--surface)] transition-all duration-200 active:scale-95"
               onClick={copyAyah}
               title="Copy Ayah"
               aria-label="Copy ayah"
             >
-              <Copy className="w-4 h-4 text-[var(--accent)]" />
+              <Copy className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-[34px] w-[34px] rounded-full text-[var(--text-secondary)] hover:text-[var(--accent-text)] hover:bg-[var(--surface)] transition-all duration-200 active:scale-95"
               onClick={refreshAyah}
               title="Another Ayah"
               aria-label="Show another ayah"
             >
-              <RefreshCw className={`w-4 h-4 text-[var(--accent)] transition-transform duration-500 ${isAnimating ? "animate-spin text-[var(--accent)]" : ""}`} />
+              <RefreshCw className={`w-4 h-4 transition-transform duration-500 ${isAnimating ? "animate-spin text-[var(--accent)]" : ""}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--accent)] hover:text-[var(--accent-text)] transition-all duration-200 active:scale-95 shadow-xs"
+              className="h-[34px] w-[34px] rounded-full text-[var(--text-secondary)] hover:text-[var(--accent-text)] hover:bg-[var(--surface)] transition-all duration-200 active:scale-95"
               onClick={shareAyah}
               title="Share Ayah"
               aria-label="Share ayah"
             >
-              <Share2 className="w-4 h-4 text-[var(--accent)]" />
+              <Share2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* Arabic Typography Section - Always shown in full */}
+        {/* Ornamental Recessed Arabic Verse Box */}
         <div className={`transition-all duration-300 ${isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
-          <div className="bg-[var(--surface-2)] rounded-xl p-3.5 sm:p-4 border border-[var(--border)]">
+          <div
+            className="relative rounded-2xl p-4 sm:p-5 border border-[var(--border)] overflow-hidden"
+            style={{
+              background: 'color-mix(in srgb, var(--bg-base) 65%, transparent)',
+              boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)',
+            }}
+          >
+            {/* Corner Ornamental Accents */}
+            <span className="absolute top-2 left-2 text-[10px] text-[var(--accent)]/40 select-none font-serif">✦</span>
+            <span className="absolute top-2 right-2 text-[10px] text-[var(--accent)]/40 select-none font-serif">✦</span>
+            <span className="absolute bottom-2 left-2 text-[10px] text-[var(--accent)]/40 select-none font-serif">✦</span>
+            <span className="absolute bottom-2 right-2 text-[10px] text-[var(--accent)]/40 select-none font-serif">✦</span>
+
             <p
-              className="font-amiri text-2xl sm:text-[26px] leading-[1.8] text-[var(--text-primary)] text-right drop-shadow-sm select-text break-words"
+              className="font-amiri text-xl sm:text-2xl leading-[1.9] text-[var(--text-primary)] text-right drop-shadow-sm select-text break-words px-2"
               dir="rtl"
               style={{ fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif" }}
             >
@@ -424,14 +449,14 @@ export function EnhancedDailyAyah() {
         {/* English Translation Section */}
         <div className={`space-y-2 transition-all duration-300 ${isAnimating ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"}`}>
           <p
-            className={`text-[15px] sm:text-base leading-[1.6] text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 ${
+            className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 ${
               !isTranslationExpanded && isTranslationLong ? "line-clamp-2" : ""
             }`}
           >
-            {ayah.translation}
+            "{ayah.translation}"
           </p>
 
-          {/* Read More / Show Less Toggle Button for Translation */}
+          {/* Read More / Show Less Toggle Button */}
           {isTranslationLong && (
             <div className="flex items-center justify-between pt-1">
               <button
@@ -451,9 +476,15 @@ export function EnhancedDailyAyah() {
           )}
         </div>
 
-        {/* Reflection (if available) with optional truncation if >2 lines */}
+        {/* Reflection (with 3px solid accent border and soft glass background) */}
         {ayah.reflection && (
-          <div className="p-3 rounded-xl bg-[var(--surface-2)] border-l-2 border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5">
+          <div
+            className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5"
+            style={{
+              background: 'var(--surface-2)',
+              boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+            }}
+          >
             <div className="flex items-start gap-1.5">
               <span className="text-[var(--accent)] font-semibold not-italic shrink-0">Reflection:</span>
               <p
@@ -482,43 +513,34 @@ export function EnhancedDailyAyah() {
           </div>
         )}
 
-        {/* Revelation and Surah Info Pill */}
-        <div className="rounded-xl bg-[var(--surface-2)] border border-[var(--border)] p-2.5 sm:p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[var(--text-secondary)]">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-[var(--accent)] font-semibold shrink-0">Revelation:</span>
-            <span className="text-[var(--text-primary)] font-medium truncate">
-              {ayah.surah} (Surah {ayah.surahNumber})
-            </span>
-          </div>
-          <div className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--accent-text)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-md border border-[var(--border)] shrink-0 self-start sm:self-auto font-medium">
-            <span>Ayah {ayah.ayahNumber}</span>
-          </div>
-        </div>
-
-        {/* Action Buttons & Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-[var(--border)]">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="gap-2 rounded-xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] font-bold px-3 py-1.5 h-8 text-xs inline-flex items-center shadow-md shadow-black/20 hover:brightness-105 active:scale-95 transition-all duration-200 cursor-pointer"
-              onClick={() => navigate(`/quran/surah-${ayah.surahNumber}`)}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-[var(--on-accent)] stroke-[2.5]" />
-              Read Surah
-            </button>
-            <button
-              type="button"
-              className="gap-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface)] px-3 py-1.5 h-8 text-xs font-semibold inline-flex items-center active:scale-95 transition-all duration-200 cursor-pointer"
-              onClick={() => navigate("/quran")}
-            >
-              <span>All Surahs</span>
-            </button>
-          </div>
-          
-          <div className="text-[11px] text-[var(--text-secondary)] font-medium flex items-center gap-1.5">
+        {/* Single Sleek Metadata Chip Row */}
+        <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] px-1 font-medium">
+          <span className="truncate">
+            Surah {ayah.surah} • Verse {ayah.ayahNumber}
+          </span>
+          <span className="flex items-center gap-1.5 shrink-0 ml-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             Updated daily at Fajr
-          </div>
+          </span>
+        </div>
+
+        {/* 2-Column Action Buttons Row with 0ms SPA Routing */}
+        <div className="grid grid-cols-2 gap-2.5 pt-1">
+          <button
+            type="button"
+            className="gap-2 rounded-xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] font-bold px-3 py-2 text-xs inline-flex items-center justify-center shadow-md shadow-black/20 hover:brightness-105 active:scale-95 transition-all duration-200 cursor-pointer w-full"
+            onClick={() => navigate(`/quran/surah-${ayah.surahNumber}`)}
+          >
+            <BookOpen className="w-3.5 h-3.5 text-[var(--on-accent)] stroke-[2.5]" />
+            <span>Read Surah</span>
+          </button>
+          <button
+            type="button"
+            className="gap-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface)] px-3 py-2 text-xs font-semibold inline-flex items-center justify-center active:scale-95 transition-all duration-200 cursor-pointer w-full"
+            onClick={() => navigate("/quran")}
+          >
+            <span>All Surahs</span>
+          </button>
         </div>
       </CardContent>
     </Card>

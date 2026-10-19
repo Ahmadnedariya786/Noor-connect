@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { moods, type Mood, type MoodContent } from "@/data/mood-data";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -23,6 +24,7 @@ const toCopyText = (item: MoodContent) =>
   `${item.arabic ? `${item.arabic}\n\n` : ""}${item.text}\n${item.reference}`;
 
 export function EnhancedMoodSelector() {
+  const navigate = useNavigate();
   const initialMood = moods[0] ?? null;
   const [selectedMood, setSelectedMood] = useState<Mood | null>(initialMood);
   const [activeIndexes, setActiveIndexes] = useState<Record<string, number>>(() => {
@@ -143,7 +145,7 @@ export function EnhancedMoodSelector() {
           </div>
         </div>
         <button
-          onClick={() => window.location.href = "/remedy-favorites"}
+          onClick={() => navigate("/remedy-favorites")}
           className="relative rounded-full p-2 hover:bg-muted transition-colors"
         >
           <Heart className="h-5 w-5 text-muted-foreground" />
