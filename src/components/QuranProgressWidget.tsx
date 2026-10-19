@@ -279,89 +279,79 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
           <p className="text-xs font-medium text-[var(--text-primary)]/90">{motivationalMessage}</p>
         </div>
 
-        {/* Action Buttons with 0ms SPA Router Navigation */}
-        <div
-          className="pt-1"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
-          }}
-        >
+        {/* Action Buttons with 0ms SPA Router Navigation - 100% Full-Width Stacked Layout */}
+        <div className="pt-1 w-full" style={{ display: 'flex', flexDirection: 'column' }}>
           <button
             type="button"
-            onClick={() => navigate('/quran')}
+            onClick={() => navigate('/quran', { replace: true })}
             style={{
-              minWidth: 0,
               width: '100%',
-              overflow: 'hidden',
-              boxSizing: 'border-box',
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              padding: '11px 10px',
-              borderRadius: '12px',
-              fontSize: 'clamp(0.68rem, 2.8vw, 0.74rem)',
-              fontWeight: 700,
-              letterSpacing: '0.02em',
-              whiteSpace: 'nowrap',
-              textTransform: 'uppercase',
-              background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+              gap: '8px',
+              padding: '13px 16px',
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
               color: 'var(--on-accent)',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              letterSpacing: '0.03em',
+              textTransform: 'uppercase',
               border: 'none',
+              boxShadow: '0 4px 14px var(--accent-glow)',
+              boxSizing: 'border-box',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px var(--accent-glow)',
+              transition: 'all 0.2s ease',
             }}
-            className="hover:opacity-95 active:scale-95 transition-all"
+            className="hover:opacity-95 active:scale-[0.98]"
           >
             <BookOpen
-              className="shrink-0 stroke-[2.5]"
+              className="stroke-[2.5]"
               style={{
-                width: '15px',
-                height: '15px',
+                width: '16px',
+                height: '16px',
                 flexShrink: 0,
                 color: 'var(--on-accent)',
               }}
             />
-            <span>Continue Reading</span>
+            Continue Reading
           </button>
           <button
             type="button"
-            onClick={() => navigate('/quran-progress')}
+            onClick={() => navigate('/quran-progress', { replace: true })}
             style={{
-              minWidth: 0,
               width: '100%',
-              overflow: 'hidden',
-              boxSizing: 'border-box',
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              padding: '11px 10px',
-              borderRadius: '12px',
-              fontSize: 'clamp(0.68rem, 2.8vw, 0.74rem)',
-              fontWeight: 700,
-              letterSpacing: '0.02em',
-              whiteSpace: 'nowrap',
-              textTransform: 'uppercase',
+              gap: '8px',
+              padding: '11px 16px',
+              borderRadius: '14px',
               background: 'var(--surface-2)',
               color: 'var(--text-primary)',
+              fontWeight: 600,
+              fontSize: '0.82rem',
+              letterSpacing: '0.02em',
+              textTransform: 'uppercase',
               border: '1px solid var(--border)',
+              boxSizing: 'border-box',
+              marginTop: '8px',
               cursor: 'pointer',
+              transition: 'all 0.2s ease',
             }}
-            className="hover:bg-[var(--surface)] active:scale-95 transition-all"
+            className="hover:bg-[var(--surface)] active:scale-[0.98]"
           >
             <TrendingUp
-              className="shrink-0 stroke-[2.5]"
+              className="stroke-[2.5]"
               style={{
-                width: '15px',
-                height: '15px',
+                width: '16px',
+                height: '16px',
                 flexShrink: 0,
                 color: 'var(--accent-text)',
               }}
             />
-            <span>View Details</span>
+            View Details
           </button>
         </div>
       </CardContent>

@@ -132,7 +132,7 @@ export default function Services() {
                                         transition: { delay: idx * 0.05, duration: 0.4 },
                                         whileTap: { scale: 0.95 }
                                     })}
-                                    onClick={() => navigate(item.path)}
+                                    onClick={() => navigate(item.path, { replace: true })}
                                     className="group relative flex flex-col items-start p-4 sm:p-5 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] rounded-[20px] overflow-hidden text-left w-full min-w-0 transition-colors shadow-sm"
                                 >
                                     {/* Icon Box with Vibrant Gradient */}

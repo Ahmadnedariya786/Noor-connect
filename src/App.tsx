@@ -30,6 +30,7 @@ import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/perf
 import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
 import { runFirstLaunchPermissionOnboarding } from "@/lib/onboarding-permissions";
 import { ExactAlarmPermissionDialog } from "@/components/ExactAlarmPermissionDialog";
+import { HardwareBackButtonHandler } from "@/components/HardwareBackButtonHandler";
 
 /**
  * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
@@ -351,6 +352,7 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
 
             <LayoutManager>
               <ErrorBoundary>
+                <HardwareBackButtonHandler />
                 <DeepLinkListener />
                 <AppRoutes />
               </ErrorBoundary>

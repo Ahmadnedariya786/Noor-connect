@@ -498,10 +498,10 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
   }, [prayers, nextPrayerName, nextPrayerTime, targetTime, timeFormat]);
 
   // Stable callbacks for PremiumDashboard props
-  const onServiceClick = useCallback((route: string) => navigate(route), [navigate]);
-  const onVerseClick = useCallback(() => navigate('/quran'), [navigate]);
-  const onHadithClick = useCallback(() => navigate('/hadith/collections'), [navigate]);
-  const onNotificationClick = useCallback(() => navigate('/notification-history'), [navigate]);
+  const onServiceClick = useCallback((route: string) => navigate(route, { replace: true }), [navigate]);
+  const onVerseClick = useCallback(() => navigate('/quran', { replace: true }), [navigate]);
+  const onHadithClick = useCallback(() => navigate('/hadith/collections', { replace: true }), [navigate]);
+  const onNotificationClick = useCallback(() => navigate('/notification-history', { replace: true }), [navigate]);
   const onLocationClick = useCallback(() => setShowManualLocationDialog(true), [setShowManualLocationDialog]);
 
 return (

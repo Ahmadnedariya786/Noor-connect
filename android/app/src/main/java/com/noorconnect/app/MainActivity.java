@@ -75,6 +75,19 @@ public class MainActivity extends BridgeActivity {
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to set setMotionEventSplittingEnabled", t);
             }
+            try {
+                webView.addJavascriptInterface(new Object() {
+                    @android.webkit.JavascriptInterface
+                    public void closeApp() {
+                        runOnUiThread(() -> {
+                            Log.i(TAG, "AndroidBridge.closeApp() invoked from JS: finishing activity affinity");
+                            finishAffinity();
+                        });
+                    }
+                }, "AndroidBridge");
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to register AndroidBridge JavascriptInterface", t);
+            }
         }
 
         // Install renderer process crash handler via Capacitor's bridge listener
@@ -295,5 +308,21 @@ public class MainActivity extends BridgeActivity {
                 manager.createNotificationChannel(channel);
             }
         }
+    }
+
+    /**
+     * Override hardware/gesture back press to dispatch custom nativeBackPressed event to WebView
+     * and allow Capacitor's App.addListener('backButton') to coordinate root navigation / exit.
+     */
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed intercepted: dispatching nativeBackPressed DOM event to WebView");
+        WebView webView = (this.getBridge() != null) ? this.getBridge().getWebView() : null;
+        if (webView != null) {
+            webView.post(() -> {
+                webView.evaluateJavascript("window.dispatchEvent(new CustomEvent('nativeBackPressed'));", null);
+            });
+        }
+        super.onBackPressed();
     }
 }

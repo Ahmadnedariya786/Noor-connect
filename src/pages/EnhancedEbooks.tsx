@@ -250,7 +250,7 @@ export default function EnhancedEbooksPage() {
 
   // --- If viewing PDF, show viewer ---
   if (viewingBook) {
-    return <PdfViewer url={viewingBook.url} title={viewingBook.title} localKey={viewingBook.localKey} onClose={() => window.history.back()} />;
+    return <PdfViewer url={viewingBook.url} title={viewingBook.title} localKey={viewingBook.localKey} onClose={() => setViewingBook(null)} />;
   }
 
   // --- Main Render ---

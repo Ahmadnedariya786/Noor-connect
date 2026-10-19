@@ -62,6 +62,7 @@ const BottomNav = memo(function BottomNav() {
           <NavLink
             key={item.path}
             to={item.path}
+            replace
             end={item.exact}
             className="flex-1 flex flex-col items-center justify-center h-full relative min-w-0"
             style={{ touchAction: 'manipulation' }}

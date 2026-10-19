@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { moods, type Mood } from "@/data/mood-data";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 
 export default function RemedyFavorites() {
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const [favorites, setFavorites] = useState<FavoriteRemedy[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,7 +116,7 @@ export default function RemedyFavorites() {
               <p className="text-sm text-muted-foreground mb-4">
                 Start saving your favorite Islamic remedies to build your personal collection.
               </p>
-              <Button onClick={() => window.history.back()}>
+              <Button onClick={() => navigate('/islamic-remedies', { replace: true })}>
                 Browse Remedies
               </Button>
             </Card>
