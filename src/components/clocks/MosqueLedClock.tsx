@@ -111,7 +111,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               <span
                 className={cn(
                   "rounded font-black shrink-0",
-                  isStaticPreview ? "px-1 py-0.2 text-[7.5px]" : "px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px]"
+                  isStaticPreview ? "px-1 py-[1px] text-[7.5px]" : "px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px]"
                 )}
                 style={{
                   color: 'var(--on-accent)',
@@ -139,8 +139,8 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               style={{
                 gridArea: '1 / 1',
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                fontSize: isStaticPreview ? '1.05rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
-                letterSpacing: isStaticPreview ? '0.04em' : '0.06em',
+                fontSize: isStaticPreview ? '0.98rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
+                letterSpacing: isStaticPreview ? '0.02em' : '0.06em',
                 fontVariantNumeric: 'tabular-nums',
                 whiteSpace: 'nowrap',
                 textAlign: 'center',
@@ -151,9 +151,9 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               aria-hidden="true"
             >
               <span>88</span>
-              <span className="inline-block mx-0.5 sm:mx-1">:</span>
+              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1")}>:</span>
               <span>88</span>
-              <span className="inline-block mx-0.5 sm:mx-1">:</span>
+              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1")}>:</span>
               <span>88</span>
             </div>
 
@@ -163,8 +163,8 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               style={{
                 gridArea: '1 / 1',
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                fontSize: isStaticPreview ? '1.05rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
-                letterSpacing: isStaticPreview ? '0.04em' : '0.06em',
+                fontSize: isStaticPreview ? '0.98rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
+                letterSpacing: isStaticPreview ? '0.02em' : '0.06em',
                 fontVariantNumeric: 'tabular-nums',
                 whiteSpace: 'nowrap',
                 textAlign: 'center',
@@ -174,9 +174,9 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               }}
             >
               <span>{displayHours}</span>
-              <span className={cn("inline-block mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
+              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
               <span>{displayMinutes}</span>
-              <span className={cn("inline-block mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
+              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
               <span style={{ opacity: 0.95 }}>{displaySeconds}</span>
             </div>
           </div>
