@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sunset, Bell } from 'lucide-react';
-import { getPrayerDisplayName } from '@/lib/prayer-utils';
+import { getPrayerDisplayName, isMatchingPrayer } from '@/lib/prayer-utils';
 
 export interface PrayerItem {
   name: string;
@@ -330,9 +330,9 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   }, [prayers]);
 
   const suhoorTime = suhoorIftaar?.suhoorTime || fajrPrayer?.time || '--:--';
-  const suhoorLabel = suhoorIftaar?.suhoorLabel || 'Suhoor ends';
+  const suhoorLabel = 'Suhoor';
   const iftaarTime = suhoorIftaar?.iftaarTime || maghribPrayer?.time || '--:--';
-  const iftaarLabel = suhoorIftaar?.iftaarLabel || 'Iftaar';
+  const iftaarLabel = 'Iftaar';
 
   // Subtitle next to or below progress bar
   const remainingSubtitle = useMemo(() => {
@@ -510,13 +510,22 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
         }}
       >
         {/* Left Item: Suhoor */}
-        <div className="flex items-center gap-2 min-w-0">
+        <div
+          className="text-[0.82rem] min-[390px]:text-[0.85rem]"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
           <Moon className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-text)' }} />
-          <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
-            {suhoorLabel}
+          <span style={{ color: 'var(--text-secondary)' }}>
+            Suhoor
           </span>
           <span
-            className="text-xs font-semibold tabular-nums shrink-0"
+            className="font-semibold tabular-nums shrink-0"
             style={{ color: 'var(--text-primary)' }}
           >
             {suhoorTime}
@@ -533,13 +542,22 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
         />
 
         {/* Right Item: Iftaar */}
-        <div className="flex items-center gap-2 min-w-0">
+        <div
+          className="text-[0.82rem] min-[390px]:text-[0.85rem]"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
           <Sunset className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-text)' }} />
-          <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
-            {iftaarLabel}
+          <span style={{ color: 'var(--text-secondary)' }}>
+            Iftaar
           </span>
           <span
-            className="text-xs font-semibold tabular-nums shrink-0"
+            className="font-semibold tabular-nums shrink-0"
             style={{ color: 'var(--text-primary)' }}
           >
             {iftaarTime}
@@ -564,10 +582,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           const displayName = getPrayerDisplayName(prayer.name, prayer.date);
           const isRowActive = Boolean(
             prayer.isActive ||
-            prayer.name === nextPrayer.name ||
-            prayer.originalName === nextPrayer.name ||
-            displayName === nextPrayer.name ||
-            displayName === resolvedNextDisplayName
+            isMatchingPrayer(prayer.name, nextPrayer.name) ||
+            isMatchingPrayer(prayer.originalName, nextPrayer.name) ||
+            isMatchingPrayer(displayName, nextPrayer.name) ||
+            isMatchingPrayer(displayName, resolvedNextDisplayName)
           );
 
           return (
@@ -640,11 +658,12 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   }}
                   className="p-1.5 rounded-full hover:bg-[var(--surface-2)] active:scale-95 transition-all"
                   style={{
-                    color:
-                      notificationsEnabled && rawName !== 'Sunrise'
-                        ? 'var(--accent)'
-                        : 'var(--text-secondary)',
-                    opacity: notificationsEnabled && rawName !== 'Sunrise' ? 1 : 0.5,
+                    color: isRowActive
+                      ? 'var(--accent)'
+                      : notificationsEnabled && rawName !== 'Sunrise'
+                      ? 'var(--accent)'
+                      : 'var(--text-secondary)',
+                    opacity: isRowActive || (notificationsEnabled && rawName !== 'Sunrise') ? 1 : 0.5,
                   }}
                 >
                   <Bell className="w-4 h-4" />

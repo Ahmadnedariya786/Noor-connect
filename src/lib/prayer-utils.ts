@@ -55,3 +55,33 @@ export function getPrayerDisplayName(
 
   return PRAYER_CANONICAL_NAMES[lower] || trimmed;
 }
+
+/**
+ * Normalizes a prayer name for robust matching:
+ * - Strips any parenthetical annotations such as "(Tomorrow)", "(Today)", etc.
+ * - Trims whitespace and converts to lower case
+ * - Maps "jummah" to "dhuhr" for canonical Friday equivalence
+ *
+ * @param name - Raw prayer name string
+ * @returns Canonical lowercase prayer key (e.g., 'fajr', 'dhuhr', 'asr', 'maghrib', 'isha')
+ */
+export function normalizePrayerName(name?: string | null): string {
+  if (!name) return '';
+  const stripped = name.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+  if (stripped === 'jummah') return 'dhuhr';
+  return stripped;
+}
+
+/**
+ * Checks if two prayer names match, taking into account:
+ * - "(Tomorrow)" / parenthetical suffix stripping (e.g., "Fajr (Tomorrow)" matches "Fajr")
+ * - Friday Jummah <-> Dhuhr canonical equality
+ * - Case-insensitivity
+ */
+export function isMatchingPrayer(nameA?: string | null, nameB?: string | null): boolean {
+  const normA = normalizePrayerName(nameA);
+  const normB = normalizePrayerName(nameB);
+  if (!normA || !normB) return false;
+  return normA === normB;
+}
+

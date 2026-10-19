@@ -35,7 +35,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GeocodingService } from "@/lib/geocoding";
 import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
-import { getPrayerDisplayName } from "@/lib/prayer-utils";
+import { getPrayerDisplayName, isMatchingPrayer } from "@/lib/prayer-utils";
 
 import { hasHomeEntranceCompleted, markHomeEntranceCompleted } from "@/lib/home-entrance";
 
@@ -236,7 +236,7 @@ export default function Dashboard() {
 
       // Suhoor & Iftaar times derived strictly from calculation output per Guard 1
       const sTime = timings.Imsak ? formatTimeFromAPI(timings.Imsak) : formatTimeFromAPI(timings.Fajr);
-      const sLabel = timings.Imsak ? "Suhoor (Imsak)" : "Suhoor ends";
+      const sLabel = "Suhoor";
       const iTime = formatTimeFromAPI(timings.Maghrib);
       setSuhoorIftaar({
         suhoorTime: sTime,
@@ -279,7 +279,7 @@ export default function Dashboard() {
       // Offline Suhoor & Iftaar per Guard 1
       setSuhoorIftaar({
         suhoorTime: formatTimeFromAPI(times.fajr.toTimeString().slice(0, 5)),
-        suhoorLabel: "Suhoor ends",
+        suhoorLabel: "Suhoor",
         iftaarTime: formatTimeFromAPI(times.maghrib.toTimeString().slice(0, 5)),
         iftaarLabel: "Iftaar",
       });
@@ -425,7 +425,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
         time: p.time,
         date: p.date,
         icon: prayerIcons[p.name] || <Sun className="w-5 h-5" />,
-        isActive: nextPrayerName === p.name || nextPrayerName === displayName,
+        isActive: isMatchingPrayer(nextPrayerName, p.name) || isMatchingPrayer(nextPrayerName, displayName),
         isUpcoming: isUpcoming,
         isCompleted,
         onCheckIn: isObligatory ? () => handleCheckIn(pKey) : undefined,
@@ -436,9 +436,8 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
   const previousPrayerInfo = useMemo(() => {
     if (prayers.length === 0) return { name: '', time: '--:--' };
     const nextIdx = prayers.findIndex(p =>
-      p.name === nextPrayerName ||
-      p.originalName === nextPrayerName ||
-      getPrayerDisplayName(p.name) === getPrayerDisplayName(nextPrayerName)
+      isMatchingPrayer(p.name, nextPrayerName) ||
+      isMatchingPrayer(p.originalName, nextPrayerName)
     );
     if (nextIdx > 0) {
       const p = prayers[nextIdx - 1];
@@ -461,11 +460,10 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
 
   const nextPrayerInfo = useMemo(() => {
     const nextIdx = prayers.findIndex(p =>
-      p.name === nextPrayerName ||
-      p.originalName === nextPrayerName ||
-      getPrayerDisplayName(p.name) === getPrayerDisplayName(nextPrayerName)
+      isMatchingPrayer(p.name, nextPrayerName) ||
+      isMatchingPrayer(p.originalName, nextPrayerName)
     );
-    const prevPrayer = nextIdx > 0 ? prayers[nextIdx - 1] : null;
+    const prevPrayer = nextIdx > 0 ? prayers[nextIdx - 1] : (nextIdx === 0 && prayers.length > 0 ? prayers[prayers.length - 1] : null);
     const prevDate = prevPrayer?.date;
     const resolvedDisplayName = nextPrayerName ? getPrayerDisplayName(nextPrayerName, targetTime) : "Loading...";
     if (!prevDate || !targetTime) return {

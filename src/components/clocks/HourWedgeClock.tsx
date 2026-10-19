@@ -130,7 +130,7 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
         <svg
           viewBox="0 0 240 240"
           className="w-full h-full"
-          style={{ overflow: 'visible' }}
+          style={{ overflow: 'visible', isolation: 'isolate' }}
         >
           <defs>
             {/* Accent gradient for the active hour slice */}
@@ -176,6 +176,8 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
           <g
             id="wedge-layer"
             style={{
+              position: 'relative',
+              zIndex: 1,
               transform: `rotate(${wedgeAngle}deg)`,
               transformOrigin: `${center}px ${center}px`,
               transition: isStaticPreview ? 'none' : 'transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)',
@@ -216,6 +218,7 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
                 fontFamily="'Impact', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Trebuchet MS', sans-serif"
                 style={{
                   letterSpacing: '-0.02em',
+                  filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6))',
                 }}
               >
                 {wedgeLabel}
@@ -224,7 +227,14 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
           </g>
 
           {/* ── Hands Layer: Rendered strictly ABOVE the wedge layer (z-order) ── */}
-          <g id="hands-layer">
+          <g
+            id="hands-layer"
+            style={{
+              position: 'relative',
+              zIndex: 10,
+            }}
+          >
+
             {/* Hour Hand: Short thick rounded bar in var(--text-primary) with dark casing for crisp contrast over the wedge */}
             <g
               filter="url(#wedgeHandShadow)"
