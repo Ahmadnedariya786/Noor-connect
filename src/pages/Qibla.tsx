@@ -37,14 +37,10 @@ const Qibla = () => {
               <QiblaCompassModern />
             </ErrorBoundary>
           </div>
-          <p className="text-center text-xs text-[var(--text-secondary)]/70 px-6 pb-8 italic">
+          <p className="text-center text-xs text-[var(--text-secondary)]/75 px-6 pb-8 italic leading-relaxed">
             {t(
-              "qiblaDisclaimerLine1",
-              "The qibla feature is currently in development and may not be 100% accurate."
-            )}{" "}
-            {t(
-              "qiblaDisclaimerLine2",
-              "Please use a physical compass for religious obligations."
+              "qiblaCalibrationTip",
+              "Tip: Keep your phone flat away from metal/magnetic cases and move it in a figure-8 motion to calibrate the compass sensor."
             )}
           </p>
         </div>
