@@ -195,76 +195,135 @@ export const AdhanSelector = () => {
   };
 
   return (
-    <Card className="p-4 bg-card border-border">
+    <Card
+      className="p-4 bg-[var(--surface)] border-[var(--border)] rounded-2xl w-full max-w-full overflow-hidden box-border"
+      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
+    >
       <div
-        className="flex items-center justify-between cursor-pointer"
+        className="flex items-center justify-between cursor-pointer select-none"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-3">
-          <Volume2 className="w-5 h-5 text-primary" />
-          <div>
-            <h3 className="font-semibold text-foreground">Adhan Sounds</h3>
-            <p className="text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center shrink-0 border border-[var(--border)] text-[var(--accent)]">
+            <Volume2 className="w-4 h-4 text-[var(--accent)]" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm text-[var(--text-primary)]">Adhan Sounds</h3>
+            <p className="text-xs text-[var(--text-secondary)] truncate">
               Customize adhan for each prayer
             </p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="shrink-0">
+        <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 text-[var(--text-secondary)]">
           {isExpanded ? (
             <ChevronUp className="w-4 h-4" />
           ) : (
             <ChevronDown className="w-4 h-4" />
           )}
         </Button>
-      </div >
+      </div>
 
       {isExpanded && (
-        <div className="mt-4 space-y-3">
-          {PRAYERS.map((prayer) => (
-            <div key={prayer} className="flex items-center gap-2">
-              <span className="w-20 text-sm font-medium text-foreground">
-                {prayer}
-              </span>
-              <Switch
-                checked={Boolean(adhanConfig[prayerToggleMap[prayer]])}
-                onCheckedChange={(checked) => handleTogglePrayer(prayer, checked)}
-                className="shrink-0"
-              />
-              <Select
-                value={preferences[prayer]}
-                onValueChange={(value) => handleAdhanChange(prayer, value)}
+        <div className="mt-4 space-y-3 w-full max-w-full overflow-hidden box-border">
+          {PRAYERS.map((prayer) => {
+            const isEnabled = Boolean(adhanConfig[prayerToggleMap[prayer]]);
+            return (
+              <div
+                key={prayer}
+                className="w-full box-border rounded-[14px] p-2.5 sm:p-3 flex flex-col gap-2 border transition-all"
+                style={{
+                  background: 'var(--surface-2)',
+                  borderColor: 'var(--border)',
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box',
+                }}
               >
-                <SelectTrigger className="flex-1 bg-background h-9">
-                  <SelectValue placeholder="Select Adhan" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border z-50">
-                  {combinedOptions.map((adhan) => (
-                    <SelectItem key={adhan.id} value={adhan.id}>
-                      {adhan.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handlePreview(prayer)}
-                className="shrink-0 h-9 w-9"
-              >
-                {playingPrayer === prayer ? (
-                  <Pause className="w-4 h-4" />
-                ) : (
-                  <Play className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-          ))}
+                {/* Top Row: Prayer Name + Status Badge (Left), Switch + Play Button (Right) */}
+                <div className="flex items-center justify-between gap-2 w-full">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-bold text-sm text-[var(--text-primary)]">
+                      {prayer}
+                    </span>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-[10px] font-semibold border select-none"
+                      style={{
+                        background: isEnabled ? 'var(--accent-soft)' : 'var(--surface)',
+                        borderColor: isEnabled ? 'var(--accent)' : 'var(--border)',
+                        color: isEnabled ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      }}
+                    >
+                      {isEnabled ? 'Active' : 'Muted'}
+                    </span>
+                  </div>
 
-          <p className="text-xs text-primary/70 mt-3 pt-2 border-t border-border/50">
-            💡 Fajr defaults to a special Adhan, but you can change it
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Switch
+                      checked={isEnabled}
+                      onCheckedChange={(checked) => handleTogglePrayer(prayer, checked)}
+                      className="shrink-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handlePreview(prayer)}
+                      aria-label={`Preview adhan for ${prayer}`}
+                      className="w-[34px] h-[34px] rounded-[10px] border flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-sm"
+                      style={{
+                        borderColor: 'var(--border)',
+                        background: 'var(--surface)',
+                        color: 'var(--accent-text)',
+                      }}
+                    >
+                      {playingPrayer === prayer ? (
+                        <Pause className="w-3.5 h-3.5 text-[var(--accent)]" />
+                      ) : (
+                        <Play className="w-3.5 h-3.5 text-[var(--accent)] ml-0.5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Full-Width Contained Sound Selector */}
+                <div className="w-full min-w-0 max-w-full overflow-hidden box-border">
+                  <Select
+                    value={preferences[prayer]}
+                    onValueChange={(value) => handleAdhanChange(prayer, value)}
+                  >
+                    <SelectTrigger
+                      className="w-full max-w-full min-w-0 h-9 rounded-xl border text-xs font-medium"
+                      style={{
+                        background: 'var(--surface)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text-primary)',
+                        width: '100%',
+                        maxWidth: '100%',
+                        minWidth: 0,
+                        boxSizing: 'border-box',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <SelectValue placeholder="Select Adhan" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[var(--surface)] border-[var(--border)] z-50 max-h-60 rounded-xl">
+                      {combinedOptions.map((adhan) => (
+                        <SelectItem key={adhan.id} value={adhan.id} className="text-xs">
+                          {adhan.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            );
+          })}
+
+          <p className="text-xs text-[var(--text-secondary)] mt-3 pt-2 border-t border-[var(--border)]">
+            💡 Fajr defaults to a special Adhan, but you can assign any sound or custom upload.
           </p>
         </div>
       )}
-    </Card >
+    </Card>
   );
 };

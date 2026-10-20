@@ -66,6 +66,7 @@ const PRAYERS: PrayerName[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
 export function CustomAdhanUpload() {
   const [customAdhans, setCustomAdhans] = useState<CustomAdhan[]>([]);
+  const [isLoadingCustomAdhans, setIsLoadingCustomAdhans] = useState<boolean>(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<AdhanPreferences>(getAdhanPreferences());
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -98,6 +99,8 @@ export function CustomAdhanUpload() {
       if (saved) setCustomAdhans(saved);
     } catch (error) {
       console.error("Error loading custom adhans:", error);
+    } finally {
+      setIsLoadingCustomAdhans(false);
     }
   };
 
@@ -223,11 +226,11 @@ export function CustomAdhanUpload() {
   };
 
   return (
-    <Card className="p-4 space-y-4">
+    <Card className="p-4 space-y-4 rounded-2xl bg-[var(--surface)] border-[var(--border)] w-full max-w-full overflow-hidden box-border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Music className="w-5 h-5 text-primary" />
-          <h3 className="font-medium">Custom Adhan Library</h3>
+          <Music className="w-5 h-5 text-[var(--accent)]" />
+          <h3 className="font-bold text-sm text-[var(--text-primary)]">Custom Adhan Library</h3>
         </div>
         <input
           type="file"
@@ -239,6 +242,7 @@ export function CustomAdhanUpload() {
         <Button
           variant="outline"
           size="sm"
+          className="rounded-xl border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="w-4 h-4 mr-2" />
@@ -246,41 +250,46 @@ export function CustomAdhanUpload() {
         </Button>
       </div>
 
-      {customAdhans.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">
+      {isLoadingCustomAdhans ? (
+        <div className="py-6 flex flex-col items-center justify-center gap-2">
+          <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+          <span className="text-[11px] text-[var(--text-secondary)] font-medium">Checking saved adhans...</span>
+        </div>
+      ) : customAdhans.length === 0 ? (
+        <p className="text-xs text-[var(--text-secondary)] text-center py-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
           No custom adhans uploaded. Upload your own MP3 file to use as prayer notification.
         </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {customAdhans.map((adhan) => (
             <div
               key={adhan.id}
-              className="p-3 rounded-lg border border-border bg-card/50 space-y-3"
+              className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] space-y-3"
             >
               <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="shrink-0"
+                  className="shrink-0 h-9 w-9 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--accent-text)]"
                   onClick={() => handlePlay(adhan)}
                 >
                   {playingId === adhan.id ? (
-                    <Pause className="w-4 h-4" />
+                    <Pause className="w-4 h-4 text-[var(--accent)]" />
                   ) : (
-                    <Play className="w-4 h-4" />
+                    <Play className="w-4 h-4 text-[var(--accent)] ml-0.5" />
                   )}
                 </Button>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{adhan.name}</p>
+                  <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{adhan.name}</p>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {getAssignedPrayers(adhan.id).map(p => (
-                      <span key={p} className="px-1.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded uppercase">
+                      <span key={p} className="px-1.5 py-0.5 bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] text-[10px] font-bold rounded-full uppercase">
                         {p}
                       </span>
                     ))}
                     {getAssignedPrayers(adhan.id).length === 0 && (
-                      <span className="text-xs text-muted-foreground italic">
+                      <span className="text-[11px] text-[var(--text-secondary)] italic">
                         Not assigned to any prayer
                       </span>
                     )}
@@ -290,28 +299,34 @@ export function CustomAdhanUpload() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-destructive opacity-50 hover:opacity-100"
+                  className="h-8 w-8 text-destructive opacity-60 hover:opacity-100 hover:bg-destructive/10 rounded-xl"
                   onClick={() => handleDelete(adhan.id)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
 
-              <div className="pt-2 border-t border-border/50">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2">Assign to Prayer:</p>
+              <div className="pt-2 border-t border-[var(--border)]/70">
+                <p className="text-[11px] uppercase tracking-wider text-[var(--text-secondary)] font-bold mb-2">Assign to Prayer:</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {PRAYERS.map(prayer => (
-                    <Button
-                      key={prayer}
-                      variant={isAssignedTo(adhan.id, prayer) ? "default" : "outline"}
-                      size="sm"
-                      className="h-7 text-xs px-2"
-                      onClick={() => handleAssignToPrayer(adhan.id, prayer)}
-                    >
-                      {prayer}
-                      {isAssignedTo(adhan.id, prayer) && <Check className="w-3 h-3 ml-1" />}
-                    </Button>
-                  ))}
+                  {PRAYERS.map(prayer => {
+                    const active = isAssignedTo(adhan.id, prayer);
+                    return (
+                      <button
+                        key={prayer}
+                        type="button"
+                        className={`h-7 text-xs px-2.5 rounded-lg font-semibold flex items-center gap-1 transition-all border ${
+                          active
+                            ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)]'
+                            : 'bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--surface-2)]'
+                        }`}
+                        onClick={() => handleAssignToPrayer(adhan.id, prayer)}
+                      >
+                        {prayer}
+                        {active && <Check className="w-3 h-3 ml-0.5" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -319,7 +334,7 @@ export function CustomAdhanUpload() {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-[var(--text-secondary)]">
         Assign custom audio to specific prayers. They will automatically play at prayer times.
       </p>
     </Card>

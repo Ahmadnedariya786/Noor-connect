@@ -78,40 +78,41 @@ export function HapticSettings() {
       {settings.enabled && (
         <>
           {/* Intensity Setting */}
-          <Card className="p-4">
+          <Card className="p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
             <div className="space-y-3">
-              <Label className="text-sm font-bold flex items-center gap-2">
-                <HandHeart className="w-4 h-4" />
-                Vibration Intensity
-              </Label>
-              <Select 
-                value={settings.intensity} 
-                onValueChange={(value: 'light' | 'medium' | 'heavy') => updateSetting('intensity', value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="light">
-                    <div className="flex flex-col">
-                      <span className="font-medium">Light</span>
-                      <span className="text-xs text-muted-foreground">Subtle vibration</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="medium">
-                    <div className="flex flex-col">
-                      <span className="font-medium">Medium</span>
-                      <span className="text-xs text-muted-foreground">Balanced feedback</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="heavy">
-                    <div className="flex flex-col">
-                      <span className="font-medium">Heavy</span>
-                      <span className="text-xs text-muted-foreground">Strong vibration</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <HandHeart className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                  Vibration Intensity
+                </Label>
+                <span className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                  {settings.intensity}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 p-1 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                {(['light', 'medium', 'heavy'] as const).map((intensity) => {
+                  const isSelected = settings.intensity === intensity;
+                  return (
+                    <button
+                      key={intensity}
+                      type="button"
+                      onClick={() => updateSetting('intensity', intensity)}
+                      className="py-2 px-3 rounded-lg text-xs font-bold capitalize transition-all flex flex-col items-center justify-center gap-0.5"
+                      style={{
+                        background: isSelected ? 'linear-gradient(135deg, var(--accent), var(--accent-2))' : 'transparent',
+                        color: isSelected ? 'var(--on-accent)' : 'var(--text-secondary)',
+                        boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                      }}
+                    >
+                      <span>{intensity}</span>
+                      <span className="text-[10px] font-normal opacity-80">
+                        {intensity === 'light' ? 'Subtle' : intensity === 'medium' ? 'Balanced' : 'Strong'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </Card>
 
@@ -120,9 +121,9 @@ export function HapticSettings() {
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">When to Vibrate</h3>
             
             {/* Prayer Notifications */}
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border rounded-xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${settings.prayerNotifications ? 'bg-blue-500/10 text-blue-500' : 'bg-muted text-muted-foreground'}`}>
+                <div className="p-2 rounded-lg" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
                   <Bell className="w-4 h-4" />
                 </div>
                 <div>
@@ -137,14 +138,14 @@ export function HapticSettings() {
             </div>
 
             {/* Bookmark Actions */}
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border rounded-xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${settings.bookmarkActions ? 'bg-amber-500/10 text-amber-500' : 'bg-muted text-muted-foreground'}`}>
+                <div className="p-2 rounded-lg" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
                   <Bookmark className="w-4 h-4" />
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Bookmark Actions</Label>
-                  <p className="text-xs text-muted-foreground">Saving/deleting bookmarks</p>
+                  <p className="text-xs text-muted-foreground">Saving and deleting bookmarks</p>
                 </div>
               </div>
               <Switch
@@ -154,14 +155,14 @@ export function HapticSettings() {
             </div>
 
             {/* UI Interactions */}
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border rounded-xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${settings.uiInteractions ? 'bg-purple-500/10 text-purple-500' : 'bg-muted text-muted-foreground'}`}>
+                <div className="p-2 rounded-lg" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
                   <MousePointer className="w-4 h-4" />
                 </div>
                 <div>
                   <Label className="text-sm font-medium">UI Interactions</Label>
-                  <p className="text-xs text-muted-foreground">Buttons and navigation</p>
+                  <p className="text-xs text-muted-foreground">Buttons and navigation taps</p>
                 </div>
               </div>
               <Switch

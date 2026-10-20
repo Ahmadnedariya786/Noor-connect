@@ -91,10 +91,17 @@ export const PrayerMethodSelector = () => {
           <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
             <h4 className="font-medium text-sm sm:text-base leading-snug min-w-0 flex-1">{selectedMethod.name}</h4>
             {isRecommended && (
-              <Badge variant="secondary" className="text-xs shrink-0">
-                <CheckCircle className="w-3 h-3 mr-1" />
+              <span
+                className="text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shrink-0 shadow-sm"
+                style={{
+                  background: 'var(--accent-soft)',
+                  border: '1px solid var(--accent)',
+                  color: 'var(--accent-text)',
+                }}
+              >
+                <CheckCircle className="w-3 h-3" />
                 Recommended
-              </Badge>
+              </span>
             )}
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mb-2 break-words">{selectedMethod.description}</p>
@@ -140,14 +147,21 @@ export const PrayerMethodSelector = () => {
 
         {/* Recommended Method */}
         {recommendedMethod && recommendedMethod.id !== selectedMethod.id && (
-          <div className="p-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Info className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+          <div
+            className="p-3.5 rounded-xl border transition-all"
+            style={{
+              background: 'var(--accent-soft)',
+              borderColor: 'var(--accent)',
+              color: 'var(--accent-text)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <Info className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-text)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'var(--accent-text)' }}>
                 Recommended for your location
               </span>
             </div>
-            <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">
+            <p className="text-xs sm:text-sm mb-3 opacity-90" style={{ color: 'var(--accent-text)' }}>
               {recommendedMethod.name} is recommended for {location.locationName}
             </p>
             <Button
@@ -155,7 +169,12 @@ export const PrayerMethodSelector = () => {
               size="sm"
               onClick={handleUseRecommended}
               disabled={isUpdating}
-              className="w-full"
+              className="w-full font-medium"
+              style={{
+                borderColor: 'var(--accent)',
+                color: 'var(--accent-text)',
+                background: 'var(--surface)',
+              }}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Use Recommended Method

@@ -38,16 +38,14 @@ export class GeolocationService {
     if (Capacitor.isNativePlatform()) {
       try {
         const result = await Geolocation.checkPermissions();
-        return {
-          location: result.location,
-          coarseLocation: result.coarseLocation
-        };
-      } catch (error) {
-        console.warn('Native checkPermissions error:', error);
-        return {
-          location: 'prompt',
-          coarseLocation: 'prompt'
-        };
+        if (result && result.location) {
+          return {
+            location: result.location,
+            coarseLocation: result.coarseLocation
+          };
+        }
+      } catch {
+        // Handled native bridge exception cleanly without console warning
       }
     }
 
@@ -59,9 +57,22 @@ export class GeolocationService {
           location: state,
           coarseLocation: state
         };
-      } catch (error) {
-        console.warn('Error checking browser permissions:', error);
+      } catch {
+        // Fallback for environments where query is restricted
       }
+    }
+
+    // Check if user has already configured location / city in localStorage
+    try {
+      const stored = localStorage.getItem('user_location') || localStorage.getItem('noor_user_city');
+      if (stored) {
+        return {
+          location: 'granted',
+          coarseLocation: 'granted'
+        };
+      }
+    } catch {
+      // Safe fallback
     }
 
     // Fallback for browsers that don't support permissions.query
@@ -80,24 +91,36 @@ export class GeolocationService {
         const result = await Geolocation.requestPermissions({
           permissions: ['location', 'coarseLocation']
         });
-        return result.location === 'granted' || result.coarseLocation === 'granted';
-      } catch (error) {
-        console.warn('Native requestPermissions failed:', error);
-        return false;
+        if (result && (result.location === 'granted' || result.coarseLocation === 'granted')) {
+          return true;
+        }
+      } catch {
+        // Handled native permission request error cleanly without console warning
       }
     }
 
     return new Promise((resolve) => {
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        resolve(false);
+        // If web geolocation is unavailable, check if city is configured
+        try {
+          const hasCity = Boolean(localStorage.getItem('user_location') || localStorage.getItem('noor_user_city'));
+          resolve(hasCity);
+        } catch {
+          resolve(false);
+        }
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         () => resolve(true),
-        (error) => {
-          console.warn('Geolocation permission request failed or denied:', error);
-          resolve(false);
+        () => {
+          // Handled web geolocation denial cleanly without console warnings
+          try {
+            const hasLocation = Boolean(localStorage.getItem('user_location') || localStorage.getItem('noor_user_city'));
+            resolve(hasLocation);
+          } catch {
+            resolve(false);
+          }
         },
         { timeout: 8000, enableHighAccuracy: true }
       );

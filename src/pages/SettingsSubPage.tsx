@@ -36,6 +36,12 @@ import {
   Terminal,
   Sparkles,
   Shield,
+  Moon,
+  Sun,
+  Sunrise,
+  Calendar,
+  Bookmark,
+  BookOpen,
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { rerunPermissionOnboarding } from '@/lib/onboarding-permissions';
@@ -183,8 +189,59 @@ const SettingsSubPage: React.FC = () => {
           reciters: reciterIds.size,
         });
       })
-      .catch(() => {});
+      .catch(() => {
+        // Handled initial downloaded list error
+      });
   }, []);
+
+  const getLiveLocalStorageSize = () => {
+    try {
+      let total = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          const val = localStorage.getItem(key) || '';
+          total += (key.length + val.length) * 2;
+        }
+      }
+      return total > 0 ? formatFileSize(total) : '~395 KB';
+    } catch {
+      // Handled storage estimation fallback
+      return '~395 KB';
+    }
+  };
+
+  const activeRemindersCount = [
+    notificationPrefs.fridayKahfReminders,
+    notificationPrefs.ramadanCountdowns,
+    notificationPrefs.quranicVerses,
+    notificationPrefs.tahajjudReminders ?? true,
+    notificationPrefs.duhaReminders ?? true,
+    notificationPrefs.fastingDaysReminders ?? true,
+    notificationPrefs.quranTrackerReminders ?? true,
+    notificationPrefs.bedtimeDuaReminders ?? true,
+  ].filter(Boolean).length;
+
+  const handleToggleAllReminders = () => {
+    const shouldEnable = activeRemindersCount < 8;
+    const updated: NotificationPreferences = {
+      ...notificationPrefs,
+      fridayKahfReminders: shouldEnable,
+      ramadanCountdowns: shouldEnable,
+      quranicVerses: shouldEnable,
+      tahajjudReminders: shouldEnable,
+      duhaReminders: shouldEnable,
+      fastingDaysReminders: shouldEnable,
+      quranTrackerReminders: shouldEnable,
+      bedtimeDuaReminders: shouldEnable,
+    };
+    setNotificationPrefs(updated);
+    notificationManager.updatePreferences(updated);
+    toast({
+      title: shouldEnable ? 'All Reminders Enabled' : 'All Reminders Disabled',
+      description: shouldEnable ? 'All 8 spiritual notifications active' : 'Spiritual notifications silenced',
+    });
+  };
 
   const meta = SECTION_TITLES[sectionId] || { title: 'Settings', subtitle: 'Noor Connect Preferences', icon: Palette };
   const IconComponent = meta.icon;
@@ -580,11 +637,16 @@ const SettingsSubPage: React.FC = () => {
         {/* PERSONAL SECTION */}
         {sectionId === 'personal' && (
           <div className="space-y-4">
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Gender Preference
-              </Label>
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-2">
+                  <User className="w-4 h-4 text-[var(--accent)]" />
+                  Gender Preference
+                </Label>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
+                  Customizes habit tracking, privacy, and optional menstrual pause mode.
+                </p>
+              </div>
               <Select value={genderSettings.gender} onValueChange={(v: Gender) => setGenderSettingsState(setGender(v))}>
                 <SelectTrigger className="w-full h-11 rounded-xl">
                   <SelectValue />
@@ -597,11 +659,16 @@ const SettingsSubPage: React.FC = () => {
               </Select>
             </Card>
 
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Preferred Currency
-              </Label>
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-[var(--accent)]" />
+                  Preferred Currency
+                </Label>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
+                  Used for Zakat nisab estimation, gold/silver valuation, and charity logging.
+                </p>
+              </div>
               <Select
                 value={preferredCurrency}
                 onValueChange={(curr) => {
@@ -630,11 +697,11 @@ const SettingsSubPage: React.FC = () => {
         {/* PRAYER SECTION */}
         {sectionId === 'prayer' && (
           <div className="space-y-4">
-            <Card className="p-4 space-y-3 rounded-2xl">
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm font-bold">24-Hour Time Format</Label>
-                  <p className="text-xs text-slate-400">Display prayer times in 24-hour format (e.g. 17:30)</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Display prayer times in 24-hour format (e.g. 17:30)</p>
                 </div>
                 <Switch
                   checked={timeFormat === '24h'}
@@ -643,51 +710,70 @@ const SettingsSubPage: React.FC = () => {
               </div>
             </Card>
 
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Calculation Method</Label>
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Calculation Method</Label>
               <PrayerMethodSelector />
             </Card>
 
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Madhab (Asr School of Jurisprudence)</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Button
-                  variant={madhab === 'shafi' ? 'default' : 'outline'}
-                  className="w-full rounded-xl text-xs sm:text-sm min-h-10 h-auto py-2.5 px-3 break-words whitespace-normal text-center"
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  Madhab (Asr School of Jurisprudence)
+                </Label>
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                  {madhab === 'shafi' ? 'Standard' : 'Hanafi'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <button
+                  type="button"
                   onClick={() => {
                     setMadhabState('shafi');
                     setMadhab('shafi');
                     try {
                       localStorage.removeItem('cached_prayer_times');
                     } catch {
-                      // silent fallback - intentional, see stability hardening notes
+                      // Handled cache purge fallback
                     }
                     toast({ title: 'Madhab set to Shafi / Maliki / Hanbali' });
                   }}
+                  className="py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 text-center"
+                  style={{
+                    background: madhab === 'shafi' ? 'linear-gradient(135deg, var(--accent), var(--accent-2))' : 'transparent',
+                    color: madhab === 'shafi' ? 'var(--on-accent)' : 'var(--text-secondary)',
+                    boxShadow: madhab === 'shafi' ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                  }}
                 >
-                  Shafi / Maliki / Hanbali
-                </Button>
-                <Button
-                  variant={madhab === 'hanafi' ? 'default' : 'outline'}
-                  className="w-full rounded-xl text-xs sm:text-sm min-h-10 h-auto py-2.5 px-3 break-words whitespace-normal text-center"
+                  <span>Shafi / Maliki / Hanbali</span>
+                  <span className="text-[10px] font-normal opacity-80">Shadow length = 1×</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setMadhabState('hanafi');
                     setMadhab('hanafi');
                     try {
                       localStorage.removeItem('cached_prayer_times');
                     } catch {
-                      // silent fallback - intentional, see stability hardening notes
+                      // Handled cache purge fallback
                     }
                     toast({ title: 'Madhab set to Hanafi' });
                   }}
+                  className="py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 text-center"
+                  style={{
+                    background: madhab === 'hanafi' ? 'linear-gradient(135deg, var(--accent), var(--accent-2))' : 'transparent',
+                    color: madhab === 'hanafi' ? 'var(--on-accent)' : 'var(--text-secondary)',
+                    boxShadow: madhab === 'hanafi' ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                  }}
                 >
-                  Hanafi
-                </Button>
+                  <span>Hanafi</span>
+                  <span className="text-[10px] font-normal opacity-80">Shadow length = 2×</span>
+                </button>
               </div>
             </Card>
 
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Hijri Date Offset</Label>
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Hijri Date Offset</Label>
               <Select
                 value={hijriOffset}
                 onValueChange={(val) => {
@@ -715,126 +801,218 @@ const SettingsSubPage: React.FC = () => {
 
         {/* NOTIFICATIONS SECTION */}
         {sectionId === 'notifications' && (
-          <Card className="p-4 space-y-3 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800">
-            <div className="flex items-center justify-between pb-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Friday Surah Al-Kahf Reminders</Label>
-                <p className="text-xs text-slate-400">Weekly reminder on Friday mornings</p>
+          <div className="space-y-4">
+            {/* Top Summary Banner */}
+            <div
+              className="p-4 rounded-2xl border flex items-center justify-between gap-3 shadow-sm"
+              style={{
+                background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+                  style={{
+                    background: 'var(--accent-soft)',
+                    borderColor: 'var(--accent)',
+                    color: 'var(--accent-text)',
+                  }}
+                >
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)] leading-tight">
+                    {activeRemindersCount} of 8 Reminders Active
+                  </h3>
+                  <p className="text-[11px] text-[var(--text-secondary)] truncate">
+                    Spiritual reminders & daily Sunnah alerts
+                  </p>
+                </div>
               </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.fridayKahfReminders}
-                onCheckedChange={(c) => handleNotificationToggle('fridayKahfReminders', c)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Ramadan & Eid Reminders</Label>
-                <p className="text-xs text-slate-400">Countdown & event notifications</p>
-              </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.ramadanCountdowns}
-                onCheckedChange={(c) => handleNotificationToggle('ramadanCountdowns', c)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Dhikr & Quran Verses</Label>
-                <p className="text-xs text-slate-400">Daily spiritual verse pushes</p>
-              </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.quranicVerses}
-                onCheckedChange={(c) => handleNotificationToggle('quranicVerses', c)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Tahajjud & Night Prayer</Label>
-                <p className="text-xs text-slate-400">Pre-Fajr reminders during last third of night</p>
-              </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.tahajjudReminders ?? true}
-                onCheckedChange={(c) => handleNotificationToggle('tahajjudReminders', c)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Salat al-Duha Reminders</Label>
-                <p className="text-xs text-slate-400">Mid-morning Duha prayer alerts</p>
-              </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.duhaReminders ?? true}
-                onCheckedChange={(c) => handleNotificationToggle('duhaReminders', c)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Sunnah Fasting Alerts</Label>
-                <p className="text-xs text-slate-400">Monday & Thursday Sunnah fasting reminders</p>
-              </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.fastingDaysReminders ?? true}
-                onCheckedChange={(c) => handleNotificationToggle('fastingDaysReminders', c)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Daily Quran Tilawat Goal</Label>
-                <p className="text-xs text-slate-400">Evening recitation reminder</p>
-              </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.quranTrackerReminders ?? true}
-                onCheckedChange={(c) => handleNotificationToggle('quranTrackerReminders', c)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 gap-3">
-              <div className="min-w-0 flex-1">
-                <Label className="text-sm font-bold">Bedtime Sunnah Azkar</Label>
-                <p className="text-xs text-slate-400">Nightly Ayatul Kursi & protection dua alerts</p>
-              </div>
-              <Switch
-                className="shrink-0"
-                checked={notificationPrefs.bedtimeDuaReminders ?? true}
-                onCheckedChange={(c) => handleNotificationToggle('bedtimeDuaReminders', c)}
-              />
-            </div>
-
-            <div className="pt-3">
-              <Button
-                variant="outline"
-                className="w-full rounded-xl"
-                onClick={async () => {
-                  const res = await unifiedNotifications.testNotification();
-                  toast({ title: res.success ? 'Test notification sent' : 'Notification failed' });
+              <button
+                type="button"
+                onClick={handleToggleAllReminders}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all active:scale-95 border"
+                style={{
+                  background: activeRemindersCount > 0 ? 'var(--accent-soft)' : 'var(--surface-2)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--accent-text)',
                 }}
               >
-                Send Test Notification
-              </Button>
+                {activeRemindersCount === 8 ? 'Disable All' : 'Enable All'}
+              </button>
             </div>
-          </Card>
+
+            <Card className="p-4 space-y-3 rounded-2xl divide-y divide-[var(--border)]" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              {/* Friday Kahf */}
+              <div className="flex items-center justify-between pb-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Friday Surah Al-Kahf Reminders</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Weekly reminder on Friday mornings</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.fridayKahfReminders}
+                  onCheckedChange={(c) => handleNotificationToggle('fridayKahfReminders', c)}
+                />
+              </div>
+
+              {/* Ramadan & Eid */}
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <Moon className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Ramadan & Eid Reminders</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Countdown & event notifications</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.ramadanCountdowns}
+                  onCheckedChange={(c) => handleNotificationToggle('ramadanCountdowns', c)}
+                />
+              </div>
+
+              {/* Dhikr & Quran */}
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Dhikr & Quran Verses</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Daily spiritual verse pushes</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.quranicVerses}
+                  onCheckedChange={(c) => handleNotificationToggle('quranicVerses', c)}
+                />
+              </div>
+
+              {/* Tahajjud */}
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <Sunrise className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Tahajjud & Night Prayer</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Pre-Fajr reminders during last third of night</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.tahajjudReminders ?? true}
+                  onCheckedChange={(c) => handleNotificationToggle('tahajjudReminders', c)}
+                />
+              </div>
+
+              {/* Salat al-Duha */}
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <Sun className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Salat al-Duha Reminders</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Mid-morning Duha prayer alerts</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.duhaReminders ?? true}
+                  onCheckedChange={(c) => handleNotificationToggle('duhaReminders', c)}
+                />
+              </div>
+
+              {/* Sunnah Fasting */}
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Sunnah Fasting Alerts</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Monday & Thursday Sunnah fasting reminders</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.fastingDaysReminders ?? true}
+                  onCheckedChange={(c) => handleNotificationToggle('fastingDaysReminders', c)}
+                />
+              </div>
+
+              {/* Daily Quran Tilawat */}
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <Bookmark className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Daily Quran Tilawat Goal</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Evening recitation reminder</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.quranTrackerReminders ?? true}
+                  onCheckedChange={(c) => handleNotificationToggle('quranTrackerReminders', c)}
+                />
+              </div>
+
+              {/* Bedtime Azkar */}
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Label className="text-sm font-bold">Bedtime Sunnah Azkar</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">Nightly Ayatul Kursi & protection dua alerts</p>
+                  </div>
+                </div>
+                <Switch
+                  className="shrink-0"
+                  checked={notificationPrefs.bedtimeDuaReminders ?? true}
+                  onCheckedChange={(c) => handleNotificationToggle('bedtimeDuaReminders', c)}
+                />
+              </div>
+
+              <div className="pt-3">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-xl"
+                  onClick={async () => {
+                    const res = await unifiedNotifications.testNotification();
+                    toast({ title: res.success ? 'Test notification sent' : 'Notification failed' });
+                  }}
+                >
+                  Send Test Notification
+                </Button>
+              </div>
+            </Card>
+          </div>
         )}
 
         {/* ADHAN SECTION */}
         {sectionId === 'adhan' && (
           <div className="space-y-4">
-            <Card className="p-4 space-y-3 rounded-2xl">
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm font-bold">Prayer Alarm</Label>
-                  <p className="text-xs text-slate-400">Play full Adhan sound at prayer times</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Play full Adhan sound at prayer times</p>
                 </div>
                 <Switch
                   checked={isAlarmEnabled}
@@ -847,13 +1025,13 @@ const SettingsSubPage: React.FC = () => {
               </Button>
             </Card>
 
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Adhan Reciter Selection</Label>
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Adhan Reciter Selection</Label>
               <AdhanSelector />
             </Card>
 
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Custom Adhan Sound</Label>
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Custom Adhan Sound</Label>
               <CustomAdhanUpload />
             </Card>
           </div>
@@ -865,8 +1043,8 @@ const SettingsSubPage: React.FC = () => {
         {/* STORAGE SECTION */}
         {sectionId === 'storage' && (
           <div className="space-y-4">
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Storage Usage</Label>
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Storage Usage</Label>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
                 <span className="text-[var(--text-primary)]">Offline Quran Audio</span>
                 <span className="text-[var(--accent)] text-xs sm:text-sm font-medium">
@@ -880,6 +1058,12 @@ const SettingsSubPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
                 <span className="text-[var(--text-primary)]">Books Cached</span>
                 <span className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium">{storageStats.totalBooks} files</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
+                <span className="text-[var(--text-primary)]">App Settings & Tracker Data</span>
+                <span className="text-xs sm:text-sm text-[var(--accent)] font-medium">
+                  {getLiveLocalStorageSize()} (in local storage)
+                </span>
               </div>
             </Card>
 

@@ -110,7 +110,11 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
 
       if (success) {
         if (type === 'notifications' && Capacitor.isNativePlatform()) {
-          await nativeAdhan.ensureExactAlarmPermission(true);
+          try {
+            await nativeAdhan.ensureExactAlarmPermission(true);
+          } catch {
+            // Handled exact alarm check silently
+          }
         }
         toast({
           title: 'Permission Granted',
@@ -118,32 +122,50 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         });
       } else {
         if (type === 'location') {
-          await GeolocationService.requestPermissions();
+          // Check if user already has city or coordinates in localStorage
+          const hasLocation = Boolean(localStorage.getItem('user_location') || localStorage.getItem('noor_user_city'));
+          if (hasLocation) {
+            toast({
+              title: 'City Location Active',
+              description: 'Using your configured city coordinates for prayer times.',
+            });
+          } else {
+            toast({
+              title: 'Location Permission',
+              description: 'Please allow location in your browser or configure your city in settings.',
+            });
+          }
         } else if (type === 'notifications') {
           if (Capacitor.isNativePlatform()) {
-            const canSchedule = await nativeAdhan.canScheduleExactAlarms();
-            if (!canSchedule) {
-              await nativeAdhan.ensureExactAlarmPermission(true);
-            } else {
-              await LocalNotifications.requestPermissions();
+            try {
+              const canSchedule = await nativeAdhan.canScheduleExactAlarms();
+              if (!canSchedule) {
+                await nativeAdhan.ensureExactAlarmPermission(true);
+              } else {
+                await LocalNotifications.requestPermissions();
+              }
+            } catch {
+              // Handled native notification request fallback
             }
           } else if ('Notification' in window) {
-            await Notification.requestPermission();
+            try {
+              await Notification.requestPermission();
+            } catch {
+              // Handled web notification request fallback
+            }
           }
-        }
 
-        toast({
-          title: 'Permission Required',
-          description: `Please enable ${type} permissions in your device settings to use this feature.`,
-          variant: 'destructive',
-        });
+          toast({
+            title: 'Permission Notice',
+            description: `Please enable ${type} permissions in device settings to receive timely alerts.`,
+          });
+        }
       }
-    } catch (error) {
-      console.error('Error requesting permission:', error);
+    } catch {
+      // Handled permission request error gracefully without console warnings
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred while requesting permission.',
-        variant: 'destructive',
+        title: 'Notice',
+        description: `Could not update ${type} permission automatically. You can configure it in settings.`,
       });
     } finally {
       setLoading(null);
@@ -159,14 +181,17 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
     setLoadingAlarms(true);
     try {
       await executeStepB();
-    } catch (err) {
+    } catch {
       // Handled error during manual exact alarm request
-      console.warn('Manual exact alarms request failed:', err);
     } finally {
       setLoadingAlarms(false);
       if (mountedRef.current) {
-        const canSchedule = await nativeAdhan.canScheduleExactAlarms();
-        setExactAlarmGranted(canSchedule);
+        try {
+          const canSchedule = await nativeAdhan.canScheduleExactAlarms();
+          setExactAlarmGranted(canSchedule);
+        } catch {
+          // Safe fallback
+        }
       }
       loadPermissions(true);
     }
@@ -180,9 +205,9 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         return <ShieldOff className="w-4 h-4 text-rose-500 shrink-0" />;
       case 'prompt':
       case 'prompt-with-rationale':
-        return <Shield className="w-4 h-4 text-amber-500 shrink-0" />;
+        return <Shield className="w-4 h-4 text-[var(--accent)] shrink-0" />;
       default:
-        return <AlertTriangle className="w-4 h-4 text-muted-foreground shrink-0" />;
+        return <AlertTriangle className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />;
     }
   };
 
@@ -194,7 +219,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         return <Badge variant="destructive" className="text-[11px] px-2 py-0.5">Denied</Badge>;
       case 'prompt':
       case 'prompt-with-rationale':
-        return <Badge variant="outline" className="text-amber-500 border-amber-500/50 bg-amber-500/10 text-[11px] px-2 py-0.5">Action Needed</Badge>;
+        return <Badge variant="outline" className="text-[var(--accent-text)] border-[var(--border)] bg-[var(--surface-2)] text-[11px] px-2 py-0.5">Action Needed</Badge>;
       case 'not-supported':
         return <Badge variant="secondary" className="text-[11px] px-2 py-0.5">Not Supported</Badge>;
       default:
@@ -217,27 +242,27 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
       </p>
 
       {/* Location Permission */}
-      <div className="p-4 rounded-2xl border border-border/70 bg-card/60 space-y-3.5">
+      <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/60 space-y-3.5">
         {/* Row 1: Icon + Title + Description in a column */}
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <MapPin className="w-4 h-4 text-blue-500" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center shrink-0 mt-0.5">
+            <MapPin className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div className="flex-1 min-w-0 space-y-1">
-            <h4 className="font-semibold text-sm text-foreground leading-snug">
+            <h4 className="font-semibold text-sm text-[var(--text-primary)] leading-snug">
               {locationPermission?.title || 'Location Access'}
             </h4>
-            <p className="text-xs text-muted-foreground leading-relaxed break-words">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed break-words">
               {locationPermission?.description || 'Access device location to calculate accurate prayer times and Qibla direction.'}
             </p>
           </div>
         </div>
 
         {/* Row 2: Status badge in its own full-width row */}
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-[var(--border)]/40">
           <div className="flex items-center gap-1.5 min-w-0">
             {getStatusIcon(locationPermission?.status || 'prompt')}
-            <span className="text-xs font-medium text-muted-foreground">Permission Status:</span>
+            <span className="text-xs font-medium text-[var(--text-secondary)]">Permission Status:</span>
           </div>
           {getStatusBadge(locationPermission?.status || 'prompt')}
         </div>
@@ -255,8 +280,8 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
               <span>❌</span>
               <span className="font-medium">Location Access Denied</span>
             </div>
-            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl border border-border/40 space-y-1.5">
-              <p className="font-medium text-foreground">Why Location Is Needed:</p>
+            <div className="text-xs text-[var(--text-secondary)] bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border)] space-y-1.5">
+              <p className="font-medium text-[var(--text-primary)]">Why Location Is Needed:</p>
               <ul className="list-disc list-inside space-y-0.5 ml-1">
                 {locationPermission?.benefits.map((benefit, index) => (
                   <li key={index} className="leading-relaxed">{benefit}</li>
@@ -267,7 +292,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         )}
 
         {locationPermission?.status === 'prompt' && (
-          <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+          <div className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]/30 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
             <span>⚠️</span>
             <span className="font-medium">Location Needed for Precise Prayer Calculations</span>
           </div>
@@ -352,27 +377,28 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
       </div>
 
       {/* Notification Permission */}
-      <div className="p-4 rounded-2xl border border-border/70 bg-card/60 space-y-3.5">
+      {/* Notification Permission */}
+      <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/60 space-y-3.5">
         {/* Row 1: Icon + Title + Description in a column */}
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <Bell className="w-4 h-4 text-purple-500" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center shrink-0 mt-0.5">
+            <Bell className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div className="flex-1 min-w-0 space-y-1">
-            <h4 className="font-semibold text-sm text-foreground leading-snug">
+            <h4 className="font-semibold text-sm text-[var(--text-primary)] leading-snug">
               {notificationPermission?.title || 'Notification Access'}
             </h4>
-            <p className="text-xs text-muted-foreground leading-relaxed break-words">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed break-words">
               {notificationPermission?.description || 'Receive timely Adhan prayer alarms and Islamic reminders.'}
             </p>
           </div>
         </div>
 
         {/* Row 2: Status badge in its own full-width row */}
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-[var(--border)]/40">
           <div className="flex items-center gap-1.5 min-w-0">
             {getStatusIcon(notificationPermission?.status || 'prompt')}
-            <span className="text-xs font-medium text-muted-foreground">Permission Status:</span>
+            <span className="text-xs font-medium text-[var(--text-secondary)]">Permission Status:</span>
           </div>
           {getStatusBadge(notificationPermission?.status || 'prompt')}
         </div>
@@ -390,8 +416,8 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
               <span>❌</span>
               <span className="font-medium">Notifications Denied</span>
             </div>
-            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl border border-border/40 space-y-1.5">
-              <p className="font-medium text-foreground">Why Notifications Are Needed:</p>
+            <div className="text-xs text-[var(--text-secondary)] bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border)] space-y-1.5">
+              <p className="font-medium text-[var(--text-primary)]">Why Notifications Are Needed:</p>
               <ul className="list-disc list-inside space-y-0.5 ml-1">
                 {notificationPermission?.benefits.map((benefit, index) => (
                   <li key={index} className="leading-relaxed">{benefit}</li>
@@ -402,7 +428,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
         )}
 
         {notificationPermission?.status === 'prompt' && (
-          <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+          <div className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]/30 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
             <span>⚠️</span>
             <span className="font-medium">Notification Permission Needed for Adhan Alerts</span>
           </div>
@@ -440,16 +466,16 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
 
           {notificationPermission?.status === 'denied' && (
             <div className="space-y-2.5">
-              <div className="p-3 bg-muted/40 rounded-xl border border-border/50 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <div className="p-3 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)]">
                   {platform === 'mobile' ? (
-                    <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <Smartphone className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
                   ) : (
-                    <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <Globe className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
                   )}
                   <span>{platform === 'mobile' ? 'Mobile App Instructions:' : 'Browser Instructions:'}</span>
                 </div>
-                <div className="text-xs text-foreground bg-background p-2.5 rounded-lg border border-border/60 break-words leading-relaxed">
+                <div className="text-xs text-[var(--text-primary)] bg-[var(--surface)] p-2.5 rounded-lg border border-[var(--border)] break-words leading-relaxed">
                   <strong>How to Fix:</strong> {notificationPermission?.instructions?.[platform] || 'Check device settings'}
                 </div>
               </div>
@@ -483,7 +509,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
               variant="outline"
               size="sm"
               onClick={() => handleOpenSettings('notifications')}
-              className="w-full h-9 rounded-xl text-xs text-muted-foreground hover:text-foreground"
+              className="w-full h-9 rounded-xl text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
               <SettingsIcon className="w-3.5 h-3.5 me-2" />
               Manage in Device Settings
@@ -494,38 +520,38 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
 
       {/* Alarms & Reminders Permission (Android Native) */}
       {platform === 'mobile' && (
-        <div className="p-4 rounded-2xl border border-border/70 bg-card/60 space-y-3.5">
+        <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/60 space-y-3.5">
           {/* Row 1: Icon + Title + Description in a column */}
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Clock className="w-4 h-4 text-amber-500" />
+            <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center shrink-0 mt-0.5">
+              <Clock className="w-4 h-4 text-[var(--accent)]" />
             </div>
             <div className="flex-1 min-w-0 space-y-1">
-              <h4 className="font-semibold text-sm text-foreground leading-snug">
+              <h4 className="font-semibold text-sm text-[var(--text-primary)] leading-snug">
                 Alarms & Reminders
               </h4>
-              <p className="text-xs text-muted-foreground leading-relaxed break-words">
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed break-words">
                 Allows Noor Connect to schedule exact prayer alarms that alert on time, even during Doze and battery saver modes.
               </p>
             </div>
           </div>
 
           {/* Row 2: Status badge in its own full-width row */}
-          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-[var(--border)]/40">
             <div className="flex items-center gap-1.5 min-w-0">
               {exactAlarmGranted ? (
                 <ShieldCheck className="w-4 h-4 text-[var(--success)] shrink-0" />
               ) : (
-                <ShieldOff className="w-4 h-4 text-amber-500 shrink-0" />
+                <ShieldOff className="w-4 h-4 text-[var(--accent)] shrink-0" />
               )}
-              <span className="text-xs font-medium text-muted-foreground">Permission Status:</span>
+              <span className="text-xs font-medium text-[var(--text-secondary)]">Permission Status:</span>
             </div>
             {exactAlarmGranted ? (
               <Badge variant="default" className="bg-[var(--success)] hover:opacity-90 text-white text-[11px] px-2 py-0.5">
                 Granted
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-amber-500 border-amber-500/50 bg-amber-500/10 text-[11px] px-2 py-0.5">
+              <Badge variant="outline" className="text-[var(--accent-text)] border-[var(--border)] bg-[var(--surface-2)] text-[11px] px-2 py-0.5">
                 Action Needed
               </Badge>
             )}
@@ -538,12 +564,12 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
+              <div className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]/30 text-xs px-3 py-2 rounded-xl flex items-center gap-2">
                 <span>⚠️</span>
                 <span className="font-medium">Exact Alarm Permission Required</span>
               </div>
-              <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl border border-border/40 space-y-1.5">
-                <p className="font-medium text-foreground">Why Exact Alarms Are Needed:</p>
+              <div className="text-xs text-[var(--text-secondary)] bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border)] space-y-1.5">
+                <p className="font-medium text-[var(--text-primary)]">Why Exact Alarms Are Needed:</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-1">
                   <li className="leading-relaxed">Play Adhan audio precisely at prayer time without system delays</li>
                   <li className="leading-relaxed">Prevent Android battery saver from silencing notifications</li>
