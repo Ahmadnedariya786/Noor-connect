@@ -3,8 +3,11 @@ import { getMushafPageUrl, getMushafPageCdnFallback } from '@/lib/quran-mushaf-i
 import { mushafService } from '@/lib/mushaf-service';
 import { useSettings } from '@/contexts/SettingsContext';
 
+export type MushafReadingMode = 'parchment' | 'night' | 'classic';
+
 interface MushafSurahPagesProps {
   surahNumber: number;
+  mushafMode?: MushafReadingMode;
   onSwipe?: (direction: 'left' | 'right') => void;
   onPageChange?: (currentPage: number, totalPages: number, maxPageViewed: number) => void;
 }
@@ -37,11 +40,14 @@ function prefetchSurroundingPages(currentPage: number, start: number, end: numbe
 
 interface PageSlotProps {
   page: number | null;
+  pageInSurah: number;
+  totalPages: number;
   isDark: boolean;
   isNearActive: boolean;
+  mushafMode: MushafReadingMode;
 }
 
-function PageSlot({ page, isDark, isNearActive }: PageSlotProps) {
+function PageSlot({ page, pageInSurah, totalPages, isNearActive, mushafMode }: PageSlotProps) {
   const [loaded, setLoaded] = useState(false);
   const [hasBeenActive, setHasBeenActive] = useState(isNearActive);
 
@@ -56,13 +62,47 @@ function PageSlot({ page, isDark, isNearActive }: PageSlotProps) {
 
   if (page === null) return null;
 
+  // Eye-comfort CSS filters
+  const imageFilter =
+    mushafMode === 'parchment'
+      ? 'sepia(0.22) brightness(0.95) contrast(1.02)'
+      : mushafMode === 'night'
+      ? 'invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(1.08)'
+      : 'brightness(0.97)';
+
+  const containerBorder =
+    mushafMode === 'parchment'
+      ? '1.5px solid rgba(201, 168, 76, 0.45)'
+      : mushafMode === 'night'
+      ? '1.5px solid rgba(16, 85, 60, 0.45)'
+      : '1.5px solid var(--border)';
+
+  const pageBackdrop =
+    mushafMode === 'parchment'
+      ? '#fcf8ef'
+      : mushafMode === 'night'
+      ? '#0d1310'
+      : 'var(--surface)';
+
   return (
     <div
-      className="w-full rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface)]"
+      className="w-full rounded-[18px] p-2 mb-4 transition-all duration-200"
+      style={{
+        background: pageBackdrop,
+        border: containerBorder,
+        boxShadow: '0 10px 28px rgba(0,0,0,0.45)',
+      }}
     >
-      <div className="relative w-full flex items-center justify-center overflow-hidden" style={{ aspectRatio: '212 / 325' }}>
+      {/* Jewel-Framed Mushaf Page Canvas */}
+      <div
+        className="relative w-full flex items-center justify-center overflow-hidden rounded-[12px]"
+        style={{
+          aspectRatio: '212 / 325',
+          background: mushafMode === 'night' ? '#0d1310' : mushafMode === 'parchment' ? '#fbf6ec' : 'var(--surface-2)',
+        }}
+      >
         {!loaded && (
-          <div className="absolute inset-0 w-full h-full z-10 bg-[var(--surface)]">
+          <div className="absolute inset-0 w-full h-full z-10 bg-[var(--surface-2)]">
             <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,var(--accent-soft),transparent)] animate-[shimmer_1.5s_infinite]" />
           </div>
         )}
@@ -75,7 +115,8 @@ function PageSlot({ page, isDark, isNearActive }: PageSlotProps) {
             style={{
               touchAction: 'pan-y',
               opacity: loaded ? 1 : 0,
-              transition: 'opacity 0.3s ease-out',
+              filter: imageFilter,
+              transition: 'opacity 0.3s ease-out, filter 0.2s ease',
             }}
             draggable={false}
             loading={isNearActive ? 'eager' : 'lazy'}
@@ -96,16 +137,25 @@ function PageSlot({ page, isDark, isNearActive }: PageSlotProps) {
           />
         ) : null}
       </div>
-      <div className="p-3 border-t border-[#C9A84C]/10">
-        <div className={`text-xs font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/30' : 'text-muted-foreground/70'}`}>
-          Page {page}
-        </div>
+
+      {/* Luxury Header/Footer Ribbon */}
+      <div className="mt-2 flex items-center justify-between px-3.5 py-2 bg-[var(--surface-2)] rounded-[10px] border border-[var(--border)] select-none">
+        <span className="text-xs font-bold text-[var(--accent-text)] tracking-wider">
+          PAGE {page}
+        </span>
+        <span className="text-xs font-medium text-[var(--text-secondary)]">
+          Page {pageInSurah} of {totalPages}
+        </span>
       </div>
     </div>
   );
 }
 
-export function MushafSurahPages({ surahNumber, onPageChange }: MushafSurahPagesProps) {
+export function MushafSurahPages({
+  surahNumber,
+  mushafMode = 'parchment',
+  onPageChange,
+}: MushafSurahPagesProps) {
   const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
@@ -134,7 +184,7 @@ export function MushafSurahPages({ surahNumber, onPageChange }: MushafSurahPages
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = 0;
       if (!scrollContainerRef.current || totalPages === 0) return;
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      const { scrollTop, scrollHeight } = scrollContainerRef.current;
       const pageHeight = scrollHeight / totalPages;
       const newPage = Math.round(scrollTop / pageHeight);
       if (newPage !== localPage && newPage >= 0 && newPage < totalPages) {
@@ -146,7 +196,7 @@ export function MushafSurahPages({ surahNumber, onPageChange }: MushafSurahPages
         onPageChange?.(pageNum, totalPages, maxPageViewedRef.current);
       }
     });
-  }, [totalPages, localPage]);
+  }, [totalPages, localPage, onPageChange]);
 
   const absolutePage = start + localPage;
 
@@ -181,22 +231,32 @@ export function MushafSurahPages({ surahNumber, onPageChange }: MushafSurahPages
             >
               <PageSlot
                 page={pageNum}
+                pageInSurah={idx + 1}
+                totalPages={totalPages}
                 isDark={isDark}
                 isNearActive={Math.abs(idx - localPage) <= 1}
+                mushafMode={mushafMode}
               />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Floating page indicator */}
+      {/* Luxury Floating Page Ribbon */}
       <div className="fixed bottom-6 left-0 right-0 flex items-center justify-center z-20 pointer-events-none">
         <div
-          className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md pointer-events-auto"
-          style={{ background: isDark ? 'rgba(17,17,17,0.85)' : 'rgba(255,255,255,0.85)', border: '1px solid rgba(201,168,76,0.2)' }}
+          className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md pointer-events-auto shadow-xl"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--accent)',
+            boxShadow: '0 4px 20px var(--accent-glow)',
+          }}
         >
-          <span className={`text-xs font-bold px-2 ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
+          <span className="text-xs font-bold text-[var(--accent-text)] px-1">
             Page {localPage + 1} of {totalPages}
+          </span>
+          <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
+            • Mushaf p. {absolutePage}
           </span>
         </div>
       </div>
