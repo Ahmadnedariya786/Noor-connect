@@ -139,33 +139,74 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
           }}
         />
 
-        {/* ── Footer Row: Hijri Date + Next Prayer Mini Status Pill ── */}
-        <div className="relative z-10 flex items-center justify-between gap-1 text-[10px] sm:text-xs">
-          {/* Hijri Date with Decorative Diamond Stars */}
+        {/* ── Footer: 2-Line Centered Vertical Stack (Zero Truncation) ── */}
+        <div
+          className="relative z-10 w-full flex flex-col items-center justify-center text-center select-none"
+          style={{
+            gap: isStaticPreview ? '4px' : '8px',
+          }}
+        >
+          {/* Line 1: Full Hijri Date with Decorative Diamond Stars */}
           <div
-            className="flex items-center gap-1 font-medium truncate max-w-[55%] text-[var(--text-secondary)]"
+            className="flex items-center justify-center gap-1.5 font-semibold text-center select-none"
+            style={{
+              fontSize: isStaticPreview ? '0.68rem' : '0.84rem',
+              fontWeight: 600,
+              color: 'var(--accent-text)',
+              whiteSpace: 'nowrap',
+              overflow: 'visible',
+              textOverflow: 'clip',
+              lineHeight: 1.2,
+            }}
             title={hijriDate}
           >
-            <span className="text-[9px]" style={{ color: 'var(--accent)' }}>✦</span>
-            <span className="truncate">{hijriDate}</span>
-            <span className="text-[9px]" style={{ color: 'var(--accent)' }}>✦</span>
+            <span
+              className="inline-block shrink-0 select-none"
+              style={{
+                fontSize: isStaticPreview ? '0.60rem' : '0.75rem',
+                color: 'var(--accent)',
+              }}
+            >
+              ✦
+            </span>
+            <span className="tracking-wide select-none">{hijriDate}</span>
+            <span
+              className="inline-block shrink-0 select-none"
+              style={{
+                fontSize: isStaticPreview ? '0.60rem' : '0.75rem',
+                color: 'var(--accent)',
+              }}
+            >
+              ✦
+            </span>
           </div>
 
-          {/* Mini Next-Prayer Status Pill */}
+          {/* Line 2: Next Prayer Status Pill */}
           <div
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold shrink-0 select-none border"
+            className="inline-flex items-center justify-center font-semibold shrink-0 select-none border"
             style={{
+              gap: isStaticPreview ? '4px' : '6px',
+              padding: isStaticPreview ? '2px 8px' : '4px 12px',
+              borderRadius: '999px',
               background: 'var(--surface-2)',
               borderColor: 'var(--border)',
               color: 'var(--accent-text)',
-              fontSize: isStaticPreview ? '9px' : '10.5px',
+              fontSize: isStaticPreview ? '0.65rem' : '0.78rem',
+              whiteSpace: 'nowrap',
+              lineHeight: 1.2,
             }}
           >
             <span
-              className="w-1.5 h-1.5 rounded-full inline-block shrink-0"
-              style={{ background: 'var(--accent)' }}
+              className="rounded-full inline-block shrink-0"
+              style={{
+                width: isStaticPreview ? '5px' : '6px',
+                height: isStaticPreview ? '5px' : '6px',
+                background: 'var(--accent)',
+              }}
             />
-            <span className="truncate max-w-[65px] sm:max-w-none">{prayerName}</span>
+            <span className={cn(isStaticPreview ? "whitespace-nowrap" : "truncate max-w-[120px] sm:max-w-none")}>
+              {prayerName}
+            </span>
             {countdownText && (
               <span className="font-mono text-[var(--text-secondary)] font-normal ml-0.5">
                 {countdownText}

@@ -97,12 +97,18 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             className={cn(
               "relative z-10 w-full flex items-center justify-between font-mono font-bold uppercase px-0.5",
               isStaticPreview
-                ? "text-[8px] tracking-normal mb-1"
+                ? "text-[0.66rem] tracking-tight mb-1"
                 : "text-[10px] sm:text-xs tracking-widest mb-1 sm:mb-2"
             )}
             style={{ color: 'var(--accent-text)' }}
           >
-            <span className="truncate max-w-[68%]" title={hijriDate}>
+            <span
+              className={cn(
+                "whitespace-nowrap",
+                isStaticPreview ? "overflow-visible text-clip" : "truncate max-w-[68%]"
+              )}
+              title={hijriDate}
+            >
               {hijriDate}
             </span>
 
@@ -111,7 +117,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               <span
                 className={cn(
                   "rounded font-black shrink-0",
-                  isStaticPreview ? "px-1 py-[1px] text-[7.5px]" : "px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px]"
+                  isStaticPreview ? "px-1 py-[0.5px] text-[0.55rem]" : "px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px]"
                 )}
                 style={{
                   color: 'var(--on-accent)',
@@ -186,14 +192,17 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             className={cn(
               "relative z-10 w-full flex items-center justify-between font-mono font-bold",
               isStaticPreview
-                ? "text-[7.5px] mt-1 pt-1 tracking-normal"
+                ? "text-[0.65rem] mt-1 pt-1 tracking-normal"
                 : "text-[10px] sm:text-xs mt-2 pt-2 tracking-wider"
             )}
             style={{ borderTop: '1px solid var(--border)' }}
           >
             {/* Active / Next Prayer with glowing dot */}
             <div
-              className="uppercase flex items-center gap-1.5 truncate max-w-[55%]"
+              className={cn(
+                "uppercase flex items-center shrink-0",
+                isStaticPreview ? "gap-1" : "gap-1.5 truncate max-w-[55%]"
+              )}
               style={{ color: 'var(--text-secondary)' }}
             >
               <span
@@ -203,12 +212,17 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
                   boxShadow: '0 0 6px var(--accent-glow)',
                 }}
               />
-              <span className="truncate">{prayerName}</span>
+              <span className={cn(isStaticPreview ? "whitespace-nowrap" : "truncate")}>
+                {prayerName}
+              </span>
             </div>
 
             {/* Live Countdown Readout */}
             <span
-              className="font-black shrink-0 text-right ml-2"
+              className={cn(
+                "font-black shrink-0 text-right whitespace-nowrap",
+                isStaticPreview ? "text-[0.65rem] ml-1" : "ml-2"
+              )}
               style={{
                 color: 'var(--accent-text)',
                 textShadow: isStaticPreview ? undefined : '0 0 8px var(--accent-glow)',

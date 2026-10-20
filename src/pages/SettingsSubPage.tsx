@@ -61,7 +61,7 @@ import {
   type UpdateCheckResult,
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
-import noorLogo from '@/assets/noor-logo.png';
+import { NoorLogoCrest } from '@/components/NoorLogoCrest';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -1008,9 +1008,7 @@ const SettingsSubPage: React.FC = () => {
         {sectionId === 'about' && (
           <div className="space-y-4">
             <Card className="p-5 text-center space-y-2 rounded-2xl">
-              <div className="w-16 h-16 rounded-2xl mx-auto overflow-hidden shadow-md flex items-center justify-center p-1 bg-[#150D2E] border border-[var(--border)]">
-                <img src={noorLogo} alt="Noor Connect Logo" className="w-full h-full object-contain rounded-xl" />
-              </div>
+              <NoorLogoCrest size="md" animated={animationEnabled} className="mx-auto my-1" />
               <h2 className="text-lg font-bold">Noor Connect</h2>
               <p className="text-xs text-slate-400">Version {CURRENT_APP_VERSION}</p>
               <p className="text-xs text-slate-500 max-w-xs mx-auto pt-2">

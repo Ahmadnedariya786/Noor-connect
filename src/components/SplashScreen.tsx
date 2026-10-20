@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { Smartphone } from "lucide-react";
-import noorLogo from "@/assets/noor-logo.png";
+import { NoorLogoCrest } from "@/components/NoorLogoCrest";
 import { getAnimationTier } from "@/lib/device-performance";
 
 interface NavigatorWithStandalone extends Navigator {
@@ -141,66 +141,81 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
     return (
         <div
-            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#150D2E] overflow-hidden transition-opacity duration-200 ${isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#150D2E] overflow-hidden transition-all duration-300 ${isFading ? 'opacity-0 scale-[1.02] pointer-events-none' : 'opacity-100 scale-100'}`}
             style={{
                 background: "radial-gradient(ellipse at center, #24164c 0%, #150D2E 60%, #0a0618 100%)",
-                willChange: "opacity",
-                transform: "translateZ(0)",
+                willChange: "opacity, transform",
             }}
         >
             {/* Stars Background */}
             <FloatingStars enabled={shouldAnimate} />
 
-            {/* Main Content: Logo + Tagline */}
-            <div className="relative z-10 flex flex-col items-center justify-center space-y-4 px-6">
-                
-                {/* 1. Logo Emblem with Integrated Wordmark */}
-                <div className="relative">
-                    {/* Soft pulsing glow behind the logo (accent-glow, 2s ease-in-out infinite), disabled when Fluid Animations is OFF */}
-                    <div
-                        className={`absolute inset-0 rounded-3xl pointer-events-none ${
-                            shouldAnimate ? 'animate-pulse' : 'opacity-25'
-                        }`}
+            {/* Main Content: Exact Match with static-splash for 0 layout jump */}
+            <div
+                className="relative z-10 flex flex-col items-center justify-center text-center select-none"
+                style={{ padding: '24px' }}
+            >
+                {/* 1. Celestial Rub el Hizb Medallion */}
+                <NoorLogoCrest size="lg" animated={shouldAnimate} />
+
+                {/* 2. Brand Title: NOOR CONNECT */}
+                <h1
+                    style={{
+                        margin: '20px 0 0 0',
+                        fontSize: '1.25rem',
+                        fontWeight: 800,
+                        letterSpacing: '0.22em',
+                        background: 'linear-gradient(180deg, #FFF7E0 0%, #E5B85B 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        textAlign: 'center',
+                        textTransform: 'uppercase',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                    }}
+                >
+                    NOOR CONNECT
+                </h1>
+
+                {/* 3. Subtitle: ISLAMIC COMPANION */}
+                {showGreeting && (
+                    <p
                         style={{
-                            background: "radial-gradient(circle, var(--accent-glow, rgba(229, 184, 60, 0.4)) 0%, transparent 70%)",
-                            filter: "blur(28px)",
-                            transform: "scale(1.35)",
-                            animationDuration: shouldAnimate ? '2s' : 'none',
+                            margin: '6px 0 0 0',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.30em',
+                            color: 'rgba(235, 205, 140, 0.82)',
+                            textAlign: 'center',
+                            textTransform: 'uppercase',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                        }}
+                    >
+                        ISLAMIC COMPANION
+                    </p>
+                )}
+
+                {/* 4. Sleek Gold Shimmer Loader Bar */}
+                <div
+                    style={{
+                        width: '120px',
+                        height: '3px',
+                        background: 'rgba(255,255,255,0.08)',
+                        borderRadius: '999px',
+                        overflow: 'hidden',
+                        marginTop: '22px',
+                        position: 'relative',
+                    }}
+                >
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(90deg, transparent, #F5C35A, #FFF3D1, #F5C35A, transparent)',
+                            animation: shouldAnimate ? 'shimmerComet 1.6s ease-in-out infinite' : undefined,
                         }}
                     />
-
-                    <img
-                        src={noorLogo}
-                        alt="Noor Connect Logo"
-                        className="w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 object-contain relative z-10 drop-shadow-[0_12px_32px_rgba(229,184,60,0.35)] rounded-3xl"
-                    />
-                </div>
-
-                {/* 2. Tagline (Wordmark already in logo) */}
-                <div className="relative flex flex-col items-center justify-center pt-1">
-                    {showGreeting && (
-                        <p
-                            className="text-xs uppercase tracking-[0.32em] font-semibold text-[#E5B83C]/90 text-center select-none relative z-10"
-                        >
-                            Islamic Companion
-                        </p>
-                    )}
-                </div>
-
-                {/* Subtle golden loading pulse dots */}
-                <div className="w-full max-w-sm min-h-[32px] flex items-center justify-center mt-4">
-                    <div className="flex space-x-2">
-                        {[0, 1, 2].map((i) => (
-                            <div
-                                key={i}
-                                className={`w-2 h-2 rounded-full bg-[#F5C542] ${shouldAnimate ? 'animate-bounce' : ''}`}
-                                style={{
-                                    boxShadow: "0 0 10px rgba(245, 197, 66, 0.6)",
-                                    animationDelay: `${i * 0.15}s`
-                                }}
-                            />
-                        ))}
-                    </div>
                 </div>
             </div>
 
