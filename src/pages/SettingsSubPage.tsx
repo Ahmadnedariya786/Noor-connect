@@ -710,10 +710,7 @@ const SettingsSubPage: React.FC = () => {
               </div>
             </Card>
 
-            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-              <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Calculation Method</Label>
-              <PrayerMethodSelector />
-            </Card>
+            <PrayerMethodSelector />
 
             <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="flex items-center justify-between mb-1">

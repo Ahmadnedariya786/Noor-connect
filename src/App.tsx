@@ -217,10 +217,24 @@ function AppRoutes() {
 
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0a1128] via-[#1a237e] to-[#0d1b2a]">
+      <div
+        className="flex items-center justify-center min-h-screen"
+        style={{ background: 'var(--bg-base)' }}
+      >
         <div className="relative z-10 flex flex-col items-center gap-6">
-          <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-[#e0c097]/30 border-t-[#e0c097]" />
-          <p className="text-[#e0c097] text-sm font-semibold tracking-widest uppercase">{t('loading')}</p>
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-[3px]"
+            style={{
+              borderColor: 'var(--surface-2)',
+              borderTopColor: 'var(--accent)',
+            }}
+          />
+          <p
+            className="text-sm font-semibold tracking-widest uppercase"
+            style={{ color: 'var(--accent-text)' }}
+          >
+            {t('loading')}
+          </p>
         </div>
       </div>
     }>
