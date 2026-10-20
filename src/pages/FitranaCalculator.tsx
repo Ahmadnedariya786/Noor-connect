@@ -293,7 +293,7 @@ export default function FitranaCalculator() {
                   </p>
                 </div>
                 <Button 
-                  onClick={() => navigate('/services')}
+                  onClick={() => navigate('/services', { replace: true })}
                   className="mt-6 rounded-xl font-bold px-8 shadow-md"
                   style={{
                     background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",

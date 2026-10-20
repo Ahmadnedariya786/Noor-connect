@@ -395,7 +395,7 @@ const Tafsir = () => {
     if (currentSurahTafsir) {
       setCurrentSurahTafsir(null);
     } else {
-      navigate('/services');
+      navigate('/services', { replace: true });
     }
   };
 

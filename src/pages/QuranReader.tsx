@@ -151,7 +151,7 @@ export default function QuranReader() {
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <div className="text-center cursor-pointer" onClick={() => navigate('/quran')}>
+              <div className="text-center cursor-pointer" onClick={() => navigate('/quran', { replace: true })}>
                 <h1 className="text-lg font-bold text-[var(--accent-text)]">{surahInfo?.name}</h1>
                 <p className="text-xs text-[var(--text-secondary)]">{surahInfo?.englishName} — Page {currentPage} of {totalSurahPages}</p>
               </div>

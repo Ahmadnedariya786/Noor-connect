@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useTransition } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Sparkles, History, ChevronRight } from "lucide-react";
+import { Search, Sparkles, History, ChevronRight, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -27,6 +27,32 @@ const Quran = () => {
   const { t: ti18n } = useI18n();
   const { animationEnabled } = useSettings();
   const dailyAyah = useMemo(() => getDailyAyah(), []);
+  
+  const tokenizedReference = useMemo(() => {
+    const raw = dailyAyah?.reference || dailyAyah?.subtitle || 'Al-Baqarah 2:45';
+    if (!raw.includes('•')) {
+      const match = raw.match(/^(.*?)\s*(\d+:\d+|\d+)$/);
+      if (match) {
+        return `${match[1].trim()} • ${match[2].trim()}`;
+      }
+    }
+    return raw;
+  }, [dailyAyah]);
+
+  const dailySurahNumber = useMemo(() => {
+    const raw = dailyAyah?.reference || dailyAyah?.subtitle || '';
+    const match = raw.match(/(\d+):/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num >= 1 && num <= 114) return num;
+    }
+    const lower = raw.toLowerCase();
+    if (lower.includes('baqarah')) return 2;
+    if (lower.includes('imran')) return 3;
+    if (lower.includes('tawbah')) return 9;
+    if (lower.includes("ra'd") || lower.includes("rad")) return 13;
+    return null;
+  }, [dailyAyah]);
   
   const [surahs, setSurahs] = useState<Surah[]>(() => {
     try {
@@ -153,7 +179,11 @@ const Quran = () => {
                 whileTap: { scale: 0.98 }
             })}
             className="relative overflow-hidden rounded-[24px] cursor-pointer transition-transform bg-[var(--surface)] border border-[var(--border)] shadow-md group"
-            onClick={() => navigate('/quran')}
+            onClick={() => {
+              if (dailySurahNumber) {
+                navigate(`/quran/surah-${dailySurahNumber}`, { replace: true });
+              }
+            }}
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/5 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-[var(--accent)]/10 transition-colors duration-700" />
             
@@ -169,11 +199,23 @@ const Quran = () => {
                 <p className="text-[var(--text-primary)] text-sm font-medium leading-relaxed mb-4">
                   {dailyAyah?.content || 'Loading...'}
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2">
                   <Badge className="bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/30 text-xs tracking-wider uppercase font-bold px-2 py-1">
-                    {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
+                    {tokenizedReference}
                   </Badge>
-                  <span className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest">{dailyAyah?.reference || ''}</span>
+                  {dailySurahNumber ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/quran/surah-${dailySurahNumber}`, { replace: true });
+                      }}
+                      className="text-xs font-semibold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1 group/btn"
+                    >
+                      <span>Read in Surah</span>
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
@@ -187,7 +229,7 @@ const Quran = () => {
           {lastRead && (
             <motion.button
               {...motionProps({ whileTap: { scale: 0.98 } })}
-              onClick={() => navigate(`/quran/surah-${lastRead.number}`)}
+              onClick={() => navigate(`/quran/surah-${lastRead.number}`, { replace: true })}
               className="w-full flex items-center p-4 bg-[var(--surface)] border border-[var(--border)] rounded-[20px] gap-4 hover:bg-[var(--surface-2)] hover:border-[var(--accent)]/40 transition-all group shadow-sm"
             >
               <div className="w-12 h-12 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -236,7 +278,7 @@ const Quran = () => {
                         // Force a small delay so the loading spinner paints immediately before the heavy transition
                         setTimeout(() => {
                           startTransition(() => {
-                            navigate(`/quran/surah-${surah.number}`);
+                            navigate(`/quran/surah-${surah.number}`, { replace: true });
                           });
                         }, 50);
                       }}

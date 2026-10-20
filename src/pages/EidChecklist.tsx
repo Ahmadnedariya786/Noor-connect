@@ -385,7 +385,7 @@ export default function EidChecklist() {
                 <div className="pt-4">
                   <Button 
                     variant="outline" 
-                    onClick={() => navigate('/services')}
+                    onClick={() => navigate('/services', { replace: true })}
                     className="w-full h-12 rounded-2xl border font-bold"
                     style={{
                       background: "var(--surface-2)",

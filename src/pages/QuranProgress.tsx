@@ -309,7 +309,7 @@ export default function QuranProgress() {
           {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button 
-              onClick={() => navigate('/quran')}
+              onClick={() => navigate('/quran', { replace: true })}
               className="h-11 rounded-[16px] font-semibold text-xs uppercase tracking-wider gap-2 transition-all active:scale-[0.98]"
               style={{
                 background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
@@ -322,7 +322,7 @@ export default function QuranProgress() {
             </Button>
             <Button 
               variant="outline"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/dashboard', { replace: true })}
               className="h-11 rounded-[16px] font-semibold text-xs uppercase tracking-wider gap-2 border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:bg-[var(--surface)] transition-all active:scale-[0.98]"
             >
               <ChevronLeft className="w-4 h-4" />

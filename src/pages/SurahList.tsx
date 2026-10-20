@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, memo, useRef, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, ChevronLeft, Sparkles, History, Filter, MapPin, Moon } from "lucide-react";
+import { Search, X, ChevronLeft, Sparkles, History, Filter, MapPin, Moon, ArrowRight } from "lucide-react";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
 import { PageTransition } from "@/components/PageTransition";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -78,6 +78,32 @@ export default function SurahList() {
   const dailyAyah = useMemo(() => getDailyAyah(), []);
   const allSurahs = useMemo(() => quranService.getAllSurahs(), []);
 
+  const tokenizedReference = useMemo(() => {
+    const raw = dailyAyah?.reference || dailyAyah?.subtitle || 'Al-Baqarah 2:45';
+    if (!raw.includes('•')) {
+      const match = raw.match(/^(.*?)\s*(\d+:\d+|\d+)$/);
+      if (match) {
+        return `${match[1].trim()} • ${match[2].trim()}`;
+      }
+    }
+    return raw;
+  }, [dailyAyah]);
+
+  const dailySurahNumber = useMemo(() => {
+    const raw = dailyAyah?.reference || dailyAyah?.subtitle || '';
+    const match = raw.match(/(\d+):/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num >= 1 && num <= 114) return num;
+    }
+    const lower = raw.toLowerCase();
+    if (lower.includes('baqarah')) return 2;
+    if (lower.includes('imran')) return 3;
+    if (lower.includes('tawbah')) return 9;
+    if (lower.includes("ra'd") || lower.includes("rad")) return 13;
+    return null;
+  }, [dailyAyah]);
+
   useEffect(() => {
     const saved = localStorage.getItem('quran-last-read');
     if (saved) setLastRead(JSON.parse(saved));
@@ -110,7 +136,7 @@ export default function SurahList() {
   const handleSurahClick = (surahNumber: number) => {
     if ('vibrate' in navigator) navigator.vibrate(15);
     startTransition(() => {
-      navigate(`/quran/surah-${surahNumber}`);
+      navigate(`/quran/surah-${surahNumber}`, { replace: true });
     });
   };
 
@@ -209,7 +235,7 @@ export default function SurahList() {
                 onClick={() => {
                   if ('vibrate' in navigator) navigator.vibrate(15);
                   startTransition(() => {
-                    navigate(`/quran/surah-${lastRead.number}`);
+                    navigate(`/quran/surah-${lastRead.number}`, { replace: true });
                   });
                 }}
                 className="w-full flex items-center p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl gap-4 hover:border-[var(--accent)]/40 transition-all group active:scale-[0.98]"
@@ -235,7 +261,9 @@ export default function SurahList() {
               onClick={() => {
                 if ('vibrate' in navigator) navigator.vibrate(15);
                 startTransition(() => {
-                  navigate('/quran');
+                  if (dailySurahNumber) {
+                    navigate(`/quran/surah-${dailySurahNumber}`, { replace: true });
+                  }
                 });
               }}
             >
@@ -253,11 +281,26 @@ export default function SurahList() {
                   <p className="text-[var(--text-primary)] text-base font-medium leading-relaxed mb-4">
                     {dailyAyah?.content || 'Loading...'}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] text-xs font-semibold">
-                      {dailyAyah?.subtitle || 'Al-Baqarah 2:45'}
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] text-xs font-semibold px-2.5 py-0.5">
+                      {tokenizedReference}
                     </Badge>
-                    <span className="text-[var(--text-secondary)] text-xs font-medium">{dailyAyah?.reference || ''}</span>
+                    {dailySurahNumber ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if ('vibrate' in navigator) navigator.vibrate(15);
+                          startTransition(() => {
+                            navigate(`/quran/surah-${dailySurahNumber}`, { replace: true });
+                          });
+                        }}
+                        className="text-xs font-semibold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1 group/btn"
+                      >
+                        <span>Read in Surah</span>
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+                      </button>
+                    ) : null}
                   </div>
                 </div>
 

@@ -81,7 +81,7 @@ const Settings = () => {
           </div>
           
           <div 
-            onClick={() => navigate('/settings/app-theme')}
+            onClick={() => navigate('/settings/app-theme', { replace: true })}
             className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-4 flex items-center justify-between cursor-pointer hover:border-[var(--accent)]/40 transition-all"
             role="button"
             tabIndex={0}

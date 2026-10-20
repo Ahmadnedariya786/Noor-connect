@@ -6,6 +6,23 @@ import {
   completeStartupStep,
 } from "@/lib/startup-breadcrumb";
 
+// Global History Stack Guard:
+// In a single-page Capacitor mobile application, hardware back navigation is managed
+// deterministically via route hierarchy (Sub-page -> Parent Tab -> Home -> exitApp).
+// Wrapping window.history.pushState to delegate to window.history.replaceState locks
+// window.history.length <= 2 at all times, preventing WebView history bloating and loops.
+if (typeof window !== 'undefined' && window.history && typeof window.history.replaceState === 'function') {
+  try {
+    const originalReplaceState = window.history.replaceState.bind(window.history);
+    window.history.pushState = function (data: any, unused: string, url?: string | URL | null) {
+      return originalReplaceState(data, unused, url);
+    };
+  } catch (e) {
+    // History pushState wrap fallback if window.history is restricted or read-only
+    console.warn("Could not wrap window.history.pushState:", e);
+  }
+}
+
 // 0. Initialize theme engine and apply tokens before React mounts
 try {
   initThemeEngine();

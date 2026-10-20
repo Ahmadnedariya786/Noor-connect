@@ -311,7 +311,7 @@ const Profile: React.FC = () => {
         <div className="max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/', { replace: true })}
               className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-all"
               aria-label="Go back"
             >
@@ -385,7 +385,7 @@ const Profile: React.FC = () => {
                 return (
                   <div
                     key={row.id}
-                    onClick={() => navigate(row.route)}
+                    onClick={() => navigate(row.route, { replace: true })}
                     className="group flex items-center justify-between px-4 py-3.5 hover:bg-[var(--surface-2)] active:bg-[var(--surface-2)] transition-all duration-150 cursor-pointer"
                   >
                     <div className="flex items-center gap-3.5 min-w-0 flex-1">

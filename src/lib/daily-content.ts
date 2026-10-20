@@ -24,7 +24,7 @@ const ayahCollection: DailyInspiration[] = [
     id: 'ayah-2',
     type: 'ayah',
     title: 'Verse of the Day',
-    subtitle: 'Ar-Ra\'d 28',
+    subtitle: "Ar-Ra'd 13:28",
     content: "Unquestionably, by the remembrance of Allah hearts are assured.",
     reference: "Ar-Ra'd 13:28",
     reflection: "True peace is found in the connection with your Creator."

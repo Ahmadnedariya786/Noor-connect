@@ -432,7 +432,7 @@ const SettingsSubPage: React.FC = () => {
       <header className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bg-base)]/85 border-b border-[var(--border)] px-4 pb-3.5 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
         <div className="max-w-md mx-auto flex items-center gap-3">
           <button
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/profile', { replace: true })}
             className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-all"
             aria-label="Go back to Profile"
           >
@@ -480,7 +480,7 @@ const SettingsSubPage: React.FC = () => {
             <Card className="p-4 space-y-4 rounded-2xl">
               <div
                 className="flex items-center justify-between py-1 cursor-pointer group"
-                onClick={() => navigate('/settings/app-theme')}
+                onClick={() => navigate('/settings/app-theme', { replace: true })}
                 role="button"
                 tabIndex={0}
               >
@@ -541,7 +541,7 @@ const SettingsSubPage: React.FC = () => {
 
               <div
                 className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3 cursor-pointer group"
-                onClick={() => navigate('/settings/clock-style')}
+                onClick={() => navigate('/settings/clock-style', { replace: true })}
                 role="button"
                 tabIndex={0}
               >
