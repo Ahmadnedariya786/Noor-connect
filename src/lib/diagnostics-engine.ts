@@ -157,7 +157,7 @@ function hydrateStore(): void {
             if (currentCommit !== 'unknown' && e.commit && e.commit !== 'unknown' && e.commit !== currentCommit) {
               return false;
             }
-            // Filter out old resolved WidgetPlugin, network fetch, and gzip errors from previous versions
+            // Filter out old resolved WidgetPlugin, network fetch, gzip, and mushaf img errors from previous versions
             const msg = String(e.message || '').toLowerCase();
             const isResolvedStartupIssue =
               msg.includes('widgetplugin') ||
@@ -168,13 +168,28 @@ function hydrateStore(): void {
               msg.includes('could not verify native permissions') ||
               msg.includes('[updatechecker] check failed') ||
               msg.includes('failed to fetch monthly calendar') ||
-              msg.includes('error fetching islamic date');
+              msg.includes('error fetching islamic date') ||
+              msg.includes('resource failed to load: <img>');
 
             if (isResolvedStartupIssue) {
               if (currentCommit !== 'unknown' && e.commit !== currentCommit) {
                 return false;
               }
-              if (e.commit === '331b0b1') {
+              if (e.commit === '331b0b1' || e.commit === '558a670' || e.commit === '1f05af0') {
+                return false;
+              }
+            }
+
+            // Always prune historical mushaf / placeholder img errors from previous sessions/commits
+            if (msg.includes('resource failed to load: <img>')) {
+              if (
+                msg.includes('/quran/surah') ||
+                msg.includes('localhost/quran') ||
+                msg.includes('undefined') ||
+                !e.commit ||
+                e.commit !== currentCommit ||
+                e.commit === '558a670'
+              ) {
                 return false;
               }
             }
@@ -417,14 +432,61 @@ export function initDiagnosticsEngine(): void {
           const target = event.target as HTMLElement | null;
           if (target) {
             const tagName = target.tagName ? target.tagName.toLowerCase() : 'element';
-            const src =
-              (target as HTMLImageElement | HTMLAudioElement | HTMLScriptElement).src ||
+
+            // Extract the actual raw source attribute rather than resolved document URL when empty
+            const rawSrc =
+              target.getAttribute('src') ||
+              target.getAttribute('href') ||
               (target as unknown as { currentSrc?: string }).currentSrc ||
               '';
+
+            // 1. Never record errors for empty, uninitialized, or whitespace-only src
+            if (!rawSrc || !rawSrc.trim()) {
+              return;
+            }
+
+            // 2. Ignore relative or empty src that resolved to the current SPA document URL
+            if (typeof window !== 'undefined') {
+              const currentDocUrl = window.location.href.split('#')[0].split('?')[0];
+              const resolvedSrc = (target as HTMLImageElement | HTMLAudioElement | HTMLScriptElement).src || rawSrc;
+              if (resolvedSrc.split('?')[0] === currentDocUrl && rawSrc !== currentDocUrl) {
+                return;
+              }
+            }
+
+            // 3. Image-specific graceful fallback and preloader checks
+            if (tagName === 'img') {
+              const img = target as HTMLImageElement;
+
+              // Check if it is a transient offscreen preloader (e.g., new Image() or data-is-preload)
+              const isPreloader =
+                !img.isConnected ||
+                img.dataset?.isPreload === 'true' ||
+                img.getAttribute('data-is-preload') === 'true';
+
+              if (isPreloader) {
+                return;
+              }
+
+              // Check if image has a custom fallback handler that is actively recovering
+              const hasFallback =
+                img.dataset?.hasFallback === 'true' ||
+                img.getAttribute('data-has-fallback') === 'true';
+
+              const fallbackFailed =
+                img.dataset?.fallbackFailed === 'true' ||
+                img.getAttribute('data-fallback-failed') === 'true';
+
+              // If a fallback is configured and has not permanently failed, suppress runtime error
+              if (hasFallback && !fallbackFailed) {
+                return;
+              }
+            }
+
             recordDiagnosticEvent({
               category: 'RUNTIME_ERROR',
-              message: `Resource failed to load: <${tagName}>${src ? ` [${src}]` : ''}`,
-              filename: src || undefined,
+              message: `Resource failed to load: <${tagName}>${rawSrc ? ` [${rawSrc}]` : ''}`,
+              filename: rawSrc || undefined,
             });
           }
         }

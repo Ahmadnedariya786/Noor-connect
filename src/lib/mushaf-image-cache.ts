@@ -17,6 +17,7 @@ export type PageCacheStatus = 'cached' | 'loading' | 'none';
 const preloadImage = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    img.dataset.isPreload = 'true';
     img.onload = () => resolve(url);
     img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
     img.src = url;

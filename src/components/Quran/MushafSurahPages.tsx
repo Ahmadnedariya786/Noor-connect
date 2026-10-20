@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getMushafPageUrl } from '@/lib/quran-mushaf-image-cache';
+import { getMushafPageUrl, getMushafPageCdnFallback } from '@/lib/quran-mushaf-image-cache';
 import { mushafService } from '@/lib/mushaf-service';
 import { useSettings } from '@/contexts/SettingsContext';
 
@@ -23,30 +23,36 @@ function prefetchSurroundingPages(currentPage: number, start: number, end: numbe
   ].filter(p => p >= start && p <= end);
 
   toPrefetch.forEach(page => {
-    const img = new Image();
-    img.src = getMushafPageUrl(page);
+    const url = getMushafPageUrl(page);
+    if (url) {
+      const img = new Image();
+      img.dataset.isPreload = 'true';
+      img.onerror = () => {
+        // Handled prefetch fallback failure
+      };
+      img.src = url;
+    }
   });
 }
 
 interface PageSlotProps {
   page: number | null;
   isDark: boolean;
+  isNearActive: boolean;
 }
 
-function PageSlot({ page, isDark }: PageSlotProps) {
+function PageSlot({ page, isDark, isNearActive }: PageSlotProps) {
   const [loaded, setLoaded] = useState(false);
-  const [src, setSrc] = useState('');
+  const [hasBeenActive, setHasBeenActive] = useState(isNearActive);
 
   useEffect(() => {
-    if (page === null) {
-      setSrc('');
-      setLoaded(false);
-      return;
+    if (isNearActive && !hasBeenActive) {
+      setHasBeenActive(true);
     }
-    const url = getMushafPageUrl(page);
-    setLoaded(false);
-    setSrc(url);
-  }, [page]);
+  }, [isNearActive, hasBeenActive]);
+
+  const shouldRenderImg = Boolean(page && (isNearActive || hasBeenActive));
+  const primaryUrl = useMemo(() => (page ? getMushafPageUrl(page) : ''), [page]);
 
   if (page === null) return null;
 
@@ -60,20 +66,35 @@ function PageSlot({ page, isDark }: PageSlotProps) {
             <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,var(--accent-soft),transparent)] animate-[shimmer_1.5s_infinite]" />
           </div>
         )}
-        <img
-          src={src}
-          alt={`Mushaf page ${page}`}
-          className="absolute inset-0 w-full h-full object-fill z-20"
-          style={{
-            touchAction: 'pan-y',
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.3s ease-out',
-          }}
-          draggable={false}
-          loading="lazy"
-          onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(false)}
-        />
+        {shouldRenderImg && primaryUrl ? (
+          <img
+            src={primaryUrl}
+            data-has-fallback="true"
+            alt={`Mushaf page ${page}`}
+            className="absolute inset-0 w-full h-full object-fill z-20"
+            style={{
+              touchAction: 'pan-y',
+              opacity: loaded ? 1 : 0,
+              transition: 'opacity 0.3s ease-out',
+            }}
+            draggable={false}
+            loading={isNearActive ? 'eager' : 'lazy'}
+            onLoad={() => setLoaded(true)}
+            onError={(e) => {
+              const current = e.currentTarget;
+              if (!current.dataset.fallbackApplied) {
+                current.dataset.fallbackApplied = 'true';
+                const fallback = getMushafPageCdnFallback(page);
+                if (fallback) {
+                  current.src = fallback;
+                  return;
+                }
+              }
+              current.dataset.fallbackFailed = 'true';
+              setLoaded(false);
+            }}
+          />
+        ) : null}
       </div>
       <div className="p-3 border-t border-[#C9A84C]/10">
         <div className={`text-xs font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/30' : 'text-muted-foreground/70'}`}>
@@ -153,12 +174,16 @@ export function MushafSurahPages({ surahNumber, onPageChange }: MushafSurahPages
         style={{ overscrollBehavior: 'contain', maxHeight: '100vh' }}
       >
         <div className="space-y-4 pb-32">
-          {pages.map((pageNum) => (
+          {pages.map((pageNum, idx) => (
             <div
               key={pageNum}
               style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 212px 325px' }}
             >
-              <PageSlot page={pageNum} isDark={isDark} />
+              <PageSlot
+                page={pageNum}
+                isDark={isDark}
+                isNearActive={Math.abs(idx - localPage) <= 1}
+              />
             </div>
           ))}
         </div>
