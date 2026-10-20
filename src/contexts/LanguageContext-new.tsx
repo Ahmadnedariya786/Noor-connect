@@ -109,22 +109,29 @@ async function loadSavedLanguageCode(): Promise<LanguageCode | null> {
     async function sendWidgetStrings(tFn: (key: string) => string) {
       if (!isNativePlatform()) return;
       try {
-        // Build a tiny JSON payload of only the widget-relevant strings
-    const payload: Record<string, string> = {};
-    for (const key of WIDGET_STRING_KEYS) {
-      payload[key] = tFn(key);
-    }
+        const { registerPlugin, Capacitor } = await import('@capacitor/core');
+        if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('WidgetPlugin')) {
+          return;
+        }
 
-    const { registerPlugin } = await import('@capacitor/core');
-    const WidgetPlugin = registerPlugin<{
-      setWidgetStrings: (opts: { strings: string }) => Promise<{ status: string }>;
-    }>('WidgetPlugin');
-    await WidgetPlugin.setWidgetStrings({ strings: JSON.stringify(payload) });
-  } catch (e) {
-    // Widget plugin might not be available — that's OK
-    console.warn('Failed to send widget strings:', e);
-  }
-}
+        // Build a tiny JSON payload of only the widget-relevant strings
+        const payload: Record<string, string> = {};
+        for (const key of WIDGET_STRING_KEYS) {
+          payload[key] = tFn(key);
+        }
+
+        const WidgetPlugin = registerPlugin<{
+          setWidgetStrings: (opts: { strings: string }) => Promise<{ status: string }>;
+        }>('WidgetPlugin');
+        await WidgetPlugin.setWidgetStrings({ strings: JSON.stringify(payload) });
+      } catch (e: any) {
+        // WidgetPlugin optional or not registered on this build
+        const msg = String(e?.message || e || '').toLowerCase();
+        if (!msg.includes('not implemented') && !msg.includes('unimplemented')) {
+          console.warn('Failed to send widget strings:', e);
+        }
+      }
+    }
 
 // ─── Provider ────────────────────────────────────────────
 

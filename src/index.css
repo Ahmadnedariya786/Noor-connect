@@ -55,6 +55,14 @@
     animation: none !important;
   }
 
+  html,
+  body,
+  #root {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    box-sizing: border-box;
+  }
+
   :root {
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);

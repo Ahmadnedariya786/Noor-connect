@@ -96,10 +96,9 @@ export async function loadGzippedJson<T>(url: string): Promise<T> {
         pendingRequests.set(id, { resolve: resolve as (v: unknown) => void, reject });
         worker.postMessage({ id, url, gzipped: true });
       });
-    } catch (error) {
-      // Worker path failed (crash, timeout, unsupported) — fall through to the
+    } catch {
+      // Worker path failed (crash, timeout, unsupported) — fall through silently to the
       // inline implementation so loading still works everywhere.
-      console.warn('Worker parse failed for %s, falling back inline:', url, error);
     }
   }
 

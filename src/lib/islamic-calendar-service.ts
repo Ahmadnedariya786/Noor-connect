@@ -103,10 +103,8 @@ class IslamicCalendarService {
       } else {
         throw new Error("Invalid API response");
       }
-    } catch (error) {
-      console.error('Error fetching Islamic date:', error);
-      
-      // Fallback to calculation if API fails
+    } catch {
+      // Fallback silently to local Hijri date calculation if API is unavailable or offline
       return this.calculateIslamicDate(date);
     }
   }

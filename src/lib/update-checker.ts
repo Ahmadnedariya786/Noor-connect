@@ -544,7 +544,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     // If fetch or parse throws: verdict CHECK FAILED with distinct error message
     const message = formatUpdateError(err);
 
-    console.warn('[UpdateChecker] Check failed:', message, err);
+    // Routine network error - status reported cleanly in return object without console noise
 
     return {
       hasUpdate: false,

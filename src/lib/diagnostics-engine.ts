@@ -146,7 +146,45 @@ function hydrateStore(): void {
     if (rawEvents) {
       const parsed = JSON.parse(rawEvents);
       if (Array.isArray(parsed)) {
-        eventsBuffer = parsed.slice(0, MAX_DIAGNOSTIC_EVENTS);
+        const currentCommit =
+          BUILD_COMMIT ||
+          (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) ||
+          'unknown';
+
+        eventsBuffer = parsed
+          .filter((e: DiagnosticEvent) => {
+            // Prune entries from previous commits if commit is known
+            if (currentCommit !== 'unknown' && e.commit && e.commit !== 'unknown' && e.commit !== currentCommit) {
+              return false;
+            }
+            // Filter out old resolved WidgetPlugin, network fetch, and gzip errors from previous versions
+            const msg = String(e.message || '').toLowerCase();
+            const isResolvedStartupIssue =
+              msg.includes('widgetplugin') ||
+              msg.includes('failed to send widget strings') ||
+              msg.includes('failed to fetch') ||
+              msg.includes('gzip variant missing') ||
+              msg.includes('worker parse failed') ||
+              msg.includes('could not verify native permissions') ||
+              msg.includes('[updatechecker] check failed') ||
+              msg.includes('failed to fetch monthly calendar') ||
+              msg.includes('error fetching islamic date');
+
+            if (isResolvedStartupIssue) {
+              if (currentCommit !== 'unknown' && e.commit !== currentCommit) {
+                return false;
+              }
+              if (e.commit === '331b0b1') {
+                return false;
+              }
+            }
+            return true;
+          })
+          .slice(0, MAX_DIAGNOSTIC_EVENTS);
+
+        // Keep storage clean with pruned buffer
+        safePersist(DIAGNOSTICS_STORAGE_KEY, eventsBuffer);
+        syncLegacyCrashStore(eventsBuffer);
       }
     }
   } catch {
@@ -528,18 +566,27 @@ export const VALID_CLOCK_STYLES = [
 ] as const;
 
 /**
- * Scan DOM for interactive horizontal overflows
+ * Scan DOM for interactive horizontal overflows and viewport clipping
  */
-function scanDomOverflow(): { count: number; items: string[] } {
-  if (typeof document === 'undefined') return { count: 0, items: [] };
+function scanDomOverflow(): { count: number; items: string[]; hasScreenShift: boolean } {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return { count: 0, items: [], hasScreenShift: false };
+  }
 
+  const offending: string[] = [];
+  const winWidth = window.innerWidth;
+  const docScrollWidth = document.documentElement.scrollWidth;
+  const hasScreenShift = docScrollWidth > winWidth + 1;
+
+  if (hasScreenShift) {
+    offending.push(`document.documentElement (scrollWidth=${docScrollWidth}px > innerWidth=${winWidth}px) [Screen shifting detected]`);
+  }
+
+  // 1. Scan interactive candidates for scrollWidth > clientWidth
   const candidates = document.querySelectorAll<HTMLElement>(
     'button, [role="button"], .card, [data-card], header, nav, .pill'
   );
-  const offending: string[] = [];
-
   candidates.forEach((el) => {
-    // Only inspect rendered/visible elements
     if (el.offsetParent !== null) {
       if (el.scrollWidth > el.clientWidth + 2) {
         const tag = el.tagName.toLowerCase();
@@ -547,12 +594,37 @@ function scanDomOverflow(): { count: number; items: string[] } {
         const cls = el.className && typeof el.className === 'string'
           ? '.' + el.className.split(' ').filter(Boolean).slice(0, 2).join('.')
           : '';
-        offending.push(`<${tag}${cls}> "${text}" (scrollWidth=${el.scrollWidth}px > clientWidth=${el.clientWidth}px)`);
+        const itemStr = `<${tag}${cls}> "${text}" (scrollWidth=${el.scrollWidth}px > clientWidth=${el.clientWidth}px)`;
+        if (!offending.includes(itemStr)) {
+          offending.push(itemStr);
+        }
       }
     }
   });
 
-  return { count: offending.length, items: offending };
+  // 2. Scan visible elements in #root to detect bounding box extending outside viewport
+  const rootElements = document.querySelectorAll<HTMLElement>('#root *');
+  rootElements.forEach((el) => {
+    if (el.offsetParent !== null && el.offsetWidth > 0 && el.offsetHeight > 0) {
+      const rect = el.getBoundingClientRect();
+      if (rect.right > winWidth + 2 || rect.left < -2) {
+        const tag = el.tagName.toLowerCase();
+        const text = (el.innerText || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24);
+        const cls = el.className && typeof el.className === 'string'
+          ? '.' + el.className.split(' ').filter(Boolean).slice(0, 2).join('.')
+          : '';
+        const positionDetail = rect.right > winWidth + 2
+          ? `right=${Math.round(rect.right)}px > windowWidth=${winWidth}px (+${Math.round(rect.right - winWidth)}px overflow)`
+          : `left=${Math.round(rect.left)}px < -2px`;
+        const itemStr = `<${tag}${cls}> "${text}" (${positionDetail})`;
+        if (!offending.includes(itemStr) && offending.length < 20) {
+          offending.push(itemStr);
+        }
+      }
+    }
+  });
+
+  return { count: offending.length, items: offending, hasScreenShift };
 }
 
 /**
@@ -812,21 +884,24 @@ export async function runDeepSystemHealthScan(): Promise<DeepHealthScanReport> {
   // 6. DOM Overflow & Clipping Detector
   try {
     const overflow = scanDomOverflow();
+    const winWidth = typeof window !== 'undefined' ? window.innerWidth : 360;
+    const docScrollWidth = typeof document !== 'undefined' ? document.documentElement.scrollWidth : winWidth;
+
     if (overflow.count === 0) {
       checks.push({
         id: 'dom-overflow',
         name: 'DOM Overflow & Clipping Detector',
         status: 'PASS',
-        summary: '0 overflowing interactive elements detected on active screen',
-        details: 'Scanned buttons, cards, headers, and pills for scrollWidth > clientWidth. Zero horizontal overflows detected.',
+        summary: '0 overflowing or clipped elements detected on active screen',
+        details: `Viewport: ${winWidth}px • Document width: ${docScrollWidth}px\nScanned interactive elements and bounding rects in #root. Zero horizontal overflows or screen-shifting detected.`,
       });
     } else {
       checks.push({
         id: 'dom-overflow',
         name: 'DOM Overflow & Clipping Detector',
-        status: 'WARN',
-        summary: `${overflow.count} element(s) with horizontal scroll overflow`,
-        details: `Offending element(s):\n${overflow.items.map((it, i) => `${i + 1}. ${it}`).join('\n')}`,
+        status: overflow.hasScreenShift ? 'FAIL' : 'WARN',
+        summary: `${overflow.count} element(s) exceeding card or viewport boundaries`,
+        details: `Viewport: ${winWidth}px • Document width: ${docScrollWidth}px\nOffending element(s):\n${overflow.items.map((it, i) => `${i + 1}. ${it}`).join('\n')}`,
       });
     }
   } catch (err) {

@@ -68,9 +68,8 @@ async function fetchPublicJson<T>(url: string): Promise<T | null> {
   if (isGzipSupported()) {
     try {
       return await loadGzippedJson<T>(`${url}.gz`);
-    } catch (err) {
-      // No .gz variant (web deployment, legacy build) — fall through to plain JSON.
-      console.warn('Gzip variant missing for %s:', url, err);
+    } catch {
+      // No .gz variant (web deployment, legacy build) — fall through to plain JSON silently.
     }
   }
   try {

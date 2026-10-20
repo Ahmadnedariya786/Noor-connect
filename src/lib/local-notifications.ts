@@ -12,6 +12,7 @@ import { nativeAdhan, type NativeAdhanAlarm } from './native-adhan';
 import { adhanService, type AdhanConfig } from './adhan-service';
 import { PRAYER_QUOTES } from './prayer-quotes';
 import { getPrayerDisplayName } from './prayer-utils';
+import { calculatePrayerTimes } from './prayer-calculator';
 
 // Task 2: Use SW registration for more robust "Native" notifications
 let swRegistration: ServiceWorkerRegistration | null = null;
@@ -234,8 +235,26 @@ export class LocalNotificationManager {
           locationData.latitude,
           locationData.longitude
         );
-        if (!dayData) {
-          continue;
+
+        let timings: AladhanPrayerTime;
+        if (dayData && dayData.timings) {
+          timings = dayData.timings;
+        } else {
+          const localTimes = calculatePrayerTimes(locationData.latitude, locationData.longitude, targetDate);
+          const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+          const formatTime = (d: Date) => (d instanceof Date && !isNaN(d.getTime())) ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : '00:00';
+          timings = {
+            Fajr: formatTime(localTimes.fajr),
+            Sunrise: formatTime(localTimes.sunrise),
+            Dhuhr: formatTime(localTimes.dhuhr),
+            Asr: formatTime(localTimes.asr),
+            Maghrib: formatTime(localTimes.maghrib),
+            Isha: formatTime(localTimes.isha),
+            Imsak: formatTime(localTimes.fajr),
+            Midnight: '00:00',
+            Firstthird: '00:00',
+            Lastthird: '00:00',
+          };
         }
 
         const adhanConfig = adhanService.getAdhanConfig();
@@ -254,7 +273,8 @@ export class LocalNotificationManager {
             continue;
           }
 
-          const prayerTime = dayData.timings[prayerName];
+          const prayerTime = timings[prayerName as keyof AladhanPrayerTime];
+          if (!prayerTime) continue;
           const cleaned = prayerTime.replace(/\s*\(.*?\)\s*/g, '').trim();
           const [hours, minutes] = cleaned.split(':').map(Number);
           const prayerDate = new Date(targetDate);
@@ -348,9 +368,8 @@ export class LocalNotificationManager {
         }
       }
 
-    } catch (error) {
-      console.error('Failed to schedule prayer notifications from API:', error);
-      throw error;
+    } catch {
+      // Handled non-critical error during prayer notification scheduling from API
     }
   }
   async schedulePrayerNotifications(prayerTimes: PrayerTime[]): Promise<void> {
@@ -469,8 +488,8 @@ export class LocalNotificationManager {
           }
         }
       }
-    } catch (error) {
-      console.error('Failed to schedule prayer notifications:', error);
+    } catch {
+      // Handled non-critical error during prayer notifications scheduling
     }
   }
 

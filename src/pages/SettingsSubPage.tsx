@@ -1027,7 +1027,10 @@ const SettingsSubPage: React.FC = () => {
             </Button>
 
             {/* Software Updates / Nightly Build */}
-            <Card className="p-4 space-y-3 rounded-2xl border border-border">
+            <Card
+              className="p-4 space-y-3 rounded-2xl border border-border w-full max-w-full box-border overflow-hidden"
+              style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <RefreshCw className={`w-4 h-4 text-amber-500 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
@@ -1122,7 +1125,10 @@ const SettingsSubPage: React.FC = () => {
             </Card>
 
             {/* Diagnostics Black Box & Flight Recorder */}
-            <Card className="p-4 space-y-3.5 rounded-2xl border border-border bg-card">
+            <Card
+              className="p-4 space-y-3.5 rounded-2xl border border-border bg-card w-full max-w-full box-border overflow-hidden"
+              style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500">
@@ -1143,7 +1149,7 @@ const SettingsSubPage: React.FC = () => {
               </div>
 
               {/* Installed Build & Environment Identity (No-collision pills with gap-2) */}
-              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono w-full max-w-full box-border">
                 {/* Pill 1: Commit */}
                 <div className="px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60 flex items-center gap-1.5">
                   <span className="text-muted-foreground text-[10px]">Commit:</span>
@@ -1179,7 +1185,7 @@ const SettingsSubPage: React.FC = () => {
                 ).length;
 
                 return (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 w-full max-w-full box-border">
                     {/* Crashes & Errors */}
                     <div className="p-2.5 rounded-xl bg-muted/30 border border-border/50 text-center flex flex-col justify-center items-center">
                       <div className={`text-base font-bold font-mono ${errorCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
@@ -1267,53 +1273,136 @@ const SettingsSubPage: React.FC = () => {
                   )}
                 </Button>
 
-                {/* Mini Action Row */}
-                <div className="flex items-center justify-between gap-1.5 pt-1 text-xs">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground rounded-lg"
+                {/* 2×2 Diagnostics Action Grid (No horizontal overflow) */}
+                <div
+                  className="grid grid-cols-2 gap-2 w-full max-w-full box-border mt-2"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gap: '8px',
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    marginTop: '8px',
+                  }}
+                >
+                  {/* Button 1: Test Capture */}
+                  <button
+                    type="button"
+                    className="w-full min-w-0 box-border inline-flex items-center justify-center gap-1.5 rounded-[10px] text-[0.76rem] font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors hover:opacity-90 active:scale-[0.98]"
+                    style={{
+                      width: '100%',
+                      minWidth: 0,
+                      boxSizing: 'border-box',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '9px 10px',
+                      borderRadius: '10px',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.76rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
                     onClick={handleTestErrorCapture}
                   >
-                    <AlertCircle className="w-3 h-3 mr-1 text-amber-500" />
-                    Test Capture
-                  </Button>
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span className="truncate">Test Capture</span>
+                  </button>
 
-                  <div className="flex items-center gap-1">
-                    {diagnosticEvents.length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground rounded-lg"
-                        onClick={() => setIsEventsExpanded(!isEventsExpanded)}
-                      >
-                        <Terminal className="w-3 h-3 mr-1" />
-                        {isEventsExpanded ? 'Hide Logs' : `Logs (${diagnosticEvents.length})`}
-                      </Button>
-                    )}
+                  {/* Button 2: Logs */}
+                  <button
+                    type="button"
+                    className="w-full min-w-0 box-border inline-flex items-center justify-center gap-1.5 rounded-[10px] text-[0.76rem] font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{
+                      width: '100%',
+                      minWidth: 0,
+                      boxSizing: 'border-box',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '9px 10px',
+                      borderRadius: '10px',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.76rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                    onClick={() => setIsEventsExpanded(!isEventsExpanded)}
+                    disabled={diagnosticEvents.length === 0}
+                  >
+                    <Terminal className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{isEventsExpanded ? 'Hide Logs' : `Logs (${diagnosticEvents.length})`}</span>
+                  </button>
 
-                    {flightBreadcrumbs.length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground rounded-lg"
-                        onClick={() => setIsBreadcrumbsExpanded(!isBreadcrumbsExpanded)}
-                      >
-                        <Activity className="w-3 h-3 mr-1 text-sky-500" />
-                        {isBreadcrumbsExpanded ? 'Hide Trail' : `Trail (${flightBreadcrumbs.length})`}
-                      </Button>
-                    )}
+                  {/* Button 3: Trail */}
+                  <button
+                    type="button"
+                    className="w-full min-w-0 box-border inline-flex items-center justify-center gap-1.5 rounded-[10px] text-[0.76rem] font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{
+                      width: '100%',
+                      minWidth: 0,
+                      boxSizing: 'border-box',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '9px 10px',
+                      borderRadius: '10px',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.76rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                    onClick={() => setIsBreadcrumbsExpanded(!isBreadcrumbsExpanded)}
+                    disabled={flightBreadcrumbs.length === 0}
+                  >
+                    <Activity className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                    <span className="truncate">{isBreadcrumbsExpanded ? 'Hide Trail' : `Trail (${flightBreadcrumbs.length})`}</span>
+                  </button>
 
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-red-500 rounded-lg"
-                      onClick={handleClearDiagnostics}
-                    >
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      Clear
-                    </Button>
-                  </div>
+                  {/* Button 4: Clear */}
+                  <button
+                    type="button"
+                    className="w-full min-w-0 box-border inline-flex items-center justify-center gap-1.5 rounded-[10px] text-[0.76rem] font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors hover:opacity-90 active:scale-[0.98]"
+                    style={{
+                      width: '100%',
+                      minWidth: 0,
+                      boxSizing: 'border-box',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '9px 10px',
+                      borderRadius: '10px',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.76rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                    onClick={handleClearDiagnostics}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                    <span className="truncate">Clear</span>
+                  </button>
                 </div>
               </div>
 
@@ -1392,7 +1481,10 @@ const SettingsSubPage: React.FC = () => {
                               {chk.summary}
                             </p>
                             {isExpanded && chk.details && (
-                              <pre className="text-[10px] font-mono p-2 rounded-lg bg-background/80 border border-border/40 text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-36">
+                              <pre
+                                className="text-[10px] font-mono p-2 rounded-lg bg-background/80 border border-border/40 text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-36 max-w-full"
+                                style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
+                              >
                                 {chk.details}
                               </pre>
                             )}
@@ -1431,7 +1523,8 @@ const SettingsSubPage: React.FC = () => {
                       return (
                         <div
                           key={entry.id}
-                          className="p-2.5 rounded-xl bg-muted/60 border border-border text-left space-y-1.5"
+                          className="p-2.5 rounded-xl bg-muted/60 border border-border text-left space-y-1.5 w-full max-w-full box-border overflow-hidden"
+                          style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
                         >
                           <div className="flex items-center justify-between text-[10px] text-muted-foreground gap-2">
                             <div className="flex items-center gap-1.5">
@@ -1465,7 +1558,10 @@ const SettingsSubPage: React.FC = () => {
                               {entry.componentStack && (
                                 <div>
                                   <span className="text-[9px] font-mono text-muted-foreground">React Component Stack:</span>
-                                  <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-24 bg-background/80 p-1.5 rounded border border-border/40">
+                                  <pre
+                                    className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-24 bg-background/80 p-1.5 rounded border border-border/40 max-w-full"
+                                    style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
+                                  >
                                     {entry.componentStack}
                                   </pre>
                                 </div>
@@ -1473,7 +1569,10 @@ const SettingsSubPage: React.FC = () => {
                               {entry.stack && (
                                 <div>
                                   <span className="text-[9px] font-mono text-muted-foreground">Stack Trace:</span>
-                                  <pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-28 bg-background/80 p-1.5 rounded border border-border/40">
+                                  <pre
+                                    className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-28 bg-background/80 p-1.5 rounded border border-border/40 max-w-full"
+                                    style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
+                                  >
                                     {entry.stack}
                                   </pre>
                                 </div>
@@ -1515,7 +1614,8 @@ const SettingsSubPage: React.FC = () => {
                     {flightBreadcrumbs.map((crumb) => (
                       <div
                         key={crumb.id}
-                        className="px-2 py-1.5 rounded-lg bg-muted/30 border border-border/40 flex items-start gap-2 text-[10px]"
+                        className="px-2 py-1.5 rounded-lg bg-muted/30 border border-border/40 flex items-start gap-2 text-[10px] w-full max-w-full box-border overflow-hidden"
+                        style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
                       >
                         <span className="font-mono text-muted-foreground shrink-0 text-[9px] pt-0.5">
                           {new Date(crumb.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -1523,7 +1623,10 @@ const SettingsSubPage: React.FC = () => {
                         <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[9px] bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
                           {crumb.type}
                         </span>
-                        <span className="text-muted-foreground break-words flex-1">
+                        <span
+                          className="text-muted-foreground break-words flex-1 min-w-0"
+                          style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                        >
                           {crumb.message}
                         </span>
                       </div>

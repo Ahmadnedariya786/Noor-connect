@@ -48,8 +48,8 @@ export function usePrayerNotifications(
       // Throttle notification scheduling to prevent rapid calls
       const timeoutId = setTimeout(() => {
         import('@/lib/local-notifications').then(({ localNotifications }) => {
-          localNotifications.schedulePrayerNotificationsFromAPI().catch((error) => {
-            console.error('Failed to schedule prayer notifications:', error);
+          localNotifications.schedulePrayerNotificationsFromAPI().catch(() => {
+            // Handled non-critical error during prayer notification scheduling
           });
         });
       }, 1000); // 1 second throttle

@@ -141,7 +141,7 @@ export class GeolocationService {
           if (permError.message?.includes('denied')) {
             throw permError;
           }
-          console.warn('Could not verify native permissions, proceeding with GPS request:', permError);
+          // Native permission check unavailable, proceeding with standard geolocation
         }
 
         const position = await Geolocation.getCurrentPosition({

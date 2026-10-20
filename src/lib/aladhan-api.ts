@@ -3,6 +3,7 @@
  * Fetches monthly calendar data with localStorage persistence
  */
 import { getMadhab } from './storage';
+import { calculatePrayerTimes } from './prayer-calculator';
 
 export interface AladhanPrayerTime {
   Fajr: string;
@@ -109,7 +110,122 @@ export const ALADHAN_METHODS: Record<string, number> = {
 
 export class AladhanAPI {
   /**
-   * Fetch monthly prayer calendar from Aladhan API
+   * Generate monthly prayer calendar offline using local calculation engine
+   */
+  static generateLocalMonthlyCalendar(
+    latitude: number,
+    longitude: number,
+    year: number = new Date().getFullYear(),
+    month: number = new Date().getMonth() + 1,
+    method: number = 1,
+    school?: number
+  ): AladhanMonthlyData {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysData: AladhanDayData[] = [];
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+    const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+    const formatTime = (d: Date) => {
+      if (!(d instanceof Date) || isNaN(d.getTime())) return '00:00';
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const targetDate = new Date(year, month - 1, day, 12, 0, 0);
+      const times = calculatePrayerTimes(latitude, longitude, targetDate);
+
+      const dString = `${pad(day)} ${targetDate.toLocaleString('en-US', { month: 'short' })} ${year}`;
+      const weekdayName = targetDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+      let hijriDay = '1';
+      let hijriMonthNumber = 1;
+      const hijriMonthEn = 'Ramadan';
+      let hijriYear = '1447';
+
+      try {
+        const hijriFmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+          day: 'numeric',
+          month: 'numeric',
+          year: 'numeric'
+        });
+        const parts = hijriFmt.formatToParts(targetDate);
+        hijriDay = parts.find(p => p.type === 'day')?.value || String(day);
+        hijriMonthNumber = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
+        hijriYear = parts.find(p => p.type === 'year')?.value || '1447';
+      } catch {
+        // Fallback to approximate values if Intl format fails
+      }
+
+      daysData.push({
+        date: {
+          readable: dString,
+          timestamp: Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000).toString(),
+          gregorian: {
+            date: `${pad(day)}-${pad(month)}-${year}`,
+            format: 'DD-MM-YYYY',
+            day: pad(day),
+            weekday: { en: weekdayName },
+            month: { number: month, en: targetDate.toLocaleString('en-US', { month: 'long' }) },
+            year: String(year),
+            designation: { abbreviated: 'AD', expanded: 'Anno Domini' }
+          },
+          hijri: {
+            date: `${hijriDay}-${hijriMonthNumber}-${hijriYear}`,
+            format: 'DD-MM-YYYY',
+            day: hijriDay,
+            weekday: { en: weekdayName, ar: '' },
+            month: { number: hijriMonthNumber, en: hijriMonthEn, ar: '' },
+            year: hijriYear,
+            designation: { abbreviated: 'AH', expanded: 'Anno Hegirae' },
+            holidays: []
+          }
+        },
+        timings: {
+          Fajr: formatTime(times.fajr),
+          Sunrise: formatTime(times.sunrise),
+          Dhuhr: formatTime(times.dhuhr),
+          Asr: formatTime(times.asr),
+          Maghrib: formatTime(times.maghrib),
+          Isha: formatTime(times.isha),
+          Imsak: formatTime(times.fajr),
+          Midnight: '00:00',
+          Firstthird: '00:00',
+          Lastthird: '00:00'
+        },
+        meta: {
+          latitude,
+          longitude,
+          timezone,
+          method: {
+            id: method,
+            name: 'Local Calculation Engine',
+            params: { Fajr: 18, Isha: 18 }
+          },
+          latitudeAdjustmentMethod: 'ANGLE_BASED',
+          midnightMode: 'STANDARD',
+          school: school === 1 ? 'HANAFI' : 'STANDARD'
+        }
+      });
+    }
+
+    const monthlyData: AladhanMonthlyData = {
+      month,
+      year,
+      latitude,
+      longitude,
+      method,
+      school,
+      data: daysData,
+      lastUpdated: new Date().toISOString()
+    };
+
+    // Save generated local data so subsequent sync reads hit cache
+    this.saveMonthlyData(monthlyData);
+    return monthlyData;
+  }
+
+  /**
+   * Fetch monthly prayer calendar from Aladhan API with offline local fallback
    */
   static async fetchMonthlyCalendar(
     latitude: number,
@@ -157,9 +273,13 @@ export class AladhanAPI {
       this.saveMonthlyData(monthlyData);
 
       return monthlyData;
-    } catch (error) {
-      console.error('Failed to fetch monthly calendar:', error);
-      throw new Error(`Failed to fetch prayer times: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch {
+      // API fetch failed (offline, timeout, or unreachable) - fall back to stored cache or local calculation engine
+      const stored = this.getStoredMonthlyData();
+      if (stored && stored.month === month && stored.year === year) {
+        return stored;
+      }
+      return this.generateLocalMonthlyCalendar(latitude, longitude, year, month, method, school);
     }
   }
 
@@ -222,8 +342,8 @@ export class AladhanAPI {
 
       return result.data.timings;
     } catch (error) {
-      console.error('Failed to fetch prayer times by city:', error);
-      throw error;
+      // API fetch failed for city timings, wrap with helpful context
+      throw new Error(`Failed to fetch prayer times for ${city}: ${error instanceof Error ? error.message : 'Network error'}`);
     }
   }
 
