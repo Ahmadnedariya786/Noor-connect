@@ -18,6 +18,14 @@ import android.webkit.WebView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONObject;
+
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.WebViewListener;
 import com.noorconnect.app.widgets.WidgetBridge;
@@ -37,6 +45,11 @@ public class MainActivity extends BridgeActivity {
     // Guard against multiple simultaneous renderer crash recovery attempts
     private final java.util.concurrent.atomic.AtomicBoolean isHandlingRendererCrash =
             new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    // State for in-app native APK updater
+    private volatile boolean isDownloadingApk = false;
+    private File pendingApkFile = null;
+    private File lastDownloadedApkFile = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,6 +96,21 @@ public class MainActivity extends BridgeActivity {
                             Log.i(TAG, "AndroidBridge.closeApp() invoked from JS: finishing activity affinity");
                             finishAffinity();
                         });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void downloadAndInstallApk(String apkUrl) {
+                        MainActivity.this.downloadAndInstallApk(apkUrl);
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void installDownloadedApk() {
+                        MainActivity.this.installDownloadedApk();
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void openExternalBrowser(String url) {
+                        MainActivity.this.openExternalBrowser(url);
                     }
                 }, "AndroidBridge");
             } catch (Throwable t) {
@@ -265,6 +293,248 @@ public class MainActivity extends BridgeActivity {
         if (canScheduleExactAlarms()) {
             WidgetForegroundService.start(this);
         }
+
+        // Auto-resume APK installation if returning from "Install unknown apps" settings
+        if (pendingApkFile != null && pendingApkFile.exists()) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getPackageManager().canRequestPackageInstalls()) {
+                File toInstall = pendingApkFile;
+                pendingApkFile = null;
+                launchApkInstallerIntent(toInstall);
+            }
+        }
+    }
+
+    /**
+     * Download an APK from apkUrl on a background thread and auto-trigger Android Package Installer.
+     * Follows HTTP/HTTPS redirects (e.g. GitHub Releases -> release-assets.githubusercontent.com).
+     */
+    public void downloadAndInstallApk(String apkUrl) {
+        if (apkUrl == null || apkUrl.trim().isEmpty()) {
+            dispatchDownloadProgress(-1, 0, 0, "error", "Invalid download URL");
+            return;
+        }
+
+        if (isDownloadingApk) {
+            Log.w(TAG, "downloadAndInstallApk called while download is already in progress");
+            return;
+        }
+
+        isDownloadingApk = true;
+        new Thread(() -> {
+            HttpURLConnection conn = null;
+            InputStream in = null;
+            FileOutputStream out = null;
+            try {
+                File downloadDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
+                if (downloadDir == null) {
+                    downloadDir = getCacheDir();
+                }
+                if (!downloadDir.exists()) {
+                    downloadDir.mkdirs();
+                }
+
+                File apkFile = new File(downloadDir, "noor-connect-update.apk");
+                if (apkFile.exists()) {
+                    apkFile.delete();
+                }
+
+                Log.i(TAG, "Starting native APK download from: " + apkUrl);
+                dispatchDownloadProgress(0, 0, 0, "downloading", null);
+
+                String currentUrl = apkUrl;
+                int redirects = 0;
+                while (redirects < 5) {
+                    URL url = new URL(currentUrl);
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setInstanceFollowRedirects(true);
+                    conn.setConnectTimeout(15000);
+                    conn.setReadTimeout(30000);
+                    conn.setRequestProperty("User-Agent", "NoorConnect-Updater");
+                    conn.connect();
+
+                    int responseCode = conn.getResponseCode();
+                    if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
+                            || responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+                            || responseCode == HttpURLConnection.HTTP_SEE_OTHER
+                            || responseCode == 307
+                            || responseCode == 308) {
+                        String newUrl = conn.getHeaderField("Location");
+                        if (newUrl != null && !newUrl.isEmpty()) {
+                            currentUrl = newUrl;
+                            redirects++;
+                            conn.disconnect();
+                            continue;
+                        }
+                    }
+
+                    if (responseCode < 200 || responseCode >= 300) {
+                        throw new java.io.IOException("Server returned HTTP " + responseCode + ": " + conn.getResponseMessage());
+                    }
+                    break;
+                }
+
+                long totalBytes = -1;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    totalBytes = conn.getContentLengthLong();
+                } else {
+                    totalBytes = conn.getContentLength();
+                }
+
+                in = new BufferedInputStream(conn.getInputStream(), 64 * 1024);
+                out = new FileOutputStream(apkFile);
+                byte[] buffer = new byte[64 * 1024];
+                long downloadedBytes = 0;
+                long lastDispatchTime = 0;
+                int read;
+
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                    downloadedBytes += read;
+
+                    long now = System.currentTimeMillis();
+                    if (now - lastDispatchTime > 150) {
+                        lastDispatchTime = now;
+                        int percent = (totalBytes > 0) ? (int) ((downloadedBytes * 100) / totalBytes) : -1;
+                        double downloadedMB = (double) downloadedBytes / (1024.0 * 1024.0);
+                        double totalMB = (totalBytes > 0) ? (double) totalBytes / (1024.0 * 1024.0) : 0;
+                        dispatchDownloadProgress(percent, downloadedMB, totalMB, "downloading", null);
+                    }
+                }
+
+                out.flush();
+                out.close();
+                out = null;
+                in.close();
+                in = null;
+                conn.disconnect();
+                conn = null;
+
+                if (!apkFile.exists() || apkFile.length() < 1_000_000) {
+                    throw new java.io.IOException("Downloaded APK file is incomplete (" + (apkFile.exists() ? apkFile.length() : 0) + " bytes)");
+                }
+
+                double finalMB = (double) apkFile.length() / (1024.0 * 1024.0);
+                Log.i(TAG, "Native APK download complete: " + apkFile.getAbsolutePath() + " (" + finalMB + " MB)");
+                lastDownloadedApkFile = apkFile;
+                dispatchDownloadProgress(100, finalMB, finalMB, "installing", null);
+
+                // Auto-trigger package installer
+                launchApkInstallerIntent(apkFile);
+            } catch (Throwable t) {
+                Log.e(TAG, "Error downloading APK: " + t.getMessage(), t);
+                dispatchDownloadProgress(-1, 0, 0, "error", t.getMessage() != null ? t.getMessage() : "Download failed");
+            } finally {
+                isDownloadingApk = false;
+                if (out != null) {
+                    try { out.close(); } catch (Throwable ignored) { /* Handled stream close */ }
+                }
+                if (in != null) {
+                    try { in.close(); } catch (Throwable ignored) { /* Handled stream close */ }
+                }
+                if (conn != null) {
+                    try { conn.disconnect(); } catch (Throwable ignored) { /* Handled connection close */ }
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Manually trigger installation of previously downloaded update APK
+     */
+    public void installDownloadedApk() {
+        if (lastDownloadedApkFile != null && lastDownloadedApkFile.exists() && lastDownloadedApkFile.length() > 1_000_000) {
+            launchApkInstallerIntent(lastDownloadedApkFile);
+            return;
+        }
+        File downloadDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
+        File fallback = (downloadDir != null) ? new File(downloadDir, "noor-connect-update.apk") : new File(getCacheDir(), "noor-connect-update.apk");
+        if (fallback.exists() && fallback.length() > 1_000_000) {
+            lastDownloadedApkFile = fallback;
+            launchApkInstallerIntent(fallback);
+        } else {
+            dispatchDownloadProgress(-1, 0, 0, "error", "No downloaded APK found to install");
+        }
+    }
+
+    /**
+     * Launch the Android OS PackageInstaller Intent for an APK file
+     */
+    public void launchApkInstallerIntent(File apkFile) {
+        if (apkFile == null || !apkFile.exists()) {
+            Log.w(TAG, "launchApkInstallerIntent: APK file does not exist");
+            dispatchDownloadProgress(-1, 0, 0, "error", "Downloaded APK file not found");
+            return;
+        }
+
+        runOnUiThread(() -> {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls()) {
+                    pendingApkFile = apkFile;
+                    Log.i(TAG, "REQUEST_INSTALL_PACKAGES not granted yet, opening unknown app sources settings");
+                    Intent settingsIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                    settingsIntent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(settingsIntent);
+                    return;
+                }
+
+                Uri apkUri = androidx.core.content.FileProvider.getUriForFile(
+                        this,
+                        getPackageName() + ".fileprovider",
+                        apkFile
+                );
+                Log.i(TAG, "Launching PackageInstaller for APK: " + apkFile.getAbsolutePath() + " with URI: " + apkUri);
+                Intent installIntent = new Intent(Intent.ACTION_VIEW);
+                installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(installIntent);
+                double sizeMB = (double) apkFile.length() / (1024.0 * 1024.0);
+                dispatchDownloadProgress(100, sizeMB, sizeMB, "completed", null);
+            } catch (Throwable t) {
+                Log.e(TAG, "Failed to launch PackageInstaller intent", t);
+                dispatchDownloadProgress(-1, 0, 0, "error", "Install error: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Fallback to open URL in standard external browser (NOT Chrome Custom Tab)
+     */
+    public void openExternalBrowser(String url) {
+        if (url == null || url.trim().isEmpty()) return;
+        runOnUiThread(() -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Throwable t) {
+                Log.e(TAG, "Failed to open external browser for: " + url, t);
+            }
+        });
+    }
+
+    /**
+     * Dispatch live download and install progress events to the JS WebView
+     */
+    private void dispatchDownloadProgress(int percent, double downloadedMB, double totalMB, String status, String errorMsg) {
+        runOnUiThread(() -> {
+            try {
+                WebView webView = (getBridge() != null) ? getBridge().getWebView() : null;
+                if (webView != null) {
+                    JSONObject detail = new JSONObject();
+                    detail.put("percent", percent);
+                    detail.put("downloadedMB", Math.round(downloadedMB * 10.0) / 10.0);
+                    detail.put("totalMB", Math.round(totalMB * 10.0) / 10.0);
+                    detail.put("status", status);
+                    if (errorMsg != null) {
+                        detail.put("message", errorMsg);
+                    }
+                    String script = "window.dispatchEvent(new CustomEvent('apkDownloadProgress', { detail: " + detail.toString() + " }));";
+                    webView.evaluateJavascript(script, null);
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to dispatch apkDownloadProgress event", t);
+            }
+        });
     }
 
     /**

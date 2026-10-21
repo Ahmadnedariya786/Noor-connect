@@ -60,11 +60,14 @@ import {
 import {
   checkNightlyUpdate,
   downloadAndInstallUpdate,
+  triggerPendingInstall,
+  openExternalBrowserFallback,
   formatReleaseDate,
   formatDateTime,
   formatCommit,
   formatUpdateError,
   type UpdateCheckResult,
+  type ApkDownloadProgressDetail,
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
@@ -261,8 +264,16 @@ const SettingsSubPage: React.FC = () => {
 
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [apkDownloadProgress, setApkDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
 
   useEffect(() => {
+    const handleApkProgress = (e: CustomEvent<ApkDownloadProgressDetail>) => {
+      if (e.detail) {
+        setApkDownloadProgress(e.detail);
+      }
+    };
+    window.addEventListener('apkDownloadProgress', handleApkProgress as EventListener);
+
     if (sectionId === 'about') {
       const refreshData = () => {
         setDiagnosticEvents(getDiagnosticEntries());
@@ -295,8 +306,13 @@ const SettingsSubPage: React.FC = () => {
 
       return () => {
         unsubscribe();
+        window.removeEventListener('apkDownloadProgress', handleApkProgress as EventListener);
       };
     }
+
+    return () => {
+      window.removeEventListener('apkDownloadProgress', handleApkProgress as EventListener);
+    };
   }, [sectionId]);
 
   const handleManualCheckUpdate = async () => {
@@ -1273,32 +1289,113 @@ const SettingsSubPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Download update button when update is available */}
+              {/* Download update button or live progress bar when update is available */}
               {updateResult?.hasUpdate && updateResult.release && (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 gap-3">
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                      <p className="text-xs font-bold text-amber-500 dark:text-amber-400 truncate">
-                        Nightly Build ({formatReleaseDate(updateResult.release.publishedAt)})
+                <div className="flex flex-col p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 gap-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                        <p className="text-xs font-bold text-amber-500 dark:text-amber-400 truncate">
+                          {apkDownloadProgress?.status === 'downloading'
+                            ? `Downloading... ${apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent + '%' : ''}`
+                            : apkDownloadProgress?.status === 'installing' || apkDownloadProgress?.status === 'completed'
+                            ? '✓ Downloaded! Launching Installer...'
+                            : apkDownloadProgress?.status === 'error'
+                            ? 'Download Failed'
+                            : `Nightly Build (${formatReleaseDate(updateResult.release.publishedAt)})`}
+                        </p>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {apkDownloadProgress?.status === 'downloading'
+                          ? `${apkDownloadProgress.downloadedMB.toFixed(1)} MB / ${apkDownloadProgress.totalMB > 0 ? apkDownloadProgress.totalMB.toFixed(1) + ' MB' : '...'}`
+                          : apkDownloadProgress?.status === 'error'
+                          ? (apkDownloadProgress.message || 'Tap to retry')
+                          : 'New updates available for download'}
                       </p>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      New updates available for download
-                    </p>
+
+                    {apkDownloadProgress?.status === 'installing' || apkDownloadProgress?.status === 'completed' ? (
+                      <Button
+                        size="sm"
+                        className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
+                        style={{
+                          background: 'var(--accent)',
+                          color: 'var(--on-accent)',
+                        }}
+                        onClick={() => triggerPendingInstall()}
+                      >
+                        <Download className="w-3.5 h-3.5 mr-1" />
+                        Install Now
+                      </Button>
+                    ) : apkDownloadProgress?.status === 'downloading' ? (
+                      <div
+                        className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold shrink-0"
+                        style={{
+                          background: 'var(--accent-soft)',
+                          color: 'var(--accent-text)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        {apkDownloadProgress.percent >= 0 ? `${apkDownloadProgress.percent}%` : '...'}
+                      </div>
+                    ) : apkDownloadProgress?.status === 'error' ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
+                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                        Retry
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
+                        style={{
+                          background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)',
+                          color: 'var(--on-accent)',
+                        }}
+                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
+                      >
+                        <Download className="w-3.5 h-3.5 mr-1" />
+                        Download update
+                      </Button>
+                    )}
                   </div>
-                  <Button
-                    size="sm"
-                    className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
-                    style={{
-                      background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
-                      color: "var(--on-accent)",
-                    }}
-                    onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
-                  >
-                    <Download className="w-3.5 h-3.5 mr-1" />
-                    Download update
-                  </Button>
+
+                  {/* Live glowing progress bar */}
+                  {apkDownloadProgress?.status === 'downloading' && (
+                    <div className="w-full h-1.5 rounded-full bg-black/20 dark:bg-white/10 overflow-hidden relative">
+                      <div
+                        className="h-full rounded-full transition-all duration-150"
+                        style={{
+                          width: `${Math.max(5, Math.min(100, apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent : 15))}%`,
+                          background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+                          boxShadow: '0 0 10px var(--accent-glow)',
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Secondary Browser Fallback Link */}
+                  {(apkDownloadProgress?.status === 'downloading' ||
+                    apkDownloadProgress?.status === 'installing' ||
+                    apkDownloadProgress?.status === 'completed' ||
+                    apkDownloadProgress?.status === 'error') && (
+                    <div className="flex items-center justify-between pt-0.5 text-[10px] text-muted-foreground/80">
+                      <span>Stuck or dismissed?</span>
+                      <button
+                        type="button"
+                        onClick={() => openExternalBrowserFallback(updateResult.release?.apkUrl)}
+                        className="inline-flex items-center gap-1 text-[var(--accent-text)] hover:underline font-medium"
+                      >
+                        <span>Download via Browser</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </Card>

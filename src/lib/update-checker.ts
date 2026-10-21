@@ -124,6 +124,25 @@ export interface UpdateCheckResult {
   error?: string;
 }
 
+export interface ApkDownloadProgressDetail {
+  percent: number;
+  downloadedMB: number;
+  totalMB: number;
+  status: 'downloading' | 'installing' | 'completed' | 'error';
+  message?: string;
+}
+
+declare global {
+  interface Window {
+    AndroidBridge?: {
+      closeApp?: () => void;
+      downloadAndInstallApk?: (apkUrl: string) => void;
+      installDownloadedApk?: () => void;
+      openExternalBrowser?: (url: string) => void;
+    };
+  }
+}
+
 interface StoredCache {
   lastChecked: number;
   release: NightlyReleaseInfo | null;
@@ -309,13 +328,28 @@ function writeCache(release: NightlyReleaseInfo | null): void {
 }
 
 /**
- * Force download through the SYSTEM browser (Chrome) using Capacitor's Browser plugin
- * with windowName: '_system'. Never uses an in-app browser, iframe, or WebView.
+ * Initiate native APK download and install when running inside Android app with AndroidBridge.
+ * Falls back to true external browser Intent (not stuck Chrome Custom Tab), or web window.open.
  */
-export async function downloadAndInstallUpdate(apkUrl?: string): Promise<void> {
+export async function downloadAndInstallUpdate(apkUrl?: string): Promise<boolean> {
   const directApkUrl = resolveDirectApkUrl(apkUrl);
 
   try {
+    // 1. Native Android Downloader via AndroidBridge (Bypasses Chrome Custom Tab completely)
+    if (typeof window !== 'undefined' && window.AndroidBridge?.downloadAndInstallApk) {
+      console.log('[UpdateChecker] Using native AndroidBridge.downloadAndInstallApk:', directApkUrl);
+      window.AndroidBridge.downloadAndInstallApk(directApkUrl);
+      return true;
+    }
+
+    // 2. Android external browser intent fallback (avoids Chrome Custom Tab hang)
+    if (typeof window !== 'undefined' && window.AndroidBridge?.openExternalBrowser) {
+      console.log('[UpdateChecker] Using AndroidBridge.openExternalBrowser:', directApkUrl);
+      window.AndroidBridge.openExternalBrowser(directApkUrl);
+      return true;
+    }
+
+    // 3. Fallback for Web/Browser environment
     if (Capacitor.isNativePlatform()) {
       try {
         const { Browser } = await import('@capacitor/browser');
@@ -323,7 +357,7 @@ export async function downloadAndInstallUpdate(apkUrl?: string): Promise<void> {
           url: directApkUrl,
           windowName: '_system',
         });
-        return;
+        return true;
       } catch (browserErr) {
         // Handled Capacitor Browser plugin error; trying window.open fallback
         console.warn('[UpdateChecker] Native Browser.open({ windowName: "_system" }) failed:', browserErr);
@@ -335,15 +369,44 @@ export async function downloadAndInstallUpdate(apkUrl?: string): Promise<void> {
       if (!w) {
         window.location.href = directApkUrl;
       }
+      return true;
     } catch (webErr) {
       // Handled window.open fallback failure
       console.warn('[UpdateChecker] Web Browser plugin fallback:', webErr);
       showBrowserOpenFailureToast(directApkUrl);
+      return false;
     }
   } catch (err) {
     // Final download launch catch block
     console.warn('[UpdateChecker] Failed to open download url:', err);
     showBrowserOpenFailureToast(directApkUrl);
+    return false;
+  }
+}
+
+/**
+ * Re-trigger installation of downloaded APK if user dismissed prompt
+ */
+export function triggerPendingInstall(): void {
+  if (typeof window !== 'undefined' && window.AndroidBridge?.installDownloadedApk) {
+    window.AndroidBridge.installDownloadedApk();
+  }
+}
+
+/**
+ * Fallback to external browser without Chrome Custom Tab
+ */
+export function openExternalBrowserFallback(url?: string): void {
+  const directUrl = resolveDirectApkUrl(url);
+  if (typeof window !== 'undefined' && window.AndroidBridge?.openExternalBrowser) {
+    window.AndroidBridge.openExternalBrowser(directUrl);
+    return;
+  }
+  try {
+    window.open(directUrl, '_system');
+  } catch {
+    // Handled external browser open fallback
+    window.location.href = directUrl;
   }
 }
 
