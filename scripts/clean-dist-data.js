@@ -103,14 +103,6 @@ const compressTargets = [
     path: path.join(distDir, 'data', 'hadith-collections'),
     label: 'dist/data/hadith-collections (runtime fetch — gzipped, stays offline)',
   },
-  {
-    path: path.join(distDir, 'data', 'seerah'),
-    label: 'dist/data/seerah (gzipped, stays offline)',
-  },
-  {
-    path: path.join(distDir, 'data', 'qisas'),
-    label: 'dist/data/qisas (gzipped, stays offline)',
-  },
 ];
 
 console.log('\n📦 Pre-cap-sync APK size cleanup\n');

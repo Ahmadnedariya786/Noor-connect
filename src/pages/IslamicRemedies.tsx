@@ -277,16 +277,25 @@ export default function IslamicRemedies() {
 
             <div className="space-y-2">
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {["all", "surah", "ayah", "dua", "hadith", "dhikr"].map(t => (
+                {[
+                  { id: "all", label: `All (${moods.length})` },
+                  { id: "surah", label: "Surah" },
+                  { id: "ayah", label: "Ayah" },
+                  { id: "dua", label: "Dua" },
+                  { id: "hadith", label: "Hadith" },
+                  { id: "dhikr", label: "Dhikr" },
+                ].map(({ id, label }) => (
                   <button
-                    key={t}
-                    onClick={() => setTypeFilter(t)}
+                    key={id}
+                    onClick={() => setTypeFilter(id)}
                     className={cn(
-                      "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors",
-                      typeFilter === t ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"
+                      "shrink-0 text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all border",
+                      typeFilter === id
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground border-border/60 hover:border-primary/40"
                     )}
                   >
-                    {t === "all" ? `All (${moods.length})` : t}
+                    {label}
                   </button>
                 ))}
               </div>

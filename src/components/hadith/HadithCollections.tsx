@@ -11,22 +11,37 @@ import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
 import { motion } from "framer-motion";
 import { goBackOrFallback } from "@/lib/navigation";
 
+function extractNarrator(englishText: string, fallback?: string): string {
+  if (fallback && fallback !== "Unknown" && fallback.trim()) return fallback.trim();
+  if (!englishText) return fallback && fallback !== "Unknown" ? fallback : "Prophetic Companion";
+  const match = englishText.match(/^(?:Narrated\s+(?:by\s+)?|It was narrated from\s+|It was narrated that\s+)([^:\n.]{3,45})(?::|\.|\s*-\s*)/i);
+  if (match && match[1]) {
+    const clean = match[1].replace(/^(that\s+|from\s+)/i, "").trim();
+    if (clean.length > 2 && clean.length < 45) {
+      return clean;
+    }
+  }
+  return fallback && fallback !== "Unknown" ? fallback : "Prophetic Companion";
+}
+
 export function HadithCollections() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
   const allCollections = useMemo(() => getAllCollections(), []);
   const [dailyHadith, setDailyHadith] = useState<{ title: string; content: string; arabic: string; subtitle: string; reference: string; reflection: string } | null>(null);
 
   useEffect(() => {
     getDailyHadithFromCollections().then(h => {
       if (h) {
+        const narrator = extractNarrator(h.englishTranslation || "", h.narrator);
         setDailyHadith({
           title: "Hadith of the Day",
           content: h.englishTranslation || "",
           arabic: h.arabic || "",
           subtitle: h.collection,
           reference: `#${h.hadithNumber}`,
-          reflection: `Narrated by: ${h.narrator || "Unknown"}`,
+          reflection: `Narrator: ${narrator}`,
         });
       }
     });
@@ -78,73 +93,87 @@ export function HadithCollections() {
           </Button>
         </div>
 
-        {/* Daily Hadith Card */}
+        {/* Daily Hadith Card - Refined Dark Jewel Manuscript */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-[32px] shadow-2xl shadow-primary/20 mb-8"
+          className="relative overflow-hidden rounded-[28px] border border-primary/25 bg-[var(--surface)] text-foreground shadow-xl mb-8"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary/60" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2" />
-          <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[1px]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 rounded-full blur-[30px] pointer-events-none" />
           
-          <div className="relative z-10 p-4 sm:p-8">
+          <div className="relative z-10 p-5 sm:p-7">
             {dailyHadith ? (
               <>
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
-                  <Sparkles className="w-4 h-4 text-primary-foreground/80 shrink-0" />
-                  <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">
+                  <div className="p-1.5 rounded-lg bg-primary/15 text-primary">
+                    <Sparkles className="w-4 h-4 shrink-0" />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
                     {dailyHadith.title}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="ml-auto h-7 w-7 rounded-full hover:bg-white/10 shrink-0"
+                    className="ml-auto h-7 w-7 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-foreground shrink-0"
                     onClick={() => {
                       getDailyHadithFromCollections().then(h => {
                         if (h) {
+                          const narrator = extractNarrator(h.englishTranslation || "", h.narrator);
                           setDailyHadith({
                             title: "Hadith of the Day",
                             content: h.englishTranslation || "",
                             arabic: h.arabic || "",
                             subtitle: h.collection,
                             reference: `#${h.hadithNumber}`,
-                            reflection: `Narrated by: ${h.narrator || "Unknown"}`,
+                            reflection: `Narrator: ${narrator}`,
                           });
                         }
                       });
                     }}
                   >
-                    <RefreshCw className="w-3.5 h-3.5 text-primary-foreground/80" />
+                    <RefreshCw className="w-3.5 h-3.5" />
                   </Button>
                 </div>
                 
-                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-amber-500/25 mb-4">
+                <div className="bg-background/60 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-primary/20 mb-3 space-y-3">
                   {dailyHadith.arabic && (
-                    <p className="text-white/90 text-xl md:text-2xl font-arabic text-right leading-loose mb-4 break-words" dir="rtl">
-                      {dailyHadith.arabic}
+                    <p className="text-foreground text-xl md:text-2xl font-arabic text-right leading-loose break-words" dir="rtl">
+                      {!isExpanded && dailyHadith.arabic.length > 200
+                        ? `${dailyHadith.arabic.slice(0, 200)}...`
+                        : dailyHadith.arabic}
                     </p>
                   )}
-                  <p className="text-white/90 text-sm sm:text-base font-medium leading-relaxed mb-4 break-words">
-                    {dailyHadith.content}
+                  <p className="text-foreground/90 text-sm sm:text-base font-normal leading-relaxed break-words">
+                    {!isExpanded && dailyHadith.content.length > 240
+                      ? `${dailyHadith.content.slice(0, 240)}...`
+                      : dailyHadith.content}
                   </p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className="bg-amber-950/40 text-amber-200 border border-amber-500/30 text-xs shrink-0 font-semibold">
+                  {(dailyHadith.content.length > 240 || (dailyHadith.arabic && dailyHadith.arabic.length > 200)) && (
+                    <button
+                      type="button"
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-xs font-semibold text-primary hover:underline focus:outline-none transition-colors"
+                    >
+                      {isExpanded ? "Show Less" : "Read More"}
+                    </button>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/40">
+                    <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-xs shrink-0 font-medium">
                       {dailyHadith.subtitle}
                     </Badge>
-                    <span className="text-white/50 text-xs font-medium">{dailyHadith.reference}</span>
+                    <span className="text-muted-foreground text-xs font-medium">{dailyHadith.reference}</span>
                   </div>
                 </div>
                 
-                <p className="text-white/60 text-sm italic">
+                <p className="text-muted-foreground text-xs sm:text-sm font-medium italic">
                   {dailyHadith.reflection}
                 </p>
               </>
             ) : (
               <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
               </div>
             )}
           </div>

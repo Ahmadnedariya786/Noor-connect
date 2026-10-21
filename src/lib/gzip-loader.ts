@@ -93,7 +93,22 @@ export async function loadGzippedJson<T>(url: string): Promise<T> {
     try {
       return await new Promise<T>((resolve, reject) => {
         const id = ++workerRequestSeq;
-        pendingRequests.set(id, { resolve: resolve as (v: unknown) => void, reject });
+        const timer = setTimeout(() => {
+          if (pendingRequests.has(id)) {
+            pendingRequests.delete(id);
+            reject(new Error("Worker timed out"));
+          }
+        }, 3000);
+        pendingRequests.set(id, {
+          resolve: (v) => {
+            clearTimeout(timer);
+            (resolve as (v: unknown) => void)(v);
+          },
+          reject: (err) => {
+            clearTimeout(timer);
+            reject(err);
+          }
+        });
         worker.postMessage({ id, url, gzipped: true });
       });
     } catch {

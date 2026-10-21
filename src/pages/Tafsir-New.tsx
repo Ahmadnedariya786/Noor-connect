@@ -536,7 +536,7 @@ const Tafsir = () => {
                 <div className="relative group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)] group-focus-within:text-[var(--accent)] transition-colors" />
                   <Input
-                    placeholder={t('searchBySurahNameOrNumber')}
+                    placeholder="Search Surah name or number..."
                     className="h-14 pl-12 rounded-2xl border text-base"
                     style={{
                       background: 'var(--bg-elev)',
@@ -717,7 +717,7 @@ const Tafsir = () => {
                     value="history"
                     className="flex-1 rounded-lg text-xs font-bold transition-all data-[state=active]:bg-[var(--accent-soft)] data-[state=active]:text-[var(--accent-text)] text-[var(--text-secondary)]"
                   >
-                    {t('history')}
+                    {t('history') ? (t('history').charAt(0).toUpperCase() + t('history').slice(1)) : 'History'}
                   </TabsTrigger>
                 </TabsList>
 
@@ -741,7 +741,7 @@ const Tafsir = () => {
                         <button
                           key={surah.number}
                           onClick={() => handleSurahSelect(surah)}
-                          className="group relative flex items-center p-5 rounded-2xl border transition-all text-left active:scale-[0.99]"
+                          className="group relative flex items-center p-3.5 sm:p-4 rounded-2xl border transition-all text-left active:scale-[0.99]"
                           style={{
                             background: 'var(--surface)',
                             borderColor: 'var(--border)',
@@ -749,7 +749,7 @@ const Tafsir = () => {
                           }}
                         >
                           <div
-                            className="relative w-12 h-12 rounded-xl flex items-center justify-center font-black transition-all overflow-hidden shrink-0"
+                            className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-sm transition-all overflow-hidden shrink-0"
                             style={{
                               background: 'var(--accent-soft)',
                               color: 'var(--accent-text)',
@@ -758,16 +758,16 @@ const Tafsir = () => {
                           >
                             <span className="relative z-10">{surah.number}</span>
                           </div>
-                          <div className="ml-4 flex-1 min-w-0">
-                            <h3 className="font-bold text-base truncate transition-colors" style={{ color: 'var(--text-primary)' }}>
+                          <div className="ml-3 sm:ml-4 flex-1 min-w-0 pr-2">
+                            <h3 className="font-bold text-sm sm:text-base truncate transition-colors" style={{ color: 'var(--text-primary)' }}>
                               {surah.englishName}
                             </h3>
                             <p className="text-xs font-medium truncate mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                               {surah.englishNameTranslation} • {surah.numberOfAyahs} {t('ayahs')}
                             </p>
                           </div>
-                          <div className="text-right flex flex-col items-end shrink-0 ml-3">
-                            <span className="font-arabic text-lg font-bold" style={{ color: 'var(--accent-text)' }}>{surah.name}</span>
+                          <div className="text-right flex flex-col items-end shrink-0 min-w-[55px]">
+                            <span className="font-arabic text-base sm:text-lg font-bold" style={{ color: 'var(--accent-text)' }}>{surah.name}</span>
                             <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--text-secondary)' }}>{surah.revelationType}</span>
                           </div>
                         </button>

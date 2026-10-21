@@ -218,7 +218,7 @@ export default function NamesOfAllah() {
                 <Search className="w-4 h-4" />
               </div>
               <Input
-                placeholder="Search by name or meaning..."
+                placeholder="Search 99 Names..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="ps-11 h-12 rounded-2xl transition-all shadow-sm font-medium"
@@ -269,7 +269,7 @@ export default function NamesOfAllah() {
                     onClick={() => setSelectedName(name)}
                   >
                     <CardContent className="p-0">
-                      <div className="flex items-stretch min-h-[100px]">
+                      <div className="flex items-stretch min-h-[105px]">
                         {/* Left Info Section */}
                         <div className="flex-1 p-5 flex flex-col justify-center">
                           <div className="flex items-center gap-3 mb-1">
@@ -296,7 +296,7 @@ export default function NamesOfAllah() {
 
                         {/* Right Arabic Section */}
                         <div
-                          className="w-[120px] flex flex-col items-center justify-center p-4 relative overflow-hidden transition-colors"
+                          className="w-[125px] flex flex-col items-center justify-center py-4 px-2 relative transition-colors"
                           style={{
                             background: "var(--surface-2)",
                             borderInlineStart: "1px solid var(--border)",
@@ -322,7 +322,7 @@ export default function NamesOfAllah() {
                             <Sparkles className="w-16 h-16" style={{ color: "var(--accent)" }} />
                           </div>
                           <span
-                            className="text-3xl font-arabic font-bold transition-colors drop-shadow-xs"
+                            className="text-3xl font-arabic font-bold transition-colors drop-shadow-xs leading-[1.8] py-1 select-none"
                             dir="rtl"
                             style={{ color: "var(--text-primary)" }}
                           >

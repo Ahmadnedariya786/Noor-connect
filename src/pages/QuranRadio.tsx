@@ -509,7 +509,7 @@ const SectionHeader = ({ icon: Icon, title, count }: { icon: LucideIcon; title: 
 
 const StationArtwork: React.FC<{ station: StationView; className?: string }> = ({ station }) => {
   const [imageError, setImageError] = useState(false);
-  const showPhoto = station.category === "reciter" && !!station.img && !imageError;
+  const showPhoto = !imageError && !!station.img;
 
   if (showPhoto) {
     return (
@@ -525,7 +525,7 @@ const StationArtwork: React.FC<{ station: StationView; className?: string }> = (
   if (station.category === "reciter") {
     return (
       <div className={`w-full h-full bg-gradient-to-br ${avatarGradient(station.url)} flex items-center justify-center`}>
-        <span className="text-2xl font-bold text-white/95">{initialsOf(station.name, station.nameEn)}</span>
+        <span className="text-xl font-bold text-white/80">{initialsOf(station.name, station.nameEn)}</span>
       </div>
     );
   }

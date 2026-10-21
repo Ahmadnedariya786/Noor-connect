@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Moon, Star, ChevronLeft, ChevronRight, X, ArrowLeft } from "lucide-react";
+import { Calendar, Moon, Star, ChevronLeft, ChevronRight, X, ArrowLeft, Sparkles, Gift, Heart, Landmark } from "lucide-react";
 import { toast } from "sonner";
 import { calendarApiResponseSchema, safeParseApiResponse } from "@/lib/api-schemas";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
@@ -11,13 +11,13 @@ import { useNavigate } from "react-router-dom";
 import { goBackOrFallback } from "@/lib/navigation";
 
 const importantDates = [
-  { name: "Ramadan", icon: "🌙", description: "Month of Fasting", color: "bg-primary/10 text-foreground border border-primary/20" },
-  { name: "Laylat al-Qadr", icon: "✨", description: "Night of Power", color: "bg-primary/20 text-foreground border border-primary/30" },
-  { name: "Eid al-Fitr", icon: "🎉", description: "Festival of Breaking the Fast", color: "bg-accent/10 text-foreground border border-accent/20" },
-  { name: "Eid al-Adha", icon: "🐑", description: "Festival of Sacrifice", color: "bg-secondary/20 text-foreground border border-primary/30" },
-  { name: "Dhul Hijjah", icon: "🕋", description: "Month of Hajj", color: "bg-primary/15 text-foreground border border-primary/25" },
-  { name: "Muharram", icon: "🌟", description: "Islamic New Year", color: "bg-accent/15 text-foreground border border-accent/25" },
-  { name: "Ashura", icon: "⭐", description: "Day of Ashura", color: "bg-secondary/25 text-foreground border border-primary/20" },
+  { name: "Ramadan", Icon: Moon, description: "Month of Fasting" },
+  { name: "Laylat al-Qadr", Icon: Sparkles, description: "Night of Power" },
+  { name: "Eid al-Fitr", Icon: Gift, description: "Festival of Breaking the Fast" },
+  { name: "Eid al-Adha", Icon: Heart, description: "Festival of Sacrifice" },
+  { name: "Dhul Hijjah", Icon: Landmark, description: "Month of Hajj" },
+  { name: "Muharram", Icon: Calendar, description: "Islamic New Year" },
+  { name: "Ashura", Icon: Star, description: "Day of Ashura" },
 ];
 
 interface CalendarDay {
@@ -606,7 +606,9 @@ export default function IslamicCalendar() {
                   }}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{event.icon}</span>
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <event.Icon className="w-5 h-5 text-primary" />
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{event.name}</h3>
                       <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{event.description}</p>

@@ -26,6 +26,7 @@ const Tasbeeh = () => {
   const [selectedDhikr, setSelectedDhikr] = useState(DHIKR_OPTIONS[0].value);
   const [dailyHistory, setDailyHistory] = useState<{ date: string; count: number; label: string }[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,7 +64,6 @@ const Tasbeeh = () => {
 
   const handleIncrement = () => {
     const newCount = count + 1;
-    const previousCount = count;
     setCount(newCount);
     addTasbeehEntry(label);
     setTotalCount(getTasbeehTotal());
@@ -80,11 +80,10 @@ const Tasbeeh = () => {
     setTimeout(() => setIsAnimating(false), 100);
   };
 
-  const handleReset = () => {
-    if (confirm(t('resetCurrentCounter'))) {
-      setCount(0);
-      triggerHapticFeedback('reset');
-    }
+  const confirmReset = () => {
+    setCount(0);
+    triggerHapticFeedback('reset');
+    setShowResetDialog(false);
   };
 
   const handleDhikrChange = (value: string) => {
@@ -136,8 +135,8 @@ const Tasbeeh = () => {
         {/* Count */}
         <span className="text-[15rem] font-black text-white leading-none select-none">{count}</span>
 
-        {/* Next goal */}
-        <div className="absolute bottom-12 left-0 right-0 text-center">
+        {/* Next goal — safe bottom padding above navigation bar */}
+        <div className="absolute bottom-28 pb-4 left-0 right-0 text-center">
           <p className="text-white/30 text-xs font-bold uppercase tracking-[0.3em] mb-2">Next Goal</p>
           <p className="text-[#C9860A] text-2xl font-bold font-serif italic">{nextMilestone}</p>
         </div>
@@ -269,7 +268,7 @@ const Tasbeeh = () => {
               <Button
                 variant="outline"
                 className="flex-1 h-14 rounded-2xl gap-3 text-xs font-bold border-border/40 bg-card/40 hover:bg-muted/50 transition-all"
-                onClick={handleReset}
+                onClick={() => setShowResetDialog(true)}
               >
                 <RotateCcw className="w-4 h-4" />
                 {t('resetCount')}
@@ -316,6 +315,50 @@ const Tasbeeh = () => {
             </Card>
           </div>
         </div>
+
+        {/* Tokenized Reset Confirmation Modal */}
+        <AnimatePresence>
+          {showResetDialog && (
+            <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-sm rounded-[24px] border border-[var(--border)] p-6 space-y-4 shadow-2xl"
+                style={{
+                  background: 'linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <RotateCcw className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-[var(--text-primary)]">Reset Counter</h3>
+                    <p className="text-xs text-[var(--text-secondary)]">Reset current counter to 0?</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-xl h-11 border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:bg-[var(--surface)] hover:text-[var(--text-primary)]"
+                    onClick={() => setShowResetDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 rounded-xl h-11 bg-[var(--accent)] text-[var(--on-accent)] hover:opacity-90 font-bold shadow-md"
+                    onClick={confirmReset}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </PageTransition>
   );

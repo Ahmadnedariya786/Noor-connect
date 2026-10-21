@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { useReciters } from "@/hooks/useReciters";
 import { AlertCircle, Pause, Play, User, Volume2, X, ChevronUp, ChevronDown, Repeat, SkipBack, SkipForward } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +23,9 @@ const RECITER_STORAGE_KEY = 'mp3quran-selected-reciter';
 
 export function GlobalQuranPlayer() {
     const audioRef = useRef<HTMLAudioElement>(null);
+    const location = useLocation();
+    const isLiveRoute = location.pathname.startsWith('/live');
+
     const {
         isPlaying, surahNumber, surahName, reciter, volume, progress, duration, isBackgroundMode,
         updateState, playSurah, pause, resume, setProgress, setDuration
@@ -42,24 +46,33 @@ export function GlobalQuranPlayer() {
     const [isAudioLoading, setIsAudioLoading] = useState(false);
     const isLoading = isReciterLoading || isAudioLoading;
 
+    // Auto-pause background audio when navigating to Live Mecca
+    useEffect(() => {
+        if (isLiveRoute && isPlaying) {
+            pause();
+        }
+    }, [isLiveRoute, isPlaying, pause]);
+
     // Initialize Global Ref
     useEffect(() => {
         setGlobalQuranAudioRef(audioRef.current);
     }, []);
 
-    // Set default reciter when loaded
+    // Set default reciter when loaded — prioritizing verified reciters with full 114 surahs
     useEffect(() => {
         if (!reciters.length || reciter) return;
 
+        const isFullReciter = (r: Reciter) => !r.surahList || r.surahList.length === 0 || r.surahList.length >= 114;
         const savedId = localStorage.getItem(RECITER_STORAGE_KEY);
-        if (savedId) {
-            const saved = reciters.find(r => r.id === savedId);
-            if (saved) updateState({ reciter: saved });
-        } else {
-            const defaultReciter = reciters.find(r => r.name.includes('Mishary')) || reciters[0];
-            if (defaultReciter) updateState({ reciter: defaultReciter });
-        }
-    }, [reciters, reciter]);
+        const saved = savedId ? reciters.find(r => r.id === savedId) : null;
+
+        const defaultReciter = (saved && isFullReciter(saved) ? saved : null)
+            || reciters.find(r => r.name.includes('Mishary') && isFullReciter(r))
+            || reciters.find(isFullReciter)
+            || reciters[0];
+
+        if (defaultReciter) updateState({ reciter: defaultReciter });
+    }, [reciters, reciter, updateState]);
 
     const { toast } = useToast();
 
@@ -68,15 +81,16 @@ export function GlobalQuranPlayer() {
         const audio = audioRef.current;
         if (!audio || !surahNumber || !reciter) return;
 
-        // Check availability
-        if (reciter.surahList && !reciter.surahList.includes(surahNumber)) {
-            console.warn(`Surah ${surahNumber} not available for reciter ${reciter.name}`);
-            toast({
-                title: "Recitation Unavailable",
-                description: `This reciter does not have a recording for Surah ${surahName}.`,
-                variant: "destructive"
-            });
-            return;
+        // Check availability — automatically fallback to a full reciter instead of failing
+        if (reciter.surahList && reciter.surahList.length > 0 && !reciter.surahList.includes(surahNumber)) {
+            console.warn(`Surah ${surahNumber} not in current reciter's list, finding stream with full coverage`);
+            const fallbackReciter = reciters.find(r => r.name.includes('Mishary') && (!r.surahList || r.surahList.includes(surahNumber)))
+                || reciters.find(r => !r.surahList || r.surahList.length === 0 || r.surahList.includes(surahNumber));
+
+            if (fallbackReciter && fallbackReciter.id !== reciter.id) {
+                updateState({ reciter: fallbackReciter });
+                return;
+            }
         }
 
         const loadAudio = async () => {
@@ -219,8 +233,8 @@ export function GlobalQuranPlayer() {
         }
     }, [surahName, reciter]);
 
-    // Render nothing if no surah selected
-    if (!surahNumber) return <audio ref={audioRef} />;
+    // Render nothing if no surah selected or if currently on Live Mecca
+    if (!surahNumber || isLiveRoute) return <audio ref={audioRef} />;
 
     const togglePlayback = () => {
         if (isPlaying) pause();
@@ -300,9 +314,17 @@ export function GlobalQuranPlayer() {
     return (
         <>
             <audio ref={audioRef} />
-            <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center backdrop-blur-sm animate-in fade-in p-4" onClick={() => setIsExpanded(false)}>
-                <Card className="w-full max-w-md bg-card border-border shadow-2xl animate-in zoom-in-95 duration-200 p-6 space-y-6" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-between border-b pb-4">
+            <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={() => setIsExpanded(false)}>
+                <div
+                    className="w-full max-w-md rounded-[24px] border border-[var(--border)] p-6 space-y-6 shadow-2xl transition-all"
+                    style={{
+                        background: 'linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%)',
+                        color: 'var(--text-primary)',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+                    }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
                         <div>
                             <h3 className="font-bold text-xl">{surahName}</h3>
                             <p className="text-sm text-primary font-medium">{reciter?.name}</p>
@@ -383,7 +405,7 @@ export function GlobalQuranPlayer() {
                             </Button>
                         </div>
                     </div>
-                </Card>
+                </div>
             </div>
         </>
     );

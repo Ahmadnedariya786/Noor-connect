@@ -75,6 +75,13 @@ export function HadithBookView() {
 }
 
 const BookCard = memo(function BookCard({ book, collection, navigate }: BookCardProps) {
+  const displayName = !book.name || !book.name.trim() || book.name.trim().toLowerCase() === "chapter"
+    ? `Chapter ${book.number} • General Traditions`
+    : book.name;
+  const displayArabicName = !book.arabicName || !book.arabicName.trim() || book.arabicName.trim() === "باب"
+    ? `الباب ${book.number}`
+    : book.arabicName;
+
   return (
     <Card
       className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-border/50 hover:border-primary/30"
@@ -88,10 +95,10 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
             </div>
             <div>
               <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                {book.name}
+                {displayName}
               </h3>
               <p className="text-sm text-muted-foreground font-arabic" dir="rtl">
-                {book.arabicName}
+                {displayArabicName}
               </p>
             </div>
           </div>

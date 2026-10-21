@@ -6,6 +6,23 @@ import {
   extractAuthor, generateSubtitle, getDecorationElements 
 } from "@/lib/book-themes";
 import { formatFileSize } from "@/lib/ebooks-storage";
+import { BookOpen, Scroll, Scale, Landmark, Moon, User, Heart, Users, History, Lightbulb, Library } from "lucide-react";
+
+export function getBookCategoryVectorIcon(category: BookCategory, className: string = "w-3.5 h-3.5") {
+  switch (category) {
+    case 'Quran & Tafsir': return <BookOpen className={className} />;
+    case 'Hadith': return <Scroll className={className} />;
+    case 'Fiqh': return <Scale className={className} />;
+    case 'Aqeedah': return <Landmark className={className} />;
+    case 'Seerah': return <Moon className={className} />;
+    case 'Biography': return <User className={className} />;
+    case 'Dua & Dhikr': return <Heart className={className} />;
+    case 'Family & Women': return <Users className={className} />;
+    case 'History': return <History className={className} />;
+    case 'Knowledge': return <Lightbulb className={className} />;
+    default: return <Library className={className} />;
+  }
+}
 
 interface BookCoverProps {
   title: string;
@@ -24,7 +41,7 @@ export const BookCover = memo(({
   showProgress = true,
   className = ""
 }: BookCoverProps) => {
-  const theme = CATEGORY_THEMES[category];
+  const theme = CATEGORY_THEMES[category] || CATEGORY_THEMES['General'];
   const clean = cleanTitle(title);
   const author = extractAuthor(title);
   const subtitle = generateSubtitle(title, category);
@@ -55,33 +72,41 @@ export const BookCover = memo(({
         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-r from-white/20 to-transparent" />
         
         {/* Content */}
-        <div className="absolute inset-0 p-3 flex flex-col justify-between text-white">
-          {/* Top: Category badge */}
-          <div className="flex items-start justify-between">
+        <div className="absolute inset-0 p-2.5 flex flex-col justify-between text-white overflow-hidden">
+          {/* Top: Category badge and file size */}
+          <div className="flex items-center justify-between gap-1 w-full min-w-0">
             <Badge 
               variant="secondary" 
-              className="bg-white/10 backdrop-blur-sm border-0 text-xs text-white/90 font-medium px-1.5 py-0.5"
+              className="bg-white/15 backdrop-blur-sm border-0 text-[10px] text-white/95 font-medium px-1.5 py-0.5 flex items-center gap-1 shrink truncate max-w-[55%]"
             >
-              <span className="mr-1">{theme.icon}</span>
-              {category}
+              {getBookCategoryVectorIcon(category, "w-3 h-3 shrink-0")}
+              <span className="truncate">{category}</span>
             </Badge>
             {size && (
-              <span className="text-xs text-white/60 bg-black/20 px-1.5 py-0.5 rounded">
+              <span 
+                className="text-white/80 bg-black/40 rounded font-semibold truncate shrink-0"
+                style={{
+                  fontSize: '0.65rem',
+                  padding: '2px 6px',
+                  maxWidth: '45%',
+                  lineHeight: '1',
+                }}
+              >
                 {formatFileSize(parseInt(size))}
               </span>
             )}
           </div>
           
           {/* Center: Title and icon */}
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-1">
-            <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-2">
-              <span className="text-2xl">{theme.icon}</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-1 my-1">
+            <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-1.5 shadow-sm">
+              {getBookCategoryVectorIcon(category, "w-5 h-5 text-white/90")}
             </div>
             <h3 className="text-xs font-semibold leading-tight line-clamp-3 drop-shadow-sm">
               {clean}
             </h3>
             {author && (
-              <p className="text-xs text-white/70 mt-1 line-clamp-1">{author}</p>
+              <p className="text-[10px] text-white/70 mt-1 line-clamp-1">{author}</p>
             )}
           </div>
           

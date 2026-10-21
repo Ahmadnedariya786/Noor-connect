@@ -191,26 +191,30 @@ export default function QisasHome() {
               </div>
 
               <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-                {metadata?.title}
+                {metadata?.title || "Stories of the Prophets"}
               </h2>
               <p className="font-arabic text-2xl text-[var(--text-secondary)] mb-4" dir="rtl">
-                {metadata?.arabicTitle}
+                {metadata?.arabicTitle || "قصص الأنبياء"}
               </p>
 
-              <div className="flex items-center gap-4 mb-4">
-                <span className="text-[var(--text-secondary)] text-sm">{metadata?.author}</span>
-                <span className="text-muted-foreground text-sm">•</span>
-                <span className="text-[var(--text-secondary)] text-sm">{metadata?.arabicAuthor}</span>
-              </div>
+              {(metadata?.author || metadata?.arabicAuthor) && (
+                <div className="flex items-center gap-4 mb-4">
+                  {metadata?.author && <span className="text-[var(--text-secondary)] text-sm">{metadata.author}</span>}
+                  {metadata?.author && metadata?.arabicAuthor && <span className="text-muted-foreground text-sm">•</span>}
+                  {metadata?.arabicAuthor && <span className="text-[var(--text-secondary)] text-sm">{metadata.arabicAuthor}</span>}
+                </div>
+              )}
 
-              <p className="text-[var(--text-secondary)] text-sm mb-6">{metadata?.description}</p>
+              <p className="text-[var(--text-secondary)] text-sm mb-6">
+                {metadata?.description || "Stories of the Prophets from Adam to Isa (peace be upon them all)."}
+              </p>
 
               <div className="flex items-center gap-4">
                 <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
-                  {metadata?.totalProphets} {t("qisasProphets")}
+                  {metadata?.totalProphets || prophets.length || 24} {t("qisasProphets")}
                 </Badge>
                 <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
-                  {metadata?.language}
+                  {metadata?.language || "en"}
                 </Badge>
               </div>
             </div>
@@ -267,7 +271,7 @@ export default function QisasHome() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-[var(--accent)]">
-                  {metadata?.totalProphets}
+                  {metadata?.totalProphets || prophets.length || 24}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {t("qisasProphets")}

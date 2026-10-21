@@ -1,10 +1,23 @@
+import { useEffect } from 'react';
 import IslamicStreamPlayer from '@/components/IslamicStreamPlayer';
 import { Radio, Wifi, Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useGlobalQuran } from '@/lib/global-quran';
+import { useGlobalNasheed } from '@/lib/global-nasheed';
+import { useGlobalRadio } from '@/lib/global-radio';
 
 export default function LiveStreams() {
   const navigate = useNavigate();
+  const { isPlaying: isQuranPlaying, pause: pauseQuran } = useGlobalQuran();
+  const { isPlaying: isNasheedPlaying, pause: pauseNasheed } = useGlobalNasheed();
+  const { isPlaying: isRadioPlaying, stopRadio } = useGlobalRadio();
+
+  useEffect(() => {
+    if (isQuranPlaying) pauseQuran();
+    if (isNasheedPlaying) pauseNasheed();
+    if (isRadioPlaying) stopRadio();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background safe-top">

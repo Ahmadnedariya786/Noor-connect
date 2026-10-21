@@ -75,12 +75,16 @@ export function LivesDisplay({ onRefill, showRefillButton = true }: LivesDisplay
         {lives}/{maxLives}
       </span>
 
-      {/* Regeneration Timer */}
-      {lives < maxLives && (
+      {/* Regeneration Timer or Full Status Badge */}
+      {lives < maxLives ? (
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Clock className="w-3 h-3" />
           <span>{timeUntilNext}</span>
         </div>
+      ) : (
+        <span className="text-[11px] font-bold text-[var(--accent-text)] bg-[var(--surface-2)] border border-[var(--border)] px-2.5 py-0.5 rounded-full whitespace-nowrap">
+          {lives}/{maxLives} Full • Ready to Play
+        </span>
       )}
 
       {/* Refill Button */}

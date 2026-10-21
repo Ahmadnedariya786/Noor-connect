@@ -43,19 +43,12 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
   return (
     <div className="active:scale-[0.99] transition-transform duration-100">
       <Card className={`p-5 relative overflow-hidden border-border/40 shadow-sm ${isDuaOfDay ? 'border-[#C9860A]/30 bg-gradient-to-br from-[#C9860A]/5 to-transparent' : 'bg-card'}`}>
-        {isDuaOfDay && (
-          <div className="absolute top-3 right-3">
-            <Badge className="bg-[#C9860A] text-white text-xs font-bold uppercase tracking-[0.2em] gap-1 px-2 py-0.5">
-              <Sparkles className="w-3 h-3" />
-              Dua of the Day
-            </Badge>
-          </div>
-        )}
         <div className="space-y-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {isDuaOfDay && <Star className="w-3 h-3 text-[#C9860A] fill-[#C9860A]" />}
-              <span className="px-2 py-0.5 bg-[#C9860A]/10 text-[#C9860A] text-xs font-bold uppercase tracking-[0.2em] rounded-full">
+          {/* Header Row: Category on left, Dua of the Day badge on right (zero overlap) */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {isDuaOfDay && <Star className="w-3.5 h-3.5 text-[#C9860A] fill-[#C9860A]" />}
+              <span className="px-2.5 py-0.5 bg-[#C9860A]/10 text-[#C9860A] text-xs font-bold uppercase tracking-[0.2em] rounded-full">
                 {dua.category}
               </span>
               {dua.repeatCount && (
@@ -65,17 +58,25 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
                 </Badge>
               )}
             </div>
-            <div className="flex gap-0.5">
-              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-[#C9860A]/10" onClick={() => playAudio(dua.arabic)}>
-                <Volume2 className={`w-4 h-4 ${isPlaying ? 'text-[#C9860A]' : 'text-muted-foreground'}`} />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10" onClick={() => onToggleFavorite(dua.id)}>
-                <Heart className={`w-4 h-4 ${isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShare(dua)}>
-                <Share2 className="w-4 h-4" />
-              </Button>
-            </div>
+
+            {isDuaOfDay && (
+              <Badge className="bg-[#C9860A] text-white text-xs font-bold uppercase tracking-[0.2em] gap-1 px-2.5 py-0.5 shadow-sm">
+                <Sparkles className="w-3 h-3" />
+                ✦ DUA OF THE DAY
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-[#C9860A]/10" onClick={() => playAudio(dua.arabic)}>
+              <Volume2 className={`w-4 h-4 ${isPlaying ? 'text-[#C9860A]' : 'text-muted-foreground'}`} />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10" onClick={() => onToggleFavorite(dua.id)}>
+              <Heart className={`w-4 h-4 ${isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShare(dua)}>
+              <Share2 className="w-4 h-4" />
+            </Button>
           </div>
           <p className="text-2xl font-arabic font-bold text-foreground text-right leading-[2] tracking-wide mt-2">{dua.arabic}</p>
           <p className="text-base font-serif italic text-[#C9860A] leading-relaxed">{dua.transliteration}</p>

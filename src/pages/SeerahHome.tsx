@@ -147,26 +147,30 @@ export default function SeerahHome() {
               </div>
 
               <h2 className="text-3xl font-bold text-white mb-2">
-                {metadata?.title}
+                {metadata?.title || "Ar-Raheeq Al-Makhtum (The Sealed Nectar)"}
               </h2>
               <p className="font-arabic text-2xl text-white/90 mb-4" dir="rtl">
-                {metadata?.arabicTitle}
+                {metadata?.arabicTitle || "الرحيق المختوم"}
               </p>
 
-              <div className="flex items-center gap-4 mb-4">
-                <span className="text-white/60 text-sm">{metadata?.author}</span>
-                <span className="text-white/40 text-sm">•</span>
-                <span className="text-white/60 text-sm">{metadata?.arabicAuthor}</span>
-              </div>
+              {(metadata?.author || metadata?.arabicAuthor) && (
+                <div className="flex items-center gap-4 mb-4">
+                  {metadata?.author && <span className="text-white/60 text-sm">{metadata.author}</span>}
+                  {metadata?.author && metadata?.arabicAuthor && <span className="text-white/40 text-sm">•</span>}
+                  {metadata?.arabicAuthor && <span className="text-white/60 text-sm">{metadata.arabicAuthor}</span>}
+                </div>
+              )}
 
-              <p className="text-white/70 text-sm mb-6">{metadata?.description}</p>
+              <p className="text-white/70 text-sm mb-6">
+                {metadata?.description || "A comprehensive biography of Prophet Muhammad (peace be upon him)."}
+              </p>
 
               <div className="flex items-center gap-4">
                 <Badge className="bg-blue-950/40 text-blue-200 border border-blue-500/30">
-                  {metadata?.totalChapters} {t("seerahChapters")}
+                  {metadata?.totalChapters || chapters.length || 17} {t("seerahChapters")}
                 </Badge>
                 <Badge className="bg-blue-950/40 text-blue-200 border border-blue-500/30">
-                  {metadata?.language}
+                  {metadata?.language || "en"}
                 </Badge>
               </div>
             </div>
@@ -261,7 +265,7 @@ export default function SeerahHome() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-[#D4AF37]">
-                  {metadata?.totalChapters}
+                  {metadata?.totalChapters || chapters.length || 17}
                 </div>
                 <div className="text-sm text-muted-foreground">{t("seerahChapters")}</div>
               </div>

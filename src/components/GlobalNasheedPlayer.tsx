@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { Pause, Play, X, Music, ChevronDown, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Wifi, WifiOff } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -87,9 +88,25 @@ export function GlobalNasheedPlayer() {
     const [seekValue, setSeekValue] = useState(0);
 
     useEffect(() => {
+        if (!seekDraggingRef.current) {
+            setSeekValue(progress);
+        }
+    }, [progress]);
+
+    const location = useLocation();
+    const isLiveRoute = location.pathname.startsWith('/live');
+
+    useEffect(() => {
         setGlobalNasheedAudioRef(audioRef.current);
         return () => setGlobalNasheedAudioRef(null);
     }, []);
+
+    // Auto-pause when navigating to Live Mecca
+    useEffect(() => {
+        if (isLiveRoute && isPlaying) {
+            pause();
+        }
+    }, [isLiveRoute, isPlaying, pause]);
 
     // ── Cancel any pending retry ───────────────────────────────────────────
     const cancelRetry = useCallback(() => {
@@ -358,7 +375,7 @@ export function GlobalNasheedPlayer() {
         };
     }, [currentTrack]);
 
-    if (!currentTrack) return <audio ref={audioRef} preload="none" />;
+    if (!currentTrack || isLiveRoute) return <audio ref={audioRef} preload="none" />;
 
     const togglePlayback = () => {
         if (isTransitioningRef.current) return; // debounce rapid taps

@@ -186,9 +186,13 @@ export default function PrayerStats() {
                   <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
+                      backgroundColor: 'var(--surface-2)',
+                      border: '1px solid var(--accent)',
+                      borderRadius: '10px',
+                      color: 'var(--text-primary)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                    }}
+                    itemStyle={{
                       color: 'var(--text-primary)',
                     }}
                   />

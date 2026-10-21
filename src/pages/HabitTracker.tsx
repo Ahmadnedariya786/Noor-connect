@@ -12,7 +12,12 @@ import {
   Sparkles,
   CalendarDays,
   TrendingUp,
-  Target
+  Target,
+  BookOpen,
+  Landmark,
+  Heart,
+  Moon,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -279,16 +284,23 @@ const Heatmap = memo(function Heatmap({ cells, monthLabels, onSelect }: HeatmapP
   const cols = cells.length / 7;
   return (
     <Card className="p-4 border-border/40">
-      <h3 className="text-sm font-semibold flex items-center gap-2 mb-1">
+      <h3 className="text-sm font-semibold flex items-center gap-2 mb-2">
         <CalendarDays className="w-4 h-4 text-[#C9860A]" />
         Consistency
       </h3>
-      <div className="grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-        {Array.from({ length: cols }, (_, i) => (
-          <div key={i} className="h-3 text-[8px] leading-3 text-muted-foreground truncate px-[1px]">
-            {monthLabels.find(m => m.col === i)?.label ?? ""}
-          </div>
-        ))}
+      <div className="relative h-4 mb-1 overflow-hidden">
+        {monthLabels.map((m, idx) => {
+          const leftPercent = (m.col / cols) * 100;
+          return (
+            <span
+              key={idx}
+              className="absolute text-[9px] font-semibold text-muted-foreground whitespace-nowrap"
+              style={{ left: `${leftPercent}%` }}
+            >
+              {m.label}
+            </span>
+          );
+        })}
       </div>
       <div className="grid gap-[2px] mt-1" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridAutoRows: "minmax(0, 1fr)" }}>
         {cells.map(cell => (
@@ -392,6 +404,23 @@ interface HabitRowProps {
   onRemove: (habit: Habit) => void;
 }
 
+const getHabitVectorIcon = (category: string) => {
+  switch (category) {
+    case 'quran':
+      return <BookOpen className="w-5 h-5 text-primary" />;
+    case 'prayer':
+      return <Landmark className="w-5 h-5 text-blue-500" />;
+    case 'dhikr':
+      return <Sparkles className="w-5 h-5 text-violet-500" />;
+    case 'charity':
+      return <Heart className="w-5 h-5 text-pink-500" />;
+    case 'fasting':
+      return <Moon className="w-5 h-5 text-orange-500" />;
+    default:
+      return <Star className="w-5 h-5 text-amber-500" />;
+  }
+};
+
 const HabitRow = memo(function HabitRow({
   habit,
   done,
@@ -412,8 +441,8 @@ const HabitRow = memo(function HabitRow({
       style={done ? { backgroundColor: `rgba(${GOLD},0.04)` } : undefined}
     >
       <div className="p-3.5 flex items-center gap-3">
-        <div className={cn("w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0", meta.soft)}>
-          {habit.icon}
+        <div className={cn("w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border border-border/40", meta.soft)}>
+          {getHabitVectorIcon(habit.category)}
         </div>
 
         <div className="flex-1 min-w-0">

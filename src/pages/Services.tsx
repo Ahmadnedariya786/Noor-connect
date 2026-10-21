@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
@@ -6,9 +7,9 @@ import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { useSettings } from "@/contexts/SettingsContext";
 import { shouldShowMenstrualFeatures } from "@/lib/gender-settings";
 import {
-    MessageCircle, Radio, Target, Heart, Calculator,
+    Radio, Target, Heart, Calculator,
     Star, Trophy, Coins, Calendar, Library, Tv, Sparkles, HeartHandshake, BookOpen, BookText, Moon, Headphones,
-    CheckCircle, AlertTriangle, RotateCcw, Users, HeartPulse, Music
+    CheckCircle, AlertTriangle, Users, HeartPulse, Music, Search, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,6 +18,7 @@ export default function Services() {
     const navigate = useNavigate();
     const { isEidAlFitr, isEidAlAdha, islamicInfo, isLoading } = useIslamicCalendar();
     const { animationEnabled } = useSettings();
+    const [searchQuery, setSearchQuery] = useState("");
 
     const shouldShowFitranaCalculator = (() => {
         if (isLoading || !islamicInfo) return false;
@@ -42,120 +44,195 @@ export default function Services() {
     const showNoorCycle = shouldShowMenstrualFeatures();
 
     const baseServices = [
-        { title: "Salah Tracker", path: "/prayer-stats", icon: CheckCircle, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Qaza Tracker", path: "/qaza", icon: AlertTriangle, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        { title: "Quran Audio", path: "/quran-audio", icon: Headphones, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Nasheeds", path: "/nasheeds", icon: Music, gradient: 'from-[var(--accent)] to-[var(--accent-2)]' },
-        { title: "Live Mecca", path: "/live", icon: Tv, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        { title: "Hadith", path: "/hadith/collections", icon: BookText, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: t('seerah'), path: "/seerah", icon: BookOpen, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        { title: t('qisas'), path: "/qisas", icon: Users, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Radio", path: "/quran-radio", icon: Radio, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        { title: "Habits", path: "/habit-tracker", icon: Target, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Duas", path: "/duas", icon: Heart, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        ...(showNoorCycle ? [{ title: "Noor Cycle", path: "/noor-cycle", icon: HeartPulse as React.ComponentType<any>, gradient: 'from-[#e11d48] to-[#be123c]' as const }] : []),
-        { title: "Remedies", path: "/islamic-remedies", icon: HeartHandshake, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: t('tasbih') || "Tasbih", path: "/tasbeeh", icon: Calculator, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        { title: "Names", path: "/names-of-allah", icon: Star, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Quiz", path: "/quiz", icon: Trophy, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        { title: "Zakat", path: "/zakat", icon: Coins, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Calendar", path: "/calendar", icon: Calendar, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
-        { title: "E-Books", path: "/ebooks", icon: Library, gradient: 'from-[#C9860A] to-[#E8A020]' },
-        { title: "Tafsir", path: "/tafsir", icon: BookOpen, gradient: 'from-[#3B82F6] to-[#1D4ED8]' },
+        { title: "Salah Tracker", subtitle: "30-day analytics & streaks", path: "/prayer-stats", icon: CheckCircle },
+        { title: "Qaza Tracker", subtitle: "Missed prayer makeup plan", path: "/qaza", icon: AlertTriangle },
+        { title: "Quran Audio", subtitle: "289 reciters & HD streaming", path: "/quran-audio", icon: Headphones },
+        { title: "Nasheeds", subtitle: "400 vocals-only tracks", path: "/nasheeds", icon: Music },
+        { title: "Live Mecca", subtitle: "24/7 Makkah & Madinah HD", path: "/live", icon: Tv },
+        { title: "Hadith", subtitle: "16 authentic collections", path: "/hadith/collections", icon: BookText },
+        { title: t('seerah') || "Seerah", subtitle: "Prophetic biography timeline", path: "/seerah", icon: BookOpen },
+        { title: t('qisas') || "Prophets", subtitle: "25 Quranic prophet stories", path: "/qisas", icon: Users },
+        { title: "Radio", subtitle: "24/7 live Quran stations", path: "/quran-radio", icon: Radio },
+        { title: "Habits", subtitle: "Daily Sunnah deed tracker", path: "/habit-tracker", icon: Target },
+        { title: "Duas", subtitle: "80 authentic supplications", path: "/duas", icon: Heart },
+        ...(showNoorCycle ? [{ title: "Noor Cycle", subtitle: "Menstrual & worship guidance", path: "/noor-cycle", icon: HeartPulse as React.ComponentType<any> }] : []),
+        { title: "Remedies", subtitle: "Mood-based Quranic healing", path: "/islamic-remedies", icon: HeartHandshake },
+        { title: t('tasbih') || "Tasbih", subtitle: "Tactile dhikr counter", path: "/tasbeeh", icon: Calculator },
+        { title: "Names", subtitle: "99 Asma'ul Husna", path: "/names-of-allah", icon: Star },
+        { title: "Quiz", subtitle: "Interactive Islamic trivia", path: "/quiz", icon: Trophy },
+        { title: "Zakat", subtitle: "Nisab & wealth calculator", path: "/zakat", icon: Coins },
+        { title: "Calendar", subtitle: "Hijri dates & events", path: "/calendar", icon: Calendar },
+        { title: "E-Books", subtitle: "Islamic literature library", path: "/ebooks", icon: Library },
+        { title: "Tafsir", subtitle: "Verse-by-verse commentary", path: "/tafsir", icon: BookOpen },
     ];
 
     const conditionalServices = [];
     if (shouldShowFitranaCalculator) {
         conditionalServices.push(
-            { title: "Fitrana Calc", path: "/fitrana-calculator", icon: Calculator, gradient: 'from-[#C9860A] to-[#E8A020]' }
+            { title: "Fitrana Calc", subtitle: "Ramadan charity calculation", path: "/fitrana-calculator", icon: Calculator }
         );
     }
     if (shouldShowEidChecklist) {
         conditionalServices.push(
-            { title: "Eid Checklist", path: "/eid-checklist", icon: Moon, gradient: 'from-[#3B82F6] to-[#1D4ED8]' }
+            { title: "Eid Checklist", subtitle: "Sunnahs & preparation guide", path: "/eid-checklist", icon: Moon }
         );
     }
 
-    const services = [
+    const allServices = [
         ...baseServices.slice(0, 6),
         ...conditionalServices,
         ...baseServices.slice(6)
     ];
 
+    const filteredServices = useMemo(() => {
+        if (!searchQuery.trim()) return allServices;
+        const q = searchQuery.toLowerCase().trim();
+        return allServices.filter(s =>
+            s.title.toLowerCase().includes(q) || s.subtitle.toLowerCase().includes(q)
+        );
+    }, [allServices, searchQuery]);
+
     const motionProps = (props: any) => animationEnabled ? props : {};
 
     return (
         <PageTransition>
-            <div className="min-h-screen bg-[var(--bg-base)] pb-32 transition-colors duration-300">
-                <AppBar title={t("services") || "Services"} showBack={true} />
+            <div className="min-h-screen bg-[var(--bg-base)] pb-36 transition-colors duration-300">
+                {/* No back button on root bottom-nav tab */}
+                <AppBar title={t("services") || "Services"} showBack={false} />
 
                 {/* Premium Featured Header Card */}
-                <div className="px-4 sm:px-5 pt-4 mb-6 sm:mb-8">
+                <div className="px-4 sm:px-5 pt-4 mb-4">
                     <motion.div 
                         {...motionProps({
-                            initial: { opacity: 0, scale: 0.95 },
+                            initial: { opacity: 0, scale: 0.96 },
                             animate: { opacity: 1, scale: 1 },
-                            transition: { duration: 0.5 }
+                            transition: { duration: 0.4 }
                         })}
-                        className="relative overflow-hidden rounded-[24px] p-6 sm:p-8 shadow-2xl"
-                        style={{ background: 'linear-gradient(145deg, var(--surface), var(--surface-2))', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
+                        className="relative overflow-hidden rounded-[26px] p-6 sm:p-7 shadow-xl"
+                        style={{
+                            background: 'linear-gradient(145deg, var(--surface), var(--surface-2))',
+                            border: '1px solid var(--border)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 8px 32px rgba(0,0,0,0.25)'
+                        }}
                     >
                         {/* Elegant Light Gradients */}
-                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[20px] pointer-events-none" style={{ background: 'var(--accent-soft)' }} />
-                        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-[20px] pointer-events-none" style={{ background: 'var(--accent-glow)' }} />
+                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[30px] pointer-events-none" style={{ background: 'var(--accent-soft)' }} />
+                        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-[24px] pointer-events-none" style={{ background: 'var(--accent-glow)' }} />
+
+                        {/* Geometric Watermark Pattern */}
+                        <svg className="absolute -right-6 -bottom-6 w-44 h-44 opacity-[0.06] pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+                            <polygon points="50 0, 61 35, 98 35, 68 57, 79 91, 50 70, 21 91, 32 57, 2 35, 39 35" />
+                        </svg>
                         
                         <div className="relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface-2)] backdrop-blur-md border border-[var(--border)] mb-4">
-                                <Sparkles className="w-4 h-4 text-[var(--accent-text)]" />
-                                <span className="text-[var(--accent-text)] text-xs font-bold uppercase tracking-[0.18em]">Islamic Hub</span>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] backdrop-blur-md border border-[var(--border)] mb-3">
+                                <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                                <span className="text-[var(--accent-text)] text-[11px] font-bold uppercase tracking-[0.18em]">Islamic Hub</span>
                             </div>
-                            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] leading-tight tracking-tight mb-2" style={{ fontFamily: 'inherit', fontStyle: 'italic' }}>
-                                Discover<br/>Resources
+                            <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] leading-tight tracking-tight mb-1.5 font-serif italic">
+                                Discover Resources
                             </h2>
-                            <p className="text-[var(--text-secondary)] text-xs sm:text-sm font-medium max-w-[85%] leading-relaxed">
-                                Essential tools for your spiritual journey.
+                            <p className="text-[var(--text-secondary)] text-xs sm:text-sm font-medium max-w-[90%] leading-relaxed">
+                                Complete spiritual companion tools for prayer, knowledge, and daily Sunnah.
                             </p>
                         </div>
                     </motion.div>
                 </div>
 
-                {/* Premium Services Grid */}
+                {/* Quick-filter search bar */}
+                <div className="px-4 sm:px-5 mb-5">
+                    <div className="relative">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)] pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search 17 Islamic tools..."
+                            className="w-full h-11 pl-10 pr-9 rounded-xl text-xs sm:text-sm font-medium transition-all outline-none"
+                            style={{
+                                background: 'var(--surface)',
+                                border: '1px solid var(--border)',
+                                color: 'var(--text-primary)',
+                                boxShadow: 'inset 0 1px 0 var(--card-sheen)'
+                            }}
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Premium Categorized Bento Grid */}
                 <div className="px-4 sm:px-5 relative">
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                        <AnimatePresence>
-                            {services.map((item, idx) => (
+                        <AnimatePresence mode="popLayout">
+                            {filteredServices.map((item, idx) => (
                                 <motion.button
-                                    key={idx}
+                                    key={item.path}
                                     {...motionProps({
-                                        initial: { opacity: 0, y: 20 },
+                                        initial: { opacity: 0, y: 16 },
                                         animate: { opacity: 1, y: 0 },
-                                        transition: { delay: idx * 0.05, duration: 0.4 },
-                                        whileTap: { scale: 0.95 }
+                                        exit: { opacity: 0, scale: 0.95 },
+                                        transition: { delay: Math.min(idx * 0.03, 0.3), duration: 0.3 },
+                                        whileTap: { scale: 0.96 }
                                     })}
                                     onClick={() => navigate(item.path, { replace: true })}
-                                    className="group relative flex flex-col items-start p-4 sm:p-5 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] rounded-[20px] overflow-hidden text-left w-full min-w-0 transition-colors shadow-sm"
+                                    className="group relative flex flex-col items-start p-4 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 hover:bg-[var(--surface-2)] rounded-[20px] overflow-hidden text-left w-full min-w-0 transition-all shadow-sm"
+                                    style={{
+                                        boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 4px 16px rgba(0,0,0,0.15)'
+                                    }}
                                 >
-                                    {/* Icon Box with Vibrant Gradient */}
-                                    <div className={`flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-[14px] bg-gradient-to-br ${item.gradient} shadow-sm mb-3 opacity-90 group-hover:opacity-100 transition-opacity shrink-0`}>
-                                        <item.icon className="w-5 h-5 text-white" strokeWidth={2} />
+                                    {/* Refined Tokenized Jewel Icon Badge */}
+                                    <div
+                                        className="flex items-center justify-center rounded-xl mb-3 shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                                        style={{
+                                            background: 'var(--accent-soft)',
+                                            border: '1px solid var(--accent)',
+                                            color: 'var(--accent-text)',
+                                            width: '42px',
+                                            height: '42px'
+                                        }}
+                                    >
+                                        <item.icon className="w-5 h-5" strokeWidth={2} />
                                     </div>
 
                                     {/* Title Container */}
-                                    <h3 className="font-semibold text-xs sm:text-sm text-[var(--text-primary)] leading-snug break-words w-full line-clamp-2">
+                                    <h3 className="font-bold text-xs sm:text-sm text-[var(--text-primary)] leading-snug break-words w-full truncate">
                                         {item.title}
                                     </h3>
+
+                                    {/* Subtitle */}
+                                    <p className="text-[11px] text-[var(--text-secondary)] font-medium leading-tight mt-1 line-clamp-1 w-full">
+                                        {item.subtitle}
+                                    </p>
                                     
-                                    {/* Dynamic Glow Effect */}
-                                    <div className={`absolute -inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-br ${item.gradient} transition-opacity duration-500 pointer-events-none`} />
+                                    {/* Subtle Ambient Sheen */}
+                                    <div
+                                        className="absolute -inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px]"
+                                        style={{
+                                            background: 'radial-gradient(circle at top left, var(--accent-soft) 0%, transparent 70%)'
+                                        }}
+                                    />
                                 </motion.button>
                             ))}
                         </AnimatePresence>
                     </div>
+
+                    {filteredServices.length === 0 && (
+                        <div className="text-center py-12 text-sm text-[var(--text-secondary)]">
+                            No tools match "{searchQuery}". Try a different keyword.
+                        </div>
+                    )}
                 </div>
 
-                <div className="px-8 mt-12 text-center opacity-40 pb-8">
-                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
-                        Noor Connect
+                <div className="px-8 mt-12 text-center opacity-40 pb-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+                        Noor Connect • 17 Spiritual Tools
                     </p>
                 </div>
             </div>

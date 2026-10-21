@@ -5,7 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getSortedStationStats, getTotalListeningTime, resetRadioStats, formatDuration, type StationStats } from '@/lib/radio-stats';
 import { getAllAchievements, getCurrentStreak } from '@/lib/radio-achievements';
-import { useToast } from '@/hooks/use-toast';
+const getAchievementIcon = (id: string) => {
+  switch (id) {
+    case 'first_listen': return <Radio className="w-5 h-5 text-primary" />;
+    case 'hour_listen': return <Clock className="w-5 h-5 text-amber-500" />;
+    case 'ten_hours': return <Target className="w-5 h-5 text-blue-500" />;
+    case 'streak_3':
+    case 'streak_7':
+    case 'streak_30': return <Flame className="w-5 h-5 text-orange-500" />;
+    case 'variety_5':
+    case 'variety_10': return <TrendingUp className="w-5 h-5 text-emerald-500" />;
+    default: return <Trophy className="w-5 h-5 text-primary" />;
+  }
+};
 
 export default function RadioStats() {
   const navigate = useNavigate();
@@ -187,7 +199,9 @@ export default function RadioStats() {
                     : 'bg-muted/30 border-muted/50 opacity-60'
                 }`}
               >
-                <div className="text-2xl mb-1">{achievement.icon}</div>
+                <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  {getAchievementIcon(achievement.id)}
+                </div>
                 <p className="text-xs font-bold text-foreground leading-tight mb-0.5">
                   {achievement.title}
                 </p>

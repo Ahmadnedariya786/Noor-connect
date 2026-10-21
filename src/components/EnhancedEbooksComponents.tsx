@@ -34,6 +34,7 @@ import {
 import ebooksData from "@/data/ebooks-library.json";
 import PdfViewer from "@/components/PdfViewer";
 import { motion, AnimatePresence } from "framer-motion";
+import { getBookCategoryVectorIcon } from "@/components/ebooks/BookCover";
 
 // --- Types ---
 interface LibraryBook {
@@ -147,27 +148,35 @@ const EnhancedBookCover = memo(({
         <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-r from-white/20 to-transparent" />
         
         {/* Content */}
-        <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
+        <div className="absolute inset-0 p-3 flex flex-col justify-between text-white overflow-hidden">
           {/* Top: Category and size */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-center justify-between gap-1 w-full min-w-0">
             <Badge 
               variant="secondary" 
-              className="bg-white/10 backdrop-blur-sm border-0 text-xs text-white/90 font-medium px-2 py-1"
+              className="bg-white/15 backdrop-blur-sm border-0 text-[10px] text-white/95 font-medium px-1.5 py-0.5 flex items-center gap-1 shrink truncate max-w-[55%]"
             >
-              <span className="mr-1">{theme.icon}</span>
-              {category}
+              {getBookCategoryVectorIcon(category, "w-3 h-3 shrink-0")}
+              <span className="truncate">{category}</span>
             </Badge>
             {size && (
-              <span className="text-xs text-white/60 bg-black/20 px-2 py-1 rounded-full">
+              <span 
+                className="text-white/85 bg-black/40 rounded font-semibold truncate shrink-0"
+                style={{
+                  fontSize: '0.65rem',
+                  padding: '2px 6px',
+                  maxWidth: '45%',
+                  lineHeight: '1',
+                }}
+              >
                 {formatFileSize(parseInt(size))}
               </span>
             )}
           </div>
           
           {/* Center: Icon and title */}
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-2">
-            <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-3">
-              <span className="text-3xl">{theme.icon}</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-1 my-1">
+            <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-2 shadow-sm">
+              {getBookCategoryVectorIcon(category, "w-6 h-6 text-white/90")}
             </div>
             <h3 className="text-[12px] font-semibold leading-tight line-clamp-3 drop-shadow-sm">
               {clean}

@@ -128,7 +128,14 @@ export default function ZakatCalculator() {
   const [metalPrices, setMetalPrices] = useState<MetalPrices | null>(null);
   const [isLoadingPrices, setIsLoadingPrices] = useState(true);
   const [priceError, setPriceError] = useState<string | null>(null);
-  const [currency, setCurrency] = useState(() => localStorage.getItem('preferred-currency') || 'USD');
+  const [currency, setCurrency] = useState(() => {
+    try {
+      return localStorage.getItem('preferred-currency') || 'USD';
+    } catch {
+      // localStorage unavailable
+      return 'USD';
+    }
+  });
   const [nisabStandard, setNisabStandard] = useState<'classical' | 'common'>('classical');
   const [exchangeRateData, setExchangeRateData] = useState<{ rate: number; lastUpdated: string; source: string } | null>(null);
   const [goldCalculator, setGoldCalculator] = useState<GoldCalculator>({
@@ -143,13 +150,26 @@ export default function ZakatCalculator() {
     unit: 'grams'
   });
 
+  const handleCurrencyChange = (newCurr: string) => {
+    setCurrency(newCurr);
+    try {
+      localStorage.setItem('preferred-currency', newCurr);
+    } catch {
+      // ignore
+    }
+  };
+
   // Load metal prices on component mount
   useEffect(() => {
     loadMetalPrices();
-    loadExchangeRate();
     // Setup online listeners
     ExchangeRateFallbackService.setupOnlineListeners();
   }, []);
+
+  // Reload exchange rate when currency changes
+  useEffect(() => {
+    loadExchangeRate();
+  }, [currency]);
 
   const loadExchangeRate = async () => {
     if (currency === 'USD') {
@@ -421,8 +441,8 @@ export default function ZakatCalculator() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs">Select currency</Label>
-                <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger>
+                <Select value={currency} onValueChange={handleCurrencyChange}>
+                  <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -441,7 +461,7 @@ export default function ZakatCalculator() {
               <div className="space-y-2">
                 <Label className="text-xs">Nisab Calculation Standard</Label>
                 <Select value={nisabStandard} onValueChange={(value: 'classical' | 'common') => setNisabStandard(value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full text-xs sm:text-sm h-11 px-3.5 rounded-xl [&>span]:truncate">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

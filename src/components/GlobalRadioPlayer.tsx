@@ -1,4 +1,5 @@
-﻿import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Play, Pause, Volume2, VolumeX, Radio, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -60,10 +61,21 @@ export function GlobalRadioPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const globalRadio = useGlobalRadio();
+  const location = useLocation();
+  const isLiveRoute = location.pathname.startsWith('/live');
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 2;
+
+  // Auto-pause radio when navigating to Live Mecca
+  useEffect(() => {
+    if (isLiveRoute && globalRadio.isPlaying) {
+      if (audioRef.current) audioRef.current.pause();
+      globalRadio.stopRadio();
+      setIsVisible(false);
+    }
+  }, [isLiveRoute, globalRadio.isPlaying]);
 
   // Protection refs
   const playPromiseRef = useRef<Promise<void> | null>(null);
@@ -544,8 +556,8 @@ export function GlobalRadioPlayer() {
         }}
       />
 
-      {/* Mini Player UI - only shown when visible and station selected */}
-      {globalRadio?.currentStation && isVisible && (
+      {/* Mini Player UI - only shown when visible and station selected, hidden on Live route */}
+      {globalRadio?.currentStation && isVisible && !isLiveRoute && (
         <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
           <Card className="max-w-lg mx-auto shadow-2xl bg-card border-border border shadow-primary/10 overflow-hidden animate-in slide-in-from-bottom duration-300">
             <div className="p-3">

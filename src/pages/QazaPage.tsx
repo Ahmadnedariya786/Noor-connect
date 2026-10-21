@@ -149,7 +149,7 @@ export default function QazaPage() {
             <div className="text-xs text-muted-foreground">Today</div>
           </Card>
           <Card className="p-3 text-center">
-            <div className="text-2xl font-bold text-blue-500">{weeklyTotal}</div>
+            <div className="text-2xl font-bold text-[var(--accent-text)]">{weeklyTotal}</div>
             <div className="text-xs text-muted-foreground">This Week</div>
           </Card>
         </div>
@@ -158,8 +158,8 @@ export default function QazaPage() {
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" />
-              <span className="font-medium">Daily Goal</span>
+              <Target className="w-5 h-5 text-[var(--accent)]" />
+              <span className="font-medium text-[var(--text-primary)]">Daily Goal</span>
             </div>
             <div className="flex items-center gap-2">
               <Button 
@@ -170,7 +170,7 @@ export default function QazaPage() {
               >
                 <Minus className="w-4 h-4" />
               </Button>
-              <span className="w-8 text-center font-bold">{dailyGoal}</span>
+              <span className="w-8 text-center font-bold text-[var(--text-primary)]">{dailyGoal}</span>
               <Button 
                 variant="outline" 
                 size="icon" 
@@ -181,7 +181,15 @@ export default function QazaPage() {
               </Button>
             </div>
           </div>
-          <Progress value={goalProgress} className="h-2" />
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)] border border-[var(--border)]">
+            <div 
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${Math.min(100, goalProgress)}%`,
+                background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+              }}
+            />
+          </div>
           <p className="text-xs text-muted-foreground text-center">
             {todayCompleted} of {dailyGoal} prayers made up today
           </p>

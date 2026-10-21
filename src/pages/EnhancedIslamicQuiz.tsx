@@ -36,7 +36,13 @@ import {
   Heart,
   Package,
   Gift as GiftIcon,
-  ArrowLeft
+  ArrowLeft,
+  Landmark,
+  BookOpen,
+  Users,
+  Compass,
+  BookText,
+  SkipForward
 } from 'lucide-react';
 import { quizManager } from '@/lib/quiz-manager';
 import { quizStore } from '@/lib/quiz-store';
@@ -65,6 +71,34 @@ import {
   type PowerUp 
 } from '@/data/enhanced-quiz-data';
 import { ComboState, QuizSession } from '@/data/quiz-store-data';
+
+const getCategoryVectorIcon = (id: string) => {
+  switch (id) {
+    case 'pillars': return <Landmark className="w-4 h-4 text-emerald-500" />;
+    case 'quran': return <BookOpen className="w-4 h-4 text-blue-500" />;
+    case 'prophets': return <Users className="w-4 h-4 text-purple-500" />;
+    case 'prayer': return <Sparkles className="w-4 h-4 text-amber-500" />;
+    case 'ramadan': return <Sparkles className="w-4 h-4 text-indigo-500" />;
+    case 'history': return <Compass className="w-4 h-4 text-rose-500" />;
+    case 'hadith': return <BookText className="w-4 h-4 text-cyan-500" />;
+    default: return <Sparkles className="w-4 h-4 text-primary" />;
+  }
+};
+
+const getPowerUpVectorIcon = (id: string) => {
+  switch (id) {
+    case 'fifty_fifty':
+      return <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] leading-none">50:50</span>;
+    case 'extra_time':
+      return <Clock className="w-4 h-4 text-emerald-500" />;
+    case 'skip':
+      return <SkipForward className="w-4 h-4 text-blue-500" />;
+    case 'freeze_time':
+      return <Zap className="w-4 h-4 text-amber-500" />;
+    default:
+      return <Zap className="w-4 h-4 text-primary" />;
+  }
+};
 
 interface GameState {
   questions: QuizQuestion[];
@@ -808,8 +842,7 @@ function QuizMenu({
           }}
         />
         
-        {/* Floating Notification */}
-        <FloatingNotification onClick={() => onSelectMode()} />
+        {/* Floating banner removed to eliminate overlap with topic buttons and start CTA */}
         
         {/* Motivation Toast */}
         <MotivationToast />
@@ -898,7 +931,7 @@ function QuizMenu({
                     )}
                     className="w-full justify-start"
                   >
-                    <span className="mr-2">{category.icon}</span>
+                    <span className="mr-2.5 flex items-center">{getCategoryVectorIcon(category.id)}</span>
                     <span>{category.name}</span>
                     {isSelected && <Check className="w-4 h-4 ml-auto" />}
                     {!isSelected && stats?.categoryMastery[category.id] && (
@@ -956,8 +989,8 @@ function QuizMenu({
               {powerUps.map(powerUp => (
                 <div key={powerUp.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span>{powerUp.icon}</span>
-                    <span className="text-sm">{powerUp.name}</span>
+                    <span className="flex items-center">{getPowerUpVectorIcon(powerUp.id)}</span>
+                    <span className="text-sm font-medium">{powerUp.name}</span>
                   </div>
                   <Badge variant={powerUp.uses > 0 ? "default" : "secondary"}>
                     {powerUp.uses}/{powerUp.maxUses}

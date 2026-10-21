@@ -278,12 +278,16 @@ export default function QuranAudio() {
   const surahs = useMemo(() => quranService.getAllSurahs(), []);
   const reciterId = reciter?.id ?? null;
 
-  // Default reciter: saved → Mishary → first (mirrors GlobalQuranPlayer)
+  // Default reciter: saved → Mishary (full 114) → full reciter → first
   useEffect(() => {
     if (!reciters.length || reciter) return;
+    const isFull = (r: any) => !r.surahList || r.surahList.length === 0 || r.surahList.length >= 114;
     const savedId = localStorage.getItem(RECITER_STORAGE_KEY);
     const saved = savedId ? reciters.find((r) => r.id === savedId) : null;
-    const def = saved || reciters.find((r) => r.name.includes("Mishary")) || reciters[0];
+    const def = (saved && isFull(saved) ? saved : null)
+      || reciters.find((r) => r.name.includes("Mishary") && isFull(r))
+      || reciters.find(isFull)
+      || reciters[0];
     if (def) updateState({ reciter: def });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run when reciters/reciter resolve
   }, [reciters, reciter]);
@@ -534,7 +538,7 @@ export default function QuranAudio() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search surah by name or number…"
+                placeholder="Search by name or number..."
                 aria-label="Search surah by name or number"
                 className="ps-11 pe-10 h-11 rounded-xl transition-all shadow-sm border"
                 style={{
