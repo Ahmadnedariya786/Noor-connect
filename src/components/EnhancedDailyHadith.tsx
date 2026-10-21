@@ -374,12 +374,20 @@ export function EnhancedDailyHadith() {
       <CardContent className="p-4 sm:p-[18px] space-y-4 relative z-10">
         {/* Header Section & Action Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="p-2.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] text-[var(--accent-text)] shadow-xs shrink-0">
               <MessageCircle className="w-5 h-5 text-[var(--accent)]" />
             </div>
-            <div className="min-w-0 flex-1 space-y-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                minWidth: 0,
+                flex: 1,
+              }}
+            >
+              <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[var(--accent)]">
                   Daily Wisdom
                 </span>
@@ -393,15 +401,29 @@ export function EnhancedDailyHadith() {
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-[var(--text-primary)] text-sm sm:text-base leading-snug">
-                  Daily Hadith
-                </h3>
-                <span className="text-[var(--text-secondary)]/60 text-xs">•</span>
-                <span className="text-xs text-[var(--text-secondary)] font-medium truncate">
-                  {isCategoryValid ? hadith.category : (hadith.source || "Prophetic Tradition")}
-                </span>
-              </div>
+              <h3
+                style={{
+                  fontSize: '1.08rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  color: 'var(--text-primary)',
+                  lineHeight: 1.25,
+                }}
+              >
+                Daily Hadith
+              </h3>
+              <span
+                style={{
+                  fontSize: '0.76rem',
+                  color: 'var(--text-secondary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1.2,
+                }}
+              >
+                {isCategoryValid ? hadith.category : (hadith.source || "Prophetic Tradition")}
+              </span>
             </div>
           </div>
           

@@ -193,15 +193,17 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={() => navigate('/quran', { replace: true })}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-xs font-bold text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors shrink-0 select-none"
+              className="flex items-center gap-1 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] font-bold text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors shrink-0 select-none"
+              style={{ padding: '5px 8px', fontSize: '0.72rem' }}
             >
-              <ChevronLeft className="w-4 h-4 text-[var(--accent-text)]" />
+              <ChevronLeft className="w-3.5 h-3.5 text-[var(--accent-text)]" />
               <span>Quran</span>
             </button>
 
             {/* Center: Arabic Surah Title + English Surah Name + Subtitle */}
             <div
-              className="text-center min-w-0 flex-1 px-1 cursor-pointer select-none"
+              className="cursor-pointer select-none"
+              style={{ flex: 1, minWidth: 0, textAlign: 'center', padding: '0 4px' }}
               onClick={() => navigate('/quran', { replace: true })}
               title="Return to Quran index"
             >
@@ -211,7 +213,10 @@ export default function QuranReader() {
               <p className="text-xs font-bold text-[var(--text-primary)] truncate">
                 {surahInfo?.englishName}
               </p>
-              <p className="text-[10px] text-[var(--text-secondary)] font-medium truncate">
+              <p
+                className="text-[var(--text-secondary)] font-medium"
+                style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', lineHeight: 1.2 }}
+              >
                 Surah #{surahNum} • {totalSurahPages} Pages
               </p>
             </div>
@@ -223,7 +228,8 @@ export default function QuranReader() {
                 onClick={goToPreviousSurah}
                 disabled={surahNum <= 1}
                 title="Previous Surah"
-                className="px-2 py-1.5 rounded-lg text-xs font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
+                className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
+                style={{ padding: '5px 8px', fontSize: '0.72rem' }}
               >
                 ‹ Prev
               </button>
@@ -232,7 +238,8 @@ export default function QuranReader() {
                 onClick={goToNextSurah}
                 disabled={surahNum >= 114}
                 title="Next Surah"
-                className="px-2 py-1.5 rounded-lg text-xs font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
+                className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
+                style={{ padding: '5px 8px', fontSize: '0.72rem' }}
               >
                 Next ›
               </button>
@@ -240,13 +247,14 @@ export default function QuranReader() {
                 type="button"
                 onClick={toggleBookmark}
                 title={isBookmarked ? 'Remove Bookmark' : 'Bookmark Surah'}
-                className={`p-1.5 rounded-lg border transition-all select-none ${
+                className={`rounded-lg border transition-all select-none ${
                   isBookmarked
                     ? 'bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent)] shadow-sm'
                     : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:text-[var(--text-primary)]'
                 }`}
+                style={{ padding: '5px 7px' }}
               >
-                <Star className={`w-4 h-4 ${isBookmarked ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
+                <Star className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
               </button>
             </div>
           </div>

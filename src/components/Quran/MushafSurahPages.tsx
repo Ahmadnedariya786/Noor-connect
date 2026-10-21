@@ -67,21 +67,21 @@ function PageSlot({ page, pageInSurah, totalPages, isNearActive, mushafMode }: P
     mushafMode === 'parchment'
       ? 'sepia(0.22) brightness(0.95) contrast(1.02)'
       : mushafMode === 'night'
-      ? 'invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(1.08)'
+      ? 'invert(1) hue-rotate(180deg) sepia(0.18) brightness(1.18) contrast(1.42)'
       : 'brightness(0.97)';
 
   const containerBorder =
     mushafMode === 'parchment'
       ? '1.5px solid rgba(201, 168, 76, 0.45)'
       : mushafMode === 'night'
-      ? '1.5px solid rgba(16, 85, 60, 0.45)'
+      ? '1px solid var(--accent)'
       : '1.5px solid var(--border)';
 
   const pageBackdrop =
     mushafMode === 'parchment'
       ? '#fcf8ef'
       : mushafMode === 'night'
-      ? '#0d1310'
+      ? '#0B101B'
       : 'var(--surface)';
 
   return (
@@ -98,7 +98,8 @@ function PageSlot({ page, pageInSurah, totalPages, isNearActive, mushafMode }: P
         className="relative w-full flex items-center justify-center overflow-hidden rounded-[12px]"
         style={{
           aspectRatio: '212 / 325',
-          background: mushafMode === 'night' ? '#0d1310' : mushafMode === 'parchment' ? '#fbf6ec' : 'var(--surface-2)',
+          background: mushafMode === 'night' ? '#0B101B' : mushafMode === 'parchment' ? '#fbf6ec' : 'var(--surface-2)',
+          border: mushafMode === 'night' ? '1px solid var(--accent)' : 'none',
         }}
       >
         {!loaded && (

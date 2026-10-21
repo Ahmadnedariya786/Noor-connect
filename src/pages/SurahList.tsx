@@ -298,7 +298,7 @@ export default function SurahList() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]/60 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by Surah name, number, or meaning..."
+              placeholder="Search Surah name or number..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border border-[var(--border)] rounded-[14px] py-3 pl-11 pr-11 text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] transition-colors bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 shadow-sm"
@@ -374,7 +374,7 @@ export default function SurahList() {
                     Surah {lastReadInfo?.englishName || lastRead.name}
                   </h3>
                   <p className="text-[11px] text-[var(--text-secondary)] truncate">
-                    Surah #{lastRead.number}{lastRead.page ? ` • Page ${lastRead.page}` : ''} • Tap to resume
+                    Surah #{lastRead.number}{lastRead.page ? ` • Page ${lastRead.page}` : ''}
                   </p>
                 </div>
               </div>

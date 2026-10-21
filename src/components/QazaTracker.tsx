@@ -92,16 +92,16 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
         <CardHeader className="pb-2 pt-4 px-5">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-secondary)] flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+              <AlertCircle className="w-3.5 h-3.5 text-[var(--accent)]" />
               Qaza Prayers
             </CardTitle>
             {stats.total > 0 ? (
               <span
                 className="text-xs px-2.5 py-1 rounded-full font-bold"
                 style={{
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  color: '#ef4444',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent-text)',
+                  border: '1px solid var(--accent)',
                 }}
               >
                 {stats.total} to make up
@@ -112,7 +112,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                 style={{
                   background: 'var(--accent-soft)',
                   color: 'var(--accent-text)',
-                  border: '1px solid var(--border)',
+                  border: '1px solid var(--accent)',
                 }}
               >
                 0 pending
@@ -140,9 +140,10 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     width: '100%',
                     boxSizing: 'border-box',
                     padding: '10px 2px',
-                    background: 'var(--surface-2)',
-                    border: hasPending ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border)',
-                    boxShadow: hasPending ? '0 4px 12px rgba(239, 68, 68, 0.15)' : 'none',
+                    background: hasPending ? 'var(--accent-soft)' : 'var(--surface-2)',
+                    border: hasPending ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    boxShadow: hasPending ? '0 4px 12px var(--accent-glow)' : 'none',
+                    color: hasPending ? 'var(--accent-text)' : 'var(--success, #10b981)',
                   }}
                 >
                   <button
@@ -151,13 +152,13 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     title={hasPending ? `Mark 1 ${prayer.label} Qaza as prayed` : `All ${prayer.label} prayers completed`}
                     className="w-10 h-10 rounded-full flex flex-col items-center justify-center font-bold text-sm transition-all duration-300 relative group/btn shrink-0"
                     style={hasPending ? {
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      color: '#ef4444',
-                      border: '1.5px solid #ef4444',
-                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.25)',
+                      background: 'var(--surface)',
+                      color: 'var(--accent-text)',
+                      border: '1.5px solid var(--accent)',
+                      boxShadow: '0 0 10px var(--accent-glow)',
                     } : {
                       background: 'var(--surface)',
-                      color: 'var(--text-secondary)',
+                      color: 'var(--success, #10b981)',
                       border: '1px solid var(--border)',
                     }}
                   >
@@ -167,7 +168,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                         <span className="hidden group-hover/btn:inline text-[10px] font-black tracking-tighter leading-none">-1</span>
                       </>
                     ) : (
-                      <Check className="w-4 h-4 stroke-[2.5] text-[var(--accent-text)]" />
+                      <Check className="w-4 h-4 stroke-[2.5] text-[var(--success,#10b981)]" />
                     )}
                   </button>
                   <span
@@ -184,11 +185,11 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     {prayer.label}
                   </span>
                   {hasPending ? (
-                    <span className="text-[9px] text-destructive/80 font-medium tracking-tight">
+                    <span className="text-[9px] text-[var(--text-secondary)] font-medium tracking-tight">
                       tap -1
                     </span>
                   ) : (
-                    <span className="text-[9px] text-[var(--accent-text)] font-medium tracking-tight">
+                    <span className="text-[9px] text-[var(--success,#10b981)] font-medium tracking-tight">
                       done
                     </span>
                   )}
@@ -206,11 +207,11 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-500" />
+            <AlertCircle className="w-5 h-5 text-[var(--accent)]" />
             Qaza Prayer Tracker
           </CardTitle>
           {stats.total > 0 && (
-            <span className="text-sm bg-destructive/10 text-destructive px-3 py-1 rounded-full font-medium">
+            <span className="text-sm bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)] px-3 py-1 rounded-full font-medium">
               Total: {stats.total}
             </span>
           )}
@@ -227,7 +228,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
           >
             <div className="flex items-center gap-3">
               <div className="text-center min-w-[40px]">
-                <span className={`text-xl font-bold ${prayers[prayer.id] > 0 ? 'text-destructive' : 'text-[var(--text-secondary)]'}`}>
+                <span className={`text-xl font-bold ${prayers[prayer.id] > 0 ? 'text-[var(--accent-text)]' : 'text-[var(--text-secondary)]'}`}>
                   {prayers[prayer.id]}
                 </span>
               </div>

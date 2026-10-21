@@ -68,26 +68,26 @@ export default function Services() {
     const showNoorCycle = shouldShowMenstrualFeatures();
 
     const baseServices = [
-        { title: "Salah Tracker", subtitle: "30-day analytics & streaks", path: "/prayer-stats", icon: CheckCircle },
-        { title: "Qaza Tracker", subtitle: "Missed prayer makeup plan", path: "/qaza", icon: AlertTriangle },
-        { title: "Quran Audio", subtitle: "289 reciters & HD streaming", path: "/quran-audio", icon: Headphones },
+        { title: "Salah Tracker", subtitle: "30-day prayer analytics", path: "/prayer-stats", icon: CheckCircle },
+        { title: "Qaza Tracker", subtitle: "Missed prayer makeup", path: "/qaza", icon: AlertTriangle },
+        { title: "Quran Audio", subtitle: "289 reciters & HD audio", path: "/quran-audio", icon: Headphones },
         { title: "Nasheeds", subtitle: "400 vocals-only tracks", path: "/nasheeds", icon: Music },
-        { title: "Live Mecca", subtitle: "24/7 Makkah & Madinah HD", path: "/live", icon: Tv },
-        { title: "Hadith", subtitle: "16 authentic collections", path: "/hadith/collections", icon: BookText },
-        { title: t('seerah') || "Seerah", subtitle: "Prophetic biography timeline", path: "/seerah", icon: BookOpen },
-        { title: t('qisas') || "Prophets", subtitle: "25 Quranic prophet stories", path: "/qisas", icon: Users },
-        { title: "Radio", subtitle: "24/7 live Quran stations", path: "/quran-radio", icon: Radio },
-        { title: "Habits", subtitle: "Daily Sunnah deed tracker", path: "/habit-tracker", icon: Target },
-        { title: "Duas", subtitle: "80 authentic supplications", path: "/duas", icon: Heart },
+        { title: "Live Mecca", subtitle: "24/7 Makkah & Madinah", path: "/live", icon: Tv },
+        { title: "Hadith", subtitle: "16 authentic books", path: "/hadith/collections", icon: BookText },
+        { title: t('seerah') || "Seerah", subtitle: "Prophetic biography", path: "/seerah", icon: BookOpen },
+        { title: t('qisas') || "Prophets", subtitle: "25 Quranic stories", path: "/qisas", icon: Users },
+        { title: "Radio", subtitle: "24/7 live stations", path: "/quran-radio", icon: Radio },
+        { title: "Habits", subtitle: "Daily Sunnah deeds", path: "/habit-tracker", icon: Target },
+        { title: "Duas", subtitle: "80 authentic duas", path: "/duas", icon: Heart },
         ...(showNoorCycle ? [{ title: "Noor Cycle", subtitle: "Menstrual & worship guidance", path: "/noor-cycle", icon: HeartPulse as React.ComponentType<any> }] : []),
-        { title: "Remedies", subtitle: "Mood-based Quranic healing", path: "/islamic-remedies", icon: HeartHandshake },
+        { title: "Remedies", subtitle: "Mood-based healing", path: "/islamic-remedies", icon: HeartHandshake },
         { title: t('tasbih') || "Tasbih", subtitle: "Tactile dhikr counter", path: "/tasbeeh", icon: Calculator },
         { title: "Names", subtitle: "99 Asma'ul Husna", path: "/names-of-allah", icon: Star },
-        { title: "Quiz", subtitle: "Interactive Islamic trivia", path: "/quiz", icon: Trophy },
-        { title: "Zakat", subtitle: "Nisab & wealth calculator", path: "/zakat", icon: Coins },
+        { title: "Quiz", subtitle: "Islamic knowledge quiz", path: "/quiz", icon: Trophy },
+        { title: "Zakat", subtitle: "Nisab & wealth calc", path: "/zakat", icon: Coins },
         { title: "Calendar", subtitle: "Hijri dates & events", path: "/calendar", icon: Calendar },
-        { title: "E-Books", subtitle: "Islamic literature library", path: "/ebooks", icon: Library },
-        { title: "Tafsir", subtitle: "Verse-by-verse commentary", path: "/tafsir", icon: BookOpen },
+        { title: "E-Books", subtitle: "Islamic book library", path: "/ebooks", icon: Library },
+        { title: "Tafsir", subtitle: "Ayah commentary", path: "/tafsir", icon: BookOpen },
     ];
 
     const conditionalServices = [];
@@ -291,12 +291,14 @@ export default function Services() {
                                                 style={{
                                                     fontSize: '0.70rem',
                                                     color: 'var(--text-secondary)',
-                                                    whiteSpace: 'nowrap',
+                                                    whiteSpace: 'normal',
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
                                                     overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
                                                     width: '100%',
                                                     marginTop: '2px',
-                                                    lineHeight: 1.2,
+                                                    lineHeight: 1.3,
                                                 }}
                                             >
                                                 {item.subtitle}

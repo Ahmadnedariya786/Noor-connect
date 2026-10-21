@@ -550,8 +550,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-            gap: '4px',
-            padding: '6px',
+            gap: '3px',
+            padding: '6px 4px',
             borderRadius: '12px',
             background: 'rgba(0,0,0,0.22)',
             border: '1px solid var(--border)',
@@ -570,7 +570,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '4px 2px',
+                padding: '5px 2px',
                 borderRadius: '8px',
                 background: waqt.isActive ? 'var(--accent-soft)' : 'transparent',
                 border: waqt.isActive ? '1px solid var(--accent)' : '1px solid transparent',
@@ -582,7 +582,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             >
               <span
                 style={{
-                  fontSize: '0.62rem',
+                  fontSize: '0.60rem',
+                  letterSpacing: '-0.01em',
                   fontWeight: 600,
                   color: waqt.isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
                   whiteSpace: 'nowrap',
@@ -594,7 +595,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               </span>
               <span
                 style={{
-                  fontSize: '0.68rem',
+                  fontSize: '0.66rem',
                   fontWeight: 700,
                   color: waqt.isActive ? 'var(--accent-text)' : 'var(--text-primary)',
                   whiteSpace: 'nowrap',
