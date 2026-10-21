@@ -62,6 +62,8 @@ import {
   downloadAndInstallUpdate,
   triggerPendingInstall,
   openExternalBrowserFallback,
+  cancelApkDownload,
+  formatDownloadSpeed,
   formatReleaseDate,
   formatDateTime,
   formatCommit,
@@ -1301,6 +1303,8 @@ const SettingsSubPage: React.FC = () => {
                             ? `Downloading... ${apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent + '%' : ''}`
                             : apkDownloadProgress?.status === 'installing' || apkDownloadProgress?.status === 'completed'
                             ? '✓ Downloaded! Launching Installer...'
+                            : apkDownloadProgress?.status === 'cancelled'
+                            ? 'Download cancelled'
                             : apkDownloadProgress?.status === 'error'
                             ? 'Download Failed'
                             : `Nightly Build (${formatReleaseDate(updateResult.release.publishedAt)})`}
@@ -1308,7 +1312,9 @@ const SettingsSubPage: React.FC = () => {
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate">
                         {apkDownloadProgress?.status === 'downloading'
-                          ? `${apkDownloadProgress.downloadedMB.toFixed(1)} MB / ${apkDownloadProgress.totalMB > 0 ? apkDownloadProgress.totalMB.toFixed(1) + ' MB' : '...'}`
+                          ? `${apkDownloadProgress.downloadedMB.toFixed(1)} / ${apkDownloadProgress.totalMB > 0 ? apkDownloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(apkDownloadProgress.speedMBps)}`
+                          : apkDownloadProgress?.status === 'cancelled'
+                          ? 'Tap to restart download'
                           : apkDownloadProgress?.status === 'error'
                           ? (apkDownloadProgress.message || 'Tap to retry')
                           : 'New updates available for download'}
@@ -1329,17 +1335,38 @@ const SettingsSubPage: React.FC = () => {
                         Install Now
                       </Button>
                     ) : apkDownloadProgress?.status === 'downloading' ? (
-                      <div
-                        className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold shrink-0"
-                        style={{
-                          background: 'var(--accent-soft)',
-                          color: 'var(--accent-text)',
-                          border: '1px solid var(--border)',
-                        }}
-                      >
-                        {apkDownloadProgress.percent >= 0 ? `${apkDownloadProgress.percent}%` : '...'}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div
+                          className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold"
+                          style={{
+                            background: 'var(--accent-soft)',
+                            color: 'var(--accent-text)',
+                            border: '1px solid var(--border)',
+                          }}
+                        >
+                          {apkDownloadProgress.percent >= 0 ? `${apkDownloadProgress.percent}%` : '...'}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            cancelApkDownload();
+                            setApkDownloadProgress({
+                              percent: 0,
+                              downloadedMB: 0,
+                              totalMB: 0,
+                              speedMBps: 0,
+                              status: 'cancelled',
+                              message: 'Download cancelled',
+                            });
+                          }}
+                          aria-label="Cancel download"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
-                    ) : apkDownloadProgress?.status === 'error' ? (
+                    ) : apkDownloadProgress?.status === 'error' || apkDownloadProgress?.status === 'cancelled' ? (
                       <Button
                         size="sm"
                         variant="outline"
@@ -1383,12 +1410,16 @@ const SettingsSubPage: React.FC = () => {
                   {(apkDownloadProgress?.status === 'downloading' ||
                     apkDownloadProgress?.status === 'installing' ||
                     apkDownloadProgress?.status === 'completed' ||
+                    apkDownloadProgress?.status === 'cancelled' ||
                     apkDownloadProgress?.status === 'error') && (
                     <div className="flex items-center justify-between pt-0.5 text-[10px] text-muted-foreground/80">
                       <span>Stuck or dismissed?</span>
                       <button
                         type="button"
-                        onClick={() => openExternalBrowserFallback(updateResult.release?.apkUrl)}
+                        onClick={() => {
+                          cancelApkDownload();
+                          openExternalBrowserFallback(updateResult.release?.apkUrl);
+                        }}
                         className="inline-flex items-center gap-1 text-[var(--accent-text)] hover:underline font-medium"
                       >
                         <span>Download via Browser</span>

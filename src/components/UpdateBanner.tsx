@@ -7,6 +7,8 @@ import {
   downloadAndInstallUpdate,
   triggerPendingInstall,
   openExternalBrowserFallback,
+  cancelApkDownload,
+  formatDownloadSpeed,
   formatReleaseDate,
   formatCommit,
   isBannerDismissed,
@@ -147,17 +149,31 @@ export const UpdateBanner: React.FC = () => {
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (downloadProgress?.status === 'downloading') {
+      cancelApkDownload();
+      setDownloadProgress({
+        percent: 0,
+        downloadedMB: 0,
+        totalMB: 0,
+        speedMBps: 0,
+        status: 'cancelled',
+        message: 'Download cancelled',
+      });
+      return;
+    }
     dismissBanner();
     setDismissed(true);
   };
 
   const handleBrowserFallback = (e: React.MouseEvent) => {
     e.stopPropagation();
+    cancelApkDownload();
     openExternalBrowserFallback(updateInfo.release?.apkUrl);
   };
 
   const isDownloading = downloadProgress?.status === 'downloading';
   const isInstalledOrReady = downloadProgress?.status === 'installing' || downloadProgress?.status === 'completed';
+  const isCancelled = downloadProgress?.status === 'cancelled';
   const isError = downloadProgress?.status === 'error';
 
   const subtitle = updateInfo.release?.publishedAt
@@ -209,13 +225,17 @@ export const UpdateBanner: React.FC = () => {
                 ? `Downloading update... ${downloadProgress.percent >= 0 ? downloadProgress.percent + '%' : ''}`
                 : isInstalledOrReady
                 ? '✓ Downloaded! Launching Installer...'
+                : isCancelled
+                ? 'Download cancelled'
                 : isError
                 ? 'Download failed'
                 : 'Update available'}
             </p>
             <p className="text-[11px] text-muted-foreground truncate pt-0.5">
               {isDownloading
-                ? `${downloadProgress.downloadedMB.toFixed(1)} MB / ${downloadProgress.totalMB > 0 ? downloadProgress.totalMB.toFixed(1) + ' MB' : '...'}`
+                ? `${downloadProgress.downloadedMB.toFixed(1)} / ${downloadProgress.totalMB > 0 ? downloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(downloadProgress.speedMBps)}`
+                : isCancelled
+                ? 'Tap Install to restart download'
                 : isError
                 ? (downloadProgress.message || 'Tap to retry')
                 : subtitle}
@@ -248,7 +268,7 @@ export const UpdateBanner: React.FC = () => {
             >
               {downloadProgress.percent >= 0 ? `${downloadProgress.percent}%` : '...'}
             </div>
-          ) : isError ? (
+          ) : isError || isCancelled ? (
             <button
               type="button"
               onClick={handleInstall}
@@ -280,7 +300,7 @@ export const UpdateBanner: React.FC = () => {
             type="button"
             onClick={handleDismiss}
             className="p-1 text-muted-foreground/60 hover:text-foreground rounded-lg transition-colors"
-            aria-label="Dismiss update banner"
+            aria-label={isDownloading ? 'Cancel download' : 'Dismiss update banner'}
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -302,7 +322,7 @@ export const UpdateBanner: React.FC = () => {
       )}
 
       {/* Secondary Browser Fallback Link */}
-      {(isDownloading || isInstalledOrReady || isError) && (
+      {(isDownloading || isInstalledOrReady || isCancelled || isError) && (
         <div className="flex items-center justify-between pt-0.5 text-[10px] text-muted-foreground/80">
           <span>Stuck or prompt dismissed?</span>
           <button

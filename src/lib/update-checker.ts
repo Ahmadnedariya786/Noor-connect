@@ -128,7 +128,8 @@ export interface ApkDownloadProgressDetail {
   percent: number;
   downloadedMB: number;
   totalMB: number;
-  status: 'downloading' | 'installing' | 'completed' | 'error';
+  speedMBps?: number;
+  status: 'downloading' | 'installing' | 'completed' | 'error' | 'cancelled';
   message?: string;
 }
 
@@ -137,6 +138,7 @@ declare global {
     AndroidBridge?: {
       closeApp?: () => void;
       downloadAndInstallApk?: (apkUrl: string) => void;
+      cancelApkDownload?: () => void;
       installDownloadedApk?: () => void;
       openExternalBrowser?: (url: string) => void;
     };
@@ -394,19 +396,53 @@ export function triggerPendingInstall(): void {
 }
 
 /**
- * Fallback to external browser without Chrome Custom Tab
+ * Abort active native in-app APK download and release background connections immediately.
+ */
+export function cancelApkDownload(): void {
+  if (typeof window !== 'undefined' && window.AndroidBridge?.cancelApkDownload) {
+    try {
+      window.AndroidBridge.cancelApkDownload();
+    } catch {
+      // Handled AndroidBridge.cancelApkDownload fallback
+    }
+  }
+}
+
+/**
+ * Format live transfer speed nicely into MB/s or KB/s
+ */
+export function formatDownloadSpeed(speedMBps?: number): string {
+  if (!speedMBps || speedMBps <= 0) return '';
+  if (speedMBps >= 1.0) {
+    return ` • ${speedMBps.toFixed(1)} MB/s`;
+  }
+  const kbps = Math.round(speedMBps * 1024);
+  return ` • ${kbps} KB/s`;
+}
+
+/**
+ * Fallback to external browser without Chrome Custom Tab.
+ * FIRST aborts any active in-app background download so 100% network bandwidth is freed,
+ * and appends cache-busting query to guarantee a clean unthrottled connection.
  */
 export function openExternalBrowserFallback(url?: string): void {
+  // 1. Immediately abort active native in-app download sockets to free bandwidth
+  cancelApkDownload();
+
   const directUrl = resolveDirectApkUrl(url);
+  // 2. Append cache-busting timestamp so Chrome starts a fresh unthrottled connection
+  const separator = directUrl.includes('?') ? '&' : '?';
+  const cacheBustedUrl = `${directUrl}${separator}t=${Date.now()}`;
+
   if (typeof window !== 'undefined' && window.AndroidBridge?.openExternalBrowser) {
-    window.AndroidBridge.openExternalBrowser(directUrl);
+    window.AndroidBridge.openExternalBrowser(cacheBustedUrl);
     return;
   }
   try {
-    window.open(directUrl, '_system');
+    window.open(cacheBustedUrl, '_system');
   } catch {
     // Handled external browser open fallback
-    window.location.href = directUrl;
+    window.location.href = cacheBustedUrl;
   }
 }
 
