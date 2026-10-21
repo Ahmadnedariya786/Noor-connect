@@ -10,6 +10,7 @@ import type { EnhancedHadith } from "@/data/hadith-collections";
 import { getCollectionByName } from "@/data/hadith-collections";
 import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
+import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 
 export function HadithDetail() {
   const { collection, book, hadithNumber } = useParams<{ collection: string; book: string; hadithNumber: string }>();
@@ -193,6 +194,8 @@ export function HadithDetail() {
                 {hadith.arabic}
               </p>
             </div>
+
+            <ManuscriptDivider />
 
             {hadith.englishTranslation && (
               <div>

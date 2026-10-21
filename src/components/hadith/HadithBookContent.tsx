@@ -10,6 +10,7 @@ import { getCollectionByName, HadithBook, HadithCollection, EnhancedHadith } fro
 import { getHadithBookData, getHadithCollectionMetadata } from "@/lib/hadith";
 import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
+import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 
 const SHOW_ALL_PAGE_SIZE = 300;
 
@@ -68,6 +69,8 @@ const HadithCard = memo(function HadithCard({ hadith, index, collection, book, b
                 {hadith.arabic}
               </p>
             </div>
+
+            <ManuscriptDivider />
 
             {/* Translation */}
             {hadith.englishTranslation && (

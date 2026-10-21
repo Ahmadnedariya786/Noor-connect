@@ -9,6 +9,7 @@ import { getAllCollections } from "@/data/hadith-collections";
 import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import type { HadithItem } from '@/data/hadith.json';
+import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 
 interface HadithData {
   hadith: string;
@@ -210,9 +211,12 @@ const { t } = useLanguage();
  
                   {/* Translation */}
                   {hadith.translation && (
-                    <p className="text-base leading-relaxed text-center opacity-80 font-serif italic px-2">
-                      {hadith.translation}
-                    </p>
+                    <>
+                      <ManuscriptDivider />
+                      <p className="text-base leading-relaxed text-center opacity-80 font-serif italic px-2">
+                        {hadith.translation}
+                      </p>
+                    </>
                   )}
  
                   {/* Source */}

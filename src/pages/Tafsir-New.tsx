@@ -63,6 +63,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { fetchSurahTafsir, TAFSIR_EDITIONS, type TafsirEdition } from "@/lib/tafsir";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 
 interface Surah {
   number: number;
@@ -1081,15 +1082,18 @@ const Tafsir = () => {
                                   {tafsir.arabic}
                                 </p>
                                 {tafsir.translation && (
-                                  <p
-                                    className="text-base md:text-lg italic leading-relaxed pl-4 py-1.5"
-                                    style={{
-                                      color: 'var(--text-secondary)',
-                                      borderLeft: '3px solid var(--accent)',
-                                    }}
-                                  >
-                                    {tafsir.translation}
-                                  </p>
+                                  <>
+                                    <ManuscriptDivider />
+                                    <p
+                                      className="text-base md:text-lg italic leading-relaxed pl-4 py-1.5"
+                                      style={{
+                                        color: 'var(--text-secondary)',
+                                        borderLeft: '3px solid var(--accent)',
+                                      }}
+                                    >
+                                      {tafsir.translation}
+                                    </p>
+                                  </>
                                 )}
                               </div>
                             )}

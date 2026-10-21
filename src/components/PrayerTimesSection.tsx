@@ -346,6 +346,62 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   const iftaarTime = suhoorIftaar?.iftaarTime || maghribPrayer?.time || '--:--';
   const iftaarLabel = 'Iftaar';
 
+  // Arabic calligraphy vocalized waqt mapping (Part 2)
+  const WAQT_CALLIGRAPHY_MAP: Record<string, string> = {
+    fajr: 'ٱلْفَجْر',
+    sunrise: 'ٱلشُّرُوق',
+    dhuhr: 'ٱلظُّهْر',
+    jummah: 'ٱلْجُمُعَة',
+    asr: 'ٱلْعَصْر',
+    maghrib: 'ٱلْمَغْرِب',
+    isha: 'ٱلْعِشَاء',
+  };
+
+  const baseWaqtKey = (resolvedNextDisplayName || nextPrayer.name || '')
+    .toLowerCase()
+    .split(' ')[0]
+    .replace(/[^a-z]/g, '');
+  const arabicWaqtEmblem = WAQT_CALLIGRAPHY_MAP[baseWaqtKey] || 'ٱلصَّلَاة';
+
+  // Compact 5-waqt strip items without AM/PM suffix
+  const fiveWaqts = useMemo(() => {
+    const isFriday = (nextPrayer.targetTime || new Date()).getDay() === 5;
+    const slots = [
+      { key: 'fajr', label: 'Fajr' },
+      { key: 'dhuhr', label: isFriday ? 'Jummah' : 'Dhuhr' },
+      { key: 'asr', label: 'Asr' },
+      { key: 'maghrib', label: 'Maghrib' },
+      { key: 'isha', label: 'Isha' },
+    ];
+
+    return slots.map((slot) => {
+      const item = prayers.find((p) => {
+        const lower = (p.originalName || p.name).toLowerCase();
+        if (slot.key === 'dhuhr') {
+          return lower === 'dhuhr' || lower === 'jummah';
+        }
+        return lower === slot.key;
+      });
+
+      const rawTime = item?.time || '--:--';
+      const compactTime = rawTime.replace(/\s*[AaPp][Mm]$/, '').trim();
+      const isActive = Boolean(
+        item && (
+          isMatchingPrayer(item.name, nextPrayer.name) ||
+          isMatchingPrayer(item.originalName, nextPrayer.name) ||
+          isMatchingPrayer(item.name, resolvedNextDisplayName)
+        )
+      );
+
+      return {
+        key: slot.key,
+        label: slot.label,
+        time: compactTime,
+        isActive,
+      };
+    });
+  }, [prayers, nextPrayer.name, nextPrayer.targetTime, resolvedNextDisplayName]);
+
   // Subtitle next to or below progress bar
   const remainingSubtitle = useMemo(() => {
     if (countdownText === 'due now') return 'Time for prayer';
@@ -392,26 +448,29 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           border: '1px solid var(--border)',
           boxShadow:
             '0 10px 30px -10px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow), inset 0 1px 0 var(--card-sheen)',
+          boxSizing: 'border-box',
         }}
       >
         {/* Subtle Mosque Silhouette Vector background art */}
         <MosqueSilhouette />
 
-        {/* Two-Column Flex Header (Zero Overlap) */}
+        {/* Two-Column Flex Header (Zero Overlap & Collision-Proof) */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            gap: '12px',
+            gap: '8px',
             position: 'relative',
             zIndex: 1,
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
           {/* Left Column */}
-          <div className="flex flex-col min-w-0">
+          <div className="flex flex-col min-w-0" style={{ minWidth: 0, flex: 1 }}>
             <span
-              className="font-serif capitalize tracking-wide text-sm sm:text-base leading-none mb-1"
+              className="font-serif capitalize tracking-wide text-sm sm:text-base leading-none mb-1 truncate"
               style={{
                 color: 'var(--accent-text)',
                 fontWeight: 600,
@@ -420,10 +479,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               {resolvedNextDisplayName}
             </span>
             <span
-              className="tracking-tight tabular-nums"
+              className="tracking-tight tabular-nums truncate"
               style={{
                 color: 'var(--text-primary)',
-                fontSize: '2rem',
+                fontSize: '1.95rem',
                 lineHeight: 1.1,
                 fontWeight: 700,
               }}
@@ -433,28 +492,51 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           </div>
 
           {/* Right Column (Right-Aligned) */}
-          <div className="flex flex-col items-end shrink-0 text-right">
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: '4px',
+              flexShrink: 0,
+              textAlign: 'right',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span
+                style={{
+                  fontSize: '1.35rem',
+                  fontWeight: 700,
+                  color: 'var(--accent-text)',
+                  textShadow: '0 0 12px var(--accent-glow)',
+                  lineHeight: 1.1,
+                  fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+                }}
+              >
+                {arabicWaqtEmblem}
+              </span>
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                  color: 'var(--on-accent)',
+                  fontWeight: 700,
+                  fontSize: '0.72rem',
+                  padding: '4px 10px',
+                  borderRadius: '999px',
+                  boxShadow: '0 2px 10px var(--accent-glow)',
+                  letterSpacing: '0.06em',
+                  lineHeight: 1.2,
+                  display: 'inline-block',
+                }}
+              >
+                NEXT
+              </span>
+            </div>
             <span
-              style={{
-                background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-                color: 'var(--on-accent)',
-                fontWeight: 700,
-                fontSize: '0.72rem',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                boxShadow: '0 2px 10px var(--accent-glow)',
-                letterSpacing: '0.06em',
-                lineHeight: 1.2,
-                display: 'inline-block',
-              }}
-            >
-              NEXT
-            </span>
-            <span
-              className="tabular-nums mt-1"
+              className="tabular-nums"
               style={{
                 color: 'var(--text-primary)',
-                fontSize: '0.9rem',
+                fontSize: '0.88rem',
                 fontWeight: 500,
               }}
             >
@@ -463,10 +545,75 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           </div>
         </div>
 
+        {/* Compact 5-Waqt Mini Timeline Strip Inside Hero Card (Zero Truncation at 360px) */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+            gap: '4px',
+            padding: '6px',
+            borderRadius: '12px',
+            background: 'rgba(0,0,0,0.22)',
+            border: '1px solid var(--border)',
+            margin: '10px 0 8px 0',
+            width: '100%',
+            boxSizing: 'border-box',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          {fiveWaqts.map((waqt) => (
+            <div
+              key={waqt.key}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px 2px',
+                borderRadius: '8px',
+                background: waqt.isActive ? 'var(--accent-soft)' : 'transparent',
+                border: waqt.isActive ? '1px solid var(--accent)' : '1px solid transparent',
+                color: waqt.isActive ? 'var(--accent-text)' : 'inherit',
+                minWidth: 0,
+                boxSizing: 'border-box',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '0.62rem',
+                  fontWeight: 600,
+                  color: waqt.isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  lineHeight: 1.2,
+                }}
+              >
+                {waqt.label}
+              </span>
+              <span
+                style={{
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: waqt.isActive ? 'var(--accent-text)' : 'var(--text-primary)',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  fontFamily: 'monospace',
+                  lineHeight: 1.2,
+                  marginTop: '1px',
+                }}
+              >
+                {waqt.time}
+              </span>
+            </div>
+          ))}
+        </div>
+
         {/* Elapsed/Remaining Progress Bar (Bottom of Hero Card) */}
         <div
           style={{
-            marginTop: '14px',
+            marginTop: '8px',
             position: 'relative',
             zIndex: 1,
           }}

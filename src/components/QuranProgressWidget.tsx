@@ -132,8 +132,15 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   const motivationalMessage = getMotivationalMessage(progress.percentage);
   const pct = Math.min(Math.max(progress.percentage, 0), 100);
   const radius = 38;
+  const cx = 50;
+  const cy = 50;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - pct / 100);
+
+  // Exact trigonometric comet tip calculation (Part 3)
+  const angleRad = ((pct / 100) * 360 - 90) * (Math.PI / 180);
+  const orbX = cx + radius * Math.cos(angleRad);
+  const orbY = cy + radius * Math.sin(angleRad);
 
   return (
     <Card className={`relative overflow-hidden bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-md rounded-[24px] ${className || ''}`}
@@ -160,7 +167,11 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         {/* Main Dual-Ring Gauge & Overview */}
         <div className="flex items-center justify-center pt-1 pb-1">
           <div className="relative inline-flex items-center justify-center w-28 h-28">
-            <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
+            <svg
+              className="w-28 h-28"
+              viewBox="0 0 100 100"
+              style={{ overflow: 'visible' }}
+            >
               <defs>
                 <linearGradient id="quranArcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="var(--accent)" />
@@ -170,8 +181,8 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
 
               {/* Outer Decorative Tick Ring */}
               <circle
-                cx="50"
-                cy="50"
+                cx={cx}
+                cy={cy}
                 r="46"
                 fill="none"
                 stroke="var(--border)"
@@ -182,18 +193,18 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
 
               {/* Background Track Ring (Thick 8px in surface-2) */}
               <circle
-                cx="50"
-                cy="50"
+                cx={cx}
+                cy={cy}
                 r={radius}
                 fill="none"
                 stroke="var(--surface-2)"
                 strokeWidth="8"
               />
 
-              {/* Glowing Progress Arc */}
+              {/* Glowing Progress Arc (rotated -90deg to start at 12 o'clock) */}
               <circle
-                cx="50"
-                cy="50"
+                cx={cx}
+                cy={cy}
                 r={radius}
                 fill="none"
                 stroke="url(#quranArcGrad)"
@@ -201,22 +212,31 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
+                transform={`rotate(-90 ${cx} ${cy})`}
                 style={{
                   transition: 'stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                   filter: 'drop-shadow(0 0 4px var(--accent-glow))',
                 }}
               />
 
-              {/* Glowing Start Indicator Dot */}
+              {/* Glowing Start Indicator Dot at 12 o'clock */}
               <circle
-                cx="50"
-                cy="12"
+                cx={cx}
+                cy={cy - radius}
                 r="3"
                 fill="var(--accent)"
                 style={{
                   filter: 'drop-shadow(0 0 4px var(--accent-glow))',
                 }}
               />
+
+              {/* Glowing Comet Orb at Tip (Part 3) */}
+              {pct > 0 && (
+                <g style={{ transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                  <circle cx={orbX} cy={orbY} r={7} fill="var(--accent)" opacity={0.35} />
+                  <circle cx={orbX} cy={orbY} r={3.5} fill="var(--accent-text)" stroke="var(--accent)" strokeWidth={1.5} />
+                </g>
+              )}
             </svg>
 
             {/* Centered % Display */}

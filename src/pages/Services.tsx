@@ -12,6 +12,30 @@ import {
     CheckCircle, AlertTriangle, Users, HeartPulse, Music, Search, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+const SERVICE_CATEGORIES: Record<string, string> = {
+    "/prayer-stats": "Worship",
+    "/qaza": "Worship",
+    "/quran-audio": "Audio",
+    "/nasheeds": "Audio",
+    "/live": "Live",
+    "/hadith/collections": "Knowledge",
+    "/seerah": "Knowledge",
+    "/qisas": "Knowledge",
+    "/quran-radio": "Audio",
+    "/habit-tracker": "Worship",
+    "/duas": "Worship",
+    "/noor-cycle": "Wellness",
+    "/islamic-remedies": "Wellness",
+    "/tasbeeh": "Worship",
+    "/names-of-allah": "Knowledge",
+    "/quiz": "Knowledge",
+    "/zakat": "Tools",
+    "/calendar": "Tools",
+    "/ebooks": "Knowledge",
+    "/tafsir": "Knowledge",
+    "/fitrana-calculator": "Tools",
+    "/eid-checklist": "Worship",
+};
 
 export default function Services() {
     const { t } = useLanguage();
@@ -171,55 +195,140 @@ export default function Services() {
                 <div className="px-4 sm:px-5 relative">
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <AnimatePresence mode="popLayout">
-                            {filteredServices.map((item, idx) => (
-                                <motion.button
-                                    key={item.path}
-                                    {...motionProps({
-                                        initial: { opacity: 0, y: 16 },
-                                        animate: { opacity: 1, y: 0 },
-                                        exit: { opacity: 0, scale: 0.95 },
-                                        transition: { delay: Math.min(idx * 0.03, 0.3), duration: 0.3 },
-                                        whileTap: { scale: 0.96 }
-                                    })}
-                                    onClick={() => navigate(item.path, { replace: true })}
-                                    className="group relative flex flex-col items-start p-4 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 hover:bg-[var(--surface-2)] rounded-[20px] overflow-hidden text-left w-full min-w-0 transition-all shadow-sm"
-                                    style={{
-                                        boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 4px 16px rgba(0,0,0,0.15)'
-                                    }}
-                                >
-                                    {/* Refined Tokenized Jewel Icon Badge */}
-                                    <div
-                                        className="flex items-center justify-center rounded-xl mb-3 shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                            {filteredServices.map((item, idx) => {
+                                const category = SERVICE_CATEGORIES[item.path] || "Tools";
+                                return (
+                                    <motion.button
+                                        key={item.path}
+                                        {...motionProps({
+                                            initial: { opacity: 0, y: 16 },
+                                            animate: { opacity: 1, y: 0 },
+                                            exit: { opacity: 0, scale: 0.95 },
+                                            transition: { delay: Math.min(idx * 0.03, 0.3), duration: 0.3 },
+                                            whileTap: { scale: 0.96 }
+                                        })}
+                                        onClick={() => navigate(item.path, { replace: true })}
+                                        className="group relative text-left transition-all cursor-pointer"
                                         style={{
-                                            background: 'var(--accent-soft)',
-                                            border: '1px solid var(--accent)',
-                                            color: 'var(--accent-text)',
-                                            width: '42px',
-                                            height: '42px'
+                                            width: '100%',
+                                            minWidth: 0,
+                                            boxSizing: 'border-box',
+                                            overflow: 'hidden',
+                                            padding: '13px',
+                                            borderRadius: '18px',
+                                            background: 'linear-gradient(145deg, var(--surface), var(--surface-2))',
+                                            border: '1px solid var(--border)',
+                                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between',
+                                            gap: '8px',
                                         }}
                                     >
-                                        <item.icon className="w-5 h-5" strokeWidth={2} />
-                                    </div>
+                                        {/* Top Row: Jewel Icon Pod & Category Micro-Pill */}
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: '6px',
+                                                width: '100%',
+                                            }}
+                                        >
+                                            <div
+                                                className="shadow-sm transition-transform duration-200 group-hover:scale-105"
+                                                style={{
+                                                    background: 'var(--accent-soft)',
+                                                    border: '1px solid var(--accent)',
+                                                    borderRadius: '11px',
+                                                    color: 'var(--accent-text)',
+                                                    flexShrink: 0,
+                                                    width: '38px',
+                                                    height: '38px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                <item.icon className="w-5 h-5" strokeWidth={2} />
+                                            </div>
 
-                                    {/* Title Container */}
-                                    <h3 className="font-bold text-xs sm:text-sm text-[var(--text-primary)] leading-snug break-words w-full truncate">
-                                        {item.title}
-                                    </h3>
+                                            <span
+                                                style={{
+                                                    fontSize: '0.58rem',
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.04em',
+                                                    padding: '2px 6px',
+                                                    borderRadius: '999px',
+                                                    background: 'var(--bg-base)',
+                                                    border: '1px solid var(--border)',
+                                                    color: 'var(--accent-text)',
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                {category}
+                                            </span>
+                                        </div>
 
-                                    {/* Subtitle */}
-                                    <p className="text-[11px] text-[var(--text-secondary)] font-medium leading-tight mt-1 line-clamp-1 w-full">
-                                        {item.subtitle}
-                                    </p>
-                                    
-                                    {/* Subtle Ambient Sheen */}
-                                    <div
-                                        className="absolute -inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px]"
-                                        style={{
-                                            background: 'radial-gradient(circle at top left, var(--accent-soft) 0%, transparent 70%)'
-                                        }}
-                                    />
-                                </motion.button>
-                            ))}
+                                        {/* Middle: Bold Tool Title & Subtitle */}
+                                        <div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
+                                            <h3
+                                                style={{
+                                                    fontSize: '0.92rem',
+                                                    fontWeight: 700,
+                                                    color: 'var(--text-primary)',
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    width: '100%',
+                                                    lineHeight: 1.25,
+                                                }}
+                                            >
+                                                {item.title}
+                                            </h3>
+                                            <p
+                                                style={{
+                                                    fontSize: '0.70rem',
+                                                    color: 'var(--text-secondary)',
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    width: '100%',
+                                                    marginTop: '2px',
+                                                    lineHeight: 1.2,
+                                                }}
+                                            >
+                                                {item.subtitle}
+                                            </p>
+                                        </div>
+
+                                        {/* Bottom Row: Explore → Micro-Link */}
+                                        <div
+                                            style={{
+                                                fontSize: '0.66rem',
+                                                fontWeight: 600,
+                                                color: 'var(--accent-text)',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '3px',
+                                                marginTop: '2px',
+                                            }}
+                                        >
+                                            <span>Explore</span>
+                                            <span style={{ transition: 'transform 0.15s ease' }} className="group-hover:translate-x-0.5">→</span>
+                                        </div>
+
+                                        {/* Subtle Ambient Sheen */}
+                                        <div
+                                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[18px]"
+                                            style={{
+                                                background: 'radial-gradient(circle at top left, var(--accent-soft) 0%, transparent 70%)'
+                                            }}
+                                        />
+                                    </motion.button>
+                                );
+                            })}
                         </AnimatePresence>
                     </div>
 

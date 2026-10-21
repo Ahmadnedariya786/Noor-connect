@@ -95,31 +95,51 @@ export default function QuranProgress() {
                 {/* Surahs Progress */}
                 <div className="text-center flex flex-col items-center">
                   <div className="relative inline-flex items-center justify-center w-32 h-32 mb-2">
-                    <svg className="transform -rotate-90 w-32 h-32">
-                      <circle
-                        cx="64"
-                        cy="64"
-                        r="48"
-                        stroke="var(--surface-2)"
-                        strokeWidth="8"
-                        fill="none"
-                      />
-                      <circle
-                        cx="64"
-                        cy="64"
-                        r="48"
-                        stroke="var(--accent)"
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        fill="none"
-                        strokeDasharray={`${2 * Math.PI * 48}`}
-                        strokeDashoffset={`${2 * Math.PI * 48 * (1 - (overallProgress?.percentage || 0) / 100)}`}
-                        style={{
-                          filter: 'drop-shadow(0 0 6px var(--accent-glow))',
-                          transition: 'stroke-dashoffset 0.8s ease-out',
-                        }}
-                      />
-                    </svg>
+                    {(() => {
+                      const qPct = Math.min(Math.max(overallProgress?.percentage || 0, 0), 100);
+                      const qCx = 64;
+                      const qCy = 64;
+                      const qR = 48;
+                      const qCircumference = 2 * Math.PI * qR;
+                      const qAngleRad = ((qPct / 100) * 360 - 90) * (Math.PI / 180);
+                      const qOrbX = qCx + qR * Math.cos(qAngleRad);
+                      const qOrbY = qCy + qR * Math.sin(qAngleRad);
+
+                      return (
+                        <svg className="w-32 h-32" viewBox="0 0 128 128" style={{ overflow: 'visible' }}>
+                          <circle
+                            cx={qCx}
+                            cy={qCy}
+                            r={qR}
+                            stroke="var(--surface-2)"
+                            strokeWidth="8"
+                            fill="none"
+                          />
+                          <circle
+                            cx={qCx}
+                            cy={qCy}
+                            r={qR}
+                            stroke="var(--accent)"
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            fill="none"
+                            strokeDasharray={`${qCircumference}`}
+                            strokeDashoffset={`${qCircumference * (1 - qPct / 100)}`}
+                            transform={`rotate(-90 ${qCx} ${qCy})`}
+                            style={{
+                              filter: 'drop-shadow(0 0 6px var(--accent-glow))',
+                              transition: 'stroke-dashoffset 0.8s ease-out',
+                            }}
+                          />
+                          {qPct > 0 && (
+                            <g style={{ transition: 'all 0.4s ease-out' }}>
+                              <circle cx={qOrbX} cy={qOrbY} r={7} fill="var(--accent)" opacity={0.35} />
+                              <circle cx={qOrbX} cy={qOrbY} r={3.5} fill="var(--accent-text)" stroke="var(--accent)" strokeWidth={1.5} />
+                            </g>
+                          )}
+                        </svg>
+                      );
+                    })()}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div>
                         <div

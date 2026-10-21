@@ -11,6 +11,7 @@ import { androidAudioHelper } from "@/lib/android-audio-helper";
 import { useGlobalRadio } from "@/lib/global-radio"; // To pause radio
 import { useGlobalQuran, setGlobalQuranAudioRef, Reciter } from "@/lib/global-quran";
 import { downloadManager } from "@/lib/download-manager";
+import { quranService } from "@/lib/quran-service";
 
 const formatTime = (time: number): string => {
     if (!time || isNaN(time)) return "0:00";
@@ -187,7 +188,7 @@ export function GlobalQuranPlayer() {
         const handleEnded = () => {
             if (isRepeating) {
                 audio.currentTime = 0;
-                audio.play().catch(() => {});
+                audio.play().catch(() => { /* Repeat playback interrupted */ });
             } else {
                 setSeekValue(0);
                 updateState({ isPlaying: false, progress: 0 });
@@ -324,23 +325,106 @@ export function GlobalQuranPlayer() {
                     }}
                     onClick={e => e.stopPropagation()}
                 >
-                    <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
-                        <div>
-                            <h3 className="font-bold text-xl">{surahName}</h3>
-                            <p className="text-sm text-primary font-medium">{reciter?.name}</p>
+                    <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+                        <div className="min-w-0 flex-1 pr-2">
+                            <h3 className="font-bold text-lg truncate leading-tight">{surahName}</h3>
+                            <p className="text-xs text-[var(--accent-text)] font-semibold truncate mt-0.5">{reciter?.name}</p>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => setIsExpanded(false)} className="rounded-full hover:bg-muted">
+                        <Button variant="ghost" size="icon" onClick={() => setIsExpanded(false)} className="rounded-full hover:bg-muted shrink-0">
                             <ChevronDown className="w-5 h-5" />
                         </Button>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
+                        {/* 1. Compact Illuminated Medallion (96px × 96px — Fits 800px Height Easily) */}
+                        <div
+                            style={{
+                                width: '96px',
+                                height: '96px',
+                                margin: '0 auto 10px auto',
+                                borderRadius: '50%',
+                                background: 'radial-gradient(circle, var(--accent-soft) 0%, var(--bg-base) 75%)',
+                                border: '1.5px solid var(--accent)',
+                                boxShadow: '0 0 22px var(--accent-glow)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                            }}
+                        >
+                            {/* Rotating 8-Point Rub el Hizb Star Ring */}
+                            <svg
+                                viewBox="0 0 100 100"
+                                className="absolute inset-0 w-full h-full pointer-events-none select-none"
+                                style={{
+                                    animation: 'spin 24s linear infinite',
+                                    animationPlayState: isPlaying ? 'running' : 'paused',
+                                    color: 'var(--accent)',
+                                }}
+                            >
+                                <rect
+                                    x="22"
+                                    y="22"
+                                    width="56"
+                                    height="56"
+                                    rx="2.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    opacity="0.55"
+                                />
+                                <rect
+                                    x="22"
+                                    y="22"
+                                    width="56"
+                                    height="56"
+                                    rx="2.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    opacity="0.55"
+                                    transform="rotate(45 50 50)"
+                                />
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="39"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="0.8"
+                                    strokeDasharray="2 3"
+                                    opacity="0.4"
+                                />
+                            </svg>
+
+                            {/* Center Arabic Surah Emblem */}
+                            <span
+                                className="relative z-10 font-bold select-none text-center"
+                                style={{
+                                    color: 'var(--accent-text)',
+                                    fontSize: (surahNumber && quranService.getSurahInfo(surahNumber)?.name?.length || 0) > 8 ? '0.95rem' : '1.15rem',
+                                    fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+                                    textShadow: '0 0 8px var(--accent-glow)',
+                                    lineHeight: 1.1,
+                                    padding: '0 6px',
+                                    maxWidth: '82px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {(surahNumber && quranService.getSurahInfo(surahNumber)?.name) || 'القرآن'}
+                            </span>
+                        </div>
+
                         {/* Reciter Select */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reciter</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Reciter</label>
                             <Select value={reciter?.id} onValueChange={handleReciterChange}>
-                                <SelectTrigger className="h-12">
-                                    <User className="w-4 h-4 me-2 text-primary" />
+                                <SelectTrigger className="h-11 rounded-xl">
+                                    <User className="w-4 h-4 me-2 text-[var(--accent-text)]" />
                                     <SelectValue placeholder="Select Reciter" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[200px] z-[200]">
@@ -351,8 +435,51 @@ export function GlobalQuranPlayer() {
                             </Select>
                         </div>
 
-                        {/* Progress */}
-                        <div className="space-y-2">
+                        {/* 2. 20-Bar CSS Soundwave Visualizer (height: 20px) */}
+                        <div className="space-y-1.5 pt-1">
+                            <style>{`
+                                @keyframes quranSoundwavePulse {
+                                    0% { transform: scaleY(0.25); }
+                                    100% { transform: scaleY(1); }
+                                }
+                            `}</style>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '3px',
+                                    height: '20px',
+                                    margin: '6px 0',
+                                }}
+                                aria-hidden="true"
+                            >
+                                {Array.from({ length: 20 }).map((_, i) => {
+                                    const progressPct = duration > 0 ? (seekValue / duration) * 100 : 0;
+                                    const isFilled = (i / 19) * 100 <= progressPct;
+                                    const baseScales = [0.4, 0.7, 0.5, 0.9, 0.6, 1.0, 0.75, 0.45, 0.85, 0.55, 0.95, 0.65, 0.8, 0.5, 0.9, 0.7, 0.4, 0.85, 0.6, 0.35];
+
+                                    return (
+                                        <span
+                                            key={i}
+                                            style={{
+                                                width: '3px',
+                                                height: '100%',
+                                                borderRadius: '999px',
+                                                background: isFilled ? 'var(--accent)' : 'var(--surface-2)',
+                                                boxShadow: isFilled ? '0 0 6px var(--accent-glow)' : 'none',
+                                                transformOrigin: 'bottom',
+                                                transform: isPlaying ? undefined : `scaleY(${baseScales[i]})`,
+                                                animation: isPlaying ? `quranSoundwavePulse ${0.8 + (i % 5) * 0.15}s ease-in-out infinite alternate` : 'none',
+                                                animationDelay: `${(i * 0.06).toFixed(2)}s`,
+                                                transition: 'background 0.2s ease',
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+
+                            {/* Scrubber Progress Slider */}
                             <Slider
                                 value={[seekValue]}
                                 max={duration || 100}
@@ -363,7 +490,7 @@ export function GlobalQuranPlayer() {
                                 }}
                                 className="cursor-pointer"
                             />
-                            <div className="flex justify-between text-xs font-mono text-muted-foreground">
+                            <div className="flex justify-between text-xs font-mono text-muted-foreground pt-0.5">
                                 <span>{formatTime(seekValue)}</span>
                                 <span>{formatTime(duration)}</span>
                             </div>

@@ -209,21 +209,41 @@ const Tasbeeh = () => {
               {/* Background Ring - Outer */}
               <div className="absolute inset-0 rounded-full border-[10px] border-muted/20" />
 
-              {/* Progress Ring */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle
-                  cx="144"
-                  cy="144"
-                  r="134"
-                  fill="transparent"
-                  stroke="currentColor"
-                  strokeWidth="10"
-                  strokeDasharray={842}
-                  strokeDashoffset={842 - (842 * progress) / 100}
-                  className="text-primary transition-all duration-300 ease-out"
-                  strokeLinecap="round"
-                />
-              </svg>
+              {/* Progress Ring with Glowing Comet Orb (Part 3) */}
+              {(() => {
+                const cx = 144;
+                const cy = 144;
+                const r = 134;
+                const angleRad = ((progress / 100) * 360 - 90) * (Math.PI / 180);
+                const orbX = cx + r * Math.cos(angleRad);
+                const orbY = cy + r * Math.sin(angleRad);
+
+                return (
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 288 288" style={{ overflow: 'visible' }}>
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={r}
+                      fill="transparent"
+                      stroke="var(--accent)"
+                      strokeWidth="10"
+                      strokeDasharray={842}
+                      strokeDashoffset={842 - (842 * progress) / 100}
+                      className="transition-all duration-300 ease-out"
+                      strokeLinecap="round"
+                      transform={`rotate(-90 ${cx} ${cy})`}
+                    />
+                    {progress > 0 && (
+                      <g style={{ transition: 'all 0.3s ease-out' }}>
+                        {/* Outer ambient halo */}
+                        <circle cx={orbX} cy={orbY} r={7} fill="var(--accent)" opacity={0.35} />
+                        {/* Inner bright core */}
+                        <circle cx={orbX} cy={orbY} r={3.5} fill="var(--accent-text)" stroke="var(--accent)" strokeWidth={1.5} />
+                      </g>
+                    )}
+                  </svg>
+                );
+              })()}
 
               {/* Animated Inner Aura */}
               <AnimatePresence>

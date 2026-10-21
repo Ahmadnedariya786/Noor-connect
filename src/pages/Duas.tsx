@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getFavorites, toggleFavorite } from "@/lib/storage";
 import { duasData, duaCategories } from "@/data/duas";
+import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 
 interface DuaCardProps {
   dua: typeof duasData[0];
@@ -79,6 +80,7 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
             </Button>
           </div>
           <p className="text-2xl font-arabic font-bold text-foreground text-right leading-[2] tracking-wide mt-2">{dua.arabic}</p>
+          <ManuscriptDivider />
           <p className="text-base font-serif italic text-[#C9860A] leading-relaxed">{dua.transliteration}</p>
           <p className="text-sm text-foreground/80 leading-relaxed font-medium">{dua.translation}</p>
           {dua.reference && (

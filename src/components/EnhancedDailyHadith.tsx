@@ -15,6 +15,7 @@ import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
 import type { EnhancedHadith } from "@/data/hadith-collections";
 import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
+import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 
 interface Hadith {
   id: string;
@@ -493,12 +494,8 @@ export function EnhancedDailyHadith() {
           </div>
         </div>
 
-        {/* Elegant Islamic Divider */}
-        <div className="flex items-center gap-3 my-2 select-none">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-[var(--accent)]/10" />
-          <span className="text-[var(--accent)] text-xs font-serif">✦</span>
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[var(--accent)]/30 to-[var(--accent)]/10" />
-        </div>
+        {/* Ornamental Manuscript Divider */}
+        <ManuscriptDivider />
 
         {/* English Translation Section */}
         <div className={`space-y-2 transition-all duration-300 ${isAnimating ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}`}>
