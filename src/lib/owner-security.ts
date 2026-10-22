@@ -272,18 +272,18 @@ export function lockOwnerSession(): void {
 }
 
 /**
- * Returns whether Upgradation Lock is enabled (default: true).
+ * Returns whether Upgradation Lock is enabled (default: false for zero-friction user updates).
  */
 export function isUpgradationLockEnabled(): boolean {
   try {
     if (typeof localStorage !== 'undefined') {
       const val = localStorage.getItem(STORAGE_KEY_UPGRADATION_LOCK);
-      return val !== 'false';
+      return val === 'true';
     }
   } catch {
     // Safe storage read fallback
   }
-  return true;
+  return false;
 }
 
 /**

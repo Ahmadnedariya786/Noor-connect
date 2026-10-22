@@ -279,6 +279,29 @@ const SettingsSubPage: React.FC = () => {
   );
   const pendingSecurityActionRef = useRef<(() => void) | null>(null);
 
+  // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1)
+  const [isStealthVaultVisible, setIsStealthVaultVisible] = useState(false);
+  const versionTapTimesRef = useRef<number[]>([]);
+
+  const handleVersionTap = () => {
+    const now = Date.now();
+    const recentTaps = versionTapTimesRef.current.filter((t) => now - t <= 3000);
+    recentTaps.push(now);
+    versionTapTimesRef.current = recentTaps;
+
+    if (recentTaps.length >= 5) {
+      versionTapTimesRef.current = [];
+      setIsStealthVaultVisible(true);
+      if (!isOwnerSessionUnlocked()) {
+        executeWithSecurity(
+          () => {},
+          '🔒 Unlock Owner Security Vault',
+          'Enter your private Owner Master Key to unlock administrative settings.'
+        );
+      }
+    }
+  };
+
   const executeWithSecurity = (
     action: () => void,
     title?: string,
@@ -304,6 +327,12 @@ const SettingsSubPage: React.FC = () => {
     );
     setSecurityModalOpen(true);
   };
+
+  useEffect(() => {
+    // Reset stealth vault visibility on navigating away from about section
+    setIsStealthVaultVisible(false);
+    versionTapTimesRef.current = [];
+  }, [sectionId]);
 
   useEffect(() => {
     const handleApkProgress = (e: CustomEvent<ApkDownloadProgressDetail>) => {
@@ -1251,7 +1280,16 @@ const SettingsSubPage: React.FC = () => {
             <Card className="p-5 text-center space-y-2 rounded-2xl">
               <NoorLogoCrest size="md" animated={animationEnabled} className="mx-auto my-1" />
               <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Noor Connect</h2>
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Version {CURRENT_APP_VERSION}</p>
+              <p
+                className="text-xs select-none cursor-pointer active:opacity-60 transition-opacity inline-block"
+                style={{ color: 'var(--text-secondary)' }}
+                onClick={handleVersionTap}
+                role="button"
+                tabIndex={0}
+                aria-label={`Version ${CURRENT_APP_VERSION}`}
+              >
+                Version {CURRENT_APP_VERSION}
+              </p>
               <div className="pt-2 space-y-1 max-w-xs mx-auto">
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                   Crafted with love for the Ummah — Noor Connect Team
@@ -1286,14 +1324,7 @@ const SettingsSubPage: React.FC = () => {
                   size="sm"
                   variant="ghost"
                   className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() =>
-                    executeWithSecurity(
-                      handleManualCheckUpdate,
-                      'Check For Updates',
-                      'Checking and fetching software updates requires owner authorization.',
-                      true
-                    )
-                  }
+                  onClick={handleManualCheckUpdate}
                   disabled={isCheckingUpdate}
                 >
                   {isCheckingUpdate ? 'Checking...' : 'Check now'}
@@ -1383,14 +1414,7 @@ const SettingsSubPage: React.FC = () => {
                           background: 'var(--accent)',
                           color: 'var(--on-accent)',
                         }}
-                        onClick={() =>
-                          executeWithSecurity(
-                            () => triggerPendingInstall(),
-                            'Install Software Update',
-                            'Launching APK installation requires owner authorization.',
-                            true
-                          )
-                        }
+                        onClick={() => triggerPendingInstall()}
                       >
                         <Download className="w-3.5 h-3.5 mr-1" />
                         Install Now
@@ -1432,14 +1456,7 @@ const SettingsSubPage: React.FC = () => {
                         size="sm"
                         variant="outline"
                         className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
-                        onClick={() =>
-                          executeWithSecurity(
-                            () => downloadAndInstallUpdate(updateResult.release?.apkUrl),
-                            'Download & Install Update',
-                            'Installing application binaries requires owner authorization.',
-                            true
-                          )
-                        }
+                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
                       >
                         <RefreshCw className="w-3.5 h-3.5 mr-1" />
                         Retry
@@ -1452,14 +1469,7 @@ const SettingsSubPage: React.FC = () => {
                           background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)',
                           color: 'var(--on-accent)',
                         }}
-                        onClick={() =>
-                          executeWithSecurity(
-                            () => downloadAndInstallUpdate(updateResult.release?.apkUrl),
-                            'Download & Install Update',
-                            'Installing application binaries requires owner authorization.',
-                            true
-                          )
-                        }
+                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
                       >
                         <Download className="w-3.5 h-3.5 mr-1" />
                         Download update
@@ -1491,17 +1501,10 @@ const SettingsSubPage: React.FC = () => {
                       <span>Stuck or dismissed?</span>
                       <button
                         type="button"
-                        onClick={() =>
-                          executeWithSecurity(
-                            () => {
-                              cancelApkDownload();
-                              openExternalBrowserFallback(updateResult.release?.apkUrl);
-                            },
-                            'Download Via Browser',
-                            'Downloading application binaries requires owner authorization.',
-                            true
-                          )
-                        }
+                        onClick={() => {
+                          cancelApkDownload();
+                          openExternalBrowserFallback(updateResult.release?.apkUrl);
+                        }}
                         className="inline-flex items-center gap-1 text-[var(--accent-text)] hover:underline font-medium"
                       >
                         <span>Download via Browser</span>
@@ -2074,16 +2077,21 @@ const SettingsSubPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* OWNER SECURITY VAULT — Cryptographic Owner Authorization */}
-            <OwnerSecurityVaultCard
-              onRequireUnlock={(title, desc) =>
-                executeWithSecurity(
-                  () => {},
-                  title || 'Unlock Owner Vault',
-                  desc || 'Enter your private Owner Master Key to unlock administrative settings.'
-                )
-              }
-            />
+            {/* OWNER SECURITY VAULT — Cryptographic Owner Authorization (Stealth 5-Tap Mode) */}
+            {isStealthVaultVisible && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <OwnerSecurityVaultCard
+                  onRequireUnlock={(title, desc) =>
+                    executeWithSecurity(
+                      () => {},
+                      title || 'Unlock Owner Vault',
+                      desc || 'Enter your private Owner Master Key to unlock administrative settings.'
+                    )
+                  }
+                  onLockVault={() => setIsStealthVaultVisible(false)}
+                />
+              </div>
+            )}
 
             {showChangelog && <Changelog onClose={() => setShowChangelog(false)} />}
           </div>

@@ -32,10 +32,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface OwnerSecurityVaultCardProps {
   onRequireUnlock: (actionTitle?: string, actionDesc?: string) => void;
+  onLockVault?: () => void;
 }
 
 export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
   onRequireUnlock,
+  onLockVault,
 }) => {
   const [isUnlocked, setIsUnlocked] = useState(() => isOwnerSessionUnlocked());
   const [remainingSec, setRemainingSec] = useState(() => getRemainingSessionSeconds());
@@ -111,6 +113,7 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
       title: '🔒 Vault Locked',
       description: 'Owner session has been terminated.',
     });
+    onLockVault?.();
   };
 
   const handleCopyHash = async () => {
@@ -281,6 +284,8 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
             className="font-bold flex items-center gap-1"
             style={{
               color: isUpgradeLocked ? 'var(--accent-text)' : 'var(--warning)',
+              fontSize: '0.78rem',
+              whiteSpace: 'nowrap',
             }}
           >
             {isUpgradeLocked ? '🔒 Key Protected' : '⚠️ Unrestricted'}
@@ -298,8 +303,15 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
           <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
             Active Key Mode:
           </span>
-          <span className="font-bold truncate" style={{ color: 'var(--text-primary)' }}>
-            {isCustomKey ? '✨ Custom Owner Key' : '🛡️ Bootstrap Initial'}
+          <span
+            className="font-bold truncate"
+            style={{
+              color: 'var(--text-primary)',
+              fontSize: '0.78rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {isCustomKey ? 'Master Key Active' : 'Protected (SHA-256)'}
           </span>
         </div>
       </div>
