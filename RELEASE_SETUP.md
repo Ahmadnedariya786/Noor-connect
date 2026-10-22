@@ -2,7 +2,7 @@
 
 ## Overview & Goal
 
-In Android, updates to an installed application **must** be signed with the exact same cryptographic signing key as the currently installed APK. 
+In Android, updates to an installed application **must** be signed with the exact same cryptographic signing key as the currently installed APK.
 
 Previously, builds without a persistent signing key generated ephemeral or varying debug signatures. When users downloaded a new nightly build, Android rejected the update with an installation conflict error, requiring a manual uninstall and reinstall (which wiped local settings, prayer records, and offline cache).
 
@@ -42,13 +42,17 @@ In `.github/workflows/nightly-apk.yml`:
 
 1. **Secret Validation**: Fails fast if any of the 4 secrets are not defined.
 2. **Decode Keystore**: The pipeline executes:
+
    ```bash
    echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
    ```
+
 3. **Assemble Release**: Runs Gradle release build with the signing credentials:
+
    ```bash
    ./gradlew assembleRelease --no-daemon
    ```
+
 4. **Local Fallback**: If building locally without these environment variables or without `release.keystore`, `android/app/build.gradle` safely falls back to standard debug signing so local workflows never break.
 
 ---
