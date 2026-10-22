@@ -2,6 +2,7 @@
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "2.2.1",
+  "author": "Noor Connect Team",
   "type": "module",
   "scripts": {
     "dev": "vite",

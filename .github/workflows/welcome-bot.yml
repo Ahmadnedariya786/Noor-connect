@@ -22,14 +22,14 @@ jobs:
 
             Thank you for opening this issue. Our team will review it soon.
 
-            - Check our [README](https://github.com/darkmaster0345/Noor-connect#readme) for feature overview
-            - Review the [CHANGELOG](https://github.com/darkmaster0345/Noor-connect/blob/main/CHANGELOG.md) for recent changes
-            - Search [existing issues](https://github.com/darkmaster0345/Noor-connect/issues) before posting
+            - Check our [README](https://github.com/Ahmadnedariya786/Noor-connect#readme) for feature overview
+            - Review the [CHANGELOG](https://github.com/Ahmadnedariya786/Noor-connect/blob/main/CHANGELOG.md) for recent changes
+            - Search [existing issues](https://github.com/Ahmadnedariya786/Noor-connect/issues) before posting
           pr-message: |
             Thank you for your contribution! 🕌
 
             Your PR will be reviewed shortly. Make sure it passes all CI checks.
 
-            - [Lint & TypeCheck](https://github.com/darkmaster0345/Noor-connect/actions/workflows/lint-typecheck.yml) must pass
-            - [PR Validation](https://github.com/darkmaster0345/Noor-connect/actions/workflows/pr-validation.yml) must pass
-            - Translation changes go through [Translation Sync](https://github.com/darkmaster0345/Noor-connect/actions/workflows/translation-sync.yml)
+            - [Lint & TypeCheck](https://github.com/Ahmadnedariya786/Noor-connect/actions/workflows/lint-typecheck.yml) must pass
+            - [PR Validation](https://github.com/Ahmadnedariya786/Noor-connect/actions/workflows/pr-validation.yml) must pass
+            - Translation changes go through [Translation Sync](https://github.com/Ahmadnedariya786/Noor-connect/actions/workflows/translation-sync.yml)

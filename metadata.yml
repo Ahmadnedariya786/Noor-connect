@@ -1,8 +1,7 @@
 License: MIT
-SourceCode: https://github.com/darkmaster0345/Noor-connect
-IssueTracker: https://github.com/darkmaster0345/Noor-connect/issues
-Changelog: https://github.com/darkmaster0345/Noor-connect/releases
-Donate: https://github.com/sponsors/darkmaster0345
+SourceCode: https://github.com/Ahmadnedariya786/Noor-connect
+IssueTracker: https://github.com/Ahmadnedariya786/Noor-connect/issues
+Changelog: https://github.com/Ahmadnedariya786/Noor-connect/releases
 
 Summary: Your Ultimate Islamic Companion
 Description: |-
@@ -30,11 +29,11 @@ Categories:
   - Religion
 
 RepoType: git
-Repo: https://github.com/darkmaster0345/Noor-connect.git
+Repo: https://github.com/Ahmadnedariya786/Noor-connect.git
 
 Name: Noor Connect
-WebSite: https://github.com/darkmaster0345/Noor-connect
-Author: darkmaster0345
+WebSite: https://github.com/Ahmadnedariya786/Noor-connect
+Author: Noor Connect Team
 AutoName: Noor Connect
 
 Builds:

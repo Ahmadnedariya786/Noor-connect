@@ -1,7 +1,7 @@
 ![Untitled design](https://github.com/user-attachments/assets/2e0a2569-47a2-49b3-8ccc-25e37964bfb5)
 # 🌙 Noor Connect - Your Ultimate Islamic Companion
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/darkmaster0345/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.2.1-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://opensource.org/licenses/GPL-3.0) [![Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/Ahmadnedariya786/Noor-connect) [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml) [![Version](https://img.shields.io/badge/version-2.2.1-orange.svg)](CHANGELOG.md) [![Privacy First](https://img.shields.io/badge/Privacy-First-brightgreen.svg)]() [![Nasheed Partner](https://img.shields.io/badge/Nasheed-No%20Copyright%20Nasheed-purple.svg)]()
 
 **Noor Connect** is a truly comprehensive, beautiful, and strict privacy-focused Islamic application designed to help you stay connected with your faith. Built to modern mobile standards using web technologies (React + Vite + Capacitor), it stands as a premium, tracker-free digital companion for spiritual growth.
 
@@ -17,7 +17,7 @@ The mainstream Islamic app market is dominated by apps that:
 - 🔍 **Monitor your Quran reading** for analytics
 - 💰 **Monetize your spiritual data** without consent
 
-**Noor Connect was built differently** — by a Muslim who needed a complete Islamic toolkit but refused to trade privacy for convenience. Every feature exists because the developer personally needed it, and every architectural decision prioritizes **your sovereignty over your spiritual data**.
+**Noor Connect was built differently** — crafted with love for the Ummah by the Noor Connect Team, refusing to trade privacy for convenience. Every feature exists because the team needed it, and every architectural decision prioritizes **your sovereignty over your spiritual data**.
 
 ### 🏆 **Partnership: No Copyright Nasheed**
 We're proud to announce our partnership with **[No Copyright Nasheed](https://nocopyrightnasheed.com/)** — the leading platform for copyright-free Islamic nasheeds.
@@ -239,7 +239,7 @@ Noor Connect is built from the ground up for performance and ethical transparenc
 
 ### Clone & Run
 ```bash
-git clone https://github.com/darkmaster0345/Noor-connect.git
+git clone https://github.com/Ahmadnedariya786/Noor-connect.git
 cd Noor-connect
 npm install
 

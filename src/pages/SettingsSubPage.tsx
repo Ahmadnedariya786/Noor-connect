@@ -12,15 +12,12 @@ import {
   HardDrive,
   ShieldCheck,
   Info,
-  Heart,
   Mail,
   Globe,
   DollarSign,
   Trash2,
   Copy,
   ExternalLink,
-  MessageCircle,
-  Briefcase,
   AlertTriangle,
   X,
   Check,
@@ -32,7 +29,6 @@ import {
   ChevronDown,
   CheckCircle2,
   AlertCircle,
-  XCircle,
   Terminal,
   Sparkles,
   Shield,
@@ -118,14 +114,12 @@ const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: an
   backup: { title: 'Backup & Restore', subtitle: 'Cloud backup, sync & export settings', icon: Database },
   storage: { title: 'Storage & Cache', subtitle: 'Clear cache, offline Quran & download stats', icon: HardDrive },
   privacy: { title: 'Privacy & Security', subtitle: 'Data usage, local storage & permissions', icon: ShieldCheck },
-  about: { title: 'About Noor Connect', subtitle: 'App version, changelog & developer', icon: Info },
-  support: { title: 'Support & Donate', subtitle: 'Sponsor development & crypto donations', icon: Heart },
-  contact: { title: 'Contact & Hire Developer', subtitle: 'WhatsApp, portfolio & email contacts', icon: Mail },
+  about: { title: 'About Noor Connect', subtitle: 'App version, changelog & system health', icon: Info },
+  contact: { title: 'Contact & Feedback', subtitle: "We'd love to hear from you", icon: Mail },
 };
 
-const BITCOIN_ADDRESS = 'bc1q43nelc0skgng752wesq5ez4qzhgl09cksmlddx';
-const SOLANA_ADDRESS = '3Aw78BrsdtBeZNpTQvAP6kjtUpGqDBqhr8dATzEZgp8V';
-const BNB_ADDRESS = '0xb170A4621662c5f870E4186a81dA7645B132cb09';
+const SUPPORT_EMAIL = 'overstay-cobbler41@bravealias.com';
+const MAILTO_FEEDBACK_URL = `mailto:${SUPPORT_EMAIL}?subject=Noor%20Connect%20Feedback`;
 
 const SettingsSubPage: React.FC = () => {
   const { sectionId = 'appearance' } = useParams<{ sectionId: string }>();
@@ -174,6 +168,12 @@ const SettingsSubPage: React.FC = () => {
   });
 
   const { isEnabled: isAlarmEnabled, testAdhan, enableAlarm, disableAlarm } = usePrayerAlarm();
+
+  useEffect(() => {
+    if (sectionId === 'support' || sectionId === 'donate') {
+      navigate('/settings/about', { replace: true });
+    }
+  }, [sectionId, navigate]);
 
   useEffect(() => {
     setMadhabState(getMadhab());
@@ -464,9 +464,14 @@ const SettingsSubPage: React.FC = () => {
     }
   };
 
-  const handleCopy = (name: string, address: string) => {
-    navigator.clipboard?.writeText(address);
-    toast({ title: `${name} address copied to clipboard` });
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(SUPPORT_EMAIL);
+      toast({ title: 'Email copied!' });
+    } catch {
+      // Clipboard write fallback
+      toast({ title: 'Could not copy email', variant: 'destructive' });
+    }
   };
 
   const handleClearCache = async () => {
@@ -1208,11 +1213,16 @@ const SettingsSubPage: React.FC = () => {
           <div className="space-y-4">
             <Card className="p-5 text-center space-y-2 rounded-2xl">
               <NoorLogoCrest size="md" animated={animationEnabled} className="mx-auto my-1" />
-              <h2 className="text-lg font-bold">Noor Connect</h2>
-              <p className="text-xs text-slate-400">Version {CURRENT_APP_VERSION}</p>
-              <p className="text-xs text-slate-500 max-w-xs mx-auto pt-2">
-                Built end-to-end: 6 languages, 5 native widgets, 400+ licensed nasheeds. Built for the sake of Allah.
-              </p>
+              <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Noor Connect</h2>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Version {CURRENT_APP_VERSION}</p>
+              <div className="pt-2 space-y-1 max-w-xs mx-auto">
+                <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  Crafted with love for the Ummah — Noor Connect Team
+                </p>
+                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  A privacy-first Islamic companion, built free for the sake of Allah. All data stays on your device. Always.
+                </p>
+              </div>
             </Card>
 
             <Button
@@ -1978,111 +1988,80 @@ const SettingsSubPage: React.FC = () => {
           </div>
         )}
 
-        {/* SUPPORT SECTION */}
-        {sectionId === 'support' && (
-          <div className="space-y-4">
-            <Card className="p-4 space-y-3 rounded-2xl">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Support Noor Connect Development</Label>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                100% of donations go to development — no fees, no middlemen. Supports BTC, SOL & BNB. Tap to copy the address, then paste it in your wallet.
-              </p>
-
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                  <div>
-                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>Bitcoin (BTC)</span>
-                    <p className="text-[10px] truncate max-w-[200px]" style={{ color: "var(--text-secondary)" }}>{BITCOIN_ADDRESS}</p>
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => handleCopy('Bitcoin', BITCOIN_ADDRESS)}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                  <div>
-                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>Solana (SOL)</span>
-                    <p className="text-[10px] truncate max-w-[200px]" style={{ color: "var(--text-secondary)" }}>{SOLANA_ADDRESS}</p>
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => handleCopy('Solana', SOLANA_ADDRESS)}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                  <div>
-                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>BNB Chain</span>
-                    <p className="text-[10px] truncate max-w-[200px]" style={{ color: "var(--text-secondary)" }}>{BNB_ADDRESS}</p>
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => handleCopy('BNB', BNB_ADDRESS)}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* CONTACT SECTION — Developer Info */}
+        {/* CONTACT SECTION — Clean, single-purpose email contact */}
         {sectionId === 'contact' && (
           <div className="space-y-4">
-            <Card className="p-5 bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] flex items-center justify-center border border-[var(--border)] shrink-0">
-                  <Briefcase className="w-6 h-6 text-[var(--accent)]" />
+            <Card
+              className="p-5 space-y-4 rounded-2xl border"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border"
+                  style={{
+                    background: 'var(--accent-soft)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--accent-text)',
+                  }}
+                >
+                  <Mail className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">Love this app? I built it.</h3>
-                  <p className="text-xs text-slate-400">One developer. Zero trackers. Built for the sake of Allah.</p>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-xs uppercase tracking-wider font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Support & Feedback Email
+                  </p>
+                  <p
+                    className="text-sm font-semibold truncate select-all mt-0.5"
+                    style={{ color: 'var(--text-primary)', fontWeight: 600 }}
+                  >
+                    {SUPPORT_EMAIL}
+                  </p>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                I also build production software, websites, and security audits for businesses and startups. If you need a developer who delivers quality work, let's talk.
-              </p>
-
-              <div className="space-y-2.5 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                 <Button
-                  className="w-full h-11 shadow-sm transition-all rounded-xl"
+                  className="w-full h-11 shadow-sm font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                   style={{
-                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
-                    color: "var(--on-accent)",
+                    background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2, var(--accent)) 100%)',
+                    color: 'var(--on-accent, #000000)',
                   }}
-                  onClick={() => window.open('https://wa.me/923352706540', '_blank')}
+                  onClick={() => {
+                    window.location.href = MAILTO_FEEDBACK_URL;
+                  }}
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  <span className="font-medium">Let's Talk on WhatsApp</span>
+                  <Mail className="w-4 h-4" />
+                  <span>Send Email</span>
                 </Button>
 
                 <Button
                   variant="outline"
-                  className="w-full h-11 justify-center bg-[var(--surface-2)] text-[var(--text-primary)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] transition-all rounded-xl border border-[var(--border)]"
-                  onClick={() => window.open('https://ubaid-ur-rehmanportfolio.vercel.app/', '_blank')}
+                  className="w-full h-11 font-semibold text-xs rounded-xl flex items-center justify-center gap-2 border transition-all active:scale-[0.98]"
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                  onClick={handleCopyEmail}
                 >
-                  <ExternalLink className="w-4 h-4 mr-2 text-[var(--accent)]" />
-                  <span className="font-medium">View my work</span>
+                  <Copy className="w-4 h-4" />
+                  <span>Copy Email</span>
                 </Button>
-
-                <button
-                  className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors p-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
-                  onClick={() => window.location.href = 'mailto:arifubaid0345@gmail.com'}
-                >
-                  <Mail className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>
-                    <span className="font-semibold text-[var(--text-primary)]">Gmail</span> — arifubaid0345@gmail.com
-                  </span>
-                </button>
-
-                <button
-                  className="w-full min-h-11 flex items-center gap-2.5 text-left text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors p-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
-                  onClick={() => window.location.href = 'mailto:ubaid0345@proton.me'}
-                >
-                  <Mail className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>
-                    Other email: <span className="font-semibold text-[var(--text-primary)]">Proton</span> — ubaid0345@proton.me
-                  </span>
-                </button>
               </div>
             </Card>
+
+            <p
+              className="text-xs text-center px-2 leading-relaxed"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              For bugs, suggestions, or feature requests — we read every message.
+            </p>
           </div>
         )}
       </main>

@@ -99,7 +99,7 @@ export function InstallDialog() {
                 Download and install the native Android app directly on your device.
               </p>
               <a 
-                href="https://drive.proton.me/urls/A056VN0X4G#2GDO93Y0aiZo" 
+                href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 rounded-md text-sm font-medium transition-colors"

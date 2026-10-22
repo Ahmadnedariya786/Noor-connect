@@ -297,6 +297,8 @@ function AppRoutes() {
               <Route path="/tafsir" element={<Tafsir />} />
               <Route path="/eid-checklist" element={<EidChecklist />} />
               <Route path="/fitrana-calculator" element={<FitranaCalculator />} />
+              <Route path="/support" element={<Navigate to="/settings/about" replace />} />
+              <Route path="/donate" element={<Navigate to="/settings/about" replace />} />
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
               <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
               <Route path="*" element={<NotFound />} />
@@ -353,6 +355,8 @@ function AppRoutes() {
               <Route path="/tafsir" element={<Tafsir />} />
               <Route path="/eid-checklist" element={<EidChecklist />} />
               <Route path="/fitrana-calculator" element={<FitranaCalculator />} />
+              <Route path="/support" element={<Navigate to="/settings/about" replace />} />
+              <Route path="/donate" element={<Navigate to="/settings/about" replace />} />
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
               <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
               <Route path="*" element={<NotFound />} />

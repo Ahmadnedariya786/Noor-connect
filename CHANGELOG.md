@@ -41,8 +41,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### ⚙️ Modular Settings Architecture & Android OOM Crash Elimination
 - **Legacy Android WebView OOM Resolution**: Deprecated the 1,600-line monolithic Settings page that rendered 15+ sections simultaneously.
 - **Index Landing Page (`/profile`)**: Replaced with a fast navigation index leveraging 500ms single-pass deferred async state fetching to eliminate UI-thread blocking.
-- **Lazy-Loaded Sub-Pages (`/settings/:sectionId`)**: Built 12 modular sub-pages covering Theme, Haptics, Personal Info, Prayer Calculation, Notifications, Adhan, Backup, Storage, Privacy, About, Support, and Developer Contact.
-- **Authentic Contact & Support**: Restored verified developer WhatsApp, Portfolio, Gmail, ProtonMail links, and BTC/SOL/BNB donation addresses.
+- **Lazy-Loaded Sub-Pages (`/settings/:sectionId`)**: Built modular sub-pages covering Theme, Haptics, Personal Info, Prayer Calculation, Notifications, Adhan, Backup, Storage, Privacy, About, and Contact.
+- **Privacy-First Community & Support**: Direct team support email and community channels.
 
 ### 🔔 Expanded Smart Notification Suite
 - **Pre-Fajr Tahajjud & Night Prayer**: Reminders during the last third of the night to stand in prayer.
