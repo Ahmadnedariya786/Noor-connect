@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Dead Code Removed**: Deleted the unused `WidgetPrefs` update-throttle helpers, the never-invoked duplicate step-detection registration in `WidgetRefreshWorker` (the live implementation lives in `WidgetForegroundService`), an unused import, and the inert `android.appwidget.configure` manifest meta-data blocks (real wiring is `android:configure` in each widget info XML).
 
 ### 🎵 Quran Audio & Player Enhancements
+
 - **Quran Audio Page Redesigned**: Complete Spotify-style UI/UX remake — dark hero card, horizontal reciter carousel with circular gold-gradient avatars, surah list with diamond number plates and animated equalizer on the playing row, sticky search bar, and playback via GlobalQuranPlayer mini-player app-wide.
 - **GlobalQuranPlayer Repeat Loop**: Added repeat toggle (loop current surah indefinitely); audio automatically restarts from 0:00 when ended and repeat is enabled.
 - **GlobalQuranPlayer Progress Bar**: Added thin gold progress bar in mini-player showing seek position; expanded player includes seek backward/forward 10s buttons with proper SkipBack/SkipForward icons (was placeholder Repeat icons).
@@ -28,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Performance Fix**: Stabilized `getRowProgress` callback via `useRef` to prevent 114 surah row re-renders during active downloads, fixing FPS degradation.
 
 ### 📻 Live Streams — Migrated to Official SBA CDN
+
 - **Replaced dead streams**: The `m.live.net.sa` Wowza server was decommissioned (returning 404) and the Aloula CDN redirect URLs were CORS-blocked. Both replaced with official SBA streams served via Globecast/Akamai CDN (`cdn-globecast.akamaized.net`). HTTPS, CORS-enabled globally, works on both native Android and web.
 - **Unified platform URLs**: Removed the native/web URL split — both platforms now use the same HTTPS endpoint. No more cleartext HTTP or Android network security config exceptions for live streams.
 - **Makkah fallback**: Added Kwikmotion 1080p (Akamai CDN) as an automatic secondary source for Makkah. Madinah has no alternative CORS-enabled source at this time.
@@ -39,12 +41,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.2.0] - 2026-08-01
 
 ### ⚙️ Modular Settings Architecture & Android OOM Crash Elimination
+
 - **Legacy Android WebView OOM Resolution**: Deprecated the 1,600-line monolithic Settings page that rendered 15+ sections simultaneously.
 - **Index Landing Page (`/profile`)**: Replaced with a fast navigation index leveraging 500ms single-pass deferred async state fetching to eliminate UI-thread blocking.
 - **Lazy-Loaded Sub-Pages (`/settings/:sectionId`)**: Built modular sub-pages covering Theme, Haptics, Personal Info, Prayer Calculation, Notifications, Adhan, Backup, Storage, Privacy, About, and Contact.
 - **Privacy-First Community & Support**: Direct team support email and community channels.
 
 ### 🔔 Expanded Smart Notification Suite
+
 - **Pre-Fajr Tahajjud & Night Prayer**: Reminders during the last third of the night to stand in prayer.
 - **Salat al-Duha Alerts**: Mid-morning Duha prayer notification to fulfill daily body joint charity.
 - **Sunnah Fasting Reminders**: Automated Monday & Thursday Sunnah fasting notifications.
@@ -52,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Bedtime Sunnah Azkar**: Nightly reminder to recite Ayatul Kursi and protection surahs before sleep.
 
 ### 📦 APK Size Optimization
+
 - **Mushaf Downscale**: 606 images → 810×1145 WebP q75 (83.9 → 56.6 MB).
 - **Hadith Gzip**: 34 JSON files → `.json.gz` (95.4 → 19.8 MB, 79 MB saved), loaded via `DecompressionStream` with fallback.
 - **Vite Duplicate Purge**: `clean-dist-data.js` strips all redundant `.br`/`.gz` from dist (except hadith `.json.gz`), reducing dist from 110 → 34.8 MB.
@@ -59,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Final APK**: 94.4 MB (was ~97.4 MB), all offline features intact.
 
 ### ⚡ 5-Phase Performance Optimization Pass
+
 - **Re-render churn eliminated**: Subscriber-counted global timer scheduler (starts/stops with subscribers); dashboard's 30s clock tick replaced with a derived 60s `minuteTick`; guarded state updates in countdown widgets, Ramadan widget, and the radio player stop redundant re-renders.
 - **Long list rendering**: Hadith collections render in pages of 300 with IntersectionObserver infinite scroll; memoized cards for hadith, books, and radio stations; debounced Tafsir / Names of Allah search with cached filtered results.
 - **Startup & bundle size**: Premium dashboard and the weekly chart are code-split (chart renders only when animations are enabled and the device can handle it); dead `chart.tsx` removed; module preload hints filtered for heavy chunks; first auto-backup and daily hadith fetch deferred to idle time with an in-memory parse cache.
@@ -66,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Timer & memory leaks fixed**: Ebook download progress interval cleared on failure; periodic notification checks made idempotent with tracked interval + removable listener + `stopPeriodicChecks()`; dead `PrayerCountdown` component deleted; animation tier benchmark runs once per session instead of on every consumer mount.
 
 ### 📻 Live Streams Reliability & Fullscreen Fixes
+
 - **Fixed Broken Makkah & Madinah Streams**: Replaced the CORS-blocked Aloula CDN redirect URLs (rejected by browsers before playback starts) with `m.live.net.sa` HLS streams (later superseded by v2.2.1 — see above).
 - **Automatic Source Fallback**: If the primary stream fails, the player automatically switches to a secondary source once before showing a friendly error with Retry.
 - **Android Fullscreen Rendering Fix**: Entering fullscreen now uses native `requestFullscreen` + landscape orientation lock on Android, fills the entire screen edge-to-edge (`100vw`/`100vh` with safe-area insets), and recalculates video sizing on `resize`/`orientationchange` so the picture stays centered with `object-fit: contain`. Exiting fullscreen restores the 16:9 layout and unlocks orientation.
@@ -73,10 +80,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Source Info Cards**: In-player stream source info cards reflect the current CDN source configuration.
 
 ### 🤖 Android Stability
+
 - **Android 14+ Crash Fix**: Replaced the adaptive app icon (rejected by Android 14+ strict notification validation) with a proper white-on-transparent vector drawable — fixes the `BadForegroundServiceNotificationException` crash in `WidgetForegroundService` and prevents the same crash in `AdhanPlaybackService` and `WidgetRefreshWorker`.
 - **Android 12+ Background Service Crash Fix**: Wrapped `startForegroundService` in a `try-catch` block to prevent `ForegroundServiceStartNotAllowedException` when widgets trigger updates from the background.
 
 ### 📱 Native Widget Reliability
+
 - **Quran Progress Sync Fixed**: The Quran Progress widget never updated because the sync payload was missing its `lastUpdated` timestamp and was silently rejected by runtime validation on every push. The hook now sends a valid timestamp, so reading progress, streak, and goal data reach the widget.
 - **Daily Content No Longer Dropped**: When no hadith cache existed yet, the fallback hadith had an empty `source` which failed payload validation and dropped the entire ayah + hadith update. The fallback now carries a valid source so Daily Ayah / Daily Hadith widgets always receive content.
 - **Shared Service Lifecycle Fixed**: Each widget's `onDisabled` stopped the shared foreground service when only *its own* instances were gone — removing one widget type while others remained killed step/location monitoring and prayer alarms for the survivors. All five providers now check whether **any** widget type still has instances before stopping the service or cancelling alarms.
@@ -86,6 +95,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Dead Code Removed**: Deleted orphaned `StepDetectionService` and `LocationChangeService` (superseded by the inline step/location logic in `WidgetForegroundService`).
 
 ### 🎨 Native Widget Quality Pass — Light & Dark Theme Support
+
 - **Premium Visual Redesign**: All five widgets completely redesigned with Material 3 glassmorphism, translucent inner rim borders, gold gradient dividers, and unified Arabic brand headers (`نور`).
 - **Light + Dark Themes**: All five widgets now ship a full light palette (warm parchment) alongside the dark theme, with dedicated `values-night` / `values-night-v31` overrides — the widgets gracefully switch appearance with the system theme on every Android version, and follow Material You dynamic color on Android 12+.
 - **System Corner Radius (Tier 1 WS-2)**: On API 31+ widgets now use the platform-provided `system_app_widget_background_radius` / `system_app_widget_inner_radius` instead of a hardcoded radius, so corners visually match the launcher and OEM surfaces.
@@ -93,11 +103,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Contrast & Readability Pass (WC-3)**: Accent and text colors darkened in both palettes (deeper emerald/gold, darker `#BA1A1A` da'if-grade red) and the stale-data badge darkened — every element now clears WCAG AA contrast on light backgrounds.
 
 ### 🕌 Major Prayer Times & Quran Refactor
+
 - **usePrayerTimes Hook Complete Rewrite**: Simplified logic with signature-based caching deduping, robust fallback chain (geolocation → stored → manual → timezone default), and separated notification scheduling into new `usePrayerNotifications` hook with 1s throttle.
 - **Removed Standalone Mushaf Viewer**: Deleted the standalone `/mushaf` image-based viewer feature to streamline the app. The app now exclusively uses the vertical-scrolling `/quran` reader (which still utilizes the beautiful Madani Mushaf WebP images and integrates with recitation progress/streaks).
 - **GlobalPrayerAlarm Optimization**: localStorage caching skips redundant geolocation/API calls when today's times already cached; abort controller for clean fetch cancellation.
 
 ### 🌸 Noor Cycle & Women's Wellness
+
 - **Smart Notifications**: Added highly contextual local nudges for Fertile Window tracking (15 days before predicted period) and a smart Qaza Fasting reminder (Sunday evening prompt to make up missed Ramadan fasts, if the user is in Tuhr).
 - **Major UI/UX Overhaul**: Transitioned the tracker from a sidebar layout to a fully mobile-optimized native Bottom Tab Bar, preventing layout overlaps.
 - **Health Tracking Integrations**: Built a daily Water Hydration Tracker (8 glasses) and a 1-10 Pain Scale logger directly into the Today and Log tabs.
@@ -109,22 +121,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Islamic Wellness Library**: Curated Fiqh & Wellness articles added to the Islamic knowledge tab, covering nutrition, exercise, and mental health from an Islamic perspective.
 
 ### 🎵 Nasheed Player Upgrades
+
 - **New Equalizer Component**: Animated audio visualizer with configurable bars, colors, heights, and animation timing.
 - **Offline Playback Cache**: Played nasheeds cached for offline listening (200 tracks, 90-day retention, quota-safe) with cache status indicators.
 - **Filter by Artist**: Quick artist-filter chips for browsing 400+ nasheed library.
 - **Back to Top**: Instant jump to top of long library lists.
 
 ### ⚡ Performance & Core Web Vitals
+
 - **Added react-window & @types/react-window** for virtualized list support.
 - **Prayer Times Hook**: Race condition fixes (removed stale ref checks), `parseTime` throws on invalid input instead of returning current time.
 - **GlobalPrayerAlarm**: Module-level side effects moved to `useEffect`; event listener type safety fixed; missing cleanup listeners added.
 
 ### 🛡️ Code Quality & Lint Fixes
+
 - **Resolved 12 lint errors**: 5 empty catch blocks (added non-critical comments), 1 `require()`→`import` conversion, 4 `@ts-ignore`→`@ts-expect-error` with descriptions, 1 parsing error (extra closing braces).
 - **Settings.tsx**: Fixed empty catch block (eslint error).
 - **TypeScript**: Stricter types in prayer times and alarm modules.
 
 ### 🕌 Prayer Tracking & Qaza Fixes
+
 - **Critical Prayer Tracking Bridge**: `syncMissedPrayersToQaza()` moved from unused SalahTracker into Dashboard.tsx — missed prayers auto-detected and added to qaza from home screen.
 - **Dashboard Prayer Time Validation**: Check-in passes prayer times to `togglePrayer()`, showing "Cannot check in before prayer time" error instead of silently bypassing.
 - **Qaza History Centralized**: Moved to `qaza-tracker.ts` lib functions (`getQazaHistory`, `addQazaHistoryEntry`, `getQazaDailyGoal`, `setQazaDailyGoal`).
@@ -132,10 +148,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Hadith Collection Flash Fix**: `HadithBookView` initializes `metadataLoading` to `true`, checks `remoteCollectionData` for loading guard — eliminates "1 book" flash.
 
 ### 🧹 Dead Code Cleanup
+
 - **Deleted Unused Components**: `SalahTracker.tsx` (205 lines), `PrayerTimesList.tsx` (451 lines), `EnhancedPrayerTimesList.tsx` (111 lines) — imported but never rendered.
 - **Dashboard Cleanup**: Removed unused lazy imports for `PrayerTimesList`, `SalahTracker`, `QazaTracker`.
 
 ### 🌐 Complete Language & Translation Overhaul
+
 - **All 5 Languages Synchronized**: English, Arabic, Urdu, Bengali, Russian — 410 translation keys each (was 278-314 with 99-105 missing).
 - **Hardcoded English Strings Eliminated**: 20+ AppBar titles, BottomNav labels, DashboardFeatureCards now use `t()`.
 - **Locale-Aware Formatting**: `time-formatter.ts`, `useI18n.ts`, `widget-service.ts` respect selected language.
@@ -143,11 +161,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Widget String Sync**: Android widgets receive translated prayer labels in all 5 languages.
 
 ### 🔔 Intelligent Notification Engine
+
 - **Ghost Notification Fix**: Ramadan reminders (Suhoor, Iftar, Tarawih) no longer persist into other months — safety clear on-boot sweeps native OS buffer.
 - **Deterministic Scheduling**: Predictable ID mapping (`Suhoor: 2001`, `Iftar: 2002`) replaces random hashes for proper overwrite/cancel.
 - **Accurate Calendar Countdowns**: Async `islamicCalendarService` replaces deprecated tabular estimates.
 
 ### 🛡️ Bulletproof Backup & Restore System
+
 - **Unified Backup Service**: Single `backup-service.ts` consolidates legacy systems — existing backups auto-migrated on first launch.
 - **Complete Data Capture**: All localStorage + Capacitor Preferences + e-book metadata, Seerah/Qisas/Hadith progress, quiz economy, sleep settings, global player states, Eid checklists.
 - **Always-On Auto Save**: Snapshot every 20 min of use + on app close; latest overwrites previous; offered back on reinstall.
@@ -163,6 +183,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Quran Progress Tracking Fixes
 
 #### 🐛 Bug Fixes
+
 - Fixed incorrect surah count: Progress now only counts fully completed surahs (when all ayahs are read), not partially read ones.
 - Fixed misleading UI text: Updated "Surahs Completed" to "Surahs fully Completed" for clarity.
 - Fixed wrong progress calculation: Changed from ayah-based estimation to accurate page-based tracking (604 total pages).
@@ -170,6 +191,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed widget sync mismatch: Added widget-compatible localStorage key sync for native Android widgets.
 
 #### ⚡ Improvements
+
 - Updated `QuranProgressWidget` to display pages read (X/604) instead of ayahs.
 - Modified `quran-features` service to track pages read and calculate percentage based on pages.
 - Fixed `QuranReader` to use current page instead of `maxPageViewed` for progress.
@@ -182,6 +204,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Noor Connect 2.0 — Major Release
 
 #### ✨ New Features
+
 - **Widget System v2**: 5 native Kotlin widgets (Next Prayer, Daily Ayah, Daily Hadith, Quran Progress, Tasbeeh Counter) rebuilt from scratch with Material You dynamic color.
 - **Noor Cycle**: Ovulation day tracking, cycle insights, fertile window, analytics tab with recharts, and PDF doctor report export.
 - **Seerah chapters and Qisas (Stories of Prophets)**: Reader with offline tafsir support and progress tracking.
@@ -196,6 +219,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Qibla enhancements**: Single smart button with geo-anchor note, magnetic declination correction via NOAA API, device orientation and metal-interference warnings with calibration UX.
 
 #### 🐛 Bug Fixes
+
 - Critical Haidh Tracker fixes: prayer pause/resume on cycle start/end, backup inclusion, gender filter, and route consolidation.
 - TypeScript strictness: removed unsafe `JSON.parse` and `as any` casts, fixed dependency arrays, race conditions, and memory leaks.
 - Widget stability: `WidgetBootReceiver` refactor, payload validation logging, thread-safe `HadithBundle.cachedHadiths`, and Arabic RTL fixes.
@@ -210,6 +234,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - App Icon: Removed `android:roundIcon` attribute from AndroidManifest to resolve icon rendering issues on legacy Android brands.
 
 #### ⚡ Improvements
+
 - **F-Droid Metadata**: Updated license to GPL-3.0-or-later and synchronized feature descriptions (Widgets, Menstrual Tracker, Zakat) for store publication.
 - RadioStats consolidated into unified MediaStats tracking Live Makkah/Madinah watch time.
 - Spotify-inspired PremiumDashboard with gold/green accents, dynamic greetings, and backdrop blurs.
@@ -228,6 +253,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Expanded Features — Zen Mode, Hadith, Widgets, Noor Cycle
 
 #### ✨ New Features
+
 - **Zen Mode (Tasbeeh)**: Dhikr counter, categories, and review mode.
 - **Quiz expansion**: Categories, review mode, and gamification streaks.
 - **Duas expansion**: Search, DuaOfDay, audio playback, and counter.
@@ -239,6 +265,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Notification overhaul**: Fixed hadith randomization, low-end device throttling, dynamic SW dates, dedup scheduling, and caching.
 
 #### 🐛 Bug Fixes
+
 - Qibla: compass heading accuracy, layout overflow fixes, and F-Droid compliance with custom FOSS sensor implementation.
 - Profile page: madhab labels updated, Islamic sleep reminder toggle added, SurahList react-window import fixed.
 - Calendar: Wired `daysUntilRamadan`, replaced offline fallback with tabular Islamic calendar, and dynamic Eid date lookup.
@@ -250,10 +277,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Live Radio Widget & Native Android Improvements
 
 #### ✨ New Features
+
 - **Live Quran Radio Widget**: Direct background audio playback and home screen controls.
 - **Next Adhan, Daily Ayah, and Daily Schedule Widgets**: Rebuilt in native Kotlin for perfect Doze mode performance.
 
 #### 🐛 Bug Fixes
+
 - Fixed Quiz streak logic and Daily check-in errors during Menstrual Mode overrides.
 - Corrected premature Eid Mubarak popups from triggering before Shawwal.
 - Replaced non-free qibla library with custom FOSS sensor implementation for F-Droid compliance.
@@ -262,6 +291,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Critical security fixes: TypeScript strict mode enabled, XSS vulnerability patched, ErrorBoundary added, and console.log stripped from production.
 
 #### ⚡ Improvements
+
 - Added premium Android 14 notification center integration with large icon display support.
 
 ---
@@ -271,11 +301,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Gender-Based Features & Menstrual Mode
 
 #### ✨ New Features
+
 - Added gender selection for personalized experience.
 - Menstrual mode for prayer notification management.
 - Widget customization system.
 
 #### ⚡ Improvements
+
 - Enhanced dashboard with customizable widgets.
 
 ---
@@ -285,6 +317,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Initial Release
 
 #### ✨ Features
+
 - Quran reading with audio recitation.
 - Prayer times with location detection.
 - Qibla direction finder.

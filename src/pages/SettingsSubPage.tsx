@@ -71,7 +71,7 @@ import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
 import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
 import { OwnerSecurityVaultCard } from '@/components/OwnerSecurityVaultCard';
-import { isOwnerSessionUnlocked, isUpgradationLockEnabled } from '@/lib/owner-security';
+import { isOwnerSessionUnlocked, isUpgradationLockEnabled, subscribeOwnerSecurity } from '@/lib/owner-security';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';

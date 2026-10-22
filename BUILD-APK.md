@@ -10,18 +10,18 @@ This project provides two ways to build signed APKs:
 
 ## 🔐 Setup Secret Instructions
 
-### 1. Create Secrets in GitHub:
+### 1. Create Secrets in GitHub
 
-**Settings → Secrets and variables → Actions → New repository secret**
+Navigate to: **Settings → Secrets and variables → Actions → New repository secret**
 
 | Secret Name | Description | How to get |
-|-------------|-------------|------------|
-| `KEYSTORE_BASE64` | Your keystore file (base64 encoded) | Use `base64 -w 0 <your-keystore.jks` |
+| --- | --- | --- |
+| `KEYSTORE_BASE64` | Your keystore file (base64 encoded) | Use `base64 -w 0 <your-keystore.jks>` |
 | `KEYSTORE_PASSWORD` | Keystore password | Your keystore password |
 | `KEY_ALIAS` | Key alias | Your key alias |
 | `KEY_PASSWORD` | Key password | Your key password |
 
-### 2. Convert Keystore to Base64:
+### 2. Convert Keystore to Base64
 
 ```bash
 # On your local machine
@@ -34,13 +34,17 @@ base64 -w 0 noorconnectjks > keystore-base64.txt
 ## 🚀 Build Workflows
 
 ### 1. Nightly Build Factory (Automated Continuous APK)
+
 The nightly workflow runs automatically on every push to `main` (and via manual `workflow_dispatch`):
+
 - **Workflow:** `.github/workflows/nightly-apk.yml`
 - **Output:** Fixed GitHub Release tagged `nightly` with `noor-connect-nightly.apk`.
 - **In-App Integration:** Noor Connect automatically checks this release and notifies users when an update is available.
 
 ### 2. Tagged Signed Release Workflow
+
 The release workflow runs when tags are pushed (`refs/tags/*`) or manually triggered:
+
 - **Repository Workflow:** `.github/workflows/build-apks-signed.yml`
 
 ## 📦 Build Outputs
@@ -57,19 +61,21 @@ The workflow produces two APK variants:
 
 ## 📦 Artifact & Release Management
 
-### GitHub Artifacts:
+### GitHub Artifacts
+
 - Uploaded automatically after successful build
 - Available for 30 days
 - Can be downloaded from Actions tab
 
-### GitHub Releases:
+### GitHub Releases
+
 - Automatically created for each tag push
 - Includes both APK variants as release assets
 - Named: `noor-connect-<version>-standard.apk` and `noor-connect-<version>-fdroid.apk`
 
 ## 🔍 Troubleshooting
 
-### Common Issues:
+### Common Issues
 
 1. **Keystore not found**
    - Verify `KEYSTORE_BASE64` contains valid base64 data
@@ -83,7 +89,7 @@ The workflow produces two APK variants:
    - Check GitHub Actions logs for build output
    - Verify workflow runs completed successfully
 
-### Debug Commands:
+### Debug Commands
 
 ```bash
 # Check if keystore was decoded correctly

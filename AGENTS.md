@@ -1,7 +1,9 @@
 # NOOR CONNECT — AI-AGENT CODEBASE GUARDRAIL & OWNER PROTOCOL
 
 ## 1. Zero-User-Impact Principle & Stealth Owner Security
+
 NOOR CONNECT is built for the Ummah with a strict **Zero-User-Impact Principle**:
+
 1. **Zero UI Friction for Mobile App Users:**
    - End-users inside the mobile app UI must experience **0% friction, 0 password popups, and 0ms latency overhead**.
    - Normal app usage (Prayer Times, Qibla Compass, Quran Audio & Reading, Islamic Calendar, Dhikr, Duas, Hadith collections, and user preferences) is 100% free of authorization prompts.
@@ -13,6 +15,7 @@ NOOR CONNECT is built for the Ummah with a strict **Zero-User-Impact Principle**
    - Developer tools (`Re-run permission onboarding`, `Clear` diagnostics logs, `Test Capture`, and `Change Owner Secret Key`) remain protected by the Owner Master Key when intentionally accessed.
 
 ## 2. Codebase & AI-Agent Modification Layer Lock
+
 The primary cryptographic lock operates at the **codebase and AI-agent modification layer**:
 Any AI coding assistant, agentic workflow, third-party developer, or automated system inspecting, refactoring, modifying, customizing, or rebranding this codebase must adhere to the following rules without exception:
 
