@@ -291,11 +291,15 @@ const SettingsSubPage: React.FC = () => {
 
     if (recentTaps.length >= 5) {
       versionTapTimesRef.current = [];
-      setIsStealthVaultVisible(true);
-      if (!isOwnerSessionUnlocked()) {
+      if (isOwnerSessionUnlocked()) {
+        setIsStealthVaultVisible(true);
+      } else {
+        // True Stealth: ONLY reveal vault card upon successful Master Key verification!
         executeWithSecurity(
-          () => {},
-          '🔒 Unlock Owner Security Vault',
+          () => {
+            setIsStealthVaultVisible(true);
+          },
+          'Unlock Owner Security Vault',
           'Enter your private Owner Master Key to unlock administrative settings.'
         );
       }
@@ -333,6 +337,16 @@ const SettingsSubPage: React.FC = () => {
     setIsStealthVaultVisible(false);
     versionTapTimesRef.current = [];
   }, [sectionId]);
+
+  useEffect(() => {
+    // Auto-hide vault if session locks or expires
+    const unsub = subscribeOwnerSecurity(() => {
+      if (!isOwnerSessionUnlocked()) {
+        setIsStealthVaultVisible(false);
+      }
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const handleApkProgress = (e: CustomEvent<ApkDownloadProgressDetail>) => {

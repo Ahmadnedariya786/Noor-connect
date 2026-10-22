@@ -272,30 +272,32 @@ export function lockOwnerSession(): void {
 }
 
 /**
- * Returns whether Upgradation Lock is enabled (default: false for zero-friction user updates).
+ * Returns whether Upgradation Lock is enabled (permanently false for zero-friction user updates).
+ * Automatically purges any legacy upgradation lock keys from localStorage.
  */
 export function isUpgradationLockEnabled(): boolean {
   try {
     if (typeof localStorage !== 'undefined') {
-      const val = localStorage.getItem(STORAGE_KEY_UPGRADATION_LOCK);
-      return val === 'true';
+      localStorage.removeItem(STORAGE_KEY_UPGRADATION_LOCK);
+      localStorage.removeItem('noor_require_key_for_updates');
     }
   } catch {
-    // Safe storage read fallback
+    // Safe storage cleanup fallback
   }
   return false;
 }
 
 /**
- * Toggles Upgradation Lock ON or OFF.
+ * Toggles Upgradation Lock (Permanently disabled: APK updates are 100% key-free).
  */
-export function setUpgradationLockEnabled(enabled: boolean): void {
+export function setUpgradationLockEnabled(_enabled: boolean): void {
   try {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY_UPGRADATION_LOCK, enabled ? 'true' : 'false');
+      localStorage.removeItem(STORAGE_KEY_UPGRADATION_LOCK);
+      localStorage.removeItem('noor_require_key_for_updates');
     }
   } catch {
-    // Safe storage write fallback
+    // Safe storage cleanup fallback
   }
   notifySecuritySubscribers();
 }

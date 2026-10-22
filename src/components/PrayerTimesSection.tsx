@@ -479,12 +479,14 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               {resolvedNextDisplayName}
             </span>
             <span
-              className="tracking-tight tabular-nums truncate"
+              className="tabular-nums"
               style={{
                 color: 'var(--text-primary)',
-                fontSize: '1.95rem',
+                fontSize: 'clamp(1.75rem, 7.2vw, 2.15rem)',
                 lineHeight: 1.1,
                 fontWeight: 700,
+                whiteSpace: 'nowrap',
+                letterSpacing: '-0.02em',
               }}
             >
               {heroDisplayTime}

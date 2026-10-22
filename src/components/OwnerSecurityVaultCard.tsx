@@ -19,8 +19,6 @@ import {
   isOwnerSessionUnlocked,
   lockOwnerSession,
   getRemainingSessionSeconds,
-  isUpgradationLockEnabled,
-  setUpgradationLockEnabled,
   getActiveOwnerHash,
   hasCustomOwnerKey,
   changeOwnerSecretKey,
@@ -41,7 +39,6 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
 }) => {
   const [isUnlocked, setIsUnlocked] = useState(() => isOwnerSessionUnlocked());
   const [remainingSec, setRemainingSec] = useState(() => getRemainingSessionSeconds());
-  const [isUpgradeLocked, setIsUpgradeLocked] = useState(() => isUpgradationLockEnabled());
   const [cooldownSec, setCooldownSec] = useState(() => getRemainingCooldownSeconds());
   const [activeHash, setActiveHash] = useState(() => getActiveOwnerHash());
   const [isCustomKey, setIsCustomKey] = useState(() => hasCustomOwnerKey());
@@ -65,7 +62,6 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
     const syncState = () => {
       setIsUnlocked(isOwnerSessionUnlocked());
       setRemainingSec(getRemainingSessionSeconds());
-      setIsUpgradeLocked(isUpgradationLockEnabled());
       setCooldownSec(getRemainingCooldownSeconds());
       setActiveHash(getActiveOwnerHash());
       setIsCustomKey(hasCustomOwnerKey());
@@ -83,25 +79,6 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
       clearInterval(interval);
     };
   }, []);
-
-  const handleToggleUpgradeLock = () => {
-    if (!isUnlocked) {
-      onRequireUnlock(
-        'Toggle Upgradation Lock',
-        'Toggling the APK Upgradation Security Lock requires Owner authorization.'
-      );
-      return;
-    }
-    const nextVal = !isUpgradeLocked;
-    setUpgradationLockEnabled(nextVal);
-    setIsUpgradeLocked(nextVal);
-    toast({
-      title: nextVal ? '🔒 Upgrades Protected' : '⚠️ Upgrades Unlocked',
-      description: nextVal
-        ? 'Owner Master Key is required for APK installations.'
-        : 'APK installations can now proceed without key prompt.',
-    });
-  };
 
   const handleLockNow = () => {
     lockOwnerSession();
@@ -269,7 +246,7 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
 
       {/* Vault Status Overview */}
       <div className="grid grid-cols-2 gap-2 text-[11px] font-mono w-full">
-        {/* Card 1: Upgrade Lock Status */}
+        {/* Card 1: Security Scope */}
         <div
           className="p-2.5 rounded-xl border flex flex-col justify-between gap-1"
           style={{
@@ -278,21 +255,22 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
           }}
         >
           <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-            Upgrades & APK:
+            Security Scope:
           </span>
           <span
             className="font-bold flex items-center gap-1"
             style={{
-              color: isUpgradeLocked ? 'var(--accent-text)' : 'var(--warning)',
-              fontSize: '0.78rem',
+              color: 'var(--accent-text)',
+              fontSize: '0.76rem',
+              fontWeight: 700,
               whiteSpace: 'nowrap',
             }}
           >
-            {isUpgradeLocked ? '🔒 Key Protected' : '⚠️ Unrestricted'}
+            Admin & Code
           </span>
         </div>
 
-        {/* Card 2: Key Hash Status */}
+        {/* Card 2: Encryption */}
         <div
           className="p-2.5 rounded-xl border flex flex-col justify-between gap-1"
           style={{
@@ -301,17 +279,18 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
           }}
         >
           <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-            Active Key Mode:
+            Encryption:
           </span>
           <span
             className="font-bold truncate"
             style={{
               color: 'var(--text-primary)',
-              fontSize: '0.78rem',
+              fontSize: '0.76rem',
+              fontWeight: 700,
               whiteSpace: 'nowrap',
             }}
           >
-            {isCustomKey ? 'Master Key Active' : 'Protected (SHA-256)'}
+            SHA-256 Active
           </span>
         </div>
       </div>
@@ -351,40 +330,7 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
       {/* UNLOCKED VIEW: Full Administrative Capabilities */}
       {isUnlocked && (
         <div className="space-y-3 pt-1 animate-in fade-in duration-300">
-          {/* Action 1: Toggle Upgradation Lock */}
-          <div
-            className="p-3 rounded-xl border flex items-center justify-between gap-3"
-            style={{
-              background: 'var(--surface-2)',
-              borderColor: 'var(--border)',
-            }}
-          >
-            <div>
-              <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                Require Key for APK Updates
-              </p>
-              <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-                {isUpgradeLocked
-                  ? 'Key is required before checking, downloading, or installing updates'
-                  : 'Updates can be checked and downloaded freely'}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant={isUpgradeLocked ? 'default' : 'outline'}
-              className="h-8 px-3 rounded-lg text-xs font-semibold shrink-0"
-              style={{
-                background: isUpgradeLocked ? 'var(--accent)' : 'transparent',
-                color: isUpgradeLocked ? 'var(--on-accent)' : 'var(--text-primary)',
-                borderColor: 'var(--border)',
-              }}
-              onClick={handleToggleUpgradeLock}
-            >
-              {isUpgradeLocked ? 'Lock: ON' : 'Lock: OFF'}
-            </Button>
-          </div>
-
-          {/* Action 2: Active 64-char Hash Display with 1-Tap Copy */}
+          {/* Action 1: Active 64-char Hash Display with 1-Tap Copy */}
           <div
             className="p-3 rounded-xl border space-y-1.5"
             style={{

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Shield, Eye, EyeOff, Lock, Clock, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,11 +109,15 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
   };
 
   const isCooldownActive = cooldownSec > 0;
+  const displayTitle = actionTitle.replace(/^🔒\s*/, '').trim();
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
       style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
@@ -159,7 +164,7 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
               className="text-sm sm:text-base font-bold tracking-tight flex items-center gap-1.5"
               style={{ color: 'var(--text-primary)' }}
             >
-              <span>🔒 {actionTitle}</span>
+              <span>🔒 {displayTitle}</span>
             </h2>
             <p
               className="text-xs leading-relaxed mt-1"
@@ -278,4 +283,6 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
