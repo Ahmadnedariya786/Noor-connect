@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -69,6 +69,9 @@ import {
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
+import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
+import { OwnerSecurityVaultCard } from '@/components/OwnerSecurityVaultCard';
+import { isOwnerSessionUnlocked, isUpgradationLockEnabled } from '@/lib/owner-security';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -267,6 +270,40 @@ const SettingsSubPage: React.FC = () => {
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [apkDownloadProgress, setApkDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
+
+  // Owner Security Authorization Lock state
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
+  const [securityActionTitle, setSecurityActionTitle] = useState('Owner Security Key Required');
+  const [securityActionDesc, setSecurityActionDesc] = useState(
+    'Protected customization & upgradation action. Enter your private Owner Master Key to proceed.'
+  );
+  const pendingSecurityActionRef = useRef<(() => void) | null>(null);
+
+  const executeWithSecurity = (
+    action: () => void,
+    title?: string,
+    desc?: string,
+    requiresUpgradeLock = false
+  ) => {
+    // If action is only gated by upgradation lock and owner disabled it, allow immediately
+    if (requiresUpgradeLock && !isUpgradationLockEnabled()) {
+      action();
+      return;
+    }
+
+    // If session is already unlocked for 15 minutes, proceed immediately
+    if (isOwnerSessionUnlocked()) {
+      action();
+      return;
+    }
+
+    pendingSecurityActionRef.current = action;
+    setSecurityActionTitle(title || 'Owner Security Key Required');
+    setSecurityActionDesc(
+      desc || 'Protected customization & upgradation action. Enter your private Owner Master Key to proceed.'
+    );
+    setSecurityModalOpen(true);
+  };
 
   useEffect(() => {
     const handleApkProgress = (e: CustomEvent<ApkDownloadProgressDetail>) => {
@@ -1249,7 +1286,14 @@ const SettingsSubPage: React.FC = () => {
                   size="sm"
                   variant="ghost"
                   className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={handleManualCheckUpdate}
+                  onClick={() =>
+                    executeWithSecurity(
+                      handleManualCheckUpdate,
+                      'Check For Updates',
+                      'Checking and fetching software updates requires owner authorization.',
+                      true
+                    )
+                  }
                   disabled={isCheckingUpdate}
                 >
                   {isCheckingUpdate ? 'Checking...' : 'Check now'}
@@ -1339,7 +1383,14 @@ const SettingsSubPage: React.FC = () => {
                           background: 'var(--accent)',
                           color: 'var(--on-accent)',
                         }}
-                        onClick={() => triggerPendingInstall()}
+                        onClick={() =>
+                          executeWithSecurity(
+                            () => triggerPendingInstall(),
+                            'Install Software Update',
+                            'Launching APK installation requires owner authorization.',
+                            true
+                          )
+                        }
                       >
                         <Download className="w-3.5 h-3.5 mr-1" />
                         Install Now
@@ -1381,7 +1432,14 @@ const SettingsSubPage: React.FC = () => {
                         size="sm"
                         variant="outline"
                         className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
-                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
+                        onClick={() =>
+                          executeWithSecurity(
+                            () => downloadAndInstallUpdate(updateResult.release?.apkUrl),
+                            'Download & Install Update',
+                            'Installing application binaries requires owner authorization.',
+                            true
+                          )
+                        }
                       >
                         <RefreshCw className="w-3.5 h-3.5 mr-1" />
                         Retry
@@ -1394,7 +1452,14 @@ const SettingsSubPage: React.FC = () => {
                           background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)',
                           color: 'var(--on-accent)',
                         }}
-                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
+                        onClick={() =>
+                          executeWithSecurity(
+                            () => downloadAndInstallUpdate(updateResult.release?.apkUrl),
+                            'Download & Install Update',
+                            'Installing application binaries requires owner authorization.',
+                            true
+                          )
+                        }
                       >
                         <Download className="w-3.5 h-3.5 mr-1" />
                         Download update
@@ -1426,10 +1491,17 @@ const SettingsSubPage: React.FC = () => {
                       <span>Stuck or dismissed?</span>
                       <button
                         type="button"
-                        onClick={() => {
-                          cancelApkDownload();
-                          openExternalBrowserFallback(updateResult.release?.apkUrl);
-                        }}
+                        onClick={() =>
+                          executeWithSecurity(
+                            () => {
+                              cancelApkDownload();
+                              openExternalBrowserFallback(updateResult.release?.apkUrl);
+                            },
+                            'Download Via Browser',
+                            'Downloading application binaries requires owner authorization.',
+                            true
+                          )
+                        }
                         className="inline-flex items-center gap-1 text-[var(--accent-text)] hover:underline font-medium"
                       >
                         <span>Download via Browser</span>
@@ -1626,7 +1698,13 @@ const SettingsSubPage: React.FC = () => {
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                     }}
-                    onClick={handleTestErrorCapture}
+                    onClick={() =>
+                      executeWithSecurity(
+                        handleTestErrorCapture,
+                        'Test Diagnostic Capture',
+                        'Triggering diagnostic test errors requires owner authorization.'
+                      )
+                    }
                   >
                     <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <span className="truncate">Test Capture</span>
@@ -1715,7 +1793,13 @@ const SettingsSubPage: React.FC = () => {
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                     }}
-                    onClick={handleClearDiagnostics}
+                    onClick={() =>
+                      executeWithSecurity(
+                        handleClearDiagnostics,
+                        'Clear Diagnostic Logs',
+                        'Wiping diagnostic flight recorder data requires owner authorization.'
+                      )
+                    }
                   >
                     <Trash2 className="w-3.5 h-3.5 text-red-500 shrink-0" />
                     <span className="truncate">Clear</span>
@@ -1958,31 +2042,48 @@ const SettingsSubPage: React.FC = () => {
                   size="sm"
                   variant="outline"
                   className="w-full h-8 text-xs rounded-xl border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/10 text-amber-500 dark:text-amber-400 font-medium flex items-center justify-center gap-1.5"
-                  onClick={async () => {
-                    if (!Capacitor.isNativePlatform()) {
-                      toast({
-                        title: 'Native Only',
-                        description: 'Permission onboarding flow is only available on Android native app.',
-                      });
-                      return;
-                    }
-                    try {
-                      toast({
-                        title: 'Resetting Onboarding',
-                        description: 'Clearing flags and restarting permission sequence...',
-                      });
-                      await rerunPermissionOnboarding();
-                    } catch (err) {
-                      // Handled manual permission onboarding rerun error
-                      console.warn('Failed to rerun permission onboarding:', err);
-                    }
-                  }}
+                  onClick={() =>
+                    executeWithSecurity(
+                      async () => {
+                        if (!Capacitor.isNativePlatform()) {
+                          toast({
+                            title: 'Native Only',
+                            description: 'Permission onboarding flow is only available on Android native app.',
+                          });
+                          return;
+                        }
+                        try {
+                          toast({
+                            title: 'Resetting Onboarding',
+                            description: 'Clearing flags and restarting permission sequence...',
+                          });
+                          await rerunPermissionOnboarding();
+                        } catch (err) {
+                          // Handled manual permission onboarding rerun error
+                          console.warn('Failed to rerun permission onboarding:', err);
+                        }
+                      },
+                      'Reset Permission Sequence',
+                      'Resetting system permission state requires owner authorization.'
+                    )
+                  }
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Re-run permission onboarding
                 </Button>
               </div>
             </Card>
+
+            {/* OWNER SECURITY VAULT — Cryptographic Owner Authorization */}
+            <OwnerSecurityVaultCard
+              onRequireUnlock={(title, desc) =>
+                executeWithSecurity(
+                  () => {},
+                  title || 'Unlock Owner Vault',
+                  desc || 'Enter your private Owner Master Key to unlock administrative settings.'
+                )
+              }
+            />
 
             {showChangelog && <Changelog onClose={() => setShowChangelog(false)} />}
           </div>
@@ -2065,6 +2166,24 @@ const SettingsSubPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Owner Security Modal for Protected Actions */}
+      <OwnerSecurityModal
+        isOpen={securityModalOpen}
+        onClose={() => {
+          setSecurityModalOpen(false);
+          pendingSecurityActionRef.current = null;
+        }}
+        onSuccess={() => {
+          const action = pendingSecurityActionRef.current;
+          pendingSecurityActionRef.current = null;
+          if (action) {
+            action();
+          }
+        }}
+        actionTitle={securityActionTitle}
+        actionDescription={securityActionDesc}
+      />
     </div>
   );
 };

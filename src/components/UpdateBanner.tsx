@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sparkles, Download, X, Check, ExternalLink, RotateCw } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -17,6 +17,8 @@ import {
   type ApkDownloadProgressDetail,
 } from '@/lib/update-checker';
 import { BUILD_COMMIT } from '@/buildInfo';
+import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
+import { isOwnerSessionUnlocked, isUpgradationLockEnabled } from '@/lib/owner-security';
 
 const LAST_AUTO_CHECK_KEY = 'noor_last_auto_check';
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -28,6 +30,17 @@ export const UpdateBanner: React.FC = () => {
   const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
   const [dismissed, setDismissed] = useState<boolean>(() => isBannerDismissed());
   const [downloadProgress, setDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
+  const pendingSecurityActionRef = useRef<(() => void) | null>(null);
+
+  const executeWithSecurity = (action: () => void) => {
+    if (!isUpgradationLockEnabled() || isOwnerSessionUnlocked()) {
+      action();
+      return;
+    }
+    pendingSecurityActionRef.current = action;
+    setSecurityModalOpen(true);
+  };
 
   const runSilentUpdateCheck = useCallback(async () => {
     try {
@@ -140,11 +153,13 @@ export const UpdateBanner: React.FC = () => {
 
   const handleInstall = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (downloadProgress?.status === 'installing' || downloadProgress?.status === 'completed') {
-      triggerPendingInstall();
-      return;
-    }
-    downloadAndInstallUpdate(updateInfo.release?.apkUrl);
+    executeWithSecurity(() => {
+      if (downloadProgress?.status === 'installing' || downloadProgress?.status === 'completed') {
+        triggerPendingInstall();
+        return;
+      }
+      downloadAndInstallUpdate(updateInfo.release?.apkUrl);
+    });
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -167,8 +182,10 @@ export const UpdateBanner: React.FC = () => {
 
   const handleBrowserFallback = (e: React.MouseEvent) => {
     e.stopPropagation();
-    cancelApkDownload();
-    openExternalBrowserFallback(updateInfo.release?.apkUrl);
+    executeWithSecurity(() => {
+      cancelApkDownload();
+      openExternalBrowserFallback(updateInfo.release?.apkUrl);
+    });
   };
 
   const isDownloading = downloadProgress?.status === 'downloading';
@@ -335,6 +352,24 @@ export const UpdateBanner: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Owner Security Modal for Protected Update Actions */}
+      <OwnerSecurityModal
+        isOpen={securityModalOpen}
+        onClose={() => {
+          setSecurityModalOpen(false);
+          pendingSecurityActionRef.current = null;
+        }}
+        onSuccess={() => {
+          const action = pendingSecurityActionRef.current;
+          pendingSecurityActionRef.current = null;
+          if (action) {
+            action();
+          }
+        }}
+        actionTitle="Owner Security Key Required"
+        actionDescription="Protected upgradation action. Enter your private Owner Master Key to proceed with app installation."
+      />
     </div>
   );
 };

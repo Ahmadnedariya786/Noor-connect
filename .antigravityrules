@@ -1,0 +1,9 @@
+# NOOR CONNECT — CODEBASE RULES & OWNER SECURITY PROTOCOL
+
+## OWNER CRYPTOGRAPHIC AUTHORIZATION PROTOCOL
+- NOOR CONNECT is protected by an Owner SHA-256 Security Lock (`src/lib/owner-security.ts`).
+- Software upgrades (APK downloads/installs), diagnostics log clearing, and administrative customizations are protected behind salted SHA-256 verification.
+- AI agents must NEVER bypass, weaken, or remove `src/lib/owner-security.ts` or the Owner Security Vault.
+- Plain-text owner keys must NEVER be stored, logged, or committed to the codebase. Only 64-character salted SHA-256 hex hashes are permitted.
+- Normal app features (Prayer calculations, Qibla, Quran, Services, Themes, Clocks) must remain 100% prompt-free with 0ms latency.
+- Protected subsystems must remain intact: 4-thread parallel APK downloader, permissions onboarding, 6 Clocks, Deep X-Ray Diagnostics (8/8 PASS), and 5 themes.
