@@ -29,6 +29,10 @@ interface CalendarDay {
   };
   hijriYear: number;
   gregorianDate: string;
+  gregorianDay: number;
+  gregorianMonthName: string;
+  gregorianYear: number;
+  weekday: string;
   isCurrentMonth: boolean;
   isToday: boolean;
   holidays: string[];
@@ -45,6 +49,7 @@ export default function IslamicCalendar() {
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
   const [monthData, setMonthData] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<CalendarDay | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     fetchMonthCalendar(currentMonth, currentYear);
@@ -136,6 +141,10 @@ export default function IslamicCalendar() {
         hijriMonth: { number: 0, en: "", ar: "" },
         hijriYear: 0,
         gregorianDate: '',
+        gregorianDay: 0,
+        gregorianMonthName: '',
+        gregorianYear: 0,
+        weekday: '',
         isCurrentMonth: false,
         isToday: false,
         holidays: [],
@@ -149,23 +158,63 @@ export default function IslamicCalendar() {
         dayData.gregorian.month.number - 1,
         dayData.gregorian.day
       );
+      const gDay = parseInt(dayData.gregorian.day, 10);
+      const gMonth = dayData.gregorian.month.en;
+      const gYear = parseInt(dayData.gregorian.year, 10);
+      const weekday = dayData.gregorian.weekday?.en || '';
 
       days.push({
-        hijriDay: parseInt(dayData.hijri.day),
+        hijriDay: parseInt(dayData.hijri.day, 10),
         hijriMonth: {
           number: dayData.hijri.month.number,
           en: dayData.hijri.month.en,
           ar: dayData.hijri.month.ar
         },
-        hijriYear: parseInt(dayData.hijri.year),
-        gregorianDate: `${dayData.gregorian.day} ${dayData.gregorian.month.en}`,
+        hijriYear: parseInt(dayData.hijri.year, 10),
+        gregorianDate: `${gDay} ${gMonth} ${gYear}`,
+        gregorianDay: gDay,
+        gregorianMonthName: gMonth,
+        gregorianYear: gYear,
+        weekday: weekday,
         isCurrentMonth: true,
         isToday: gregorianDate.toDateString() === today.toDateString(),
         holidays: dayData.hijri.holidays || [],
       });
     });
 
+    // Pad trailing empty days so each row has 7 columns
+    const remainder = days.length % 7;
+    if (remainder !== 0) {
+      const fillNeeded = 7 - remainder;
+      for (let i = 0; i < fillNeeded; i++) {
+        days.push({
+          hijriDay: 0,
+          hijriMonth: { number: 0, en: "", ar: "" },
+          hijriYear: 0,
+          gregorianDate: '',
+          gregorianDay: 0,
+          gregorianMonthName: '',
+          gregorianYear: 0,
+          weekday: '',
+          isCurrentMonth: false,
+          isToday: false,
+          holidays: [],
+        });
+      }
+    }
+
     setCalendarDays(days);
+
+    // Auto-select today if present in this month, otherwise first valid day
+    const todayMatch = days.find((d) => d.isCurrentMonth && d.isToday);
+    if (todayMatch) {
+      setSelectedDate(todayMatch);
+    } else {
+      const firstValidDay = days.find((d) => d.isCurrentMonth);
+      if (firstValidDay) {
+        setSelectedDate(firstValidDay);
+      }
+    }
   };
 
   const handlePreviousMonth = () => {
@@ -193,11 +242,12 @@ export default function IslamicCalendar() {
   };
 
   const handleDateClick = (day: CalendarDay) => {
+    if (!day.isCurrentMonth) return;
     setSelectedDate(day);
   };
 
   const closeDateModal = () => {
-    setSelectedDate(null);
+    setShowDetailModal(false);
   };
 
   const hijriMonthHeader = useMemo(() => {
@@ -210,6 +260,36 @@ export default function IslamicCalendar() {
     if (years.length === 1) return `${months.join(" / ")} ${years[0]}`;
     return `${months[0]} ${years[0]} / ${months[1]} ${years[1]}`;
   }, [calendarDays]);
+
+  const weeks = useMemo(() => {
+    const rows: CalendarDay[][] = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+      rows.push(calendarDays.slice(i, i + 7));
+    }
+    return rows;
+  }, [calendarDays]);
+
+  const getDayStatus = (day: CalendarDay) => {
+    if (day.holidays && day.holidays.length > 0) {
+      return day.holidays[0];
+    }
+    if (day.hijriDay >= 13 && day.hijriDay <= 15) {
+      return "🌕 Ayyam al-Beed Fast";
+    }
+    const isFri = day.weekday?.toLowerCase() === 'friday';
+    if (isFri) {
+      return "✦ Blessed Jumu'ah";
+    }
+    const isMonThu = day.weekday?.toLowerCase() === 'monday' || day.weekday?.toLowerCase() === 'thursday';
+    if (isMonThu) {
+      return "🌙 Sunnah Fast";
+    }
+    if (day.isToday) {
+      return "✨ Today";
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen px-4 pb-20 safe-top" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', paddingTop: 'calc(var(--safe-top) + 1.5rem)' }}>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -307,193 +387,339 @@ export default function IslamicCalendar() {
           </CardContent>
         </Card>
 
-        {/* Full Calendar View */}
-        <Card
-          className="border rounded-3xl overflow-hidden"
+        {/* Full Calendar View with Laser-Spotlight Card Frame */}
+        <div
+          className="relative overflow-hidden"
           style={{
+            borderRadius: '24px',
             background: 'var(--surface)',
-            borderColor: 'var(--border)',
-            boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
+            border: '1px solid var(--border)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
+            padding: '16px 12px',
           }}
         >
-          <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-3">
-            <div className="flex flex-wrap items-center justify-between gap-2.5">
-              {/* Title block left with max 2 lines (font one step smaller, line-height 1.2) */}
-              <div className="flex items-start gap-2 min-w-0 max-w-full sm:max-w-[calc(100%-140px)]">
-                <Moon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
-                <CardTitle
-                  className="text-sm sm:text-base font-bold leading-[1.2] line-clamp-2"
-                  style={{ color: 'var(--text-primary)', lineHeight: '1.2' }}
-                >
-                  {hijriMonthHeader ? `${hijriMonthHeader} AH` : (
-                    <span className="inline-block h-4 w-32 rounded animate-pulse" style={{ background: 'var(--surface-2)' }} />
-                  )}
-                </CardTitle>
-              </div>
+          {/* Subtle top radial spotlight */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at 50% 0%, var(--accent-soft), transparent 65%)',
+            }}
+          />
 
-              {/* Controls right in a single row vertically centered; on narrow widths wrap below title, never overlap */}
-              <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleToday}
-                  className="rounded-xl font-bold text-[11px] h-7 px-2.5"
-                  style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handlePreviousMonth}
-                  aria-label="Previous month"
-                  className="rounded-xl h-7 w-7 p-0"
-                  style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNextMonth}
-                  aria-label="Next month"
-                  className="rounded-xl h-7 w-7 p-0"
-                  style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+          {/* Top-center glowing laser accent bar */}
+          <div
+            className="relative z-10"
+            style={{
+              width: '72px',
+              height: '3px',
+              borderRadius: '0 0 999px 999px',
+              background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+              boxShadow: '0 2px 16px var(--accent-glow)',
+              margin: '0 auto 10px auto',
+            }}
+          />
+
+          {/* Sleek Month Switcher Header */}
+          <div className="relative z-10 flex items-center justify-between gap-2 mb-3 px-1">
+            <button
+              type="button"
+              onClick={handlePreviousMonth}
+              aria-label="Previous month"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-95 shrink-0"
+              style={{
+                borderRadius: '50%',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="text-center min-w-0 flex-1 px-1">
+              <h2 className="text-base sm:text-lg font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
+                {hijriMonthHeader ? `${hijriMonthHeader} AH` : 'Islamic Calendar'}
+              </h2>
+              <p className="text-xs font-semibold mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
+                {monthData ? `${monthData.gregorian.month.en} ${monthData.gregorian.year}` : ''}
+              </p>
             </div>
-            <CardDescription className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-              {monthData && `${monthData.gregorian.month.en} ${monthData.gregorian.year}`}
-              {!monthData && (
-                <span className="inline-block h-3 w-24 rounded animate-pulse" style={{ background: 'var(--surface-2)' }} />
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-2 sm:p-5 pt-0" style={{ contentVisibility: "auto", containIntrinsicSize: "800px" }}>
-            <div className="w-full">
-              {/* Single CSS grid: 7 columns, fixed min-height 56px, no overlapping layers */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-1.5 w-full">
-                {/* Day headers */}
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="text-center font-bold text-[11px] py-1 truncate" style={{ color: 'var(--text-secondary)' }}>
-                    {day}
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleToday}
+                className="px-2.5 py-1 rounded-full text-xs font-bold transition-transform active:scale-95"
+                style={{
+                  background: 'var(--accent-soft)',
+                  border: '1px solid var(--accent)',
+                  color: 'var(--accent-text)',
+                }}
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                aria-label="Next month"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-95 shrink-0"
+                style={{
+                  borderRadius: '50%',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Open Architectural Grid Container */}
+          <div className="relative z-10 w-full">
+            {/* 7-Column Header */}
+            <div
+              className="grid grid-cols-7 gap-1 text-center py-1.5 mb-1"
+              style={{
+                borderBottom: '1px solid color-mix(in srgb, var(--border) 55%, transparent)',
+              }}
+            >
+              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI ✦', 'SAT'].map((col, idx) => {
+                const isFri = idx === 5;
+                return (
+                  <div
+                    key={col}
+                    className="text-[11px] uppercase tracking-wider py-1 select-none"
+                    style={{
+                      color: isFri ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      fontWeight: isFri ? 700 : 600,
+                    }}
+                  >
+                    {col}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Skeletons while loading */}
+            {loading && (
+              <div className="space-y-1 py-1">
+                {Array.from({ length: 5 }).map((_, w) => (
+                  <div key={`skel-row-${w}`} className="grid grid-cols-7 gap-1 py-1">
+                    {Array.from({ length: 7 }).map((_, c) => (
+                      <div
+                        key={`skel-c-${w}-${c}`}
+                        className="min-h-[46px] rounded-xl flex flex-col items-center justify-center gap-1 animate-pulse"
+                        style={{ background: 'var(--surface-2)' }}
+                      >
+                        <div className="h-3 w-4 rounded bg-white/10" />
+                        <div className="h-2 w-3 rounded bg-white/5" />
+                      </div>
+                    ))}
                   </div>
                 ))}
+              </div>
+            )}
 
-                {/* Calendar days skeletons */}
-                {loading && (
-                  Array.from({ length: 35 }).map((_, index) => (
-                    <div
-                      key={`cal-skel-${index}`}
-                      className="rounded-xl p-1 border min-h-[56px] flex flex-col justify-between items-center"
-                      style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-                    >
-                      <div className="h-3 w-4 rounded animate-pulse bg-white/10 mt-1" />
-                      <div className="h-3 w-6 rounded animate-pulse bg-white/10 mb-1" />
-                    </div>
-                  ))
-                )}
-
-                {/* Calendar days normal flow: Day number on top, Hijri number below, centered, min-h-[56px] */}
-                {!loading && calendarDays.map((day, index) => {
-                  const isFriday = (index % 7 === 5);
+            {/* Open Architectural Grid Weeks */}
+            {!loading && (
+              <div className="space-y-0.5">
+                {weeks.map((week, wIdx) => {
+                  const isLastWeek = wIdx === weeks.length - 1;
                   return (
                     <div
-                      key={index}
-                      className={`
-                        min-w-0 p-1 border rounded-xl min-h-[56px] flex flex-col items-center justify-between text-center overflow-hidden transition-colors select-none
-                        ${!day.isCurrentMonth ? 'opacity-25 cursor-default' : 'cursor-pointer hover:border-[var(--accent)] active:scale-[0.98]'}
-                      `}
+                      key={`week-${wIdx}`}
+                      className="grid grid-cols-7 gap-1 py-1"
                       style={{
-                        background: day.isToday
-                          ? 'var(--accent-soft)'
-                          : day.isCurrentMonth ? 'var(--surface)' : 'transparent',
-                        borderColor: day.isToday ? 'var(--accent)' : 'var(--border)',
-                        boxShadow: day.isToday ? '0 0 12px var(--accent-glow)' : 'inset 0 1px 0 var(--card-sheen)',
+                        borderBottom: isLastWeek ? 'none' : '1px solid color-mix(in srgb, var(--border) 55%, transparent)',
                       }}
-                      onClick={() => day.isCurrentMonth && handleDateClick(day)}
                     >
-                      {day.isCurrentMonth ? (
-                        <div className="flex flex-col h-full w-full justify-between items-center min-w-0 overflow-hidden">
-                          {/* Line 1: Gregorian day number centered with fixed line-height + optional today dot + Friday marker */}
-                          <div className="flex flex-col items-center justify-center w-full min-w-0">
-                            <div className="flex items-center justify-center gap-1 w-full">
-                              <span
-                                className="text-xs font-bold tabular-nums leading-4 text-center truncate"
-                                style={{
-                                  color: day.isToday ? 'var(--accent-text)' : 'var(--text-primary)',
-                                  lineHeight: '16px',
-                                }}
-                              >
-                                {day.gregorianDate.split(' ')[0] || day.gregorianDate}
-                              </span>
-                              {day.isToday && (
-                                <span
-                                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                                  style={{ background: 'var(--accent)', boxShadow: '0 0 6px var(--accent)' }}
-                                />
-                              )}
-                            </div>
+                      {week.map((day, dIdx) => {
+                        if (!day.isCurrentMonth) {
+                          return (
+                            <div key={`empty-${wIdx}-${dIdx}`} className="min-h-[46px] opacity-0 pointer-events-none" />
+                          );
+                        }
 
-                            {/* Friday marker: 3-letter chip with font-size 9px, padding 1px 4px, max-width 100%, overflow hidden */}
-                            {isFriday && (
-                              <span
-                                className="text-[9px] font-bold leading-none rounded uppercase tracking-tight max-w-full overflow-hidden text-ellipsis whitespace-nowrap block mt-0.5"
-                                style={{
-                                  fontSize: '9px',
-                                  padding: '1px 4px',
-                                  background: 'var(--accent-soft)',
-                                  color: 'var(--accent-text)',
-                                  border: '1px solid var(--accent)',
-                                  maxWidth: '100%',
-                                  overflow: 'hidden',
-                                  lineHeight: '10px',
-                                }}
-                              >
-                                JUM
-                              </span>
-                            )}
-                          </div>
+                        const isFri = dIdx === 5;
+                        const isAyyam = day.hijriDay >= 13 && day.hijriDay <= 15;
+                        const isSelected = selectedDate !== null && selectedDate.isCurrentMonth && selectedDate.hijriDay === day.hijriDay;
+                        const isOrb = isSelected;
 
-                          {/* Line 2: Hijri number below centered with fixed line-height */}
-                          <div className="w-full flex flex-col items-center justify-center min-w-0 mt-auto pt-0.5">
+                        let cellBg = 'transparent';
+                        let borderStyle: React.CSSProperties = {};
+                        let boxShadow = 'none';
+
+                        if (isOrb) {
+                          cellBg = 'linear-gradient(135deg, var(--accent), var(--accent-2))';
+                          boxShadow = '0 4px 16px var(--accent-glow)';
+                          borderStyle = { borderRadius: '14px' };
+                        } else if (isAyyam) {
+                          cellBg = 'color-mix(in srgb, var(--accent-soft) 65%, transparent)';
+                          borderStyle = {
+                            borderTop: '1px dashed var(--accent)',
+                            borderBottom: '1px dashed var(--accent)',
+                            ...(day.hijriDay === 13 ? {
+                              borderLeft: '1px dashed var(--accent)',
+                              borderTopLeftRadius: '10px',
+                              borderBottomLeftRadius: '10px',
+                            } : {}),
+                            ...(day.hijriDay === 15 ? {
+                              borderRight: '1px dashed var(--accent)',
+                              borderTopRightRadius: '10px',
+                              borderBottomRightRadius: '10px',
+                            } : {}),
+                          };
+                        } else if (isFri) {
+                          // Delicate vertical column tint for Friday cells
+                          cellBg = 'color-mix(in srgb, var(--accent-soft) 35%, transparent)';
+                          borderStyle = { borderRadius: '10px' };
+                        }
+
+                        // Today indicator if not currently selected orb
+                        if (day.isToday && !isOrb) {
+                          borderStyle = {
+                            ...borderStyle,
+                            border: '1.5px solid var(--accent)',
+                            borderRadius: borderStyle.borderRadius || '10px',
+                          };
+                          boxShadow = '0 0 10px var(--accent-glow)';
+                        }
+
+                        return (
+                          <div
+                            key={`day-${day.hijriDay}-${dIdx}`}
+                            onClick={() => handleDateClick(day)}
+                            className="min-h-[46px] flex flex-col items-center justify-center relative cursor-pointer transition-transform active:scale-95 select-none"
+                            style={{
+                              background: cellBg,
+                              boxShadow,
+                              ...borderStyle,
+                            }}
+                          >
+                            {/* Top number: Gregorian day */}
                             <span
-                              className="text-[11px] font-semibold tabular-nums text-center leading-[14px] truncate block max-w-full"
-                              style={{ color: 'var(--accent-text)', lineHeight: '14px', fontSize: '11px' }}
+                              style={{
+                                fontSize: '0.90rem',
+                                fontWeight: 700,
+                                color: isOrb ? 'var(--on-accent)' : (day.isToday ? 'var(--accent-text)' : 'var(--text-primary)'),
+                                lineHeight: 1.15,
+                              }}
+                            >
+                              {day.gregorianDay}
+                            </span>
+
+                            {/* Bottom number: Hijri day */}
+                            <span
+                              style={{
+                                fontSize: '0.66rem',
+                                fontWeight: 600,
+                                color: isOrb ? 'var(--on-accent)' : 'var(--accent-text)',
+                                opacity: isOrb ? 0.95 : 0.85,
+                                lineHeight: 1.1,
+                              }}
                             >
                               {day.hijriDay}
-                              {day.hijriDay === 1 && (
-                                <span className="text-[9px] uppercase font-bold ml-0.5 opacity-70">
-                                  {day.hijriMonth.en.substring(0, 3)}
-                                </span>
-                              )}
                             </span>
+
+                            {/* Islamic event indicator dot */}
                             {day.holidays.length > 0 && (
-                              <span
-                                className="w-1.5 h-1.5 rounded-full shrink-0 mt-0.5"
-                                style={{ background: 'var(--accent)' }}
-                                title={day.holidays[0]}
+                              <div
+                                style={{
+                                  width: '4px',
+                                  height: '4px',
+                                  borderRadius: '50%',
+                                  background: isOrb ? 'var(--on-accent)' : 'var(--accent)',
+                                  boxShadow: '0 0 4px var(--accent)',
+                                  marginTop: '2px',
+                                }}
+                                title={day.holidays.join(', ')}
                               />
                             )}
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-full w-full">
-                          <span className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.3 }}>—</span>
-                        </div>
-                      )}
+                        );
+                      })}
                     </div>
                   );
                 })}
               </div>
+            )}
+
+            {/* Ayyam al-Beed Legend Pill Below Grid */}
+            <div className="flex items-center justify-center mt-3 pt-2">
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                style={{
+                  background: 'color-mix(in srgb, var(--accent-soft) 55%, transparent)',
+                  border: '1px solid var(--accent)',
+                  color: 'var(--accent-text)',
+                }}
+              >
+                <span>🌕 13–15 Hijri: Ayyam al-Beed Sunnah Fasting</span>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Interactive Selected-Day Contextual Detail Bar */}
+            {selectedDate && (
+              <div
+                onClick={() => setShowDetailModal(true)}
+                className="mt-3 flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl border transition-all cursor-pointer"
+                style={{
+                  background: 'var(--surface-2)',
+                  borderColor: 'var(--border)',
+                  borderRadius: '14px',
+                  boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                }}
+                title="Tap to view full details"
+              >
+                <div className="flex flex-col min-w-0">
+                  <div className="text-xs sm:text-sm font-bold truncate flex items-center gap-1.5" style={{ color: 'var(--accent-text)' }}>
+                    <span>{selectedDate.hijriDay} {selectedDate.hijriMonth.en} {selectedDate.hijriYear} AH</span>
+                    {selectedDate.isToday && (
+                      <span className="text-[10px] uppercase px-1.5 py-0.2 rounded-full font-extrabold" style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}>
+                        Today
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
+                    {selectedDate.weekday ? `${selectedDate.weekday.slice(0, 3)}, ` : ''}{selectedDate.gregorianDate}
+                  </div>
+                </div>
+
+                {/* Status pill badge */}
+                {(() => {
+                  const status = getDayStatus(selectedDate);
+                  return status ? (
+                    <div
+                      className="px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 flex items-center gap-1"
+                      style={{
+                        background: 'var(--accent-soft)',
+                        border: '1px solid var(--accent)',
+                        color: 'var(--accent-text)',
+                      }}
+                    >
+                      {status}
+                    </div>
+                  ) : (
+                    <div
+                      className="px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
+                      style={{
+                        background: 'var(--surface)',
+                        color: 'var(--text-secondary)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      Details ↗
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Date Details Modal */}
-        {selectedDate && (
+        {showDetailModal && selectedDate && (
           <div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={closeDateModal}

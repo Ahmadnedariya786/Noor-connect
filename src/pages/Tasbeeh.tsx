@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RotateCcw, Sparkles, History, ChevronRight, Volume2, Moon } from "lucide-react";
+import {
+  RotateCcw, Sparkles, History, ChevronLeft, ChevronRight,
+  Volume2, VolumeX, Smartphone, Lock, Unlock, Maximize2, Minimize2,
+  Play, Pause, Moon
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getTasbeehTotal, getTasbeehHistory, addTasbeehEntry, setTasbeehTotal } from "@/lib/storage";
+import { getTasbeehTotal, getTasbeehHistory, addTasbeehEntry } from "@/lib/storage";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
 import { AppBar } from "@/components/AppBar";
@@ -16,7 +19,13 @@ const DHIKR_OPTIONS = [
   { value: "allahuakbar", label: "اللَّٰهُ أَكْبَرُ", transliteration: "Allahu Akbar", translation: "Allah is the Greatest" },
   { value: "lailahaillallah", label: "لَا إِلَٰهَ إِلَّا ٱللَّٰهُ", transliteration: "La ilaha illallah", translation: "None has the right to be worshipped but Allah" },
   { value: "astagfirullah", label: "أَسْتَغْفِرُ ٱللَّٰهَ", transliteration: "Astagfirullah", translation: "I seek forgiveness from Allah" },
+  { value: "salawat", label: "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ", transliteration: "Allahumma Salli Ala Muhammad", translation: "O Allah, send blessings upon Muhammad" },
+  { value: "hawqala", label: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", transliteration: "La Hawla Wa La Quwwata Illa Billah", translation: "There is no power nor strength except with Allah" },
 ];
+
+const GOAL_OPTIONS = [33, 99, 100, 1000, Infinity];
+
+type FeedbackMode = 'all' | 'vibrate' | 'silent';
 
 const Tasbeeh = () => {
   const navigate = useNavigate();
@@ -25,60 +34,151 @@ const Tasbeeh = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedDhikr, setSelectedDhikr] = useState(DHIKR_OPTIONS[0].value);
   const [dailyHistory, setDailyHistory] = useState<{ date: string; count: number; label: string }[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [targetGoal, setTargetGoal] = useState<number>(33);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>('all');
+  const [isAutoCounting, setIsAutoCounting] = useState(false);
+  const [autoPace, setAutoPace] = useState(2.0); // seconds: 1.5, 2.0, 2.5
   const [zenMode, setZenMode] = useState(false);
-  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const currentDhikr = DHIKR_OPTIONS.find(d => d.value === selectedDhikr) || DHIKR_OPTIONS[0];
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const currentDhikr = useMemo(() => {
+    return DHIKR_OPTIONS.find(d => d.value === selectedDhikr) || DHIKR_OPTIONS[0];
+  }, [selectedDhikr]);
+
   const label = currentDhikr.transliteration;
 
+  // Initialize total and history from storage
   useEffect(() => {
     setTotalCount(getTasbeehTotal());
     setDailyHistory(getTasbeehHistory());
   }, []);
 
+  // Session timer that ticks cleanly while page is open
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSessionSeconds(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format session time as MM:SS
+  const formattedSessionTime = useMemo(() => {
+    const m = Math.floor(sessionSeconds / 60);
+    const s = sessionSeconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }, [sessionSeconds]);
+
+  // Audio click synthesizer (zero dependencies, 0 latency, 100% offline)
+  const playAudioClick = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.035);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.035);
+      setTimeout(() => {
+        try { ctx.close(); } catch {}
+      }, 120);
+    } catch {
+      // Audio context guard
+    }
+  }, []);
+
   // Enhanced haptic feedback patterns
-  const triggerHapticFeedback = (type: 'increment' | 'milestone' | 'reset' | 'select' = 'increment') => {
+  const triggerHapticFeedback = useCallback((type: 'increment' | 'milestone' | 'reset' | 'select' = 'increment') => {
     if (!('vibrate' in navigator)) return;
-
-    switch (type) {
-      case 'increment':
-        // Single tap for normal increment
-        navigator.vibrate(8);
-        break;
-      case 'milestone':
-        // Double pulse for milestone achievements
-        navigator.vibrate([10, 50, 10]);
-        break;
-      case 'reset':
-        // Long vibration for reset confirmation
-        navigator.vibrate([15, 30, 15, 30, 15]);
-        break;
-      case 'select':
-        // Short pulse for selection changes
-        navigator.vibrate(5);
-        break;
+    try {
+      switch (type) {
+        case 'increment':
+          navigator.vibrate(8);
+          break;
+        case 'milestone':
+          navigator.vibrate([10, 50, 10]);
+          break;
+        case 'reset':
+          navigator.vibrate([15, 30, 15, 30, 15]);
+          break;
+        case 'select':
+          navigator.vibrate(5);
+          break;
+      }
+    } catch {
+      // Vibration error guard
     }
-  };
+  }, []);
 
-  const handleIncrement = () => {
-    const newCount = count + 1;
-    setCount(newCount);
-    addTasbeehEntry(label);
-    setTotalCount(getTasbeehTotal());
-    setDailyHistory(getTasbeehHistory());
-    setIsAnimating(true);
+  // Core increment logic
+  const handleIncrement = useCallback(() => {
+    setCount(prev => {
+      const newCount = prev + 1;
+      addTasbeehEntry(label);
+      setTotalCount(getTasbeehTotal());
+      setDailyHistory(getTasbeehHistory());
 
-    // Enhanced haptic feedback with milestone detection
-    if (newCount === 33 || newCount === 99 || newCount === 100 || (newCount % 100 === 0 && newCount > 0)) {
-      triggerHapticFeedback('milestone');
+      // Feedback
+      if (feedbackMode === 'all' || feedbackMode === 'vibrate') {
+        const goalNum = targetGoal === Infinity ? 100 : targetGoal;
+        if (newCount === 33 || newCount === 99 || newCount === 100 || (newCount % goalNum === 0 && newCount > 0)) {
+          triggerHapticFeedback('milestone');
+        } else {
+          triggerHapticFeedback('increment');
+        }
+      }
+      if (feedbackMode === 'all') {
+        playAudioClick();
+      }
+
+      return newCount;
+    });
+  }, [feedbackMode, label, playAudioClick, targetGoal, triggerHapticFeedback]);
+
+  // Keep a stable ref for auto counter
+  const handleIncrementRef = useRef(handleIncrement);
+  useEffect(() => {
+    handleIncrementRef.current = handleIncrement;
+  }, [handleIncrement]);
+
+  // Hands-free rhythmic auto counter timer
+  useEffect(() => {
+    if (isAutoCounting) {
+      autoIntervalRef.current = setInterval(() => {
+        handleIncrementRef.current();
+      }, autoPace * 1000);
     } else {
-      triggerHapticFeedback('increment');
+      if (autoIntervalRef.current) {
+        clearInterval(autoIntervalRef.current);
+        autoIntervalRef.current = null;
+      }
     }
+    return () => {
+      if (autoIntervalRef.current) {
+        clearInterval(autoIntervalRef.current);
+        autoIntervalRef.current = null;
+      }
+    };
+  }, [isAutoCounting, autoPace]);
 
-    setTimeout(() => setIsAnimating(false), 100);
-  };
+  // Stop auto counter on unmount or when locked
+  useEffect(() => {
+    if (isLocked && isAutoCounting) {
+      setIsAutoCounting(false);
+    }
+  }, [isLocked, isAutoCounting]);
 
   const confirmReset = () => {
     setCount(0);
@@ -87,13 +187,70 @@ const Tasbeeh = () => {
   };
 
   const handleDhikrChange = (value: string) => {
+    if (isLocked) return;
     setSelectedDhikr(value);
     setCount(0);
     triggerHapticFeedback('select');
   };
 
+  const handlePrevDhikr = () => {
+    if (isLocked) return;
+    const idx = DHIKR_OPTIONS.findIndex(d => d.value === selectedDhikr);
+    const prevIdx = (idx - 1 + DHIKR_OPTIONS.length) % DHIKR_OPTIONS.length;
+    setSelectedDhikr(DHIKR_OPTIONS[prevIdx].value);
+    triggerHapticFeedback('select');
+  };
+
+  const handleNextDhikr = () => {
+    if (isLocked) return;
+    const idx = DHIKR_OPTIONS.findIndex(d => d.value === selectedDhikr);
+    const nextIdx = (idx + 1) % DHIKR_OPTIONS.length;
+    setSelectedDhikr(DHIKR_OPTIONS[nextIdx].value);
+    triggerHapticFeedback('select');
+  };
+
+  const cycleGoal = () => {
+    if (isLocked) return;
+    const currentIdx = GOAL_OPTIONS.indexOf(targetGoal);
+    const nextIdx = (currentIdx + 1) % GOAL_OPTIONS.length;
+    setTargetGoal(GOAL_OPTIONS[nextIdx]);
+    triggerHapticFeedback('select');
+  };
+
+  const cycleFeedbackMode = () => {
+    if (feedbackMode === 'all') setFeedbackMode('vibrate');
+    else if (feedbackMode === 'vibrate') setFeedbackMode('silent');
+    else setFeedbackMode('all');
+    triggerHapticFeedback('select');
+  };
+
+  const toggleAutoCounter = () => {
+    if (isLocked) return;
+    setIsAutoCounting(prev => !prev);
+    triggerHapticFeedback('select');
+  };
+
+  const cycleAutoPace = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isLocked) return;
+    if (autoPace === 1.5) setAutoPace(2.0);
+    else if (autoPace === 2.0) setAutoPace(2.5);
+    else setAutoPace(1.5);
+    triggerHapticFeedback('select');
+  };
+
+  const toggleLock = () => {
+    setIsLocked(prev => !prev);
+    triggerHapticFeedback('select');
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(prev => !prev);
+    triggerHapticFeedback('select');
+  };
+
   const toggleZenMode = () => {
-    setZenMode(!zenMode);
+    setZenMode(prev => !prev);
     triggerHapticFeedback('select');
   };
 
@@ -112,14 +269,40 @@ const Tasbeeh = () => {
     }
   };
 
-  const nextMilestone = count < 33 ? 33 : count < 99 ? 99 : count < 100 ? 100 : Math.ceil((count + 1) / 100) * 100;
-  const progress = (count / nextMilestone) * 100;
+  // Progress percentage calculation
+  const progress = useMemo(() => {
+    if (targetGoal === Infinity) {
+      return Math.min(100, Math.round(((count % 100) / 100) * 100));
+    }
+    const lap = count % targetGoal;
+    if (count > 0 && lap === 0) return 100;
+    return Math.min(100, Math.round((lap / targetGoal) * 100));
+  }, [count, targetGoal]);
+
+  // Completed rounds (Set #)
+  const currentGoalNum = targetGoal === Infinity ? 33 : targetGoal;
+  const setNumber = Math.floor(count / currentGoalNum) + 1;
+
+  // 3D Gemstone beads coordinates along quadratic curve M 15 38 Q 180 10 345 38
+  const beadsData = useMemo(() => {
+    const totalBeads = 7;
+    const shift = count % totalBeads;
+    return Array.from({ length: totalBeads }, (_, i) => {
+      const frac = ((i + shift) % totalBeads) / (totalBeads - 1);
+      const t = 0.08 + 0.84 * frac;
+      const cx = (1 - t) * (1 - t) * 15 + 2 * (1 - t) * t * 180 + t * t * 345;
+      const cy = (1 - t) * (1 - t) * 38 + 2 * (1 - t) * t * 10 + t * t * 38;
+      const isLead = i === shift;
+      return { id: i, cx, cy, isLead };
+    });
+  }, [count]);
 
   // Zen Mode overlay
   if (zenMode) {
     return (
       <div
-        className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center select-none"
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none"
+        style={{ background: 'var(--bg-base)' }}
         onClick={handleIncrement}
         onTouchStart={handleZenTouchStart}
         onTouchEnd={handleZenTouchEnd}
@@ -127,23 +310,27 @@ const Tasbeeh = () => {
         onMouseUp={handleZenTouchEnd}
         onMouseLeave={handleZenTouchEnd}
       >
-        {/* Dhikr label */}
-        <div className="absolute top-12 left-0 right-0 text-center">
-          <p className="text-white/40 text-sm font-medium tracking-wide">{currentDhikr.transliteration}</p>
+        <div className="absolute top-12 left-0 right-0 text-center px-4">
+          <p className="text-xl font-bold font-arabic mb-1" style={{ color: 'var(--accent-text)' }}>{currentDhikr.label}</p>
+          <p className="text-xs uppercase font-bold tracking-widest" style={{ color: 'var(--text-secondary)' }}>{currentDhikr.transliteration}</p>
         </div>
 
-        {/* Count */}
-        <span className="text-[15rem] font-black text-white leading-none select-none">{count}</span>
+        <span
+          className="text-[12rem] sm:text-[15rem] font-black leading-none select-none tabular-nums"
+          style={{ color: 'var(--text-primary)', textShadow: '0 0 24px var(--accent-glow)' }}
+        >
+          {count}
+        </span>
 
-        {/* Next goal — safe bottom padding above navigation bar */}
         <div className="absolute bottom-28 pb-4 left-0 right-0 text-center">
-          <p className="text-white/30 text-xs font-bold uppercase tracking-[0.3em] mb-2">Next Goal</p>
-          <p className="text-[#C9860A] text-2xl font-bold font-serif italic">{nextMilestone}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.3em] mb-1" style={{ color: 'var(--text-secondary)' }}>Goal Progress</p>
+          <p className="text-2xl font-bold italic" style={{ color: 'var(--accent-text)' }}>
+            {targetGoal === Infinity ? '∞' : `${count % targetGoal} / ${targetGoal}`}
+          </p>
         </div>
 
-        {/* Exit hint */}
         <div className="absolute top-4 left-4">
-          <p className="text-white/15 text-xs tracking-wide">Hold to exit</p>
+          <p className="text-xs tracking-wide" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>Hold to exit Zen</p>
         </div>
       </div>
     );
@@ -151,189 +338,523 @@ const Tasbeeh = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-20">
-        <AppBar title={t('digitalTasbeeh')} showBack />
+      <div
+        className={`min-h-screen pb-20 transition-all ${isFullscreen ? 'fixed inset-0 z-40 overflow-y-auto' : ''}`}
+        style={{
+          background: 'var(--bg-base)',
+          color: 'var(--text-primary)',
+          paddingBottom: isFullscreen ? '112px' : '96px',
+        }}
+      >
+        {!isFullscreen && <AppBar title={t('digitalTasbeeh')} showBack />}
 
-        <div className="max-w-lg mx-auto px-5 pt-4 space-y-6">
+        <div className="max-w-md mx-auto px-4 pt-3 sm:pt-5 space-y-4">
 
-          {/* Dhikr Selector Hero */}
-          <Card className="overflow-hidden border-border/30 shadow-lg bg-card/50 backdrop-blur-xl">
-            <div className="p-4 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-primary/10 rounded-lg">
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('selectDhikr')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={toggleZenMode}
-                    className="p-1.5 rounded-full text-[#C9860A] hover:bg-[#C9860A]/10 transition-colors"
-                    title={t("zenMode") || "Zen Mode"}
-                  >
-                    <Moon className="w-3.5 h-3.5" />
-                  </button>
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-[#C9860A]/10 rounded-full text-xs font-bold tracking-widest uppercase text-[#C9860A]">
-                    <History className="w-3 h-3" />
-                    {t('total')}: <span className="font-serif italic ml-1 text-sm tracking-normal">{totalCount.toLocaleString()}</span>
-                  </div>
-                </div>
+          {/* 1. Top Instrument Status Bar */}
+          <div className="flex items-center justify-between gap-1.5 flex-wrap">
+            {/* Left pills: Set # & Session Timer */}
+            <div className="flex items-center gap-1.5">
+              <div
+                className="px-3 py-1 rounded-full text-xs font-bold select-none"
+                style={{
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                Set: <span style={{ color: 'var(--accent-text)' }}>{setNumber}</span>
               </div>
 
-              <Select value={selectedDhikr} onValueChange={handleDhikrChange}>
-                <SelectTrigger className="h-16 rounded-2xl bg-card border-border/40 text-left px-5">
-                  <div className="flex flex-col">
-                    <span className="font-arabic text-lg text-primary leading-tight">{currentDhikr.label}</span>
-                    <span className="text-xs text-muted-foreground font-medium">{currentDhikr.transliteration}</span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {DHIKR_OPTIONS.map((dhikr) => (
-                    <SelectItem key={dhikr.value} value={dhikr.value} className="py-3">
-                      <div className="flex flex-col">
-                        <span className="font-arabic text-base">{dhikr.label}</span>
-                        <span className="text-xs text-muted-foreground">{dhikr.transliteration}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </Card>
-
-          {/* Main Visual Counter */}
-          <div className="flex flex-col items-center justify-center py-6 space-y-8">
-
-            <div className="relative w-72 h-72 flex items-center justify-center">
-              {/* Background Ring - Outer */}
-              <div className="absolute inset-0 rounded-full border-[10px] border-muted/20" />
-
-              {/* Progress Ring with Glowing Comet Orb (Part 3) */}
-              {(() => {
-                const cx = 144;
-                const cy = 144;
-                const r = 134;
-                const angleRad = ((progress / 100) * 360 - 90) * (Math.PI / 180);
-                const orbX = cx + r * Math.cos(angleRad);
-                const orbY = cy + r * Math.sin(angleRad);
-
-                return (
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 288 288" style={{ overflow: 'visible' }}>
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r={r}
-                      fill="transparent"
-                      stroke="var(--accent)"
-                      strokeWidth="10"
-                      strokeDasharray={842}
-                      strokeDashoffset={842 - (842 * progress) / 100}
-                      className="transition-all duration-300 ease-out"
-                      strokeLinecap="round"
-                      transform={`rotate(-90 ${cx} ${cy})`}
-                    />
-                    {progress > 0 && (
-                      <g style={{ transition: 'all 0.3s ease-out' }}>
-                        {/* Outer ambient halo */}
-                        <circle cx={orbX} cy={orbY} r={7} fill="var(--accent)" opacity={0.35} />
-                        {/* Inner bright core */}
-                        <circle cx={orbX} cy={orbY} r={3.5} fill="var(--accent-text)" stroke="var(--accent)" strokeWidth={1.5} />
-                      </g>
-                    )}
-                  </svg>
-                );
-              })()}
-
-              {/* Animated Inner Aura */}
-              <AnimatePresence>
-                {isAnimating && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 0.2, scale: 1.1 }}
-                    exit={{ opacity: 0, scale: 1.2 }}
-                    className="absolute inset-4 rounded-full bg-primary"
-                  />
-                )}
-              </AnimatePresence>
-
-              {/* Main Counter Hub */}
-              <button
-                onClick={handleIncrement}
-                onTouchStart={() => triggerHapticFeedback('increment')}
-                className="relative w-[210px] h-[210px] rounded-full bg-card shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-border/10 flex flex-col items-center justify-center group active:scale-[0.9] transition-all duration-150"
+              <div
+                className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold tabular-nums select-none"
+                style={{
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
               >
-                {/* Background reflection */}
-                <div className="absolute inset-4 border border-[var(--card-sheen)] rounded-full" />
+                <span>⏱</span>
+                <span>{formattedSessionTime}</span>
+              </div>
+            </div>
 
-                <span className="text-xs font-bold text-[#C9860A] uppercase tracking-[0.2em] mb-1">{t('count')}</span>
+            {/* Right pills: Touch Lock & Fullscreen & Zen */}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={toggleLock}
+                className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-transform active:scale-95 select-none"
+                style={{
+                  background: isLocked ? 'var(--accent-soft)' : 'var(--surface-2)',
+                  border: `1px solid ${isLocked ? 'var(--accent)' : 'var(--border)'}`,
+                  color: isLocked ? 'var(--accent-text)' : 'var(--text-secondary)',
+                }}
+                title={isLocked ? "Touch is locked to prevent accidental taps" : "Lock screen controls"}
+              >
+                {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                <span>{isLocked ? 'Locked' : 'Lock'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="flex items-center justify-center w-8 h-8 rounded-full transition-transform active:scale-95"
+                style={{
+                  background: isFullscreen ? 'var(--accent-soft)' : 'var(--surface-2)',
+                  border: `1px solid ${isFullscreen ? 'var(--accent)' : 'var(--border)'}`,
+                  color: isFullscreen ? 'var(--accent-text)' : 'var(--text-secondary)',
+                }}
+                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Mode"}
+              >
+                {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleZenMode}
+                className="flex items-center justify-center w-8 h-8 rounded-full transition-transform active:scale-95"
+                style={{
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--accent-text)',
+                }}
+                title="Zen Mode"
+              >
+                <Moon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Luminous Vocalized Dhikr Stage & Inline Goal Progress Bar */}
+          <div
+            className="relative overflow-hidden rounded-3xl p-4 sm:p-5 border"
+            style={{
+              background: 'var(--surface)',
+              borderColor: 'var(--border)',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
+            }}
+          >
+            {/* Ambient radial glow */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle at 50% 0%, var(--accent-soft), transparent 70%)',
+              }}
+            />
+
+            <div className="relative z-10 flex flex-col items-center text-center space-y-2">
+              {/* Carousel navigation header */}
+              <div className="flex items-center justify-between w-full">
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={handlePrevDhikr}
+                  aria-label="Previous Dhikr"
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Dhikr Selector dropdown trigger */}
+                <div className="flex-1 px-2">
+                  <Select value={selectedDhikr} onValueChange={handleDhikrChange} disabled={isLocked}>
+                    <SelectTrigger
+                      className="h-8 mx-auto px-3 border-0 shadow-none text-center justify-center gap-1.5 font-bold text-xs uppercase tracking-wider"
+                      style={{
+                        background: 'transparent',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      <Sparkles className="w-3 h-3 shrink-0" style={{ color: 'var(--accent)' }} />
+                      <SelectValue placeholder="Choose Dhikr" />
+                    </SelectTrigger>
+                    <SelectContent
+                      style={{
+                        background: 'var(--bg-elev)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
+                      {DHIKR_OPTIONS.map((dhikr) => (
+                        <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5">
+                          <div className="flex flex-col text-left">
+                            <span className="font-arabic text-base" style={{ color: 'var(--accent-text)' }}>{dhikr.label}</span>
+                            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{dhikr.transliteration}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={handleNextDhikr}
+                  aria-label="Next Dhikr"
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Vocalized Arabic calligraphy */}
+              <div
+                className="quran-arabic py-1 select-none"
+                dir="rtl"
+                style={{
+                  fontSize: '1.85rem',
+                  fontWeight: 700,
+                  color: 'var(--accent-text)',
+                  textShadow: '0 0 16px var(--accent-glow)',
+                  lineHeight: 1.4,
+                }}
+              >
+                {currentDhikr.label}
+              </div>
+
+              {/* Transliteration + English Meaning */}
+              <div className="space-y-0.5">
+                <p
+                  className="text-xs uppercase font-extrabold tracking-widest"
+                  style={{
+                    letterSpacing: '0.08em',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  {currentDhikr.transliteration}
+                </p>
+                <p
+                  className="text-xs italic"
+                  style={{
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  "{currentDhikr.translation}"
+                </p>
+              </div>
+
+              {/* Interactive GOAL Pill: 33 • X% ✎ */}
+              <div className="pt-2 w-full flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={cycleGoal}
+                  className="px-3 py-1 rounded-full text-xs font-bold transition-transform active:scale-95 select-none disabled:opacity-40"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--accent-text)',
+                  }}
+                  title="Tap to change target goal"
+                >
+                  GOAL: {targetGoal === Infinity ? '∞' : targetGoal} • {progress}% ✎
+                </button>
+
+                {/* Sleek horizontal glowing progress bar */}
+                <div
+                  className="w-full h-1.5 rounded-full overflow-hidden"
+                  style={{
+                    background: 'var(--surface-2)',
+                  }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${progress}%`,
+                      background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+                      boxShadow: '0 0 8px var(--accent-glow)',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Interactive Curved 3D Gemstone Bead String */}
+          <div className="w-full px-2">
+            <svg
+              className="w-full h-[54px] overflow-visible"
+              viewBox="0 0 360 54"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <radialGradient id="tasbihBeadGrad" cx="35%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="var(--accent-text)" />
+                  <stop offset="55%" stopColor="var(--accent)" />
+                  <stop offset="100%" stopColor="var(--bg-base)" />
+                </radialGradient>
+              </defs>
+
+              {/* Thread wire */}
+              <path
+                d="M 15 38 Q 180 10 345 38"
+                stroke="var(--border)"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                opacity={0.65}
+              />
+
+              {/* 7 3D Gemstone Beads along the wire */}
+              {beadsData.map((bead) => (
+                <g key={bead.id} style={{ transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                  {/* Lead bead ambient aura */}
+                  {bead.isLead && (
+                    <circle cx={bead.cx} cy={bead.cy} r={14} fill="var(--accent)" opacity={0.32} />
+                  )}
+
+                  {/* Gemstone sphere body */}
+                  <circle
+                    cx={bead.cx}
+                    cy={bead.cy}
+                    r={9}
+                    fill="url(#tasbihBeadGrad)"
+                    stroke="var(--border)"
+                    strokeWidth={1}
+                  />
+
+                  {/* Specular 3D highlight */}
+                  <circle
+                    cx={bead.cx - 2.8}
+                    cy={bead.cy - 2.8}
+                    r={2.4}
+                    fill="#FFFFFF"
+                    opacity={0.85}
+                  />
+                </g>
+              ))}
+            </svg>
+          </div>
+
+          {/* 4. 100% Theme-Tokenized Concentric Dark-Jewel Tap Pad */}
+          <div className="flex flex-col items-center justify-center py-2 sm:py-4">
+            <div className="relative w-72 h-72 flex items-center justify-center">
+              {/* Outer Circular Progress Track */}
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 288 288" style={{ overflow: 'visible' }}>
+                <circle
+                  cx={144}
+                  cy={144}
+                  r={134}
+                  fill="transparent"
+                  stroke="var(--surface-2)"
+                  strokeWidth={10}
+                />
+                <circle
+                  cx={144}
+                  cy={144}
+                  r={134}
+                  fill="transparent"
+                  stroke="var(--accent)"
+                  strokeWidth={10}
+                  strokeDasharray={842}
+                  strokeDashoffset={842 - (842 * progress) / 100}
+                  strokeLinecap="round"
+                  transform="rotate(-90 144 144)"
+                  style={{
+                    transition: 'stroke-dashoffset 0.3s ease-out',
+                    filter: 'drop-shadow(0 0 6px var(--accent-glow))',
+                  }}
+                />
+                {/* Comet Tip Orb */}
+                {progress > 0 && (() => {
+                  const angleRad = ((progress / 100) * 360 - 90) * (Math.PI / 180);
+                  const orbX = 144 + 134 * Math.cos(angleRad);
+                  const orbY = 144 + 134 * Math.sin(angleRad);
+                  return (
+                    <g style={{ transition: 'all 0.3s ease-out' }}>
+                      <circle cx={orbX} cy={orbY} r={7} fill="var(--accent)" opacity={0.4} />
+                      <circle cx={orbX} cy={orbY} r={3.5} fill="var(--accent-text)" stroke="var(--accent)" strokeWidth={1.5} />
+                    </g>
+                  );
+                })()}
+              </svg>
+
+              {/* Concentric Jewel Tap Pad */}
+              <button
+                type="button"
+                onClick={handleIncrement}
+                className="relative w-[214px] h-[214px] rounded-full flex flex-col items-center justify-center active:scale-95 transition-transform duration-100 select-none cursor-pointer outline-none"
+                style={{
+                  background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)',
+                  border: '1.5px solid var(--border)',
+                  boxShadow: 'inset 0 2px 12px var(--accent-soft), 0 10px 28px rgba(0,0,0,0.55)',
+                }}
+              >
+                {/* Inner subtle geometric dashed ring */}
+                <div
+                  className="absolute inset-3 rounded-full pointer-events-none"
+                  style={{
+                    border: '1px dashed var(--card-sheen)',
+                    opacity: 0.6,
+                  }}
+                />
+
+                {/* Center Count Readout */}
                 <motion.span
                   key={count}
-                  initial={{ scale: 0.8 }}
+                  initial={{ scale: 0.85 }}
                   animate={{ scale: 1 }}
-                  className="text-7xl font-bold text-foreground font-serif italic tracking-tight"
+                  transition={{ duration: 0.12 }}
+                  className="text-6xl sm:text-7xl font-extrabold tracking-tight tabular-nums"
+                  style={{
+                    color: 'var(--accent-text)',
+                    textShadow: '0 0 18px var(--accent-glow)',
+                    fontVariantNumeric: 'tabular-nums',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  }}
                 >
                   {count}
                 </motion.span>
 
-                <div className="absolute bottom-10 flex items-center gap-1">
-                  <Volume2 className="w-3 h-3 text-muted-foreground opacity-50" />
-                  <span className="text-xs font-bold text-muted-foreground/60 uppercase tracking-tighter">{t('tapToDhikr')}</span>
-                </div>
+                {/* Subtitle */}
+                <span
+                  className="text-[10px] font-bold uppercase tracking-[0.2em] mt-2 select-none"
+                  style={{
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  TAP TO COUNT
+                </span>
               </button>
             </div>
-
-            {/* Bottom Controls */}
-            <div className="flex items-center gap-4 w-full px-4">
-              <Button
-                variant="outline"
-                className="flex-1 h-14 rounded-2xl gap-3 text-xs font-bold border-border/40 bg-card/40 hover:bg-muted/50 transition-all"
-                onClick={() => setShowResetDialog(true)}
-              >
-                <RotateCcw className="w-4 h-4" />
-                {t('resetCount')}
-              </Button>
-
-              <div className="flex-1 h-14 bg-muted/20 border border-border/40 rounded-2xl flex flex-col items-center justify-center px-4 shadow-sm">
-                <span className="text-xs font-bold uppercase text-muted-foreground tracking-[0.2em]">{t('nextGoal')}</span>
-                <span className="text-base font-bold text-[#C9860A] font-serif italic">{nextMilestone}</span>
-              </div>
-            </div>
           </div>
 
-          {/* Translation Card */}
-          <Card className="p-6 bg-primary/5 border-primary/20 rounded-3xl relative overflow-hidden">
-            <div className="absolute -end-4 -bottom-4 opacity-5">
-              <Sparkles className="w-24 h-24 text-primary" />
-            </div>
-            <p className="text-center text-sm font-medium italic text-primary leading-relaxed">
-              "{currentDhikr.translation}"
-            </p>
-          </Card>
+          {/* 5. 3-Pill Bottom Control Deck */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full px-1">
+            {/* Left Pill: Reset */}
+            <button
+              type="button"
+              disabled={isLocked}
+              onClick={() => setShowResetDialog(true)}
+              className="h-12 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 select-none"
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <RotateCcw className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+              <span>Reset</span>
+            </button>
 
-          {/* Today's History Tab */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#C9860A] ms-2 mb-2">Today's Progress</h3>
-            <Card className="p-5 border-border/40 bg-card shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C9860A]/20 to-[#E8A020]/5 flex items-center justify-center border border-[#C9860A]/10">
-                    <History className="w-5 h-5 text-[#C9860A]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-foreground">Sessions Completed</p>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">Based on your activity today</p>
-                  </div>
+            {/* Center Primary Pill: Auto Rhythm Counter */}
+            <button
+              type="button"
+              disabled={isLocked}
+              onClick={toggleAutoCounter}
+              className="h-12 rounded-2xl flex items-center justify-center gap-1 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 select-none"
+              style={{
+                background: isAutoCounting ? 'var(--accent)' : 'var(--accent-soft)',
+                border: '1px solid var(--accent)',
+                color: isAutoCounting ? 'var(--on-accent)' : 'var(--accent-text)',
+                boxShadow: isAutoCounting ? '0 0 14px var(--accent-glow)' : 'none',
+              }}
+              title="Hands-free rhythmic counter"
+            >
+              {isAutoCounting ? (
+                <>
+                  <Pause className="w-3.5 h-3.5" />
+                  <span>Auto</span>
+                  <span
+                    onClick={cycleAutoPace}
+                    className="text-[10px] opacity-80 underline cursor-pointer px-1 py-0.5 rounded"
+                  >
+                    ({autoPace.toFixed(1)}s)
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>▶ Auto</span>
+                </>
+              )}
+            </button>
+
+            {/* Right Pill: Sound / Vibrate */}
+            <button
+              type="button"
+              onClick={cycleFeedbackMode}
+              className="h-12 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-95 select-none"
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              {feedbackMode === 'all' && (
+                <>
+                  <Volume2 className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+                  <span>Sound</span>
+                </>
+              )}
+              {feedbackMode === 'vibrate' && (
+                <>
+                  <Smartphone className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+                  <span>Vibrate</span>
+                </>
+              )}
+              {feedbackMode === 'silent' && (
+                <>
+                  <VolumeX className="w-3.5 h-3.5" style={{ color: 'var(--text-secondary)' }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>Mute</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Today's Lifetime Activity & History Card */}
+          <div
+            className="rounded-3xl p-4 border"
+            style={{
+              background: 'var(--surface)',
+              borderColor: 'var(--border)',
+              boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border"
+                  style={{
+                    background: 'var(--accent-soft)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--accent)',
+                  }}
+                >
+                  <History className="w-5 h-5" />
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-[#C9860A] font-serif italic">
-                    {dailyHistory.find(h => h.date === new Date().toLocaleDateString() && h.label === label)?.count || 0}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+                    Total Dhikr Recorded
                   </p>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Dhikr</p>
+                  <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                    Lifetime count across sessions
+                  </p>
                 </div>
               </div>
-            </Card>
+
+              <div className="text-right">
+                <p className="text-xl font-black tabular-nums" style={{ color: 'var(--accent-text)' }}>
+                  {totalCount.toLocaleString()}
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
+                  Total
+                </p>
+              </div>
+            </div>
           </div>
+
         </div>
 
         {/* Tokenized Reset Confirmation Modal */}
@@ -344,32 +865,50 @@ const Tasbeeh = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full max-w-sm rounded-[24px] border border-[var(--border)] p-6 space-y-4 shadow-2xl"
+                className="w-full max-w-sm rounded-[24px] p-6 space-y-4 shadow-2xl"
                 style={{
-                  background: 'linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%)',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   color: 'var(--text-primary)',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <div
+                    className="p-2.5 rounded-xl border"
+                    style={{
+                      background: 'var(--accent-soft)',
+                      borderColor: 'var(--accent)',
+                      color: 'var(--accent-text)',
+                    }}
+                  >
                     <RotateCcw className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-base text-[var(--text-primary)]">Reset Counter</h3>
-                    <p className="text-xs text-[var(--text-secondary)]">Reset current counter to 0?</p>
+                    <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Reset Counter</h3>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Reset current counter to 0?</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">
                   <Button
                     variant="outline"
-                    className="flex-1 rounded-xl h-11 border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:bg-[var(--surface)] hover:text-[var(--text-primary)]"
+                    className="flex-1 rounded-xl h-11 transition-all"
+                    style={{
+                      background: 'var(--surface-2)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-primary)',
+                    }}
                     onClick={() => setShowResetDialog(false)}
                   >
                     Cancel
                   </Button>
                   <Button
-                    className="flex-1 rounded-xl h-11 bg-[var(--accent)] text-[var(--on-accent)] hover:opacity-90 font-bold shadow-md"
+                    className="flex-1 rounded-xl h-11 font-bold shadow-md transition-all"
+                    style={{
+                      background: 'var(--accent)',
+                      color: 'var(--on-accent)',
+                    }}
                     onClick={confirmReset}
                   >
                     Reset
@@ -385,3 +924,4 @@ const Tasbeeh = () => {
 };
 
 export default Tasbeeh;
+

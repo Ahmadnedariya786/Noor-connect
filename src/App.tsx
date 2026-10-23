@@ -260,6 +260,9 @@ function AppRoutes() {
               <Route path="/quran/:surahName" element={<QuranReader />} />
               <Route path="/quran-progress" element={<QuranProgress />} />
               <Route path="/tasbeeh" element={<Tasbeeh />} />
+              <Route path="/tasbih" element={<Navigate to="/tasbeeh" replace />} />
+              <Route path="/services/tasbih" element={<Navigate to="/tasbeeh" replace />} />
+              <Route path="/services/calendar" element={<Navigate to="/calendar" replace />} />
               <Route path="/qibla" element={<Qibla />} />
               <Route path="/duas" element={<Duas />} />
               <Route path="/hadith" element={<Hadith />} />
@@ -318,6 +321,9 @@ function AppRoutes() {
               <Route path="/quran/:surahName" element={<QuranReader />} />
               <Route path="/quran-progress" element={<QuranProgress />} />
               <Route path="/tasbeeh" element={<Tasbeeh />} />
+              <Route path="/tasbih" element={<Navigate to="/tasbeeh" replace />} />
+              <Route path="/services/tasbih" element={<Navigate to="/tasbeeh" replace />} />
+              <Route path="/services/calendar" element={<Navigate to="/calendar" replace />} />
               <Route path="/qibla" element={<Qibla />} />
               <Route path="/duas" element={<Duas />} />
               <Route path="/hadith" element={<Hadith />} />
