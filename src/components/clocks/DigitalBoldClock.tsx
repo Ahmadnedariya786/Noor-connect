@@ -85,7 +85,7 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
         </div>
 
         {/* ── Main Digits Row (HH:MM + Stacked Column) ── */}
-        <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 my-0.5">
+        <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 my-0.5 ltr-num" dir="ltr" style={{ direction: 'ltr' }}>
           {/* Bold Metallic Gradient HH:MM Numerals */}
           <div
             className="font-extrabold tracking-tight tabular-nums leading-none"

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, TrendingUp, Award, Calendar } from 'lucide-react';
 import { quranFeaturesService } from '@/lib/quran-features';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext-new';
 
 interface OverallProgress {
   totalSurahs: number;
@@ -29,6 +30,7 @@ interface QuranProgressWidgetProps {
 
 export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [progress, setProgress] = useState<OverallProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -88,7 +90,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         <CardHeader>
           <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
             <BookOpen className="w-5 h-5 text-[var(--accent-text)]" />
-            Quran Progress
+            {t('quranProgress') || 'Quran Progress'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -108,7 +110,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         <CardHeader>
           <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-[var(--text-primary)]">
             <BookOpen className="w-5 h-5 text-[var(--accent-text)]" />
-            Quran Progress
+            {t('quranProgress') || 'Quran Progress'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -261,16 +263,16 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         {/* 2 Recessed Stat Tiles */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="p-3 rounded-[14px] bg-[var(--surface-2)] border border-[var(--border)] text-center">
-            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--accent-text)]">
-              {progress.completedSurahs} <span className="text-[11px] text-[var(--text-secondary)] font-normal">/ {progress.totalSurahs}</span>
+            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--accent-text)] ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+              <span className="ltr-num" dir="ltr">{progress.completedSurahs}</span> <span className="text-[11px] text-[var(--text-secondary)] font-normal ltr-num" dir="ltr">/ {progress.totalSurahs}</span>
             </p>
             <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)] mt-0.5">
               Surahs Completed
             </p>
           </div>
           <div className="p-3 rounded-[14px] bg-[var(--surface-2)] border border-[var(--border)] text-center">
-            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--text-primary)]">
-              {progress.pagesRead} <span className="text-[11px] text-[var(--text-secondary)] font-normal">/ {progress.totalPages}</span>
+            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--text-primary)] ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+              <span className="ltr-num" dir="ltr">{progress.pagesRead}</span> <span className="text-[11px] text-[var(--text-secondary)] font-normal ltr-num" dir="ltr">/ {progress.totalPages}</span>
             </p>
             <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)] mt-0.5">
               Pages Read
@@ -291,13 +293,13 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)] text-center">
-            {progress.completedAyahs?.toLocaleString() || 0} / {progress.totalAyahs?.toLocaleString() || 6236} Total Ayahs
+            <span className="ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>{progress.completedAyahs?.toLocaleString() || 0} / {progress.totalAyahs?.toLocaleString() || 6236}</span> TOTAL AYAHS
           </p>
         </div>
 
         {/* Motivational Message */}
         <div className="text-center p-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
-          <p className="text-xs font-medium text-[var(--text-primary)]/90">{motivationalMessage}</p>
+          <p className="text-xs font-medium text-[var(--text-primary)]/90 bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>{motivationalMessage}</p>
         </div>
 
         {/* Action Buttons with 0ms SPA Router Navigation - 100% Full-Width Stacked Layout */}

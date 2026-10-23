@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getPrayerDisplayName } from "@/lib/prayer-utils";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import {
   loadDashboardWidgetConfig,
@@ -109,6 +110,7 @@ function PremiumDashboardInner({
   toast,
 }: PremiumDashboardProps) {
   const { animationEnabled, timeFormat } = useSettings();
+  const { t } = useLanguage();
   const { tier } = useAnimationTier();
   const { isRamadan, ramadanDay } = useIslamicCalendar();
   const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>([]);
@@ -437,17 +439,26 @@ function PremiumDashboardInner({
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">Daily Salah</h3>
+                          <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
+                            {t('dailySalah') || 'Daily Salah'}
+                          </h3>
                           <div
                             className="w-6 h-[3px] rounded-full mt-1.5"
                             style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
                           />
                         </div>
                         <div
-                          className="px-2.5 py-1 rounded-full text-xs font-bold"
-                          style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}
+                          className="px-2.5 py-1 rounded-full text-xs font-bold ltr-num"
+                          dir="ltr"
+                          style={{
+                            background: 'var(--accent-soft)',
+                            color: 'var(--accent-text)',
+                            border: '1px solid var(--border)',
+                            direction: 'ltr',
+                            unicodeBidi: 'isolate',
+                          }}
                         >
-                          {completedCount} / 5
+                          <span className="ltr-num" dir="ltr">{completedCount} / 5</span>
                         </div>
                       </div>
 

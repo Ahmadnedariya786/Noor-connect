@@ -114,9 +114,12 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
         {/* Stats Summary */}
         <div className="flex items-center justify-between mb-3 text-xs font-semibold text-[var(--text-secondary)]">
           <span>
-            {weeklyStats.completed} / {weeklyStats.total} {ti18n('prayersThisWeek')}
+            <span className="ltr-num font-mono" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+              {weeklyStats.completed} / {weeklyStats.total}
+            </span>{' '}
+            {ti18n('prayersThisWeek')}
           </span>
-          <span className="text-[11px] font-medium opacity-80">
+          <span className="text-[11px] font-medium opacity-80 bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
             Past 7 Days
           </span>
         </div>

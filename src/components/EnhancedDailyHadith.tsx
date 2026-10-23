@@ -16,6 +16,7 @@ import type { EnhancedHadith } from "@/data/hadith-collections";
 import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 interface Hadith {
   id: string;
@@ -162,6 +163,7 @@ let cachedCollectionsHadith: EnhancedHadith | null = null;
 
 export function EnhancedDailyHadith() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [hadith, setHadith] = useState<Hadith | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -410,7 +412,7 @@ export function EnhancedDailyHadith() {
                   lineHeight: 1.25,
                 }}
               >
-                Daily Hadith
+                {t('dailyHadith') || 'Daily Hadith'}
               </h3>
               <span
                 style={{
@@ -522,9 +524,10 @@ export function EnhancedDailyHadith() {
         {/* English Translation Section */}
         <div className={`space-y-2 transition-all duration-300 ${isAnimating ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}`}>
           <p
-            className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 ${
+            className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 bidi-plaintext ${
               !isExpanded && isEnglishLong ? "line-clamp-3" : ""
             }`}
+            style={{ unicodeBidi: 'plaintext' }}
           >
             "{hadith.englishTranslation}"
           </p>
@@ -546,7 +549,7 @@ export function EnhancedDailyHadith() {
                 )}
               </button>
               {!isExpanded && (
-                <span className="text-[11px] text-[var(--text-secondary)]/80 italic font-mono">
+                <span className="text-[11px] text-[var(--text-secondary)]/80 italic font-mono ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
                   {wordCount} words
                 </span>
               )}
@@ -557,22 +560,24 @@ export function EnhancedDailyHadith() {
         {/* Reflection (if available) with 3px solid accent left border */}
         {hadith.reflection && (
           <div
-            className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed"
+            className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed bidi-plaintext"
             style={{
               background: 'var(--surface-2)',
               boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+              unicodeBidi: 'plaintext',
+              textAlign: 'start',
             }}
           >
-            <span className="text-[var(--accent)] font-semibold not-italic mr-1.5">Reflection:</span>
-            {hadith.reflection}
+            <span className="text-[var(--accent)] font-semibold not-italic mr-1.5 inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>Reflection:</span>
+            <span>{hadith.reflection}</span>
           </div>
         )}
 
         {/* Narrator & Source Strip (Sanitized: hides Unknown narrator completely) */}
         {activeNarrator ? (
           <div className="flex items-center justify-between text-xs px-1 text-[var(--text-secondary)] font-medium">
-            <div className="flex items-center gap-1.5 min-w-0 truncate">
-              <span className="text-[var(--accent)] font-semibold shrink-0">Narrator:</span>
+            <div className="flex items-center gap-1.5 min-w-0 truncate bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
+              <span className="text-[var(--accent)] font-semibold shrink-0 inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>Narrator:</span>
               <span className="text-[var(--text-primary)] font-medium truncate">{activeNarrator}</span>
             </div>
             <div className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--accent-text)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-md border border-[var(--border)] shrink-0 ml-2">

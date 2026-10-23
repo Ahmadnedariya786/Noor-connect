@@ -93,7 +93,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-secondary)] flex items-center gap-2">
               <AlertCircle className="w-3.5 h-3.5 text-[var(--accent)]" />
-              Qaza Prayers
+              {t('qazaPrayers') || 'Qaza Prayers'}
             </CardTitle>
             {stats.total > 0 ? (
               <span

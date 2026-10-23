@@ -2103,3 +2103,16 @@
   }
 }
 
+/* RTL Bidi Normalization Utilities */
+.ltr-num {
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  display: inline-block;
+}
+
+.bidi-plaintext {
+  unicode-bidi: plaintext !important;
+  text-align: start;
+}
+
+

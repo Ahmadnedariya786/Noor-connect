@@ -288,6 +288,7 @@ export default function Services() {
                                                 {item.title}
                                             </h3>
                                             <p
+                                                className="bidi-plaintext"
                                                 style={{
                                                     fontSize: '0.70rem',
                                                     color: 'var(--text-secondary)',
@@ -299,6 +300,8 @@ export default function Services() {
                                                     width: '100%',
                                                     marginTop: '2px',
                                                     lineHeight: 1.3,
+                                                    unicodeBidi: 'plaintext',
+                                                    textAlign: 'start',
                                                 }}
                                             >
                                                 {item.subtitle}
@@ -307,6 +310,8 @@ export default function Services() {
 
                                         {/* Bottom Row: Explore → Micro-Link */}
                                         <div
+                                            className="ltr-num"
+                                            dir="ltr"
                                             style={{
                                                 fontSize: '0.66rem',
                                                 fontWeight: 600,
@@ -315,6 +320,8 @@ export default function Services() {
                                                 alignItems: 'center',
                                                 gap: '3px',
                                                 marginTop: '2px',
+                                                direction: 'ltr',
+                                                unicodeBidi: 'isolate',
                                             }}
                                         >
                                             <span>Explore</span>

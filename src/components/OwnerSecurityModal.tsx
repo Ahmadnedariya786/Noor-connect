@@ -90,10 +90,10 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
           description: 'Session unlocked for 15 minutes.',
         });
         setKeyInput('');
-        onClose();
         if (onSuccess) {
           onSuccess();
         }
+        onClose();
       } else {
         setErrorMessage(res.error || 'Invalid key.');
         if (res.remainingCooldown) {

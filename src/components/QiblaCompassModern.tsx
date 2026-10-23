@@ -576,14 +576,15 @@ const QiblaCompassModern = () => {
         </p>
 
         {/* Large Degree Display */}
-        <div className="flex items-baseline justify-center gap-2">
+        <div className="flex items-baseline justify-center gap-2 ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
           <span
-            className="text-5xl font-black text-[var(--text-primary)] tracking-tight font-mono"
-            style={{ fontStyle: 'italic' }}
+            className="text-5xl font-black text-[var(--text-primary)] tracking-tight font-mono ltr-num"
+            dir="ltr"
+            style={{ fontStyle: 'italic', direction: 'ltr', unicodeBidi: 'isolate' }}
           >
             {Math.round(qiblaAngle)}°
           </span>
-          <span className="text-2xl font-bold text-[var(--accent-text)]">
+          <span className="text-2xl font-bold text-[var(--accent-text)] ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
             {qiblaResult?.cardinalDirection || 'W'}
           </span>
         </div>
@@ -925,11 +926,11 @@ const QiblaCompassModern = () => {
                   <Navigation className="w-3.5 h-3.5" />
                   Distance to Baitullah
                 </p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-black text-[var(--text-primary)] tracking-tight">
+                <div className="flex items-baseline gap-1.5 ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+                  <span className="text-3xl font-black text-[var(--text-primary)] tracking-tight ltr-num" dir="ltr">
                     {Math.round(distanceKm).toLocaleString()}
                   </span>
-                  <span className="text-sm font-bold text-[var(--text-secondary)]">km</span>
+                  <span className="text-sm font-bold text-[var(--text-secondary)] ltr-num" dir="ltr">km</span>
                 </div>
               </div>
 

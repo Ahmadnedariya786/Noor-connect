@@ -157,8 +157,8 @@ export default function QuranProgress() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-3xl font-extrabold text-[var(--accent-text)]">
-                      {overallProgress?.completedSurahs || 0} / {overallProgress?.totalSurahs || 114}
+                    <p className="text-3xl font-extrabold text-[var(--accent-text)] ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+                      <span className="ltr-num" dir="ltr">{overallProgress?.completedSurahs || 0} / {overallProgress?.totalSurahs || 114}</span>
                     </p>
                     <p className="text-xs uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Surahs</p>
                   </div>
@@ -230,7 +230,7 @@ export default function QuranProgress() {
                   />
                 </div>
                 <p className="text-center text-xs font-medium text-[var(--text-secondary)]">
-                  {overallProgress?.completedAyahs?.toLocaleString() || 0} / {overallProgress?.totalAyahs?.toLocaleString() || 6236} ayahs completed
+                  <span className="ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>{overallProgress?.completedAyahs?.toLocaleString() || 0} / {overallProgress?.totalAyahs?.toLocaleString() || 6236}</span> ayahs completed
                 </p>
               </div>
             </CardContent>

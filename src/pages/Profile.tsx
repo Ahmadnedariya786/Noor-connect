@@ -25,10 +25,12 @@ import { CURRENT_APP_VERSION } from '@/lib/constants';
 import { CLOCK_STYLES } from '@/types/clock';
 import { THEMES } from '@/lib/theme-engine';
 import type { ThemeId } from '@/types/theme';
+import { useLanguage } from '@/contexts/LanguageContext-new';
 
 interface SettingsRow {
   id: string;
   title: string;
+  titleKey?: string;
   subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
   gradient: string;
@@ -40,6 +42,7 @@ interface SettingsRow {
 interface SettingsGroup {
   id: string;
   title: string;
+  titleKey?: string;
   badge?: string;
   rows: SettingsRow[];
 }
@@ -48,11 +51,13 @@ const GROUPS: SettingsGroup[] = [
   {
     id: 'appearance',
     title: 'Appearance & Personalization',
+    titleKey: 'appearanceAndPersonalization',
     badge: 'Display',
     rows: [
       {
         id: 'appearance',
         title: 'Theme & Appearance',
+        titleKey: 'themeAndAppearance',
         subtitle: '5 royal dark themes & UI animations',
         icon: Palette,
         gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
@@ -63,6 +68,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'clock-style',
         title: 'Clock Style',
+        titleKey: 'clockStyle',
         subtitle: '6 luxury analog & digital watch faces',
         icon: Clock,
         gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
@@ -73,6 +79,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'haptics',
         title: 'Haptic Feedback',
+        titleKey: 'hapticFeedback',
         subtitle: 'Tactile vibration & pulse intensity',
         icon: Vibrate,
         gradient: 'from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/20',
@@ -83,6 +90,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'personal',
         title: 'Personal Information',
+        titleKey: 'personalInformation',
         subtitle: 'Gender mode & Zakat currency',
         icon: User,
         gradient: 'from-blue-500/10 via-blue-500/5 to-transparent border-blue-500/20',
@@ -94,11 +102,13 @@ const GROUPS: SettingsGroup[] = [
   {
     id: 'prayer',
     title: 'Prayer & Adhan',
+    titleKey: 'prayerAndAdhan',
     badge: 'Spiritual',
     rows: [
       {
         id: 'prayer',
         title: 'Prayer Calculation',
+        titleKey: 'prayerCalculation',
         subtitle: 'Angles, Madhab & Hijri offset',
         icon: Clock,
         gradient: 'from-teal-500/10 via-teal-500/5 to-transparent border-teal-500/20',
@@ -109,6 +119,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'notifications',
         title: 'Prayer Notifications',
+        titleKey: 'prayerNotifications',
         subtitle: 'Daily reminders & Sunnah alerts',
         icon: Bell,
         gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
@@ -119,6 +130,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'adhan',
         title: 'Adhan Sounds & Reciters',
+        titleKey: 'adhanAndSounds',
         subtitle: 'Muadhin voices & custom MP3s',
         icon: Volume2,
         gradient: 'from-cyan-500/10 via-cyan-500/20 to-transparent border-cyan-500/20',
@@ -130,11 +142,13 @@ const GROUPS: SettingsGroup[] = [
   {
     id: 'data',
     title: 'Data & Storage',
+    titleKey: 'dataAndStorage',
     badge: 'System',
     rows: [
       {
         id: 'backup',
         title: 'Backup & Restore',
+        titleKey: 'backupAndRestore',
         subtitle: 'Auto-backup & JSON file export',
         icon: Database,
         gradient: 'from-indigo-500/10 via-indigo-500/5 to-transparent border-indigo-500/20',
@@ -144,6 +158,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'storage',
         title: 'Storage & Cache',
+        titleKey: 'storageAndCache',
         subtitle: 'Offline Quran audio & e-book cache',
         icon: HardDrive,
         gradient: 'from-rose-500/10 via-rose-500/5 to-transparent border-rose-500/20',
@@ -154,6 +169,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'privacy',
         title: 'Privacy & Security',
+        titleKey: 'privacyAndSecurity',
         subtitle: '100% local data & app permissions',
         icon: ShieldCheck,
         gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
@@ -165,11 +181,13 @@ const GROUPS: SettingsGroup[] = [
   {
     id: 'about',
     title: 'About & Community',
+    titleKey: 'trustAndIdentity',
     badge: 'Noor',
     rows: [
       {
         id: 'about',
         title: 'About Noor Connect',
+        titleKey: 'aboutNoorConnect',
         subtitle: `Version ${CURRENT_APP_VERSION}, updates & X-Ray diagnostics`,
         icon: Info,
         gradient: 'from-orange-500/10 via-orange-500/5 to-transparent border-orange-500/20',
@@ -179,6 +197,7 @@ const GROUPS: SettingsGroup[] = [
       {
         id: 'contact',
         title: 'Contact & Feedback',
+        titleKey: 'contactAndFeedback',
         subtitle: "We'd love to hear from you",
         icon: Mail,
         gradient: 'from-violet-500/10 via-violet-500/5 to-transparent border-violet-500/20',
@@ -240,6 +259,7 @@ function getCalcMethodDisplay(val: string | null): string | null {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [asyncValues, setAsyncValues] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
@@ -431,45 +451,51 @@ const Profile: React.FC = () => {
         </div>
 
         {/* Group Cards */}
-        {GROUPS.map((group) => (
-          <section key={group.id} className="space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                {group.title}
-              </h2>
-              {group.badge && (
-                <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
-                  {group.badge}
-                </span>
-              )}
-            </div>
+        {GROUPS.map((group) => {
+          const groupTitle = group.titleKey && t(group.titleKey) !== group.titleKey ? t(group.titleKey) : group.title;
+          return (
+            <section key={group.id} className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  {groupTitle}
+                </h2>
+                {group.badge && (
+                  <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
+                    {group.badge}
+                  </span>
+                )}
+              </div>
 
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden divide-y divide-[var(--border)]">
-              {group.rows.map((row) => {
-                const IconComponent = row.icon;
-                const hasAsyncKey = !!row.asyncKey;
-                const val = hasAsyncKey ? asyncValues[row.asyncKey!] : undefined;
+              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden divide-y divide-[var(--border)]">
+                {group.rows.map((row) => {
+                  const IconComponent = row.icon;
+                  const hasAsyncKey = !!row.asyncKey;
+                  const val = hasAsyncKey ? asyncValues[row.asyncKey!] : undefined;
+                  const rowTitle = row.titleKey && t(row.titleKey) !== row.titleKey ? t(row.titleKey) : row.title;
 
-                return (
-                  <div
-                    key={row.id}
-                    onClick={() => navigate(row.route, { replace: true })}
-                    className="group flex items-center justify-between px-4 py-3.5 hover:bg-[var(--surface-2)] active:bg-[var(--surface-2)] transition-all duration-150 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${row.gradient} border flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
-                        <IconComponent className={`w-5 h-5 ${row.iconColor}`} />
-                      </div>
-
-                      <div className="min-w-0 flex-1 pe-2">
-                        <div className="text-[14px] font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors leading-tight">
-                          {row.title}
+                  return (
+                    <div
+                      key={row.id}
+                      onClick={() => navigate(row.route, { replace: true })}
+                      className="group flex items-center justify-between px-4 py-3.5 hover:bg-[var(--surface-2)] active:bg-[var(--surface-2)] transition-all duration-150 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${row.gradient} border flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
+                          <IconComponent className={`w-5 h-5 ${row.iconColor}`} />
                         </div>
-                        <div className="text-[11px] font-normal text-[var(--text-secondary)] mt-0.5 truncate">
-                          {row.subtitle}
+
+                        <div className="min-w-0 flex-1 pe-2">
+                          <div className="text-[14px] font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors leading-tight">
+                            {rowTitle}
+                          </div>
+                          <div
+                            className="text-[11px] font-normal text-[var(--text-secondary)] mt-0.5 truncate bidi-plaintext"
+                            style={{ unicodeBidi: 'plaintext' }}
+                          >
+                            {row.subtitle}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0 ms-2">
                       {hasAsyncKey && (
@@ -488,7 +514,8 @@ const Profile: React.FC = () => {
               })}
             </div>
           </section>
-        ))}
+        );
+      })}
 
         {/* Privacy & Version Footer */}
         <div className="pt-4 text-center space-y-2">

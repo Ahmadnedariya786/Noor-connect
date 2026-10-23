@@ -118,3 +118,72 @@
 [dir="rtl"] .carousel-next {
     transform: scaleX(-1);
 }
+
+/* Protected LTR islands: preserve natural arrow directions */
+[dir="ltr"] .arrow-right,
+[dir="ltr"] .arrow-left,
+[dir="ltr"] .chevron-right,
+[dir="ltr"] .chevron-left,
+[dir="ltr"] .rtl-icon,
+[dir="rtl"] [dir="ltr"] .arrow-right,
+[dir="rtl"] [dir="ltr"] .arrow-left,
+[dir="rtl"] [dir="ltr"] .chevron-right,
+[dir="rtl"] [dir="ltr"] .chevron-left,
+[dir="rtl"] [dir="ltr"] .rtl-icon {
+    transform: none !important;
+}
+
+/* ==========================================================================
+   RTL BIDI ISOLATION & NUMBER/TIME/PUNCTUATION NORMALIZATION
+   ========================================================================== */
+
+/* 1. Plaintext Isolation for Paragraphs, Subtitles, Descriptions, & English Copy */
+[dir="rtl"] p,
+[dir="rtl"] .text-secondary,
+[dir="rtl"] .text-muted-foreground,
+[dir="rtl"] [class*="subtitle"],
+[dir="rtl"] .card-subtitle,
+[dir="rtl"] .reflection-text,
+[dir="rtl"] .translation-text,
+[dir="rtl"] .hadith-narrator,
+[dir="rtl"] .description-text,
+[dir="rtl"] label,
+[dir="rtl"] .label,
+[dir="rtl"] h3,
+[dir="rtl"] h4,
+[dir="rtl"] .bidi-plaintext {
+    unicode-bidi: plaintext;
+    text-align: start;
+}
+
+/* Fix subtitle truncation clipping on wrong side */
+[dir="rtl"] .truncate {
+    unicode-bidi: plaintext;
+}
+
+/* 2. Numeric, Time, Fraction, Ratio, Compass & Unit Isolation */
+.ltr-num,
+.isolate-ltr,
+[dir="ltr"],
+[dir="rtl"] .ltr-num,
+[dir="rtl"] .isolate-ltr,
+[dir="rtl"] [data-ltr="true"],
+[dir="rtl"] .font-mono,
+[dir="rtl"] .tabular-nums,
+[dir="rtl"] .prayer-time,
+[dir="rtl"] .waqt-time,
+[dir="rtl"] .compass-degree,
+[dir="rtl"] .ratio-counter,
+[dir="rtl"] .stat-fraction {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    display: inline-block;
+    text-align: left;
+}
+
+/* Ensure flex containers containing LTR numbers or compass degrees stay in LTR order */
+[dir="rtl"] .flex-ltr,
+[dir="rtl"] [data-flex-ltr="true"] {
+    direction: ltr !important;
+}
+

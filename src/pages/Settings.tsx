@@ -193,8 +193,8 @@ const Settings = () => {
                   <Clock className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate">24-Hour Time Format</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Use 24-hour clock (17:30) instead of 12-hour (5:30 PM)</p>
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>24-Hour Time Format</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>Use 24-hour clock (17:30) instead of 12-hour (5:30 PM)</p>
                 </div>
               </div>
               <button 

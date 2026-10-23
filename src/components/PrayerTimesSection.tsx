@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sunset, Bell } from 'lucide-react';
 import { getPrayerDisplayName, isMatchingPrayer } from '@/lib/prayer-utils';
+import { useLanguage } from '@/contexts/LanguageContext-new';
 
 export interface PrayerItem {
   name: string;
@@ -300,6 +301,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   locationLabel,
 }) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Notification status check for bell styling
   const [notificationsEnabled] = useState(() => {
@@ -415,7 +417,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       <div className="flex items-center justify-between px-1 mb-3">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
-            Prayer Times
+            {t('prayerTimes') || 'Prayer Times'}
           </h2>
           <div
             className="w-6 h-[3px] rounded-full mt-1.5"
@@ -479,7 +481,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               {resolvedNextDisplayName}
             </span>
             <span
-              className="tabular-nums"
+              className="tabular-nums ltr-num"
+              dir="ltr"
               style={{
                 color: 'var(--text-primary)',
                 fontSize: 'clamp(1.75rem, 7.2vw, 2.15rem)',
@@ -487,6 +490,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 fontWeight: 700,
                 whiteSpace: 'nowrap',
                 letterSpacing: '-0.02em',
+                direction: 'ltr',
+                unicodeBidi: 'isolate',
               }}
             >
               {heroDisplayTime}
@@ -535,11 +540,14 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               </span>
             </div>
             <span
-              className="tabular-nums"
+              className="tabular-nums ltr-num"
+              dir="ltr"
               style={{
                 color: 'var(--text-primary)',
                 fontSize: '0.88rem',
                 fontWeight: 500,
+                direction: 'ltr',
+                unicodeBidi: 'isolate',
               }}
             >
               {countdownText}
@@ -596,6 +604,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 {waqt.label}
               </span>
               <span
+                className="ltr-num"
+                dir="ltr"
                 style={{
                   fontSize: '0.66rem',
                   fontWeight: 700,
@@ -605,6 +615,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   fontFamily: 'monospace',
                   lineHeight: 1.2,
                   marginTop: '1px',
+                  direction: 'ltr',
+                  unicodeBidi: 'isolate',
                 }}
               >
                 {waqt.time}
@@ -684,11 +696,12 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
         >
           <Moon className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-text)' }} />
           <span style={{ color: 'var(--text-secondary)' }}>
-            Suhoor
+            {t('suhoor') || 'Suhoor'}
           </span>
           <span
-            className="font-semibold tabular-nums shrink-0"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-semibold tabular-nums shrink-0 ltr-num"
+            dir="ltr"
+            style={{ color: 'var(--text-primary)', direction: 'ltr', unicodeBidi: 'isolate' }}
           >
             {suhoorTime}
           </span>
@@ -716,11 +729,12 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
         >
           <Sunset className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-text)' }} />
           <span style={{ color: 'var(--text-secondary)' }}>
-            Iftaar
+            {t('iftaar') || 'Iftaar'}
           </span>
           <span
-            className="font-semibold tabular-nums shrink-0"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-semibold tabular-nums shrink-0 ltr-num"
+            dir="ltr"
+            style={{ color: 'var(--text-primary)', direction: 'ltr', unicodeBidi: 'isolate' }}
           >
             {iftaarTime}
           </span>
@@ -800,11 +814,15 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 }}
               >
                 <span
+                  className="ltr-num tabular-nums"
+                  dir="ltr"
                   style={{
                     color: isRowActive ? 'var(--accent-text)' : 'var(--text-primary)',
                     fontWeight: 600,
                     fontVariantNumeric: 'tabular-nums',
                     fontSize: '0.95rem',
+                    direction: 'ltr',
+                    unicodeBidi: 'isolate',
                   }}
                 >
                   {prayer.time}

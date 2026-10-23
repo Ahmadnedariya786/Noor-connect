@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, RefreshCw, Share2, Copy, Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 interface Ayah {
   arabic: string;
@@ -126,6 +127,7 @@ const AYAH_BOOKMARKS_KEY = "daily-ayah-bookmarks";
 
 export function EnhancedDailyAyah() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [ayah, setAyah] = useState<Ayah | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -370,7 +372,7 @@ export function EnhancedDailyAyah() {
                   lineHeight: 1.25,
                 }}
               >
-                Daily Ayah
+                {t('dailyAyah') || 'Daily Ayah'}
               </h3>
               <span
                 style={{
@@ -471,9 +473,10 @@ export function EnhancedDailyAyah() {
         {/* English Translation Section */}
         <div className={`space-y-2 transition-all duration-300 ${isAnimating ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"}`}>
           <p
-            className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 ${
+            className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 bidi-plaintext ${
               !isTranslationExpanded && isTranslationLong ? "line-clamp-2" : ""
             }`}
+            style={{ unicodeBidi: 'plaintext' }}
           >
             "{ayah.translation}"
           </p>
@@ -501,18 +504,21 @@ export function EnhancedDailyAyah() {
         {/* Reflection (with 3px solid accent border and soft glass background) */}
         {ayah.reflection && (
           <div
-            className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5"
+            className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5 bidi-plaintext"
             style={{
               background: 'var(--surface-2)',
               boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+              unicodeBidi: 'plaintext',
+              textAlign: 'start',
             }}
           >
             <div className="flex items-start gap-1.5">
-              <span className="text-[var(--accent)] font-semibold not-italic shrink-0">Reflection:</span>
+              <span className="text-[var(--accent)] font-semibold not-italic shrink-0 inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>Reflection:</span>
               <p
-                className={`break-words select-text transition-all duration-300 ${
+                className={`break-words select-text transition-all duration-300 bidi-plaintext ${
                   !isReflectionExpanded && isReflectionLong ? "line-clamp-2" : ""
                 }`}
+                style={{ unicodeBidi: 'plaintext' }}
               >
                 {ayah.reflection}
               </p>

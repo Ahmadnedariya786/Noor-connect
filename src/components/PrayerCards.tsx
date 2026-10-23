@@ -242,9 +242,9 @@ const PrayerCardsComponent = function PrayerCards({
                     </div>
 
                     <div className="text-right">
-                      <p className="text-lg font-bold font-mono leading-none">{prayer.time}</p>
+                      <p className="text-lg font-bold font-mono leading-none ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>{prayer.time}</p>
                       <p className="text-xs text-muted-foreground leading-none mt-1">
-                        until {prayer.endTimeFormatted}
+                        until <span className="ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>{prayer.endTimeFormatted}</span>
                       </p>
                     </div>
                   </div>

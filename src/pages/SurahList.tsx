@@ -385,10 +385,13 @@ export default function SurahList() {
                   {lastReadInfo?.name || lastRead.arabicName || ''}
                 </span>
                 <span
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-tight shadow-sm select-none"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-tight shadow-sm select-none ltr-num"
+                  dir="ltr"
                   style={{
                     background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
                     color: 'var(--on-accent)',
+                    direction: 'ltr',
+                    unicodeBidi: 'isolate',
                   }}
                 >
                   <span>Resume</span>
@@ -441,7 +444,9 @@ export default function SurahList() {
                           navigate(`/quran/surah-${dailySurahNumber}`, { replace: true });
                         });
                       }}
-                      className="text-xs font-semibold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1 group/btn"
+                      className="text-xs font-semibold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1 group/btn ltr-num"
+                      dir="ltr"
+                      style={{ direction: 'ltr', unicodeBidi: 'isolate' }}
                     >
                       <span>Read in Surah</span>
                       <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
@@ -451,7 +456,7 @@ export default function SurahList() {
               </div>
 
               {dailyAyah?.reflection && (
-                <p className="text-[var(--text-secondary)] text-[11px] italic leading-relaxed">
+                <p className="text-[var(--text-secondary)] text-[11px] italic leading-relaxed bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
                   {dailyAyah.reflection}
                 </p>
               )}

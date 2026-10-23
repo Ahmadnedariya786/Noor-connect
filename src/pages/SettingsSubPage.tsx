@@ -71,7 +71,7 @@ import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
 import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
 import { OwnerSecurityVaultCard } from '@/components/OwnerSecurityVaultCard';
-import { isOwnerSessionUnlocked, isUpgradationLockEnabled, subscribeOwnerSecurity } from '@/lib/owner-security';
+import { isOwnerSessionUnlocked, isUpgradationLockEnabled, subscribeOwnerSecurity, lockOwnerSession } from '@/lib/owner-security';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -105,20 +105,20 @@ import PermissionManager from '@/components/PermissionManager';
 import { Changelog } from '@/components/Changelog';
 import { AutoBackupCard } from '@/components/AutoBackupCard';
 
-const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
-  appearance: { title: 'Theme & Appearance', subtitle: 'Display, animations & splash settings', icon: Palette },
-  'app-theme': { title: 'App Theme', subtitle: 'Choose your full-app color theme', icon: Palette },
-  'clock-style': { title: 'Clock Style', subtitle: 'Select home screen clock design', icon: Clock },
-  haptics: { title: 'Haptic Feedback', subtitle: 'Vibration & tactile feedback settings', icon: Vibrate },
-  personal: { title: 'Personal Information', subtitle: 'Gender, language & preferred currency', icon: User },
-  prayer: { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock },
-  notifications: { title: 'Prayer Notifications', subtitle: 'Reminders, daily notifications & alerts', icon: Bell },
-  adhan: { title: 'Adhan & Sounds', subtitle: 'Adhan audio selection & custom uploads', icon: Volume2 },
-  backup: { title: 'Backup & Restore', subtitle: 'Cloud backup, sync & export settings', icon: Database },
-  storage: { title: 'Storage & Cache', subtitle: 'Clear cache, offline Quran & download stats', icon: HardDrive },
-  privacy: { title: 'Privacy & Security', subtitle: 'Data usage, local storage & permissions', icon: ShieldCheck },
-  about: { title: 'About Noor Connect', subtitle: 'App version, changelog & system health', icon: Info },
-  contact: { title: 'Contact & Feedback', subtitle: "We'd love to hear from you", icon: Mail },
+const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: any; titleKey?: string }> = {
+  appearance: { title: 'Theme & Appearance', subtitle: 'Display, animations & splash settings', icon: Palette, titleKey: 'themeAndAppearance' },
+  'app-theme': { title: 'App Theme', subtitle: 'Choose your full-app color theme', icon: Palette, titleKey: 'appTheme' },
+  'clock-style': { title: 'Clock Style', subtitle: 'Select home screen clock design', icon: Clock, titleKey: 'clockStyle' },
+  haptics: { title: 'Haptic Feedback', subtitle: 'Vibration & tactile feedback settings', icon: Vibrate, titleKey: 'hapticFeedback' },
+  personal: { title: 'Personal Information', subtitle: 'Gender, language & preferred currency', icon: User, titleKey: 'personalInformation' },
+  prayer: { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock, titleKey: 'prayerCalculation' },
+  notifications: { title: 'Prayer Notifications', subtitle: 'Reminders, daily notifications & alerts', icon: Bell, titleKey: 'prayerNotifications' },
+  adhan: { title: 'Adhan & Sounds', subtitle: 'Adhan audio selection & custom uploads', icon: Volume2, titleKey: 'adhanAndSounds' },
+  backup: { title: 'Backup & Restore', subtitle: 'Cloud backup, sync & export settings', icon: Database, titleKey: 'backupAndRestore' },
+  storage: { title: 'Storage & Cache', subtitle: 'Clear cache, offline Quran & download stats', icon: HardDrive, titleKey: 'storageAndCache' },
+  privacy: { title: 'Privacy & Security', subtitle: 'Data usage, local storage & permissions', icon: ShieldCheck, titleKey: 'privacyAndSecurity' },
+  about: { title: 'About Noor Connect', subtitle: 'App version, changelog & system health', icon: Info, titleKey: 'aboutNoorConnect' },
+  contact: { title: 'Contact & Feedback', subtitle: "We'd love to hear from you", icon: Mail, titleKey: 'contactAndFeedback' },
 };
 
 const SUPPORT_EMAIL = 'overstay-cobbler41@bravealias.com';
@@ -128,7 +128,7 @@ const SettingsSubPage: React.FC = () => {
   const { sectionId = 'appearance' } = useParams<{ sectionId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const {
     animationEnabled,
     setAnimationEnabled,
@@ -251,7 +251,13 @@ const SettingsSubPage: React.FC = () => {
     });
   };
 
-  const meta = SECTION_TITLES[sectionId] || { title: 'Settings', subtitle: 'Noor Connect Preferences', icon: Palette };
+  const sectionConfig = SECTION_TITLES[sectionId];
+  const translatedTitle = sectionConfig?.titleKey ? t(sectionConfig.titleKey) : undefined;
+  const meta = {
+    title: (translatedTitle && translatedTitle !== sectionConfig?.titleKey) ? translatedTitle : (sectionConfig?.title || 'Settings'),
+    subtitle: sectionConfig?.subtitle || 'Noor Connect Preferences',
+    icon: sectionConfig?.icon || Palette,
+  };
   const IconComponent = meta.icon;
 
   const [diagnosticEvents, setDiagnosticEvents] = useState<DiagnosticEvent[]>([]);
@@ -279,8 +285,8 @@ const SettingsSubPage: React.FC = () => {
   );
   const pendingSecurityActionRef = useRef<(() => void) | null>(null);
 
-  // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1)
-  const [isStealthVaultVisible, setIsStealthVaultVisible] = useState(false);
+  // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1 when unlocked)
+  const [isOwnerUnlocked, setIsOwnerUnlocked] = useState(() => isOwnerSessionUnlocked());
   const versionTapTimesRef = useRef<number[]>([]);
 
   const handleVersionTap = () => {
@@ -292,12 +298,16 @@ const SettingsSubPage: React.FC = () => {
     if (recentTaps.length >= 5) {
       versionTapTimesRef.current = [];
       if (isOwnerSessionUnlocked()) {
-        setIsStealthVaultVisible(true);
+        setIsOwnerUnlocked(true);
+        toast({
+          title: '🔓 Owner Vault Unlocked',
+          description: 'Owner administrative session is active.',
+        });
       } else {
         // True Stealth: ONLY reveal vault card upon successful Master Key verification!
         executeWithSecurity(
           () => {
-            setIsStealthVaultVisible(true);
+            setIsOwnerUnlocked(true);
           },
           'Unlock Owner Security Vault',
           'Enter your private Owner Master Key to unlock administrative settings.'
@@ -333,18 +343,21 @@ const SettingsSubPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // Reset stealth vault visibility on navigating away from about section
-    setIsStealthVaultVisible(false);
+    // Reset stealth vault visibility and lock session on navigating away from about section
+    if (sectionId !== 'about') {
+      lockOwnerSession();
+      setIsOwnerUnlocked(false);
+    }
     versionTapTimesRef.current = [];
   }, [sectionId]);
 
   useEffect(() => {
-    // Auto-hide vault if session locks or expires
-    const unsub = subscribeOwnerSecurity(() => {
-      if (!isOwnerSessionUnlocked()) {
-        setIsStealthVaultVisible(false);
-      }
-    });
+    // Auto-sync vault if session locks or expires
+    const syncUnlocked = () => {
+      setIsOwnerUnlocked(isOwnerSessionUnlocked());
+    };
+    syncUnlocked();
+    const unsub = subscribeOwnerSecurity(syncUnlocked);
     return unsub;
   }, []);
 
@@ -602,7 +615,7 @@ const SettingsSubPage: React.FC = () => {
             <h1 className="text-base font-bold text-[var(--text-primary)] leading-tight">
               {meta.title}
             </h1>
-            <p className="text-[11px] text-[var(--text-secondary)]">
+            <p className="text-[11px] text-[var(--text-secondary)] bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
               {meta.subtitle}
             </p>
           </div>
@@ -690,8 +703,8 @@ const SettingsSubPage: React.FC = () => {
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
-                  <Label className="text-sm font-bold">24-Hour Time Format</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
+                  <Label className="text-sm font-bold bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>24-Hour Time Format</Label>
+                  <p className="text-xs text-[var(--text-secondary)] bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
                 </div>
                 <Switch
                   checked={timeFormat === '24h'}
@@ -803,8 +816,8 @@ const SettingsSubPage: React.FC = () => {
             <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-bold">24-Hour Time Format</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Display prayer times in 24-hour format (e.g. 17:30)</p>
+                  <Label className="text-sm font-bold bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>24-Hour Time Format</Label>
+                  <p className="text-xs text-[var(--text-secondary)] bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>Display prayer times in 24-hour format (e.g. 17:30)</p>
                 </div>
                 <Switch
                   checked={timeFormat === '24h'}
@@ -2092,7 +2105,7 @@ const SettingsSubPage: React.FC = () => {
             </Card>
 
             {/* OWNER SECURITY VAULT — Cryptographic Owner Authorization (Stealth 5-Tap Mode) */}
-            {isStealthVaultVisible && (
+            {isOwnerUnlocked && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <OwnerSecurityVaultCard
                   onRequireUnlock={(title, desc) =>
@@ -2102,7 +2115,10 @@ const SettingsSubPage: React.FC = () => {
                       desc || 'Enter your private Owner Master Key to unlock administrative settings.'
                     )
                   }
-                  onLockVault={() => setIsStealthVaultVisible(false)}
+                  onLockVault={() => {
+                    lockOwnerSession();
+                    setIsOwnerUnlocked(false);
+                  }}
                 />
               </div>
             )}
@@ -2197,6 +2213,7 @@ const SettingsSubPage: React.FC = () => {
           pendingSecurityActionRef.current = null;
         }}
         onSuccess={() => {
+          setIsOwnerUnlocked(true);
           const action = pendingSecurityActionRef.current;
           pendingSecurityActionRef.current = null;
           if (action) {
