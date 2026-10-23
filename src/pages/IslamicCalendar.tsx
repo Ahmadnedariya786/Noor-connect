@@ -772,12 +772,13 @@ export default function IslamicCalendar() {
                   <div
                     className="font-bold flex items-center gap-1.5 flex-wrap"
                     style={{
-                      fontSize: '0.80rem',
+                      fontSize: '0.76rem',
                       fontWeight: 700,
                       color: 'var(--accent-text)',
+                      lineHeight: 1.25,
                     }}
                   >
-                    <span className="truncate">
+                    <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                       {selectedDate.hijriDay} {(selectedDate.hijriMonth.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū')} {selectedDate.hijriYear} AH
                     </span>
                     {selectedDate.isToday && (
@@ -892,7 +893,7 @@ export default function IslamicCalendar() {
                 }}
               >
                 <div className="text-2xl font-bold" style={{ color: 'var(--accent-text)' }}>
-                  {selectedDate.hijriDay} {selectedDate.hijriMonth.en} {selectedDate.hijriYear} AH
+                  {selectedDate.hijriDay} {(selectedDate.hijriMonth.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū')} {selectedDate.hijriYear} AH
                 </div>
                 <div className="text-xl quran-arabic" dir="rtl" style={{ color: 'var(--accent-text)' }}>
                   {selectedDate.hijriDay} {selectedDate.hijriMonth.ar} {selectedDate.hijriYear} AH

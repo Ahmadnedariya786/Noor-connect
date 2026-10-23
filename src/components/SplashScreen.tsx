@@ -34,12 +34,14 @@ function FloatingStars({ enabled }: { enabled: boolean }) {
             {!enabled ? null : stars.map((star) => (
                 <div
                     key={star.id}
-                    className="absolute rounded-full bg-amber-200/50 animate-[pulse_3s_ease-in-out_infinite]"
+                    className="absolute rounded-full animate-[pulse_3s_ease-in-out_infinite]"
                     style={{
                         left: `${star.x}%`,
                         top: `${star.y}%`,
                         width: star.size,
                         height: star.size,
+                        backgroundColor: 'var(--accent-text)',
+                        opacity: 0.45,
                         animationDelay: `${star.delay}s`,
                     }}
                 />
@@ -141,9 +143,9 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
     return (
         <div
-            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#150D2E] overflow-hidden transition-all duration-300 ${isFading ? 'opacity-0 scale-[1.02] pointer-events-none' : 'opacity-100 scale-100'}`}
+            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden transition-all duration-300 ${isFading ? 'opacity-0 scale-[1.02] pointer-events-none' : 'opacity-100 scale-100'}`}
             style={{
-                background: "radial-gradient(ellipse at center, #24164c 0%, #150D2E 60%, #0a0618 100%)",
+                background: "radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%)",
                 willChange: "opacity, transform",
             }}
         >
@@ -165,9 +167,8 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                         fontSize: '1.25rem',
                         fontWeight: 800,
                         letterSpacing: '0.22em',
-                        background: 'linear-gradient(180deg, #FFF7E0 0%, #E5B85B 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
+                        color: 'var(--accent-text)',
+                        textShadow: '0 0 18px var(--accent-glow)',
                         textAlign: 'center',
                         textTransform: 'uppercase',
                         fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -184,7 +185,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                             fontSize: '0.72rem',
                             fontWeight: 600,
                             letterSpacing: '0.30em',
-                            color: 'rgba(235, 205, 140, 0.82)',
+                            color: 'var(--text-secondary)',
                             textAlign: 'center',
                             textTransform: 'uppercase',
                             fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -194,12 +195,13 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                     </p>
                 )}
 
-                {/* 4. Sleek Gold Shimmer Loader Bar */}
+                {/* 4. Sleek Theme-Adaptive Shimmer Loader Bar */}
                 <div
                     style={{
                         width: '120px',
                         height: '3px',
-                        background: 'rgba(255,255,255,0.08)',
+                        background: 'var(--surface-2)',
+                        border: '1px solid var(--border)',
                         borderRadius: '999px',
                         overflow: 'hidden',
                         marginTop: '22px',
@@ -212,26 +214,27 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                             inset: 0,
                             width: '100%',
                             height: '100%',
-                            background: 'linear-gradient(90deg, transparent, #F5C35A, #FFF3D1, #F5C35A, transparent)',
+                            background: 'linear-gradient(90deg, transparent, var(--accent), var(--accent-text))',
+                            boxShadow: '0 0 14px var(--accent)',
                             animation: shouldAnimate ? 'shimmerComet 1.6s ease-in-out infinite' : undefined,
                         }}
                     />
                 </div>
             </div>
 
-            {/* Bottom Golden Haze */}
+            {/* Bottom Theme Haze */}
             <div
                 className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
                 style={{
-                    background: "linear-gradient(to top, rgba(245, 197, 66, 0.08), transparent)",
+                    background: "linear-gradient(to top, var(--accent-soft), transparent)",
                 }}
             />
 
             {/* APK Indicator */}
             {isStandaloneMode() && (
-                <div className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-amber-400/20">
-                    <Smartphone className="w-3.5 h-3.5 text-amber-300/80" />
-                    <span className="text-xs text-amber-200/80 font-medium">App Mode</span>
+                <div className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-[var(--border)]">
+                    <Smartphone className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                    <span className="text-xs text-[var(--accent-text)] font-medium">App Mode</span>
                 </div>
             )}
         </div>

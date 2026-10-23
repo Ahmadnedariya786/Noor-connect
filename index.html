@@ -51,6 +51,18 @@
     }
   </style>
 
+  <!-- Pre-React Synchronous Theme Initializer: Reads saved theme before paint -->
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('noor_theme') || localStorage.getItem('theme') || 'oxford-gold';
+        var valid = ['oxford-gold', 'madinah-emerald', 'imperial-violet', 'burgundy-velvet', 'desert-scroll'];
+        if (valid.indexOf(savedTheme) === -1) savedTheme = 'oxford-gold';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Open Graph / Twitter meta tags -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Noor Connect - Your Islamic Companion">
@@ -61,10 +73,89 @@
    <meta name="twitter:image"
       content="/qibla.png">
 
-  <!-- Splash Screen CSS is handled inline by the React SplashScreen component -->
-
-  <!-- Inline critical CSS for seamless first paint -->
+  <!-- Inline critical CSS and Theme Palettes for seamless first paint across all 5 themes -->
   <style>
+    :root, [data-theme="oxford-gold"] {
+      --bg-base: #000000;
+      --bg-elev: #0D1626;
+      --surface: #14213D;
+      --surface-2: #1D2D4A;
+      --border: rgba(252,163,17,0.22);
+      --accent: #FCA311;
+      --accent-2: #FFD34D;
+      --accent-text: #FFB84D;
+      --on-accent: #000000;
+      --accent-soft: rgba(252,163,17,0.16);
+      --accent-glow: rgba(252,163,17,0.35);
+      --card-sheen: rgba(255,211,77,0.05);
+      --text-primary: #FFFFFF;
+      --text-secondary: #B9C2D0;
+    }
+    [data-theme="madinah-emerald"] {
+      --bg-base: #03150E;
+      --bg-elev: #06231A;
+      --surface: #0A2E22;
+      --surface-2: #124332;
+      --border: rgba(52,211,153,0.25);
+      --accent: #34D399;
+      --accent-2: #D4AF37;
+      --accent-text: #6EE7B7;
+      --on-accent: #03150E;
+      --accent-soft: rgba(52,211,153,0.16);
+      --accent-glow: rgba(52,211,153,0.35);
+      --card-sheen: rgba(236,253,245,0.05);
+      --text-primary: #ECFDF5;
+      --text-secondary: #A7C9B8;
+    }
+    [data-theme="imperial-violet"] {
+      --bg-base: #1F0035;
+      --bg-elev: #2A0047;
+      --surface: #390040;
+      --surface-2: #4A0055;
+      --border: rgba(199,148,14,0.25);
+      --accent: #C7940E;
+      --accent-2: #E5B83C;
+      --accent-text: #DDB04A;
+      --on-accent: #1F0035;
+      --accent-soft: rgba(199,148,14,0.16);
+      --accent-glow: rgba(199,148,14,0.35);
+      --card-sheen: rgba(229,184,60,0.05);
+      --text-primary: #F7F0E3;
+      --text-secondary: #C9B8D8;
+    }
+    [data-theme="burgundy-velvet"] {
+      --bg-base: #0B0B0B;
+      --bg-elev: #180C0E;
+      --surface: #241012;
+      --surface-2: #3A1418;
+      --border: rgba(139,13,26,0.35);
+      --accent: #C24552;
+      --accent-2: #E0707E;
+      --accent-text: #D9666F;
+      --on-accent: #F5F2ED;
+      --accent-soft: rgba(139,13,26,0.22);
+      --accent-glow: rgba(194,69,82,0.35);
+      --card-sheen: rgba(224,112,126,0.05);
+      --text-primary: #F5F2ED;
+      --text-secondary: #C9BEB9;
+    }
+    [data-theme="desert-scroll"] {
+      --bg-base: #140B04;
+      --bg-elev: #241407;
+      --surface: #33200D;
+      --surface-2: #4A2E12;
+      --border: rgba(245,200,107,0.28);
+      --accent: #F5C86B;
+      --accent-2: #C77B3F;
+      --accent-text: #FFD98A;
+      --on-accent: #140B04;
+      --accent-soft: rgba(245,200,107,0.16);
+      --accent-glow: rgba(245,200,107,0.35);
+      --card-sheen: rgba(251,243,228,0.05);
+      --text-primary: #FBF3E4;
+      --text-secondary: #D6BE9A;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -72,8 +163,8 @@
       max-width: 100vw !important;
       overflow-x: hidden !important;
       min-height: 100%;
-      background: #0E0B1E;
-      color: #ffffff;
+      background: var(--bg-base);
+      color: var(--text-primary);
       font-family: 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', sans-serif;
     }
 
@@ -101,8 +192,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(ellipse at center, #24164c 0%, #150D2E 60%, #0a0618 100%);
-      color: #fff;
+      background: radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%);
+      color: var(--text-primary);
       overflow: hidden;
       z-index: 100;
       pointer-events: none;
@@ -155,36 +246,64 @@
       <!-- Celestial Rub el Hizb Medallion (Layer 1, 2, 3) -->
       <div style="position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center;">
         <!-- Layer 1: Ambient Radial Halo -->
-        <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle, rgba(245,185,66,0.28) 0%, transparent 70%);animation:pulseHalo 3s ease-in-out infinite;pointer-events:none;"></div>
+        <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);animation:pulseHalo 3s ease-in-out infinite;pointer-events:none;"></div>
         <!-- Layer 2: Slow-Rotating Geometric Filigree Ring -->
-        <svg width="142" height="142" viewBox="0 0 100 100" style="position:absolute;pointer-events:none;animation:spinSlow 28s linear infinite;">
-          <circle cx="50" cy="50" r="46" stroke="rgba(245, 195, 90, 0.45)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" />
-          <rect x="22" y="22" width="56" height="56" rx="6" stroke="rgba(245, 195, 90, 0.45)" stroke-width="1.2" fill="none" />
-          <rect x="22" y="22" width="56" height="56" rx="6" transform="rotate(45 50 50)" stroke="rgba(245, 195, 90, 0.45)" stroke-width="1.2" fill="none" />
+        <svg width="142" height="142" viewBox="0 0 100 100" style="position:absolute;pointer-events:none;animation:spinSlow 28s linear infinite;filter:drop-shadow(0 0 12px var(--accent-glow));">
+          <circle cx="50" cy="50" r="46" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" opacity="0.65" />
+          <rect x="22" y="22" width="56" height="56" rx="6" stroke="var(--accent-text)" stroke-width="1.2" fill="none" opacity="0.65" />
+          <rect x="22" y="22" width="56" height="56" rx="6" transform="rotate(45 50 50)" stroke="var(--accent-text)" stroke-width="1.2" fill="none" opacity="0.65" />
         </svg>
-        <!-- Layer 3: Elevated Squircle Jewel Emblem -->
-        <div style="position:relative;z-index:10;width:96px;height:96px;border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#150D2E;border:1.5px solid rgba(245, 195, 90, 0.65);box-shadow:0 16px 36px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.5);">
-          <img src="/logo-mark.png" alt="Noor Connect Logo" style="width:84px;height:84px;object-fit:contain;position:relative;z-index:10;border-radius:18px;" />
+        <!-- Layer 3: Elevated Squircle Theme-Adaptive Mosque Medallion -->
+        <div style="position:relative;z-index:10;width:96px;height:96px;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg, var(--surface-2) 0%, var(--surface) 55%, var(--bg-base) 100%);border:1.5px solid var(--accent);box-shadow:0 0 28px var(--accent-glow), inset 0 1px 0 var(--card-sheen);">
+          <!-- Crisp Inline Vector Mosque Emblem (Zero Static Blue PNG) -->
+          <svg width="60" height="60" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:10;pointer-events:none;">
+            <!-- Central Grand Dome -->
+            <path d="M 32 13 C 22.5 19.5 19.5 28 19.5 38.5 L 44.5 38.5 C 44.5 28 41.5 19.5 32 13 Z" fill="var(--accent-text)" opacity="0.95" />
+            <!-- Crescent & Star Finial -->
+            <path d="M 32 7.2 C 30.6 7.2 29.5 8.2 29.5 9.6 C 29.5 11 30.7 12.1 32.3 12.1 C 31.9 11.5 31.7 10.9 31.9 10.2 C 32.2 9.2 33 8.5 33.9 8.4 C 33.4 7.7 32.7 7.2 32 7.2 Z" fill="var(--accent)" />
+            <polygon points="34.2,6.5 34.6,7.4 35.5,7.5 34.8,8.1 35,9 34.2,8.5 33.4,9 33.6,8.1 32.9,7.5 33.8,7.4" fill="var(--accent-2, var(--accent-text))" />
+            <!-- Dome Windows -->
+            <path d="M 27 38.5 L 27 32 C 27 29.8 28.5 28.2 30.2 28.2 C 31.9 28.2 33.4 29.8 33.4 32 L 33.4 38.5 Z" fill="var(--surface-2)" />
+            <path d="M 34.5 38.5 L 34.5 33 C 34.5 31.5 35.5 30.2 37 30.2 C 38.5 30.2 39.5 31.5 39.5 33 L 39.5 38.5 Z" fill="var(--surface-2)" opacity="0.8" />
+            <path d="M 20.8 38.5 L 20.8 33 C 20.8 31.5 21.8 30.2 23.3 30.2 C 24.8 30.2 25.8 31.5 25.8 33 L 25.8 38.5 Z" fill="var(--surface-2)" opacity="0.8" />
+            <!-- Left Minaret -->
+            <rect x="12.5" y="23" width="4.5" height="26" rx="1" fill="var(--accent-text)" opacity="0.85" />
+            <path d="M 11.5 23 L 18 23 L 14.75 16.5 Z" fill="var(--accent)" />
+            <circle cx="14.75" cy="15.2" r="0.9" fill="var(--accent-2, var(--accent-text))" />
+            <rect x="11" y="28" width="7.5" height="1.8" rx="0.5" fill="var(--accent)" />
+            <!-- Right Minaret -->
+            <rect x="47" y="23" width="4.5" height="26" rx="1" fill="var(--accent-text)" opacity="0.85" />
+            <path d="M 46 23 L 52.5 23 L 49.25 16.5 Z" fill="var(--accent)" />
+            <circle cx="49.25" cy="15.2" r="0.9" fill="var(--accent-2, var(--accent-text))" />
+            <rect x="45.5" y="28" width="7.5" height="1.8" rx="0.5" fill="var(--accent)" />
+            <!-- Main Building Base Wall -->
+            <rect x="14.5" y="38.5" width="35" height="12.5" rx="1" fill="var(--accent)" opacity="0.25" />
+            <!-- Grand Central Arched Portal -->
+            <path d="M 27.5 51 L 27.5 42 C 27.5 39.5 29.5 37.5 32 37.5 C 34.5 37.5 36.5 39.5 36.5 42 L 36.5 51 Z" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="1" />
+            <path d="M 29.2 51 L 29.2 43.5 C 29.2 41.8 30.5 40.2 32 40.2 C 33.5 40.2 34.8 41.8 34.8 43.5 L 34.8 51 Z" fill="var(--accent-text)" opacity="0.55" />
+            <!-- Base Plinth -->
+            <rect x="9.5" y="51" width="45" height="2.8" rx="1" fill="var(--accent)" />
+          </svg>
           <div style="position:absolute;inset:0;pointer-events:none;z-index:20;background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);animation:shimmerGlass 2.4s ease-in-out infinite;"></div>
         </div>
       </div>
 
       <!-- Brand Title: NOOR CONNECT -->
-      <h1 style="margin:20px 0 0 0;font-size:1.25rem;font-weight:800;letter-spacing:0.22em;background:linear-gradient(180deg, #FFF7E0 0%, #E5B85B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
+      <h1 style="margin:20px 0 0 0;font-size:1.25rem;font-weight:800;letter-spacing:0.22em;color:var(--accent-text);text-shadow:0 0 18px var(--accent-glow);text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
         NOOR CONNECT
       </h1>
 
       <!-- Subtitle: ISLAMIC COMPANION -->
-      <p style="margin:6px 0 0 0;font-size:0.72rem;font-weight:600;letter-spacing:0.30em;color:rgba(235, 205, 140, 0.82);text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
+      <p style="margin:6px 0 0 0;font-size:0.72rem;font-weight:600;letter-spacing:0.30em;color:var(--text-secondary);text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
         ISLAMIC COMPANION
       </p>
 
-      <!-- Sleek Gold Shimmer Loader Bar -->
-      <div style="width:120px;height:3px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;margin-top:22px;position:relative;">
-        <div style="position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(90deg, transparent, #F5C35A, #FFF3D1, #F5C35A, transparent);animation:shimmerComet 1.6s ease-in-out infinite;"></div>
+      <!-- Sleek Dynamic Shimmer Loader Bar -->
+      <div style="width:120px;height:3px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;overflow:hidden;margin-top:22px;position:relative;">
+        <div style="position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(90deg, transparent, var(--accent), var(--accent-text));box-shadow:0 0 14px var(--accent);animation:shimmerComet 1.6s ease-in-out infinite;"></div>
       </div>
     </div>
-    <div style="position:absolute;bottom:0;left:0;right:0;height:128px;pointer-events:none;background:linear-gradient(to top, rgba(245, 197, 66, 0.08), transparent);"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:128px;pointer-events:none;background:linear-gradient(to top, var(--accent-soft), transparent);"></div>
   </div>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>

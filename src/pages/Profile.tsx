@@ -58,7 +58,7 @@ const GROUPS: SettingsGroup[] = [
         id: 'appearance',
         title: 'Theme & Appearance',
         titleKey: 'themeAndAppearance',
-        subtitle: '5 royal dark themes',
+        subtitle: '5 dark jewel themes',
         icon: Palette,
         gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
         iconColor: 'text-amber-600 dark:text-amber-400',
@@ -466,8 +466,13 @@ const Profile: React.FC = () => {
               >
                 <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Theme</span>
                 <span
-                  className="font-bold text-[var(--accent-text)] truncate w-full"
-                  style={{ fontSize: '0.70rem', whiteSpace: 'nowrap', padding: '6px 4px' }}
+                  className="font-bold text-[var(--accent-text)] uppercase"
+                  style={{
+                    fontSize: '0.65rem',
+                    letterSpacing: '-0.02em',
+                    whiteSpace: 'nowrap',
+                    padding: '4px 2px',
+                  }}
                 >
                   {asyncValues['theme'] || 'Imperial Violet'}
                 </span>

@@ -292,7 +292,13 @@ const Tasbeeh = () => {
     return (
       <div
         className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none"
-        style={{ background: 'var(--bg-base)' }}
+        style={{
+          background: 'var(--bg-base)',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+          touchAction: 'manipulation',
+        }}
         onClick={handleIncrement}
       >
         {/* 1-Tap Exit Zen Pill */}
@@ -318,7 +324,7 @@ const Tasbeeh = () => {
           ✕ Exit Zen
         </button>
 
-        <div className="absolute top-16 left-0 right-0 text-center px-4 max-w-sm mx-auto">
+        <div className="absolute top-16 left-0 right-0 text-center px-4 max-w-sm mx-auto pointer-events-none select-none">
           <p
             className="font-bold font-arabic mb-1.5"
             dir="rtl"
@@ -347,13 +353,19 @@ const Tasbeeh = () => {
         </div>
 
         <span
-          className="text-[12rem] sm:text-[15rem] font-black leading-none select-none tabular-nums"
-          style={{ color: 'var(--text-primary)', textShadow: '0 0 24px var(--accent-glow)' }}
+          className="text-[12rem] sm:text-[15rem] font-black leading-none select-none tabular-nums pointer-events-none"
+          style={{
+            color: 'var(--text-primary)',
+            textShadow: '0 0 24px var(--accent-glow)',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none',
+          }}
         >
           {count}
         </span>
 
-        <div className="absolute bottom-28 pb-4 left-0 right-0 text-center">
+        <div className="absolute bottom-28 pb-4 left-0 right-0 text-center pointer-events-none select-none">
           <p className="text-xs font-bold uppercase tracking-[0.3em] mb-1" style={{ color: 'var(--text-secondary)' }}>Goal Progress</p>
           <p className="text-2xl font-bold italic" style={{ color: 'var(--accent-text)' }}>
             {targetGoal === Infinity ? '∞' : `${count % targetGoal} / ${targetGoal}`}
@@ -366,11 +378,14 @@ const Tasbeeh = () => {
   return (
     <PageTransition>
       <div
-        className={`min-h-screen pb-20 transition-all ${isFullscreen ? 'fixed inset-0 z-40 overflow-y-auto' : ''}`}
+        className={`min-h-screen pb-20 transition-all select-none ${isFullscreen ? 'fixed inset-0 z-40 overflow-y-auto' : ''}`}
         style={{
           background: 'var(--bg-base)',
           color: 'var(--text-primary)',
           paddingBottom: isFullscreen ? '112px' : '96px',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
         }}
       >
         {!isFullscreen && <AppBar title={t('digitalTasbeeh')} showBack />}
@@ -632,9 +647,10 @@ const Tasbeeh = () => {
           </div>
 
           {/* 3. Interactive Curved 3D Gemstone Bead String */}
-          <div className="w-full px-2">
+          <div className="w-full px-2 pointer-events-none select-none">
             <svg
-              className="w-full h-[40px] overflow-visible"
+              className="w-full h-[40px] overflow-visible pointer-events-none"
+              style={{ pointerEvents: 'none' }}
               viewBox="0 0 360 40"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -691,7 +707,11 @@ const Tasbeeh = () => {
           <div className="flex flex-col items-center justify-center py-1 sm:py-2">
             <div className="relative w-[236px] h-[236px] flex items-center justify-center">
               {/* Outer Circular Progress Track */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 236 236" style={{ overflow: 'visible' }}>
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 236 236"
+                style={{ overflow: 'visible', pointerEvents: 'none' }}
+              >
                 <circle
                   cx={118}
                   cy={118}
@@ -734,8 +754,15 @@ const Tasbeeh = () => {
               <button
                 type="button"
                 onClick={handleIncrement}
-                className="relative w-[196px] h-[196px] rounded-full flex flex-col items-center justify-center active:scale-95 transition-transform duration-100 select-none cursor-pointer outline-none"
+                className="relative z-20 w-[196px] h-[196px] rounded-full flex flex-col items-center justify-center active:scale-95 transition-transform duration-100 select-none cursor-pointer outline-none pointer-events-auto"
                 style={{
+                  position: 'relative',
+                  zIndex: 20,
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  WebkitTouchCallout: 'none',
                   background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)',
                   border: '1.5px solid var(--border)',
                   boxShadow: 'inset 0 2px 12px var(--accent-soft), 0 10px 28px rgba(0,0,0,0.55)',
@@ -756,12 +783,16 @@ const Tasbeeh = () => {
                   initial={{ scale: 0.85 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.12 }}
-                  className="text-5xl sm:text-6xl font-extrabold tracking-tight tabular-nums"
+                  className="text-5xl sm:text-6xl font-extrabold tracking-tight tabular-nums select-none pointer-events-none"
                   style={{
                     color: 'var(--accent-text)',
                     textShadow: '0 0 18px var(--accent-glow)',
                     fontVariantNumeric: 'tabular-nums',
                     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                    pointerEvents: 'none',
                   }}
                 >
                   {count}
@@ -769,9 +800,13 @@ const Tasbeeh = () => {
 
                 {/* Subtitle */}
                 <span
-                  className="text-[9px] font-bold uppercase tracking-[0.2em] mt-1 select-none"
+                  className="text-[9px] font-bold uppercase tracking-[0.2em] mt-1 select-none pointer-events-none"
                   style={{
                     color: 'var(--text-secondary)',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                    pointerEvents: 'none',
                   }}
                 >
                   TAP TO COUNT

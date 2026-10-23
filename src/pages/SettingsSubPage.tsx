@@ -712,24 +712,6 @@ const SettingsSubPage: React.FC = () => {
                   onCheckedChange={(checked) => setTimeFormat(checked ? '24h' : '12h')}
                 />
               </div>
-
-              <div
-                className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3 cursor-pointer group"
-                onClick={() => navigate('/settings/clock-style', { replace: true })}
-                role="button"
-                tabIndex={0}
-              >
-                <div>
-                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">Clock Style</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Choose home screen clock appearance</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
-                    {currentClockStyleName}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </div>
             </Card>
           </div>
         )}

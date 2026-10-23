@@ -92,6 +92,9 @@ class IslamicCalendarService {
 
       if (parseResult.success && parseResult.data.code === 200) {
         const islamicDate = parseResult.data.data as IslamicDate;
+        if (islamicDate?.hijri?.month?.en) {
+          islamicDate.hijri.month.en = islamicDate.hijri.month.en.replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
+        }
         
         // Cache the result
         this.cache.set(cacheKey, {

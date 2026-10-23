@@ -139,7 +139,6 @@ export class AladhanAPI {
 
       let hijriDay = '1';
       let hijriMonthNumber = 1;
-      const hijriMonthEn = 'Ramadan';
       let hijriYear = '1447';
 
       try {
@@ -155,6 +154,13 @@ export class AladhanAPI {
       } catch {
         // Fallback to approximate values if Intl format fails
       }
+
+      const HIJRI_MONTH_NAMES = [
+        'Muharram', 'Safar', 'Rabīʿ al-Awwal', 'Rabīʿ al-Thānī',
+        'Jumādā al-ūlā', 'Jumādā al-ākhirah', 'Rajab', 'Shaʿbān',
+        'Ramaḍān', 'Shawwāl', 'Dhū al-Qaʿdah', 'Dhū al-Ḥijjah'
+      ];
+      const hijriMonthEn = HIJRI_MONTH_NAMES[(hijriMonthNumber - 1) % 12] || 'Ramaḍān';
 
       daysData.push({
         date: {
