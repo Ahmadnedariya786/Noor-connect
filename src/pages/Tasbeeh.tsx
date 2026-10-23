@@ -51,6 +51,11 @@ const Tasbeeh = () => {
     return DHIKR_OPTIONS.find(d => d.value === selectedDhikr) || DHIKR_OPTIONS[0];
   }, [selectedDhikr]);
 
+  const currentIndex = useMemo(() => {
+    const idx = DHIKR_OPTIONS.findIndex(d => d.value === selectedDhikr);
+    return idx >= 0 ? idx : 0;
+  }, [selectedDhikr]);
+
   const label = currentDhikr.transliteration;
 
   // Initialize total and history from storage
@@ -254,21 +259,6 @@ const Tasbeeh = () => {
     triggerHapticFeedback('select');
   };
 
-  const handleZenTouchStart = () => {
-    longPressRef.current = setTimeout(() => {
-      setZenMode(false);
-      triggerHapticFeedback('reset');
-      longPressRef.current = null;
-    }, 800);
-  };
-
-  const handleZenTouchEnd = () => {
-    if (longPressRef.current) {
-      clearTimeout(longPressRef.current);
-      longPressRef.current = null;
-    }
-  };
-
   // Progress percentage calculation
   const progress = useMemo(() => {
     if (targetGoal === Infinity) {
@@ -283,7 +273,7 @@ const Tasbeeh = () => {
   const currentGoalNum = targetGoal === Infinity ? 33 : targetGoal;
   const setNumber = Math.floor(count / currentGoalNum) + 1;
 
-  // 3D Gemstone beads coordinates along quadratic curve M 15 38 Q 180 10 345 38
+  // 3D Gemstone beads coordinates along quadratic curve M 15 28 Q 180 10 345 28
   const beadsData = useMemo(() => {
     const totalBeads = 7;
     const shift = count % totalBeads;
@@ -291,7 +281,7 @@ const Tasbeeh = () => {
       const frac = ((i + shift) % totalBeads) / (totalBeads - 1);
       const t = 0.08 + 0.84 * frac;
       const cx = (1 - t) * (1 - t) * 15 + 2 * (1 - t) * t * 180 + t * t * 345;
-      const cy = (1 - t) * (1 - t) * 38 + 2 * (1 - t) * t * 10 + t * t * 38;
+      const cy = (1 - t) * (1 - t) * 28 + 2 * (1 - t) * t * 10 + t * t * 28;
       const isLead = i === shift;
       return { id: i, cx, cy, isLead };
     });
@@ -304,13 +294,31 @@ const Tasbeeh = () => {
         className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none"
         style={{ background: 'var(--bg-base)' }}
         onClick={handleIncrement}
-        onTouchStart={handleZenTouchStart}
-        onTouchEnd={handleZenTouchEnd}
-        onMouseDown={handleZenTouchStart}
-        onMouseUp={handleZenTouchEnd}
-        onMouseLeave={handleZenTouchEnd}
       >
-        <div className="absolute top-12 left-0 right-0 text-center px-4">
+        {/* 1-Tap Exit Zen Pill */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setZenMode(false);
+            triggerHapticFeedback('reset');
+          }}
+          className="absolute top-4 left-4 select-none active:scale-95 transition-transform cursor-pointer"
+          style={{
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-primary)',
+            padding: '6px 14px',
+            borderRadius: '999px',
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            zIndex: 50,
+          }}
+        >
+          ✕ Exit Zen
+        </button>
+
+        <div className="absolute top-16 left-0 right-0 text-center px-4">
           <p className="text-xl font-bold font-arabic mb-1" style={{ color: 'var(--accent-text)' }}>{currentDhikr.label}</p>
           <p className="text-xs uppercase font-bold tracking-widest" style={{ color: 'var(--text-secondary)' }}>{currentDhikr.transliteration}</p>
         </div>
@@ -328,10 +336,6 @@ const Tasbeeh = () => {
             {targetGoal === Infinity ? '∞' : `${count % targetGoal} / ${targetGoal}`}
           </p>
         </div>
-
-        <div className="absolute top-4 left-4">
-          <p className="text-xs tracking-wide" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>Hold to exit Zen</p>
-        </div>
       </div>
     );
   }
@@ -348,7 +352,7 @@ const Tasbeeh = () => {
       >
         {!isFullscreen && <AppBar title={t('digitalTasbeeh')} showBack />}
 
-        <div className="max-w-md mx-auto px-4 pt-3 sm:pt-5 space-y-4">
+        <div className="max-w-md mx-auto px-4 pt-2.5 sm:pt-4 space-y-2.5">
 
           {/* 1. Top Instrument Status Bar */}
           <div className="flex items-center justify-between gap-1.5 flex-wrap">
@@ -427,11 +431,17 @@ const Tasbeeh = () => {
 
           {/* 2. Luminous Vocalized Dhikr Stage & Inline Goal Progress Bar */}
           <div
-            className="relative overflow-hidden rounded-3xl p-4 sm:p-5 border"
+            className="relative overflow-hidden rounded-3xl border select-none"
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--border)',
               boxShadow: '0 12px 30px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
+              position: 'relative',
+              padding: '12px 44px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
             }}
           >
             {/* Ambient radial glow */}
@@ -442,141 +452,151 @@ const Tasbeeh = () => {
               }}
             />
 
-            <div className="relative z-10 flex flex-col items-center text-center space-y-2">
-              {/* Carousel navigation header */}
-              <div className="flex items-center justify-between w-full">
-                <button
-                  type="button"
-                  disabled={isLocked}
-                  onClick={handlePrevDhikr}
-                  aria-label="Previous Dhikr"
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
+            {/* Prev Carousel Button */}
+            <button
+              type="button"
+              disabled={isLocked}
+              onClick={handlePrevDhikr}
+              aria-label="Previous Dhikr"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer"
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Next Carousel Button */}
+            <button
+              type="button"
+              disabled={isLocked}
+              onClick={handleNextDhikr}
+              aria-label="Next Dhikr"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer"
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Top Pill (Dropdown Trigger): Dhikr X of Y • Change ⌄ */}
+            <div className="relative z-10">
+              <Select value={selectedDhikr} onValueChange={handleDhikrChange} disabled={isLocked}>
+                <SelectTrigger
+                  className="h-auto w-auto px-2.5 py-1 border shadow-none text-center justify-center gap-1 font-semibold rounded-full select-none"
                   style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 600,
+                    color: 'var(--accent-text)',
                     background: 'var(--surface-2)',
                     border: '1px solid var(--border)',
+                    borderRadius: '999px',
+                    padding: '3px 10px',
+                  }}
+                >
+                  <span>Dhikr {currentIndex + 1} of {DHIKR_OPTIONS.length} • Change</span>
+                </SelectTrigger>
+                <SelectContent
+                  style={{
+                    background: 'var(--bg-elev)',
+                    borderColor: 'var(--border)',
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
+                  {DHIKR_OPTIONS.map((dhikr) => (
+                    <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5">
+                      <div className="flex flex-col text-left">
+                        <span className="font-arabic text-base" style={{ color: 'var(--accent-text)' }}>{dhikr.label}</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{dhikr.transliteration}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Dhikr Selector dropdown trigger */}
-                <div className="flex-1 px-2">
-                  <Select value={selectedDhikr} onValueChange={handleDhikrChange} disabled={isLocked}>
-                    <SelectTrigger
-                      className="h-8 mx-auto px-3 border-0 shadow-none text-center justify-center gap-1.5 font-bold text-xs uppercase tracking-wider"
-                      style={{
-                        background: 'transparent',
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      <Sparkles className="w-3 h-3 shrink-0" style={{ color: 'var(--accent)' }} />
-                      <SelectValue placeholder="Choose Dhikr" />
-                    </SelectTrigger>
-                    <SelectContent
-                      style={{
-                        background: 'var(--bg-elev)',
-                        borderColor: 'var(--border)',
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      {DHIKR_OPTIONS.map((dhikr) => (
-                        <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5">
-                          <div className="flex flex-col text-left">
-                            <span className="font-arabic text-base" style={{ color: 'var(--accent-text)' }}>{dhikr.label}</span>
-                            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{dhikr.transliteration}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {/* Main Arabic Calligraphy (Rendered ONCE) */}
+            <div
+              className="relative z-10 quran-arabic select-none"
+              dir="rtl"
+              style={{
+                fontSize: 'clamp(1.45rem, 5.5vw, 1.8rem)',
+                fontWeight: 700,
+                color: 'var(--accent-text)',
+                textShadow: '0 0 16px var(--accent-glow)',
+                lineHeight: 1.35,
+                textAlign: 'center',
+                marginTop: '2px',
+              }}
+            >
+              {currentDhikr.label}
+            </div>
 
-                <button
-                  type="button"
-                  disabled={isLocked}
-                  onClick={handleNextDhikr}
-                  aria-label="Next Dhikr"
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
-                  style={{
-                    background: 'var(--surface-2)',
-                    border: '1px solid var(--border)',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+            {/* Uppercase Transliteration (Rendered ONCE) */}
+            <p
+              className="relative z-10 uppercase select-none"
+              style={{
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                letterSpacing: '0.05em',
+                textAlign: 'center',
+              }}
+            >
+              {currentDhikr.transliteration}
+            </p>
 
-              {/* Vocalized Arabic calligraphy */}
-              <div
-                className="quran-arabic py-1 select-none"
-                dir="rtl"
+            {/* English Meaning (Rendered ONCE) */}
+            <p
+              className="relative z-10 italic select-none"
+              style={{
+                fontSize: '0.72rem',
+                color: 'var(--text-secondary)',
+                textAlign: 'center',
+                lineHeight: 1.25,
+              }}
+            >
+              "{currentDhikr.translation}"
+            </p>
+
+            {/* Goal Pill & Progress Bar */}
+            <div className="relative z-10 pt-1.5 w-full flex flex-col items-center gap-1.5">
+              <button
+                type="button"
+                disabled={isLocked}
+                onClick={cycleGoal}
+                className="px-2.5 py-0.5 rounded-full font-bold transition-transform active:scale-95 select-none disabled:opacity-40"
                 style={{
-                  fontSize: '1.85rem',
-                  fontWeight: 700,
+                  fontSize: '0.70rem',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
                   color: 'var(--accent-text)',
-                  textShadow: '0 0 16px var(--accent-glow)',
-                  lineHeight: 1.4,
+                }}
+                title="Tap to change target goal"
+              >
+                GOAL: {targetGoal === Infinity ? '∞' : targetGoal} • {progress}% ✎
+              </button>
+
+              {/* Sleek 4px progress bar */}
+              <div
+                className="w-full h-1 rounded-full overflow-hidden"
+                style={{
+                  background: 'var(--surface-2)',
                 }}
               >
-                {currentDhikr.label}
-              </div>
-
-              {/* Transliteration + English Meaning */}
-              <div className="space-y-0.5">
-                <p
-                  className="text-xs uppercase font-extrabold tracking-widest"
-                  style={{
-                    letterSpacing: '0.08em',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  {currentDhikr.transliteration}
-                </p>
-                <p
-                  className="text-xs italic"
-                  style={{
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  "{currentDhikr.translation}"
-                </p>
-              </div>
-
-              {/* Interactive GOAL Pill: 33 • X% ✎ */}
-              <div className="pt-2 w-full flex flex-col items-center gap-2">
-                <button
-                  type="button"
-                  disabled={isLocked}
-                  onClick={cycleGoal}
-                  className="px-3 py-1 rounded-full text-xs font-bold transition-transform active:scale-95 select-none disabled:opacity-40"
-                  style={{
-                    background: 'var(--surface-2)',
-                    border: '1px solid var(--border)',
-                    color: 'var(--accent-text)',
-                  }}
-                  title="Tap to change target goal"
-                >
-                  GOAL: {targetGoal === Infinity ? '∞' : targetGoal} • {progress}% ✎
-                </button>
-
-                {/* Sleek horizontal glowing progress bar */}
                 <div
-                  className="w-full h-1.5 rounded-full overflow-hidden"
+                  className="h-full rounded-full transition-all duration-300"
                   style={{
-                    background: 'var(--surface-2)',
+                    width: `${progress}%`,
+                    background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+                    boxShadow: '0 0 8px var(--accent-glow)',
                   }}
-                >
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${progress}%`,
-                      background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
-                      boxShadow: '0 0 8px var(--accent-glow)',
-                    }}
-                  />
-                </div>
+                />
               </div>
             </div>
           </div>
@@ -584,8 +604,8 @@ const Tasbeeh = () => {
           {/* 3. Interactive Curved 3D Gemstone Bead String */}
           <div className="w-full px-2">
             <svg
-              className="w-full h-[54px] overflow-visible"
-              viewBox="0 0 360 54"
+              className="w-full h-[40px] overflow-visible"
+              viewBox="0 0 360 40"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
@@ -599,7 +619,7 @@ const Tasbeeh = () => {
 
               {/* Thread wire */}
               <path
-                d="M 15 38 Q 180 10 345 38"
+                d="M 15 28 Q 180 10 345 28"
                 stroke="var(--border)"
                 strokeWidth={1.5}
                 strokeDasharray="4 3"
@@ -611,14 +631,14 @@ const Tasbeeh = () => {
                 <g key={bead.id} style={{ transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
                   {/* Lead bead ambient aura */}
                   {bead.isLead && (
-                    <circle cx={bead.cx} cy={bead.cy} r={14} fill="var(--accent)" opacity={0.32} />
+                    <circle cx={bead.cx} cy={bead.cy} r={12} fill="var(--accent)" opacity={0.32} />
                   )}
 
                   {/* Gemstone sphere body */}
                   <circle
                     cx={bead.cx}
                     cy={bead.cy}
-                    r={9}
+                    r={7.5}
                     fill="url(#tasbihBeadGrad)"
                     stroke="var(--border)"
                     strokeWidth={1}
@@ -626,9 +646,9 @@ const Tasbeeh = () => {
 
                   {/* Specular 3D highlight */}
                   <circle
-                    cx={bead.cx - 2.8}
-                    cy={bead.cy - 2.8}
-                    r={2.4}
+                    cx={bead.cx - 2.2}
+                    cy={bead.cy - 2.2}
+                    r={2}
                     fill="#FFFFFF"
                     opacity={0.85}
                   />
@@ -638,29 +658,29 @@ const Tasbeeh = () => {
           </div>
 
           {/* 4. 100% Theme-Tokenized Concentric Dark-Jewel Tap Pad */}
-          <div className="flex flex-col items-center justify-center py-2 sm:py-4">
-            <div className="relative w-72 h-72 flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center py-1 sm:py-2">
+            <div className="relative w-[236px] h-[236px] flex items-center justify-center">
               {/* Outer Circular Progress Track */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 288 288" style={{ overflow: 'visible' }}>
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 236 236" style={{ overflow: 'visible' }}>
                 <circle
-                  cx={144}
-                  cy={144}
-                  r={134}
+                  cx={118}
+                  cy={118}
+                  r={108}
                   fill="transparent"
                   stroke="var(--surface-2)"
-                  strokeWidth={10}
+                  strokeWidth={8}
                 />
                 <circle
-                  cx={144}
-                  cy={144}
-                  r={134}
+                  cx={118}
+                  cy={118}
+                  r={108}
                   fill="transparent"
                   stroke="var(--accent)"
-                  strokeWidth={10}
-                  strokeDasharray={842}
-                  strokeDashoffset={842 - (842 * progress) / 100}
+                  strokeWidth={8}
+                  strokeDasharray={679}
+                  strokeDashoffset={679 - (679 * progress) / 100}
                   strokeLinecap="round"
-                  transform="rotate(-90 144 144)"
+                  transform="rotate(-90 118 118)"
                   style={{
                     transition: 'stroke-dashoffset 0.3s ease-out',
                     filter: 'drop-shadow(0 0 6px var(--accent-glow))',
@@ -669,12 +689,12 @@ const Tasbeeh = () => {
                 {/* Comet Tip Orb */}
                 {progress > 0 && (() => {
                   const angleRad = ((progress / 100) * 360 - 90) * (Math.PI / 180);
-                  const orbX = 144 + 134 * Math.cos(angleRad);
-                  const orbY = 144 + 134 * Math.sin(angleRad);
+                  const orbX = 118 + 108 * Math.cos(angleRad);
+                  const orbY = 118 + 108 * Math.sin(angleRad);
                   return (
                     <g style={{ transition: 'all 0.3s ease-out' }}>
-                      <circle cx={orbX} cy={orbY} r={7} fill="var(--accent)" opacity={0.4} />
-                      <circle cx={orbX} cy={orbY} r={3.5} fill="var(--accent-text)" stroke="var(--accent)" strokeWidth={1.5} />
+                      <circle cx={orbX} cy={orbY} r={6} fill="var(--accent)" opacity={0.4} />
+                      <circle cx={orbX} cy={orbY} r={3} fill="var(--accent-text)" stroke="var(--accent)" strokeWidth={1.5} />
                     </g>
                   );
                 })()}
@@ -684,7 +704,7 @@ const Tasbeeh = () => {
               <button
                 type="button"
                 onClick={handleIncrement}
-                className="relative w-[214px] h-[214px] rounded-full flex flex-col items-center justify-center active:scale-95 transition-transform duration-100 select-none cursor-pointer outline-none"
+                className="relative w-[196px] h-[196px] rounded-full flex flex-col items-center justify-center active:scale-95 transition-transform duration-100 select-none cursor-pointer outline-none"
                 style={{
                   background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 65%, var(--bg-base) 100%)',
                   border: '1.5px solid var(--border)',
@@ -706,7 +726,7 @@ const Tasbeeh = () => {
                   initial={{ scale: 0.85 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.12 }}
-                  className="text-6xl sm:text-7xl font-extrabold tracking-tight tabular-nums"
+                  className="text-5xl sm:text-6xl font-extrabold tracking-tight tabular-nums"
                   style={{
                     color: 'var(--accent-text)',
                     textShadow: '0 0 18px var(--accent-glow)',
@@ -719,7 +739,7 @@ const Tasbeeh = () => {
 
                 {/* Subtitle */}
                 <span
-                  className="text-[10px] font-bold uppercase tracking-[0.2em] mt-2 select-none"
+                  className="text-[9px] font-bold uppercase tracking-[0.2em] mt-1 select-none"
                   style={{
                     color: 'var(--text-secondary)',
                   }}
@@ -731,13 +751,13 @@ const Tasbeeh = () => {
           </div>
 
           {/* 5. 3-Pill Bottom Control Deck */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full px-1">
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full px-1">
             {/* Left Pill: Reset */}
             <button
               type="button"
               disabled={isLocked}
               onClick={() => setShowResetDialog(true)}
-              className="h-12 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 select-none"
+              className="h-11 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 select-none"
               style={{
                 background: 'var(--surface-2)',
                 border: '1px solid var(--border)',
@@ -753,7 +773,7 @@ const Tasbeeh = () => {
               type="button"
               disabled={isLocked}
               onClick={toggleAutoCounter}
-              className="h-12 rounded-2xl flex items-center justify-center gap-1 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 select-none"
+              className="h-11 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 select-none"
               style={{
                 background: isAutoCounting ? 'var(--accent)' : 'var(--accent-soft)',
                 border: '1px solid var(--accent)',
@@ -768,7 +788,7 @@ const Tasbeeh = () => {
                   <span>Auto</span>
                   <span
                     onClick={cycleAutoPace}
-                    className="text-[10px] opacity-80 underline cursor-pointer px-1 py-0.5 rounded"
+                    className="text-[10px] opacity-80 underline cursor-pointer px-0.5 py-0.5 rounded"
                   >
                     ({autoPace.toFixed(1)}s)
                   </span>
@@ -776,7 +796,7 @@ const Tasbeeh = () => {
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>▶ Auto</span>
+                  <span>Auto</span>
                 </>
               )}
             </button>
@@ -785,7 +805,7 @@ const Tasbeeh = () => {
             <button
               type="button"
               onClick={cycleFeedbackMode}
-              className="h-12 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-95 select-none"
+              className="h-11 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-95 select-none"
               style={{
                 background: 'var(--surface-2)',
                 border: '1px solid var(--border)',

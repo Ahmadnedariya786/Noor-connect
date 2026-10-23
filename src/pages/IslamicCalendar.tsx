@@ -256,9 +256,18 @@ export default function IslamicCalendar() {
     const months = Array.from(new Set(activeDays.map(d => d.hijriMonth.en)));
     const years = Array.from(new Set(activeDays.map(d => d.hijriYear)));
 
+    const shortenMonth = (m: string) => {
+      return m
+        .replace(/al-thānī/gi, 'II')
+        .replace(/al-thani/gi, 'II')
+        .replace(/al-ūlā/gi, 'I')
+        .replace(/al-ula/gi, 'I')
+        .replace(/al-awwal/gi, 'I');
+    };
+
     if (months.length === 1) return `${months[0]} ${years[0]}`;
-    if (years.length === 1) return `${months.join(" / ")} ${years[0]}`;
-    return `${months[0]} ${years[0]} / ${months[1]} ${years[1]}`;
+    if (years.length === 1) return `${shortenMonth(months[0])} – ${shortenMonth(months[1])} ${years[0]}`;
+    return `${shortenMonth(months[0])} ${years[0]} – ${shortenMonth(months[1])} ${years[1]}`;
   }, [calendarDays]);
 
   const weeks = useMemo(() => {
@@ -348,8 +357,16 @@ export default function IslamicCalendar() {
                     boxShadow: '0 8px 30px var(--accent-glow)',
                   }}
                 >
-                  <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1" style={{ color: 'var(--accent-text)' }}>
-                    {islamicInfo.currentDate.hijri.day} {islamicInfo.currentDate.hijri.month.en} {islamicInfo.currentDate.hijri.year} AH
+                  <div
+                    className="font-extrabold tracking-tight mb-1"
+                    style={{
+                      fontSize: 'clamp(1.25rem, 5.2vw, 1.6rem)',
+                      color: 'var(--accent-text)',
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.day} {islamicInfo.currentDate.hijri.month.en}</span>{' '}
+                    <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.year} AH</span>
                   </div>
                   <div className="text-2xl sm:text-3xl quran-arabic mb-3" dir="rtl" style={{ color: 'var(--accent-text)' }}>
                     {islamicInfo.currentDate.hijri.day} {islamicInfo.currentDate.hijri.month.ar} {islamicInfo.currentDate.hijri.year}
@@ -437,7 +454,15 @@ export default function IslamicCalendar() {
             </button>
 
             <div className="text-center min-w-0 flex-1 px-1">
-              <h2 className="text-base sm:text-lg font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
+              <h2
+                className="font-bold leading-tight"
+                style={{
+                  fontSize: '0.84rem',
+                  lineHeight: 1.2,
+                  color: 'var(--text-primary)',
+                  wordBreak: 'normal',
+                }}
+              >
                 {hijriMonthHeader ? `${hijriMonthHeader} AH` : 'Islamic Calendar'}
               </h2>
               <p className="text-xs font-semibold mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
@@ -648,14 +673,16 @@ export default function IslamicCalendar() {
             {/* Ayyam al-Beed Legend Pill Below Grid */}
             <div className="flex items-center justify-center mt-3 pt-2">
               <div
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold select-none"
                 style={{
+                  fontSize: '0.70rem',
+                  whiteSpace: 'nowrap',
                   background: 'color-mix(in srgb, var(--accent-soft) 55%, transparent)',
                   border: '1px solid var(--accent)',
                   color: 'var(--accent-text)',
                 }}
               >
-                <span>🌕 13–15 Hijri: Ayyam al-Beed Sunnah Fasting</span>
+                <span>🌕 13–15 Hijri • Ayyam al-Beed Sunnah Fast</span>
               </div>
             </div>
 
@@ -672,11 +699,19 @@ export default function IslamicCalendar() {
                 }}
                 title="Tap to view full details"
               >
-                <div className="flex flex-col min-w-0">
-                  <div className="text-xs sm:text-sm font-bold truncate flex items-center gap-1.5" style={{ color: 'var(--accent-text)' }}>
+                <div className="flex flex-col min-w-0" style={{ flex: 1 }}>
+                  <div
+                    className="font-bold flex items-center gap-1.5"
+                    style={{
+                      fontSize: '0.80rem',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      color: 'var(--accent-text)',
+                    }}
+                  >
                     <span>{selectedDate.hijriDay} {selectedDate.hijriMonth.en} {selectedDate.hijriYear} AH</span>
                     {selectedDate.isToday && (
-                      <span className="text-[10px] uppercase px-1.5 py-0.2 rounded-full font-extrabold" style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}>
+                      <span className="text-[9px] uppercase px-1.5 py-0.2 rounded-full font-extrabold flex-shrink-0" style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}>
                         Today
                       </span>
                     )}
@@ -691,8 +726,11 @@ export default function IslamicCalendar() {
                   const status = getDayStatus(selectedDate);
                   return status ? (
                     <div
-                      className="px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 flex items-center gap-1"
+                      className="rounded-full font-bold flex items-center gap-1 select-none"
                       style={{
+                        fontSize: '0.66rem',
+                        padding: '3px 8px',
+                        flexShrink: 0,
                         background: 'var(--accent-soft)',
                         border: '1px solid var(--accent)',
                         color: 'var(--accent-text)',
@@ -702,8 +740,11 @@ export default function IslamicCalendar() {
                     </div>
                   ) : (
                     <div
-                      className="px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
+                      className="rounded-full font-semibold select-none"
                       style={{
+                        fontSize: '0.66rem',
+                        padding: '3px 8px',
+                        flexShrink: 0,
                         background: 'var(--surface)',
                         color: 'var(--text-secondary)',
                         border: '1px solid var(--border)',
