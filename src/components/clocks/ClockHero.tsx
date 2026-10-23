@@ -87,6 +87,10 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
     date: previousPrayer?.date,
   };
 
+  const sanitizedHijriDate = (hijriDate || '')
+    .replace(/al-ōlā/gi, 'al-ūlā')
+    .replace(/ō/g, 'ū');
+
   return (
     <div className="w-full flex justify-center items-center" key="clock-hero-wrapper">
       <ClockRenderer
@@ -94,7 +98,7 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
         styleId={clockStyle}
         now={now}
         timeFormat={normalizedTimeFormat}
-        hijriDate={hijriDate}
+        hijriDate={sanitizedHijriDate}
         nextPrayer={normalizedNext}
         previousPrayer={normalizedPrev}
       />

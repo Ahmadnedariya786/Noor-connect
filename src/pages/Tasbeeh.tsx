@@ -19,8 +19,8 @@ const DHIKR_OPTIONS = [
   { value: "allahuakbar", label: "اللَّٰهُ أَكْبَرُ", transliteration: "Allahu Akbar", translation: "Allah is the Greatest" },
   { value: "lailahaillallah", label: "لَا إِلَٰهَ إِلَّا ٱللَّٰهُ", transliteration: "La ilaha illallah", translation: "None has the right to be worshipped but Allah" },
   { value: "astagfirullah", label: "أَسْتَغْفِرُ ٱللَّٰهَ", transliteration: "Astagfirullah", translation: "I seek forgiveness from Allah" },
-  { value: "salawat", label: "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ", transliteration: "Allahumma Salli Ala Muhammad", translation: "O Allah, send blessings upon Muhammad" },
-  { value: "hawqala", label: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", transliteration: "La Hawla Wa La Quwwata Illa Billah", translation: "There is no power nor strength except with Allah" },
+  { value: "salawat", label: "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ النَّبِيِّ الْأُمِّيِّ وَعَلَىٰ آلِهِ وَسَلِّمْ تَسْلِيمًا", transliteration: "ALLAHUMMA SALLI 'ALA MUHAMMADIN NABIYYIL UMMIYYI WA 'ALA ALIHI WA SALLIM TASLEEMA", translation: "O Allah, send blessings and peace upon Muhammad, the Unlettered Prophet, and upon his family" },
+  { value: "hawqala", label: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ الْعَلِيِّ الْعَظِيمِ", transliteration: "LA HAWLA WA LA QUWWATA ILLA BILLAHIL 'ALIYYIL 'AZIM", translation: "There is no power nor strength except with Allah, the Most High, the Most Great" },
 ];
 
 const GOAL_OPTIONS = [33, 99, 100, 1000, Infinity];
@@ -318,9 +318,32 @@ const Tasbeeh = () => {
           ✕ Exit Zen
         </button>
 
-        <div className="absolute top-16 left-0 right-0 text-center px-4">
-          <p className="text-xl font-bold font-arabic mb-1" style={{ color: 'var(--accent-text)' }}>{currentDhikr.label}</p>
-          <p className="text-xs uppercase font-bold tracking-widest" style={{ color: 'var(--text-secondary)' }}>{currentDhikr.transliteration}</p>
+        <div className="absolute top-16 left-0 right-0 text-center px-4 max-w-sm mx-auto">
+          <p
+            className="font-bold font-arabic mb-1.5"
+            dir="rtl"
+            style={{
+              color: 'var(--accent-text)',
+              fontSize: 'clamp(1.18rem, 4.5vw, 1.45rem)',
+              lineHeight: 1.45,
+              whiteSpace: 'normal',
+              textAlign: 'center',
+            }}
+          >
+            {currentDhikr.label}
+          </p>
+          <p
+            className="uppercase font-bold tracking-wider"
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: '0.72rem',
+              lineHeight: 1.35,
+              whiteSpace: 'normal',
+              textAlign: 'center',
+            }}
+          >
+            {currentDhikr.transliteration}
+          </p>
         </div>
 
         <span
@@ -502,14 +525,18 @@ const Tasbeeh = () => {
                   <span>Dhikr {currentIndex + 1} of {DHIKR_OPTIONS.length} • Change</span>
                 </SelectTrigger>
                 <SelectContent
+                  className="max-h-[270px] overflow-y-auto"
                   style={{
                     background: 'var(--bg-elev)',
                     borderColor: 'var(--border)',
                     color: 'var(--text-primary)',
+                    padding: '8px 0',
+                    maxHeight: '270px',
+                    overflowY: 'auto',
                   }}
                 >
                   {DHIKR_OPTIONS.map((dhikr) => (
-                    <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5">
+                    <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5 px-3">
                       <div className="flex flex-col text-left">
                         <span className="font-arabic text-base" style={{ color: 'var(--accent-text)' }}>{dhikr.label}</span>
                         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{dhikr.transliteration}</span>
@@ -522,14 +549,15 @@ const Tasbeeh = () => {
 
             {/* Main Arabic Calligraphy (Rendered ONCE) */}
             <div
-              className="relative z-10 quran-arabic select-none"
+              className="relative z-10 quran-arabic select-none w-full px-2"
               dir="rtl"
               style={{
-                fontSize: 'clamp(1.45rem, 5.5vw, 1.8rem)',
+                fontSize: 'clamp(1.18rem, 4.5vw, 1.45rem)',
                 fontWeight: 700,
                 color: 'var(--accent-text)',
                 textShadow: '0 0 16px var(--accent-glow)',
-                lineHeight: 1.35,
+                lineHeight: 1.45,
+                whiteSpace: 'normal',
                 textAlign: 'center',
                 marginTop: '2px',
               }}
@@ -539,9 +567,11 @@ const Tasbeeh = () => {
 
             {/* Uppercase Transliteration (Rendered ONCE) */}
             <p
-              className="relative z-10 uppercase select-none"
+              className="relative z-10 uppercase select-none w-full px-2"
               style={{
-                fontSize: '0.76rem',
+                fontSize: '0.72rem',
+                lineHeight: 1.35,
+                whiteSpace: 'normal',
                 fontWeight: 700,
                 color: 'var(--text-primary)',
                 letterSpacing: '0.05em',

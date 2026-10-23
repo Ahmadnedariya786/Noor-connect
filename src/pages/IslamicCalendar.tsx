@@ -9,6 +9,7 @@ import { calendarApiResponseSchema, safeParseApiResponse } from "@/lib/api-schem
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { useNavigate } from "react-router-dom";
 import { goBackOrFallback } from "@/lib/navigation";
+import { islamicCalendarService } from "@/lib/islamic-calendar-service";
 
 const importantDates = [
   { name: "Ramadan", Icon: Moon, description: "Month of Fasting" },
@@ -43,12 +44,11 @@ export default function IslamicCalendar() {
   // Use the Maghrib-aware hook (same as Dashboard) for the header date
   const { islamicInfo, isLoading: dateLoading } = useIslamicCalendar();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
-  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
-  const [monthData, setMonthData] = useState<any>(null);
-  const [selectedDate, setSelectedDate] = useState<CalendarDay | null>(null);
+  const [apiMonthData, setApiMonthData] = useState<Record<string, any[]>>({});
+  const [selectedDayNum, setSelectedDayNum] = useState<number | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
@@ -62,6 +62,7 @@ export default function IslamicCalendar() {
   }, [currentMonth, currentYear]);
 
   const fetchMonthCalendar = async (month: number, year: number) => {
+    const key = `${year}-${month}`;
     try {
       setLoading(true);
       const offset = parseInt(localStorage.getItem('hijri-date-offset') || '0', 10);
@@ -104,83 +105,132 @@ export default function IslamicCalendar() {
            });
         }
         
-        setMonthData(dataToProcess[0]);
-        generateCalendarDays(dataToProcess);
-      } else {
-        throw new Error("Invalid API response");
+        setApiMonthData(prev => ({ ...prev, [key]: dataToProcess }));
       }
-    } catch (error) {
-      console.error('Error fetching calendar:', error);
-      toast.error('Failed to load calendar');
+    } catch {
+      // Fallback: synchronous tabular calendar remains active seamlessly
     } finally {
       setLoading(false);
     }
   };
 
-  const generateCalendarDays = (monthData: any[]) => {
-    const days: CalendarDay[] = [];
+  const calendarDays = useMemo<CalendarDay[]>(() => {
+    const key = `${currentYear}-${currentMonth}`;
+    const offset = parseInt(localStorage.getItem('hijri-date-offset') || '0', 10);
     const today = new Date();
+    const days: CalendarDay[] = [];
 
-    if (monthData.length === 0) return;
-
-    // Get the first day of the month to determine starting weekday
-    const firstDayData = monthData[0];
-    const firstDayDate = new Date(
-      firstDayData.gregorian.year,
-      firstDayData.gregorian.month.number - 1,
-      firstDayData.gregorian.day
-    );
-
-    // Get weekday index (0 = Sunday, 1 = Monday, etc.)
-    const firstWeekdayIndex = firstDayDate.getDay();
-
-    // Add empty cells for days before the 1st of the month
-    for (let i = 0; i < firstWeekdayIndex; i++) {
-      days.push({
-        hijriDay: 0,
-        hijriMonth: { number: 0, en: "", ar: "" },
-        hijriYear: 0,
-        gregorianDate: '',
-        gregorianDay: 0,
-        gregorianMonthName: '',
-        gregorianYear: 0,
-        weekday: '',
-        isCurrentMonth: false,
-        isToday: false,
-        holidays: [],
-      });
-    }
-
-    // Add the actual days of the month
-    monthData.forEach((dayData: any) => {
-      const gregorianDate = new Date(
-        dayData.gregorian.year,
-        dayData.gregorian.month.number - 1,
-        dayData.gregorian.day
+    // If we have Aladhan API data for this month, use it
+    const monthApiData = apiMonthData[key];
+    if (monthApiData && monthApiData.length > 0) {
+      const firstDayData = monthApiData[0];
+      const firstDayDate = new Date(
+        firstDayData.gregorian.year,
+        firstDayData.gregorian.month.number - 1,
+        firstDayData.gregorian.day
       );
-      const gDay = parseInt(dayData.gregorian.day, 10);
-      const gMonth = dayData.gregorian.month.en;
-      const gYear = parseInt(dayData.gregorian.year, 10);
-      const weekday = dayData.gregorian.weekday?.en || '';
+      const firstWeekdayIndex = firstDayDate.getDay();
 
-      days.push({
-        hijriDay: parseInt(dayData.hijri.day, 10),
-        hijriMonth: {
-          number: dayData.hijri.month.number,
-          en: dayData.hijri.month.en,
-          ar: dayData.hijri.month.ar
-        },
-        hijriYear: parseInt(dayData.hijri.year, 10),
-        gregorianDate: `${gDay} ${gMonth} ${gYear}`,
-        gregorianDay: gDay,
-        gregorianMonthName: gMonth,
-        gregorianYear: gYear,
-        weekday: weekday,
-        isCurrentMonth: true,
-        isToday: gregorianDate.toDateString() === today.toDateString(),
-        holidays: dayData.hijri.holidays || [],
+      for (let i = 0; i < firstWeekdayIndex; i++) {
+        days.push({
+          hijriDay: 0,
+          hijriMonth: { number: 0, en: "", ar: "" },
+          hijriYear: 0,
+          gregorianDate: '',
+          gregorianDay: 0,
+          gregorianMonthName: '',
+          gregorianYear: 0,
+          weekday: '',
+          isCurrentMonth: false,
+          isToday: false,
+          holidays: [],
+        });
+      }
+
+      monthApiData.forEach((dayData: any) => {
+        const gregorianDate = new Date(
+          dayData.gregorian.year,
+          dayData.gregorian.month.number - 1,
+          dayData.gregorian.day
+        );
+        const gDay = parseInt(dayData.gregorian.day, 10);
+        const gMonth = dayData.gregorian.month.en;
+        const gYear = parseInt(dayData.gregorian.year, 10);
+        const weekday = dayData.gregorian.weekday?.en || '';
+        const monthEn = (dayData.hijri.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
+
+        days.push({
+          hijriDay: parseInt(dayData.hijri.day, 10),
+          hijriMonth: {
+            number: dayData.hijri.month.number,
+            en: monthEn,
+            ar: dayData.hijri.month.ar
+          },
+          hijriYear: parseInt(dayData.hijri.year, 10),
+          gregorianDate: `${gDay} ${gMonth} ${gYear}`,
+          gregorianDay: gDay,
+          gregorianMonthName: gMonth,
+          gregorianYear: gYear,
+          weekday: weekday,
+          isCurrentMonth: true,
+          isToday: gregorianDate.toDateString() === today.toDateString(),
+          holidays: dayData.hijri.holidays || [],
+        });
       });
-    });
+    } else {
+      // Synchronous offline computation: instant load with 0 skeleton flash!
+      const numDays = new Date(currentYear, currentMonth, 0).getDate();
+      const firstDayDate = new Date(currentYear, currentMonth - 1, 1);
+      const firstWeekdayIndex = firstDayDate.getDay();
+
+      for (let i = 0; i < firstWeekdayIndex; i++) {
+        days.push({
+          hijriDay: 0,
+          hijriMonth: { number: 0, en: "", ar: "" },
+          hijriYear: 0,
+          gregorianDate: '',
+          gregorianDay: 0,
+          gregorianMonthName: '',
+          gregorianYear: 0,
+          weekday: '',
+          isCurrentMonth: false,
+          isToday: false,
+          holidays: [],
+        });
+      }
+
+      for (let day = 1; day <= numDays; day++) {
+        const gDate = new Date(currentYear, currentMonth - 1, day);
+        const effectiveDate = new Date(gDate);
+        if (offset !== 0) {
+          effectiveDate.setDate(effectiveDate.getDate() + offset);
+        }
+        const hijriInfo = islamicCalendarService.calculateIslamicDate(effectiveDate);
+        const gDay = day;
+        const gMonth = gDate.toLocaleDateString('en-US', { month: 'long' });
+        const gYear = currentYear;
+        const weekday = gDate.toLocaleDateString('en-US', { weekday: 'long' });
+        const monthEn = (hijriInfo.hijri.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
+
+        days.push({
+          hijriDay: parseInt(hijriInfo.hijri.day, 10),
+          hijriMonth: {
+            number: hijriInfo.hijri.month.number,
+            en: monthEn,
+            ar: hijriInfo.hijri.month.ar
+          },
+          hijriYear: parseInt(hijriInfo.hijri.year, 10),
+          gregorianDate: `${gDay} ${gMonth} ${gYear}`,
+          gregorianDay: gDay,
+          gregorianMonthName: gMonth,
+          gregorianYear: gYear,
+          weekday: weekday,
+          isCurrentMonth: true,
+          isToday: gDate.toDateString() === today.toDateString(),
+          holidays: [],
+        });
+      }
+    }
 
     // Pad trailing empty days so each row has 7 columns
     const remainder = days.length % 7;
@@ -203,21 +253,36 @@ export default function IslamicCalendar() {
       }
     }
 
-    setCalendarDays(days);
+    return days;
+  }, [currentMonth, currentYear, apiMonthData]);
 
-    // Auto-select today if present in this month, otherwise first valid day
-    const todayMatch = days.find((d) => d.isCurrentMonth && d.isToday);
-    if (todayMatch) {
-      setSelectedDate(todayMatch);
-    } else {
-      const firstValidDay = days.find((d) => d.isCurrentMonth);
-      if (firstValidDay) {
-        setSelectedDate(firstValidDay);
+  const monthData = useMemo(() => {
+    const key = `${currentYear}-${currentMonth}`;
+    const apiFirst = apiMonthData[key]?.[0];
+    if (apiFirst) return apiFirst;
+    const gDate = new Date(currentYear, currentMonth - 1, 1);
+    return {
+      gregorian: {
+        month: { en: gDate.toLocaleDateString('en-US', { month: 'long' }) },
+        year: currentYear.toString(),
       }
+    };
+  }, [currentYear, currentMonth, apiMonthData]);
+
+  const selectedDate = useMemo<CalendarDay | null>(() => {
+    if (calendarDays.length === 0) return null;
+    const currentDays = calendarDays.filter(d => d.isCurrentMonth);
+    if (selectedDayNum !== null) {
+      const found = currentDays.find(d => d.gregorianDay === selectedDayNum);
+      if (found) return found;
     }
-  };
+    const todayMatch = currentDays.find(d => d.isToday);
+    if (todayMatch) return todayMatch;
+    return currentDays[0] || null;
+  }, [calendarDays, selectedDayNum]);
 
   const handlePreviousMonth = () => {
+    setSelectedDayNum(null);
     if (currentMonth === 1) {
       setCurrentMonth(12);
       setCurrentYear(currentYear - 1);
@@ -227,6 +292,7 @@ export default function IslamicCalendar() {
   };
 
   const handleNextMonth = () => {
+    setSelectedDayNum(null);
     if (currentMonth === 12) {
       setCurrentMonth(1);
       setCurrentYear(currentYear + 1);
@@ -237,13 +303,14 @@ export default function IslamicCalendar() {
 
   const handleToday = () => {
     const today = new Date();
+    setSelectedDayNum(today.getDate());
     setCurrentMonth(today.getMonth() + 1);
     setCurrentYear(today.getFullYear());
   };
 
   const handleDateClick = (day: CalendarDay) => {
     if (!day.isCurrentMonth) return;
-    setSelectedDate(day);
+    setSelectedDayNum(day.gregorianDay);
   };
 
   const closeDateModal = () => {
@@ -253,11 +320,13 @@ export default function IslamicCalendar() {
   const hijriMonthHeader = useMemo(() => {
     if (calendarDays.length === 0) return "";
     const activeDays = calendarDays.filter(d => d.isCurrentMonth);
-    const months = Array.from(new Set(activeDays.map(d => d.hijriMonth.en)));
+    const months = Array.from(new Set(activeDays.map(d => (d.hijriMonth.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū'))));
     const years = Array.from(new Set(activeDays.map(d => d.hijriYear)));
 
     const shortenMonth = (m: string) => {
-      return m
+      return (m || '')
+        .replace(/al-ōlā/gi, 'al-ūlā')
+        .replace(/ō/g, 'ū')
         .replace(/al-thānī/gi, 'II')
         .replace(/al-thani/gi, 'II')
         .replace(/al-ūlā/gi, 'I')
@@ -365,7 +434,7 @@ export default function IslamicCalendar() {
                       lineHeight: 1.25,
                     }}
                   >
-                    <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.day} {islamicInfo.currentDate.hijri.month.en}</span>{' '}
+                    <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.day} {(islamicInfo.currentDate.hijri.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū')}</span>{' '}
                     <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.year} AH</span>
                   </div>
                   <div className="text-2xl sm:text-3xl quran-arabic mb-3" dir="rtl" style={{ color: 'var(--accent-text)' }}>
@@ -526,8 +595,8 @@ export default function IslamicCalendar() {
               })}
             </div>
 
-            {/* Skeletons while loading */}
-            {loading && (
+            {/* Skeletons while loading initial state (fallback tabular guarantees calendarDays is present) */}
+            {loading && calendarDays.length === 0 && (
               <div className="space-y-1 py-1">
                 {Array.from({ length: 5 }).map((_, w) => (
                   <div key={`skel-row-${w}`} className="grid grid-cols-7 gap-1 py-1">
@@ -546,8 +615,8 @@ export default function IslamicCalendar() {
               </div>
             )}
 
-            {/* Open Architectural Grid Weeks */}
-            {!loading && (
+            {/* Open Architectural Grid Weeks — Instant render with 0-flash */}
+            {calendarDays.length > 0 && (
               <div className="space-y-0.5">
                 {weeks.map((week, wIdx) => {
                   const isLastWeek = wIdx === weeks.length - 1;
@@ -699,19 +768,30 @@ export default function IslamicCalendar() {
                 }}
                 title="Tap to view full details"
               >
-                <div className="flex flex-col min-w-0" style={{ flex: 1 }}>
+                <div className="flex flex-col min-w-0 flex-1">
                   <div
-                    className="font-bold flex items-center gap-1.5"
+                    className="font-bold flex items-center gap-1.5 flex-wrap"
                     style={{
                       fontSize: '0.80rem',
                       fontWeight: 700,
-                      whiteSpace: 'nowrap',
                       color: 'var(--accent-text)',
                     }}
                   >
-                    <span>{selectedDate.hijriDay} {selectedDate.hijriMonth.en} {selectedDate.hijriYear} AH</span>
+                    <span className="truncate">
+                      {selectedDate.hijriDay} {(selectedDate.hijriMonth.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū')} {selectedDate.hijriYear} AH
+                    </span>
                     {selectedDate.isToday && (
-                      <span className="text-[9px] uppercase px-1.5 py-0.2 rounded-full font-extrabold flex-shrink-0" style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}>
+                      <span
+                        className="text-[9px] uppercase font-extrabold flex-shrink-0 leading-none select-none"
+                        style={{
+                          background: 'var(--accent)',
+                          color: 'var(--on-accent)',
+                          padding: '3px 7px',
+                          borderRadius: '999px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                        }}
+                      >
                         Today
                       </span>
                     )}
@@ -721,39 +801,53 @@ export default function IslamicCalendar() {
                   </div>
                 </div>
 
-                {/* Status pill badge */}
-                {(() => {
-                  const status = getDayStatus(selectedDate);
-                  return status ? (
-                    <div
-                      className="rounded-full font-bold flex items-center gap-1 select-none"
-                      style={{
-                        fontSize: '0.66rem',
-                        padding: '3px 8px',
-                        flexShrink: 0,
-                        background: 'var(--accent-soft)',
-                        border: '1px solid var(--accent)',
-                        color: 'var(--accent-text)',
-                      }}
-                    >
-                      {status}
-                    </div>
-                  ) : (
-                    <div
-                      className="rounded-full font-semibold select-none"
-                      style={{
-                        fontSize: '0.66rem',
-                        padding: '3px 8px',
-                        flexShrink: 0,
-                        background: 'var(--surface)',
-                        color: 'var(--text-secondary)',
-                        border: '1px solid var(--border)',
-                      }}
-                    >
-                      Details ↗
-                    </div>
-                  );
-                })()}
+                {/* Status pill badge container — unclipped and wrap-safe */}
+                <div
+                  className="flex items-center justify-end flex-wrap gap-1.5 shrink-0"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    flexWrap: 'wrap',
+                    gap: '6px',
+                    overflow: 'visible',
+                  }}
+                >
+                  {(() => {
+                    const status = getDayStatus(selectedDate);
+                    return status ? (
+                      <div
+                        className="rounded-full font-bold flex items-center gap-1 select-none leading-normal"
+                        style={{
+                          fontSize: '0.66rem',
+                          padding: '3px 8px',
+                          flexShrink: 0,
+                          background: 'var(--accent-soft)',
+                          border: '1px solid var(--accent)',
+                          color: 'var(--accent-text)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {status}
+                      </div>
+                    ) : (
+                      <div
+                        className="rounded-full font-semibold select-none leading-normal"
+                        style={{
+                          fontSize: '0.66rem',
+                          padding: '3px 8px',
+                          flexShrink: 0,
+                          background: 'var(--surface)',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Details ↗
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             )}
           </div>

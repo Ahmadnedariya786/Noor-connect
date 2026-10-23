@@ -118,7 +118,7 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backgroundColor: 'rgba(0, 0, 0, 0.82)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
@@ -132,7 +132,7 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
         style={{
           background: 'var(--surface)',
           border: '1.5px solid var(--accent)',
-          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.75)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85)',
           color: 'var(--text-primary)',
         }}
         onClick={(e) => e.stopPropagation()}

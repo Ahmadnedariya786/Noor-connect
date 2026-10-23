@@ -55,9 +55,9 @@ const SurahCard = memo(function SurahCard({ surah, isBookmarked, onClick }: Sura
               {surah.englishNameTranslation}
             </p>
             {/* Bottom Line: Metadata Pills */}
-            <div className="flex items-center gap-1.5 pt-0.5">
+            <div className="flex items-center gap-1.5 pt-0.5 flex-nowrap">
               <span
-                className="uppercase font-bold tracking-wider rounded-[6px]"
+                className="uppercase font-bold tracking-wider rounded-[6px] shrink-0 whitespace-nowrap"
                 style={{
                   background: 'var(--accent-soft)',
                   color: 'var(--accent-text)',
@@ -67,8 +67,8 @@ const SurahCard = memo(function SurahCard({ surah, isBookmarked, onClick }: Sura
               >
                 {surah.revelationType.toUpperCase()}
               </span>
-              <span className="text-[var(--text-secondary)] text-[0.72rem] font-semibold">
-                • {surah.numberOfAyahs} AYAHS
+              <span className="text-[var(--text-secondary)] text-[0.72rem] font-semibold whitespace-nowrap shrink-0">
+                • {surah.numberOfAyahs}&nbsp;AYAHS
               </span>
             </div>
           </div>

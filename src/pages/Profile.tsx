@@ -159,7 +159,7 @@ const GROUPS: SettingsGroup[] = [
         id: 'storage',
         title: 'Storage & Cache',
         titleKey: 'storageAndCache',
-        subtitle: 'Offline Quran audio & e-book cache',
+        subtitle: 'Offline Quran & cache',
         icon: HardDrive,
         gradient: 'from-rose-500/10 via-rose-500/5 to-transparent border-rose-500/20',
         iconColor: 'text-rose-600 dark:text-rose-400',
@@ -260,55 +260,94 @@ function getCalcMethodDisplay(val: string | null): string | null {
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [asyncValues, setAsyncValues] = useState<Record<string, string | null>>({});
+  const [asyncValues, setAsyncValues] = useState<Record<string, string | null>>(() => {
+    const initial: Record<string, string | null> = {};
+    try {
+      const rawTheme = (localStorage.getItem('noor_theme') || 'imperial-violet') as ThemeId;
+      const currentThemeDef = THEMES[rawTheme] || THEMES['imperial-violet'] || THEMES['oxford-gold'];
+      initial['theme'] = currentThemeDef?.name || 'Imperial Violet';
+    } catch {
+      initial['theme'] = 'Imperial Violet';
+    }
+
+    try {
+      const rawClock = localStorage.getItem('noor_clock_style') || 'prayer-arc';
+      const found = CLOCK_STYLES.find(s => s.id === rawClock);
+      initial['clockStyle'] = found ? found.name : 'Prayer Arc';
+    } catch {
+      initial['clockStyle'] = 'Prayer Arc';
+    }
+
+    try {
+      const hapticStatus = localStorage.getItem('hapticEnabled');
+      initial['haptic'] = hapticStatus === 'false' ? 'Off' : 'On';
+    } catch {
+      initial['haptic'] = 'On';
+    }
+
+    try {
+      const calcMethod = localStorage.getItem('prayer_calculation_method') || localStorage.getItem('calculation_method');
+      initial['prayer'] = getCalcMethodDisplay(calcMethod);
+    } catch {
+      initial['prayer'] = null;
+    }
+
+    try {
+      initial['storage'] = formatBytes(getLocalStorageSize());
+    } catch {
+      initial['storage'] = '390.4 KB';
+    }
+
+    return initial;
+  });
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      const results: Record<string, string | null> = {};
+    let isMounted = true;
+
+    const fetchLiveSystemData = async () => {
+      const updates: Record<string, string | null> = {};
 
       try {
-        const rawTheme = (localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
-        const currentThemeDef = THEMES[rawTheme] || THEMES['oxford-gold'];
-        results['theme'] = currentThemeDef.name;
+        const rawTheme = (localStorage.getItem('noor_theme') || 'imperial-violet') as ThemeId;
+        const currentThemeDef = THEMES[rawTheme] || THEMES['imperial-violet'] || THEMES['oxford-gold'];
+        updates['theme'] = currentThemeDef?.name || 'Imperial Violet';
       } catch {
-        // Fallback for theme storage error
-        results['theme'] = 'Oxford Gold';
+        updates['theme'] = 'Imperial Violet';
       }
 
       try {
-        const rawClock = localStorage.getItem('noor_clock_style') || 'digital-bold';
+        const rawClock = localStorage.getItem('noor_clock_style') || 'prayer-arc';
         const found = CLOCK_STYLES.find(s => s.id === rawClock);
-        results['clockStyle'] = found ? found.name : 'Digital Bold';
+        updates['clockStyle'] = found ? found.name : 'Prayer Arc';
       } catch {
-        // Fallback for clock style storage error
-        results['clockStyle'] = 'Digital Bold';
+        updates['clockStyle'] = 'Prayer Arc';
       }
 
       try {
         const hapticStatus = localStorage.getItem('hapticEnabled');
-        results['haptic'] = hapticStatus === 'false' ? 'Off' : 'On';
+        updates['haptic'] = hapticStatus === 'false' ? 'Off' : 'On';
       } catch {
-        results['haptic'] = null;
+        updates['haptic'] = null;
       }
 
       try {
         const calcMethod = localStorage.getItem('prayer_calculation_method') || localStorage.getItem('calculation_method');
-        results['prayer'] = getCalcMethodDisplay(calcMethod);
+        updates['prayer'] = getCalcMethodDisplay(calcMethod);
       } catch {
-        results['prayer'] = null;
+        updates['prayer'] = null;
       }
 
       try {
         if (typeof LocalNotifications !== 'undefined' && LocalNotifications.getPending) {
           const pending = await LocalNotifications.getPending();
-          results['notifications'] = pending?.notifications?.length !== undefined
+          updates['notifications'] = pending?.notifications?.length !== undefined
             ? String(pending.notifications.length)
             : '0';
         } else {
-          results['notifications'] = '0';
+          updates['notifications'] = '0';
         }
       } catch {
-        results['notifications'] = null;
+        updates['notifications'] = '0';
       }
 
       try {
@@ -326,16 +365,21 @@ const Profile: React.FC = () => {
         }
         const localBytes = getLocalStorageSize();
         const total = storageBytes + localBytes;
-        results['storage'] = formatBytes(total > 0 ? total : 395 * 1024);
+        updates['storage'] = formatBytes(total > 0 ? total : 395 * 1024);
       } catch {
-        // Fallback to localStorage size
-        results['storage'] = formatBytes(getLocalStorageSize());
+        updates['storage'] = formatBytes(getLocalStorageSize());
       }
 
-      setAsyncValues(results);
-    }, 500);
+      if (isMounted) {
+        setAsyncValues((prev) => ({ ...prev, ...updates }));
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchLiveSystemData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -417,12 +461,15 @@ const Profile: React.FC = () => {
             {/* 3-Pill Live Status Strip */}
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[var(--border)]">
               <div 
-                className="py-1.5 px-2 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
+                className="py-1.5 px-1 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
                 style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
                 <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Theme</span>
-                <span className="text-[11px] font-bold text-[var(--accent-text)] truncate w-full">
-                  {asyncValues['theme'] || 'Oxford Gold'}
+                <span
+                  className="font-bold text-[var(--accent-text)] truncate w-full"
+                  style={{ fontSize: '0.70rem', whiteSpace: 'nowrap', padding: '6px 4px' }}
+                >
+                  {asyncValues['theme'] || 'Imperial Violet'}
                 </span>
               </div>
               <div 
@@ -431,7 +478,7 @@ const Profile: React.FC = () => {
               >
                 <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Clock</span>
                 <span className="text-[11px] font-bold text-[var(--accent-text)] truncate w-full">
-                  {asyncValues['clockStyle'] || 'Digital Bold'}
+                  {asyncValues['clockStyle'] || 'Prayer Arc'}
                 </span>
               </div>
               <div 
@@ -489,8 +536,8 @@ const Profile: React.FC = () => {
                             {rowTitle}
                           </div>
                           <div
-                            className="text-[11px] font-normal text-[var(--text-secondary)] mt-0.5 truncate bidi-plaintext"
-                            style={{ unicodeBidi: 'plaintext' }}
+                            className="font-normal text-[var(--text-secondary)] mt-0.5 truncate bidi-plaintext"
+                            style={{ fontSize: '0.70rem', unicodeBidi: 'plaintext' }}
                           >
                             {row.subtitle}
                           </div>
@@ -502,8 +549,12 @@ const Profile: React.FC = () => {
                         val === undefined ? (
                           <div className="w-8 h-4 bg-[var(--surface-2)] rounded-full animate-pulse" />
                         ) : val !== null ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
-                            {val}
+                          <span
+                            className="rounded-full font-semibold bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] shrink-0"
+                            style={{ fontSize: '0.68rem', padding: '3px 8px' }}
+                            dir="ltr"
+                          >
+                            <span style={{ unicodeBidi: 'isolate' }}>{val}</span>
                           </span>
                         ) : null
                       )}
@@ -519,7 +570,11 @@ const Profile: React.FC = () => {
 
         {/* Privacy & Version Footer */}
         <div className="pt-4 text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] text-xs font-medium border border-[var(--border)]">
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] text-xs font-medium border border-[var(--border)]"
+            dir="ltr"
+            style={{ unicodeBidi: 'isolate' }}
+          >
             <Lock className="w-3 h-3" />
             100% Private • Local Data Security
           </div>

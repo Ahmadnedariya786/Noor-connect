@@ -167,7 +167,11 @@ export function HadithCollections() {
                   </div>
                 </div>
                 
-                <p className="text-muted-foreground text-xs sm:text-sm font-medium italic">
+                <p
+                  className="text-muted-foreground text-xs sm:text-sm font-medium italic"
+                  dir="ltr"
+                  style={{ unicodeBidi: 'isolate' }}
+                >
                   {dailyHadith.reflection}
                 </p>
               </>

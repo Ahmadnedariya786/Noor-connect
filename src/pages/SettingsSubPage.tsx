@@ -144,7 +144,8 @@ const SettingsSubPage: React.FC = () => {
 
   const { clockStyle } = useClockStyle();
   const currentClockStyleName = CLOCK_STYLES.find(s => s.id === clockStyle)?.name || 'Digital Bold';
-  const { currentTheme } = useAppTheme();
+  const { currentTheme, theme } = useAppTheme();
+  const currentThemeName = theme?.name || THEMES[currentTheme]?.name || 'Imperial Violet';
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
@@ -626,7 +627,7 @@ const SettingsSubPage: React.FC = () => {
       </header>
 
       {/* Main Content Body */}
-      <main className="max-w-md mx-auto px-4 pt-5 space-y-5">
+      <main className="max-w-md mx-auto px-4 pt-5 space-y-5 pb-32" style={{ paddingBottom: '128px' }}>
         {/* APPEARANCE SECTION */}
         {sectionId === 'appearance' && (
           <div className="space-y-4">
@@ -663,7 +664,7 @@ const SettingsSubPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
-                    {currentTheme.name}
+                    {currentThemeName}
                   </span>
                   <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform" />
                 </div>
@@ -1207,17 +1208,25 @@ const SettingsSubPage: React.FC = () => {
             </Card>
 
             <AlertDialog open={showClearCacheDialog} onOpenChange={setShowClearCacheDialog}>
-              <AlertDialogContent className="rounded-2xl">
+              <AlertDialogContent
+                className="rounded-2xl max-w-[92vw] sm:max-w-lg"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1.5px solid var(--accent)',
+                  color: 'var(--text-primary)',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.85)',
+                }}
+              >
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertDialogTitle className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                     <AlertTriangle className="w-5 h-5 text-amber-500" />
                     Clear Cache?
                   </AlertDialogTitle>
                   <AlertDialogDescription asChild>
-                    <div className="space-y-4">
+                    <div className="space-y-4" style={{ color: 'var(--text-secondary)' }}>
                       <p>This will remove temporary files and downloaded content to free up space.</p>
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-foreground">Will be removed:</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Will be removed:</p>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-sm">
                             <X className="w-3.5 h-3.5 text-destructive shrink-0" />
@@ -1230,7 +1239,7 @@ const SettingsSubPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-foreground">Your data is safe:</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Your data is safe:</p>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-sm">
                             <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
@@ -1260,14 +1269,22 @@ const SettingsSubPage: React.FC = () => {
 
             {/* DELETE DOWNLOADED SURAHS DIALOG */}
             <AlertDialog open={showClearQuranDialog} onOpenChange={setShowClearQuranDialog}>
-              <AlertDialogContent className="rounded-2xl">
+              <AlertDialogContent
+                className="rounded-2xl max-w-[92vw] sm:max-w-lg"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1.5px solid var(--accent)',
+                  color: 'var(--text-primary)',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.85)',
+                }}
+              >
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertDialogTitle className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                     <AlertTriangle className="w-5 h-5 text-amber-500" />
                     Delete Downloaded Surahs?
                   </AlertDialogTitle>
-<AlertDialogDescription asChild>
-                    <div className="space-y-3">
+                  <AlertDialogDescription asChild>
+                    <div className="space-y-3" style={{ color: 'var(--text-secondary)' }}>
                       <p>
                         This removes all offline Quran recitations from {quranDownloads.reciters} reciter{quranDownloads.reciters !== 1 ? "s" : ""}
                         ({quranDownloads.count} surah{quranDownloads.count !== 1 ? "s" : ""}, {formatFileSize(quranDownloads.size)}).
@@ -2171,8 +2188,14 @@ const SettingsSubPage: React.FC = () => {
                     Support & Feedback Email
                   </p>
                   <p
-                    className="text-sm font-semibold truncate select-all mt-0.5"
-                    style={{ color: 'var(--text-primary)', fontWeight: 600 }}
+                    className="font-semibold select-all mt-0.5"
+                    style={{
+                      color: 'var(--text-primary)',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      wordBreak: 'break-all',
+                      whiteSpace: 'normal',
+                    }}
                   >
                     {SUPPORT_EMAIL}
                   </p>

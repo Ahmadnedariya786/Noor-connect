@@ -115,7 +115,7 @@ export async function syncPrayerData(payload: PrayerPayload): Promise<void> {
 
   const err = validatePrayerPayload(payload);
   if (err) {
-    console.warn('[WidgetBridge] syncPrayerData validation error:', err);
+    // Validation guard: payload does not meet widget requirements
     return;
   }
 
@@ -123,9 +123,8 @@ export async function syncPrayerData(payload: PrayerPayload): Promise<void> {
     const plugin = getNativePlugin();
     if (!plugin || typeof plugin.syncPrayerData !== 'function') return;
     await plugin.syncPrayerData({ payload: JSON.stringify(payload) });
-  } catch (err) {
-    // Silent fallback: never surface widget errors to global error handlers
-    console.warn('[WidgetBridge] syncPrayerData failed silently:', err);
+  } catch (_err) {
+    // Silently ignore bridge failures/unsupported native callbacks to avoid diagnostic log pollution
   }
 }
 
@@ -138,7 +137,7 @@ export async function syncDailyContent(payload: DailyContentPayload): Promise<vo
 
   const err = validateDailyContentPayload(payload);
   if (err) {
-    console.warn('[WidgetBridge] syncDailyContent validation error:', err);
+    // Validation guard: payload does not meet widget requirements
     return;
   }
 
@@ -146,8 +145,8 @@ export async function syncDailyContent(payload: DailyContentPayload): Promise<vo
     const plugin = getNativePlugin();
     if (!plugin || typeof plugin.syncDailyContent !== 'function') return;
     await plugin.syncDailyContent({ payload: JSON.stringify(payload) });
-  } catch (err) {
-    console.warn('[WidgetBridge] syncDailyContent failed silently:', err);
+  } catch (_err) {
+    // Silently ignore bridge failures/unsupported native callbacks to avoid diagnostic log pollution
   }
 }
 
@@ -160,7 +159,7 @@ export async function syncQuranProgress(payload: QuranProgressPayload): Promise<
 
   const err = validateQuranProgressPayload(payload);
   if (err) {
-    console.warn('[WidgetBridge] syncQuranProgress validation error:', err);
+    // Validation guard: payload does not meet widget requirements
     return;
   }
 
@@ -168,8 +167,8 @@ export async function syncQuranProgress(payload: QuranProgressPayload): Promise<
     const plugin = getNativePlugin();
     if (!plugin || typeof plugin.syncQuranProgress !== 'function') return;
     await plugin.syncQuranProgress({ payload: JSON.stringify(payload) });
-  } catch (err) {
-    console.warn('[WidgetBridge] syncQuranProgress failed silently:', err);
+  } catch (_err) {
+    // Silently ignore bridge failures/unsupported native callbacks to avoid diagnostic log pollution
   }
 }
 
@@ -184,7 +183,7 @@ export async function pushTasbeehIncrement(count: number): Promise<void> {
     const plugin = getNativePlugin();
     if (!plugin || typeof plugin.pushTasbeehIncrement !== 'function') return;
     await plugin.pushTasbeehIncrement({ count });
-  } catch (err) {
-    console.warn('[WidgetBridge] pushTasbeehIncrement failed silently:', err);
+  } catch (_err) {
+    // Silently handle unsupported/missing native bridge callbacks to prevent diagnostic log pollution
   }
 }

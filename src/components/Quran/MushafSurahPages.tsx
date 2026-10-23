@@ -68,21 +68,21 @@ function PageSlot({ page, pageInSurah, totalPages, isNearActive, mushafMode }: P
       ? 'sepia(0.22) brightness(0.95) contrast(1.02)'
       : mushafMode === 'night'
       ? 'invert(1) hue-rotate(180deg) sepia(0.18) brightness(1.18) contrast(1.42)'
-      : 'brightness(0.97)';
+      : 'contrast(1.45) brightness(0.95)';
 
   const containerBorder =
     mushafMode === 'parchment'
       ? '1.5px solid rgba(201, 168, 76, 0.45)'
       : mushafMode === 'night'
       ? '1px solid var(--accent)'
-      : '1.5px solid var(--border)';
+      : '1.5px solid rgba(0, 0, 0, 0.12)';
 
   const pageBackdrop =
     mushafMode === 'parchment'
       ? '#fcf8ef'
       : mushafMode === 'night'
       ? '#0B101B'
-      : 'var(--surface)';
+      : '#FAF8F2';
 
   return (
     <div
@@ -98,7 +98,7 @@ function PageSlot({ page, pageInSurah, totalPages, isNearActive, mushafMode }: P
         className="relative w-full flex items-center justify-center overflow-hidden rounded-[12px]"
         style={{
           aspectRatio: '212 / 325',
-          background: mushafMode === 'night' ? '#0B101B' : mushafMode === 'parchment' ? '#fbf6ec' : 'var(--surface-2)',
+          background: mushafMode === 'night' ? '#0B101B' : mushafMode === 'parchment' ? '#fbf6ec' : '#FAF8F2',
           border: mushafMode === 'night' ? '1px solid var(--accent)' : 'none',
         }}
       >
@@ -117,6 +117,7 @@ function PageSlot({ page, pageInSurah, totalPages, isNearActive, mushafMode }: P
               touchAction: 'pan-y',
               opacity: loaded ? 1 : 0,
               filter: imageFilter,
+              mixBlendMode: mushafMode === 'classic' ? 'multiply' : 'normal',
               transition: 'opacity 0.3s ease-out, filter 0.2s ease',
             }}
             draggable={false}

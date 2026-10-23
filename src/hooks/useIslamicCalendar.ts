@@ -160,9 +160,10 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
             }
         }
 
+        const sanitizedMonthEn = (h.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
         setHijriDay(h.day);
         setHijriMonthNum(h.month.number);
-        setHijriMonthEn(h.month.en);
+        setHijriMonthEn(sanitizedMonthEn);
         setHijriMonthAr(h.month.ar);
         setHijriYear(h.year);
         setHijriWeekday(h.weekday);
@@ -172,9 +173,10 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
         const { islamicCalendarService } = await import('@/lib/islamic-calendar-service');
         const info = await islamicCalendarService.getIslamicCalendarInfo(now);
         const h = info.currentDate.hijri;
+        const sanitizedMonthEn = (h.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
         setHijriDay(h.day);
         setHijriMonthNum(h.month.number);
-        setHijriMonthEn(h.month.en);
+        setHijriMonthEn(sanitizedMonthEn);
         setHijriMonthAr(h.month.ar || '');
         setHijriYear(h.year);
         setHijriWeekday(h.weekday);
