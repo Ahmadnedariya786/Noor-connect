@@ -188,7 +188,7 @@ const GROUPS: SettingsGroup[] = [
         id: 'about',
         title: 'About Noor Connect',
         titleKey: 'aboutNoorConnect',
-        subtitle: `Version ${CURRENT_APP_VERSION}, updates & X-Ray diagnostics`,
+        subtitle: `Version ${CURRENT_APP_VERSION}, changelog & updates`,
         icon: Info,
         gradient: 'from-orange-500/10 via-orange-500/5 to-transparent border-orange-500/20',
         iconColor: 'text-orange-600 dark:text-orange-400',

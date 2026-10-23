@@ -117,7 +117,7 @@ const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: an
   backup: { title: 'Backup & Restore', subtitle: 'Cloud backup, sync & export settings', icon: Database, titleKey: 'backupAndRestore' },
   storage: { title: 'Storage & Cache', subtitle: 'Clear cache, offline Quran & download stats', icon: HardDrive, titleKey: 'storageAndCache' },
   privacy: { title: 'Privacy & Security', subtitle: 'Data usage, local storage & permissions', icon: ShieldCheck, titleKey: 'privacyAndSecurity' },
-  about: { title: 'About Noor Connect', subtitle: 'App version, changelog & system health', icon: Info, titleKey: 'aboutNoorConnect' },
+  about: { title: 'About Noor Connect', subtitle: 'App version, release notes & updates', icon: Info, titleKey: 'aboutNoorConnect' },
   contact: { title: 'Contact & Feedback', subtitle: "We'd love to hear from you", icon: Mail, titleKey: 'contactAndFeedback' },
 };
 
@@ -329,7 +329,7 @@ const SettingsSubPage: React.FC = () => {
     }
 
     // If session is already unlocked for 15 minutes, proceed immediately
-    if (isOwnerSessionUnlocked()) {
+    if (isOwnerUnlocked || isOwnerSessionUnlocked()) {
       action();
       return;
     }
@@ -1543,11 +1543,14 @@ const SettingsSubPage: React.FC = () => {
               )}
             </Card>
 
-            {/* Diagnostics Black Box & Flight Recorder */}
-            <Card
-              className="p-4 space-y-3.5 rounded-2xl border border-border bg-card w-full max-w-full box-border overflow-hidden"
-              style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
-            >
+            {/* OWNER SECURITY VAULT & DEEP X-RAY DIAGNOSTICS (Stealth 5-Tap Mode: Both Appear & Lock Together) */}
+            {isOwnerUnlocked && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                {/* Diagnostics Black Box & Flight Recorder */}
+                <Card
+                  className="p-4 space-y-3.5 rounded-2xl border border-border bg-card w-full max-w-full box-border overflow-hidden"
+                  style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
+                >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500">
@@ -1728,13 +1731,17 @@ const SettingsSubPage: React.FC = () => {
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                     }}
-                    onClick={() =>
-                      executeWithSecurity(
-                        handleTestErrorCapture,
-                        'Test Diagnostic Capture',
-                        'Triggering diagnostic test errors requires owner authorization.'
-                      )
-                    }
+                    onClick={() => {
+                      if (isOwnerUnlocked || isOwnerSessionUnlocked()) {
+                        handleTestErrorCapture();
+                      } else {
+                        executeWithSecurity(
+                          handleTestErrorCapture,
+                          'Test Diagnostic Capture',
+                          'Triggering diagnostic test errors requires owner authorization.'
+                        );
+                      }
+                    }}
                   >
                     <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <span className="truncate">Test Capture</span>
@@ -1823,13 +1830,17 @@ const SettingsSubPage: React.FC = () => {
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                     }}
-                    onClick={() =>
-                      executeWithSecurity(
-                        handleClearDiagnostics,
-                        'Clear Diagnostic Logs',
-                        'Wiping diagnostic flight recorder data requires owner authorization.'
-                      )
-                    }
+                    onClick={() => {
+                      if (isOwnerUnlocked || isOwnerSessionUnlocked()) {
+                        handleClearDiagnostics();
+                      } else {
+                        executeWithSecurity(
+                          handleClearDiagnostics,
+                          'Clear Diagnostic Logs',
+                          'Wiping diagnostic flight recorder data requires owner authorization.'
+                        );
+                      }
+                    }}
                   >
                     <Trash2 className="w-3.5 h-3.5 text-red-500 shrink-0" />
                     <span className="truncate">Clear</span>
@@ -2072,31 +2083,37 @@ const SettingsSubPage: React.FC = () => {
                   size="sm"
                   variant="outline"
                   className="w-full h-8 text-xs rounded-xl border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/10 text-amber-500 dark:text-amber-400 font-medium flex items-center justify-center gap-1.5"
-                  onClick={() =>
-                    executeWithSecurity(
-                      async () => {
-                        if (!Capacitor.isNativePlatform()) {
-                          toast({
-                            title: 'Native Only',
-                            description: 'Permission onboarding flow is only available on Android native app.',
-                          });
-                          return;
-                        }
-                        try {
-                          toast({
-                            title: 'Resetting Onboarding',
-                            description: 'Clearing flags and restarting permission sequence...',
-                          });
-                          await rerunPermissionOnboarding();
-                        } catch (err) {
-                          // Handled manual permission onboarding rerun error
-                          console.warn('Failed to rerun permission onboarding:', err);
-                        }
-                      },
-                      'Reset Permission Sequence',
-                      'Resetting system permission state requires owner authorization.'
-                    )
-                  }
+                  onClick={async () => {
+                    const rerunAction = async () => {
+                      if (!Capacitor.isNativePlatform()) {
+                        toast({
+                          title: 'Native Only',
+                          description: 'Permission onboarding flow is only available on Android native app.',
+                        });
+                        return;
+                      }
+                      try {
+                        toast({
+                          title: 'Resetting Onboarding',
+                          description: 'Clearing flags and restarting permission sequence...',
+                        });
+                        await rerunPermissionOnboarding();
+                      } catch (err) {
+                        // Handled manual permission onboarding rerun error
+                        console.warn('Failed to rerun permission onboarding:', err);
+                      }
+                    };
+
+                    if (isOwnerUnlocked || isOwnerSessionUnlocked()) {
+                      await rerunAction();
+                    } else {
+                      executeWithSecurity(
+                        rerunAction,
+                        'Reset Permission Sequence',
+                        'Resetting system permission state requires owner authorization.'
+                      );
+                    }
+                  }}
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Re-run permission onboarding
@@ -2104,24 +2121,22 @@ const SettingsSubPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* OWNER SECURITY VAULT — Cryptographic Owner Authorization (Stealth 5-Tap Mode) */}
-            {isOwnerUnlocked && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <OwnerSecurityVaultCard
-                  onRequireUnlock={(title, desc) =>
-                    executeWithSecurity(
-                      () => {},
-                      title || 'Unlock Owner Vault',
-                      desc || 'Enter your private Owner Master Key to unlock administrative settings.'
-                    )
-                  }
-                  onLockVault={() => {
-                    lockOwnerSession();
-                    setIsOwnerUnlocked(false);
-                  }}
-                />
-              </div>
-            )}
+            {/* Cryptographic Owner Authorization Vault Card */}
+            <OwnerSecurityVaultCard
+              onRequireUnlock={(title, desc) =>
+                executeWithSecurity(
+                  () => {},
+                  title || 'Unlock Owner Vault',
+                  desc || 'Enter your private Owner Master Key to unlock administrative settings.'
+                )
+              }
+              onLockVault={() => {
+                lockOwnerSession();
+                setIsOwnerUnlocked(false);
+              }}
+            />
+          </div>
+        )}
 
             {showChangelog && <Changelog onClose={() => setShowChangelog(false)} />}
           </div>
