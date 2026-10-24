@@ -126,23 +126,23 @@ export const useLocationState = () => {
       if (GeolocationService.isSupported()) {
         try {
           const position = await GeolocationService.getCurrentPosition({
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 300000
+            enableHighAccuracy: false,
+            timeout: 4000,
+            maximumAge: 60000
           });
           lat = position.latitude;
           lon = position.longitude;
           isIpBased = false;
         } catch (gpsError) {
-          console.warn('GPS detection failed or timed out, trying IP fallback:', gpsError);
+          // GPS detection failed, disabled, or timed out — proceed cleanly to IP fallback
         }
       }
 
-      // 2. FALLBACK: If GPS failed or was denied, try IP geolocation fallback
+      // 2. FALLBACK: If GPS failed or was denied, try IP geolocation fallback with 3000ms timeout
       if (lat === null || lon === null) {
         try {
           const ipResponse = await fetch('https://ipapi.co/json/', {
-            signal: AbortSignal.timeout(4000)
+            signal: AbortSignal.timeout(3000)
           });
           if (ipResponse.ok) {
             const ipData = await ipResponse.json();
@@ -153,7 +153,7 @@ export const useLocationState = () => {
             }
           }
         } catch (ipError) {
-          console.warn('IP-based geolocation also failed:', ipError);
+          // IP-based geolocation fallback failed or device is offline
         }
       }
 

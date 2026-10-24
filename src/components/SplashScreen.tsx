@@ -146,13 +146,13 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 animFrameId = requestAnimationFrame(updateProgress);
             } else {
                 setProgress(100);
-                // Pause 50ms at 100%, then trigger fast 160ms exit transition
+                // Pause 40ms at 100%, then trigger crisp, fast 150ms exit transition
                 setTimeout(() => {
                     setIsFading(true);
                     setTimeout(() => {
                         triggerComplete();
-                    }, 160);
-                }, 50);
+                    }, 150);
+                }, 40);
             }
         };
 
@@ -176,14 +176,15 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 inset: 0,
                 width: '100vw',
                 height: '100dvh',
-                zIndex: 2147483647,
+                zIndex: 99999,
                 backgroundColor: 'var(--bg-base)',
                 backgroundImage: 'radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%)',
                 color: 'var(--text-primary)',
                 opacity: isFading ? 0 : 1,
-                transition: 'opacity 160ms ease-out',
+                transform: isFading ? 'scale(0.98)' : 'scale(1)',
+                transition: 'opacity 150ms ease-out, transform 150ms ease-out',
                 pointerEvents: isFading ? 'none' : 'all',
-                willChange: 'opacity',
+                willChange: 'opacity, transform',
             }}
         >
             {/* Stars Background */}

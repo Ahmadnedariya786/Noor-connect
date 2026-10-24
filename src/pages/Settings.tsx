@@ -82,24 +82,24 @@ const Settings = () => {
           
           <div 
             onClick={() => navigate('/settings/app-theme', { replace: true })}
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-4 flex items-center justify-between cursor-pointer hover:border-[var(--accent)]/40 transition-all"
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--accent)]/40 transition-all"
             role="button"
             tabIndex={0}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
                 <Palette className="w-5 h-5 text-[var(--accent-text)]" />
               </div>
-              <div>
-                <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg">App Theme</h3>
-                <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5">Choose full-app color theme</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate">App Theme</h3>
+                <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Choose full-app color theme</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)] whitespace-nowrap inline-flex items-center">
                 {currentTheme.name}
               </span>
-              <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
+              <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
             </div>
           </div>
         </section>

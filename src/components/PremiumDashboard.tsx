@@ -291,15 +291,16 @@ function PremiumDashboardInner({
                         toast({ title: "Location Updated", description: `Time adjusted to ${timezone}` });
                       } else {
                         toast({
-                          title: "Detection Failed",
-                          description: "Could not detect GPS location. Please check permissions or select your city manually.",
+                          title: "Unable to detect GPS",
+                          description: "Please check location permissions or pick your city below.",
                           variant: "destructive"
                         });
                       }
-                    } catch (err: any) {
+                    } catch (_err) {
+                      // CRITICAL: NEVER CRASH! Show friendly notification if hardware GPS or permission throws
                       toast({
-                        title: "Detection Failed",
-                        description: err?.message || "Please enable location permissions or select your city manually.",
+                        title: "Unable to detect GPS",
+                        description: "Please check location permissions or pick your city below.",
                         variant: "destructive"
                       });
                     } finally {

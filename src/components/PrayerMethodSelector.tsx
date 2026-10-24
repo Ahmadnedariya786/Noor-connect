@@ -208,7 +208,7 @@ export const PrayerMethodSelector = () => {
               </span>
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="max-h-80">
+          <SelectContent className="max-h-[260px] overflow-y-auto pb-4" style={{ maxHeight: '260px', overflowY: 'auto', paddingBottom: '16px' }}>
             {prayerMethods.getAllMethods().map((method) => (
               <SelectItem
                 key={method.id}
@@ -216,8 +216,8 @@ export const PrayerMethodSelector = () => {
                 className="py-2.5 px-3 h-auto cursor-pointer"
                 style={{ padding: '10px 12px', height: 'auto' }}
               >
-                <div className="flex flex-col items-start gap-0.5">
-                  <span className="font-semibold text-sm text-[var(--text-primary)]">
+                <div className="flex flex-col items-start gap-0.5 w-full">
+                  <span className="font-semibold text-sm text-[var(--text-primary)] break-words text-left leading-snug">
                     {method.name}
                   </span>
                   <span className="text-xs text-[var(--text-secondary)]">

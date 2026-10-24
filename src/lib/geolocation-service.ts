@@ -129,16 +129,16 @@ export class GeolocationService {
 
   /**
    * Get current position with strict timeout and fallback handling
-   * Defaults to 10s timeout to prevent hanging on "Detecting..."
+   * Defaults to 4s timeout to prevent hanging on "Detecting..." and avoid native GPS lock freeze
    */
   static async getCurrentPosition(options?: {
     enableHighAccuracy?: boolean;
     timeout?: number;
     maximumAge?: number;
   }): Promise<LocationCoordinates> {
-    const timeoutMs = options?.timeout ?? 10000;
-    const enableHighAccuracy = options?.enableHighAccuracy ?? true;
-    const maximumAge = options?.maximumAge ?? 300000;
+    const timeoutMs = Math.min(options?.timeout ?? 4000, 4000);
+    const enableHighAccuracy = options?.enableHighAccuracy ?? false;
+    const maximumAge = options?.maximumAge ?? 60000;
 
     // Hard timeout race promise so detection NEVER hangs
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -156,32 +156,34 @@ export class GeolocationService {
             const requested = await Geolocation.requestPermissions({
               permissions: ['location', 'coarseLocation']
             });
-            if (requested.location === 'denied' && requested.coarseLocation === 'denied') {
+            if (requested.location !== 'granted' && requested.coarseLocation !== 'granted') {
               throw new Error('Location permission denied. Please enable location access in settings or pick your city manually.');
             }
           }
         } catch (permError: any) {
-          if (permError.message?.includes('denied')) {
-            throw permError;
+          // Native permission check unavailable or location services disabled on device
+          throw new Error(permError?.message || 'Location services disabled or permission denied');
+        }
+
+        try {
+          const position = await Geolocation.getCurrentPosition({
+            enableHighAccuracy,
+            timeout: timeoutMs,
+            maximumAge
+          });
+
+          if (!position?.coords || typeof position.coords.latitude !== 'number' || typeof position.coords.longitude !== 'number' || Number.isNaN(position.coords.latitude) || Number.isNaN(position.coords.longitude)) {
+            throw new Error('Invalid GPS coordinates received from native provider');
           }
-          // Native permission check unavailable, proceeding with standard geolocation
+
+          return {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: typeof position.coords.accuracy === 'number' ? position.coords.accuracy : 1000
+          };
+        } catch (nativeErr: any) {
+          throw new Error(nativeErr?.message || 'Native GPS unavailable');
         }
-
-        const position = await Geolocation.getCurrentPosition({
-          enableHighAccuracy,
-          timeout: timeoutMs,
-          maximumAge
-        });
-
-        if (!position?.coords || typeof position.coords.latitude !== 'number' || typeof position.coords.longitude !== 'number' || Number.isNaN(position.coords.latitude) || Number.isNaN(position.coords.longitude)) {
-          throw new Error('Invalid GPS coordinates received from native provider');
-        }
-
-        return {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: typeof position.coords.accuracy === 'number' ? position.coords.accuracy : 1000
-        };
       })();
 
       return Promise.race([nativePromise, timeoutPromise]);
@@ -194,8 +196,10 @@ export class GeolocationService {
         return;
       }
 
+      const timer = setTimeout(() => reject(new Error('GPS timeout')), timeoutMs);
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          clearTimeout(timer);
           resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -203,6 +207,7 @@ export class GeolocationService {
           });
         },
         (error) => {
+          clearTimeout(timer);
           switch (error.code) {
             case error.PERMISSION_DENIED:
               reject(new Error('Location access denied. Please enable location permissions or pick your city manually.'));
@@ -219,8 +224,8 @@ export class GeolocationService {
           }
         },
         {
-          enableHighAccuracy,
-          timeout: timeoutMs,
+          enableHighAccuracy: false,
+          timeout: Math.max(1000, timeoutMs - 500),
           maximumAge
         }
       );
@@ -292,11 +297,14 @@ export class GeolocationService {
             }
           }
         },
-        () => {},
+        () => {
+          // Handled watch position error callback safely
+        },
         { enableHighAccuracy, timeout, maximumAge }
       );
       return watchId.toString();
     } catch {
+      // Safe fallback when watchPosition is unsupported or denied
       return "";
     }
   }

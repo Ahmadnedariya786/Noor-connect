@@ -90,38 +90,46 @@ export const CitySearch = ({ onCitySelect, showManualCoordinates = true }: CityS
   };
 
   const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Geolocation Not Supported",
-        description: "Your browser doesn't support location services",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        location.setLocation(latitude, longitude, 'Current Location');
-        
+    try {
+      if (!navigator.geolocation) {
         toast({
-          title: "Location Updated",
-          description: `Prayer times updated for your current location`,
-        });
-      },
-      (error) => {
-        toast({
-          title: "Location Access Denied",
-          description: "Please enable location permissions to use this feature",
+          title: "Geolocation Not Supported",
+          description: "Your browser doesn't support location services",
           variant: "destructive",
         });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000 // 5 minutes
+        return;
       }
-    );
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          location.setLocation(latitude, longitude, 'Current Location');
+          
+          toast({
+            title: "Location Updated",
+            description: `Prayer times updated for your current location`,
+          });
+        },
+        (_error) => {
+          toast({
+            title: "Location Access Denied",
+            description: "Please enable location permissions to use this feature",
+            variant: "destructive",
+          });
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 4000,
+          maximumAge: 60000
+        }
+      );
+    } catch (_e) {
+      toast({
+        title: "Location Error",
+        description: "Could not retrieve current location.",
+        variant: "destructive",
+      });
+    }
   };
 
    const getPlaceTypeIcon = (osmValue: string) => {
