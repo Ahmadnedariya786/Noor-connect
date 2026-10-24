@@ -88,6 +88,8 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
   };
 
   const sanitizedHijriDate = (hijriDate || '')
+    .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+    .replace(/al-ola/gi, 'al-ūlā')
     .replace(/al-ōlā/gi, 'al-ūlā')
     .replace(/ō/g, 'ū');
 

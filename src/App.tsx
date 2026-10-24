@@ -380,7 +380,7 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
   const reduceMotion = tier.shouldReduceAnimations;
 
   return (
-    <MotionConfig reducedMotion={(!animationEnabled || reduceMotion) ? "always" : "never"}>
+    <MotionConfig reducedMotion={(!animationEnabled || reduceMotion) ? "always" : "user"}>
       <LazyMotionWrapper>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <div className="flex flex-col min-h-screen overflow-x-hidden">
@@ -475,7 +475,7 @@ function AppShell() {
     }
   }, []);
 
-  // Safety fallback: ensure splash screen handoff always completes within 3.5s
+  // Safety fallback: ensure splash screen handoff always completes cleanly within 2.5s
   useEffect(() => {
     if (!splashEnabled) {
       handleSplashComplete();
@@ -484,11 +484,10 @@ function AppShell() {
     }
     const timer = setTimeout(() => {
       if (!splashHandoffDoneRef.current) {
-        console.warn('Splash handoff safety fallback triggered');
         handleSplashComplete();
         forceReleaseSplashScrollLock();
       }
-    }, 3500);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [splashEnabled, handleSplashComplete]);
 

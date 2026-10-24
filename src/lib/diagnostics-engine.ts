@@ -576,8 +576,15 @@ export function initDiagnosticsEngine(): void {
       isCapturingConsole = true;
       try {
         const msg = args.map(stringifyConsoleArg).join(' ');
-        // Don't record internal diagnostics logs or known noise
-        if (!msg.includes('[NOOR_DIAGNOSTICS]')) {
+        // Don't record internal diagnostics logs or known third-party informational noise
+        const isInternalDiagnostics = msg.includes('[NOOR_DIAGNOSTICS]');
+        const isReducedMotionWarning =
+          msg.includes('Reduced Motion enabled') ||
+          msg.includes('reduced-motion') ||
+          msg.includes('motion.dev');
+        const isSplashHandoffNotice = msg.includes('Splash handoff');
+
+        if (!isInternalDiagnostics && !isReducedMotionWarning && !isSplashHandoffNotice) {
           recordDiagnosticEvent({
             category: 'CONSOLE_WARN',
             message: msg,
@@ -725,7 +732,7 @@ export async function runDeepSystemHealthScan(): Promise<DeepHealthScanReport> {
   // 2. Theme Token Integrity
   try {
     const computed = typeof document !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-    const activeTheme = (typeof localStorage !== 'undefined' && localStorage.getItem('noor_theme')) || 'oxford-gold';
+    const activeTheme = (typeof localStorage !== 'undefined' && (localStorage.getItem('noor-theme') || localStorage.getItem('noor_theme'))) || 'oxford-gold';
     const missingTokens: string[] = [];
 
     if (computed) {
@@ -890,6 +897,7 @@ export async function runDeepSystemHealthScan(): Promise<DeepHealthScanReport> {
 
       // Test critical JSON keys
       const testKeys = [
+        'noor-theme',
         'noor_theme',
         'noor_clock_style',
         LOCATION_STORAGE_KEY,

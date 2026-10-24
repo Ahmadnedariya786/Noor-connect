@@ -12,20 +12,28 @@ export interface ClockRendererProps extends ClockProps {
 }
 
 export const ClockRenderer: React.FC<ClockRendererProps> = ({ styleId, ...clockProps }) => {
+  const sanitizedHijriDate = (clockProps.hijriDate || '')
+    .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+    .replace(/al-ola/gi, 'al-ūlā')
+    .replace(/al-ōlā/gi, 'al-ūlā')
+    .replace(/ō/g, 'ū');
+
+  const props = { ...clockProps, hijriDate: sanitizedHijriDate };
+
   switch (styleId) {
     case 'mosque-led':
-      return <MosqueLedClock {...clockProps} />;
+      return <MosqueLedClock {...props} />;
     case 'crescent-moon':
-      return <CrescentMoonClock {...clockProps} />;
+      return <CrescentMoonClock {...props} />;
     case 'ottoman-heritage':
-      return <OttomanHeritageClock {...clockProps} />;
+      return <OttomanHeritageClock {...props} />;
     case 'hour-wedge':
-      return <HourWedgeClock {...clockProps} />;
+      return <HourWedgeClock {...props} />;
     case 'prayer-arc':
-      return <PrayerArcClock {...clockProps} />;
+      return <PrayerArcClock {...props} />;
     case 'digital-bold':
     default:
-      return <DigitalBoldClock {...clockProps} />;
+      return <DigitalBoldClock {...props} />;
   }
 };
 

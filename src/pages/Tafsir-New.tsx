@@ -1075,9 +1075,16 @@ const Tafsir = () => {
                             {tafsir.arabic && (
                               <div className="space-y-4">
                                 <p
-                                  className="text-2xl md:text-3xl text-right leading-[2.4] font-arabic"
+                                  className="text-2xl md:text-3xl text-right font-arabic"
                                   dir="rtl"
-                                  style={{ color: 'var(--text-primary)', fontFamily: 'inherit' }}
+                                  style={{
+                                    color: 'var(--text-primary)',
+                                    fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+                                    lineHeight: 2.3,
+                                    wordSpacing: '2px',
+                                    paddingTop: '8px',
+                                    paddingBottom: '8px',
+                                  }}
                                 >
                                   {tafsir.arabic}
                                 </p>

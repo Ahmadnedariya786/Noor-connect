@@ -1,7 +1,21 @@
 <!doctype html>
-<html lang="en" class="dark" data-theme="oxford-gold">
+<html lang="en" class="dark splash-active">
 
 <head>
+  <!-- Pre-React Synchronous Theme Initializer: Reads saved theme before any CSS, link or paint -->
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('noor-theme') || localStorage.getItem('noor_theme') || localStorage.getItem('theme') || 'oxford-gold';
+        var valid = ['oxford-gold', 'madinah-emerald', 'imperial-violet', 'burgundy-velvet', 'desert-scroll'];
+        if (valid.indexOf(savedTheme) === -1) savedTheme = 'oxford-gold';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.documentElement.className = 'dark ' + savedTheme + ' splash-active';
+      } catch (e) {
+        // Safe fallback
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <!-- PWA Manifest and Icons -->
@@ -51,18 +65,6 @@
     }
   </style>
 
-  <!-- Pre-React Synchronous Theme Initializer: Reads saved theme before paint -->
-  <script>
-    (function () {
-      try {
-        var savedTheme = localStorage.getItem('noor_theme') || localStorage.getItem('theme') || 'oxford-gold';
-        var valid = ['oxford-gold', 'madinah-emerald', 'imperial-violet', 'burgundy-velvet', 'desert-scroll'];
-        if (valid.indexOf(savedTheme) === -1) savedTheme = 'oxford-gold';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-      } catch (e) {}
-    })();
-  </script>
-
   <!-- Open Graph / Twitter meta tags -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Noor Connect - Your Islamic Companion">
@@ -75,7 +77,7 @@
 
   <!-- Inline critical CSS and Theme Palettes for seamless first paint across all 5 themes -->
   <style>
-    :root, [data-theme="oxford-gold"] {
+    :root, [data-theme="oxford-gold"], .oxford-gold {
       --bg-base: #000000;
       --bg-elev: #0D1626;
       --surface: #14213D;
@@ -91,7 +93,7 @@
       --text-primary: #FFFFFF;
       --text-secondary: #B9C2D0;
     }
-    [data-theme="madinah-emerald"] {
+    [data-theme="madinah-emerald"], .madinah-emerald {
       --bg-base: #03150E;
       --bg-elev: #06231A;
       --surface: #0A2E22;
@@ -107,7 +109,7 @@
       --text-primary: #ECFDF5;
       --text-secondary: #A7C9B8;
     }
-    [data-theme="imperial-violet"] {
+    [data-theme="imperial-violet"], .imperial-violet {
       --bg-base: #1F0035;
       --bg-elev: #2A0047;
       --surface: #390040;
@@ -123,7 +125,7 @@
       --text-primary: #F7F0E3;
       --text-secondary: #C9B8D8;
     }
-    [data-theme="burgundy-velvet"] {
+    [data-theme="burgundy-velvet"], .burgundy-velvet {
       --bg-base: #0B0B0B;
       --bg-elev: #180C0E;
       --surface: #241012;
@@ -139,7 +141,7 @@
       --text-primary: #F5F2ED;
       --text-secondary: #C9BEB9;
     }
-    [data-theme="desert-scroll"] {
+    [data-theme="desert-scroll"], .desert-scroll {
       --bg-base: #140B04;
       --bg-elev: #241407;
       --surface: #33200D;
@@ -185,6 +187,7 @@
       display: block;
     }
 
+    #initial-splash,
     #static-splash {
       position: fixed;
       inset: 0;
@@ -241,7 +244,7 @@
 
 <body class="splash-active">
   <!-- Static pre-React splash element: physically removed by React once SplashScreen mounts with 0 layout jump -->
-  <div id="static-splash" aria-hidden="true">
+  <div id="initial-splash" class="static-splash" aria-hidden="true">
     <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
       <!-- Celestial Rub el Hizb Medallion (Layer 1, 2, 3) -->
       <div style="position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center;">

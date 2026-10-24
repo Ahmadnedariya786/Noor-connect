@@ -61,9 +61,13 @@ export function forceReleaseSplashScrollLock(): void {
         document.body.style.touchAction = "";
         document.documentElement.style.overscrollBehavior = "";
         document.body.style.overscrollBehavior = "";
-        const el = document.getElementById("static-splash");
-        if (el) {
-            el.remove();
+        const elInitial = document.getElementById("initial-splash");
+        if (elInitial) {
+            elInitial.remove();
+        }
+        const elStatic = document.getElementById("static-splash");
+        if (elStatic) {
+            elStatic.remove();
         }
     } catch {
         // Safe fallback: ensure scroll unlock never throws
@@ -101,10 +105,14 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const shouldAnimate = animationsEnabled && !prefersReducedMotion && !tier.shouldReduceAnimations;
 
     useEffect(() => {
-        // Physically remove the pre-React static splash element from DOM so no duplicate or touch-blocking layer remains
-        const staticSplash = document.getElementById("static-splash");
-        if (staticSplash) {
-            staticSplash.remove();
+        // Physically remove the pre-React static splash elements from DOM so no duplicate or touch-blocking layer remains
+        const elInitial = document.getElementById("initial-splash");
+        if (elInitial) {
+            elInitial.remove();
+        }
+        const elStatic = document.getElementById("static-splash");
+        if (elStatic) {
+            elStatic.remove();
         }
 
         // Lock scroll while splash is active

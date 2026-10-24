@@ -10,6 +10,7 @@ import { type ThemeId, type ThemeTokens, type AppTheme } from '@/types/theme';
 import { recordBreadcrumb } from './diagnostics-engine';
 
 export const THEME_STORAGE_KEY = 'noor_theme';
+export const ALT_THEME_STORAGE_KEY = 'noor-theme';
 export const LEGACY_THEME_KEY = 'theme';
 export const THEME_CHANGED_EVENT = 'noor-theme-changed';
 export const DEFAULT_THEME_ID: ThemeId = 'oxford-gold';
@@ -157,7 +158,7 @@ const VALID_THEME_IDS = new Set<ThemeId>(APP_THEMES.map((t) => t.id));
  */
 export function getTheme(): ThemeId {
   try {
-    const val = localStorage.getItem(THEME_STORAGE_KEY);
+    const val = localStorage.getItem(ALT_THEME_STORAGE_KEY) || localStorage.getItem(THEME_STORAGE_KEY) || localStorage.getItem(LEGACY_THEME_KEY);
     if (val && VALID_THEME_IDS.has(val as ThemeId)) {
       return val as ThemeId;
     }
@@ -184,8 +185,15 @@ export function applyThemeToDOM(themeId: ThemeId): void {
     root.classList.add('dark');
   }
 
-  // 2. Set theme data attribute
+  // 2. Set theme data attribute and class
   root.setAttribute('data-theme', validId);
+  APP_THEMES.forEach((t) => {
+    if (t.id === validId) {
+      root.classList.add(t.id);
+    } else {
+      root.classList.remove(t.id);
+    }
+  });
 
   // 3. Write all 15 CSS custom properties directly onto document root
   (Object.keys(theme.tokens) as Array<keyof ThemeTokens>).forEach((token) => {
@@ -211,6 +219,7 @@ export function setTheme(newThemeId: ThemeId): void {
   const validId = VALID_THEME_IDS.has(newThemeId) ? newThemeId : DEFAULT_THEME_ID;
 
   try {
+    localStorage.setItem(ALT_THEME_STORAGE_KEY, validId);
     localStorage.setItem(THEME_STORAGE_KEY, validId);
     // Ignore and remove legacy theme mode to avoid conflicting states
     localStorage.removeItem(LEGACY_THEME_KEY);

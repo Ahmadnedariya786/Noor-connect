@@ -169,7 +169,13 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
             >
               ✦
             </span>
-            <span className="tracking-wide select-none">{hijriDate}</span>
+            <span className="tracking-wide select-none">
+              {(hijriDate || '')
+                .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+                .replace(/al-ola/gi, 'al-ūlā')
+                .replace(/al-ōlā/gi, 'al-ūlā')
+                .replace(/ō/g, 'ū')}
+            </span>
             <span
               className="inline-block shrink-0 select-none"
               style={{

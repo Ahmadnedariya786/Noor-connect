@@ -79,7 +79,19 @@ const DuaCard = memo(function DuaCard({ dua, isFavorite, onToggleFavorite, onSha
               <Share2 className="w-4 h-4" />
             </Button>
           </div>
-          <p className="text-2xl font-arabic font-bold text-foreground text-right leading-[2] tracking-wide mt-2">{dua.arabic}</p>
+          <p
+            className="text-2xl font-arabic font-bold text-foreground text-right tracking-wide mt-2"
+            dir="rtl"
+            style={{
+              fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+              lineHeight: 2.25,
+              wordSpacing: '2px',
+              paddingTop: '8px',
+              paddingBottom: '8px',
+            }}
+          >
+            {dua.arabic}
+          </p>
           <ManuscriptDivider />
           <p className="text-base font-serif italic text-[#C9860A] leading-relaxed">{dua.transliteration}</p>
           <p className="text-sm text-foreground/80 leading-relaxed font-medium">{dua.translation}</p>

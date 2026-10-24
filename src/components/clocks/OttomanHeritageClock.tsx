@@ -306,7 +306,11 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
               filter: 'drop-shadow(0 0 10px var(--accent-glow))',
             }}
           >
-            {hijriDate}
+            {hijriDate
+              .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+              .replace(/al-ola/gi, 'al-ūlā')
+              .replace(/al-ōlā/gi, 'al-ūlā')
+              .replace(/ō/g, 'ū')}
           </p>
           <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
         </div>

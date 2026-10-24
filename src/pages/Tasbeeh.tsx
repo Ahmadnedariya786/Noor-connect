@@ -475,7 +475,7 @@ const Tasbeeh = () => {
               borderColor: 'var(--border)',
               boxShadow: '0 12px 30px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
               position: 'relative',
-              padding: '12px 44px',
+              padding: '12px 16px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -490,40 +490,34 @@ const Tasbeeh = () => {
               }}
             />
 
-            {/* Prev Carousel Button */}
-            <button
-              type="button"
-              disabled={isLocked}
-              onClick={handlePrevDhikr}
-              aria-label="Previous Dhikr"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer"
+            {/* Top Selector Bar: [ ‹ ]   [ Dhikr X of 7 • Change ⌄ ]   [ › ] */}
+            <div
+              className="relative z-10 flex items-center justify-between w-full"
               style={{
-                background: 'var(--surface-2)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                marginBottom: '6px',
               }}
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+              {/* Prev Carousel Button */}
+              <button
+                type="button"
+                disabled={isLocked}
+                onClick={handlePrevDhikr}
+                aria-label="Previous Dhikr"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer shrink-0"
+                style={{
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
 
-            {/* Next Carousel Button */}
-            <button
-              type="button"
-              disabled={isLocked}
-              onClick={handleNextDhikr}
-              aria-label="Next Dhikr"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer"
-              style={{
-                background: 'var(--surface-2)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            {/* Top Pill (Dropdown Trigger): Dhikr X of Y • Change ⌄ */}
-            <div className="relative z-10">
+              {/* Center Pill (Dropdown Trigger): Dhikr X of Y • Change ⌄ */}
               <Select value={selectedDhikr} onValueChange={handleDhikrChange} disabled={isLocked}>
                 <SelectTrigger
                   className="h-auto w-auto px-2.5 py-1 border shadow-none text-center justify-center gap-1 font-semibold rounded-full select-none"
@@ -534,7 +528,7 @@ const Tasbeeh = () => {
                     background: 'var(--surface-2)',
                     border: '1px solid var(--border)',
                     borderRadius: '999px',
-                    padding: '3px 10px',
+                    padding: '3px 12px',
                   }}
                 >
                   <span>Dhikr {currentIndex + 1} of {DHIKR_OPTIONS.length} • Change</span>
@@ -560,6 +554,22 @@ const Tasbeeh = () => {
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Next Carousel Button */}
+              <button
+                type="button"
+                disabled={isLocked}
+                onClick={handleNextDhikr}
+                aria-label="Next Dhikr"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer shrink-0"
+                style={{
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Main Arabic Calligraphy (Rendered ONCE) */}

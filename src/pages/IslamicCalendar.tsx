@@ -39,6 +39,13 @@ interface CalendarDay {
   holidays: string[];
 }
 
+export const normalizeHijriMonth = (val: string): string =>
+  (val || '')
+    .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+    .replace(/al-ola/gi, 'al-ūlā')
+    .replace(/al-ōlā/gi, 'al-ūlā')
+    .replace(/ō/g, 'ū');
+
 export default function IslamicCalendar() {
   const navigate = useNavigate();
   // Use the Maghrib-aware hook (same as Dashboard) for the header date
@@ -157,7 +164,7 @@ export default function IslamicCalendar() {
         const gMonth = dayData.gregorian.month.en;
         const gYear = parseInt(dayData.gregorian.year, 10);
         const weekday = dayData.gregorian.weekday?.en || '';
-        const monthEn = (dayData.hijri.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
+        const monthEn = normalizeHijriMonth(dayData.hijri.month.en);
 
         days.push({
           hijriDay: parseInt(dayData.hijri.day, 10),
@@ -210,7 +217,7 @@ export default function IslamicCalendar() {
         const gMonth = gDate.toLocaleDateString('en-US', { month: 'long' });
         const gYear = currentYear;
         const weekday = gDate.toLocaleDateString('en-US', { weekday: 'long' });
-        const monthEn = (hijriInfo.hijri.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
+        const monthEn = normalizeHijriMonth(hijriInfo.hijri.month.en);
 
         days.push({
           hijriDay: parseInt(hijriInfo.hijri.day, 10),
@@ -320,7 +327,7 @@ export default function IslamicCalendar() {
   const hijriMonthHeader = useMemo(() => {
     if (calendarDays.length === 0) return "";
     const activeDays = calendarDays.filter(d => d.isCurrentMonth);
-    const months = Array.from(new Set(activeDays.map(d => (d.hijriMonth.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū'))));
+    const months = Array.from(new Set(activeDays.map(d => normalizeHijriMonth(d.hijriMonth.en))));
     const years = Array.from(new Set(activeDays.map(d => d.hijriYear)));
 
     const shortenMonth = (m: string) => {
@@ -434,7 +441,7 @@ export default function IslamicCalendar() {
                       lineHeight: 1.25,
                     }}
                   >
-                    <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.day} {(islamicInfo.currentDate.hijri.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū')}</span>{' '}
+                    <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.day} {normalizeHijriMonth(islamicInfo.currentDate.hijri.month.en)}</span>{' '}
                     <span className="whitespace-nowrap">{islamicInfo.currentDate.hijri.year} AH</span>
                   </div>
                   <div className="text-2xl sm:text-3xl quran-arabic mb-3" dir="rtl" style={{ color: 'var(--accent-text)' }}>
@@ -779,7 +786,7 @@ export default function IslamicCalendar() {
                     }}
                   >
                     <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                      {selectedDate.hijriDay} {(selectedDate.hijriMonth.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū')} {selectedDate.hijriYear} AH
+                      {selectedDate.hijriDay} {normalizeHijriMonth(selectedDate.hijriMonth.en)} {selectedDate.hijriYear} AH
                     </span>
                     {selectedDate.isToday && (
                       <span
@@ -893,7 +900,7 @@ export default function IslamicCalendar() {
                 }}
               >
                 <div className="text-2xl font-bold" style={{ color: 'var(--accent-text)' }}>
-                  {selectedDate.hijriDay} {(selectedDate.hijriMonth.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū')} {selectedDate.hijriYear} AH
+                  {selectedDate.hijriDay} {normalizeHijriMonth(selectedDate.hijriMonth.en)} {selectedDate.hijriYear} AH
                 </div>
                 <div className="text-xl quran-arabic" dir="rtl" style={{ color: 'var(--accent-text)' }}>
                   {selectedDate.hijriDay} {selectedDate.hijriMonth.ar} {selectedDate.hijriYear} AH

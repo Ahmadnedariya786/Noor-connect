@@ -160,7 +160,11 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
             }
         }
 
-        const sanitizedMonthEn = (h.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
+        const sanitizedMonthEn = (h.month.en || '')
+          .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+          .replace(/al-ola/gi, 'al-ūlā')
+          .replace(/al-ōlā/gi, 'al-ūlā')
+          .replace(/ō/g, 'ū');
         setHijriDay(h.day);
         setHijriMonthNum(h.month.number);
         setHijriMonthEn(sanitizedMonthEn);
@@ -173,7 +177,11 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
         const { islamicCalendarService } = await import('@/lib/islamic-calendar-service');
         const info = await islamicCalendarService.getIslamicCalendarInfo(now);
         const h = info.currentDate.hijri;
-        const sanitizedMonthEn = (h.month.en || '').replace(/al-ōlā/gi, 'al-ūlā').replace(/ō/g, 'ū');
+        const sanitizedMonthEn = (h.month.en || '')
+          .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+          .replace(/al-ola/gi, 'al-ūlā')
+          .replace(/al-ōlā/gi, 'al-ūlā')
+          .replace(/ō/g, 'ū');
         setHijriDay(h.day);
         setHijriMonthNum(h.month.number);
         setHijriMonthEn(sanitizedMonthEn);
@@ -235,7 +243,13 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
   const isEidAlFitr = hijriMonthNumber === 10 && (hijriDayNumber >= 1 && hijriDayNumber <= 3);
   const isEidAlAdha = hijriMonthNumber === 12 && (hijriDayNumber >= 10 && hijriDayNumber <= 13);
 
-  const hijriDate = hijriDay ? `${hijriDay} ${hijriMonthEn} ${hijriYear}` : '';
+  const hijriDate = hijriDay
+    ? `${hijriDay} ${hijriMonthEn} ${hijriYear}`
+        .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+        .replace(/al-ola/gi, 'al-ūlā')
+        .replace(/al-ōlā/gi, 'al-ūlā')
+        .replace(/ō/g, 'ū')
+    : '';
 
   const islamicInfo = hijriDay ? {
     currentDate: {

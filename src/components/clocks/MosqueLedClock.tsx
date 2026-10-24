@@ -109,7 +109,11 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
               )}
               title={hijriDate}
             >
-              {hijriDate}
+              {(hijriDate || '')
+                .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+                .replace(/al-ola/gi, 'al-ūlā')
+                .replace(/al-ōlā/gi, 'al-ūlā')
+                .replace(/ō/g, 'ū')}
             </span>
 
             {/* AM/PM Badge: Strictly hidden in 24h mode per 12/24h Guard */}

@@ -295,59 +295,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
             />
           </g>
 
-          {/* ── Layer 4: Recessed Chronograph Sub-Dial Pill (Lower Half — Zero Pivot Overlap) ── */}
-          <g id="chrono-subdial-pill">
-            <rect
-              x="74"
-              y="152"
-              width="92"
-              height="28"
-              rx="14"
-              fill="var(--surface)"
-              stroke="var(--border)"
-              strokeWidth="1"
-            />
-            <rect
-              x="75"
-              y="153"
-              width="90"
-              height="26"
-              rx="13"
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="0.75"
-              opacity="0.35"
-            />
-            {/* Next Prayer Label */}
-            <text
-              x={center}
-              y="161.5"
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize="7.5"
-              fontFamily="sans-serif"
-              fontWeight="800"
-              letterSpacing="0.12em"
-              fill="var(--accent-text)"
-            >
-              {prayerDisplayName.toUpperCase()}
-            </text>
-            {/* Countdown string */}
-            <text
-              x={center}
-              y="171.5"
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize="7.5"
-              fontFamily="monospace"
-              fontWeight="700"
-              fill="var(--text-primary)"
-            >
-              {countdownText}
-            </text>
-          </g>
-
-          {/* ── Layer 5 (TOP): Watch Hands + Center Jewel Cap ── */}
+          {/* ── Layer 4 (TOP): Watch Hands + Center Jewel Cap (100% Unobstructed 360° Sweep) ── */}
           <g id="prayer-arc-hands" filter={!isStaticPreview ? "url(#arcHandShadow)" : undefined}>
             {/* Tapered Hour Hand */}
             <g
@@ -476,23 +424,61 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
         </svg>
       </div>
 
-      {!isStaticPreview && (
-        <div className="flex items-center justify-center gap-2 mt-2 select-none">
-          <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
-          <p
-            className="text-xs font-semibold tracking-[0.06em] text-center"
+      {/* ── Integrated Prayer Status Pill & Hijri Date (100% Unobstructed Dial Sweep) ── */}
+      <div className="flex flex-col items-center justify-center gap-1.5 mt-2.5 select-none">
+        <div
+          className="inline-flex items-center justify-center font-semibold shrink-0 select-none border"
+          style={{
+            gap: isStaticPreview ? '4px' : '6px',
+            padding: isStaticPreview ? '2px 8px' : '3px 12px',
+            borderRadius: '999px',
+            background: 'var(--surface-2)',
+            borderColor: 'var(--border)',
+            color: 'var(--accent-text)',
+            fontSize: isStaticPreview ? '0.62rem' : '0.76rem',
+            whiteSpace: 'nowrap',
+            lineHeight: 1.2,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          <span
+            className="rounded-full inline-block shrink-0"
             style={{
-              background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 0 10px var(--accent-glow))',
+              width: '6px',
+              height: '6px',
+              background: 'var(--accent)',
             }}
-          >
-            {hijriDate}
-          </p>
-          <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+          />
+          <span className="font-bold tracking-wider">{prayerDisplayName.toUpperCase()}</span>
+          {countdownText && (
+            <span className="font-mono text-[var(--text-secondary)] font-normal ml-0.5">
+              • {countdownText}
+            </span>
+          )}
         </div>
-      )}
+
+        {!isStaticPreview && (
+          <div className="flex items-center justify-center gap-2 select-none">
+            <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+            <p
+              className="text-xs font-semibold tracking-[0.06em] text-center"
+              style={{
+                background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 0 10px var(--accent-glow))',
+              }}
+            >
+              {(hijriDate || '')
+                .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+                .replace(/al-ola/gi, 'al-ūlā')
+                .replace(/al-ōlā/gi, 'al-ūlā')
+                .replace(/ō/g, 'ū')}
+            </p>
+            <span className="text-[9px] select-none" style={{ color: 'var(--accent)' }}>◈</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

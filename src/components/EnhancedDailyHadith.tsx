@@ -507,11 +507,18 @@ export function EnhancedDailyHadith() {
             <span className="absolute bottom-2 right-2 text-[10px] text-[var(--accent)]/40 select-none font-serif">✦</span>
 
             <p
-              className={`font-amiri text-xl sm:text-2xl leading-[1.9] text-[var(--text-primary)] text-right drop-shadow-sm select-text break-words px-2 transition-all duration-300 ${
+              className={`font-amiri text-[var(--text-primary)] text-right drop-shadow-sm select-text break-words px-2 transition-all duration-300 ${
                 !isExpanded && isArabicLong ? "line-clamp-3 sm:line-clamp-4" : ""
               }`}
               dir="rtl"
-              style={{ fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif" }}
+              style={{
+                fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+                lineHeight: 2.25,
+                fontSize: 'clamp(1.22rem, 4.5vw, 1.42rem)',
+                wordSpacing: '2px',
+                paddingTop: '8px',
+                paddingBottom: '8px',
+              }}
             >
               {hadith.arabic}
             </p>

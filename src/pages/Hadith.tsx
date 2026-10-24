@@ -205,7 +205,18 @@ const { t } = useLanguage();
                   </div>
  
                   {/* Hadith text */}
-                  <blockquote className="text-xl md:text-3xl leading-relaxed text-center font-arabic font-bold mt-6 mb-2">
+                  <blockquote
+                    className="text-xl md:text-3xl text-center font-arabic font-bold mt-6 mb-2"
+                    dir="rtl"
+                    style={{
+                      fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+                      lineHeight: 2.25,
+                      fontSize: 'clamp(1.22rem, 4.5vw, 1.42rem)',
+                      wordSpacing: '2px',
+                      paddingTop: '8px',
+                      paddingBottom: '8px',
+                    }}
+                  >
                     {hadith.hadith}
                   </blockquote>
  

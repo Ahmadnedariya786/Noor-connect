@@ -58,7 +58,7 @@ const GROUPS: SettingsGroup[] = [
         id: 'appearance',
         title: 'Theme & Appearance',
         titleKey: 'themeAndAppearance',
-        subtitle: '5 dark jewel themes',
+        subtitle: '5 royal themes',
         icon: Palette,
         gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
         iconColor: 'text-amber-600 dark:text-amber-400',
