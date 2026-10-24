@@ -13,6 +13,7 @@ import { serviceWorkerManager } from "@/lib/service-worker-registration";
 import { islamicEventsService } from "@/lib/islamic-events-service";
 import { LayoutManager } from "@/components/LayoutManager";
 import { SplashScreen, forceReleaseSplashScrollLock } from "@/components/SplashScreen";
+import { THEME_BG_HEX_MAP, ThemeId } from "@/lib/theme-engine";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { AnimatePresence, MotionConfig, m } from "framer-motion";
 import { LazyMotionWrapper } from "@/components/LazyMotionWrapper";
@@ -426,6 +427,17 @@ function AppShell() {
   useAutoBackup();
   // Push Quran-progress + tasbeeh state to native widgets when they change
   useWidgetSync();
+
+  // Sync native Android window and WebView background color immediately on startup
+  useEffect(() => {
+    try {
+      const savedTheme = (localStorage.getItem('noor-theme') || localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
+      const bgHex = THEME_BG_HEX_MAP[savedTheme] || '#000000';
+      (window as any).AndroidBridge?.setNativeThemeBg?.(bgHex);
+    } catch {
+      // Safe fallback when AndroidBridge is unavailable
+    }
+  }, []);
   
   // Initialize animation preference (deferred from module scope)
   const initializedRef = useRef(false);

@@ -91,6 +91,20 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(BatteryOptimizationPlugin.class);
         super.onCreate(savedInstanceState);
 
+        // Apply persisted native theme background color immediately to eliminate cold-start flash
+        try {
+            String bgHex = getSharedPreferences("noor_native_theme", MODE_PRIVATE).getString("bg_hex", "#070709");
+            final int color = android.graphics.Color.parseColor(bgHex);
+            getWindow().getDecorView().setBackgroundColor(color);
+            getWindow().setStatusBarColor(color);
+            getWindow().setNavigationBarColor(color);
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                getBridge().getWebView().setBackgroundColor(color);
+            }
+        } catch (Exception ignored) {
+            // Ignore invalid color strings safely on cold start
+        }
+
         // Create default notification channel for Capacitor LocalNotifications
         createDefaultNotificationChannel();
 
@@ -100,6 +114,13 @@ public class MainActivity extends BridgeActivity {
         // Enable Motion Event Splitting and allow immediate audio playback on the WebView
         WebView webView = (this.getBridge() != null) ? this.getBridge().getWebView() : null;
         if (webView != null) {
+            try {
+                String bgHex = getSharedPreferences("noor_native_theme", MODE_PRIVATE).getString("bg_hex", "#070709");
+                final int color = android.graphics.Color.parseColor(bgHex);
+                webView.setBackgroundColor(color);
+            } catch (Exception ignored) {
+                // Ignore invalid color strings safely
+            }
             try {
                 webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
             } catch (Throwable t) {
@@ -112,6 +133,27 @@ public class MainActivity extends BridgeActivity {
             }
             try {
                 webView.addJavascriptInterface(new Object() {
+                    @android.webkit.JavascriptInterface
+                    public void setNativeThemeBg(String hexColor) {
+                        try {
+                            final int color = android.graphics.Color.parseColor(hexColor);
+                            getSharedPreferences("noor_native_theme", MODE_PRIVATE)
+                                .edit()
+                                .putString("bg_hex", hexColor)
+                                .apply();
+                            runOnUiThread(() -> {
+                                getWindow().getDecorView().setBackgroundColor(color);
+                                getWindow().setStatusBarColor(color);
+                                getWindow().setNavigationBarColor(color);
+                                if (getBridge() != null && getBridge().getWebView() != null) {
+                                    getBridge().getWebView().setBackgroundColor(color);
+                                }
+                            });
+                        } catch (Exception ignored) {
+                            // Ignore invalid color strings safely
+                        }
+                    }
+
                     @android.webkit.JavascriptInterface
                     public void closeApp() {
                         runOnUiThread(() -> {

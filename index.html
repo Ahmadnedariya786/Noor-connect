@@ -11,6 +11,25 @@
         if (valid.indexOf(savedTheme) === -1) savedTheme = 'oxford-gold';
         document.documentElement.setAttribute('data-theme', savedTheme);
         document.documentElement.className = 'dark ' + savedTheme + ' splash-active';
+
+        // Check user startup splash preference
+        var splashEnabled = localStorage.getItem('splash_enabled');
+        if (splashEnabled === 'false') {
+          document.documentElement.classList.remove('splash-active');
+          var style = document.createElement('style');
+          style.id = 'splash-off-style';
+          style.textContent = '#initial-splash, #static-splash { display: none !important; }';
+          document.head.appendChild(style);
+        }
+
+        // Check user startup greeting subtitle preference
+        var splashGreeting = localStorage.getItem('splash_greeting_enabled');
+        if (splashGreeting === 'false') {
+          var greetStyle = document.createElement('style');
+          greetStyle.id = 'splash-greeting-off-style';
+          greetStyle.textContent = '#splash-subtitle { display: none !important; }';
+          document.head.appendChild(greetStyle);
+        }
       } catch (e) {
         // Safe fallback
       }
@@ -191,15 +210,29 @@
     #static-splash {
       position: fixed;
       inset: 0;
+      width: 100vw;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%);
+      background-color: var(--bg-base);
+      background-image: radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%);
       color: var(--text-primary);
       overflow: hidden;
-      z-index: 100;
-      pointer-events: none;
+      z-index: 2147483647;
+      pointer-events: all;
+    }
+
+    @keyframes pulseStar {
+      0%, 100% {
+        opacity: 0.25;
+        transform: scale(0.9);
+      }
+      50% {
+        opacity: 0.65;
+        transform: scale(1.15);
+      }
     }
 
     @keyframes pulseHalo {
@@ -245,11 +278,23 @@
 <body class="splash-active">
   <!-- Static pre-React splash element: physically removed by React once SplashScreen mounts with 0 layout jump -->
   <div id="initial-splash" class="static-splash" aria-hidden="true">
+    <!-- Fixed Celestial Stars Layer (matches React FloatingStars 100%) -->
+    <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+      <div style="position:absolute;left:18%;top:22%;width:2px;height:2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;"></div>
+      <div style="position:absolute;left:82%;top:19%;width:2.5px;height:2.5px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:0.5s;"></div>
+      <div style="position:absolute;left:25%;top:75%;width:1.5px;height:1.5px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.0s;"></div>
+      <div style="position:absolute;left:78%;top:72%;width:2px;height:2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.5s;"></div>
+      <div style="position:absolute;left:12%;top:48%;width:2px;height:2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:0.8s;"></div>
+      <div style="position:absolute;left:88%;top:52%;width:1.5px;height:1.5px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.2s;"></div>
+      <div style="position:absolute;left:35%;top:15%;width:2.2px;height:2.2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:0.3s;"></div>
+      <div style="position:absolute;left:65%;top:84%;width:1.8px;height:1.8px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.7s;"></div>
+    </div>
+
     <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
       <!-- Celestial Rub el Hizb Medallion (Layer 1, 2, 3) -->
       <div style="position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center;">
         <!-- Layer 1: Ambient Radial Halo -->
-        <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);animation:pulseHalo 3s ease-in-out infinite;pointer-events:none;"></div>
+        <div style="position:absolute;inset:0;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);animation:pulseHalo 3s ease-in-out infinite;pointer-events:none;"></div>
         <!-- Layer 2: Slow-Rotating Geometric Filigree Ring -->
         <svg width="142" height="142" viewBox="0 0 100 100" style="position:absolute;pointer-events:none;animation:spinSlow 28s linear infinite;filter:drop-shadow(0 0 12px var(--accent-glow));">
           <circle cx="50" cy="50" r="46" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" opacity="0.65" />
@@ -257,9 +302,9 @@
           <rect x="22" y="22" width="56" height="56" rx="6" transform="rotate(45 50 50)" stroke="var(--accent-text)" stroke-width="1.2" fill="none" opacity="0.65" />
         </svg>
         <!-- Layer 3: Elevated Squircle Theme-Adaptive Mosque Medallion -->
-        <div style="position:relative;z-index:10;width:96px;height:96px;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg, var(--surface-2) 0%, var(--surface) 55%, var(--bg-base) 100%);border:1.5px solid var(--accent);box-shadow:0 0 28px var(--accent-glow), inset 0 1px 0 var(--card-sheen);">
+        <div style="position:relative;z-index:10;width:88px;height:88px;border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg, var(--surface-2) 0%, var(--surface) 55%, var(--bg-base) 100%);border:1.5px solid var(--accent);box-shadow:0 0 28px var(--accent-glow), inset 0 1px 0 var(--card-sheen);">
           <!-- Crisp Inline Vector Mosque Emblem (Zero Static Blue PNG) -->
-          <svg width="60" height="60" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:10;pointer-events:none;">
+          <svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:10;pointer-events:none;">
             <!-- Central Grand Dome -->
             <path d="M 32 13 C 22.5 19.5 19.5 28 19.5 38.5 L 44.5 38.5 C 44.5 28 41.5 19.5 32 13 Z" fill="var(--accent-text)" opacity="0.95" />
             <!-- Crescent & Star Finial -->
@@ -297,13 +342,13 @@
       </h1>
 
       <!-- Subtitle: ISLAMIC COMPANION -->
-      <p style="margin:6px 0 0 0;font-size:0.72rem;font-weight:600;letter-spacing:0.30em;color:var(--text-secondary);text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
+      <p id="splash-subtitle" style="margin:6px 0 0 0;font-size:0.72rem;font-weight:600;letter-spacing:0.30em;color:var(--text-secondary);text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
         ISLAMIC COMPANION
       </p>
 
       <!-- Sleek Dynamic Shimmer Loader Bar -->
-      <div style="width:120px;height:3px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;overflow:hidden;margin-top:22px;position:relative;">
-        <div style="position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(90deg, transparent, var(--accent), var(--accent-text));box-shadow:0 0 14px var(--accent);animation:shimmerComet 1.6s ease-in-out infinite;"></div>
+      <div style="width:140px;height:3px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin-top:22px;position:relative;">
+        <div style="position:absolute;inset:0;width:35%;height:100%;border-radius:999px;background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, transparent), var(--accent), var(--accent-text));box-shadow:0 0 10px var(--accent);animation:shimmerComet 1.6s ease-in-out infinite;"></div>
       </div>
     </div>
     <div style="position:absolute;bottom:0;left:0;right:0;height:128px;pointer-events:none;background:linear-gradient(to top, var(--accent-soft), transparent);"></div>

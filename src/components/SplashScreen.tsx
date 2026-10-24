@@ -1,40 +1,27 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { Smartphone } from "lucide-react";
+import { createPortal } from "react-dom";
 import { NoorLogoCrest } from "@/components/NoorLogoCrest";
 import { getAnimationTier } from "@/lib/device-performance";
 
-interface NavigatorWithStandalone extends Navigator {
-    standalone?: boolean;
-}
+const FIXED_STARS = [
+    { id: 1, x: 18, y: 22, size: 2, delay: 0 },
+    { id: 2, x: 82, y: 19, size: 2.5, delay: 0.5 },
+    { id: 3, x: 25, y: 75, size: 1.5, delay: 1.0 },
+    { id: 4, x: 78, y: 72, size: 2, delay: 1.5 },
+    { id: 5, x: 12, y: 48, size: 2, delay: 0.8 },
+    { id: 6, x: 88, y: 52, size: 1.5, delay: 1.2 },
+    { id: 7, x: 35, y: 15, size: 2.2, delay: 0.3 },
+    { id: 8, x: 65, y: 84, size: 1.8, delay: 1.7 },
+];
 
-const isStandaloneMode = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    const navigatorWithStandalone = window.navigator as NavigatorWithStandalone;
+function CelestialStars({ enabled }: { enabled: boolean }) {
+    if (!enabled) return null;
     return (
-        window.matchMedia('(display-mode: standalone)').matches ||
-        Boolean(navigatorWithStandalone.standalone) ||
-        document.referrer.includes('android-app://')
-    );
-};
-
-// Star component purely for visual flair
-function FloatingStars({ enabled }: { enabled: boolean }) {
-    const stars = useMemo(() =>
-        Array.from({ length: 12 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-            size: Math.random() * 2 + 1,
-            delay: Math.random() * 2,
-        })), []
-    );
-
-    return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {!enabled ? null : stars.map((star) => (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+            {FIXED_STARS.map((star) => (
                 <div
                     key={star.id}
-                    className="absolute rounded-full animate-[pulse_3s_ease-in-out_infinite]"
+                    className="absolute rounded-full animate-[pulseStar_3s_ease-in-out_infinite]"
                     style={{
                         left: `${star.x}%`,
                         top: `${star.y}%`,
@@ -81,6 +68,7 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: SplashScreenProps) {
+    const [progress, setProgress] = useState(15);
     const [isFading, setIsFading] = useState(false);
     const [isMounted, setIsMounted] = useState(true);
     const hasTriggeredCompletionRef = useRef(false);
@@ -104,68 +92,109 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
     const shouldAnimate = animationsEnabled && !prefersReducedMotion && !tier.shouldReduceAnimations;
 
-    useEffect(() => {
-        // Physically remove the pre-React static splash elements from DOM so no duplicate or touch-blocking layer remains
-        const elInitial = document.getElementById("initial-splash");
-        if (elInitial) {
-            elInitial.remove();
+    const triggerComplete = useRef(() => {
+        if (hasTriggeredCompletionRef.current) return;
+        hasTriggeredCompletionRef.current = true;
+        setIsMounted(false);
+        forceReleaseSplashScrollLock();
+        try {
+            onComplete();
+        } catch (e) {
+            console.warn('Splash onComplete callback error', e);
         }
-        const elStatic = document.getElementById("static-splash");
-        if (elStatic) {
-            elStatic.remove();
-        }
+    }).current;
 
+    useEffect(() => {
         // Lock scroll while splash is active
         document.documentElement.classList.add("splash-active");
         document.body.classList.add("splash-active");
 
-        const triggerComplete = () => {
-            if (hasTriggeredCompletionRef.current) return;
-            hasTriggeredCompletionRef.current = true;
-            setIsMounted(false);
-            forceReleaseSplashScrollLock();
-            try {
-                onComplete();
-            } catch (e) {
-                console.warn('Splash onComplete callback error', e);
+        // Keep <SplashScreen /> mounted at opacity: 1 (100% solid opaque) BEFORE removing #initial-splash.
+        // Remove #initial-splash inside requestAnimationFrame right after <SplashScreen /> paints at opacity: 1.
+        const rafId = requestAnimationFrame(() => {
+            const elInitial = document.getElementById("initial-splash");
+            if (elInitial) elInitial.remove();
+            const elStatic = document.getElementById("static-splash");
+            if (elStatic) elStatic.remove();
+        });
+
+        if (!shouldAnimate) {
+            const timer = setTimeout(() => {
+                triggerComplete();
+            }, 80);
+            return () => {
+                cancelAnimationFrame(rafId);
+                clearTimeout(timer);
+                forceReleaseSplashScrollLock();
+            };
+        }
+
+        // Animate progress smoothly from 15% to 100% over ~850ms
+        const startTime = performance.now();
+        const duration = 850;
+        let animFrameId: number;
+
+        const updateProgress = (now: number) => {
+            const elapsed = now - startTime;
+            const factor = Math.min(1, elapsed / duration);
+            // Smooth ease-out cubic curve from 15 to 100
+            const eased = 1 - Math.pow(1 - factor, 3);
+            const currentProgress = Math.round(15 + eased * 85);
+            setProgress(currentProgress);
+
+            if (factor < 1) {
+                animFrameId = requestAnimationFrame(updateProgress);
+            } else {
+                setProgress(100);
+                // Pause 50ms at 100%, then trigger fast 160ms exit transition
+                setTimeout(() => {
+                    setIsFading(true);
+                    setTimeout(() => {
+                        triggerComplete();
+                    }, 160);
+                }, 50);
             }
         };
 
-        // Snappy splash duration allowing ambient glow pulse and loading dots
-        const baseDuration = shouldAnimate ? 1100 : 100;
-
-        const fadeTimer = setTimeout(() => {
-            setIsFading(true);
-            setTimeout(() => {
-                triggerComplete();
-            }, 200);
-        }, baseDuration);
+        animFrameId = requestAnimationFrame(updateProgress);
 
         return () => {
-            clearTimeout(fadeTimer);
+            cancelAnimationFrame(rafId);
+            cancelAnimationFrame(animFrameId);
             forceReleaseSplashScrollLock();
         };
-    }, [shouldAnimate, onComplete]);
+    }, [shouldAnimate, triggerComplete]);
 
     if (!isMounted) return null;
 
-    return (
+    const splashContent = (
         <div
-            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden transition-all duration-300 ${isFading ? 'opacity-0 scale-[1.02] pointer-events-none' : 'opacity-100 scale-100'}`}
+            id="react-splash-screen"
+            className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
             style={{
-                background: "radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%)",
-                willChange: "opacity, transform",
+                position: 'fixed',
+                inset: 0,
+                width: '100vw',
+                height: '100dvh',
+                zIndex: 2147483647,
+                backgroundColor: 'var(--bg-base)',
+                backgroundImage: 'radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%)',
+                color: 'var(--text-primary)',
+                opacity: isFading ? 0 : 1,
+                transition: 'opacity 160ms ease-out',
+                pointerEvents: isFading ? 'none' : 'all',
+                willChange: 'opacity',
             }}
         >
             {/* Stars Background */}
-            <FloatingStars enabled={shouldAnimate} />
+            <CelestialStars enabled={shouldAnimate} />
 
-            {/* Main Content: Exact Match with static-splash for 0 layout jump */}
+            {/* Main Content: 100% Pixel-Identical Match with index.html initial-splash */}
             <div
                 className="relative z-10 flex flex-col items-center justify-center text-center select-none"
                 style={{ padding: '24px' }}
             >
-                {/* 1. Celestial Rub el Hizb Medallion */}
+                {/* 1. Celestial Rub el Hizb Medallion (170x170 center, 88x88 squircle, 56px SVG) */}
                 <NoorLogoCrest size="lg" animated={shouldAnimate} />
 
                 {/* 2. Brand Title: NOOR CONNECT */}
@@ -203,13 +232,12 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                     </p>
                 )}
 
-                {/* 4. Sleek Theme-Adaptive Shimmer Loader Bar */}
+                {/* 4. Sleek Unified Single-Hue Progress Beam (140px track, no split colors) */}
                 <div
                     style={{
-                        width: '120px',
+                        width: '140px',
                         height: '3px',
                         background: 'var(--surface-2)',
-                        border: '1px solid var(--border)',
                         borderRadius: '999px',
                         overflow: 'hidden',
                         marginTop: '22px',
@@ -218,13 +246,12 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 >
                     <div
                         style={{
-                            position: 'absolute',
-                            inset: 0,
-                            width: '100%',
                             height: '100%',
-                            background: 'linear-gradient(90deg, transparent, var(--accent), var(--accent-text))',
-                            boxShadow: '0 0 14px var(--accent)',
-                            animation: shouldAnimate ? 'shimmerComet 1.6s ease-in-out infinite' : undefined,
+                            width: `${progress}%`,
+                            borderRadius: '999px',
+                            background: 'linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, transparent), var(--accent), var(--accent-text))',
+                            boxShadow: '0 0 10px var(--accent)',
+                            transition: shouldAnimate ? 'width 60ms linear' : 'none',
                         }}
                     />
                 </div>
@@ -234,17 +261,14 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             <div
                 className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
                 style={{
-                    background: "linear-gradient(to top, var(--accent-soft), transparent)",
+                    background: 'linear-gradient(to top, var(--accent-soft), transparent)',
                 }}
             />
-
-            {/* APK Indicator */}
-            {isStandaloneMode() && (
-                <div className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-[var(--border)]">
-                    <Smartphone className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                    <span className="text-xs text-[var(--accent-text)] font-medium">App Mode</span>
-                </div>
-            )}
         </div>
     );
+
+    if (typeof document !== 'undefined') {
+        return createPortal(splashContent, document.body);
+    }
+    return splashContent;
 }

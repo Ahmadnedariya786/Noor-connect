@@ -28,6 +28,6 @@
     <color name="widget_grade_sahih">@android:color/system_accent1_600</color>
     <color name="widget_grade_hasan">@android:color/system_accent2_600</color>
     <color name="widget_grade_daif">#FFBA1A1A</color>
-    <!-- Splash retained (matches web splash base #0E0B1E) -->
-    <color name="splash_background">#FF0E0B1E</color>
+    <!-- Splash retained (neutral deep obsidian base #070709) -->
+    <color name="splash_background">#FF070709</color>
 </resources>

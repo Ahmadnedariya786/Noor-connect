@@ -162,14 +162,14 @@ export const NoorLogoCrest: React.FC<NoorLogoCrestProps> = ({
 
       {/* Layer 3: Elevated Squircle Jewel Emblem */}
       <div
-        className="relative z-10 w-[96px] h-[96px] rounded-[22px] overflow-hidden flex items-center justify-center"
+        className="relative z-10 w-[88px] h-[88px] rounded-[20px] overflow-hidden flex items-center justify-center"
         style={{
           background: 'linear-gradient(145deg, var(--surface-2) 0%, var(--surface) 55%, var(--bg-base) 100%)',
           border: '1.5px solid var(--accent)',
           boxShadow: '0 0 28px var(--accent-glow), inset 0 1px 0 var(--card-sheen)',
         }}
       >
-        <MosqueEmblemSVG size={60} />
+        <MosqueEmblemSVG size={56} />
         {/* Subtle Diagonal Glass Shimmer Sweep */}
         <div
           className="absolute inset-0 pointer-events-none z-20"

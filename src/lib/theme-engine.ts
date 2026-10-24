@@ -210,7 +210,25 @@ export function applyThemeToDOM(themeId: ThemeId): void {
       // Safe fallback when native status bar is unavailable
     }
   }
+
+  // 5. Synchronize native Android window & WebView background color to eliminate cold-start navy flash
+  const bgHex = THEME_BG_HEX_MAP[validThemeId] || '#000000';
+  if (typeof window !== 'undefined') {
+    try {
+      (window as any).AndroidBridge?.setNativeThemeBg?.(bgHex);
+    } catch {
+      // Safe fallback when AndroidBridge is unavailable
+    }
+  }
 }
+
+export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
+  'oxford-gold': '#000000',
+  'madinah-emerald': '#03150E',
+  'imperial-violet': '#1F0035',
+  'burgundy-velvet': '#0B0B0B',
+  'desert-scroll': '#140B04',
+};
 
 /**
  * Changes active theme, persists to localStorage, cleans legacy theme key, and emits change event.

@@ -115,8 +115,14 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     if (currentValue !== null) return currentValue === 'true';
     return getStoredBoolean(LEGACY_GREETING_KEY, true);
   });
-  const [splashGreetingEnabled, setSplashGreetingEnabledState] = useState<boolean>(true); // Will be loaded from Preferences
-  const [splashEnabled, setSplashEnabledState] = useState<boolean>(true); // Will be loaded from Preferences
+  const [splashGreetingEnabled, setSplashGreetingEnabledState] = useState<boolean>(() => {
+    const val = localStorage.getItem(SPLASH_GREETING_KEY);
+    return val === null ? true : val === 'true';
+  });
+  const [splashEnabled, setSplashEnabledState] = useState<boolean>(() => {
+    const val = localStorage.getItem(SPLASH_ENABLED_KEY);
+    return val === null ? true : val === 'true';
+  });
   const [timeFormat, setTimeFormatState] = useState<TimeFormat>(() => {
     try {
       const stored = localStorage.getItem(TIME_FORMAT_KEY) || localStorage.getItem(LEGACY_TIME_FORMAT_KEY);
