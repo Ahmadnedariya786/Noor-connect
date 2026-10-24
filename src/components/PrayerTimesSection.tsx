@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sunset, Bell } from 'lucide-react';
+import { Moon, Sunset, Bell, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { getPrayerDisplayName, isMatchingPrayer } from '@/lib/prayer-utils';
 import { useLanguage } from '@/contexts/LanguageContext-new';
+import { useLocationState } from '@/lib/location-state';
+import { OnlinePrayerAPI, type LiveDaySchedule } from '@/lib/online-prayer-api';
+import { useSettings } from '@/contexts/SettingsContext';
+import { formatPrayerTime } from '@/lib/time-formatter';
 
 export interface PrayerItem {
   name: string;
@@ -302,6 +306,64 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const location = useLocationState();
+  const { timeFormat } = useSettings();
+
+  const [selectedDateOffset, setSelectedDateOffset] = useState<number>(0);
+  const [offsetSchedule, setOffsetSchedule] = useState<LiveDaySchedule | null>(null);
+
+  const viewedDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + selectedDateOffset);
+    return d;
+  }, [selectedDateOffset]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    if (selectedDateOffset === 0) {
+      setOffsetSchedule(null);
+      return;
+    }
+    if (location.latitude && location.longitude) {
+      OnlinePrayerAPI.fetchLiveDayTimings(viewedDate, location.latitude, location.longitude)
+        .then((sched) => {
+          if (!isCancelled) setOffsetSchedule(sched);
+        })
+        .catch(() => {
+          // Keep offline or previous schedule gracefully
+        });
+    }
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedDateOffset, viewedDate, location.latitude, location.longitude]);
+
+  const dateSwitcherLabel = useMemo(() => {
+    const monthShort = viewedDate.toLocaleString('en-US', { month: 'short' });
+    const dayNum = viewedDate.getDate();
+    const hijriPart = offsetSchedule?.date?.hijri
+      ? ` • ${offsetSchedule.date.hijri.day} ${offsetSchedule.date.hijri.month.en} ${offsetSchedule.date.hijri.year}`
+      : '';
+
+    if (selectedDateOffset === 0) return `Today, ${monthShort} ${dayNum}${hijriPart}`;
+    if (selectedDateOffset === -1) return `Yesterday, ${monthShort} ${dayNum}${hijriPart}`;
+    if (selectedDateOffset === 1) return `Tomorrow, ${monthShort} ${dayNum}${hijriPart}`;
+    const weekday = viewedDate.toLocaleString('en-US', { weekday: 'short' });
+    return `${weekday}, ${monthShort} ${dayNum}${hijriPart}`;
+  }, [selectedDateOffset, viewedDate, offsetSchedule]);
+
+  const displayedPrayers = useMemo(() => {
+    if (selectedDateOffset === 0 || !offsetSchedule) return prayers;
+    const t = offsetSchedule.timings;
+    return [
+      { name: 'Fajr', time: formatPrayerTime(t.Fajr, timeFormat), date: viewedDate, originalName: 'Fajr' },
+      { name: 'Sunrise', time: formatPrayerTime(t.Sunrise, timeFormat), date: viewedDate, originalName: 'Sunrise' },
+      { name: 'Dhuhr', time: formatPrayerTime(t.Dhuhr, timeFormat), date: viewedDate, originalName: 'Dhuhr' },
+      { name: 'Asr', time: formatPrayerTime(t.Asr, timeFormat), date: viewedDate, originalName: 'Asr' },
+      { name: 'Maghrib', time: formatPrayerTime(t.Maghrib, timeFormat), date: viewedDate, originalName: 'Maghrib' },
+      { name: 'Isha', time: formatPrayerTime(t.Isha, timeFormat), date: viewedDate, originalName: 'Isha' },
+    ];
+  }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat]);
 
   // Notification status check for bell styling
   const [notificationsEnabled] = useState(() => {
@@ -742,6 +804,49 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       </div>
 
       {/* ═════════════════════════════════════════════════════════════ */}
+      {/* INTERACTIVE DATE SWITCHER BAR (< YESTERDAY | TODAY | TOMORROW >) */}
+      {/* ═════════════════════════════════════════════════════════════ */}
+      <div
+        className="w-full flex items-center justify-between px-3 py-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] mt-3.5 select-none transition-all"
+        style={{
+          boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setSelectedDateOffset((prev) => prev - 1)}
+          aria-label="Previous day prayer times"
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] active:scale-90 transition-all shrink-0"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-2 min-w-0 px-1 text-center justify-center">
+          <span className="text-xs font-bold text-[var(--text-primary)] truncate">
+            {dateSwitcherLabel}
+          </span>
+          {selectedDateOffset !== 0 && (
+            <button
+              type="button"
+              onClick={() => setSelectedDateOffset(0)}
+              className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-sm active:scale-95 transition-all shrink-0 whitespace-nowrap"
+            >
+              Back to today
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSelectedDateOffset((prev) => prev + 1)}
+          aria-label="Next day prayer times"
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] active:scale-90 transition-all shrink-0"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* ═════════════════════════════════════════════════════════════ */}
       {/* PART 3: FLOATING PRAYER LIST CARDS WITH GLOWING ACTIVE STATE */}
       {/* ═════════════════════════════════════════════════════════════ */}
       <div
@@ -750,18 +855,20 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          marginTop: '14px',
+          marginTop: '10px',
         }}
       >
-        {prayers.map((prayer) => {
+        {displayedPrayers.map((prayer) => {
           const rawName = prayer.originalName || prayer.name;
           const displayName = getPrayerDisplayName(prayer.name, prayer.date);
           const isRowActive = Boolean(
-            prayer.isActive ||
-            isMatchingPrayer(prayer.name, nextPrayer.name) ||
-            isMatchingPrayer(prayer.originalName, nextPrayer.name) ||
-            isMatchingPrayer(displayName, nextPrayer.name) ||
-            isMatchingPrayer(displayName, resolvedNextDisplayName)
+            selectedDateOffset === 0 && (
+              prayer.isActive ||
+              isMatchingPrayer(prayer.name, nextPrayer.name) ||
+              isMatchingPrayer(prayer.originalName, nextPrayer.name) ||
+              isMatchingPrayer(displayName, nextPrayer.name) ||
+              isMatchingPrayer(displayName, resolvedNextDisplayName)
+            )
           );
 
           return (
@@ -852,6 +959,26 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             </div>
           );
         })}
+
+        {/* Full-Width Subtle Action Row: Prayer times for the whole month */}
+        <button
+          type="button"
+          onClick={() => navigate('/timetable')}
+          className="w-full mt-2 py-3 px-4 rounded-2xl flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] active:scale-[0.99] transition-all group cursor-pointer"
+          style={{
+            boxShadow: '0 4px 18px rgba(0, 0, 0, 0.25)',
+          }}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-base">📅</span>
+            <span className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors">
+              Prayer times for the whole month
+            </span>
+          </div>
+          <span className="text-xs font-bold text-[var(--accent-text)] flex items-center gap-1">
+            View Sheet →
+          </span>
+        </button>
       </div>
     </div>
   );

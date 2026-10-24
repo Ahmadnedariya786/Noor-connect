@@ -3,17 +3,77 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, RefreshCw, Info, CheckCircle } from "lucide-react";
+import { Settings as SettingsIcon, RefreshCw, Info, CheckCircle, Sliders, RotateCcw, Plus, Minus } from "lucide-react";
 import { prayerMethods, type PrayerMethod } from "@/lib/prayer-methods";
 import { useLocationState } from "@/lib/location-state";
 import { useToast } from "@/hooks/use-toast";
+import {
+  getPrayerMinuteOffsets,
+  savePrayerMinuteOffsets,
+  resetPrayerMinuteOffsets,
+  PRAYER_OFFSETS_CHANGED_EVENT,
+  type PrayerMinuteOffsets
+} from "@/lib/prayer-offsets";
+import { OnlinePrayerAPI } from "@/lib/online-prayer-api";
 
 export const PrayerMethodSelector = () => {
   const location = useLocationState();
   const { toast } = useToast();
   const [selectedMethod, setSelectedMethod] = useState<PrayerMethod>(prayerMethods.getSelectedMethod());
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isRefreshingLive, setIsRefreshingLive] = useState(false);
   const [recommendedMethod, setRecommendedMethod] = useState<PrayerMethod | null>(null);
+  const [offsets, setOffsets] = useState<PrayerMinuteOffsets>(() => getPrayerMinuteOffsets());
+
+  useEffect(() => {
+    const handleOffsetsChange = (e: Event) => {
+      const customEvent = e as CustomEvent<PrayerMinuteOffsets>;
+      if (customEvent.detail) {
+        setOffsets(customEvent.detail);
+      } else {
+        setOffsets(getPrayerMinuteOffsets());
+      }
+    };
+    window.addEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+    return () => window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+  }, []);
+
+  const handleAdjustOffset = (prayer: keyof PrayerMinuteOffsets, delta: number) => {
+    const current = offsets[prayer];
+    const newVal = Math.max(-30, Math.min(30, current + delta));
+    const updated = { ...offsets, [prayer]: newVal };
+    setOffsets(updated);
+    savePrayerMinuteOffsets(updated);
+  };
+
+  const handleResetOffsets = () => {
+    resetPrayerMinuteOffsets();
+    setOffsets(getPrayerMinuteOffsets());
+    toast({
+      title: "Offsets Reset",
+      description: "All prayer minute offsets reset to 0 minutes.",
+    });
+  };
+
+  const handleRefreshLive = async () => {
+    if (!location.latitude || !location.longitude) return;
+    setIsRefreshingLive(true);
+    try {
+      await OnlinePrayerAPI.refreshLiveData(location.latitude, location.longitude);
+      toast({
+        title: "Live Data Refreshed",
+        description: "Synced with AlAdhan live timings & calendar.",
+      });
+    } catch {
+      toast({
+        title: "Refresh Failed",
+        description: "Could not reach live API. Using cached calculations.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshingLive(false);
+    }
+  };
 
   useEffect(() => {
     // Get recommended method for current location
@@ -71,19 +131,44 @@ export const PrayerMethodSelector = () => {
   };
 
   const { fajrDisplay, ishaDisplay } = prayerMethods.getMethodDisplayInfo(selectedMethod);
-  const usesInterval = prayerMethods.usesIshaInterval(selectedMethod);
   const isRecommended = recommendedMethod?.id === selectedMethod.id;
+  const prayerOffsetList: { key: keyof PrayerMinuteOffsets; label: string }[] = [
+    { key: "fajr", label: "Fajr" },
+    { key: "sunrise", label: "Sunrise" },
+    { key: "dhuhr", label: "Dhuhr" },
+    { key: "asr", label: "Asr" },
+    { key: "maghrib", label: "Maghrib" },
+    { key: "isha", label: "Isha" },
+  ];
 
   return (
-    <Card className="p-4 space-y-4 rounded-2xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <SettingsIcon className="w-4 h-4 text-[var(--accent)]" />
-          <h3 className="text-sm font-bold text-[var(--text-primary)]">Prayer Calculation Method</h3>
+    <div className="space-y-4">
+      <Card className="p-4 space-y-4 rounded-2xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <SettingsIcon className="w-4 h-4 text-[var(--accent)]" />
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">Prayer Calculation Method</h3>
+          </div>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Choose the calculation method for prayer times based on your location and preference
+          </p>
         </div>
-        <p className="text-xs text-[var(--text-secondary)]">
-          Choose the calculation method for prayer times based on your location and preference
-        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleRefreshLive}
+          disabled={isRefreshingLive}
+          className="shrink-0 text-xs h-8 px-2.5 rounded-lg border gap-1.5 font-medium transition-all"
+          style={{
+            borderColor: 'var(--border)',
+            background: 'var(--surface-2)',
+            color: 'var(--text-primary)'
+          }}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-[var(--accent)] ${isRefreshingLive ? 'animate-spin' : ''}`} />
+          <span>{isRefreshingLive ? 'Refreshing...' : 'Refresh live data'}</span>
+        </Button>
       </div>
 
       {/* Current Method Info */}
@@ -296,5 +381,103 @@ export const PrayerMethodSelector = () => {
         </div>
       )}
     </Card>
+
+    {/* Per-Prayer Minute Offsets Card */}
+    <Card
+      className="p-4 space-y-4 rounded-2xl border"
+      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-[var(--accent)]" />
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">
+              PER-PRAYER MINUTE OFFSETS (MASJID TUNING)
+            </h3>
+          </div>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Fine-tune prayer times (-30 to +30 min) to match your local masjid or iqamah schedule
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleResetOffsets}
+          className="shrink-0 text-xs h-7 px-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] gap-1"
+          title="Reset all offsets to 0"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Reset</span>
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {prayerOffsetList.map(({ key, label }) => {
+          const val = offsets[key] || 0;
+          const isZero = val === 0;
+          const isPos = val > 0;
+          return (
+            <div
+              key={key}
+              className="flex items-center justify-between p-2.5 rounded-xl border"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <div>
+                <span className="text-xs font-semibold text-[var(--text-primary)] block">
+                  {label}
+                </span>
+                <span
+                  className="text-[11px] font-mono font-bold"
+                  style={{
+                    color: isZero
+                      ? 'var(--text-secondary)'
+                      : isPos
+                      ? 'var(--accent)'
+                      : '#f87171',
+                  }}
+                >
+                  {isZero ? '0 min' : `${isPos ? '+' : ''}${val} min`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleAdjustOffset(key, -1)}
+                  disabled={val <= -30}
+                  className="w-7 h-7 rounded-lg border flex items-center justify-center transition-all disabled:opacity-40"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                  aria-label={`Decrease ${label} offset`}
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAdjustOffset(key, 1)}
+                  disabled={val >= 30}
+                  className="w-7 h-7 rounded-lg border flex items-center justify-center transition-all disabled:opacity-40"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                  aria-label={`Increase ${label} offset`}
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  </div>
   );
 };

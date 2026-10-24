@@ -379,20 +379,31 @@ export default function IslamicCalendar() {
     <div className="min-h-screen px-4 pb-20 safe-top" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', paddingTop: 'calc(var(--safe-top) + 1.5rem)' }}>
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => goBackOrFallback(navigate, '/dashboard')}
-            className="rounded-full"
-            style={{ color: 'var(--text-secondary)', background: 'var(--surface-2)' }}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Islamic Calendar</h1>
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>Hijri Dates</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => goBackOrFallback(navigate, '/dashboard')}
+              className="rounded-full"
+              style={{ color: 'var(--text-secondary)', background: 'var(--surface-2)' }}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Islamic Calendar</h1>
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>Hijri Dates</p>
+            </div>
           </div>
+          <Button
+            size="sm"
+            onClick={() => navigate('/timetable')}
+            className="rounded-xl text-xs font-bold gap-1.5 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] border-none shadow-sm hover:opacity-90 transition-opacity"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Monthly Timetable →</span>
+            <span className="sm:hidden">Timetable →</span>
+          </Button>
         </div>
 
         {/* Current Islamic Date */}

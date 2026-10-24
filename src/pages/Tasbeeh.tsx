@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   RotateCcw, Sparkles, History, ChevronLeft, ChevronRight,
   Volume2, VolumeX, Smartphone, Lock, Unlock, Maximize2, Minimize2,
-  Play, Pause, Moon
+  Play, Pause, Moon, Link2, ArrowLeft, ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,59 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
 import { AppBar } from "@/components/AppBar";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+
+export interface ChainStep {
+  id: number;
+  label: string;
+  transliteration: string;
+  translation: string;
+  target: number;
+}
+
+export const SUNNAH_CHAIN_STEPS: ChainStep[] = [
+  {
+    id: 1,
+    label: "سُبْحَانَ اللَّهِ",
+    transliteration: "SubhanAllah",
+    translation: "Glory be to Allah",
+    target: 33,
+  },
+  {
+    id: 2,
+    label: "ٱلْحَمْدُ لِلَّٰهِ",
+    transliteration: "Alhamdulillah",
+    translation: "Praise be to Allah",
+    target: 33,
+  },
+  {
+    id: 3,
+    label: "اللَّٰهُ أَكْبَرُ",
+    transliteration: "Allahu Akbar",
+    translation: "Allah is the Greatest",
+    target: 33,
+  },
+  {
+    id: 4,
+    label: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+    transliteration: "La ilaha illallahu wahdahu la sharika lah...",
+    translation: "None has the right to be worshipped but Allah alone (100th Seal of Tawheed)",
+    target: 1,
+  },
+  {
+    id: 5,
+    label: "أَسْتَغْفِرُ ٱللَّٰهَ",
+    transliteration: "Astaghfirullah",
+    translation: "I seek forgiveness from Allah",
+    target: 100,
+  },
+  {
+    id: 6,
+    label: "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَعَلَىٰ آلِ مُحَمَّدٍ",
+    transliteration: "Allahumma salli 'ala Muhammadin...",
+    translation: "O Allah, send blessings upon Muhammad and upon the family of Muhammad",
+    target: 10,
+  },
+];
 
 const DHIKR_OPTIONS = [
   { value: "subhanallah", label: "سُبْحَانَ اللَّهِ", transliteration: "SubhanAllah", translation: "Glory be to Allah" },
@@ -43,13 +96,26 @@ const Tasbeeh = () => {
   const [isAutoCounting, setIsAutoCounting] = useState(false);
   const [autoPace, setAutoPace] = useState(2.0); // seconds: 1.5, 2.0, 2.5
   const [zenMode, setZenMode] = useState(false);
+  const [isChainMode, setIsChainMode] = useState(false);
+  const [chainStepIndex, setChainStepIndex] = useState(0);
 
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const activeChainStep = SUNNAH_CHAIN_STEPS[chainStepIndex];
+  const nextChainStep = SUNNAH_CHAIN_STEPS[(chainStepIndex + 1) % SUNNAH_CHAIN_STEPS.length];
+
   const currentDhikr = useMemo(() => {
+    if (isChainMode) {
+      return {
+        value: `chain-${activeChainStep.id}`,
+        label: activeChainStep.label,
+        transliteration: activeChainStep.transliteration,
+        translation: activeChainStep.translation,
+      };
+    }
     return DHIKR_OPTIONS.find(d => d.value === selectedDhikr) || DHIKR_OPTIONS[0];
-  }, [selectedDhikr]);
+  }, [isChainMode, activeChainStep, selectedDhikr]);
 
   const currentIndex = useMemo(() => {
     const idx = DHIKR_OPTIONS.findIndex(d => d.value === selectedDhikr);
@@ -131,13 +197,28 @@ const Tasbeeh = () => {
   const handleIncrement = useCallback(() => {
     setCount(prev => {
       const newCount = prev + 1;
-      addTasbeehEntry(label);
+      const target = isChainMode ? SUNNAH_CHAIN_STEPS[chainStepIndex].target : targetGoal;
+      const activeLabel = isChainMode ? SUNNAH_CHAIN_STEPS[chainStepIndex].transliteration : label;
+
+      addTasbeehEntry(activeLabel);
       setTotalCount(getTasbeehTotal());
       setDailyHistory(getTasbeehHistory());
 
+      if (isChainMode && newCount >= target) {
+        triggerHapticFeedback('milestone');
+        if (feedbackMode === 'all') {
+          playAudioClick();
+        }
+        setTimeout(() => {
+          setChainStepIndex(prevStep => (prevStep + 1) % SUNNAH_CHAIN_STEPS.length);
+          setCount(0);
+        }, 180);
+        return newCount;
+      }
+
       // Feedback
       if (feedbackMode === 'all' || feedbackMode === 'vibrate') {
-        const goalNum = targetGoal === Infinity ? 100 : targetGoal;
+        const goalNum = target === Infinity ? 100 : target;
         if (newCount === 33 || newCount === 99 || newCount === 100 || (newCount % goalNum === 0 && newCount > 0)) {
           triggerHapticFeedback('milestone');
         } else {
@@ -150,7 +231,7 @@ const Tasbeeh = () => {
 
       return newCount;
     });
-  }, [feedbackMode, label, playAudioClick, targetGoal, triggerHapticFeedback]);
+  }, [chainStepIndex, feedbackMode, isChainMode, label, playAudioClick, targetGoal, triggerHapticFeedback]);
 
   // Keep a stable ref for auto counter
   const handleIncrementRef = useRef(handleIncrement);
@@ -214,6 +295,20 @@ const Tasbeeh = () => {
     triggerHapticFeedback('select');
   };
 
+  const handlePrevChain = () => {
+    if (isLocked) return;
+    setChainStepIndex(prev => (prev - 1 + SUNNAH_CHAIN_STEPS.length) % SUNNAH_CHAIN_STEPS.length);
+    setCount(0);
+    triggerHapticFeedback('select');
+  };
+
+  const handleNextChain = () => {
+    if (isLocked) return;
+    setChainStepIndex(prev => (prev + 1) % SUNNAH_CHAIN_STEPS.length);
+    setCount(0);
+    triggerHapticFeedback('select');
+  };
+
   const cycleGoal = () => {
     if (isLocked) return;
     const currentIdx = GOAL_OPTIONS.indexOf(targetGoal);
@@ -259,19 +354,21 @@ const Tasbeeh = () => {
     triggerHapticFeedback('select');
   };
 
+  const effectiveTargetGoal = isChainMode ? SUNNAH_CHAIN_STEPS[chainStepIndex].target : targetGoal;
+
   // Progress percentage calculation
   const progress = useMemo(() => {
-    if (targetGoal === Infinity) {
+    if (effectiveTargetGoal === Infinity) {
       return Math.min(100, Math.round(((count % 100) / 100) * 100));
     }
-    const lap = count % targetGoal;
+    const lap = count % effectiveTargetGoal;
     if (count > 0 && lap === 0) return 100;
-    return Math.min(100, Math.round((lap / targetGoal) * 100));
-  }, [count, targetGoal]);
+    return Math.min(100, Math.round((lap / effectiveTargetGoal) * 100));
+  }, [count, effectiveTargetGoal]);
 
   // Completed rounds (Set #)
-  const currentGoalNum = targetGoal === Infinity ? 33 : targetGoal;
-  const setNumber = Math.floor(count / currentGoalNum) + 1;
+  const currentGoalNum = effectiveTargetGoal === Infinity ? 33 : effectiveTargetGoal;
+  const setNumber = isChainMode ? chainStepIndex + 1 : Math.floor(count / currentGoalNum) + 1;
 
   // 3D Gemstone beads coordinates along quadratic curve M 15 28 Q 180 10 345 28
   const beadsData = useMemo(() => {
@@ -467,6 +564,28 @@ const Tasbeeh = () => {
             </div>
           </div>
 
+          {/* Mode Switcher Pill: ⛓ Sunnah Chain (Set X of 6) */}
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (isLocked) return;
+                setIsChainMode(prev => !prev);
+                setCount(0);
+                triggerHapticFeedback('select');
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 border shadow-sm"
+              style={{
+                background: isChainMode ? 'var(--accent-soft)' : 'var(--surface-2)',
+                borderColor: isChainMode ? 'var(--accent)' : 'var(--border)',
+                color: isChainMode ? 'var(--accent-text)' : 'var(--text-secondary)',
+              }}
+            >
+              <Link2 className="w-3.5 h-3.5" />
+              <span>{isChainMode ? `⛓ Sunnah Chain (Set ${chainStepIndex + 1} of 6)` : '⛓ Sunnah Chain Mode'}</span>
+            </button>
+          </div>
+
           {/* 2. Luminous Vocalized Dhikr Stage & Inline Goal Progress Bar */}
           <div
             className="relative overflow-hidden rounded-3xl border select-none"
@@ -490,87 +609,141 @@ const Tasbeeh = () => {
               }}
             />
 
-            {/* Top Selector Bar: [ ‹ ]   [ Dhikr X of 7 • Change ⌄ ]   [ › ] */}
-            <div
-              className="relative z-10 flex items-center justify-between w-full"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                marginBottom: '6px',
-              }}
-            >
-              {/* Prev Carousel Button */}
-              <button
-                type="button"
-                disabled={isLocked}
-                onClick={handlePrevDhikr}
-                aria-label="Previous Dhikr"
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer shrink-0"
+            {/* Top Selector Bar: Chain Step or Freeflow Carousel */}
+            {isChainMode ? (
+              <div
+                className="relative z-10 flex items-center justify-between w-full mb-1.5"
                 style={{
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
                 }}
               >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {/* Center Pill (Dropdown Trigger): Dhikr X of Y • Change ⌄ */}
-              <Select value={selectedDhikr} onValueChange={handleDhikrChange} disabled={isLocked}>
-                <SelectTrigger
-                  className="h-auto w-auto px-2.5 py-1 border shadow-none text-center justify-center gap-1 font-semibold rounded-full select-none"
+                <button
+                  type="button"
+                  disabled={isLocked || chainStepIndex === 0}
+                  onClick={handlePrevChain}
+                  aria-label="Previous Chain Step"
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-30 cursor-pointer shrink-0"
                   style={{
-                    fontSize: '0.68rem',
-                    fontWeight: 600,
-                    color: 'var(--accent-text)',
                     background: 'var(--surface-2)',
                     border: '1px solid var(--border)',
-                    borderRadius: '999px',
-                    padding: '3px 12px',
-                  }}
-                >
-                  <span>Dhikr {currentIndex + 1} of {DHIKR_OPTIONS.length} • Change</span>
-                </SelectTrigger>
-                <SelectContent
-                  className="max-h-[270px] overflow-y-auto"
-                  style={{
-                    background: 'var(--bg-elev)',
-                    borderColor: 'var(--border)',
                     color: 'var(--text-primary)',
-                    padding: '8px 0',
-                    maxHeight: '270px',
-                    overflowY: 'auto',
                   }}
                 >
-                  {DHIKR_OPTIONS.map((dhikr) => (
-                    <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5 px-3">
-                      <div className="flex flex-col text-left">
-                        <span className="font-arabic text-base" style={{ color: 'var(--accent-text)' }}>{dhikr.label}</span>
-                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{dhikr.transliteration}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
 
-              {/* Next Carousel Button */}
-              <button
-                type="button"
-                disabled={isLocked}
-                onClick={handleNextDhikr}
-                aria-label="Next Dhikr"
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer shrink-0"
+                <div
+                  className="px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5"
+                  style={{
+                    background: 'var(--accent-soft)',
+                    borderColor: 'var(--accent)',
+                    color: 'var(--accent-text)',
+                  }}
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span>Sunnah Chain • Set {chainStepIndex + 1} of 6</span>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={handleNextChain}
+                  aria-label="Skip Chain Step"
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 cursor-pointer shrink-0"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                className="relative z-10 flex items-center justify-between w-full"
                 style={{
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  marginBottom: '6px',
                 }}
               >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+                {/* Prev Carousel Button */}
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={handlePrevDhikr}
+                  aria-label="Previous Dhikr"
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer shrink-0"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Center Pill (Dropdown Trigger): Dhikr X of Y • Change ⌄ */}
+                <Select value={selectedDhikr} onValueChange={handleDhikrChange} disabled={isLocked}>
+                  <SelectTrigger
+                    className="h-auto w-auto px-2.5 py-1 border shadow-none text-center justify-center gap-1 font-semibold rounded-full select-none"
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      color: 'var(--accent-text)',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '999px',
+                      padding: '3px 12px',
+                    }}
+                  >
+                    <span>Dhikr {currentIndex + 1} of {DHIKR_OPTIONS.length} • Change</span>
+                  </SelectTrigger>
+                  <SelectContent
+                    className="max-h-[270px] overflow-y-auto"
+                    style={{
+                      background: 'var(--bg-elev)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-primary)',
+                      padding: '8px 0',
+                      maxHeight: '270px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    {DHIKR_OPTIONS.map((dhikr) => (
+                      <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5 px-3">
+                        <div className="flex flex-col text-left">
+                          <span className="font-arabic text-base" style={{ color: 'var(--accent-text)' }}>{dhikr.label}</span>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{dhikr.transliteration}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Next Carousel Button */}
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={handleNextDhikr}
+                  aria-label="Next Dhikr"
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer shrink-0"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Main Arabic Calligraphy (Rendered ONCE) */}
             <div
@@ -623,18 +796,20 @@ const Tasbeeh = () => {
             <div className="relative z-10 pt-1.5 w-full flex flex-col items-center gap-1.5">
               <button
                 type="button"
-                disabled={isLocked}
+                disabled={isLocked || isChainMode}
                 onClick={cycleGoal}
-                className="px-2.5 py-0.5 rounded-full font-bold transition-transform active:scale-95 select-none disabled:opacity-40"
+                className="px-2.5 py-0.5 rounded-full font-bold transition-transform active:scale-95 select-none disabled:opacity-80"
                 style={{
                   fontSize: '0.70rem',
                   background: 'var(--surface-2)',
                   border: '1px solid var(--border)',
                   color: 'var(--accent-text)',
                 }}
-                title="Tap to change target goal"
+                title={isChainMode ? "Target preset by Sunnah Chain" : "Tap to change target goal"}
               >
-                GOAL: {targetGoal === Infinity ? '∞' : targetGoal} • {progress}% ✎
+                {isChainMode
+                  ? `SET ${chainStepIndex + 1} OF 6 • TARGET: ${activeChainStep.target} • ${progress}%`
+                  : `GOAL: ${targetGoal === Infinity ? '∞' : targetGoal} • ${progress}% ✎`}
               </button>
 
               {/* Sleek 4px progress bar */}
@@ -653,6 +828,48 @@ const Tasbeeh = () => {
                   }}
                 />
               </div>
+
+              {/* Next preview bar in Chain Mode */}
+              {isChainMode && (
+                <div
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-xs font-semibold mt-1"
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderColor: 'var(--border)',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={handlePrevChain}
+                    disabled={isLocked || chainStepIndex === 0}
+                    className="px-2 py-0.5 rounded-lg border text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 flex items-center gap-1 text-[11px]"
+                    style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span>Prev</span>
+                  </button>
+
+                  <div className="flex items-center gap-1 text-center truncate px-1">
+                    <span className="text-[var(--text-secondary)] text-[11px]">Next:</span>
+                    <span className="text-[var(--accent-text)] font-bold truncate text-[11px]">
+                      {chainStepIndex === 5
+                        ? 'Restart (SubhanAllah • 33)'
+                        : `${nextChainStep.transliteration} • ${nextChainStep.target}`}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleNextChain}
+                    disabled={isLocked}
+                    className="px-2 py-0.5 rounded-lg border text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 text-[11px]"
+                    style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+                  >
+                    <span>Skip</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

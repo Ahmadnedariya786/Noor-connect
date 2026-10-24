@@ -153,7 +153,24 @@ export const useLocationState = () => {
             }
           }
         } catch (ipError) {
-          // IP-based geolocation fallback failed or device is offline
+          // Try secondary IP geolocation provider: get.geojs.io
+          try {
+            const geojsRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+              signal: AbortSignal.timeout(3000)
+            });
+            if (geojsRes.ok) {
+              const geojsData = await geojsRes.json();
+              const gLat = parseFloat(geojsData.latitude);
+              const gLon = parseFloat(geojsData.longitude);
+              if (!isNaN(gLat) && !isNaN(gLon)) {
+                lat = gLat;
+                lon = gLon;
+                isIpBased = true;
+              }
+            }
+          } catch {
+            // Both IP fallbacks failed or device is completely offline
+          }
         }
       }
 

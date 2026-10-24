@@ -4,6 +4,8 @@ import { Bell, MapPin, ChevronRight, Activity, Compass, X, Check } from "lucide-
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { calculateQibla } from "@/lib/qibla";
 import { cn } from "@/lib/utils";
 import { getPrayerDisplayName } from "@/lib/prayer-utils";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -109,11 +111,24 @@ function PremiumDashboardInner({
   setLoadingAPI,
   toast,
 }: PremiumDashboardProps) {
+  const navigate = useNavigate();
   const { animationEnabled, timeFormat } = useSettings();
   const { t } = useLanguage();
   const { tier } = useAnimationTier();
   const { isRamadan, ramadanDay } = useIslamicCalendar();
   const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>([]);
+
+  const qiblaBearing = React.useMemo(() => {
+    if (location?.latitude && location?.longitude) {
+      try {
+        const res = calculateQibla(location.latitude, location.longitude);
+        return Math.round(res.bearing);
+      } catch {
+        // Safe math fallback
+      }
+    }
+    return null;
+  }, [location?.latitude, location?.longitude]);
 
   useEffect(() => {
     // Load config on mount
@@ -372,13 +387,35 @@ function PremiumDashboardInner({
             <ChevronRight className="w-3 h-3 text-muted-foreground" />
           </button>
 
-          {/* Notification bell */}
-          <button
-            onClick={onNotificationClick}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 bg-muted/60 border border-border"
-          >
-            <Bell className="w-4 h-4 text-foreground/60" />
-          </button>
+          {/* Right actions: Qibla bearing pill + Notification bell */}
+          <div className="flex items-center gap-2">
+            {qiblaBearing !== null && (
+              <button
+                type="button"
+                onClick={() => navigate('/qibla')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all active:scale-95 border text-xs font-bold"
+                style={{
+                  background: 'var(--surface-2)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+                title="Open Qibla Compass"
+                aria-label={`Qibla direction ${qiblaBearing} degrees`}
+              >
+                <Compass className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <span>Qibla {qiblaBearing}°</span>
+              </button>
+            )}
+
+            {/* Notification bell */}
+            <button
+              onClick={onNotificationClick}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 bg-muted/60 border border-border"
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4 text-foreground/60" />
+            </button>
+          </div>
         </div>
 
         {/* ── Update Available Banner ── */}

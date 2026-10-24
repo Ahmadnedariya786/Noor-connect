@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FALLBACK_LOCATIONS } from '@/lib/location-state';
 import { LOCATION_STORAGE_KEY } from '@/lib/location-config';
-import { Compass, Loader2, RefreshCw, Navigation, MapPin, Car, Plane, Sliders, Check } from 'lucide-react';
+import { Compass, Loader2, RefreshCw, Navigation, MapPin, Car, Plane, Sliders, Check, Info, X } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { GeolocationService, type LocationCoordinates } from '@/lib/geolocation-service';
 import { Capacitor } from '@capacitor/core';
@@ -63,7 +63,7 @@ function loadInitialLocation(): { coords: LocationCoordinates; name: string } {
   const fallback = getFallbackLocationByTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   return {
     coords: { latitude: fallback.lat, longitude: fallback.lon, accuracy: 1000 },
-    name: `${fallback.name} (Offline)`,
+    name: fallback.name,
   };
 }
 
@@ -198,6 +198,8 @@ const QiblaCompassModern = () => {
   const [sensorError, setSensorError] = useState<string | null>(null);
   const [isSensorInactive, setIsSensorInactive] = useState(false);
   const [showManualSlider, setShowManualSlider] = useState(false);
+  const [compassSignal, setCompassSignal] = useState<number | null>(null);
+  const [showCalibrationModal, setShowCalibrationModal] = useState(false);
 
   // ── Refs ─────────────────────────────────────────────────────
   const locationRef = useRef<LocationCoordinates | null>(bootLocation.coords);
@@ -211,6 +213,8 @@ const QiblaCompassModern = () => {
   const lastFrameTimeRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
   const hapticFiredRef = useRef(false);
+  const recentHeadingsRef = useRef<number[]>([]);
+  const lastSignalCalcRef = useRef<number>(0);
 
   // ── Safe Sensor Error Handler ────────────────────────────────
   const handleSensorError = useCallback((err: unknown) => {
@@ -251,6 +255,8 @@ const QiblaCompassModern = () => {
 
     hasReceivedSensorEventRef.current = false;
     smoothedHeadingRef.current = null;
+    recentHeadingsRef.current = [];
+    setCompassSignal(null);
   }, []);
 
   // ── Pure HTML5 Crash-Proof Sensor Engine ─────────────────────
@@ -277,7 +283,7 @@ const QiblaCompassModern = () => {
         if (event.type === 'deviceorientation' && absoluteEventFired) return;
         if (event.type === 'deviceorientationabsolute') absoluteEventFired = true;
 
-        const ev = event as DeviceOrientationEvent & { webkitCompassHeading?: number };
+        const ev = event as DeviceOrientationEvent & { webkitCompassHeading?: number; webkitCompassAccuracy?: number };
         let rawHeading: number | null = null;
 
         // 1. iOS Safari compass heading
@@ -302,8 +308,39 @@ const QiblaCompassModern = () => {
           }
         }
 
+        // Rolling 12-sample circular heading stability estimation
+        recentHeadingsRef.current.push(rawHeading);
+        if (recentHeadingsRef.current.length > 12) {
+          recentHeadingsRef.current.shift();
+        }
+
         // Throttle updates to at most once every ~40ms (~25fps) to prevent WebView renderer churn
         const now = performance.now();
+        if (now - lastSignalCalcRef.current > 350) {
+          lastSignalCalcRef.current = now;
+          const samples = recentHeadingsRef.current;
+          let stability = 95;
+          if (samples.length >= 4) {
+            let sumSin = 0;
+            let sumCos = 0;
+            for (let i = 0; i < samples.length; i++) {
+              const rad = (samples[i] * Math.PI) / 180;
+              sumSin += Math.sin(rad);
+              sumCos += Math.cos(rad);
+            }
+            const R = Math.sqrt(sumSin * sumSin + sumCos * sumCos) / samples.length;
+            stability = Math.max(25, Math.min(99, Math.round(R * 100)));
+          }
+
+          let finalSig = stability;
+          if (typeof ev.webkitCompassAccuracy === 'number' && ev.webkitCompassAccuracy >= 0) {
+            const accDeg = ev.webkitCompassAccuracy;
+            const accScore = Math.max(15, Math.min(100, Math.round(100 - accDeg * 2.5)));
+            finalSig = Math.round(stability * 0.5 + accScore * 0.5);
+          }
+          setCompassSignal(finalSig);
+        }
+
         if (now - lastFrameTimeRef.current < 40) return;
         lastFrameTimeRef.current = now;
 
@@ -365,6 +402,7 @@ const QiblaCompassModern = () => {
             smoothedHeadingRef.current = 0;
             setDeviceHeading(0);
           }
+          setCompassSignal(null);
         }
       }, SENSOR_INACTIVE_TIMEOUT_MS);
     } catch (attachErr) {
@@ -875,6 +913,65 @@ const QiblaCompassModern = () => {
         </div>
       </div>
 
+      {/* ── Real-Time Compass Signal Meter (Part 4.1) ───────────────── */}
+      <div className="flex flex-col items-center justify-center gap-1.5 -mt-3 mb-2 px-4">
+        <button
+          type="button"
+          onClick={() => setShowCalibrationModal(true)}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold backdrop-blur-md transition-all active:scale-95 shadow-sm"
+          style={{
+            background: 'var(--surface-2)',
+            borderColor:
+              compassSignal === null
+                ? 'var(--border)'
+                : compassSignal >= 80
+                ? 'var(--accent)'
+                : compassSignal >= 50
+                ? '#f59e0b'
+                : '#ef4444',
+          }}
+          aria-label="Compass signal accuracy and calibration guide"
+        >
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{
+              backgroundColor:
+                compassSignal === null
+                  ? 'var(--text-secondary)'
+                  : compassSignal >= 80
+                  ? 'var(--accent)'
+                  : compassSignal >= 50
+                  ? '#f59e0b'
+                  : '#ef4444',
+              boxShadow:
+                compassSignal !== null && compassSignal >= 80
+                  ? '0 0 6px var(--accent)'
+                  : 'none',
+            }}
+          />
+          <span className="text-[var(--text-primary)] font-bold">
+            {compassSignal !== null ? `Compass signal ${compassSignal}%` : 'Compass sensor offline'}
+          </span>
+          <span
+            className="w-4 h-4 rounded-full flex items-center justify-center text-[var(--accent)] font-bold text-[11px] border border-[var(--border)]"
+            style={{ background: 'var(--surface)' }}
+          >
+            ⓘ
+          </span>
+        </button>
+
+        {compassSignal !== null && compassSignal < 80 && (
+          <p
+            className="text-[11px] text-center font-medium leading-tight px-3"
+            style={{ color: compassSignal >= 50 ? '#f59e0b' : '#ef4444' }}
+          >
+            {compassSignal >= 50
+              ? 'Move away from metal/cases & tilt in a figure-8'
+              : 'Low sensor accuracy. Tap ⓘ for figure-8 calibration.'}
+          </p>
+        )}
+      </div>
+
       {/* ── Status & Sensor Controls ──────────────────────────────── */}
       <div className="relative z-10 px-5 pb-6 space-y-3.5">
         {/* Sensor Inactive / Fallback Notice */}
@@ -1137,6 +1234,80 @@ const QiblaCompassModern = () => {
           </p>
         )}
       </div>
+
+      {/* ── Calibration Guide Modal (Part 4.1) ── */}
+      {showCalibrationModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowCalibrationModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl p-5 border space-y-4 shadow-2xl"
+            style={{
+              background: 'var(--surface)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-[var(--accent)]" />
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
+                  Compass Signal & Calibration
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCalibrationModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center border text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+                aria-label="Close dialog"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs leading-relaxed text-[var(--text-secondary)]">
+              <div className="p-3 rounded-2xl border space-y-1.5" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+                  <span className="font-bold text-[var(--text-primary)]">≥ 80% — High Accuracy</span>
+                </div>
+                <p>Sensor is properly calibrated with minimal electromagnetic interference.</p>
+              </div>
+
+              <div className="p-3 rounded-2xl border space-y-1.5" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="font-bold text-[var(--text-primary)]">50%–79% — Moderate Interference</span>
+                </div>
+                <p>Metal tables, phone cases, or electronic devices nearby are warping magnetic field lines.</p>
+              </div>
+
+              <div className="p-3 rounded-2xl border space-y-1.5" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  <span className="font-bold text-[var(--text-primary)]">&lt; 50% — Recalibration Required</span>
+                </div>
+                <p>To calibrate: hold your device flat in your hand and move it in a slow <strong>figure-8 motion (∞)</strong> for 5–10 seconds.</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowCalibrationModal(false)}
+              className="w-full py-2.5 rounded-xl font-bold text-xs"
+              style={{
+                background: 'var(--accent)',
+                color: 'var(--on-accent)',
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

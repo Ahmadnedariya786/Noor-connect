@@ -24,13 +24,44 @@ export class GeocodingService {
   private static readonly NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search';
 
   /**
-   * Search for a location by query (city name, address, etc.)
-   * Offline-first: returns local pre-indexed cities instantly without network calls
+   * Search for a location by query (city name, address, town, village, or postal code)
+   * Online-first: Queries Nominatim for global coverage (including towns, villages, postal codes)
+   * and falls back to offline pre-indexed cities if offline.
    */
   static async searchLocation(query: string): Promise<GeocodingResult[]> {
-    // 1. Search offline dataset first (instant, zero network)
-    const offlineMatches = searchOfflineCities(query, 10);
-    const offlineResults: GeocodingResult[] = offlineMatches.map(city => ({
+    const trimmed = query.trim();
+    if (!trimmed) return [];
+
+    // 1. Primary Live Search when online
+    if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+      try {
+        const url = `${this.NOMINATIM_BASE}?q=${encodeURIComponent(trimmed)}&format=json&limit=8&addressdetails=1`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'NoorConnect-IslamicApp/2.2 (contact@noorconnect.app)',
+            'Accept-Language': 'en'
+          },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const results = await response.json();
+          if (Array.isArray(results) && results.length > 0) {
+            return results;
+          }
+        }
+      } catch (error) {
+        // Fall through to offline search on network drop or timeout
+      }
+    }
+
+    // 2. Offline Fallback: Search offline dataset (instant local search)
+    const offlineMatches = searchOfflineCities(trimmed, 10);
+    return offlineMatches.map(city => ({
       display_name: `${city.city}, ${city.state ? city.state + ', ' : ''}${city.country}`,
       lat: city.lat.toString(),
       lon: city.lon.toString(),
@@ -41,35 +72,6 @@ export class GeocodingService {
         country: city.country
       }
     }));
-
-    if (offlineResults.length > 0) {
-      return offlineResults;
-    }
-
-    // 2. If no offline matches, attempt online search if network is available
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      return [];
-    }
-
-    try {
-      const url = `${this.NOMINATIM_BASE}?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
-
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Noor-Connect-Islamic-App/1.0' // Required by Nominatim policy
-        }
-      });
-
-      if (!response.ok) {
-        return [];
-      }
-
-      const results = await response.json();
-      return results;
-    } catch (error) {
-      console.warn('Network search failed or offline:', error);
-      return [];
-    }
   }
 
   /**

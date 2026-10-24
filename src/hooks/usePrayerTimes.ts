@@ -12,9 +12,10 @@ import { formatPrayerTime } from '@/lib/time-formatter';
 import { GeolocationService } from '@/lib/geolocation-service';
 import { isNativePlatform } from '@/lib/capacitor-utils';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
-import { findNearestOfflineCity } from '@/data/cities';
 import { getMadhab } from '@/lib/storage';
 import { usePrayerNotifications } from './usePrayerNotifications';
+import { getPrayerMinuteOffsets, applyOffsetToDate, PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
+import { PRAYER_DATA_REFRESHED_EVENT } from '@/lib/online-prayer-api';
 
 export interface PrayerTimes {
   fajr: Date;
@@ -140,7 +141,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       latitude: defaultLoc.lat,
       longitude: defaultLoc.lon,
       city: defaultLoc.name,
-      locationName: `${defaultLoc.name} (Offline)`,
+      locationName: defaultLoc.name,
       timeZone,
       source: 'default'
     };
@@ -254,7 +255,9 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       const now = new Date();
       const dayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const madhab = getMadhab();
-      const fetchSignature = `${locationKey}|${dayKey}|${methodId}|${madhab}`;
+      const offsets = getPrayerMinuteOffsets();
+      const offsetsKey = `${offsets.fajr}_${offsets.sunrise}_${offsets.dhuhr}_${offsets.asr}_${offsets.maghrib}_${offsets.isha}`;
+      const fetchSignature = `${locationKey}|${dayKey}|${methodId}|${madhab}|${offsetsKey}`;
 
       if (lastFetchSignatureRef.current === fetchSignature) {
         return;
@@ -308,12 +311,12 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       };
 
       const prayerDates = {
-        fajr: parseTime(timings.Fajr),
-        sunrise: parseTime(timings.Sunrise),
-        dhuhr: parseTime(timings.Dhuhr),
-        asr: parseTime(timings.Asr),
-        maghrib: parseTime(timings.Maghrib),
-        isha: parseTime(timings.Isha),
+        fajr: applyOffsetToDate(parseTime(timings.Fajr), 'fajr', offsets),
+        sunrise: applyOffsetToDate(parseTime(timings.Sunrise), 'sunrise', offsets),
+        dhuhr: applyOffsetToDate(parseTime(timings.Dhuhr), 'dhuhr', offsets),
+        asr: applyOffsetToDate(parseTime(timings.Asr), 'asr', offsets),
+        maghrib: applyOffsetToDate(parseTime(timings.Maghrib), 'maghrib', offsets),
+        isha: applyOffsetToDate(parseTime(timings.Isha), 'isha', offsets),
       };
 
       // Parse optional times from API if available
@@ -603,6 +606,24 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
     window.addEventListener('madhab-changed', handleMadhabChange);
     return () => {
       window.removeEventListener('madhab-changed', handleMadhabChange);
+    };
+  }, [location, fetchPrayerTimesWithCoordinates]);
+
+  // Listen for prayer minute offsets and live data refresh
+  useEffect(() => {
+    const handleOffsetsChange = () => {
+      lastFetchSignatureRef.current = null;
+      previousNotificationSignatureRef.current = null;
+      if (location) {
+        fetchPrayerTimesWithCoordinates(location);
+      }
+    };
+
+    window.addEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+    window.addEventListener(PRAYER_DATA_REFRESHED_EVENT, handleOffsetsChange);
+    return () => {
+      window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+      window.removeEventListener(PRAYER_DATA_REFRESHED_EVENT, handleOffsetsChange);
     };
   }, [location, fetchPrayerTimesWithCoordinates]);
 

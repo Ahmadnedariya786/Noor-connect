@@ -174,6 +174,7 @@ const SeerahReader = lazy(() => import("./pages/SeerahReader"));
 const HaidhTracker = lazy(() => import("./pages/HaidhTracker"));
 const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
+const MonthlyTimetable = lazy(() => import("./pages/MonthlyTimetable"));
 
 function AnimationInitializer() {
   useEffect(() => {
@@ -264,6 +265,8 @@ function AppRoutes() {
               <Route path="/tasbih" element={<Navigate to="/tasbeeh" replace />} />
               <Route path="/services/tasbih" element={<Navigate to="/tasbeeh" replace />} />
               <Route path="/services/calendar" element={<Navigate to="/calendar" replace />} />
+              <Route path="/timetable" element={<MonthlyTimetable />} />
+              <Route path="/services/timetable" element={<Navigate to="/timetable" replace />} />
               <Route path="/qibla" element={<Qibla />} />
               <Route path="/duas" element={<Duas />} />
               <Route path="/hadith" element={<Hadith />} />
@@ -325,6 +328,8 @@ function AppRoutes() {
               <Route path="/tasbih" element={<Navigate to="/tasbeeh" replace />} />
               <Route path="/services/tasbih" element={<Navigate to="/tasbeeh" replace />} />
               <Route path="/services/calendar" element={<Navigate to="/calendar" replace />} />
+              <Route path="/timetable" element={<MonthlyTimetable />} />
+              <Route path="/services/timetable" element={<Navigate to="/timetable" replace />} />
               <Route path="/qibla" element={<Qibla />} />
               <Route path="/duas" element={<Duas />} />
               <Route path="/hadith" element={<Hadith />} />

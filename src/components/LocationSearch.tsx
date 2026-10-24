@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, MapPin, Loader2 } from "lucide-react";
+import { Search, MapPin, Loader2, Bookmark, X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { GeocodingService, type GeocodingResult } from "@/lib/geocoding";
+import {
+  getSavedLocations,
+  saveLocationToFavorites,
+  removeSavedLocation,
+  SAVED_LOCATIONS_CHANGED_EVENT,
+  type SavedLocation
+} from "@/lib/saved-locations";
 import {
   POPULAR_CITIES,
   POPULAR_INDIAN_CITIES,
@@ -23,9 +30,16 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [regionFilter, setRegionFilter] = useState<'india' | 'international' | 'all'>('india');
+  const [regionFilter, setRegionFilter] = useState<'saved' | 'india' | 'international' | 'all'>('saved');
+  const [savedLocations, setSavedLocations] = useState<SavedLocation[]>(() => getSavedLocations());
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const handleSavedChange = () => setSavedLocations(getSavedLocations());
+    window.addEventListener(SAVED_LOCATIONS_CHANGED_EVENT, handleSavedChange);
+    return () => window.removeEventListener(SAVED_LOCATIONS_CHANGED_EVENT, handleSavedChange);
+  }, []);
 
   // Handle outside click to close suggestions
   useEffect(() => {
@@ -38,7 +52,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced search
+  // Debounced search (350ms)
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (searchQuery.trim().length < 2) {
@@ -52,11 +66,11 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
         setSuggestions(results);
         setShowSuggestions(results.length > 0);
       } catch (error) {
-        console.error("Search failed:", error);
+        // Safe catch for search failures
       } finally {
         setIsSearching(false);
       }
-    }, 300); // 300ms debounce
+    }, 350); // 350ms debounce
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -158,13 +172,38 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
               onTouchMove={(e) => e.stopPropagation()}
             >
               {suggestions.map((place, index) => (
-                <button
+                <div
                   key={index}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
-                  onClick={() => handleSuggestionSelect(place)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
                 >
-                  <p className="font-medium truncate">{place.display_name}</p>
-                </button>
+                  <button
+                    type="button"
+                    className="flex-1 text-left truncate mr-2"
+                    onClick={() => handleSuggestionSelect(place)}
+                  >
+                    <p className="font-medium truncate text-xs">{place.display_name}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const city = place.address.city || place.address.town || place.address.village || place.display_name.split(',')[0];
+                      const country = place.address.country || '';
+                      saveLocationToFavorites({
+                        name: place.display_name,
+                        city,
+                        country,
+                        latitude: parseFloat(place.lat),
+                        longitude: parseFloat(place.lon)
+                      });
+                      toast({ title: "Location Saved", description: `${city} added to saved locations.` });
+                    }}
+                    className="p-1 rounded-full text-muted-foreground hover:text-[var(--accent-text)] hover:bg-[var(--accent-soft)] transition-colors shrink-0"
+                    title="Bookmark location"
+                  >
+                    <Bookmark className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -188,17 +227,27 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
           </Button>
         </div>
 
-        <div className="mt-6" onTouchMove={(e) => e.stopPropagation()}>
-          <p className="text-sm font-medium mb-3 text-center">Popular Cities</p>
-
+        <div className="mt-5" onTouchMove={(e) => e.stopPropagation()}>
           {/* Region Tabs */}
           <div className="flex items-center justify-center p-1 bg-muted/60 rounded-xl mb-3 gap-1">
             <button
               type="button"
+              onClick={() => setRegionFilter('saved')}
+              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1 ${
+                regionFilter === 'saved'
+                  ? 'bg-background text-foreground shadow-sm font-bold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Bookmark className="w-3 h-3 text-[var(--accent-text)]" />
+              Saved ({savedLocations.length})
+            </button>
+            <button
+              type="button"
               onClick={() => setRegionFilter('india')}
-              className={`flex-1 text-xs py-1.5 px-2.5 rounded-lg font-medium transition-all ${
+              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all ${
                 regionFilter === 'india'
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -207,26 +256,73 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             <button
               type="button"
               onClick={() => setRegionFilter('international')}
-              className={`flex-1 text-xs py-1.5 px-2.5 rounded-lg font-medium transition-all ${
+              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all ${
                 regionFilter === 'international'
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              International
+              World
             </button>
             <button
               type="button"
               onClick={() => setRegionFilter('all')}
-              className={`flex-1 text-xs py-1.5 px-2.5 rounded-lg font-medium transition-all ${
+              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all ${
                 regionFilter === 'all'
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               All
             </button>
           </div>
+
+          {/* Saved Locations List */}
+          {regionFilter === 'saved' && (
+            <div className="space-y-2">
+              {savedLocations.length === 0 ? (
+                <div className="text-center py-4 text-xs text-muted-foreground">
+                  No saved locations yet. Search any city or town above to bookmark it.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-1.5 max-h-[170px] overflow-y-auto pr-1">
+                  {savedLocations.map((loc) => (
+                    <div
+                      key={loc.id}
+                      className="flex items-center justify-between p-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)]/50 transition-all text-left"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery(`${loc.city}, ${loc.country}`);
+                          onLocationSelect(loc.city, loc.country);
+                        }}
+                        disabled={isLoading}
+                        className="flex-1 flex items-center gap-2 truncate pr-2 text-left"
+                      >
+                        <MapPin className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
+                        <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                          {loc.name || `${loc.city}, ${loc.country}`}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeSavedLocation(loc.id);
+                          toast({ title: "Location Removed", description: `Removed from saved locations.` });
+                        }}
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                        title="Remove location"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Cities Grid based on selected tab */}
           {regionFilter === 'india' && (
