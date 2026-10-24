@@ -212,7 +212,7 @@ export function applyThemeToDOM(themeId: ThemeId): void {
   }
 
   // 5. Synchronize native Android window & WebView background color to eliminate cold-start navy flash
-  const bgHex = THEME_BG_HEX_MAP[validThemeId] || '#000000';
+  const bgHex = THEME_BG_HEX_MAP[validId] || '#000000';
   if (typeof window !== 'undefined') {
     try {
       (window as any).AndroidBridge?.setNativeThemeBg?.(bgHex);

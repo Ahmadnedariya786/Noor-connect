@@ -237,7 +237,8 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                     style={{
                         width: '140px',
                         height: '3px',
-                        background: 'var(--surface-2)',
+                        background: 'rgba(255, 255, 255, 0.10)',
+                        border: 'none',
                         borderRadius: '999px',
                         overflow: 'hidden',
                         marginTop: '22px',
@@ -249,7 +250,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                             height: '100%',
                             width: `${progress}%`,
                             borderRadius: '999px',
-                            background: 'linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, transparent), var(--accent), var(--accent-text))',
+                            background: 'var(--accent)',
                             boxShadow: '0 0 10px var(--accent)',
                             transition: shouldAnimate ? 'width 60ms linear' : 'none',
                         }}

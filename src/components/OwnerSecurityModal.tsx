@@ -161,8 +161,8 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
           <div>
             <h2
               id="owner-security-title"
-              className="text-sm sm:text-base font-bold tracking-tight flex items-center gap-1.5"
-              style={{ color: 'var(--text-primary)' }}
+              className="font-bold tracking-tight flex items-center gap-1.5"
+              style={{ color: 'var(--text-primary)', fontSize: '0.96rem', whiteSpace: 'nowrap' }}
             >
               <span>🔒 {displayTitle}</span>
             </h2>

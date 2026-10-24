@@ -60,8 +60,8 @@ for (const f of allSrcFiles) {
   }
 }
 
-// 2. TypeScript Compiler Diagnostics for src/components
-console.log('Running TypeScript diagnostics for src/components...');
+// 2. TypeScript Compiler Diagnostics for all src/ files
+console.log('Running TypeScript diagnostics for all src/ files...');
 try {
   const configPath = ts.findConfigFile('./', ts.sys.fileExists, 'tsconfig.json');
   if (configPath) {
@@ -75,7 +75,8 @@ try {
 
     for (const sourceFile of program.getSourceFiles()) {
       const fileName = sourceFile.fileName.replace(/\\/g, '/');
-      if (!fileName.includes('/src/components/')) continue;
+      if (!fileName.includes('/src/')) continue;
+      if (fileName.includes('/node_modules/') || fileName.endsWith('.d.ts')) continue;
 
       const fileDiags = [
         ...program.getSyntacticDiagnostics(sourceFile),
