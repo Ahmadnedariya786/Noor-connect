@@ -82,18 +82,39 @@ function clampOffset(val: number): number {
 export function applyOffsetToDate(date: Date, prayerName: string, offsets?: PrayerMinuteOffsets): Date {
   if (!date || isNaN(date.getTime())) return date;
   const currentOffsets = offsets || getPrayerMinuteOffsets();
-  const key = prayerName.toLowerCase().trim() as keyof PrayerMinuteOffsets;
+  const lower = prayerName.toLowerCase().trim();
+  let key: keyof PrayerMinuteOffsets | null = null;
+  if (lower.includes('fajr')) key = 'fajr';
+  else if (lower.includes('sunrise')) key = 'sunrise';
+  else if (lower.includes('dhuhr') || lower.includes('jummah') || lower.includes('jumu')) key = 'dhuhr';
+  else if (lower.includes('asr')) key = 'asr';
+  else if (lower.includes('maghrib')) key = 'maghrib';
+  else if (lower.includes('isha')) key = 'isha';
+
+  if (!key) return date;
   const minutes = currentOffsets[key] || 0;
   if (minutes === 0) return date;
   return new Date(date.getTime() + minutes * 60000);
 }
 
 /**
- * Adjust a "HH:mm" 24h or 12h time string by specified prayer offset
+ * Adjust a "HH:mm" 24h or 12h time string by specified prayer offset.
+ * Handles:
+ *  - "12:24 (IST)", "12:24 (+05:30)", "12:24 (PKT)" (AlAdhan API with timezone tag)
+ *  - "12:24:00" or "12:24:00 (IST)" (with seconds)
+ *  - "12:24" (standard 24h)
+ *  - "12:24 PM", "12:24:00 PM" (12h format)
  */
 export function adjustTimeStringByMinutes(timeStr: string, minutes: number): string {
   if (!timeStr || minutes === 0) return timeStr;
-  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+
+  // Extract timezone suffix like "(IST)", "(PKT)", "(+05:30)" if present
+  const tzMatch = timeStr.match(/\s*(\([^\)]*\))\s*$/);
+  const tzSuffix = tzMatch ? ` ${tzMatch[1]}` : '';
+  const cleaned = timeStr.replace(/\s*\([^\)]*\)\s*$/g, '').trim();
+
+  // Match 24h or 12h: "12:24", "12:24:00", "12:24 PM", "12:24:00 PM"
+  const match = cleaned.match(/^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);
   if (!match) return timeStr;
 
   let hours = parseInt(match[1], 10);
@@ -119,7 +140,7 @@ export function adjustTimeStringByMinutes(timeStr: string, minutes: number): str
     return `${h12}:${minPad} ${isPm ? 'PM' : 'AM'}`;
   }
 
-  return `${newHours24.toString().padStart(2, '0')}:${minPad}`;
+  return `${newHours24.toString().padStart(2, '0')}:${minPad}${tzSuffix}`;
 }
 
 /**

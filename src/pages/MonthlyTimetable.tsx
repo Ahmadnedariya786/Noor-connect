@@ -101,7 +101,7 @@ export default function MonthlyTimetable() {
   }, []);
 
   const qrSvg = useMemo(() => {
-    return generateQRCodeSVG(GITHUB_APP_URL, 72, "var(--text-primary)", "transparent");
+    return generateQRCodeSVG(GITHUB_APP_URL, 64, "#0B101B", "#FFFFFF");
   }, []);
 
   const loadCalendar = useCallback(async (year: number, month: number, forceRefresh = false) => {
@@ -416,7 +416,7 @@ export default function MonthlyTimetable() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-24 print:bg-white print:text-black print:pb-0">
+      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-24 print:bg-white print:text-black print:pb-0 timetable-print-sheet">
         {/* Screen-Only App Bar with Back Button and Refresh Action */}
         <div className="print:hidden">
           <AppBar
@@ -437,7 +437,7 @@ export default function MonthlyTimetable() {
           />
         </div>
 
-        <div className="max-w-4xl mx-auto px-2.5 sm:px-4 pt-3 space-y-3 print:p-0 print:m-0 print:max-w-none">
+        <div className="max-w-4xl mx-auto px-2.5 sm:px-4 pt-3 space-y-3 print:p-0 print:m-0 print:max-w-none print:space-y-1">
           {/* Header Card with Location, Month Switcher & Action Grid */}
           <Card
             className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] print:border-none print:bg-transparent print:p-0 print:shadow-none"
@@ -447,9 +447,9 @@ export default function MonthlyTimetable() {
               {/* Left Info */}
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-6 rounded-full bg-gradient-to-b from-[var(--accent)] to-[var(--accent-2)] shrink-0" />
+                  <span className="w-2.5 h-6 rounded-full bg-gradient-to-b from-[var(--accent)] to-[var(--accent-2)] shrink-0 print:hidden" />
                   <h1 className="text-base sm:text-xl font-bold tracking-tight text-[var(--text-primary)] truncate print:text-black">
-                    Monthly Prayer Timetable
+                    Monthly Timetable
                   </h1>
                   <Badge
                     variant="outline"
@@ -472,15 +472,15 @@ export default function MonthlyTimetable() {
               </div>
 
               {/* Printable Header QR Block */}
-              <div className="hidden print:flex items-center gap-3 border border-black p-2 rounded-xl">
+              <div className="hidden print:flex items-center gap-2 border border-gray-400 p-1.5 rounded-lg bg-white">
                 <div
-                  className="w-14 h-14 shrink-0 flex items-center justify-center text-black"
+                  className="w-14 h-14 shrink-0 flex items-center justify-center bg-white"
                   dangerouslySetInnerHTML={{ __html: qrSvg }}
                 />
-                <div className="text-[10px] space-y-0.5">
-                  <p className="font-bold text-black">NOOR CONNECT</p>
-                  <p className="text-gray-600">Scan for App</p>
-                  <p className="text-[9px] text-gray-500">Free & Open Source</p>
+                <div className="text-[7.5pt] space-y-0.5 leading-tight">
+                  <p className="font-bold text-[#111827]">NOOR CONNECT</p>
+                  <p className="text-gray-600 text-[6.5pt]">Scan for Mobile App</p>
+                  <p className="text-[6pt] text-gray-500">Free & Open Source</p>
                 </div>
               </div>
             </div>
@@ -533,10 +533,10 @@ export default function MonthlyTimetable() {
 
               <Button
                 onClick={handlePrintPDF}
-                className="h-9 rounded-xl text-xs font-bold gap-1.5 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] border-none shadow-md shadow-[var(--accent-glow)] w-full truncate"
+                className="h-9 rounded-xl text-xs font-bold gap-1.5 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] border-none shadow-md shadow-[var(--accent-glow)] w-full px-2"
               >
                 <Printer className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Save / Print PDF</span>
+                <span className="text-[0.76rem] font-bold whitespace-nowrap">Save / Print PDF</span>
               </Button>
             </div>
           </Card>
@@ -641,7 +641,7 @@ export default function MonthlyTimetable() {
           <Card className="p-3.5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-lg flex items-center justify-between gap-3 print:hidden">
             <div className="flex items-center gap-3 min-w-0">
               <div
-                className="w-12 h-12 shrink-0 p-1 bg-white rounded-xl flex items-center justify-center shadow-inner"
+                className="w-16 h-16 shrink-0 p-1 bg-white rounded-xl flex items-center justify-center shadow-inner overflow-hidden"
                 dangerouslySetInnerHTML={{ __html: qrSvg }}
               />
               <div className="min-w-0">

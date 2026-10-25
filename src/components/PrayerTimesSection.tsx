@@ -379,8 +379,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   const displayedPrayers = useMemo(() => {
     if (selectedDateOffset === 0 && prayers.length > 0) return prayers;
     if (!offsetSchedule) return prayers;
-    const offsets = getPrayerMinuteOffsets();
-    const t = applyOffsetsToTimings(offsetSchedule.timings, offsets);
+    const t = offsetSchedule.timings;
     return [
       { name: 'Fajr', time: formatPrayerTime(t.Fajr, timeFormat), date: viewedDate, originalName: 'Fajr' },
       { name: 'Sunrise', time: formatPrayerTime(t.Sunrise, timeFormat), date: viewedDate, originalName: 'Sunrise' },

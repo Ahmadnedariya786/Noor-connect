@@ -22,7 +22,7 @@ import {
 export { POPULAR_CITIES, POPULAR_INDIAN_CITIES, POPULAR_GLOBAL_CITIES };
 
 interface LocationSearchProps {
-  onLocationSelect: (city: string, country: string) => Promise<void>;
+  onLocationSelect: (city: string, country: string, lat?: number, lon?: number, displayName?: string) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -38,19 +38,19 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
   const { toast } = useToast();
 
   const storedLoc = loadStoredLocation();
-  const activeCity = searchQuery.trim()
-    ? searchQuery.trim().split(',')[0].trim()
-    : (storedLoc.locationName ? storedLoc.locationName.split(',')[0].trim() : 'Current Location');
-  const isCitySaved = savedLocations.some(
-    l => l.name?.toLowerCase().includes(activeCity.toLowerCase()) || l.city.toLowerCase() === activeCity.toLowerCase()
+  const confirmedCity = storedLoc.locationName
+    ? storedLoc.locationName.split(',')[0].trim()
+    : (storedLoc.city || 'Current Location');
+  const isConfirmedCitySaved = savedLocations.some(
+    l => l.name?.toLowerCase().includes(confirmedCity.toLowerCase()) || l.city.toLowerCase() === confirmedCity.toLowerCase()
   );
 
   const handleSaveActiveCity = () => {
     const loc = loadStoredLocation();
-    const fullName = searchQuery.trim() || loc.locationName || 'Current Location';
+    const fullName = loc.locationName || 'Current Location';
     const parts = fullName.split(',');
     const city = parts[0]?.trim() || fullName;
-    const country = parts.length > 1 ? parts.slice(1).join(',').trim() : (loc.locationName?.split(',')[1]?.trim() || '');
+    const country = parts.length > 1 ? parts.slice(1).join(',').trim() : '';
     saveLocationToFavorites({
       name: fullName,
       city,
@@ -109,14 +109,16 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
         place.address.village ||
         place.address.county ||
         place.address.state ||
-        place.display_name.split(',')[0];
+        place.display_name.split(',')[0].trim();
 
       const country = place.address.country || "";
+      const lat = parseFloat(place.lat);
+      const lon = parseFloat(place.lon);
 
       setSearchQuery(place.display_name);
       setShowSuggestions(false);
 
-      await onLocationSelect(city, country);
+      await onLocationSelect(city, country, isNaN(lat) ? undefined : lat, isNaN(lon) ? undefined : lon, place.display_name);
     } catch (error) {
       console.error("Selection error:", error);
       toast({
@@ -131,12 +133,25 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
     const trimmedQuery = searchQuery.trim();
     if (!trimmedQuery) return;
 
-    // Split by comma if present to try and parse city/country
-    const parts = trimmedQuery.split(',');
-    const city = parts[0].trim();
-    const country = parts.length > 1 ? parts.slice(1).join(',').trim() : "";
-
+    setIsSearching(true);
     try {
+      // 1. If suggestions already loaded in state, choose top suggestion
+      if (suggestions.length > 0) {
+        await handleSuggestionSelect(suggestions[0]);
+        return;
+      }
+
+      // 2. Direct online/offline geocoding for typed query
+      const results = await GeocodingService.searchLocation(trimmedQuery);
+      if (results.length > 0) {
+        await handleSuggestionSelect(results[0]);
+        return;
+      }
+
+      // 3. Fallback to manual parsing
+      const parts = trimmedQuery.split(',');
+      const city = parts[0].trim();
+      const country = parts.length > 1 ? parts.slice(1).join(',').trim() : "";
       await onLocationSelect(city, country);
       setShowSuggestions(false);
     } catch (error) {
@@ -146,6 +161,8 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
         description: "Could not find prayer times for this location.",
         variant: "destructive"
       });
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -186,28 +203,28 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             )}
           </div>
 
-          {/* 1-Tap Save Active City Chip */}
-          {activeCity && (
+          {/* 1-Tap Save Active City Chip - strictly bound to confirmed location, hidden while typing */}
+          {searchQuery.trim().length === 0 && confirmedCity && (
             <div className="flex items-center justify-between px-0.5">
               <button
                 type="button"
                 onClick={handleSaveActiveCity}
-                disabled={isCitySaved}
+                disabled={isConfirmedCitySaved}
                 className={`text-xs px-3 py-1 rounded-full flex items-center gap-1.5 transition-all ${
-                  isCitySaved
+                  isConfirmedCitySaved
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 cursor-default'
                     : 'bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] hover:bg-[var(--accent)] hover:text-white active:scale-95'
                 }`}
               >
-                {isCitySaved ? (
+                {isConfirmedCitySaved ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="font-medium truncate max-w-[210px]">Saved "{activeCity}"</span>
+                    <span className="font-medium truncate max-w-[210px]">Saved "{confirmedCity}"</span>
                   </>
                 ) : (
                   <>
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-                    <span className="font-semibold truncate max-w-[210px]">★ Save "{activeCity}"</span>
+                    <span className="font-semibold truncate max-w-[210px]">★ Save "{confirmedCity}"</span>
                   </>
                 )}
               </button>
@@ -269,11 +286,12 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
           )}
 
           <Button
+            type="button"
             onClick={handleManualSearch}
-            disabled={isLoading || !searchQuery.trim()}
+            disabled={isLoading || isSearching || !searchQuery.trim()}
             className="w-full"
           >
-            {isLoading ? (
+            {isLoading || isSearching ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Setting Location...

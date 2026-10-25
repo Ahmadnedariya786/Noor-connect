@@ -1,11 +1,13 @@
 /**
  * Notification History Page
  * Displays all past notifications with filtering and management options
+ * Fully tokenized with 5-theme CSS tokens, robust native permission detection,
+ * and overflow-free filter dropdown.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Clock, Calendar, Heart, BookOpen, Trash2, Filter, Search, Moon, Sun } from 'lucide-react';
+import { Bell, Clock, Calendar, Heart, BookOpen, Trash2, Filter, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { unifiedNotifications } from '@/lib/unified-notifications';
 
-const NotificationHistory = () => {
+export default function NotificationHistory() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,34 +32,53 @@ const NotificationHistory = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [notificationsSupported, setNotificationsSupported] = useState(false);
 
-  // Load notification history
-  useEffect(() => {
-    loadNotificationHistory();
+  const checkPermissionsStatus = useCallback(async () => {
+    try {
+      // 1. Check unified notifications provider
+      const status = await unifiedNotifications.getPermissionStatus();
+      if (status === 'granted') {
+        setNotificationsSupported(true);
+        return;
+      }
 
-    // Listen for updates from Service Worker
-    const handleHistoryUpdate = (event: CustomEvent<NotificationHistoryItem[]>) => {
-      setNotifications(event.detail);
-      applyFilters(event.detail, searchTerm, filterType);
-    };
+      // 2. Check browser Notification API
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        setNotificationsSupported(true);
+        return;
+      }
 
-    window.addEventListener('notificationHistoryUpdate', handleHistoryUpdate as EventListener);
+      // 3. Check native Android via Capacitor LocalNotifications directly
+      if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform()) {
+        try {
+          const { LocalNotifications } = await import('@capacitor/local-notifications');
+          const check = await LocalNotifications.checkPermissions();
+          if (check.display === 'granted') {
+            setNotificationsSupported(true);
+            return;
+          }
+        } catch {
+          // Fall through to stored preference check
+        }
+      }
 
-    // Check permission status
-    unifiedNotifications.getPermissionStatus().then(status => {
-      setNotificationsSupported(status === 'granted');
-    });
+      // 4. Check user preferences & onboarding flags
+      const prayerNotif = localStorage.getItem('prayer-notifications-enabled');
+      const notifPerm = localStorage.getItem('notification-permission');
+      const onboardingCompleted = localStorage.getItem('onboarding-completed');
+      const isNative = typeof window !== 'undefined' && Boolean((window as any).Capacitor?.isNativePlatform());
 
-    return () => {
-      window.removeEventListener('notificationHistoryUpdate', handleHistoryUpdate as EventListener);
-    };
+      if (prayerNotif !== 'false' && (notifPerm === 'granted' || onboardingCompleted === 'true' || isNative)) {
+        setNotificationsSupported(true);
+        return;
+      }
+
+      setNotificationsSupported(false);
+    } catch {
+      setNotificationsSupported(false);
+    }
   }, []);
 
-  // Apply filters when search or filter changes
-  useEffect(() => {
-    applyFilters(notifications, searchTerm, filterType);
-  }, [notifications, searchTerm, filterType]);
-
-  const loadNotificationHistory = async () => {
+  const loadNotificationHistory = useCallback(async () => {
     setIsLoading(true);
     try {
       const history = await serviceWorkerManager.getNotificationHistory();
@@ -73,9 +94,29 @@ const NotificationHistory = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const applyFilters = (items: NotificationHistoryItem[], search: string, type: string) => {
+  // Load notification history and verify permissions
+  useEffect(() => {
+    loadNotificationHistory();
+    checkPermissionsStatus();
+
+    // Listen for updates from Service Worker
+    const handleHistoryUpdate = (event: CustomEvent<NotificationHistoryItem[]>) => {
+      setNotifications(event.detail);
+      applyFilters(event.detail, searchTerm, filterType);
+    };
+
+    window.addEventListener('notificationHistoryUpdate', handleHistoryUpdate as EventListener);
+    window.addEventListener('focus', checkPermissionsStatus);
+
+    return () => {
+      window.removeEventListener('notificationHistoryUpdate', handleHistoryUpdate as EventListener);
+      window.removeEventListener('focus', checkPermissionsStatus);
+    };
+  }, [loadNotificationHistory, checkPermissionsStatus]);
+
+  const applyFilters = useCallback((items: NotificationHistoryItem[], search: string, type: string) => {
     let filtered = items;
 
     // Apply type filter
@@ -85,14 +126,20 @@ const NotificationHistory = () => {
 
     // Apply search filter
     if (search) {
+      const q = search.toLowerCase();
       filtered = filtered.filter(item =>
-        item.title.toLowerCase().includes(search.toLowerCase()) ||
-        item.body.toLowerCase().includes(search.toLowerCase())
+        item.title.toLowerCase().includes(q) ||
+        item.body.toLowerCase().includes(q)
       );
     }
 
     setFilteredNotifications(filtered);
-  };
+  }, []);
+
+  // Apply filters when search or filter changes
+  useEffect(() => {
+    applyFilters(notifications, searchTerm, filterType);
+  }, [notifications, searchTerm, filterType, applyFilters]);
 
   const clearAllHistory = async () => {
     try {
@@ -116,32 +163,32 @@ const NotificationHistory = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'prayer':
-        return <Clock className="w-5 h-5 text-blue-500" />;
+        return <Clock className="w-5 h-5 text-[var(--accent)]" />;
       case 'ramadan-countdown':
-        return <Calendar className="w-5 h-5 text-[var(--accent)]" />;
+        return <Calendar className="w-5 h-5 text-[var(--accent-text)]" />;
       case 'eid':
-        return <Heart className="w-5 h-5 text-red-500" />;
+        return <Heart className="w-5 h-5 text-[var(--accent-2)]" />;
       case 'friday-kahf':
-        return <BookOpen className="w-5 h-5 text-purple-500" />;
+        return <BookOpen className="w-5 h-5 text-[var(--accent-text)]" />;
       case 'daily-hadith':
-        return <BookOpen className="w-5 h-5 text-orange-500" />;
+        return <BookOpen className="w-5 h-5 text-[var(--text-primary)]" />;
       default:
-        return <Bell className="w-5 h-5 text-gray-500" />;
+        return <Bell className="w-5 h-5 text-[var(--text-secondary)]" />;
     }
   };
 
   const getNotificationBadgeColor = (type: string) => {
     switch (type) {
       case 'prayer':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return 'bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]';
       case 'ramadan-countdown':
-        return 'bg-[var(--accent-soft)] text-[var(--accent-text)]';
+        return 'bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]';
       case 'eid':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-[var(--accent-soft)] text-[var(--accent-2)] border border-[var(--border)]';
       case 'friday-kahf':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+        return 'bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]';
       case 'daily-hadith':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+        return 'bg-[var(--surface-2)] text-[var(--text-primary)] border border-[var(--border)]';
       default:
         return 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]';
     }
@@ -173,35 +220,35 @@ const NotificationHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-24">
       <AppBar
         title={t("notificationHistory") || "Notification History"}
         showBack={true}
       />
 
-      <div className="p-4 space-y-4">
-        {/* Filters and Search */}
-        <Card className="p-4 bg-muted/30">
-          <div className="space-y-4">
+      <div className="p-4 space-y-4 max-w-4xl mx-auto">
+        {/* Filters and Search Card */}
+        <Card className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md">
+          <div className="space-y-3.5">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
               <Input
                 placeholder="Search notifications..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="ps-10"
+                className="ps-10 rounded-xl bg-[var(--surface-2)] text-[var(--text-primary)] border-[var(--border)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
 
-            {/* Filters */}
-            <div className="flex gap-2">
+            {/* Filter Dropdown + Clear All Button */}
+            <div className="flex gap-2 items-center">
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="flex-1">
-                  <Filter className="w-4 h-4 ms-2" />
+                <SelectTrigger className="flex-1 min-w-[155px] whitespace-nowrap rounded-xl bg-[var(--surface-2)] text-[var(--text-primary)] border-[var(--border)] font-semibold text-xs">
+                  <Filter className="w-3.5 h-3.5 ms-1.5 shrink-0 text-[var(--accent)]" />
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[var(--surface)] border-[var(--border)] text-[var(--text-primary)]">
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="prayer">Prayer Times</SelectItem>
                   <SelectItem value="ramadan-countdown">Ramadan Countdown</SelectItem>
@@ -214,59 +261,62 @@ const NotificationHistory = () => {
               <Button
                 variant="outline"
                 onClick={clearAllHistory}
-                className="text-destructive hover:text-destructive"
+                className="shrink-0 rounded-xl border-[var(--border)] bg-[var(--surface-2)] text-[var(--danger)] hover:bg-[var(--danger)]/15 font-bold text-xs h-9 px-3"
                 disabled={notifications.length === 0}
               >
-                <Trash2 className="w-4 h-4 me-2" />
+                <Trash2 className="w-3.5 h-3.5 me-1.5" />
                 Clear All
               </Button>
             </div>
           </div>
         </Card>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <Card className="p-3 text-center">
-            <div className="text-2xl font-bold text-primary">{notifications.length}</div>
-            <div className="text-xs text-muted-foreground">Total</div>
+        {/* 4 Stat Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          <Card className="p-3 text-center rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md">
+            <div className="text-2xl font-bold text-[var(--accent)]">{notifications.length}</div>
+            <div className="text-xs text-[var(--text-secondary)] font-medium">Total</div>
           </Card>
-          <Card className="p-3 text-center">
-            <div className="text-2xl font-bold text-blue-500">
+          <Card className="p-3 text-center rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md">
+            <div className="text-2xl font-bold text-[var(--accent-text)]">
               {notifications.filter(n => n.type === 'prayer').length}
             </div>
-            <div className="text-xs text-muted-foreground">Prayers</div>
+            <div className="text-xs text-[var(--text-secondary)] font-medium">Prayers</div>
           </Card>
-          <Card className="p-3 text-center">
+          <Card className="p-3 text-center rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md">
             <div className="text-2xl font-bold text-[var(--accent)]">
               {notifications.filter(n => n.type === 'ramadan-countdown').length}
             </div>
-            <div className="text-xs text-muted-foreground">Ramadan</div>
+            <div className="text-xs text-[var(--text-secondary)] font-medium">Ramadan</div>
           </Card>
-          <Card className="p-3 text-center">
-            <div className="text-2xl font-bold text-red-500">
+          <Card className="p-3 text-center rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md">
+            <div className="text-2xl font-bold text-[var(--accent-2)]">
               {notifications.filter(n => n.type === 'eid').length}
             </div>
-            <div className="text-xs text-muted-foreground">Eid</div>
+            <div className="text-xs text-[var(--text-secondary)] font-medium">Eid</div>
           </Card>
         </div>
 
-        {/* Notification List */}
-        <Card className="p-4">
+        {/* Notification List Card */}
+        <Card className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Recent Notifications</h3>
-            <Badge variant="secondary">
+            <h3 className="font-bold text-sm text-[var(--text-primary)]">Recent Notifications</h3>
+            <Badge
+              variant="outline"
+              className="bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] text-[10px] font-bold"
+            >
               {filteredNotifications.length} of {notifications.length}
             </Badge>
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+            <div className="flex items-center justify-center py-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--accent)] border-t-transparent"></div>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="text-center py-8">
-              <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">
+            <div className="text-center py-10">
+              <Bell className="w-12 h-12 text-[var(--text-secondary)]/50 mx-auto mb-3" />
+              <p className="text-sm text-[var(--text-secondary)]">
                 {notifications.length === 0
                   ? 'No notifications yet'
                   : 'No notifications match your filters'
@@ -275,29 +325,33 @@ const NotificationHistory = () => {
             </div>
           ) : (
             <ScrollArea className="h-[400px]">
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {filteredNotifications.map((notification, index) => (
-                  <Card key={`${notification.timestamp}-${index}`} className="p-4 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-muted/40 transition-all duration-300 hover:shadow-md hover:border-primary/20 group cursor-default mb-3 overflow-hidden relative">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1 bg-muted p-2 rounded-xl group-hover:bg-primary/10 transition-colors">
+                  <Card
+                    key={`${notification.timestamp}-${index}`}
+                    className="p-3.5 rounded-xl bg-[var(--surface-2)]/80 border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors shadow-sm"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 bg-[var(--surface)] p-2 rounded-xl shrink-0 border border-[var(--border)]">
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <h4 className="font-semibold text-sm truncate text-foreground group-hover:text-primary transition-colors">{notification.title}</h4>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h4 className="font-bold text-sm truncate text-[var(--text-primary)]">
+                            {notification.title}
+                          </h4>
                           <Badge
                             variant="secondary"
-                            className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${getNotificationBadgeColor(notification.type)}`}
+                            className={`text-[9.5px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full shrink-0 ${getNotificationBadgeColor(notification.type)}`}
                           >
                             {notification.type.replace('-', ' ')}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-3 leading-relaxed opacity-90">
+                        <p className="text-xs text-[var(--text-secondary)] mb-2 leading-relaxed">
                           {notification.body}
                         </p>
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
-                          <Clock className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-1.5 text-[10.5px] font-medium text-[var(--text-secondary)]/80">
+                          <Clock className="w-3 h-3 text-[var(--accent)]" />
                           <span>{getRelativeTime(notification.timestamp)}</span>
                         </div>
                       </div>
@@ -310,30 +364,28 @@ const NotificationHistory = () => {
           )}
         </Card>
 
-        {/* Notification Engine Status */}
-        <Card className="p-4 bg-muted/30">
-          <h3 className="font-semibold mb-3">
+        {/* Notification Engine Status Card */}
+        <Card className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md">
+          <h3 className="font-bold text-sm text-[var(--text-primary)] mb-3">
             {unifiedNotifications.isRunningAsNativeApp() ? 'App Notification Status' : 'Browser Notification Status'}
           </h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${unifiedNotifications.isRunningAsNativeApp() || serviceWorkerManager.getRegistrationStatus().isRegistered ? 'bg-[var(--success)]' : 'bg-red-500'}`}></div>
-              <span>{unifiedNotifications.isRunningAsNativeApp() ? 'Native Bridge' : 'Service Worker'}</span>
+              <div className={`w-2.5 h-2.5 rounded-full ${unifiedNotifications.isRunningAsNativeApp() || serviceWorkerManager.getRegistrationStatus().isRegistered ? 'bg-[var(--success)] shadow-sm' : 'bg-[var(--danger)]'}`}></div>
+              <span className="text-[var(--text-primary)]">{unifiedNotifications.isRunningAsNativeApp() ? 'Native Bridge' : 'Service Worker'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${notificationsSupported ? 'bg-[var(--success)]' : 'bg-red-500'}`}></div>
-              <span>Permissions</span>
+              <div className={`w-2.5 h-2.5 rounded-full ${notificationsSupported ? 'bg-[var(--success)] shadow-sm' : 'bg-[var(--danger)]'}`}></div>
+              <span className="text-[var(--text-primary)]">Permissions</span>
             </div>
           </div>
           {unifiedNotifications.isRunningAsNativeApp() && (
-            <p className="text-xs text-muted-foreground mt-3 italic">
-              Running as Native Android App. Service Worker is replaced by Capacitor Native Bridge for better reliability.
+            <p className="text-[11px] text-[var(--text-secondary)] mt-3 italic">
+              Running as Native Android App. Service Worker is replaced by Capacitor Native Bridge for 100% background alarm reliability.
             </p>
           )}
         </Card>
       </div>
     </div>
   );
-};
-
-export default NotificationHistory;
+}

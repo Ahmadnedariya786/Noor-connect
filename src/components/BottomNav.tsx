@@ -39,7 +39,8 @@ const BottomNav = memo(function BottomNav() {
 
   return (
     <nav
-      className="w-full fixed bottom-0 left-0 right-0 z-[100] pointer-events-none flex justify-center safe-bottom"
+      data-bottom-nav="true"
+      className="w-full fixed bottom-0 left-0 right-0 z-[100] pointer-events-none flex justify-center safe-bottom print:hidden"
       style={{
         paddingBottom: 'calc(var(--safe-bottom) + 10px)',
         paddingLeft: '16px',

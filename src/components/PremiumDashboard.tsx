@@ -337,23 +337,33 @@ function PremiumDashboardInner({
                 </div>
 
                 <LocationSearch
-                  onLocationSelect={async (city: string, country: string) => {
+                  onLocationSelect={async (city: string, country: string, lat?: number, lon?: number, displayName?: string) => {
                     try {
                       setLoadingAPI(true);
                       AladhanAPI.clearCachedData();
-                      const coords = await GeocodingService.getCityCoordinates(city, country);
-                      const result = await AladhanAPI.getTodaysPrayerTimes(coords.latitude, coords.longitude, 1);
-                      location.setLocation(coords.latitude, coords.longitude, `${city}, ${country}`, result.timezone);
+                      let latitude = lat;
+                      let longitude = lon;
+                      let finalName = displayName || (country ? `${city}, ${country}` : city);
+
+                      if (latitude === undefined || longitude === undefined || isNaN(latitude) || isNaN(longitude)) {
+                        const coords = await GeocodingService.getCityCoordinates(city, country);
+                        latitude = coords.latitude;
+                        longitude = coords.longitude;
+                        if (coords.displayName) finalName = coords.displayName;
+                      }
+
+                      const result = await AladhanAPI.getTodaysPrayerTimes(latitude, longitude, 1);
+                      location.setLocation(latitude, longitude, finalName, result.timezone);
                       await prayerTimesHook.setManualLocation(city, country);
                       handleCloseModal();
                       toast({ title: "Location Updated", description: `Time adjusted to ${result.timezone}` });
                     } catch (err) {
-                      toast({ title: "Selection Failed", description: "Could not sync timezone. Please try again.", variant: "destructive" });
+                      toast({ title: "Selection Failed", description: "Could not set location. Please try again.", variant: "destructive" });
                     } finally {
                       setLoadingAPI(false);
                     }
                   }}
-                  isLoading={prayerTimesHook.isLoading}
+                  isLoading={prayerTimesHook.isLoading || loadingAPI}
                 />
 
                 <Button

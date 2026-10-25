@@ -66,6 +66,15 @@ export const SUNNAH_CHAIN_STEPS: ChainStep[] = [
   },
 ];
 
+const NEXT_CHAIN_PREVIEWS = [
+  "Alhamdulillah ×33",
+  "Allahu Akbar ×33",
+  "Tawheed Seal ×1",
+  "Astaghfirullah ×100",
+  "Durood Shareef ×10",
+  "Set 1 • SubhanAllah",
+];
+
 const DHIKR_OPTIONS = [
   { value: "subhanallah", label: "سُبْحَانَ اللَّهِ", transliteration: "SubhanAllah", translation: "Glory be to Allah" },
   { value: "alhamdulillah", label: "ٱلْحَمْدُ لِلَّٰهِ", transliteration: "Alhamdulillah", translation: "Praise be to Allah" },
@@ -872,9 +881,7 @@ const Tasbeeh = () => {
                   <div className="flex items-center gap-1 text-center truncate px-1">
                     <span className="text-[var(--text-secondary)] text-[11px]">Next:</span>
                     <span className="text-[var(--accent-text)] font-bold truncate text-[11px]">
-                      {chainStepIndex === 5
-                        ? 'Set 1 • SubhanAllah'
-                        : `${nextChainStep.transliteration} • ${nextChainStep.target}`}
+                      {NEXT_CHAIN_PREVIEWS[chainStepIndex] || 'Alhamdulillah ×33'}
                     </span>
                   </div>
 

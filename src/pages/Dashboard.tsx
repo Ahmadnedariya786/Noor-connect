@@ -45,6 +45,8 @@ let cachedDashboardPrayers: PrayerTime[] = [];
 let cachedNextPrayerName: string = "";
 let cachedNextPrayerTime: string = "";
 let cachedTargetTime: Date | null = null;
+let cachedRawTimings: AladhanPrayerTime | null = null;
+let cachedOffsetsFingerprint: string = "";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -215,7 +217,9 @@ export default function Dashboard() {
 
       // Get today's prayer times and metadata (including timezone)
       const { timings: rawTimings, timezone: fetchedTimezone } = await AladhanAPI.getTodaysPrayerTimes(location.latitude, location.longitude, 1);
+      cachedRawTimings = rawTimings;
       const offsets = getPrayerMinuteOffsets();
+      cachedOffsetsFingerprint = JSON.stringify(offsets);
       const timings = applyOffsetsToTimings(rawTimings, offsets);
 
       // Update global location state with the fetched timezone if it's different or not set
@@ -320,10 +324,37 @@ export default function Dashboard() {
   // Reactive subscription to prayer offsets changes and route focus
   useEffect(() => {
     const handleOffsetsChange = () => {
+      const offsets = getPrayerMinuteOffsets();
+      cachedOffsetsFingerprint = JSON.stringify(offsets);
       cachedDashboardPrayers = [];
       cachedNextPrayerName = "";
       cachedNextPrayerTime = "";
       cachedTargetTime = null;
+
+      // Instant local synchronous re-derivation if raw timings exist in memory
+      if (cachedRawTimings) {
+        const timings = applyOffsetsToTimings(cachedRawTimings, offsets);
+        const prayerList: PrayerTime[] = [
+          { name: "Fajr", time: formatTimeFromAPI(timings.Fajr), date: parseTimeToDate(timings.Fajr) },
+          { name: "Sunrise", time: formatTimeFromAPI(timings.Sunrise), date: parseTimeToDate(timings.Sunrise) },
+          { name: "Dhuhr", time: formatTimeFromAPI(timings.Dhuhr), date: parseTimeToDate(timings.Dhuhr) },
+          { name: "Asr", time: formatTimeFromAPI(timings.Asr), date: parseTimeToDate(timings.Asr) },
+          { name: "Maghrib", time: formatTimeFromAPI(timings.Maghrib), date: parseTimeToDate(timings.Maghrib) },
+          { name: "Isha", time: formatTimeFromAPI(timings.Isha), date: parseTimeToDate(timings.Isha) },
+        ];
+        cachedDashboardPrayers = prayerList;
+        setPrayers(prayerList);
+
+        const sTime = timings.Imsak ? formatTimeFromAPI(timings.Imsak) : formatTimeFromAPI(timings.Fajr);
+        const iTime = formatTimeFromAPI(timings.Maghrib);
+        setSuhoorIftaar({
+          suhoorTime: sTime,
+          suhoorLabel: "Suhoor",
+          iftaarTime: iTime,
+          iftaarLabel: "Iftaar",
+        });
+      }
+
       loadPrayerTimes();
     };
 
@@ -336,14 +367,15 @@ export default function Dashboard() {
       window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
       window.removeEventListener('focus', handleOffsetsChange);
     };
-  }, [loadPrayerTimes]);
+  }, [loadPrayerTimes, formatTimeFromAPI, parseTimeToDate]);
 
   // Re-read offsets on mount or route transition
-  const lastOffsetsRef = useRef(JSON.stringify(getPrayerMinuteOffsets()));
+  const lastOffsetsRef = useRef(cachedOffsetsFingerprint || "");
   useEffect(() => {
     const currentOffsetsStr = JSON.stringify(getPrayerMinuteOffsets());
     if (lastOffsetsRef.current !== currentOffsetsStr) {
       lastOffsetsRef.current = currentOffsetsStr;
+      cachedOffsetsFingerprint = currentOffsetsStr;
       cachedDashboardPrayers = [];
       cachedNextPrayerName = "";
       cachedNextPrayerTime = "";
