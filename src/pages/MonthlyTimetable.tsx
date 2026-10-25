@@ -539,12 +539,39 @@ export default function MonthlyTimetable() {
           {calendar?.days.map((day, idx) => {
             const fri = isFriday(day);
             const adj = applyOffsetsToTimings(day.timings, offsets);
-            const cleanHijriMonth = sanitizeHijri(day.date.hijri.month.en);
-            const shortHijriMonth = cleanHijriMonth.includes("ūlā") || cleanHijriMonth.includes("1")
-              ? "Jum I"
-              : cleanHijriMonth.includes("ākhirah") || cleanHijriMonth.includes("2")
-              ? "Jum II"
-              : cleanHijriMonth.substring(0, 7);
+            const conciseHijriTitles: Record<number, string> = {
+              1: "Muharram",
+              2: "Safar",
+              3: "Rabi I",
+              4: "Rabi II",
+              5: "Jumada I",
+              6: "Jumada II",
+              7: "Rajab",
+              8: "Sha'ban",
+              9: "Ramadan",
+              10: "Shawwal",
+              11: "Dhul-Qa'dah",
+              12: "Dhul-Hijjah",
+            };
+            const monthNum = day.date.hijri.month.number;
+            const rawHijri = day.date.hijri.month.en || "";
+            let shortHijriMonth = conciseHijriTitles[monthNum];
+            if (!shortHijriMonth) {
+              const l = rawHijri.toLowerCase();
+              if (l.includes("muharram")) shortHijriMonth = "Muharram";
+              else if (l.includes("safar")) shortHijriMonth = "Safar";
+              else if (l.includes("rabi") && (l.includes("awwal") || l.includes("1") || l.includes("i"))) shortHijriMonth = "Rabi I";
+              else if (l.includes("rabi")) shortHijriMonth = "Rabi II";
+              else if (l.includes("jumad") && (l.includes("ula") || l.includes("1") || l.includes("i"))) shortHijriMonth = "Jumada I";
+              else if (l.includes("jumad")) shortHijriMonth = "Jumada II";
+              else if (l.includes("rajab")) shortHijriMonth = "Rajab";
+              else if (l.includes("sha")) shortHijriMonth = "Sha'ban";
+              else if (l.includes("ramadan")) shortHijriMonth = "Ramadan";
+              else if (l.includes("shawwal")) shortHijriMonth = "Shawwal";
+              else if (l.includes("qa")) shortHijriMonth = "Dhul-Qa'dah";
+              else if (l.includes("hij")) shortHijriMonth = "Dhul-Hijjah";
+              else shortHijriMonth = "Jumada I";
+            }
 
             const rowBg = fri ? "#ecfdf5" : (idx % 2 === 1 ? "#f8fafc" : "#ffffff");
             const rowColor = fri ? "#065f46" : "#0f172a";

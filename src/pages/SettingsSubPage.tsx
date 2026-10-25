@@ -1321,7 +1321,7 @@ const SettingsSubPage: React.FC = () => {
                   Crafted with love for the Ummah — Noor Connect Team
                 </p>
                 <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                  A privacy-first Islamic companion, built free for the sake of Allah. All data stays on your device. Always.
+                  Personal data stays on your device; prayer times & location sync live with full offline fallback.
                 </p>
               </div>
             </Card>

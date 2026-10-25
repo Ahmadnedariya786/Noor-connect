@@ -14,6 +14,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 const SERVICE_CATEGORIES: Record<string, string> = {
     "/prayer-stats": "Worship",
+    "/services/salah-tracker": "Worship",
+    "/salah-tracker": "Worship",
     "/qaza": "Worship",
     "/quran-audio": "Audio",
     "/nasheeds": "Audio",
@@ -68,7 +70,7 @@ export default function Services() {
     const showNoorCycle = shouldShowMenstrualFeatures();
 
     const baseServices = [
-        { title: "Salah Tracker", subtitle: "30-day prayer analytics", path: "/prayer-stats", icon: CheckCircle },
+        { title: "Salah Tracker", subtitle: "Worship & fasting journal", path: "/services/salah-tracker", icon: CheckCircle },
         { title: "Qaza Tracker", subtitle: "Missed prayer makeup", path: "/qaza", icon: AlertTriangle },
         { title: "Quran Audio", subtitle: "289 reciters & HD audio", path: "/quran-audio", icon: Headphones },
         { title: "Nasheeds", subtitle: "400 vocals-only tracks", path: "/nasheeds", icon: Music },

@@ -244,11 +244,13 @@ export default defineConfig(({ mode }) => ({
       algorithm: 'gzip',
       ext: '.gz',
       threshold: 10240, // Only compress files > 10KB
+      filter: /\.(js|mjs|css|html)$/i,
     }),
     compression({
       algorithm: 'brotliCompress',
       ext: '.br',
       threshold: 10240,
+      filter: /\.(js|mjs|css|html)$/i,
     })
   ].filter(Boolean),
   resolve: {

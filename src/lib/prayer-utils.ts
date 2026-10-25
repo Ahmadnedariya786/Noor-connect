@@ -85,3 +85,26 @@ export function isMatchingPrayer(nameA?: string | null, nameB?: string | null): 
   return normA === normB;
 }
 
+/**
+ * Format prayer time string for display according to 12h or 24h preference
+ */
+export function formatTimetableTime(timeStr: string, is24h: boolean): string {
+  if (!timeStr) return "--:--";
+  const cleaned = timeStr.replace(/\s*\(.*?\)\s*/g, "").trim();
+  const match = cleaned.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+  if (!match) return cleaned;
+  let h = parseInt(match[1], 10);
+  const m = match[2];
+  const ampm = match[3]?.toUpperCase();
+  if (ampm) {
+    if (ampm === "PM" && h < 12) h += 12;
+    if (ampm === "AM" && h === 12) h = 0;
+  }
+  if (is24h) {
+    return `${String(h).padStart(2, "0")}:${m}`;
+  }
+  let h12 = h % 12;
+  if (h12 === 0) h12 = 12;
+  return `${h12}:${m}`;
+}
+

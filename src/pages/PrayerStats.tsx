@@ -1,287 +1,725 @@
-import { useState, useEffect, useCallback } from "react";
-import { AppBar } from "@/components/AppBar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Calendar, TrendingUp, Award, Target, CheckCircle, Circle } from "lucide-react";
-import { getPrayerHistory, type DailyPrayers } from "@/lib/salah-tracker";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { useLanguage } from "@/contexts/LanguageContext-new";
+/**
+ * All-In-One Worship, Sunnah & Fasting Journal with 3-Month Heatmap
+ * Bidirectional sync with Home Dashboard (DAILY SALAH, WEEKLY PROGRESS & QAZA PRAYERS)
+ * Single Source of Truth: 'salah-tracker', 'qaza-prayers', and 'salah-streak'
+ */
 
-const PRAYER_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
-const CHART_COLORS = ['#C9860A', '#E8A020', '#F3B140', '#FCD570', '#FDE7A6'];
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { AppBar } from "@/components/AppBar";
+import { PageTransition } from "@/components/PageTransition";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  Flame,
+  Moon,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Minus,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  RotateCcw,
+  WifiOff,
+  Sun,
+  ShieldCheck,
+} from "lucide-react";
+import {
+  formatDateKey,
+  getDayWorshipLog,
+  updatePrayerStatus,
+  cycleSunnahRawatib,
+  updateNightWorship,
+  toggleFastingStatus,
+  getRecommendedFast,
+  getWorshipKPIs,
+  get3MonthHeatmapData,
+  getPrayerTimesForDate,
+  type DayWorshipLog,
+  type PrayerName,
+  type PrayerStatus,
+  type FastCategory,
+  type WorshipKPIs,
+  type HeatmapDayCell,
+} from "@/lib/worship-log";
+import { formatTimetableTime } from "@/lib/prayer-utils";
+import { useSettings } from "@/contexts/SettingsContext";
+
+const PRAYERS: { key: PrayerName; label: string; sunnahMax: number; sunnahCycleLabel: string }[] = [
+  { key: "fajr", label: "Fajr", sunnahMax: 2, sunnahCycleLabel: "2 Sunnah Before" },
+  { key: "dhuhr", label: "Dhuhr", sunnahMax: 6, sunnahCycleLabel: "4 Before • 2 After" },
+  { key: "asr", label: "Asr", sunnahMax: 0, sunnahCycleLabel: "Nafl Optional" },
+  { key: "maghrib", label: "Maghrib", sunnahMax: 2, sunnahCycleLabel: "2 Sunnah After" },
+  { key: "isha", label: "Isha", sunnahMax: 2, sunnahCycleLabel: "2 Sunnah After" },
+];
 
 export default function PrayerStats() {
-  const { t } = useLanguage();
-  const PRAYERS = [t("fajr"), t("dhuhr"), t("asr"), t("maghrib"), t("isha")];
-  const [history, setHistory] = useState<DailyPrayers[]>([]);
-  const [stats, setStats] = useState({
-    totalPrayers: 0,
-    completedPrayers: 0,
-    currentStreak: 0,
-    longestStreak: 0,
-    bestDay: '',
-    weeklyAverage: 0,
-    prayerBreakdown: [] as { name: string; completed: number; total: number }[],
-  });
+  const { timeFormat } = useSettings();
+  const is24h = timeFormat === "24" || timeFormat === "24h";
 
-  const loadData = useCallback(() => {
-    const data = getPrayerHistory(30); // Last 30 days
-    setHistory(data);
-    
-    // Calculate statistics
-    let totalCompleted = 0;
-    const totalPossible = data.length * 5;
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-    let bestDayCount = 0;
-    let bestDayDate = '';
-    
-    const prayerCounts: Record<string, { completed: number; total: number }> = {};
-    PRAYERS.forEach(p => prayerCounts[p] = { completed: 0, total: data.length });
-    
-    // Process each day
-    data.forEach((day, index) => {
-      const dayCompleted = PRAYER_KEYS.filter(key => day[key]).length;
-      totalCompleted += dayCompleted;
-      
-      // Count per-prayer completions
-      PRAYER_KEYS.forEach((key, i) => {
-        if (day[key]) {
-          prayerCounts[PRAYERS[i]].completed++;
+  // Selected date for Daily Worship Editor
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
+  const selectedDateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate]);
+  const isSelectedDateToday = useMemo(() => {
+    return selectedDateKey === formatDateKey(new Date());
+  }, [selectedDateKey]);
+
+  // Reactive state
+  const [dayLog, setDayLog] = useState<DayWorshipLog>(() => getDayWorshipLog(selectedDateKey));
+  const [kpis, setKpis] = useState<WorshipKPIs>(() => getWorshipKPIs());
+  const [heatmapCells, setHeatmapCells] = useState<HeatmapDayCell[]>(() => get3MonthHeatmapData());
+
+  // Prayer times state for selected date
+  const [daySchedule, setDaySchedule] = useState<any>(null);
+  const [isOfflineTimes, setIsOfflineTimes] = useState(false);
+  const [selectedFastCategory, setSelectedFastCategory] = useState<FastCategory>("sunnah");
+
+  // Read location coordinates
+  const { lat, lon } = useMemo(() => {
+    let latitude = 21.3891;
+    let longitude = 39.8579;
+    try {
+      const locStr = localStorage.getItem("location-storage");
+      if (locStr) {
+        const parsed = JSON.parse(locStr);
+        if (typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
+          latitude = parsed.latitude;
+          longitude = parsed.longitude;
         }
-      });
-      
-      // Track streaks (5/5 days)
-      if (dayCompleted === 5) {
-        tempStreak++;
-        if (tempStreak > longestStreak) {
-          longestStreak = tempStreak;
-        }
-      } else {
-        if (index === 0) {
-          currentStreak = tempStreak;
-        }
-        tempStreak = 0;
       }
-      
-      // Best day
-      if (dayCompleted > bestDayCount) {
-        bestDayCount = dayCompleted;
-        bestDayDate = day.date;
-      }
-    });
-    
-    // If streak continues to today
-    if (tempStreak > 0) {
-      currentStreak = tempStreak;
+    } catch {
+      // Default coordinates fallback
     }
-    
-    const prayerBreakdown = PRAYERS.map(name => ({
-      name,
-      completed: prayerCounts[name].completed,
-      total: prayerCounts[name].total,
-    }));
-    
-    setStats({
-      totalPrayers: totalPossible,
-      completedPrayers: totalCompleted,
-      currentStreak,
-      longestStreak,
-      bestDay: bestDayDate,
-      weeklyAverage: data.length >= 7 
-        ? Math.round((data.slice(0, 7).reduce((acc, d) => acc + PRAYER_KEYS.filter(key => d[key]).length, 0) / 7) * 10) / 10
-        : 0,
-      prayerBreakdown,
-    });
+    return { lat: latitude, lon: longitude };
   }, []);
 
+  // Refresh reactive data
+  const refreshAll = useCallback(() => {
+    setDayLog(getDayWorshipLog(selectedDateKey));
+    setKpis(getWorshipKPIs());
+    setHeatmapCells(get3MonthHeatmapData());
+  }, [selectedDateKey]);
+
+  // Sync with storage events from Home Dashboard
   useEffect(() => {
-    loadData();
-    window.addEventListener('salah-updated', loadData);
-    return () => window.removeEventListener('salah-updated', loadData);
-  }, [loadData]);
+    refreshAll();
+    const handleSync = () => refreshAll();
+    window.addEventListener("salah-updated", handleSync);
+    window.addEventListener("qaza-updated", handleSync);
+    return () => {
+      window.removeEventListener("salah-updated", handleSync);
+      window.removeEventListener("qaza-updated", handleSync);
+    };
+  }, [refreshAll]);
 
-  const completionRate = stats.totalPrayers > 0 
-    ? Math.round((stats.completedPrayers / stats.totalPrayers) * 100) 
-    : 0;
+  // Load prayer times for selected date (online-first with offline fallback)
+  useEffect(() => {
+    let isMounted = true;
+    getPrayerTimesForDate(selectedDate, lat, lon)
+      .then(({ schedule, isOfflineTimes: offline }) => {
+        if (!isMounted) return;
+        setDaySchedule(schedule);
+        setIsOfflineTimes(offline);
+      })
+      .catch(() => {
+        // Safe catch for network or compute failure
+        if (!isMounted) return;
+        setIsOfflineTimes(true);
+      });
 
-  // Prepare chart data
-  const weeklyChartData = history.slice(0, 7).reverse().map(day => ({
-    date: new Date(day.date).toLocaleDateString('en', { weekday: 'short' }),
-    completed: PRAYER_KEYS.filter(key => day[key]).length,
-  }));
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDate, lat, lon]);
 
-  const pieData = stats.prayerBreakdown.map((p, i) => ({
-    name: p.name,
-    value: p.completed,
-    fill: CHART_COLORS[i % CHART_COLORS.length],
-  }));
+  // Auto-detected recommended fast
+  const recommendedFast = useMemo(() => {
+    const hDay = daySchedule?.date?.hijri?.day ? parseInt(daySchedule.date.hijri.day, 10) : undefined;
+    const hMonth = daySchedule?.date?.hijri?.month?.number ? parseInt(daySchedule.date.hijri.month.number, 10) : undefined;
+    return getRecommendedFast(selectedDate, hDay, hMonth);
+  }, [selectedDate, daySchedule]);
+
+  // Set default fast category when switching days
+  useEffect(() => {
+    if (dayLog.fastType) {
+      setSelectedFastCategory(dayLog.fastType);
+    } else {
+      setSelectedFastCategory(recommendedFast.defaultCategory);
+    }
+  }, [dayLog.fastType, recommendedFast.defaultCategory]);
+
+  // Date navigation handlers
+  const handlePrevDay = () => {
+    const prev = new Date(selectedDate);
+    prev.setDate(prev.getDate() - 1);
+    setSelectedDate(prev);
+  };
+
+  const handleNextDay = () => {
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + 1);
+    setSelectedDate(next);
+  };
+
+  const handleBackToToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  // Status button tap handler
+  const handleStatusChange = (prayer: PrayerName, status: PrayerStatus) => {
+    if ("vibrate" in navigator) navigator.vibrate(15);
+    const updated = updatePrayerStatus(selectedDateKey, prayer, status);
+    setDayLog(updated);
+    setKpis(getWorshipKPIs());
+    setHeatmapCells(get3MonthHeatmapData());
+  };
+
+  // Sunnah Rawatib tap handler
+  const handleCycleSunnah = (prayer: PrayerName) => {
+    if ("vibrate" in navigator) navigator.vibrate(15);
+    const updated = cycleSunnahRawatib(selectedDateKey, prayer);
+    setDayLog(updated);
+    setKpis(getWorshipKPIs());
+  };
+
+  // Night worship handlers
+  const handleToggleWitr = () => {
+    if ("vibrate" in navigator) navigator.vibrate(15);
+    const updated = updateNightWorship(selectedDateKey, { witr: !dayLog.witr });
+    setDayLog(updated);
+  };
+
+  const handleStepQiyam = (delta: number) => {
+    if ("vibrate" in navigator) navigator.vibrate(15);
+    const updated = updateNightWorship(selectedDateKey, { qiyamDelta: delta });
+    setDayLog(updated);
+  };
+
+  // Fasting tap handler
+  const handleToggleFasting = () => {
+    if ("vibrate" in navigator) navigator.vibrate(25);
+    const updated = toggleFastingStatus(selectedDateKey, selectedFastCategory);
+    setDayLog(updated);
+    setKpis(getWorshipKPIs());
+    setHeatmapCells(get3MonthHeatmapData());
+  };
+
+  // Cell color resolver for GitHub heatmap
+  const getCellBg = (count: number, isSelected: boolean) => {
+    if (isSelected) {
+      return "border-2 border-[var(--accent)]";
+    }
+    return "border border-[var(--border)]";
+  };
+
+  // Format Gregorian & Hijri dates for switcher header
+  const formattedGregorian = useMemo(() => {
+    return selectedDate.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  }, [selectedDate]);
+
+  const formattedHijri = useMemo(() => {
+    if (daySchedule?.date?.hijri) {
+      const h = daySchedule.date.hijri;
+      return `${h.day} ${h.month.en}`;
+    }
+    return "";
+  }, [daySchedule]);
+
+  // Times mapping for the 5 prayers + Suhoor/Iftaar
+  const prayerTimesMap = useMemo(() => {
+    const timings = daySchedule?.timings;
+    if (!timings) return null;
+    return {
+      fajr: formatTimetableTime(timings.Fajr, is24h),
+      dhuhr: formatTimetableTime(timings.Dhuhr, is24h),
+      asr: formatTimetableTime(timings.Asr, is24h),
+      maghrib: formatTimetableTime(timings.Maghrib, is24h),
+      isha: formatTimetableTime(timings.Isha, is24h),
+      suhoor: formatTimetableTime(timings.Imsak || timings.Fajr, is24h),
+      iftaar: formatTimetableTime(timings.Maghrib, is24h),
+    };
+  }, [daySchedule, is24h]);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
-      <AppBar title={t("prayerStatistics") || "Prayer Statistics"} showBack />
-      
-      <div className="max-w-lg mx-auto p-4 space-y-4">
-        {/* Overview Card */}
-        <Card className="overflow-hidden bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-xl">
-          <div className="bg-gradient-to-br from-[var(--accent)]/20 via-[var(--accent)]/5 to-transparent p-6 relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/15 rounded-full blur-[20px] pointer-events-none" />
-            <div className="text-center relative z-10">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)] mb-2">30-Day Completion Rate</p>
-              <p className="text-6xl font-bold text-[var(--text-primary)] font-serif italic mb-2 drop-shadow-md">{completionRate}%</p>
-              <p className="text-xs font-medium text-[var(--text-secondary)]">
-                {stats.completedPrayers} of {stats.totalPrayers} prayers
-              </p>
-            </div>
+    <PageTransition>
+      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-32">
+        <AppBar title="Worship & Fasting Journal" showBack={true} />
+
+        <div className="max-w-2xl mx-auto px-3.5 sm:px-4 pt-3 space-y-4">
+          {/* TOP 4 WORSHIP KPI PODS (Clean 2x2 Grid, Zero Truncation) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {/* KPI 1: On-Time Streak */}
+            <Card
+              className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <Flame className="w-4 h-4 text-[var(--accent)]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Streak</span>
+              </div>
+              <div className="text-lg font-black text-[var(--accent-text)] tracking-tight leading-none">
+                {kpis.onTimeStreak} {kpis.onTimeStreak === 1 ? "Day" : "Days"}
+              </div>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">On-time Salah</span>
+            </Card>
+
+            {/* KPI 2: Sunnah Kept % */}
+            <Card
+              className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <Sparkles className="w-4 h-4 text-[var(--accent-2)]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Sunnah</span>
+              </div>
+              <div className="text-lg font-black text-[var(--text-primary)] tracking-tight leading-none">
+                {kpis.sunnahKeptPercent}%
+              </div>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">Rawatib this mo.</span>
+            </Card>
+
+            {/* KPI 3: Fasted Days */}
+            <Card
+              className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <Moon className="w-4 h-4 text-[var(--accent)]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Fasted</span>
+              </div>
+              <div className="text-lg font-black text-[var(--accent-text)] tracking-tight leading-none">
+                {kpis.fastedDaysThisMonth} {kpis.fastedDaysThisMonth === 1 ? "Day" : "Days"}
+              </div>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">This month</span>
+            </Card>
+
+            {/* KPI 4: Qaza Owed */}
+            <Card
+              className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Qaza Owed</span>
+              </div>
+              <div
+                className={`text-lg font-black tracking-tight leading-none ${
+                  kpis.qazaOwedTotal === 0 ? "text-emerald-400" : "text-amber-400"
+                }`}
+              >
+                {kpis.qazaOwedTotal === 0 ? "0 • Clear" : `${kpis.qazaOwedTotal} Left`}
+              </div>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">Pending makeup</span>
+            </Card>
           </div>
-          <CardContent className="p-5 border-t border-[var(--border)]">
-            <Progress value={completionRate} className="h-2 bg-[var(--surface-2)]" />
-          </CardContent>
-        </Card>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Current Streak</span>
-            </div>
-            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{stats.currentStreak} <span className="text-sm not-italic text-[var(--text-secondary)]">days</span></p>
-          </Card>
-          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
-              <Award className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Best Streak</span>
-            </div>
-            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{stats.longestStreak} <span className="text-sm not-italic text-[var(--text-secondary)]">days</span></p>
-          </Card>
-          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
-              <Target className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Weekly Average</span>
-            </div>
-            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{stats.weeklyAverage}<span className="text-sm not-italic text-[var(--text-secondary)]">/5</span></p>
-          </Card>
-          <Card className="p-5 bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-            <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
-              <Calendar className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Days Tracked</span>
-            </div>
-            <p className="text-3xl font-bold font-serif italic text-[var(--text-primary)]">{history.length}</p>
-          </Card>
-        </div>
-
-        {/* Weekly Chart */}
-        <Card className="bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Weekly Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyChartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'var(--surface-2)',
-                      border: '1px solid var(--accent)',
-                      borderRadius: '10px',
-                      color: 'var(--text-primary)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                    }}
-                    itemStyle={{
-                      color: 'var(--text-primary)',
-                    }}
-                  />
-                  <Bar dataKey="completed" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Prayer Breakdown */}
-        <Card className="bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Prayer Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="w-32 h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={25}
-                      outerRadius={50}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+          {/* INTERACTIVE 3-MONTH GITHUB-STYLE HEATMAP (13 Weeks x 7 Days = 91 Cells) */}
+          <Card
+            className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md"
+            style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                  3-Month Consistency Heatmap
+                </h3>
               </div>
-              <div className="flex-1 space-y-2">
-                {stats.prayerBreakdown.map((prayer, index) => {
-                  const rate = prayer.total > 0 ? Math.round((prayer.completed / prayer.total) * 100) : 0;
-                  return (
-                    <div key={prayer.name} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                      />
-                      <span className="text-sm font-medium flex-1 tracking-wide">{prayer.name}</span>
-                      <span className="text-lg font-bold font-serif italic text-[var(--accent)]">{rate}%</span>
-                    </div>
-                  );
-                })}
-              </div>
+              <span className="text-[11px] text-[var(--text-secondary)]">Tap cell to edit</span>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Recent History */}
-        <Card className="bg-[var(--surface)] border border-[var(--border)] shadow-sm pb-8">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-[0.2em]">Recent History</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {history.slice(0, 7).map(day => (
-              <div key={day.date} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
-                <span className="text-sm">
-                  {new Date(day.date).toLocaleDateString('en', { 
-                    weekday: 'short', 
-                    month: 'short', 
-                    day: 'numeric' 
+            {/* Heatmap Grid Container (Horizontal scroll safe for 360px) */}
+            <div className="overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="min-w-[240px] flex gap-1.5 justify-between">
+                {/* Day-of-week labels on left: M, W, F, S */}
+                <div className="flex flex-col justify-between text-[9px] font-bold text-[var(--text-secondary)] pr-1 select-none pt-4">
+                  <span>M</span>
+                  <span>W</span>
+                  <span>F</span>
+                  <span>S</span>
+                </div>
+
+                {/* 13 Week Columns */}
+                <div className="flex-1 grid grid-flow-col grid-rows-7 gap-1.5 auto-cols-fr">
+                  {heatmapCells.map((cell) => {
+                    const isSelected = cell.date === selectedDateKey;
+                    const c = cell.completedCount;
+
+                    // Fallback style followed by color-mix style
+                    let cellBg = "var(--surface-2)";
+                    let cellColorMix = "var(--surface-2)";
+                    let shadowGlow = "none";
+
+                    if (c >= 5) {
+                      cellBg = "var(--accent)";
+                      cellColorMix = "var(--accent)";
+                      shadowGlow = "0 0 6px var(--accent-glow)";
+                    } else if (c >= 3) {
+                      cellBg = "rgba(212, 175, 55, 0.6)";
+                      cellColorMix = "color-mix(in srgb, var(--accent) 60%, var(--surface-2))";
+                    } else if (c >= 1) {
+                      cellBg = "rgba(212, 175, 55, 0.28)";
+                      cellColorMix = "color-mix(in srgb, var(--accent) 28%, var(--surface-2))";
+                    }
+
+                    return (
+                      <button
+                        key={cell.date}
+                        type="button"
+                        onClick={() => setSelectedDate(cell.dateObj)}
+                        title={`${cell.date}: ${cell.completedCount}/5 prayers${cell.fasted ? " • Fasted" : ""}`}
+                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[4px] relative flex items-center justify-center transition-all ${getCellBg(
+                          c,
+                          isSelected
+                        )}`}
+                        style={{
+                          backgroundColor: cellBg,
+                          background: cellColorMix,
+                          boxShadow: isSelected ? "0 0 0 2px var(--accent)" : shadowGlow,
+                        }}
+                      >
+                        {/* Fasted Day indicator: tiny inner accent ring/dot */}
+                        {cell.fasted && (
+                          <span
+                            className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)] block pointer-events-none"
+                            style={{ boxShadow: "0 0 2px rgba(0,0,0,0.8)" }}
+                          />
+                        )}
+                      </button>
+                    );
                   })}
-                </span>
-                <div className="flex gap-1">
-                  {PRAYER_KEYS.map((key, index) => (
-                    <div 
-                      key={key}
-                      title={PRAYERS[index]}
-                      className="w-6 h-6 rounded-full flex items-center justify-center"
-                    >
-                      {day[key] ? (
-                        <CheckCircle className="w-4 h-4 text-[var(--accent)]" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-muted-foreground/30" />
-                      )}
-                    </div>
-                  ))}
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            </div>
+
+            {/* Heatmap Legend */}
+            <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] mt-3 pt-2.5 border-t border-[var(--border)]">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)]" /> Fasted day
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span>Less</span>
+                <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--surface-2)]" />
+                <span
+                  className="w-2.5 h-2.5 rounded-[2px]"
+                  style={{
+                    backgroundColor: "rgba(212, 175, 55, 0.28)",
+                    background: "color-mix(in srgb, var(--accent) 28%, var(--surface-2))",
+                  }}
+                />
+                <span
+                  className="w-2.5 h-2.5 rounded-[2px]"
+                  style={{
+                    backgroundColor: "rgba(212, 175, 55, 0.6)",
+                    background: "color-mix(in srgb, var(--accent) 60%, var(--surface-2))",
+                  }}
+                />
+                <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--accent)]" />
+                <span>5/5</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* DATE SWITCHER HEADER (< Selected Date • Hijri Date > + Back to Today Chip) */}
+          <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePrevDay}
+              className="h-8 w-8 p-0 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              aria-label="Previous day"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+
+            <div className="flex items-center gap-2 min-w-0 flex-1 justify-center text-center">
+              <div className="min-w-0">
+                <h2 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">
+                  {isSelectedDateToday ? "Today" : formattedGregorian}
+                  {formattedHijri ? ` • ${formattedHijri}` : ""}
+                </h2>
+                {isOfflineTimes && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-medium">
+                    <WifiOff className="w-2.5 h-2.5" />
+                    <span>offline times</span>
+                  </span>
+                )}
+              </div>
+
+              {!isSelectedDateToday && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBackToToday}
+                  className="h-6 px-2 text-[10px] font-bold rounded-lg bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)]"
+                >
+                  Back to today
+                </Button>
+              )}
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNextDay}
+              className="h-8 w-8 p-0 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              aria-label="Next day"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* 5 FARD PRAYER CARDS */}
+          <div className="space-y-2.5">
+            {PRAYERS.map((prayer) => {
+              const currentStatus = dayLog.statuses[prayer.key] || "none";
+              const prayerTime = prayerTimesMap ? (prayerTimesMap as any)[prayer.key] : "...";
+              const sunnahCount = dayLog.sunnah[prayer.key] || 0;
+
+              return (
+                <Card
+                  key={prayer.key}
+                  className="p-3.5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-sm"
+                  style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+                >
+                  {/* Top Line: Name + Live Time + Sunnah Rawatib Chip */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+                      <span className="font-bold text-sm text-[var(--text-primary)]">{prayer.label}</span>
+                      <span className="text-xs text-[var(--accent-text)] font-mono font-semibold">{prayerTime}</span>
+                    </div>
+
+                    {/* Interactive Sunnah Rawatib Chip */}
+                    {prayer.sunnahMax > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleCycleSunnah(prayer.key)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all border"
+                        style={{
+                          background: sunnahCount > 0 ? "var(--accent-soft)" : "var(--surface-2)",
+                          color: sunnahCount > 0 ? "var(--accent-text)" : "var(--text-secondary)",
+                          borderColor: sunnahCount > 0 ? "var(--accent)" : "var(--border)",
+                        }}
+                        title={`Tap to cycle Sunnah: ${sunnahCount}/${prayer.sunnahMax}`}
+                      >
+                        <Sparkles className="w-2.5 h-2.5" />
+                        <span>Sunnah {sunnahCount}/{prayer.sunnahMax}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 4-Pill Status Selector (Fitting 360px with repeat(4, 1fr)) */}
+                  <div className="grid grid-cols-4 gap-1.5" style={{ minWidth: 0 }}>
+                    {[
+                      { key: "ontime" as PrayerStatus, label: "On time" },
+                      { key: "late" as PrayerStatus, label: "Late" },
+                      { key: "missed" as PrayerStatus, label: "Missed" },
+                      { key: "makeup" as PrayerStatus, label: "Make-up" },
+                    ].map((pill) => {
+                      const isActive = currentStatus === pill.key;
+                      let activeStyle = {};
+                      if (isActive) {
+                        if (pill.key === "ontime") {
+                          activeStyle = { background: "var(--accent)", color: "var(--on-accent)" };
+                        } else if (pill.key === "late") {
+                          activeStyle = { background: "#F59E0B", color: "#000000" };
+                        } else if (pill.key === "missed") {
+                          activeStyle = { background: "#EF4444", color: "#FFFFFF" };
+                        } else if (pill.key === "makeup") {
+                          activeStyle = { background: "#10B981", color: "#FFFFFF" };
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={pill.key}
+                          type="button"
+                          onClick={() => handleStatusChange(prayer.key, pill.key)}
+                          className={`w-full py-1.5 px-0.5 rounded-[10px] text-[11px] font-bold transition-all truncate text-center select-none ${
+                            isActive
+                              ? "shadow-sm font-extrabold"
+                              : "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]"
+                          }`}
+                          style={activeStyle}
+                        >
+                          {pill.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* NIGHT WORSHIP CARD BELOW ISHA (Witr Prayed Toggle + Qiyam Stepper) */}
+          <Card
+            className="p-3.5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-sm space-y-3"
+            style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+          >
+            <div className="flex items-center gap-2">
+              <Moon className="w-4 h-4 text-[var(--accent)]" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                Night Worship (Qiyam & Witr)
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {/* Witr Prayed Toggle Pill */}
+              <button
+                type="button"
+                onClick={handleToggleWitr}
+                className={`w-full py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                  dayLog.witr
+                    ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm"
+                    : "bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]"
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{dayLog.witr ? "Witr Prayed ✓" : "Witr Prayed"}</span>
+              </button>
+
+              {/* Qiyam Stepper in Steps of 2 */}
+              <div className="flex items-center justify-between p-1 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleStepQiyam(-2)}
+                  disabled={dayLog.qiyam <= 0}
+                  className="h-7 w-7 p-0 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  aria-label="Decrease Qiyam rak'ats"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </Button>
+
+                <div className="text-center">
+                  <span className="text-xs font-bold text-[var(--text-primary)]">
+                    {dayLog.qiyam} {dayLog.qiyam === 1 ? "Rak'at" : "Rak'ats"}
+                  </span>
+                  <span className="block text-[8.5pt] text-[var(--text-secondary)] leading-none">Qiyam</span>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleStepQiyam(2)}
+                  className="h-7 w-7 p-0 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  aria-label="Increase Qiyam rak'ats"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* INTEGRATED SUNNAH & RAMADAN FASTING CARD */}
+          <Card
+            className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md space-y-3.5"
+            style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
+          >
+            {/* Header: Title + Auto-Detected Recommended Fast Badge */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Sun className="w-4 h-4 text-[var(--accent)]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                  Fasting Journal
+                </h3>
+              </div>
+
+              {recommendedFast.isRecommended && (
+                <Badge
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                  style={{
+                    background: "var(--accent-soft)",
+                    color: "var(--accent-text)",
+                    borderColor: "var(--border)",
+                  }}
+                >
+                  ✦ {recommendedFast.label}
+                </Badge>
+              )}
+            </div>
+
+            {/* Suhoor & Iftaar Times Bar */}
+            <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-center">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] block">
+                  Suhoor (Fajr/Imsak)
+                </span>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {prayerTimesMap?.suhoor || "..."}
+                </span>
+              </div>
+              <div className="border-l border-[var(--border)] pl-2">
+                <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] block">
+                  Iftaar (Maghrib)
+                </span>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {prayerTimesMap?.iftaar || "..."}
+                </span>
+              </div>
+            </div>
+
+            {/* Fast Category Selector Pills */}
+            <div className="grid grid-cols-4 gap-1.5" style={{ minWidth: 0 }}>
+              {[
+                { key: "sunnah" as FastCategory, label: "Sunnah" },
+                { key: "ramadan" as FastCategory, label: "Ramadan" },
+                { key: "qaza" as FastCategory, label: "Qaza" },
+                { key: "nafl" as FastCategory, label: "Nafl" },
+              ].map((cat) => {
+                const isCatActive = selectedFastCategory === cat.key;
+                return (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setSelectedFastCategory(cat.key)}
+                    className={`w-full py-1.5 px-0.5 rounded-[10px] text-[11px] font-bold transition-all truncate text-center select-none ${
+                      isCatActive
+                        ? "bg-[var(--accent)] text-[var(--on-accent)] shadow-sm"
+                        : "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 1-Tap Fasted Action Button */}
+            <Button
+              type="button"
+              onClick={handleToggleFasting}
+              className="w-full h-11 rounded-xl font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2"
+              style={{
+                background: dayLog.fasted
+                  ? "linear-gradient(135deg, #10B981 0%, #059669 100%)"
+                  : "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                color: dayLog.fasted ? "#FFFFFF" : "var(--on-accent)",
+              }}
+            >
+              {dayLog.fasted ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>✓ Fast Kept — BarakAllahu Feek</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4" />
+                  <span>Mark as Fasted Today</span>
+                </>
+              )}
+            </Button>
+          </Card>
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

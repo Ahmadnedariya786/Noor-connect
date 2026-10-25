@@ -292,6 +292,8 @@ function AppRoutes() {
               <Route path="/names-of-allah" element={<NamesOfAllah />} />
               <Route path="/quiz" element={<IslamicQuiz />} />
               <Route path="/prayer-stats" element={<PrayerStats />} />
+              <Route path="/services/salah-tracker" element={<PrayerStats />} />
+              <Route path="/salah-tracker" element={<PrayerStats />} />
               <Route path="/habit-tracker" element={<HabitTracker />} />
               <Route path="/quran-radio" element={<QuranRadio />} />
               <Route path="/quran-audio" element={<QuranAudio />} />
@@ -355,6 +357,8 @@ function AppRoutes() {
               <Route path="/names-of-allah" element={<NamesOfAllah />} />
               <Route path="/quiz" element={<IslamicQuiz />} />
               <Route path="/prayer-stats" element={<PrayerStats />} />
+              <Route path="/services/salah-tracker" element={<PrayerStats />} />
+              <Route path="/salah-tracker" element={<PrayerStats />} />
               <Route path="/habit-tracker" element={<HabitTracker />} />
               <Route path="/quran-radio" element={<QuranRadio />} />
               <Route path="/quran-audio" element={<QuranAudio />} />

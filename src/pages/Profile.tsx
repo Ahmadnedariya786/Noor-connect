@@ -490,7 +490,7 @@ const Profile: React.FC = () => {
                 className="py-1.5 px-2 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
                 style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
-                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Offline Data</span>
+                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Personal Data</span>
                 <span className="text-[11px] font-bold text-[var(--accent-text)] truncate w-full">
                   100% Local
                 </span>

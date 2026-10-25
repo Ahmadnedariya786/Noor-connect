@@ -19,7 +19,7 @@ try {
   console.log('SW: Error setting up navigation route', e);
 }
 
-const ASSET_CACHE_NAME = 'noor-connect-assets-v1';
+const ASSET_CACHE_NAME = 'noor-connect-assets-v2';
 const API_CACHE_NAME = 'noor-connect-api-v1';
 const HADITH_CACHE_NAME = 'noor-connect-hadith-v1';
 const NASHEED_CACHE_NAME = 'noor-connect-nasheed-v1';

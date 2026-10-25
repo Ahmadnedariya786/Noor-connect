@@ -583,4 +583,13 @@ export class OnlinePrayerAPI {
       isOnlineSource: false
     };
   }
+
+  /**
+   * Helper alias to retrieve live/cached day schedule with fallback
+   */
+  static async getDaySchedule(date: Date, latitude: number, longitude: number, forceRefresh = false): Promise<LiveDaySchedule> {
+    return this.fetchLiveDayTimings(date, latitude, longitude, forceRefresh);
+  }
 }
+
+export const onlinePrayerApi = OnlinePrayerAPI;

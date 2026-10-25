@@ -151,18 +151,18 @@ export function applyOffsetsToTimings<T extends Record<string, string>>(
   offsets?: PrayerMinuteOffsets
 ): T {
   const currentOffsets = offsets || getPrayerMinuteOffsets();
-  const adjusted = { ...timings };
+  const adjusted: any = { ...timings };
 
   const prayers = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
   for (const prayer of prayers) {
     const key = prayer.toLowerCase() as keyof PrayerMinuteOffsets;
     const offset = currentOffsets[key];
     if (offset !== 0 && adjusted[prayer]) {
-      adjusted[prayer] = adjustTimeStringByMinutes(adjusted[prayer], offset) as any;
+      adjusted[prayer] = adjustTimeStringByMinutes(adjusted[prayer], offset);
     }
   }
 
-  return adjusted;
+  return adjusted as T;
 }
 
 export const applyPrayerOffsets = applyOffsetsToTimings;
