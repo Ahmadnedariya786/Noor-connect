@@ -4,15 +4,15 @@
 
 # ── Noor Connect App Classes ────────────────────────────────────
 # BroadcastReceivers, Services, and Plugins referenced in Manifest
--keep class com.noorconnect.app.AdhanAlarmReceiver { *; }
--keep class com.noorconnect.app.AdhanPlaybackService { *; }
--keep class com.noorconnect.app.NativeAdhanScheduler { *; }
--keep class com.noorconnect.app.NativeAdhanScheduler$ScheduledAdhan { *; }
--keep class com.noorconnect.app.BootReceiver { *; }
--keep class com.noorconnect.app.MainActivity { *; }
+-keep class com.noorconnect.ummah.AdhanAlarmReceiver { *; }
+-keep class com.noorconnect.ummah.AdhanPlaybackService { *; }
+-keep class com.noorconnect.ummah.NativeAdhanScheduler { *; }
+-keep class com.noorconnect.ummah.NativeAdhanScheduler$ScheduledAdhan { *; }
+-keep class com.noorconnect.ummah.BootReceiver { *; }
+-keep class com.noorconnect.ummah.MainActivity { *; }
 
 # Widget providers (new unified widget suite)
--keep class com.noorconnect.app.widgets.** { *; }
+-keep class com.noorconnect.ummah.widgets.** { *; }
 
 # ── Capacitor Framework ──────────────────────────────────────────
 -keep class com.getcapacitor.** { *; }
@@ -40,7 +40,7 @@
 # --- Noor Connect Custom Rules ---
 
 # Keep new Kotlin widget classes
--keep class com.noorconnect.app.widgets.** { *; }
+-keep class com.noorconnect.ummah.widgets.** { *; }
 
 # Keep WorkManager (prevents minification issues with workers)
 -keep class androidx.work.** { *; }

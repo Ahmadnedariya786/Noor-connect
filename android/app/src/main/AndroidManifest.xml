@@ -89,7 +89,7 @@
                   android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+                <action android:name="com.noorconnect.ummah.WIDGET_REFRESH" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                 <action android:name="android.intent.action.TIME_SET" />
             </intent-filter>
@@ -103,7 +103,7 @@
                   android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+                <action android:name="com.noorconnect.ummah.WIDGET_REFRESH" />
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
@@ -116,7 +116,7 @@
                   android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+                <action android:name="com.noorconnect.ummah.WIDGET_REFRESH" />
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
@@ -129,7 +129,7 @@
                   android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+                <action android:name="com.noorconnect.ummah.WIDGET_REFRESH" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_quran_progress_info" />
@@ -141,7 +141,7 @@
                   android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.noorconnect.app.WIDGET_REFRESH" />
+                <action android:name="com.noorconnect.ummah.WIDGET_REFRESH" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_tasbeeh_info" />
@@ -161,8 +161,8 @@
         <receiver android:name=".widgets.tasbeeh.TasbeehReceiver" android:exported="false"
                   android:directBootAware="true">
             <intent-filter>
-                <action android:name="com.noorconnect.app.TASBEEH_INCREMENT" />
-                <action android:name="com.noorconnect.app.TASBEEH_RESET" />
+                <action android:name="com.noorconnect.ummah.TASBEEH_INCREMENT" />
+                <action android:name="com.noorconnect.ummah.TASBEEH_RESET" />
             </intent-filter>
         </receiver>
 
@@ -170,7 +170,7 @@
         <receiver android:name=".widgets.WidgetAlarmReceiver" android:exported="false"
                   android:directBootAware="true">
             <intent-filter>
-                <action android:name="com.noorconnect.app.PRAYER_ALARM" />
+                <action android:name="com.noorconnect.ummah.PRAYER_ALARM" />
             </intent-filter>
         </receiver>
 

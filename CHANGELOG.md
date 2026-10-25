@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.2.1] - 2026-08-22
 
+### 🆔 Package Identity & F-Droid Decoupling
+
+- New package identity - installs as a fresh app; previous build can be uninstalled.
+- Decoupled `applicationId` and namespace to `com.noorconnect.ummah` to resolve package name collision with upstream builds while preserving signature and local security integrity.
+
 ### 📱 Android Widgets — Stability, Deep-Links & Accent Colors
 
 - **Widgets No Longer Break on Android 8–11**: Removed all `RemoteViews` reflection calls to `View.setRotation` from the Next Prayer and Quran Progress widgets. That method only became `@RemotableViewMethod`-safe in Android 12; on API ≤ 30 every widget update threw an `ActionException` during rendering and the launcher showed "Problem loading widget". Progress rings now render purely via `setImageLevel` on the `useLevel` ring drawable, which works on every supported API level (and the redundant rotation/level double-rendering is gone — the arc starts at 12 o'clock).

@@ -130,5 +130,5 @@
     <string name="prayer_isha">Isha</string>
 
     <!-- Boot / app events -->
-    <string name="boot_reschedule_action">com.noorconnect.app.BOOT_REschedule</string>
+    <string name="boot_reschedule_action">com.noorconnect.ummah.BOOT_REschedule</string>
 </resources>

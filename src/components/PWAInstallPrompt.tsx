@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, X, Smartphone } from 'lucide-react';
 
-const FDROID_URL = 'https://f-droid.org/en/packages/com.noorconnect.app/';
+const FDROID_URL = 'https://f-droid.org/en/packages/com.noorconnect.ummah/';
 
 export function PWAInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);

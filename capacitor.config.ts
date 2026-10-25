@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.noorconnect.app',
+  appId: 'com.noorconnect.ummah',
   appName: 'Noor Connect',
   webDir: 'dist',
   server: {
