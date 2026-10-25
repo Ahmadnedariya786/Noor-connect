@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
@@ -102,6 +103,10 @@ export default function MonthlyTimetable() {
 
   const qrSvg = useMemo(() => {
     return generateQRCodeSVG(GITHUB_APP_URL, 64, "#0B101B", "#FFFFFF");
+  }, []);
+
+  const printQrSvg = useMemo(() => {
+    return generateQRCodeSVG(GITHUB_APP_URL, 56, "#0f172a", "#ffffff");
   }, []);
 
   const loadCalendar = useCallback(async (year: number, month: number, forceRefresh = false) => {
@@ -414,11 +419,204 @@ export default function MonthlyTimetable() {
     window.print();
   };
 
+  const printSheetPortal = typeof document !== "undefined" ? createPortal(
+    <div id="noor-a4-print-sheet" aria-hidden="true">
+      {/* Header Banner */}
+      <div
+        style={{
+          marginBottom: "6px",
+          padding: "8px 12px",
+          border: "1.5px solid #0f172a",
+          borderRadius: "8px",
+          background: "#f8fafc",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* Left Side: Title & Info */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <h1
+            style={{
+              fontSize: "13pt",
+              fontWeight: 800,
+              color: "#0f172a",
+              margin: 0,
+              padding: 0,
+              lineHeight: 1.2,
+              letterSpacing: "0.02em",
+            }}
+          >
+            NOOR CONNECT — MONTHLY PRAYER TIMETABLE
+          </h1>
+          <div
+            style={{
+              fontSize: "9pt",
+              fontWeight: 600,
+              color: "#0f172a",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              marginTop: "1px",
+            }}
+          >
+            <span>📍 {location.locationName || "Current Location"}</span>
+            <span>•</span>
+            <span>📅 {monthName} {currentYear} • 🌙 {hijriMonthSpan}</span>
+          </div>
+          <div
+            style={{
+              fontSize: "8.5pt",
+              color: "#334155",
+              marginTop: "1px",
+            }}
+          >
+            Method: {selectedMethod.name} • Fiqh: {madhab === "hanafi" ? "Hanafi" : "Shafi/Standard"} • Includes active Masjid minute offsets
+          </div>
+        </div>
+
+        {/* Right Side: QR Code + Caption */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            marginLeft: "12px",
+          }}
+        >
+          <div
+            style={{
+              width: "56px",
+              height: "56px",
+              background: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            dangerouslySetInnerHTML={{ __html: printQrSvg }}
+          />
+          <span
+            style={{
+              fontSize: "7pt",
+              color: "#334155",
+              marginTop: "2px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
+            Scan for App
+          </span>
+        </div>
+      </div>
+
+      {/* Full-Month Table */}
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          fontSize: "8.2pt",
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1.15,
+        }}
+      >
+        <thead>
+          <tr style={{ background: "#0f172a", color: "#ffffff" }}>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "left", width: "9%" }}>Day</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "left", width: "11%" }}>Date</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "left", width: "14%" }}>Hijri</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "center", width: "11%" }}>Fajr</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "center", width: "11%" }}>Sunrise</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "center", width: "11%" }}>Dhuhr</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "center", width: "11%" }}>Asr</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "center", width: "11%" }}>Maghrib</th>
+            <th style={{ background: "#0f172a", color: "#ffffff", fontWeight: 700, padding: "4px 5px", border: "1px solid #0f172a", textAlign: "center", width: "11%" }}>Isha</th>
+          </tr>
+        </thead>
+        <tbody>
+          {calendar?.days.map((day, idx) => {
+            const fri = isFriday(day);
+            const adj = applyOffsetsToTimings(day.timings, offsets);
+            const cleanHijriMonth = sanitizeHijri(day.date.hijri.month.en);
+            const shortHijriMonth = cleanHijriMonth.includes("ūlā") || cleanHijriMonth.includes("1")
+              ? "Jum I"
+              : cleanHijriMonth.includes("ākhirah") || cleanHijriMonth.includes("2")
+              ? "Jum II"
+              : cleanHijriMonth.substring(0, 7);
+
+            const rowBg = fri ? "#ecfdf5" : (idx % 2 === 1 ? "#f8fafc" : "#ffffff");
+            const rowColor = fri ? "#065f46" : "#0f172a";
+            const rowFontWeight = fri ? 700 : 500;
+
+            return (
+              <tr
+                key={idx}
+                style={{
+                  background: rowBg,
+                  color: rowColor,
+                  fontWeight: rowFontWeight,
+                  pageBreakInside: "avoid",
+                }}
+              >
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "left" }}>
+                  {day.date.gregorian.weekday.en.substring(0, 3)}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "left" }}>
+                  {day.date.gregorian.day} {monthName.substring(0, 3)}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "left" }}>
+                  {day.date.hijri.day} {shortHijriMonth}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "center" }}>
+                  {formatTimetableTime(adj.Fajr, is24h)}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "center" }}>
+                  {formatTimetableTime(adj.Sunrise, is24h)}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "center" }}>
+                  {formatTimetableTime(adj.Dhuhr, is24h)}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "center" }}>
+                  {formatTimetableTime(adj.Asr, is24h)}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "center" }}>
+                  {formatTimetableTime(adj.Maghrib, is24h)}
+                </td>
+                <td style={{ padding: "3px 5px", lineHeight: 1.15, borderBottom: "1px solid #cbd5e1", color: "inherit", textAlign: "center" }}>
+                  {formatTimetableTime(adj.Isha, is24h)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {/* Compact Footer */}
+      <div
+        style={{
+          marginTop: "5px",
+          fontSize: "7.5pt",
+          color: "#475569",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <span>Times formatted in 12h/24h per user preference • Includes active Masjid minute offsets</span>
+        <span>Generated by Noor Connect (Free & Open Source)</span>
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   return (
-    <PageTransition>
-      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-24 print:bg-white print:text-black print:pb-0 timetable-print-sheet">
+    <>
+      <PageTransition>
+        <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-24">
         {/* Screen-Only App Bar with Back Button and Refresh Action */}
-        <div className="print:hidden">
+        <div>
           <AppBar
             title="Monthly Timetable"
             showBack={true}
@@ -437,31 +635,31 @@ export default function MonthlyTimetable() {
           />
         </div>
 
-        <div className="max-w-4xl mx-auto px-2.5 sm:px-4 pt-3 space-y-3 print:p-0 print:m-0 print:max-w-none print:space-y-1">
+        <div className="max-w-4xl mx-auto px-2.5 sm:px-4 pt-3 space-y-3">
           {/* Header Card with Location, Month Switcher & Action Grid */}
           <Card
-            className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] print:border-none print:bg-transparent print:p-0 print:shadow-none"
+            className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)]"
             style={{ boxShadow: "0 8px 30px rgba(0, 0, 0, 0.35)" }}
           >
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               {/* Left Info */}
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-6 rounded-full bg-gradient-to-b from-[var(--accent)] to-[var(--accent-2)] shrink-0 print:hidden" />
-                  <h1 className="text-base sm:text-xl font-bold tracking-tight text-[var(--text-primary)] truncate print:text-black">
+                  <span className="w-2.5 h-6 rounded-full bg-gradient-to-b from-[var(--accent)] to-[var(--accent-2)] shrink-0" />
+                  <h1 className="text-base sm:text-xl font-bold tracking-tight text-[var(--text-primary)] truncate">
                     Monthly Timetable
                   </h1>
                   <Badge
                     variant="outline"
-                    className="text-[10px] font-bold uppercase tracking-wider bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] shrink-0 print:border-black print:text-black"
+                    className="text-[10px] font-bold uppercase tracking-wider bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] shrink-0"
                   >
                     {calendar?.isOnlineSource ? "AlAdhan Live" : "Local Math"}
                   </Badge>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-secondary)] print:text-gray-700">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-secondary)]">
                   <span className="flex items-center gap-1 font-medium truncate max-w-[200px]">
-                    <MapPin className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 print:text-black" />
+                    <MapPin className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
                     {location.locationName || "Current Location"}
                   </span>
                   <span>•</span>
@@ -470,23 +668,10 @@ export default function MonthlyTimetable() {
                   <span>Fiqh: {madhab === "hanafi" ? "Hanafi" : "Shafi/Standard"}</span>
                 </div>
               </div>
-
-              {/* Printable Header QR Block */}
-              <div className="hidden print:flex items-center gap-2 border border-gray-400 p-1.5 rounded-lg bg-white">
-                <div
-                  className="w-14 h-14 shrink-0 flex items-center justify-center bg-white"
-                  dangerouslySetInnerHTML={{ __html: qrSvg }}
-                />
-                <div className="text-[7.5pt] space-y-0.5 leading-tight">
-                  <p className="font-bold text-[#111827]">NOOR CONNECT</p>
-                  <p className="text-gray-600 text-[6.5pt]">Scan for Mobile App</p>
-                  <p className="text-[6pt] text-gray-500">Free & Open Source</p>
-                </div>
-              </div>
             </div>
 
             {/* Month Switcher Row */}
-            <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between gap-2 print:border-gray-300">
+            <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
                 <Button
                   variant="outline"
@@ -669,11 +854,13 @@ export default function MonthlyTimetable() {
           </Card>
 
           {/* Footer Note */}
-          <div className="text-center text-[10px] text-[var(--text-secondary)]/80 py-1.5 print:text-gray-600">
+          <div className="text-center text-[10px] text-[var(--text-secondary)]/80 py-1.5">
             Timetable includes active minute offsets • Based on {selectedMethod.name} ({madhab === "hanafi" ? "Hanafi" : "Shafi/Standard"})
           </div>
         </div>
       </div>
     </PageTransition>
-  );
+    {printSheetPortal}
+  </>
+);
 }

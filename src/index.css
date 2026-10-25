@@ -68,17 +68,17 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
 
     /* Token-Based Theme Engine - Oxford Gold (Default) */
-    --bg-base: #000000;
+    --bg-base: #080B14;
     --bg-elev: #0D1626;
     --surface: #14213D;
     --surface-2: #1D2D4A;
-    --border: rgba(252,163,17,0.22);
-    --accent: #FCA311;
+    --border: rgba(212,175,55,0.22);
+    --accent: #D4AF37;
     --accent-2: #FFD34D;
-    --accent-text: #FFB84D;
+    --accent-text: #F3E5AB;
     --on-accent: #000000;
-    --accent-soft: rgba(252,163,17,0.16);
-    --accent-glow: rgba(252,163,17,0.35);
+    --accent-soft: rgba(212,175,55,0.16);
+    --accent-glow: rgba(212,175,55,0.35);
     --card-sheen: rgba(255,211,77,0.05);
     --text-primary: #FFFFFF;
     --text-secondary: #B9C2D0;
@@ -219,17 +219,17 @@
   }
 
   [data-theme="oxford-gold"] {
-    --bg-base: #000000;
+    --bg-base: #080B14;
     --bg-elev: #0D1626;
     --surface: #14213D;
     --surface-2: #1D2D4A;
-    --border: rgba(252,163,17,0.22);
-    --accent: #FCA311;
+    --border: rgba(212,175,55,0.22);
+    --accent: #D4AF37;
     --accent-2: #FFD34D;
-    --accent-text: #FFB84D;
+    --accent-text: #F3E5AB;
     --on-accent: #000000;
-    --accent-soft: rgba(252,163,17,0.16);
-    --accent-glow: rgba(252,163,17,0.35);
+    --accent-soft: rgba(212,175,55,0.16);
+    --accent-glow: rgba(212,175,55,0.35);
     --card-sheen: rgba(255,211,77,0.05);
     --text-primary: #FFFFFF;
     --text-secondary: #B9C2D0;
@@ -2115,110 +2115,52 @@
   text-align: start;
 }
 
-/* Dedicated Single-Page A4 Mosque Timetable Print Stylesheet */
+/* Dedicated Single-Page A4 Mosque Timetable Print Portal */
+#noor-a4-print-sheet {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4 portrait;
-    margin: 7mm 8mm;
-  }
-
-  *,
-  *::before,
-  *::after {
-    box-shadow: none !important;
-    text-shadow: none !important;
+    margin: 6mm 8mm;
   }
 
   html,
-  body,
-  #root {
-    background: #FFFFFF !important;
-    color: #111827 !important;
-    overflow: visible !important;
-    height: auto !important;
-    max-width: 100% !important;
-    padding: 0 !important;
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
     margin: 0 !important;
-    font-size: 8.5pt !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide all app chrome, floating nav, headers, action buttons & dialogs */
-  nav,
-  [data-bottom-nav],
-  .fixed,
-  header.sticky,
-  .app-bar,
-  .print-hidden,
-  .print\:hidden,
-  button,
-  [role="status"],
-  .toaster,
-  [data-sonner-toaster],
-  .safe-bottom {
+  body > *:not(#noor-a4-print-sheet) {
     display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    width: 0 !important;
-    pointer-events: none !important;
   }
 
-  /* Timetable Print Container */
-  .timetable-print-sheet {
-    background: #FFFFFF !important;
-    color: #111827 !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  #noor-a4-print-sheet {
+    display: block !important;
     width: 100% !important;
-    max-width: 100% !important;
-    min-height: auto !important;
-    page-break-after: avoid !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  .timetable-print-sheet table {
+  #noor-a4-print-sheet table {
     width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: fixed !important;
     page-break-inside: avoid !important;
   }
 
-  .timetable-print-sheet thead tr {
-    background: #F3F4F6 !important;
-    border-bottom: 1.5pt solid #111827 !important;
+  #noor-a4-print-sheet tr {
     page-break-inside: avoid !important;
-  }
-
-  .timetable-print-sheet th {
-    padding: 2.5px 3px !important;
-    font-size: 8pt !important;
-    font-weight: 800 !important;
-    color: #111827 !important;
-    border: 0.5pt solid #D1D5DB !important;
-    line-height: 1.15 !important;
-    text-transform: uppercase !important;
-  }
-
-  .timetable-print-sheet td {
-    padding: 2.5px 4px !important;
-    font-size: 8.5pt !important;
-    line-height: 1.15 !important;
-    border: 0.5pt solid #E5E7EB !important;
-    color: #111827 !important;
-  }
-
-  .timetable-print-sheet tr {
-    page-break-inside: avoid !important;
-  }
-
-  .timetable-print-sheet tr.friday-row {
-    background-color: #F0FDF4 !important;
-  }
-
-  .timetable-print-sheet tr.today-row {
-    background-color: #FEF9C3 !important;
-    font-weight: 700 !important;
   }
 }
 
