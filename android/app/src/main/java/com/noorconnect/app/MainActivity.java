@@ -181,9 +181,141 @@ public class MainActivity extends BridgeActivity {
                     public void openExternalBrowser(String url) {
                         MainActivity.this.openExternalBrowser(url);
                     }
+
+                    @android.webkit.JavascriptInterface
+                    public void printTimetablePdf(String jobName) {
+                        runOnUiThread(() -> {
+                            try {
+                                WebView wv = (getBridge() != null) ? getBridge().getWebView() : null;
+                                if (wv == null) {
+                                    Log.w(TAG, "printTimetablePdf: WebView is null");
+                                    return;
+                                }
+                                android.print.PrintManager printManager = (android.print.PrintManager) getSystemService(Context.PRINT_SERVICE);
+                                if (printManager == null) {
+                                    Log.w(TAG, "printTimetablePdf: PrintManager not available on this device");
+                                    return;
+                                }
+                                String printJobName = (jobName != null && !jobName.trim().isEmpty())
+                                        ? jobName.trim()
+                                        : "Noor-Connect-Timetable";
+                                android.print.PrintDocumentAdapter adapter = wv.createPrintDocumentAdapter(printJobName);
+                                android.print.PrintAttributes attrs = new android.print.PrintAttributes.Builder()
+                                        .setMediaSize(android.print.PrintAttributes.MediaSize.ISO_A4)
+                                        .setColorMode(android.print.PrintAttributes.COLOR_MODE_COLOR)
+                                        .build();
+                                printManager.print(printJobName, adapter, attrs);
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Failed to launch native print manager", t);
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void shareTimetablePng(String base64DataUrl, String fileName) {
+                        runOnUiThread(() -> {
+                            try {
+                                if (base64DataUrl == null || base64DataUrl.isEmpty()) {
+                                    Log.w(TAG, "shareTimetablePng: base64DataUrl is empty");
+                                    return;
+                                }
+                                String pureBase64 = base64DataUrl;
+                                if (pureBase64.contains(",")) {
+                                    pureBase64 = pureBase64.substring(pureBase64.indexOf(",") + 1);
+                                }
+                                byte[] imageBytes = android.util.Base64.decode(pureBase64, android.util.Base64.DEFAULT);
+                                String targetName = (fileName != null && !fileName.trim().isEmpty())
+                                        ? fileName.trim()
+                                        : "noor-connect-timetable.png";
+                                File imageFile = new File(getCacheDir(), targetName);
+                                try (FileOutputStream fos = new FileOutputStream(imageFile)) {
+                                    fos.write(imageBytes);
+                                    fos.flush();
+                                }
+
+                                Uri contentUri = androidx.core.content.FileProvider.getUriForFile(
+                                        MainActivity.this,
+                                        getPackageName() + ".fileprovider",
+                                        imageFile
+                                );
+
+                                Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                                sendIntent.setType("image/png");
+                                sendIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                                sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                                Intent chooser = Intent.createChooser(sendIntent, "Share Prayer Timetable");
+                                chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(chooser);
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Failed to share timetable image natively", t);
+                            }
+                        });
+                    }
                 }, "AndroidBridge");
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to register AndroidBridge JavascriptInterface", t);
+            }
+
+            try {
+                webView.getSettings().setGeolocationEnabled(true);
+                webView.getSettings().setGeolocationDatabasePath(getFilesDir().getPath());
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to enable WebView geolocation settings", t);
+            }
+
+            try {
+                final android.webkit.WebChromeClient existingChromeClient = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        ? webView.getWebChromeClient()
+                        : null;
+                webView.setWebChromeClient(new android.webkit.WebChromeClient() {
+                    @Override
+                    public void onGeolocationPermissionsShowPrompt(String origin, android.webkit.GeolocationPermissions.Callback callback) {
+                        try {
+                            boolean hasFine = ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                            boolean hasCoarse = ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                            if (hasFine || hasCoarse) {
+                                callback.invoke(origin, true, false);
+                            } else {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                }, 9003);
+                                callback.invoke(origin, true, false);
+                            }
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Error handling geolocation permission prompt safely", t);
+                            callback.invoke(origin, false, false);
+                        }
+                    }
+
+                    @Override
+                    public boolean onShowFileChooser(WebView webView, android.webkit.ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                        if (existingChromeClient != null) {
+                            return existingChromeClient.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+                        }
+                        return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+                    }
+
+                    @Override
+                    public boolean onConsoleMessage(android.webkit.ConsoleMessage consoleMessage) {
+                        if (existingChromeClient != null) {
+                            return existingChromeClient.onConsoleMessage(consoleMessage);
+                        }
+                        return super.onConsoleMessage(consoleMessage);
+                    }
+
+                    @Override
+                    public void onProgressChanged(WebView view, int newProgress) {
+                        if (existingChromeClient != null) {
+                            existingChromeClient.onProgressChanged(view, newProgress);
+                        } else {
+                            super.onProgressChanged(view, newProgress);
+                        }
+                    }
+                });
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to set custom WebChromeClient for geolocation", t);
             }
         }
 

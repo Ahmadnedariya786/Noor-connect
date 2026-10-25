@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, MapPin, Loader2, Bookmark, X, Star } from "lucide-react";
+import { Search, MapPin, Loader2, Bookmark, X, Star, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { GeocodingService, type GeocodingResult } from "@/lib/geocoding";
+import { loadStoredLocation } from "@/lib/location-state";
 import {
   getSavedLocations,
   saveLocationToFavorites,
@@ -32,8 +33,33 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [regionFilter, setRegionFilter] = useState<'saved' | 'india' | 'international' | 'all'>('saved');
   const [savedLocations, setSavedLocations] = useState<SavedLocation[]>(() => getSavedLocations());
+  const [bookmarkedIndices, setBookmarkedIndices] = useState<Record<number, boolean>>({});
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  const storedLoc = loadStoredLocation();
+  const activeCity = searchQuery.trim()
+    ? searchQuery.trim().split(',')[0].trim()
+    : (storedLoc.locationName ? storedLoc.locationName.split(',')[0].trim() : 'Current Location');
+  const isCitySaved = savedLocations.some(
+    l => l.name?.toLowerCase().includes(activeCity.toLowerCase()) || l.city.toLowerCase() === activeCity.toLowerCase()
+  );
+
+  const handleSaveActiveCity = () => {
+    const loc = loadStoredLocation();
+    const fullName = searchQuery.trim() || loc.locationName || 'Current Location';
+    const parts = fullName.split(',');
+    const city = parts[0]?.trim() || fullName;
+    const country = parts.length > 1 ? parts.slice(1).join(',').trim() : (loc.locationName?.split(',')[1]?.trim() || '');
+    saveLocationToFavorites({
+      name: fullName,
+      city,
+      country,
+      latitude: loc.latitude,
+      longitude: loc.longitude
+    });
+    toast({ title: "Location Saved", description: `"${city}" saved to bookmarks.` });
+  };
 
   useEffect(() => {
     const handleSavedChange = () => setSavedLocations(getSavedLocations());
@@ -160,10 +186,38 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             )}
           </div>
 
-          {/* Suggestions Dropdown */}
+          {/* 1-Tap Save Active City Chip */}
+          {activeCity && (
+            <div className="flex items-center justify-between px-0.5">
+              <button
+                type="button"
+                onClick={handleSaveActiveCity}
+                disabled={isCitySaved}
+                className={`text-xs px-3 py-1 rounded-full flex items-center gap-1.5 transition-all ${
+                  isCitySaved
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 cursor-default'
+                    : 'bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] hover:bg-[var(--accent)] hover:text-white active:scale-95'
+                }`}
+              >
+                {isCitySaved ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="font-medium truncate max-w-[210px]">Saved "{activeCity}"</span>
+                  </>
+                ) : (
+                  <>
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                    <span className="font-semibold truncate max-w-[210px]">★ Save "{activeCity}"</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Suggestions Dropdown with clean elevation & spacing */}
           {showSuggestions && suggestions.length > 0 && (
             <div 
-              className="absolute z-50 w-full mt-1 bg-popover rounded-md border shadow-md max-h-[200px] overflow-auto overscroll-contain"
+              className="absolute z-50 left-0 right-0 top-full mt-2 bg-popover/95 backdrop-blur-md rounded-2xl border border-[var(--border)] shadow-2xl max-h-[220px] overflow-auto overscroll-contain"
               style={{
                 overscrollBehavior: 'contain',
                 WebkitOverflowScrolling: 'touch',
@@ -174,7 +228,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
               {suggestions.map((place, index) => (
                 <div
                   key={index}
-                  className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b border-[var(--border)]/50 last:border-0"
                 >
                   <button
                     type="button"
@@ -187,6 +241,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      e.preventDefault();
                       const city = place.address.city || place.address.town || place.address.village || place.display_name.split(',')[0];
                       const country = place.address.country || '';
                       saveLocationToFavorites({
@@ -196,12 +251,17 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
                         latitude: parseFloat(place.lat),
                         longitude: parseFloat(place.lon)
                       });
+                      setBookmarkedIndices(prev => ({ ...prev, [index]: true }));
                       toast({ title: "Location Saved", description: `${city} added to saved locations.` });
                     }}
-                    className="p-1 rounded-full text-muted-foreground hover:text-[var(--accent-text)] hover:bg-[var(--accent-soft)] transition-colors shrink-0"
+                    className="p-1.5 rounded-full text-muted-foreground hover:text-[var(--accent-text)] hover:bg-[var(--accent-soft)] transition-colors shrink-0"
                     title="Bookmark location"
                   >
-                    <Bookmark className="w-3.5 h-3.5" />
+                    {bookmarkedIndices[index] ? (
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Bookmark className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
               ))}
@@ -229,23 +289,25 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
 
         <div className="mt-5" onTouchMove={(e) => e.stopPropagation()}>
           {/* Region Tabs */}
-          <div className="flex items-center justify-center p-1 bg-muted/60 rounded-xl mb-3 gap-1">
+          <div className="flex items-center justify-between p-1 bg-muted/60 rounded-xl mb-3 gap-1 overflow-x-auto">
             <button
               type="button"
               onClick={() => setRegionFilter('saved')}
-              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1 ${
+              style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', padding: '5px 8px' }}
+              className={`flex-1 rounded-lg font-medium transition-all flex items-center justify-center gap-1 shrink-0 ${
                 regionFilter === 'saved'
                   ? 'bg-background text-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Bookmark className="w-3 h-3 text-[var(--accent-text)]" />
-              Saved ({savedLocations.length})
+              <Bookmark className="w-3 h-3 text-[var(--accent-text)] shrink-0" />
+              <span>Saved ({savedLocations.length})</span>
             </button>
             <button
               type="button"
               onClick={() => setRegionFilter('india')}
-              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all ${
+              style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', padding: '5px 8px' }}
+              className={`flex-1 rounded-lg font-medium transition-all shrink-0 ${
                 regionFilter === 'india'
                   ? 'bg-background text-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -256,7 +318,8 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             <button
               type="button"
               onClick={() => setRegionFilter('international')}
-              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all ${
+              style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', padding: '5px 8px' }}
+              className={`flex-1 rounded-lg font-medium transition-all shrink-0 ${
                 regionFilter === 'international'
                   ? 'bg-background text-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -267,7 +330,8 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             <button
               type="button"
               onClick={() => setRegionFilter('all')}
-              className={`flex-1 text-xs py-1.5 px-2 rounded-lg font-medium transition-all ${
+              style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', padding: '5px 8px' }}
+              className={`flex-1 rounded-lg font-medium transition-all shrink-0 ${
                 regionFilter === 'all'
                   ? 'bg-background text-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -414,7 +478,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
 
         <div className="mt-4 text-center">
           <p className="text-xs text-muted-foreground">
-            Offline database with OpenStreetMap search
+            Live Global Search • OpenStreetMap & AlAdhan
           </p>
         </div>
       </CardContent>

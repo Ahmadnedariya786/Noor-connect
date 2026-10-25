@@ -46,7 +46,7 @@ export const SUNNAH_CHAIN_STEPS: ChainStep[] = [
   {
     id: 4,
     label: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
-    transliteration: "La ilaha illallahu wahdahu la sharika lah...",
+    transliteration: "LA ILAHA ILLALLAHU WAHDAHU LA SHARIKA LAHU, LAHUL-MULKU WA LAHUL-HAMDU WA HUWA 'ALA KULLI SHAY'IN QADIR",
     translation: "None has the right to be worshipped but Allah alone (100th Seal of Tawheed)",
     target: 1,
   },
@@ -59,9 +59,9 @@ export const SUNNAH_CHAIN_STEPS: ChainStep[] = [
   },
   {
     id: 6,
-    label: "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَعَلَىٰ آلِ مُحَمَّدٍ",
-    transliteration: "Allahumma salli 'ala Muhammadin...",
-    translation: "O Allah, send blessings upon Muhammad and upon the family of Muhammad",
+    label: "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ النَّبِيِّ الْأُمِّيِّ وَعَلَىٰ آلِهِ وَسَلِّمْ تَسْلِيمًا",
+    transliteration: "ALLAHUMMA SALLI 'ALA MUHAMMADIN NABIYYIL UMMIYYI WA 'ALA ALIHI WA SALLIM TASLEEMA",
+    translation: "O Allah, send blessings and peace upon Muhammad, the Unlettered Prophet, and upon his family",
     target: 10,
   },
 ];
@@ -233,17 +233,15 @@ const Tasbeeh = () => {
     });
   }, [chainStepIndex, feedbackMode, isChainMode, label, playAudioClick, targetGoal, triggerHapticFeedback]);
 
-  // Keep a stable ref for auto counter
-  const handleIncrementRef = useRef(handleIncrement);
-  useEffect(() => {
-    handleIncrementRef.current = handleIncrement;
-  }, [handleIncrement]);
+  // Keep a stable ref for auto counter updated every render
+  const latestIncrementRef = useRef(handleIncrement);
+  latestIncrementRef.current = handleIncrement;
 
   // Hands-free rhythmic auto counter timer
   useEffect(() => {
     if (isAutoCounting) {
       autoIntervalRef.current = setInterval(() => {
-        handleIncrementRef.current();
+        latestIncrementRef.current();
       }, autoPace * 1000);
     } else {
       if (autoIntervalRef.current) {
@@ -274,6 +272,7 @@ const Tasbeeh = () => {
 
   const handleDhikrChange = (value: string) => {
     if (isLocked) return;
+    setIsAutoCounting(false);
     setSelectedDhikr(value);
     setCount(0);
     triggerHapticFeedback('select');
@@ -281,6 +280,7 @@ const Tasbeeh = () => {
 
   const handlePrevDhikr = () => {
     if (isLocked) return;
+    setIsAutoCounting(false);
     const idx = DHIKR_OPTIONS.findIndex(d => d.value === selectedDhikr);
     const prevIdx = (idx - 1 + DHIKR_OPTIONS.length) % DHIKR_OPTIONS.length;
     setSelectedDhikr(DHIKR_OPTIONS[prevIdx].value);
@@ -289,6 +289,7 @@ const Tasbeeh = () => {
 
   const handleNextDhikr = () => {
     if (isLocked) return;
+    setIsAutoCounting(false);
     const idx = DHIKR_OPTIONS.findIndex(d => d.value === selectedDhikr);
     const nextIdx = (idx + 1) % DHIKR_OPTIONS.length;
     setSelectedDhikr(DHIKR_OPTIONS[nextIdx].value);
@@ -570,6 +571,7 @@ const Tasbeeh = () => {
               type="button"
               onClick={() => {
                 if (isLocked) return;
+                setIsAutoCounting(false);
                 setIsChainMode(prev => !prev);
                 setCount(0);
                 triggerHapticFeedback('select');
@@ -582,7 +584,7 @@ const Tasbeeh = () => {
               }}
             >
               <Link2 className="w-3.5 h-3.5" />
-              <span>{isChainMode ? `⛓ Sunnah Chain (Set ${chainStepIndex + 1} of 6)` : '⛓ Sunnah Chain Mode'}</span>
+              <span>{isChainMode ? `⛓ Sunnah Chain: ON (${chainStepIndex + 1}/6)` : '⛓ Sunnah Chain Mode'}</span>
             </button>
           </div>
 
@@ -638,13 +640,12 @@ const Tasbeeh = () => {
                 <div
                   className="px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5"
                   style={{
-                    background: 'var(--accent-soft)',
-                    borderColor: 'var(--accent)',
-                    color: 'var(--accent-text)',
+                    background: 'var(--surface-2)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
                   }}
                 >
-                  <Link2 className="w-3.5 h-3.5" />
-                  <span>Sunnah Chain • Set {chainStepIndex + 1} of 6</span>
+                  <span>Set {chainStepIndex + 1} of 6 • Target {activeChainStep.target}</span>
                 </div>
 
                 <button
@@ -690,7 +691,17 @@ const Tasbeeh = () => {
                 </button>
 
                 {/* Center Pill (Dropdown Trigger): Dhikr X of Y • Change ⌄ */}
-                <Select value={selectedDhikr} onValueChange={handleDhikrChange} disabled={isLocked}>
+                <Select
+                  value={selectedDhikr}
+                  onValueChange={(val) => {
+                    setIsAutoCounting(false);
+                    handleDhikrChange(val);
+                  }}
+                  onOpenChange={(open) => {
+                    if (open) setIsAutoCounting(false);
+                  }}
+                  disabled={isLocked}
+                >
                   <SelectTrigger
                     className="h-auto w-auto px-2.5 py-1 border shadow-none text-center justify-center gap-1 font-semibold rounded-full select-none"
                     style={{
@@ -706,21 +717,30 @@ const Tasbeeh = () => {
                     <span>Dhikr {currentIndex + 1} of {DHIKR_OPTIONS.length} • Change</span>
                   </SelectTrigger>
                   <SelectContent
-                    className="max-h-[270px] overflow-y-auto"
+                    className="max-h-[280px] overflow-y-auto"
                     style={{
                       background: 'var(--bg-elev)',
                       borderColor: 'var(--border)',
                       color: 'var(--text-primary)',
                       padding: '8px 0',
-                      maxHeight: '270px',
+                      maxHeight: '280px',
                       overflowY: 'auto',
                     }}
                   >
                     {DHIKR_OPTIONS.map((dhikr) => (
-                      <SelectItem key={dhikr.value} value={dhikr.value} className="py-2.5 px-3">
-                        <div className="flex flex-col text-left">
-                          <span className="font-arabic text-base" style={{ color: 'var(--accent-text)' }}>{dhikr.label}</span>
-                          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{dhikr.transliteration}</span>
+                      <SelectItem
+                        key={dhikr.value}
+                        value={dhikr.value}
+                        className="cursor-pointer"
+                        style={{ padding: '10px 12px', whiteSpace: 'normal' }}
+                      >
+                        <div className="flex flex-col text-left w-full max-w-[280px]" style={{ whiteSpace: 'normal', lineHeight: 1.35 }}>
+                          <span className="font-arabic text-base" style={{ color: 'var(--accent-text)', lineHeight: 1.8, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            {dhikr.label}
+                          </span>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: 1.35, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            {dhikr.transliteration}
+                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -853,7 +873,7 @@ const Tasbeeh = () => {
                     <span className="text-[var(--text-secondary)] text-[11px]">Next:</span>
                     <span className="text-[var(--accent-text)] font-bold truncate text-[11px]">
                       {chainStepIndex === 5
-                        ? 'Restart (SubhanAllah • 33)'
+                        ? 'Set 1 • SubhanAllah'
                         : `${nextChainStep.transliteration} • ${nextChainStep.target}`}
                     </span>
                   </div>

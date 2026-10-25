@@ -38,7 +38,7 @@ const getInitialDefaultLocation = (): LocationState => {
 const DEFAULT_LOCATION: LocationState = getInitialDefaultLocation();
 
 // Load location from localStorage
-const loadStoredLocation = (): LocationState => {
+export const loadStoredLocation = (): LocationState => {
   try {
     const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
     if (stored) {
@@ -180,41 +180,44 @@ export const useLocationState = () => {
         return null;
       }
 
-      // 4. CRITICAL: DO NOT trust IP city/country string or generic names.
-      // Match against the app's offline city dataset using Haversine distance.
+      // 4. Match against the app's offline city dataset for timezone and baseline
       const nearestCity = findNearestOfflineCity(lat, lon);
       if (!nearestCity) {
         setLocationState(prev => ({ ...prev, isDetecting: false }));
         return null;
       }
 
-      // 5. Optionally reverse geocode with Nominatim to enrich the district/suburb display name if online
+      // 5. Live reverse geocode with Nominatim (zoom=12) to extract real town/city/taluka + country
+      let localPlace = nearestCity.city;
+      let countryName = nearestCity.country;
       let locationName = `${nearestCity.city}, ${nearestCity.country}`;
+
       try {
         const nominatimRes = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`,
           {
             headers: { 'User-Agent': 'Noor-Connect-Islamic-App/1.0' },
-            signal: AbortSignal.timeout(3000)
+            signal: AbortSignal.timeout(3500)
           }
         );
         if (nominatimRes.ok) {
           const data = await nominatimRes.json();
           if (data?.address) {
-            const localName = data.address.city || data.address.town || data.address.suburb || nearestCity.city;
-            const countryName = data.address.country || nearestCity.country;
-            if (localName && countryName) {
-              locationName = `${localName}, ${countryName}`;
+            const addr = data.address;
+            localPlace = addr.city || addr.town || addr.county || addr.suburb || addr.village || addr.municipality || addr.state_district || nearestCity.city;
+            countryName = addr.country || nearestCity.country;
+            if (localPlace && countryName) {
+              locationName = `${localPlace}, ${countryName}`;
             }
           }
         }
       } catch {
-        // Fallback to offline nearest city display name
+        // Fallback safely to offline nearest city display name
       }
 
       const newLocation: LocationState = {
-        latitude: nearestCity.lat,
-        longitude: nearestCity.lon,
+        latitude: lat,
+        longitude: lon,
         locationName,
         timeZone: nearestCity.timezone,
         isDetecting: false,
@@ -225,6 +228,20 @@ export const useLocationState = () => {
       setLocationState(newLocation);
       saveLocation(newLocation);
 
+      // Save to favorite/saved locations history
+      try {
+        const { saveLocationToFavorites } = await import('@/lib/saved-locations');
+        saveLocationToFavorites({
+          name: locationName,
+          city: localPlace,
+          country: countryName,
+          latitude: lat,
+          longitude: lon,
+        });
+      } catch {
+        // Safe guard for history save
+      }
+
       // Update Android widget
       import('@/lib/widget-service').then(({ WidgetService }) => {
         try {
@@ -234,7 +251,14 @@ export const useLocationState = () => {
         }
       }).catch(err => console.warn('Failed to import widget service:', err));
 
-      return nearestCity;
+      return {
+        ...nearestCity,
+        city: localPlace,
+        country: countryName,
+        lat,
+        lon,
+        locationName,
+      };
     } catch (err) {
       console.error('Unexpected error during location detection:', err);
       setLocationState(prev => ({ ...prev, isDetecting: false }));

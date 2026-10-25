@@ -300,10 +300,11 @@ function PremiumDashboardInner({
                         } catch {
                           // Offline fallback is fine
                         }
-                        location.setLocation(matchedCity.lat, matchedCity.lon, `${matchedCity.city}, ${matchedCity.country}`, timezone);
+                        const finalName = matchedCity.locationName || `${matchedCity.city}, ${matchedCity.country}`;
+                        location.setLocation(matchedCity.lat, matchedCity.lon, finalName, timezone);
                         await prayerTimesHook.setManualLocation(matchedCity.city, matchedCity.country);
                         handleCloseModal();
-                        toast({ title: "Location Updated", description: `Time adjusted to ${timezone}` });
+                        toast({ title: "Location Updated", description: finalName });
                       } else {
                         toast({
                           title: "Unable to detect GPS",
@@ -373,44 +374,48 @@ function PremiumDashboardInner({
       <div className="flex-1 px-5 pb-36 safe-top space-y-6 max-w-lg mx-auto w-full">
 
         {/* ── Top Bar ── */}
-        <div className="flex items-center justify-between pt-4">
+        <div className="flex items-center justify-between pt-4 gap-2">
           {/* Location pill */}
           <button
             onClick={onLocationClick}
-            className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full transition-all active:scale-95 border"
+            className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full transition-all active:scale-95 border min-w-0 flex-1 max-w-[210px]"
             style={{ background: 'var(--accent-soft)', borderColor: 'var(--border)' }}
           >
-            <MapPin className="w-3.5 h-3.5" style={{ color: 'var(--accent-text)' }} />
-            <span className="text-xs font-semibold max-w-[130px] truncate text-foreground/85">
+            <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--accent-text)' }} />
+            <span className="text-xs font-semibold truncate text-foreground/85">
               {locationLabel}
             </span>
-            <ChevronRight className="w-3 h-3 text-muted-foreground" />
+            <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
           </button>
 
           {/* Right actions: Qibla bearing pill + Notification bell */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {qiblaBearing !== null && (
               <button
                 type="button"
                 onClick={() => navigate('/qibla')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all active:scale-95 border text-xs font-bold"
+                className="flex items-center gap-1 rounded-full transition-all active:scale-95 border font-bold shrink-0 whitespace-nowrap"
                 style={{
                   background: 'var(--surface-2)',
                   borderColor: 'var(--border)',
                   color: 'var(--text-primary)',
+                  fontSize: '0.76rem',
+                  padding: '6px 10px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
                 title="Open Qibla Compass"
                 aria-label={`Qibla direction ${qiblaBearing} degrees`}
               >
-                <Compass className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <span>Qibla {qiblaBearing}°</span>
+                <Compass className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                <span className="whitespace-nowrap font-mono">{qiblaBearing}°</span>
               </button>
             )}
 
             {/* Notification bell */}
             <button
               onClick={onNotificationClick}
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 bg-muted/60 border border-border"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 bg-muted/60 border border-border shrink-0"
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4 text-foreground/60" />

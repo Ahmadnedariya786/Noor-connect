@@ -69,7 +69,7 @@ const GROUPS: SettingsGroup[] = [
         id: 'clock-style',
         title: 'Clock Style',
         titleKey: 'clockStyle',
-        subtitle: '6 luxury watch faces',
+        subtitle: '6 watch faces',
         icon: Clock,
         gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
         iconColor: 'text-amber-600 dark:text-amber-400',

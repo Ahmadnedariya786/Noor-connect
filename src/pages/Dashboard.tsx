@@ -38,6 +38,7 @@ import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { getPrayerDisplayName, isMatchingPrayer } from "@/lib/prayer-utils";
 
 import { hasHomeEntranceCompleted, markHomeEntranceCompleted } from "@/lib/home-entrance";
+import { getPrayerMinuteOffsets, applyOffsetsToTimings, PRAYER_OFFSETS_CHANGED_EVENT } from "@/lib/prayer-offsets";
 
 // Persistent module-level cache so prayer times remain mounted across route transitions and clock style switches
 let cachedDashboardPrayers: PrayerTime[] = [];
@@ -213,7 +214,9 @@ export default function Dashboard() {
       }
 
       // Get today's prayer times and metadata (including timezone)
-      const { timings, timezone: fetchedTimezone } = await AladhanAPI.getTodaysPrayerTimes(location.latitude, location.longitude, 1);
+      const { timings: rawTimings, timezone: fetchedTimezone } = await AladhanAPI.getTodaysPrayerTimes(location.latitude, location.longitude, 1);
+      const offsets = getPrayerMinuteOffsets();
+      const timings = applyOffsetsToTimings(rawTimings, offsets);
 
       // Update global location state with the fetched timezone if it's different or not set
       if (fetchedTimezone && fetchedTimezone !== location.timeZone) {
@@ -266,23 +269,33 @@ export default function Dashboard() {
       // Fallback to offline calculation
       const { calculatePrayerTimes } = await import('@/lib/prayer-calculator');
       const times = calculatePrayerTimes(location.latitude, location.longitude, new Date());
+      const offsets = getPrayerMinuteOffsets();
+      const rawOfflineTimings = {
+        Fajr: times.fajr.toTimeString().slice(0, 5),
+        Sunrise: times.sunrise.toTimeString().slice(0, 5),
+        Dhuhr: times.dhuhr.toTimeString().slice(0, 5),
+        Asr: times.asr.toTimeString().slice(0, 5),
+        Maghrib: times.maghrib.toTimeString().slice(0, 5),
+        Isha: times.isha.toTimeString().slice(0, 5),
+      };
+      const fallbackTimings = applyOffsetsToTimings(rawOfflineTimings, offsets);
 
       const fallbackPrayers: PrayerTime[] = [
-        { name: "Fajr", time: formatTimeFromAPI(times.fajr.toTimeString().slice(0, 5)), date: times.fajr },
-        { name: "Sunrise", time: formatTimeFromAPI(times.sunrise.toTimeString().slice(0, 5)), date: times.sunrise },
-        { name: "Dhuhr", time: formatTimeFromAPI(times.dhuhr.toTimeString().slice(0, 5)), date: times.dhuhr },
-        { name: "Asr", time: formatTimeFromAPI(times.asr.toTimeString().slice(0, 5)), date: times.asr },
-        { name: "Maghrib", time: formatTimeFromAPI(times.maghrib.toTimeString().slice(0, 5)), date: times.maghrib },
-        { name: "Isha", time: formatTimeFromAPI(times.isha.toTimeString().slice(0, 5)), date: times.isha },
+        { name: "Fajr", time: formatTimeFromAPI(fallbackTimings.Fajr), date: parseTimeToDate(fallbackTimings.Fajr) },
+        { name: "Sunrise", time: formatTimeFromAPI(fallbackTimings.Sunrise), date: parseTimeToDate(fallbackTimings.Sunrise) },
+        { name: "Dhuhr", time: formatTimeFromAPI(fallbackTimings.Dhuhr), date: parseTimeToDate(fallbackTimings.Dhuhr) },
+        { name: "Asr", time: formatTimeFromAPI(fallbackTimings.Asr), date: parseTimeToDate(fallbackTimings.Asr) },
+        { name: "Maghrib", time: formatTimeFromAPI(fallbackTimings.Maghrib), date: parseTimeToDate(fallbackTimings.Maghrib) },
+        { name: "Isha", time: formatTimeFromAPI(fallbackTimings.Isha), date: parseTimeToDate(fallbackTimings.Isha) },
       ];
       cachedDashboardPrayers = fallbackPrayers;
       setPrayers(fallbackPrayers);
 
       // Offline Suhoor & Iftaar per Guard 1
       setSuhoorIftaar({
-        suhoorTime: formatTimeFromAPI(times.fajr.toTimeString().slice(0, 5)),
+        suhoorTime: formatTimeFromAPI(fallbackTimings.Fajr),
         suhoorLabel: "Suhoor",
-        iftaarTime: formatTimeFromAPI(times.maghrib.toTimeString().slice(0, 5)),
+        iftaarTime: formatTimeFromAPI(fallbackTimings.Maghrib),
         iftaarLabel: "Iftaar",
       });
 
@@ -303,6 +316,41 @@ export default function Dashboard() {
       setInitialLoad(false);
     }
   }, [location.latitude, location.longitude, location.timeZone, location.locationName, location.setLocation, formatTimeFromAPI, parseTimeToDate, timeFormat]);
+
+  // Reactive subscription to prayer offsets changes and route focus
+  useEffect(() => {
+    const handleOffsetsChange = () => {
+      cachedDashboardPrayers = [];
+      cachedNextPrayerName = "";
+      cachedNextPrayerTime = "";
+      cachedTargetTime = null;
+      loadPrayerTimes();
+    };
+
+    window.addEventListener('prayer-offsets-changed', handleOffsetsChange);
+    window.addEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+    window.addEventListener('focus', handleOffsetsChange);
+
+    return () => {
+      window.removeEventListener('prayer-offsets-changed', handleOffsetsChange);
+      window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+      window.removeEventListener('focus', handleOffsetsChange);
+    };
+  }, [loadPrayerTimes]);
+
+  // Re-read offsets on mount or route transition
+  const lastOffsetsRef = useRef(JSON.stringify(getPrayerMinuteOffsets()));
+  useEffect(() => {
+    const currentOffsetsStr = JSON.stringify(getPrayerMinuteOffsets());
+    if (lastOffsetsRef.current !== currentOffsetsStr) {
+      lastOffsetsRef.current = currentOffsetsStr;
+      cachedDashboardPrayers = [];
+      cachedNextPrayerName = "";
+      cachedNextPrayerTime = "";
+      cachedTargetTime = null;
+      loadPrayerTimes();
+    }
+  }, [loadPrayerTimes]);
 
   useEffect(() => {
     // Add online listener to refresh prayer times as soon as internet is back

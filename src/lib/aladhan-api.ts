@@ -4,6 +4,16 @@
  */
 import { getMadhab } from './storage';
 import { calculatePrayerTimes } from './prayer-calculator';
+import { getPrayerMinuteOffsets, applyOffsetsToTimings } from './prayer-offsets';
+
+export function sanitizeHijriDiacritics(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+    .replace(/al-ola/gi, 'al-ūlā')
+    .replace(/al-ōlā/gi, 'al-ūlā')
+    .replace(/ō/g, 'ū');
+}
 
 export interface AladhanPrayerTime {
   Fajr: string;
@@ -544,7 +554,9 @@ export class AladhanAPI {
     isRamadan: boolean = false
   ): Promise<{ name: string; time: string; countdown: string; targetDate?: Date } | null> {
     try {
-      const { timings } = await this.getTodaysPrayerTimes(latitude, longitude, method);
+      const { timings: rawTimings } = await this.getTodaysPrayerTimes(latitude, longitude, method);
+      const offsets = getPrayerMinuteOffsets();
+      const timings = applyOffsetsToTimings(rawTimings, offsets);
       const now = new Date();
 
       // Convert prayer times to Date objects
@@ -584,7 +596,8 @@ export class AladhanAPI {
       // If all events passed, get tomorrow's first prayer
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const { timings: tomorrowTimings } = await this.getTodaysPrayerTimes(latitude, longitude, method);
+      const { timings: rawTomorrowTimings } = await this.getTodaysPrayerTimes(latitude, longitude, method);
+      const tomorrowTimings = applyOffsetsToTimings(rawTomorrowTimings, offsets);
       const firstPrayerTime = this.parseTime(tomorrowTimings.Fajr);
       // Adjust date to tomorrow
       firstPrayerTime.setDate(tomorrow.getDate());

@@ -7,6 +7,7 @@ import { useLocationState } from '@/lib/location-state';
 import { OnlinePrayerAPI, type LiveDaySchedule } from '@/lib/online-prayer-api';
 import { useSettings } from '@/contexts/SettingsContext';
 import { formatPrayerTime } from '@/lib/time-formatter';
+import { getPrayerMinuteOffsets, applyOffsetsToTimings, PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
 
 export interface PrayerItem {
   name: string;
@@ -311,6 +312,22 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
   const [selectedDateOffset, setSelectedDateOffset] = useState<number>(0);
   const [offsetSchedule, setOffsetSchedule] = useState<LiveDaySchedule | null>(null);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  // Subscribe to offset changes
+  useEffect(() => {
+    const handleOffsetsChange = () => {
+      setRefreshKey(k => k + 1);
+    };
+    window.addEventListener('prayer-offsets-changed', handleOffsetsChange);
+    window.addEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+    window.addEventListener('focus', handleOffsetsChange);
+    return () => {
+      window.removeEventListener('prayer-offsets-changed', handleOffsetsChange);
+      window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+      window.removeEventListener('focus', handleOffsetsChange);
+    };
+  }, []);
 
   const viewedDate = useMemo(() => {
     const d = new Date();
@@ -320,10 +337,6 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
   useEffect(() => {
     let isCancelled = false;
-    if (selectedDateOffset === 0) {
-      setOffsetSchedule(null);
-      return;
-    }
     if (location.latitude && location.longitude) {
       OnlinePrayerAPI.fetchLiveDayTimings(viewedDate, location.latitude, location.longitude)
         .then((sched) => {
@@ -336,14 +349,25 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [selectedDateOffset, viewedDate, location.latitude, location.longitude]);
+  }, [selectedDateOffset, viewedDate, location.latitude, location.longitude, refreshKey]);
 
   const dateSwitcherLabel = useMemo(() => {
     const monthShort = viewedDate.toLocaleString('en-US', { month: 'short' });
     const dayNum = viewedDate.getDate();
-    const hijriPart = offsetSchedule?.date?.hijri
-      ? ` • ${offsetSchedule.date.hijri.day} ${offsetSchedule.date.hijri.month.en} ${offsetSchedule.date.hijri.year}`
-      : '';
+    let hijriPart = '';
+    if (offsetSchedule?.date?.hijri) {
+      const h = offsetSchedule.date.hijri;
+      let m = (h.month?.en || '')
+        .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+        .replace(/al-ola/gi, 'al-ūlā')
+        .replace(/al-ōlā/gi, 'al-ūlā')
+        .replace(/ō/g, 'ū')
+        .replace(/Jumada al-ūlā/gi, 'Jumādā I')
+        .replace(/Jumādā al-ūlā/gi, 'Jumādā I')
+        .replace(/Jumada al-akhir/gi, 'Jumādā II')
+        .replace(/Jumādā al-ākhirah/gi, 'Jumādā II');
+      hijriPart = ` • ${h.day} ${m}`;
+    }
 
     if (selectedDateOffset === 0) return `Today, ${monthShort} ${dayNum}${hijriPart}`;
     if (selectedDateOffset === -1) return `Yesterday, ${monthShort} ${dayNum}${hijriPart}`;
@@ -353,8 +377,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   }, [selectedDateOffset, viewedDate, offsetSchedule]);
 
   const displayedPrayers = useMemo(() => {
-    if (selectedDateOffset === 0 || !offsetSchedule) return prayers;
-    const t = offsetSchedule.timings;
+    if (selectedDateOffset === 0 && prayers.length > 0) return prayers;
+    if (!offsetSchedule) return prayers;
+    const offsets = getPrayerMinuteOffsets();
+    const t = applyOffsetsToTimings(offsetSchedule.timings, offsets);
     return [
       { name: 'Fajr', time: formatPrayerTime(t.Fajr, timeFormat), date: viewedDate, originalName: 'Fajr' },
       { name: 'Sunrise', time: formatPrayerTime(t.Sunrise, timeFormat), date: viewedDate, originalName: 'Sunrise' },
@@ -363,7 +389,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       { name: 'Maghrib', time: formatPrayerTime(t.Maghrib, timeFormat), date: viewedDate, originalName: 'Maghrib' },
       { name: 'Isha', time: formatPrayerTime(t.Isha, timeFormat), date: viewedDate, originalName: 'Isha' },
     ];
-  }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat]);
+  }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat, refreshKey]);
 
   // Notification status check for bell styling
   const [notificationsEnabled] = useState(() => {
@@ -960,7 +986,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           );
         })}
 
-        {/* Full-Width Subtle Action Row: Prayer times for the whole month */}
+        {/* Full-Width Subtle Action Row: Monthly Prayer Timetable */}
         <button
           type="button"
           onClick={() => navigate('/timetable')}
@@ -969,14 +995,19 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             boxShadow: '0 4px 18px rgba(0, 0, 0, 0.25)',
           }}
         >
-          <div className="flex items-center gap-2.5">
-            <span className="text-base">📅</span>
-            <span className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors">
-              Prayer times for the whole month
-            </span>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-base shrink-0">📅</span>
+            <div className="flex flex-col text-left min-w-0">
+              <span className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate">
+                Monthly Prayer Timetable
+              </span>
+              <span className="text-[10px] text-[var(--text-secondary)] truncate">
+                Share image or print A4 PDF
+              </span>
+            </div>
           </div>
-          <span className="text-xs font-bold text-[var(--accent-text)] flex items-center gap-1">
-            View Sheet →
+          <span className="text-xs font-bold text-[var(--accent-text)] flex items-center gap-1 shrink-0 whitespace-nowrap ml-2">
+            View →
           </span>
         </button>
       </div>

@@ -16,6 +16,7 @@ import { getMadhab } from '@/lib/storage';
 import { usePrayerNotifications } from './usePrayerNotifications';
 import { getPrayerMinuteOffsets, applyOffsetToDate, PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
 import { PRAYER_DATA_REFRESHED_EVENT } from '@/lib/online-prayer-api';
+import { findNearestOfflineCity } from '@/data/cities';
 
 export interface PrayerTimes {
   fajr: Date;
@@ -620,10 +621,14 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
     };
 
     window.addEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+    window.addEventListener('prayer-offsets-changed', handleOffsetsChange);
     window.addEventListener(PRAYER_DATA_REFRESHED_EVENT, handleOffsetsChange);
+    window.addEventListener('focus', handleOffsetsChange);
     return () => {
       window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+      window.removeEventListener('prayer-offsets-changed', handleOffsetsChange);
       window.removeEventListener(PRAYER_DATA_REFRESHED_EVENT, handleOffsetsChange);
+      window.removeEventListener('focus', handleOffsetsChange);
     };
   }, [location, fetchPrayerTimesWithCoordinates]);
 

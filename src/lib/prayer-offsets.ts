@@ -24,6 +24,7 @@ export const DEFAULT_OFFSETS: PrayerMinuteOffsets = {
 
 const STORAGE_KEY = 'prayer_minute_offsets';
 export const PRAYER_OFFSETS_CHANGED_EVENT = 'prayer-minute-offsets-changed';
+export const PRAYER_OFFSETS_CHANGED_CUSTOM_EVENT = 'prayer-offsets-changed';
 
 export function getPrayerMinuteOffsets(): PrayerMinuteOffsets {
   try {
@@ -44,6 +45,8 @@ export function getPrayerMinuteOffsets(): PrayerMinuteOffsets {
   }
 }
 
+export const getPrayerOffsets = getPrayerMinuteOffsets;
+
 export function savePrayerMinuteOffsets(offsets: PrayerMinuteOffsets): void {
   try {
     const sanitized: PrayerMinuteOffsets = {
@@ -57,6 +60,7 @@ export function savePrayerMinuteOffsets(offsets: PrayerMinuteOffsets): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(PRAYER_OFFSETS_CHANGED_EVENT, { detail: sanitized }));
+      window.dispatchEvent(new CustomEvent(PRAYER_OFFSETS_CHANGED_CUSTOM_EVENT, { detail: sanitized }));
     }
   } catch (error) {
     // Fail safely if storage quota exceeded
@@ -139,3 +143,5 @@ export function applyOffsetsToTimings<T extends Record<string, string>>(
 
   return adjusted;
 }
+
+export const applyPrayerOffsets = applyOffsetsToTimings;

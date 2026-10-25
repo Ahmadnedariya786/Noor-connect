@@ -118,7 +118,7 @@ const CACHE_PREFIX = 'noor_live_calendar_';
 const TIMINGS_CACHE_PREFIX = 'noor_live_timings_';
 export const PRAYER_DATA_REFRESHED_EVENT = 'online-prayer-data-refreshed';
 
-function normalizeHijriName(name: string): string {
+export function normalizeHijriName(name: string): string {
   if (!name) return '';
   return name
     .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
