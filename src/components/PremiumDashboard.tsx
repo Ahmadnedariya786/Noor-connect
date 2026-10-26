@@ -647,42 +647,52 @@ function PremiumDashboardInner({
                           (todayWorship.sunnah?.isha || 0);
                         const isFasted = todayWorship.fasted;
                         return (
-                          <div className="mt-3 pt-3 border-t border-[var(--border)] grid grid-cols-2 gap-2">
+                          <div
+                            className="mt-3 pt-3 border-t border-[var(--border)]"
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr',
+                              gap: '8px',
+                            }}
+                          >
                             <button
                               type="button"
                               onClick={() => navigate('/services/salah-tracker')}
-                              className="py-1.5 px-2.5 rounded-xl border flex items-center justify-between gap-1 transition-all hover:border-[var(--accent)] active:scale-98"
+                              className="rounded-xl border flex items-center justify-between transition-all hover:border-[var(--accent)] active:scale-98"
                               style={{
                                 background: 'var(--surface-2)',
                                 borderColor: 'var(--border)',
+                                fontSize: '0.72rem',
+                                whiteSpace: 'nowrap',
+                                padding: '7px 10px',
                               }}
                             >
-                              <span className="text-[11px] font-medium text-[var(--text-secondary)] truncate">
-                                ✦ Sunnah
+                              <span className="font-semibold text-[var(--text-primary)]">
+                                ✦ Sunnah {sunnahCount}/12
                               </span>
-                              <span className="text-xs font-bold text-[var(--accent-text)] shrink-0">
-                                {sunnahCount > 0 ? `${sunnahCount}/12` : 'Log →'}
+                              <span className="text-[var(--accent-text)] font-bold text-xs ml-1">
+                                →
                               </span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => navigate('/services/salah-tracker')}
-                              className="py-1.5 px-2.5 rounded-xl border flex items-center justify-between gap-1 transition-all hover:border-[var(--accent)] active:scale-98"
+                              className="rounded-xl border flex items-center justify-between transition-all hover:border-[var(--accent)] active:scale-98"
                               style={{
                                 background: 'var(--surface-2)',
                                 borderColor: isFasted ? 'var(--accent)' : 'var(--border)',
+                                fontSize: '0.72rem',
+                                whiteSpace: 'nowrap',
+                                padding: '7px 10px',
                               }}
                             >
-                              <span className="text-[11px] font-medium text-[var(--text-secondary)] truncate">
-                                🌕 Fasting
-                              </span>
                               <span
-                                className={`text-xs font-bold shrink-0 ${
-                                  isFasted ? 'text-emerald-400' : 'text-[var(--text-secondary)]'
+                                className={`font-semibold ${
+                                  isFasted ? 'text-emerald-400' : 'text-[var(--text-primary)]'
                                 }`}
                               >
-                                {isFasted ? 'Fasted ✓' : 'Log Fast →'}
+                                {isFasted ? '🌕 Fast Kept ✓' : '🌕 Fast • Log →'}
                               </span>
                             </button>
                           </div>

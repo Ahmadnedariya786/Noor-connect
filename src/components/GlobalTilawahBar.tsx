@@ -124,29 +124,18 @@ export const GlobalTilawahBar: React.FC = () => {
           onClick={openPlayer}
           role="button"
           tabIndex={0}
-          className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer group"
+          className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer group"
           title="Open Full Tilawah Player"
         >
-          {/* Jewel Badge Icon with Live Waveform Animation */}
-          <div
-            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
-            style={{
-              background: 'var(--accent-soft)',
-              color: 'var(--accent-text)',
-              border: '1px solid var(--border)',
-            }}
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
-            ) : isPlaying ? (
-              <span className="flex items-end gap-0.5 h-3.5">
-                <span className="w-0.5 h-full bg-[var(--accent)] animate-pulse" />
-                <span className="w-0.5 h-2.5 bg-[var(--accent)] animate-pulse" style={{ animationDelay: '150ms' }} />
-                <span className="w-0.5 h-3 bg-[var(--accent)] animate-pulse" style={{ animationDelay: '300ms' }} />
-              </span>
-            ) : (
-              <Headphones className="w-4 h-4 fill-current" />
-            )}
+          {/* Sleek 8px Pulsing Accent Indicator Dot */}
+          <div className="relative flex items-center justify-center shrink-0 ml-1 mr-0.5">
+            <span
+              className={`w-2 h-2 rounded-full ${isPlaying ? 'animate-pulse' : ''}`}
+              style={{
+                backgroundColor: 'var(--accent)',
+                boxShadow: isPlaying ? '0 0 8px var(--accent)' : 'none',
+              }}
+            />
           </div>
 
           {/* 2-Line Crisp Reference & Reciter */}
@@ -165,68 +154,70 @@ export const GlobalTilawahBar: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Thumb-Friendly Control Buttons */}
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Previous Ayah */}
+        {/* Right: Thumb-Friendly Tightened Control Buttons */}
+        <div className="flex items-center shrink-0" style={{ gap: '3px' }}>
+          {/* Previous Ayah (30px) */}
           <button
             type="button"
             onClick={handlePrev}
-            className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-transform active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+            className="w-[30px] h-[30px] rounded-lg flex items-center justify-center transition-transform active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
             title="Previous Ayah"
             aria-label="Previous Ayah"
           >
-            <SkipBack className="w-4 h-4" />
+            <SkipBack className="w-3.5 h-3.5" />
           </button>
 
-          {/* Prominent Circular Play / Pause Jewel */}
+          {/* Prominent Circular Play / Pause Jewel (36px) */}
           <button
             type="button"
             onClick={handleTogglePlay}
             disabled={isLoading}
-            className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 text-[var(--on-accent)] shadow-md"
+            className="w-[36px] h-[36px] rounded-full flex items-center justify-center transition-transform active:scale-90 text-[var(--on-accent)] shadow-md"
             style={{
               backgroundColor: 'var(--accent)',
-              boxShadow: '0 0 12px var(--accent-glow)',
+              boxShadow: '0 0 10px var(--accent-glow)',
             }}
             title={isPlaying ? 'Pause Recitation' : 'Play Recitation'}
             aria-label={isPlaying ? 'Pause Recitation' : 'Play Recitation'}
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : isPlaying ? (
-              <Pause className="w-4 h-4 fill-current" />
+              <Pause className="w-3.5 h-3.5 fill-current" />
             ) : (
-              <Play className="w-4 h-4 fill-current ml-0.5" />
+              <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
             )}
           </button>
 
-          {/* Next Ayah */}
+          {/* Next Ayah (30px) */}
           <button
             type="button"
             onClick={handleNext}
-            className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-transform active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+            className="w-[30px] h-[30px] rounded-lg flex items-center justify-center transition-transform active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
             title="Next Ayah"
             aria-label="Next Ayah"
           >
-            <SkipForward className="w-4 h-4" />
+            <SkipForward className="w-3.5 h-3.5" />
           </button>
 
-          {/* Open Mushaf Reader at exact Ayah */}
-          <button
-            type="button"
-            onClick={handleOpenReader}
-            className="w-8 h-8 rounded-[10px] flex items-center justify-center transition-colors hover:bg-[var(--surface-2)] text-[var(--accent-text)]"
-            title={`Read Ayah in Mushaf (Page ${ayahMushafPage})`}
-            aria-label="Read in Mushaf"
-          >
-            <BookOpen className="w-4 h-4" />
-          </button>
+          {/* Open Mushaf Reader at exact Ayah (30px - hidden when already on /quran/:id!) */}
+          {!isQuranReader && (
+            <button
+              type="button"
+              onClick={handleOpenReader}
+              className="w-[30px] h-[30px] rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-2)] text-[var(--accent-text)]"
+              title={`Read Ayah in Mushaf (Page ${ayahMushafPage})`}
+              aria-label="Read in Mushaf"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+            </button>
+          )}
 
-          {/* Dismiss Mini-Player */}
+          {/* Dismiss Mini-Player (28px) */}
           <button
             type="button"
             onClick={handleDismiss}
-            className="w-8 h-8 rounded-[10px] flex items-center justify-center transition-colors hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-400"
+            className="w-[28px] h-[28px] rounded-lg flex items-center justify-center transition-colors hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-400"
             title="Close Tilawah Player"
             aria-label="Close Tilawah Player"
           >

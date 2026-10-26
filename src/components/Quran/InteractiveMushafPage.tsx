@@ -212,28 +212,7 @@ export function InteractiveMushafPage({
           style={{ borderColor: 'var(--border)' }}
         >
           <span className="opacity-75">JUZ {pageData?.juz_number || Math.ceil(pageNumber / 20)}</span>
-          <div className="flex items-center gap-2">
-            {showTajweed && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowLegend(true);
-                }}
-                className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border transition-all"
-                style={{
-                  background: 'var(--accent-soft)',
-                  color: 'var(--accent-text)',
-                  borderColor: 'var(--accent)',
-                }}
-              >
-                <Sparkles className="w-3 h-3 text-[var(--accent)]" />
-                <span>Tajweed Active</span>
-                <Info className="w-3 h-3 opacity-70" />
-              </button>
-            )}
-            <span className="opacity-75 font-mono">PAGE {pageNumber}</span>
-          </div>
+          <span className="opacity-75 font-mono">PAGE {pageNumber}</span>
         </div>
 
         {/* Loading Spinner */}

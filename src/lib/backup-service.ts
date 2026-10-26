@@ -852,11 +852,8 @@ export const initBackupService = (): void => {
 // ─── Misc helpers (moved from backup.ts, kept as-is) ──────────────────────────
 
 export const clearCache = async (): Promise<void> => {
-  await clearAllBooks();
-  if ('caches' in window) {
-    const cacheNames = await caches.keys();
-    await Promise.all(cacheNames.map(name => caches.delete(name)));
-  }
+  const { clearTemporaryCache } = await import('./cache-manager');
+  await clearTemporaryCache();
 };
 
 export const getQuranFontSize = (): number => {

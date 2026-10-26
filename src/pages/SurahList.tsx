@@ -16,7 +16,9 @@ import {
   Moon,
   Headphones,
   Zap,
+  HelpCircle,
 } from "lucide-react";
+import { QuranGuideModal } from "@/components/Quran/QuranGuideModal";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
 import { PageTransition } from "@/components/PageTransition";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -160,6 +162,16 @@ export default function SurahList() {
   const [isKhatmahExpanded, setIsKhatmahExpanded] = useState(false);
   const [customDays, setCustomDays] = useState("30");
   const [showCustomModal, setShowCustomModal] = useState(false);
+
+  // Quran Feature Guide & Welcome Banner State
+  const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('noor_quran_guide_dismissed_v1') !== 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // # Jump Modal State
   const [showJumpModal, setShowJumpModal] = useState(false);
@@ -476,18 +488,78 @@ export default function SurahList() {
                 114 Surahs • 30 Juz • 604 Pages
               </p>
             </div>
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
-              style={{
-                background: "var(--surface-2)",
-                color: "var(--accent-text)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-              }}
-            >
-              <BookOpen className="w-5 h-5" />
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowGuideModal(true)}
+                title="Quran Features Guide"
+                className="px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)] font-bold text-xs flex items-center gap-1 hover:border-[var(--accent)] transition-all shadow-sm active:scale-95"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>? Guide</span>
+              </button>
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
+                style={{
+                  background: "var(--surface-2)",
+                  color: "var(--accent-text)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                }}
+              >
+                <BookOpen className="w-4 h-4" />
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Dismissible First-Visit Welcome Strip */}
+        {showWelcomeBanner && (
+          <div className="max-w-2xl mx-auto px-4 mb-2">
+            <div
+              className="p-3 rounded-2xl border flex items-center justify-between gap-3 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200"
+              style={{
+                background: "linear-gradient(135deg, rgba(212, 175, 55, 0.12), var(--surface))",
+                borderColor: "var(--accent)",
+              }}
+            >
+              <div className="flex items-start gap-2.5 min-w-0">
+                <span className="text-base leading-none">✨</span>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-[var(--text-primary)] leading-tight">
+                    Explore New Quran Tools
+                  </h4>
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-1">
+                    Tap words for meaning, use Hifz loops, color Tajweed & Smart Khatmah
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowGuideModal(true)}
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[var(--accent)] text-[var(--on-accent)] shrink-0 hover:opacity-90 active:scale-95 transition-all"
+                >
+                  See How →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.setItem('noor_quran_guide_dismissed_v1', 'true');
+                    } catch {
+                      // Safe catch
+                    }
+                    setShowWelcomeBanner(false);
+                  }}
+                  className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                  title="Dismiss banner"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Slim 1-Line Continue Reading Banner */}
         {lastRead && (
@@ -729,7 +801,7 @@ export default function SurahList() {
                 /* No Active Plan: Preset Chooser */
                 <div className="space-y-2.5">
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    Start a paced Quran Khatmah tailored to your target duration:
+                    Choose a goal — Noor Connect calculates your daily pages and automatically adjusts if you read extra or miss a day.
                   </p>
                   <div className="grid grid-cols-4 gap-1.5" style={{ minWidth: 0 }}>
                     {[
@@ -820,9 +892,10 @@ export default function SurahList() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]/60 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search Surah, Juz or Page..."
+                placeholder="Search Surah, Juz, Page..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ fontSize: '0.78rem' }}
                 className="w-full border border-[var(--border)] rounded-[14px] py-2.5 pl-11 pr-10 text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] transition-colors bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 shadow-sm"
               />
               {searchQuery && (
@@ -1333,6 +1406,11 @@ export default function SurahList() {
             </div>
           </div>
         )}
+        {/* QURAN FEATURES ONBOARDING GUIDE MODAL */}
+        <QuranGuideModal
+          isOpen={showGuideModal}
+          onClose={() => setShowGuideModal(false)}
+        />
       </div>
     </PageTransition>
   );

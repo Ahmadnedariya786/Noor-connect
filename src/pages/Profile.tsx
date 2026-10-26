@@ -26,6 +26,7 @@ import { CLOCK_STYLES } from '@/types/clock';
 import { THEMES } from '@/lib/theme-engine';
 import type { ThemeId } from '@/types/theme';
 import { useLanguage } from '@/contexts/LanguageContext-new';
+import { getStorageBreakdown } from '@/lib/cache-manager';
 
 interface SettingsRow {
   id: string;
@@ -351,23 +352,10 @@ const Profile: React.FC = () => {
       }
 
       try {
-        let storageBytes = 0;
-        if (typeof Filesystem !== 'undefined' && Filesystem.stat) {
-          try {
-            const stat = await Filesystem.stat({
-              path: 'cache',
-              directory: Directory.Cache,
-            });
-            storageBytes += (stat.size || 0);
-          } catch {
-            // Handled cache folder not found on filesystem
-          }
-        }
-        const localBytes = getLocalStorageSize();
-        const total = storageBytes + localBytes;
-        updates['storage'] = formatBytes(total > 0 ? total : 395 * 1024);
+        const breakdown = await getStorageBreakdown();
+        updates['storage'] = breakdown.tempFormatted;
       } catch {
-        updates['storage'] = formatBytes(getLocalStorageSize());
+        updates['storage'] = '0 B';
       }
 
       if (isMounted) {
@@ -377,8 +365,21 @@ const Profile: React.FC = () => {
 
     fetchLiveSystemData();
 
+    const handleCacheUpdated = async () => {
+      try {
+        const breakdown = await getStorageBreakdown();
+        if (isMounted) {
+          setAsyncValues((prev) => ({ ...prev, storage: breakdown.tempFormatted }));
+        }
+      } catch {
+        // Handled cache update event
+      }
+    };
+    window.addEventListener('noor-cache-updated', handleCacheUpdated);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('noor-cache-updated', handleCacheUpdated);
     };
   }, []);
 
@@ -466,12 +467,14 @@ const Profile: React.FC = () => {
               >
                 <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Theme</span>
                 <span
-                  className="font-bold text-[var(--accent-text)] uppercase"
+                  className="font-bold text-[var(--accent-text)]"
                   style={{
-                    fontSize: '0.65rem',
-                    letterSpacing: '-0.02em',
-                    whiteSpace: 'nowrap',
-                    padding: '4px 2px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    padding: '8px 6px',
+                    textAlign: 'center',
+                    wordBreak: 'break-word',
                   }}
                 >
                   {asyncValues['theme'] || 'Imperial Violet'}

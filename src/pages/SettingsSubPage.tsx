@@ -90,7 +90,7 @@ import { getMadhab, setMadhab, type MadhabType } from '@/lib/storage';
 import { AladhanAPI } from '@/lib/aladhan-api';
 import { getStorageStats, clearAllBooks, formatFileSize } from '@/lib/ebooks-storage';
 import { downloadManager } from '@/lib/download-manager';
-import { clearCache } from '@/lib/backup';
+import { getStorageBreakdown, clearTemporaryCache, type StorageBreakdown } from '@/lib/cache-manager';
 import { notificationManager, type NotificationPreferences } from '@/lib/notification-manager';
 import { unifiedNotifications } from '@/lib/unified-notifications';
 import { getGenderSettings, setGender, type Gender } from '@/lib/gender-settings';
@@ -115,7 +115,7 @@ const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: an
   notifications: { title: 'Prayer Notifications', subtitle: 'Reminders, daily notifications & alerts', icon: Bell, titleKey: 'prayerNotifications' },
   adhan: { title: 'Adhan & Sounds', subtitle: 'Adhan audio selection & custom uploads', icon: Volume2, titleKey: 'adhanAndSounds' },
   backup: { title: 'Backup & Restore', subtitle: 'Cloud backup, sync & export settings', icon: Database, titleKey: 'backupAndRestore' },
-  storage: { title: 'Storage & Cache', subtitle: 'Clear cache, offline Quran & download stats', icon: HardDrive, titleKey: 'storageAndCache' },
+  storage: { title: 'Storage & Cache', subtitle: 'Manage temporary cache & protected local data', icon: HardDrive, titleKey: 'storageAndCache' },
   privacy: { title: 'Privacy & Security', subtitle: 'Data usage, local storage & permissions', icon: ShieldCheck, titleKey: 'privacyAndSecurity' },
   about: { title: 'About Noor Connect', subtitle: 'App version, release notes & updates', icon: Info, titleKey: 'aboutNoorConnect' },
   contact: { title: 'Contact & Feedback', subtitle: "We'd love to hear from you", icon: Mail, titleKey: 'contactAndFeedback' },
@@ -149,6 +149,7 @@ const SettingsSubPage: React.FC = () => {
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
+  const [storageBreakdown, setStorageBreakdown] = useState<StorageBreakdown | null>(null);
   const [quranDownloads, setQuranDownloads] = useState({ count: 0, size: 0, reciters: 0 });
   const [genderSettings, setGenderSettingsState] = useState(getGenderSettings());
   const [preferredCurrency, setPreferredCurrency] = useState(() => localStorage.getItem('preferred-currency') || 'USD');
@@ -188,6 +189,13 @@ const SettingsSubPage: React.FC = () => {
     if (savedOffset) setHijriOffset(savedOffset);
 
     getStorageStats().then(setStorageStats);
+    getStorageBreakdown().then(setStorageBreakdown).catch(() => {});
+
+    const handleCacheUpdated = () => {
+      getStorageBreakdown().then(setStorageBreakdown).catch(() => {});
+      getStorageStats().then(setStorageStats).catch(() => {});
+    };
+    window.addEventListener('noor-cache-updated', handleCacheUpdated);
 
     downloadManager.listDownloaded()
       .then((items) => {
@@ -201,24 +209,11 @@ const SettingsSubPage: React.FC = () => {
       .catch(() => {
         // Handled initial downloaded list error
       });
-  }, []);
 
-  const getLiveLocalStorageSize = () => {
-    try {
-      let total = 0;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key) {
-          const val = localStorage.getItem(key) || '';
-          total += (key.length + val.length) * 2;
-        }
-      }
-      return total > 0 ? formatFileSize(total) : '~395 KB';
-    } catch {
-      // Handled storage estimation fallback
-      return '~395 KB';
-    }
-  };
+    return () => {
+      window.removeEventListener('noor-cache-updated', handleCacheUpdated);
+    };
+  }, []);
 
   const activeRemindersCount = [
     notificationPrefs.fridayKahfReminders,
@@ -569,9 +564,14 @@ const SettingsSubPage: React.FC = () => {
   };
 
   const handleClearCache = async () => {
-    await clearCache();
+    const res = await clearTemporaryCache();
+    const updated = await getStorageBreakdown();
+    setStorageBreakdown(updated);
     setStorageStats({ totalBooks: 0, totalSize: 0 });
-    toast({ title: 'Cache cleared successfully' });
+    toast({
+      title: 'Temporary Cache Cleared',
+      description: `Cleared ${res.freedFormatted} of temporary cache. Personal data is safe.`,
+    });
     setShowClearCacheDialog(false);
   };
 
@@ -1142,24 +1142,26 @@ const SettingsSubPage: React.FC = () => {
             <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Storage Usage</Label>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
+                <span className="text-[var(--text-primary)]">Temporary Mushaf, Tafsir & API Cache</span>
+                <span className="text-[var(--accent)] text-xs sm:text-sm font-bold">
+                  {storageBreakdown ? storageBreakdown.tempFormatted : '0 B'}
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
+                <span className="text-[var(--text-primary)]">Personal Settings & Worship Logs (Protected)</span>
+                <span className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium">
+                  {storageBreakdown ? `${storageBreakdown.protectedFormatted} • Never deleted by cache clear` : 'Protected'}
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
                 <span className="text-[var(--text-primary)]">Offline Quran Audio</span>
                 <span className="text-[var(--accent)] text-xs sm:text-sm font-medium">
                   {quranDownloads.reciters} reciter{quranDownloads.reciters !== 1 ? "s" : ""} • {quranDownloads.count} surah{quranDownloads.count !== 1 ? "s" : ""} • {formatFileSize(quranDownloads.size)}
                 </span>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
                 <span className="text-[var(--text-primary)]">Downloaded E-books</span>
-                <span className="text-[var(--accent)] text-xs sm:text-sm font-medium">{formatFileSize(storageStats.totalSize)}</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
-                <span className="text-[var(--text-primary)]">Books Cached</span>
-                <span className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium">{storageStats.totalBooks} files</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">
-                <span className="text-[var(--text-primary)]">App Settings & Tracker Data</span>
-                <span className="text-xs sm:text-sm text-[var(--accent)] font-medium">
-                  {getLiveLocalStorageSize()} (in local storage)
-                </span>
+                <span className="text-[var(--accent)] text-xs sm:text-sm font-medium">{formatFileSize(storageStats.totalSize)} ({storageStats.totalBooks} files)</span>
               </div>
             </Card>
 
@@ -1202,38 +1204,42 @@ const SettingsSubPage: React.FC = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                     <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    Clear Cache?
+                    Clear Temporary Cache?
                   </AlertDialogTitle>
                   <AlertDialogDescription asChild>
                     <div className="space-y-4" style={{ color: 'var(--text-secondary)' }}>
-                      <p>This will remove temporary files and downloaded content to free up space.</p>
+                      <p>This will remove temporary API, Mushaf page, and Tafsir cache files to free up space.</p>
                       <div className="space-y-2">
                         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Will be removed:</p>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-sm">
                             <X className="w-3.5 h-3.5 text-destructive shrink-0" />
-                            <span>Downloaded e-book PDFs</span>
+                            <span>Temporary Mushaf pages & Tafsir cache</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <X className="w-3.5 h-3.5 text-destructive shrink-0" />
-                            <span>Offline cached assets (re-downloads on next visit)</span>
+                            <span>Cached live prayer times & translation texts</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <X className="w-3.5 h-3.5 text-destructive shrink-0" />
+                            <span>Downloaded e-book PDFs</span>
                           </div>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Your data is safe:</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Your personal data is 100% safe:</p>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-sm">
                             <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
-                            <span>Prayer records, bookmarks, qaza tracker</span>
+                            <span>Prayer records, 5-colour bookmarks, qaza tracker</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
-                            <span>Settings, preferences, habit tracker</span>
+                            <span>Settings, preferences, worship & fasting journals</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
-                            <span>Auto backup snapshot</span>
+                            <span>Auto backup snapshots & security vault</span>
                           </div>
                         </div>
                       </div>
@@ -1243,7 +1249,7 @@ const SettingsSubPage: React.FC = () => {
                 <AlertDialogFooter>
                   <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={handleClearCache} className="rounded-xl bg-destructive text-white">
-                    Clear Cache
+                    Clear Temporary Cache
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

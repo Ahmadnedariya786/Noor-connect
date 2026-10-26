@@ -59,10 +59,10 @@ interface TranslationEdition {
 }
 
 const TRANSLATION_EDITIONS: TranslationEdition[] = [
-  { id: 'en.sahih', name: 'Sahih International', lang: 'English' },
+  { id: 'en.sahih', name: "Sahih Int'l", lang: 'English' },
   { id: 'en.pickthall', name: 'Pickthall', lang: 'English' },
-  { id: 'ur.jalandhry', name: 'Fateh Muhammad Jalandhry', lang: 'Urdu' },
-  { id: 'hi.hindi', name: 'Suhel Farooq Khan & Shafi', lang: 'Hindi' },
+  { id: 'ur.jalandhry', name: 'Urdu', lang: 'Urdu' },
+  { id: 'hi.hindi', name: 'Hindi', lang: 'Hindi' },
 ];
 
 export interface TafsirEdition {
@@ -685,31 +685,67 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
               border: '1px solid var(--border)',
             }}
           >
-            <div className="flex items-center justify-between px-1">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                padding: '0 4px',
+              }}
+            >
               <span
-                className="text-[11px] font-bold uppercase tracking-wider"
-                style={{ color: 'var(--accent-text)' }}
+                style={{
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  color: 'var(--accent-text)',
+                  letterSpacing: '0.02em',
+                }}
               >
-                {activeColorObj
-                  ? `★ Bookmark • ${activeColorObj.name} (Moves as you read)`
-                  : '★ 5-Colour Bookmarks'}
+                {activeColorObj ? `★ Bookmark: ${activeColorObj.name}` : '★ 5-Colour Bookmarks'}
               </span>
               {activeBookmarkOnAyah && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-emerald-400 font-semibold">
-                    Moves as you read
-                  </span>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.68rem',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    backgroundColor: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '2px 8px',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={colorBookmarks[activeBookmarkOnAyah]?.autoMove ?? true}
                     onChange={(e) =>
                       setBookmarkAutoMove(activeBookmarkOnAyah, e.target.checked)
                     }
-                    className="w-3.5 h-3.5 accent-[var(--accent)] rounded cursor-pointer"
+                    className="w-3 h-3 accent-[var(--accent)] rounded cursor-pointer"
                   />
-                </div>
+                  <span>Auto-move</span>
+                </label>
               )}
             </div>
+
+            <p
+              style={{
+                margin: '2px 0 0 0',
+                fontSize: '0.68rem',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.3,
+                padding: '0 4px',
+              }}
+            >
+              Tap a colour to bookmark this verse. Enable Auto-move so it moves forward as you read.
+            </p>
 
             {/* 5 Circular Jewel Swatches in a Single Row */}
             <div className="flex items-center justify-between px-2 pt-1 pb-0.5">
@@ -797,7 +833,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
           {activeTab === 'translation' && (
             <div className="space-y-3">
               {/* Edition Selector Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar" style={{ paddingRight: '8px' }}>
                 {TRANSLATION_EDITIONS.map((ed) => {
                   const isSelected = selectedEdition === ed.id;
                   return (
@@ -916,6 +952,23 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                 border: '1.5px solid var(--accent)',
               }}
             >
+              {/* Hifz Engine Guidance Callout */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: 'var(--bg-base)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  padding: '7px 10px',
+                }}
+              >
+                <Repeat className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
+                  Loop verses with pauses to recite aloud, or hide text to test recall.
+                </span>
+              </div>
               {/* Repeats Per Ayah */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold">

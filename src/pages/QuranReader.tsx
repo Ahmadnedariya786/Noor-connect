@@ -11,7 +11,9 @@ import {
   Sliders,
   Info,
   X,
+  HelpCircle,
 } from 'lucide-react';
+import { QuranGuideModal } from '@/components/Quran/QuranGuideModal';
 import { quranService } from '@/lib/quran-service';
 import {
   InteractiveMushafPage,
@@ -74,6 +76,7 @@ export default function QuranReader() {
 
   // Ayah Study & Hifz Sheet state
   const [showStudySheet, setShowStudySheet] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [studyInitialAyah, setStudyInitialAyah] = useState(1);
   const [studySurah, setStudySurah] = useState(initialSurah);
 
@@ -310,12 +313,17 @@ export default function QuranReader() {
   };
 
   const currentJuz = Math.max(1, Math.min(30, Math.ceil(mushafPageNumber / 20)));
+  const isTilawahActive = currentSurah !== null && currentAyah !== null;
 
   return (
     <PageTransition>
       <div
         className="min-h-screen relative overflow-hidden bg-[var(--bg-base)]"
-        style={{ paddingBottom: 'calc(96px + var(--tilawah-dock-space, 0px))' }}
+        style={{
+          paddingBottom: isTilawahActive
+            ? 'calc(165px + env(safe-area-inset-bottom, 0px))'
+            : 'calc(96px + env(safe-area-inset-bottom, 0px))',
+        }}
       >
         {/* TOP READER CONTROL BAR */}
         <div className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)] shadow-sm">
@@ -352,8 +360,20 @@ export default function QuranReader() {
               </p>
             </div>
 
-            {/* Right: Study & Hifz + Star Bookmark */}
+            {/* Right: Guide, Study & Hifz + Star Bookmark */}
             <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowGuideModal(true)}
+                title="Quran Features Guide"
+                className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors select-none flex items-center gap-1 shadow-sm"
+                style={{ padding: '5px 7px', fontSize: '0.72rem' }}
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                <span className="hidden xs:inline">? Guide</span>
+                <span className="xs:hidden">?</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => handleOpenStudySheet(surahOnPage, 1)}
@@ -362,7 +382,7 @@ export default function QuranReader() {
                 style={{ padding: '5px 8px', fontSize: '0.72rem' }}
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Study</span>
+                <span>📚 Study</span>
               </button>
 
               <button
@@ -426,7 +446,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={toggleTajweed}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border transition-all shrink-0 ${
                 showTajweed
                   ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
                   : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] opacity-70'
@@ -435,9 +455,18 @@ export default function QuranReader() {
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               <span>🎨 Tajweed</span>
             </button>
-            <div className="text-[11px] font-semibold text-[var(--text-secondary)] flex items-center gap-1">
-              <Info className="w-3 h-3 text-[var(--accent)]" />
-              <span>Tap words to study</span>
+            <div
+              style={{
+                fontSize: '0.68rem',
+                whiteSpace: 'nowrap',
+                color: 'var(--text-secondary)',
+                fontWeight: 600,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                paddingLeft: '6px',
+              }}
+            >
+              <span>Tap word: Meaning • Tap ﴿١﴾: Tafsir</span>
             </div>
           </div>
         </div>
@@ -464,20 +493,24 @@ export default function QuranReader() {
             paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
           }}
         >
-          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
+          <div className="max-w-2xl mx-auto px-2 py-1.5 flex items-center justify-between gap-1.5">
             {/* ‹ Prev Page */}
             <button
               type="button"
               onClick={handlePrevPage}
               disabled={mushafPageNumber <= 1}
-              className="px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+              className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',
                 borderColor: 'var(--border)',
                 color: 'var(--text-primary)',
+                padding: '0 10px',
+                height: '42px',
+                fontSize: '0.76rem',
+                flexShrink: 0,
               }}
             >
-              <ChevronLeft className="w-4 h-4 text-[var(--accent-text)]" />
+              <ChevronLeft className="w-3.5 h-3.5 text-[var(--accent-text)]" />
               <span>Prev</span>
             </button>
 
@@ -488,36 +521,36 @@ export default function QuranReader() {
                 setTempPageInput(mushafPageNumber);
                 setShowPageSlider(true);
               }}
-              className="flex-1 py-1 px-2 rounded-xl border flex items-center justify-center gap-1.5 transition-all hover:border-[var(--accent)] active:scale-98"
+              className="rounded-xl border flex flex-col items-center justify-center transition-all hover:border-[var(--accent)] active:scale-98"
               style={{
                 background: 'var(--surface-2)',
                 borderColor: 'var(--border)',
+                flex: 1,
                 minWidth: 0,
+                padding: '4px 6px',
+                height: '42px',
               }}
             >
-              <Sliders className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-              <div className="text-center min-w-0" style={{ whiteSpace: 'nowrap' }}>
-                <div
-                  style={{
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    color: 'var(--text-primary)',
-                    whiteSpace: 'nowrap',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Page {mushafPageNumber} / 604
-                </div>
-                <div
-                  style={{
-                    fontSize: '0.66rem',
-                    color: 'var(--text-secondary)',
-                    whiteSpace: 'nowrap',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Juz {currentJuz} • Jump ▴
-                </div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: 'var(--text-primary)',
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1.2,
+                }}
+              >
+                Page {mushafPageNumber} / 604
+              </div>
+              <div
+                style={{
+                  fontSize: '0.63rem',
+                  color: 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1.2,
+                }}
+              >
+                Juz {currentJuz} • Jump ▴
               </div>
             </button>
 
@@ -531,11 +564,14 @@ export default function QuranReader() {
                   playAyah(surahNum, 1);
                 }
               }}
-              className="p-2.5 rounded-xl border flex items-center justify-center transition-all active:scale-95 shadow-sm"
+              className="rounded-xl border flex items-center justify-center transition-all active:scale-95 shadow-sm"
               style={{
                 background: isPlaying ? 'var(--accent)' : 'var(--surface-2)',
                 borderColor: 'var(--accent)',
                 color: isPlaying ? 'var(--on-accent)' : 'var(--accent)',
+                width: '42px',
+                height: '42px',
+                flexShrink: 0,
               }}
               title={isPlaying ? 'Pause Tilawah' : 'Play Tilawah'}
             >
@@ -547,15 +583,19 @@ export default function QuranReader() {
               type="button"
               onClick={handleNextPage}
               disabled={mushafPageNumber >= 604}
-              className="px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+              className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',
                 borderColor: 'var(--border)',
                 color: 'var(--text-primary)',
+                padding: '0 10px',
+                height: '42px',
+                fontSize: '0.76rem',
+                flexShrink: 0,
               }}
             >
               <span>Next</span>
-              <ChevronRight className="w-4 h-4 text-[var(--accent-text)]" />
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--accent-text)]" />
             </button>
           </div>
         </div>
@@ -644,6 +684,12 @@ export default function QuranReader() {
           surahNumber={studySurah}
           initialAyah={studyInitialAyah}
           currentPage={mushafPageNumber}
+        />
+
+        {/* Quran Features Onboarding & Quick-Start Guide */}
+        <QuranGuideModal
+          isOpen={showGuideModal}
+          onClose={() => setShowGuideModal(false)}
         />
       </div>
     </PageTransition>
