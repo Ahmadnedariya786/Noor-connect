@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Star } from 'lucide-react';
+import { ChevronLeft, Star, BookOpen } from 'lucide-react';
 import { quranService } from '@/lib/quran-service';
 import { MushafSurahPages, type MushafReadingMode } from '@/components/Quran/MushafSurahPages';
 import { PageTransition } from '@/components/PageTransition';
 import { Preferences } from '@capacitor/preferences';
 import { useSettings } from '@/contexts/SettingsContext';
 import { quranFeaturesService } from '@/lib/quran-features';
+import { AyahStudySheet } from '@/components/Quran/AyahStudySheet';
+import { updateAutoMovingBookmarks } from '@/lib/quran-bookmarks';
 
 const LS_LAST_SURAH = 'quran-reader-last-surah';
 const BOOKMARKS_KEY = 'quran-bookmarks';
@@ -32,6 +34,10 @@ export default function QuranReader() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalSurahPages, setTotalSurahPages] = useState(1);
   const [, setMaxPageViewed] = useState(1);
+
+  // Ayah Study & Hifz Sheet state
+  const [showStudySheet, setShowStudySheet] = useState(false);
+  const [studyInitialAyah, setStudyInitialAyah] = useState(1);
 
   // Eye-comfort mode persisted in localStorage "noor_mushaf_mode", default: 'parchment'
   const [mushafMode, setMushafMode] = useState<MushafReadingMode>(() => {
@@ -181,6 +187,30 @@ export default function QuranReader() {
     setCurrentPage(page);
     setTotalSurahPages(total);
     setMaxPageViewed(maxViewed);
+
+    // Auto-moving bookmarks follower: estimate current ayah and advance
+    const numAyahs = surahInfo?.numberOfAyahs || 1;
+    const estimatedAyah = Math.min(
+      numAyahs,
+      Math.max(1, Math.round(((page - 1) / Math.max(1, total - 1)) * numAyahs) + 1)
+    );
+    updateAutoMovingBookmarks(
+      surahNum,
+      surahInfo?.englishName || `Surah ${surahNum}`,
+      estimatedAyah,
+      page,
+      surahInfo?.name
+    );
+  };
+
+  const handleOpenStudySheet = (ayahNum?: number) => {
+    const numAyahs = surahInfo?.numberOfAyahs || 1;
+    const est = ayahNum || Math.min(
+      numAyahs,
+      Math.max(1, Math.round(((currentPage - 1) / Math.max(1, totalSurahPages - 1)) * numAyahs) + 1)
+    );
+    setStudyInitialAyah(est);
+    setShowStudySheet(true);
   };
 
   return (
@@ -221,17 +251,28 @@ export default function QuranReader() {
               </p>
             </div>
 
-            {/* Right: Prev / Next compact pill buttons + Bookmark toggle button */}
+            {/* Right: Prev / Next compact pill buttons + Study & Hifz + Bookmark button */}
             <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleOpenStudySheet()}
+                title="Study & Hifz Memorization"
+                className="rounded-lg font-bold border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent-text)] hover:border-[var(--accent)] transition-colors select-none flex items-center gap-1 shadow-sm"
+                style={{ padding: '5px 8px', fontSize: '0.72rem' }}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Study</span>
+              </button>
+
               <button
                 type="button"
                 onClick={goToPreviousSurah}
                 disabled={surahNum <= 1}
                 title="Previous Surah"
                 className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
-                style={{ padding: '5px 8px', fontSize: '0.72rem' }}
+                style={{ padding: '5px 7px', fontSize: '0.72rem' }}
               >
-                ‹ Prev
+                ‹
               </button>
               <button
                 type="button"
@@ -239,14 +280,17 @@ export default function QuranReader() {
                 disabled={surahNum >= 114}
                 title="Next Surah"
                 className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
-                style={{ padding: '5px 8px', fontSize: '0.72rem' }}
+                style={{ padding: '5px 7px', fontSize: '0.72rem' }}
               >
-                Next ›
+                ›
               </button>
               <button
                 type="button"
-                onClick={toggleBookmark}
-                title={isBookmarked ? 'Remove Bookmark' : 'Bookmark Surah'}
+                onClick={() => {
+                  toggleBookmark();
+                  handleOpenStudySheet();
+                }}
+                title={isBookmarked ? 'Remove Star / Manage Bookmarks' : 'Bookmark Surah & Ayah'}
                 className={`rounded-lg border transition-all select-none ${
                   isBookmarked
                     ? 'bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent)] shadow-sm'
@@ -294,6 +338,15 @@ export default function QuranReader() {
             onPageChange={handlePageChange}
           />
         </div>
+
+        {/* Interactive Ayah Study, Multi-Tafsir & Hifz Sheet */}
+        <AyahStudySheet
+          isOpen={showStudySheet}
+          onClose={() => setShowStudySheet(false)}
+          surahNumber={surahNum}
+          initialAyah={studyInitialAyah}
+          currentPage={currentPage}
+        />
       </div>
     </PageTransition>
   );

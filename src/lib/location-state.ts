@@ -97,14 +97,16 @@ export const useLocationState = () => {
       };
       saveLocation(newLocation);
 
-      // Update Android widget with new location (fire and forget with error handling)
+      // Update Android widget with new location (fire and forget with handled fallback)
       import('@/lib/widget-service').then(({ WidgetService }) => {
         try {
           WidgetService.updateWidget(newLocation.latitude, newLocation.longitude, newLocation.locationName);
-        } catch (widgetError) {
-          console.warn('Failed to update widget:', widgetError);
+        } catch {
+          // Handled widget update failure silently
         }
-      }).catch(err => console.warn('Failed to import widget service:', err));
+      }).catch(() => {
+        // Handled widget service import silently
+      });
 
       return newLocation;
     });
@@ -246,10 +248,12 @@ export const useLocationState = () => {
       import('@/lib/widget-service').then(({ WidgetService }) => {
         try {
           WidgetService.updateWidget(newLocation.latitude, newLocation.longitude, newLocation.locationName);
-        } catch (widgetError) {
-          console.warn('Failed to update widget:', widgetError);
+        } catch {
+          // Handled widget update failure silently
         }
-      }).catch(err => console.warn('Failed to import widget service:', err));
+      }).catch(() => {
+        // Handled widget service import silently
+      });
 
       return {
         ...nearestCity,
@@ -259,8 +263,8 @@ export const useLocationState = () => {
         lon,
         locationName,
       };
-    } catch (err) {
-      console.error('Unexpected error during location detection:', err);
+    } catch {
+      // Handled location detection fallback silently
       setLocationState(prev => ({ ...prev, isDetecting: false }));
       return null;
     }

@@ -109,9 +109,9 @@ export function adjustTimeStringByMinutes(timeStr: string, minutes: number): str
   if (!timeStr || minutes === 0) return timeStr;
 
   // Extract timezone suffix like "(IST)", "(PKT)", "(+05:30)" if present
-  const tzMatch = timeStr.match(/\s*(\([^\)]*\))\s*$/);
+  const tzMatch = timeStr.match(/\s*(\([^)]*\))\s*$/);
   const tzSuffix = tzMatch ? ` ${tzMatch[1]}` : '';
-  const cleaned = timeStr.replace(/\s*\([^\)]*\)\s*$/g, '').trim();
+  const cleaned = timeStr.replace(/\s*\([^)]*\)\s*$/g, '').trim();
 
   // Match 24h or 12h: "12:24", "12:24:00", "12:24 PM", "12:24:00 PM"
   const match = cleaned.match(/^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);

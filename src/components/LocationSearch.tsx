@@ -231,60 +231,6 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             </div>
           )}
 
-          {/* Suggestions Dropdown with clean elevation & spacing */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div 
-              className="absolute z-50 left-0 right-0 top-full mt-2 bg-popover/95 backdrop-blur-md rounded-2xl border border-[var(--border)] shadow-2xl max-h-[220px] overflow-auto overscroll-contain"
-              style={{
-                overscrollBehavior: 'contain',
-                WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-y'
-              }}
-              onTouchMove={(e) => e.stopPropagation()}
-            >
-              {suggestions.map((place, index) => (
-                <div
-                  key={index}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b border-[var(--border)]/50 last:border-0"
-                >
-                  <button
-                    type="button"
-                    className="flex-1 text-left truncate mr-2"
-                    onClick={() => handleSuggestionSelect(place)}
-                  >
-                    <p className="font-medium truncate text-xs">{place.display_name}</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      const city = place.address.city || place.address.town || place.address.village || place.display_name.split(',')[0];
-                      const country = place.address.country || '';
-                      saveLocationToFavorites({
-                        name: place.display_name,
-                        city,
-                        country,
-                        latitude: parseFloat(place.lat),
-                        longitude: parseFloat(place.lon)
-                      });
-                      setBookmarkedIndices(prev => ({ ...prev, [index]: true }));
-                      toast({ title: "Location Saved", description: `${city} added to saved locations.` });
-                    }}
-                    className="p-1.5 rounded-full text-muted-foreground hover:text-[var(--accent-text)] hover:bg-[var(--accent-soft)] transition-colors shrink-0"
-                    title="Bookmark location"
-                  >
-                    {bookmarkedIndices[index] ? (
-                      <Check className="w-4 h-4 text-emerald-500" />
-                    ) : (
-                      <Bookmark className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
           <Button
             type="button"
             onClick={handleManualSearch}
@@ -305,7 +251,104 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
           </Button>
         </div>
 
-        <div className="mt-5" onTouchMove={(e) => e.stopPropagation()}>
+        {/* When searching: render live search suggestions cleanly in normal block flow inside a solid container with zero bleed-through */}
+        {searchQuery.trim().length > 0 ? (
+          <div className="mt-4 space-y-2" onTouchMove={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-bold text-[var(--accent-text)]">
+                {isSearching ? "Searching locations..." : suggestions.length > 0 ? `Results (${suggestions.length})` : "No matching locations"}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSuggestions([]);
+                }}
+                className="text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              >
+                Clear
+              </button>
+            </div>
+
+            {isSearching && (
+              <div
+                className="p-4 rounded-[14px] flex items-center justify-center gap-2 text-xs text-[var(--text-secondary)]"
+                style={{
+                  background: 'var(--bg-elev)',
+                  border: '1px solid var(--border)'
+                }}
+              >
+                <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+                <span>Searching online & offline databases...</span>
+              </div>
+            )}
+
+            {!isSearching && suggestions.length > 0 && (
+              <div
+                className="rounded-[14px] overflow-hidden max-h-[260px] overflow-y-auto divide-y divide-[var(--border)]/60"
+                style={{
+                  background: 'var(--bg-elev)',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.35)'
+                }}
+              >
+                {suggestions.map((place, index) => (
+                  <div
+                    key={index}
+                    className="w-full flex items-center justify-between p-3 text-sm hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <button
+                      type="button"
+                      className="flex-1 text-left mr-2 min-w-0"
+                      onClick={() => handleSuggestionSelect(place)}
+                    >
+                      <p className="font-semibold text-xs text-[var(--text-primary)] truncate">{place.display_name}</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const city = place.address.city || place.address.town || place.address.village || place.display_name.split(',')[0];
+                        const country = place.address.country || '';
+                        saveLocationToFavorites({
+                          name: place.display_name,
+                          city,
+                          country,
+                          latitude: parseFloat(place.lat),
+                          longitude: parseFloat(place.lon)
+                        });
+                        setBookmarkedIndices(prev => ({ ...prev, [index]: true }));
+                        toast({ title: "Location Saved", description: `${city} added to saved locations.` });
+                      }}
+                      className="p-1.5 rounded-full text-muted-foreground hover:text-[var(--accent-text)] hover:bg-[var(--accent-soft)] transition-colors shrink-0"
+                      title="Bookmark location"
+                    >
+                      {bookmarkedIndices[index] ? (
+                        <Check className="w-4 h-4 text-emerald-500" />
+                      ) : (
+                        <Bookmark className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!isSearching && suggestions.length === 0 && (
+              <div
+                className="p-4 rounded-[14px] text-center text-xs text-[var(--text-secondary)]"
+                style={{
+                  background: 'var(--bg-elev)',
+                  border: '1px solid var(--border)'
+                }}
+              >
+                No live suggestions found. Press "Set Location" to search directly.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5" onTouchMove={(e) => e.stopPropagation()}>
           {/* Region Tabs */}
           <div className="flex items-center justify-between p-1 bg-muted/60 rounded-xl mb-3 gap-1 overflow-x-auto">
             <button
@@ -493,6 +536,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             </div>
           )}
         </div>
+        )}
 
         <div className="mt-4 text-center">
           <p className="text-xs text-muted-foreground">

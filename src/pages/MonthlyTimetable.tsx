@@ -48,6 +48,40 @@ function sanitizeHijri(str: string): string {
     .replace(/ō/g, "ū");
 }
 
+function getConciseHijriMonth(monthNumber?: number, rawMonthName?: string): string {
+  const titles: Record<number, string> = {
+    1: "Muharram",
+    2: "Safar",
+    3: "Rabīʿ I",
+    4: "Rabīʿ II",
+    5: "Jumādā I",
+    6: "Jumādā II",
+    7: "Rajab",
+    8: "Sha'ban",
+    9: "Ramadan",
+    10: "Shawwal",
+    11: "Dhul-Qa'dah",
+    12: "Dhul-Hijjah",
+  };
+  if (monthNumber && titles[monthNumber]) {
+    return titles[monthNumber];
+  }
+  const clean = sanitizeHijri(rawMonthName || "").toLowerCase();
+  if (clean.includes("muharram")) return "Muharram";
+  if (clean.includes("safar")) return "Safar";
+  if (clean.includes("rabi") && (clean.includes("awwal") || clean.includes("1") || clean.includes("i"))) return "Rabīʿ I";
+  if (clean.includes("rabi")) return "Rabīʿ II";
+  if (clean.includes("jumad") && (clean.includes("ula") || clean.includes("1") || clean.includes("i"))) return "Jumādā I";
+  if (clean.includes("jumad")) return "Jumādā II";
+  if (clean.includes("rajab")) return "Rajab";
+  if (clean.includes("sha")) return "Sha'ban";
+  if (clean.includes("ramadan")) return "Ramadan";
+  if (clean.includes("shawwal")) return "Shawwal";
+  if (clean.includes("qa")) return "Dhul-Qa'dah";
+  if (clean.includes("hij")) return "Dhul-Hijjah";
+  return clean ? clean.slice(0, 7) : "Hijri";
+}
+
 function formatTimetableTime(timeStr: string, is24h: boolean): string {
   if (!timeStr) return "--:--";
   const cleaned = timeStr.replace(/\s*\(.*?\)\s*/g, "").trim();
@@ -783,11 +817,7 @@ export default function MonthlyTimetable() {
                     const friday = isFriday(day);
                     const adj = applyOffsetsToTimings(day.timings, offsets);
                     const cleanHijriMonth = sanitizeHijri(day.date.hijri.month.en);
-                    const shortHijriMonth = cleanHijriMonth.includes("ūlā") || cleanHijriMonth.includes("1")
-                      ? "Jum I"
-                      : cleanHijriMonth.includes("ākhirah") || cleanHijriMonth.includes("2")
-                      ? "Jum II"
-                      : cleanHijriMonth.substring(0, 5);
+                    const shortHijriMonth = getConciseHijriMonth(day.date.hijri.month.number, day.date.hijri.month.en);
 
                     return (
                       <tr

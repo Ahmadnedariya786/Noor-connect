@@ -172,7 +172,9 @@ const Tasbeeh = () => {
       osc.start();
       osc.stop(ctx.currentTime + 0.035);
       setTimeout(() => {
-        try { ctx.close(); } catch {}
+        try { ctx.close(); } catch {
+          // ignore audio context close error
+        }
       }, 120);
     } catch {
       // Audio context guard

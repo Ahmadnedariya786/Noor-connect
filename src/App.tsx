@@ -33,6 +33,9 @@ import { runFirstLaunchPermissionOnboarding } from "@/lib/onboarding-permissions
 import { ExactAlarmPermissionDialog } from "@/components/ExactAlarmPermissionDialog";
 import { HardwareBackButtonHandler } from "@/components/HardwareBackButtonHandler";
 import { recordBreadcrumb } from "@/lib/diagnostics-engine";
+import { TilawahProvider, useTilawah } from "@/contexts/TilawahContext";
+import { GlobalTilawahBar } from "@/components/GlobalTilawahBar";
+import { TilawahPlayerModal } from "@/components/Quran/TilawahPlayerModal";
 
 /**
  * RouteBreadcrumbTracker — automatically logs timestamped breadcrumbs on every route change.
@@ -94,6 +97,20 @@ function DeepLinkListener() {
       cleanupPromise.then(h => h?.remove?.()).catch(() => {});
     };
   }, [navigate]);
+  return null;
+}
+
+/**
+ * TilawahRouteHandler — seamless entry point for /tilawah route
+ * Opens the dedicated Tilawah Player modal and navigates to the Quran section.
+ */
+function TilawahRouteHandler() {
+  const { openPlayer } = useTilawah();
+  const navigate = useNavigate();
+  useEffect(() => {
+    openPlayer();
+    navigate('/quran', { replace: true });
+  }, [openPlayer, navigate]);
   return null;
 }
 
@@ -258,6 +275,7 @@ function AppRoutes() {
               <Route path="/prayers" element={<Navigate to="/dashboard" replace />} />
               <Route path="/quran/reading" element={<Navigate to="/quran-progress" replace />} />
               <Route path="/quran" element={<SurahList />} />
+              <Route path="/tilawah" element={<TilawahRouteHandler />} />
               <Route path="/quran-reader/:surahNumber" element={<Navigate to="/quran" replace />} />
               <Route path="/quran/:surahName" element={<QuranReader />} />
               <Route path="/quran-progress" element={<QuranProgress />} />
@@ -323,6 +341,7 @@ function AppRoutes() {
               <Route path="/prayers" element={<Navigate to="/dashboard" replace />} />
               <Route path="/quran/reading" element={<Navigate to="/quran-progress" replace />} />
               <Route path="/quran" element={<SurahList />} />
+              <Route path="/tilawah" element={<TilawahRouteHandler />} />
               <Route path="/quran-reader/:surahNumber" element={<Navigate to="/quran" replace />} />
               <Route path="/quran/:surahName" element={<QuranReader />} />
               <Route path="/quran-progress" element={<QuranProgress />} />
@@ -393,35 +412,39 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
     <MotionConfig reducedMotion={(!animationEnabled || reduceMotion) ? "always" : "user"}>
       <LazyMotionWrapper>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <div className="flex flex-col min-h-screen overflow-x-hidden">
-            <div className="flex-shrink-0">
-              <Suspense fallback={null}>
-                <GlobalPrayerAlarm />
-                {greetingEnabled && <SalamGreeting splashActive={splashActive} />}
-                <FestivePopup />
-                <PWAInstallPrompt />
-                <EidChecklistNotification />
-                <FitranaCalculatorNotification />
-                <AutoBackupRestoreDialog />
-              </Suspense>
+          <TilawahProvider>
+            <div className="flex flex-col min-h-screen overflow-x-hidden">
+              <GlobalTilawahBar />
+              <div className="flex-shrink-0">
+                <Suspense fallback={null}>
+                  <GlobalPrayerAlarm />
+                  {greetingEnabled && <SalamGreeting splashActive={splashActive} />}
+                  <FestivePopup />
+                  <PWAInstallPrompt />
+                  <EidChecklistNotification />
+                  <FitranaCalculatorNotification />
+                  <AutoBackupRestoreDialog />
+                </Suspense>
+              </div>
+
+              <LayoutManager>
+                <ErrorBoundary>
+                  <HardwareBackButtonHandler />
+                  <RouteBreadcrumbTracker />
+                  <DeepLinkListener />
+                  <AppRoutes />
+                </ErrorBoundary>
+              </LayoutManager>
             </div>
 
-            <LayoutManager>
-              <ErrorBoundary>
-                <HardwareBackButtonHandler />
-                <RouteBreadcrumbTracker />
-                <DeepLinkListener />
-                <AppRoutes />
-              </ErrorBoundary>
-            </LayoutManager>
-          </div>
-
-          <BottomNav />
-          <Suspense fallback={null}>
-            <GlobalRadioPlayer />
-            <GlobalQuranPlayer />
-            <GlobalNasheedPlayer />
-          </Suspense>
+            <BottomNav />
+            <TilawahPlayerModal />
+            <Suspense fallback={null}>
+              <GlobalRadioPlayer />
+              <GlobalQuranPlayer />
+              <GlobalNasheedPlayer />
+            </Suspense>
+          </TilawahProvider>
         </BrowserRouter>
       </LazyMotionWrapper>
     </MotionConfig>

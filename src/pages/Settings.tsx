@@ -23,7 +23,7 @@ const Settings = () => {
     timeFormat,
     toggleTimeFormat,
   } = useSettings();
-  const { currentTheme } = useAppTheme();
+  const { currentTheme, theme } = useAppTheme();
   const navigate = useNavigate();
   const { clockStyle } = useClockStyle();
   const [showClockModal, setShowClockModal] = useState(false);
@@ -97,7 +97,7 @@ const Settings = () => {
             </div>
             <div className="flex items-center gap-1.5 shrink-0 ml-2">
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)] whitespace-nowrap inline-flex items-center">
-                {currentTheme.name}
+                {theme?.name || 'Oxford Gold'}
               </span>
               <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
             </div>

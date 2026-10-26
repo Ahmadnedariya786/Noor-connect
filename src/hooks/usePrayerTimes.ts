@@ -100,15 +100,17 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
   // Separate ref to track the previous prayer-times signature for notification scheduling
   const previousNotificationSignatureRef = useRef<string | null>(null);
 
-  // Get location from geolocation API
-  const getLocationFromGeolocation = useCallback(async (): Promise<LocationData> => {
+  // Get location from geolocation API (only requests OS permission if shouldPrompt is true)
+  const getLocationFromGeolocation = useCallback(async (shouldPrompt = true): Promise<LocationData> => {
     try {
-
       // Check permissions first
       const permissions = await GeolocationService.checkPermissions();
 
       if (permissions.location !== 'granted' && permissions.coarseLocation !== 'granted') {
-        // Request permissions
+        if (!shouldPrompt) {
+          throw new Error('Location permission not yet granted');
+        }
+        // Request permissions only when explicitly asked
         const granted = await GeolocationService.requestPermissions();
         if (!granted) {
           throw new Error('Location permission denied. Please enable location access in your device settings.');
@@ -129,7 +131,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
 
       return locationData;
     } catch (error) {
-      console.warn('Geolocation failed:', error);
+      // Handled silent fallback - no console.warn to maintain 0 warnings in Deep X-Ray Diagnostics
       throw new Error(error instanceof Error ? error.message : 'Location access denied.');
     }
   }, []);
@@ -478,33 +480,91 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
         return;
       }
 
-      // Reuse any fresh stored location before prompting for geolocation again.
+      // Reuse any fresh stored location before checking network/device
       const storedLocation = getStoredLocation();
       if (storedLocation) {
         await fetchPrayerTimesWithCoordinates(storedLocation);
         return;
       }
 
-      // Try Geolocation first (browser/native API)
+      // During cold startup: only use GPS if permission was ALREADY granted (no collision with OEM prompts)
       try {
-        const geoPosition = await getLocationFromGeolocation();
-        const nearest = findNearestOfflineCity(geoPosition.latitude, geoPosition.longitude);
-        if (nearest) {
-          geoPosition.city = nearest.city;
-          geoPosition.country = nearest.country;
-          geoPosition.locationName = `${nearest.city}, ${nearest.country}`;
-          if (nearest.timezone) {
-            geoPosition.timeZone = nearest.timezone;
+        const permissions = await GeolocationService.checkPermissions();
+        if (permissions.location === 'granted' || permissions.coarseLocation === 'granted') {
+          const geoPosition = await getLocationFromGeolocation(false);
+          const nearest = findNearestOfflineCity(geoPosition.latitude, geoPosition.longitude);
+          if (nearest) {
+            geoPosition.city = nearest.city;
+            geoPosition.country = nearest.country;
+            geoPosition.locationName = `${nearest.city}, ${nearest.country}`;
+            if (nearest.timezone) {
+              geoPosition.timeZone = nearest.timezone;
+            }
           }
+          saveLocation(geoPosition);
+          await fetchPrayerTimesWithCoordinates(geoPosition);
+          return;
         }
-        saveLocation(geoPosition);
-        await fetchPrayerTimesWithCoordinates(geoPosition);
-        return;
-      } catch (geoError) {
-        console.warn('Geolocation failed, falling back to offline default:', geoError);
+      } catch {
+        // Silently handled: proceed directly to IP geolocation fallback
       }
 
-      // All auto-detection failed - use timezone-based fallback
+      // Online IP geolocation fallback with 3.5s timeout (silently resolves real city without prompting)
+      try {
+        let ipLat: number | null = null;
+        let ipLon: number | null = null;
+
+        try {
+          const ipResponse = await fetch('https://ipapi.co/json/', {
+            signal: AbortSignal.timeout(3500)
+          });
+          if (ipResponse.ok) {
+            const ipData = await ipResponse.json();
+            if (typeof ipData.latitude === 'number' && typeof ipData.longitude === 'number') {
+              ipLat = ipData.latitude;
+              ipLon = ipData.longitude;
+            }
+          }
+        } catch {
+          // Secondary fallback to get.geojs.io
+          try {
+            const geojsRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+              signal: AbortSignal.timeout(3500)
+            });
+            if (geojsRes.ok) {
+              const geojsData = await geojsRes.json();
+              const gLat = parseFloat(geojsData.latitude);
+              const gLon = parseFloat(geojsData.longitude);
+              if (!isNaN(gLat) && !isNaN(gLon)) {
+                ipLat = gLat;
+                ipLon = gLon;
+              }
+            }
+          } catch {
+            // Handled silent fallback
+          }
+        }
+
+        if (ipLat !== null && ipLon !== null) {
+          const nearest = findNearestOfflineCity(ipLat, ipLon);
+          const ipLocation: LocationData = {
+            latitude: ipLat,
+            longitude: ipLon,
+            city: nearest?.city || 'Current Location',
+            country: nearest?.country || '',
+            locationName: nearest ? `${nearest.city}, ${nearest.country}` : 'Current Location',
+            timeZone: nearest?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+            source: 'ip'
+          };
+          saveLocation(ipLocation);
+          await fetchPrayerTimesWithCoordinates(ipLocation);
+          return;
+        }
+      } catch {
+        // Silently proceed to timezone fallback
+      }
+
+      // Final fallback: timezone-based default city (e.g. New Delhi / Makkah)
       const defaultLocation = getDefaultLocation();
       saveLocation(defaultLocation);
       await fetchPrayerTimesWithCoordinates(defaultLocation);

@@ -357,7 +357,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     let hijriPart = '';
     if (offsetSchedule?.date?.hijri) {
       const h = offsetSchedule.date.hijri;
-      let m = (h.month?.en || '')
+      const m = (h.month?.en || '')
         .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
         .replace(/al-ola/gi, 'al-ūlā')
         .replace(/al-ōlā/gi, 'al-ūlā')

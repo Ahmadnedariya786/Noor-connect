@@ -393,7 +393,7 @@ export const getWorshipKPIs = (): WorshipKPIs => {
 
   // 2. Sunnah Rawatib Kept % This Month (12 per day = 2 Fajr + 6 Dhuhr + 2 Maghrib + 2 Isha)
   let totalSunnahKept = 0;
-  let daysInMonthCount = now.getDate(); // elapsed days in month
+  const daysInMonthCount = now.getDate(); // elapsed days in month
 
   for (let d = 1; d <= daysInMonthCount; d++) {
     const checkDate = new Date(currentYear, currentMonth, d);

@@ -145,7 +145,7 @@ const SettingsSubPage: React.FC = () => {
   const { clockStyle } = useClockStyle();
   const currentClockStyleName = CLOCK_STYLES.find(s => s.id === clockStyle)?.name || 'Digital Bold';
   const { currentTheme, theme } = useAppTheme();
-  const currentThemeName = theme?.name || THEMES[currentTheme]?.name || 'Imperial Violet';
+  const currentThemeName = theme?.name || THEMES[currentTheme]?.name || 'Oxford Gold';
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });

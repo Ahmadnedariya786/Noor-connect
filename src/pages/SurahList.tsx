@@ -15,10 +15,21 @@ import {
   Bookmark,
   Hash,
   Moon,
+  Headphones,
+  Zap,
 } from "lucide-react";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
 import { PageTransition } from "@/components/PageTransition";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useTilawah } from "@/contexts/TilawahContext";
+import {
+  BOOKMARK_COLORS,
+  getColorBookmarks,
+  removeColorBookmark,
+  COLOR_BOOKMARKS_CHANGED_EVENT,
+  type ColorBookmark,
+  type BookmarkColorId,
+} from "@/lib/quran-bookmarks";
 import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,6 +184,33 @@ export default function SurahList() {
       return [];
     }
   });
+
+  const { isPlaying, currentSurah, currentAyah, reciter, openPlayer } = useTilawah();
+  const [colorBookmarks, setColorBookmarks] = useState<Record<BookmarkColorId, ColorBookmark | null>>(() =>
+    getColorBookmarks()
+  );
+
+  useEffect(() => {
+    const handleColorChange = (e: Event) => {
+      const custom = e as CustomEvent<Record<BookmarkColorId, ColorBookmark | null>>;
+      if (custom.detail) {
+        setColorBookmarks(custom.detail);
+      } else {
+        setColorBookmarks(getColorBookmarks());
+      }
+    };
+    window.addEventListener(COLOR_BOOKMARKS_CHANGED_EVENT, handleColorChange);
+    window.addEventListener("focus", () => setColorBookmarks(getColorBookmarks()));
+    return () => {
+      window.removeEventListener(COLOR_BOOKMARKS_CHANGED_EVENT, handleColorChange);
+    };
+  }, []);
+
+  const placedColorBookmarks = useMemo(() => {
+    return BOOKMARK_COLORS.map((c) => colorBookmarks[c.id]).filter(
+      (b): b is ColorBookmark => b !== null
+    );
+  }, [colorBookmarks]);
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -455,6 +493,73 @@ export default function SurahList() {
           </div>
         </div>
 
+        {/* 🎧 TILAWAH AUDIO PLAYER ENTRY BANNER */}
+        <div className="max-w-2xl mx-auto px-4 mb-3.5">
+          <div
+            onClick={openPlayer}
+            role="button"
+            tabIndex={0}
+            className="p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] group shadow-md"
+            style={{
+              background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
+              border: "1.5px solid var(--accent)",
+              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)",
+            }}
+          >
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                  color: "var(--on-accent)",
+                }}
+              >
+                <Headphones className="w-5 h-5 fill-current" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-sm text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate">
+                    🎧 Tilawah Player & Sleep Timer
+                  </h3>
+                  {isPlaying && (
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] truncate mt-0.5">
+                  {isPlaying
+                    ? `Now Playing: Surah ${currentSurah}:${currentAyah} • ${reciter.shortName}`
+                    : "6 Reciters • Ayah-by-Ayah • Gapless Audio • Sleep Timer"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                className="text-xs font-bold px-3 py-1.5 rounded-full border shadow-sm flex items-center gap-1.5 transition-colors"
+                style={{
+                  backgroundColor: isPlaying ? "var(--accent)" : "var(--surface-2)",
+                  color: isPlaying ? "var(--on-accent)" : "var(--accent-text)",
+                  borderColor: "var(--accent)",
+                }}
+              >
+                {isPlaying ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span>Active</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Listen</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </>
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* SMART PACED KHATMAH PLANNER CARD (604 Mushaf Pages) */}
         <div className="max-w-2xl mx-auto px-4 mb-3.5">
           <Card
@@ -548,30 +653,33 @@ export default function SurahList() {
                     variant="outline"
                     size="sm"
                     onClick={handleAdvancePage}
-                    className="h-8 rounded-xl text-[10px] sm:text-xs font-bold bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] truncate"
+                    style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
+                    className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)]"
                   >
-                    <Plus className="w-3 h-3 mr-1" />
-                    +1 Page Read
+                    <Plus className="w-3 h-3 mr-1 shrink-0" />
+                    <span>+1 Page</span>
                   </Button>
 
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCompleteTodayPortion}
-                    className="h-8 rounded-xl text-[10px] sm:text-xs font-bold bg-[var(--surface-2)] border-[var(--border)] text-emerald-400 truncate"
+                    style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
+                    className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-emerald-400"
                   >
-                    <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400" />
-                    Done Portion
+                    <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400 shrink-0" />
+                    <span>✓ Done Today</span>
                   </Button>
 
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleResetKhatmah}
-                    className="h-8 rounded-xl text-[10px] sm:text-xs font-bold text-[var(--text-secondary)] hover:text-rose-400 truncate"
+                    style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
+                    className="h-8 rounded-xl font-bold text-[var(--text-secondary)] hover:text-rose-400"
                   >
-                    <RotateCcw className="w-3 h-3 mr-1" />
-                    Reset Plan
+                    <RotateCcw className="w-3 h-3 mr-1 shrink-0" />
+                    <span>↺ Reset</span>
                   </Button>
                 </div>
               </div>
@@ -932,7 +1040,130 @@ export default function SurahList() {
         {/* TAB CONTENT: SURAHS OR SAVED LIST */}
         {activeMainTab !== "juz" && (
           <div className="max-w-2xl mx-auto px-4" ref={listRef}>
-            {filteredSurahs.length > 0 ? (
+            {activeMainTab === "saved" ? (
+              <div className="space-y-4">
+                {/* 5-Colour Smart Bookmarks Section */}
+                {placedColorBookmarks.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2">
+                        <Bookmark className="w-4 h-4 text-[var(--accent)]" />
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                          5-Colour Smart Bookmarks ({placedColorBookmarks.length})
+                        </h3>
+                      </div>
+                      <span className="text-[10px] text-[var(--text-secondary)]">With Moves As You Read</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      {placedColorBookmarks.map((bm) => {
+                        const colDef = BOOKMARK_COLORS.find((c) => c.id === bm.colorId);
+                        return (
+                          <div
+                            key={bm.colorId}
+                            className="p-3.5 rounded-2xl border flex items-center justify-between gap-3 transition-all hover:border-[var(--accent)]/50"
+                            style={{
+                              backgroundColor: "var(--surface)",
+                              borderColor: "var(--border)",
+                              boxShadow: "inset 0 1px 0 var(--card-sheen)",
+                            }}
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              {/* Color Dot Ribbon */}
+                              <div
+                                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                                style={{
+                                  backgroundColor: colDef?.bgHex || "var(--accent-soft)",
+                                  border: `1.5px solid ${colDef?.hex || "var(--accent)"}`,
+                                }}
+                              >
+                                <div
+                                  className="w-4 h-4 rounded-full shadow-sm"
+                                  style={{ backgroundColor: colDef?.hex }}
+                                />
+                              </div>
+
+                              <div className="min-w-0 flex-1 space-y-0.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-bold text-sm text-[var(--text-primary)] truncate">
+                                    {bm.surahName} {bm.surah}:{bm.ayah}
+                                  </h4>
+                                  {bm.autoMove && (
+                                    <Badge className="text-[9px] font-bold px-1.5 py-0 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                      ⚡ Auto-moving
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-[var(--text-secondary)] font-medium">
+                                  Mushaf Page {bm.page} • {colDef?.name} Bookmark
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                size="sm"
+                                onClick={() => navigate(`/quran/surah-${bm.surah}`)}
+                                className="h-8 rounded-xl text-xs font-bold gap-1 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] border-none"
+                              >
+                                <span>Resume</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </Button>
+                              <button
+                                type="button"
+                                onClick={() => removeColorBookmark(bm.colorId)}
+                                className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                                title="Remove bookmark"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Starred Surahs Section */}
+                {filteredSurahs.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 px-1 mb-1">
+                      <Star className="w-4 h-4 text-[var(--accent)]" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                        Starred Surahs ({filteredSurahs.length})
+                      </h3>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {filteredSurahs.map((surah, index) => (
+                        <div key={surah.number} style={{ contentVisibility: "auto", containIntrinsicSize: "88px" }}>
+                          <SurahCard
+                            surah={surah}
+                            index={index}
+                            isDark={isDark}
+                            isBookmarked={bookmarkedSurahs.includes(surah.number)}
+                            onClick={handleSurahClick}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State when both are empty */}
+                {placedColorBookmarks.length === 0 && filteredSurahs.length === 0 && (
+                  <div className="text-center py-12 px-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] max-w-md mx-auto my-6 shadow-sm">
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center mx-auto mb-3 text-[var(--accent-text)]">
+                      <Star className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-base font-bold text-[var(--text-primary)] mb-1">No Saved Items Yet</h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-xs mx-auto">
+                      Use the <span className="text-[var(--accent-text)] font-bold">5 Jewel-Toned Bookmarks</span> inside the reader or tap the <span className="text-[var(--accent-text)] font-bold">★ Star</span> icon to save surahs and ayahs here.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : filteredSurahs.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {filteredSurahs.map((surah, index) => (
                   <div key={surah.number} style={{ contentVisibility: "auto", containIntrinsicSize: "88px" }}>
@@ -945,17 +1176,6 @@ export default function SurahList() {
                     />
                   </div>
                 ))}
-              </div>
-            ) : activeMainTab === "saved" ? (
-              <div className="text-center py-12 px-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] max-w-md mx-auto my-6 shadow-sm">
-                <div className="w-14 h-14 rounded-2xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center mx-auto mb-3 text-[var(--accent-text)]">
-                  <Star className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-[var(--text-primary)] mb-1">No Saved Surahs Yet</h3>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-xs mx-auto">
-                  Tap the <span className="text-[var(--accent-text)] font-bold">★ Star</span> icon in the top bar of
-                  any Surah while reading to quickly access it here.
-                </p>
               </div>
             ) : (
               <div className="text-center py-16">

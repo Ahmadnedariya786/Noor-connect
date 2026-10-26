@@ -159,7 +159,7 @@ const GROUPS: SettingsGroup[] = [
         id: 'storage',
         title: 'Storage & Cache',
         titleKey: 'storageAndCache',
-        subtitle: 'Offline Quran & cache',
+        subtitle: 'Cached audio & local storage',
         icon: HardDrive,
         gradient: 'from-rose-500/10 via-rose-500/5 to-transparent border-rose-500/20',
         iconColor: 'text-rose-600 dark:text-rose-400',
@@ -263,11 +263,11 @@ const Profile: React.FC = () => {
   const [asyncValues, setAsyncValues] = useState<Record<string, string | null>>(() => {
     const initial: Record<string, string | null> = {};
     try {
-      const rawTheme = (localStorage.getItem('noor_theme') || 'imperial-violet') as ThemeId;
-      const currentThemeDef = THEMES[rawTheme] || THEMES['imperial-violet'] || THEMES['oxford-gold'];
-      initial['theme'] = currentThemeDef?.name || 'Imperial Violet';
+      const rawTheme = (localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
+      const currentThemeDef = THEMES[rawTheme] || THEMES['oxford-gold'];
+      initial['theme'] = currentThemeDef?.name || 'Oxford Gold';
     } catch {
-      initial['theme'] = 'Imperial Violet';
+      initial['theme'] = 'Oxford Gold';
     }
 
     try {
@@ -308,11 +308,11 @@ const Profile: React.FC = () => {
       const updates: Record<string, string | null> = {};
 
       try {
-        const rawTheme = (localStorage.getItem('noor_theme') || 'imperial-violet') as ThemeId;
-        const currentThemeDef = THEMES[rawTheme] || THEMES['imperial-violet'] || THEMES['oxford-gold'];
-        updates['theme'] = currentThemeDef?.name || 'Imperial Violet';
+        const rawTheme = (localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
+        const currentThemeDef = THEMES[rawTheme] || THEMES['oxford-gold'];
+        updates['theme'] = currentThemeDef?.name || 'Oxford Gold';
       } catch {
-        updates['theme'] = 'Imperial Violet';
+        updates['theme'] = 'Oxford Gold';
       }
 
       try {
