@@ -25,7 +25,7 @@ const BottomNav = memo(function BottomNav() {
   }, []);
 
   // Hide global nav on routes that have their own bottom navigation
-  if (location.pathname.startsWith('/noor-cycle')) {
+  if (location.pathname.startsWith('/noor-cycle') || /^\/quran\/.+/.test(location.pathname)) {
     return null;
   }
 

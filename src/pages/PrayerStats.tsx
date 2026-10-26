@@ -182,6 +182,7 @@ export default function PrayerStats() {
     const updated = cycleSunnahRawatib(selectedDateKey, prayer);
     setDayLog(updated);
     setKpis(getWorshipKPIs());
+    setHeatmapCells(get3MonthHeatmapData());
   };
 
   // Night worship handlers
@@ -189,12 +190,16 @@ export default function PrayerStats() {
     if ("vibrate" in navigator) navigator.vibrate(15);
     const updated = updateNightWorship(selectedDateKey, { witr: !dayLog.witr });
     setDayLog(updated);
+    setKpis(getWorshipKPIs());
+    setHeatmapCells(get3MonthHeatmapData());
   };
 
   const handleStepQiyam = (delta: number) => {
     if ("vibrate" in navigator) navigator.vibrate(15);
     const updated = updateNightWorship(selectedDateKey, { qiyamDelta: delta });
     setDayLog(updated);
+    setKpis(getWorshipKPIs());
+    setHeatmapCells(get3MonthHeatmapData());
   };
 
   // Fasting tap handler
@@ -213,6 +218,24 @@ export default function PrayerStats() {
     }
     return "border border-[var(--border)]";
   };
+
+  // Compute month abbreviations aligned above 13 week columns
+  const monthLabels = useMemo(() => {
+    const labels: { colIndex: number; label: string }[] = [];
+    let lastMonth = -1;
+    for (let c = 0; c < 13; c++) {
+      const cell = heatmapCells[c * 7];
+      if (cell) {
+        const m = cell.dateObj.getMonth();
+        if (m !== lastMonth) {
+          lastMonth = m;
+          const monthShort = cell.dateObj.toLocaleDateString("en-US", { month: "short" });
+          labels.push({ colIndex: c, label: monthShort });
+        }
+      }
+    }
+    return labels;
+  }, [heatmapCells]);
 
   // Format Gregorian & Hijri dates for switcher header
   const formattedGregorian = useMemo(() => {
@@ -336,64 +359,87 @@ export default function PrayerStats() {
 
             {/* Heatmap Grid Container (Horizontal scroll safe for 360px) */}
             <div className="overflow-x-auto pb-1 -mx-1 px-1">
-              <div className="min-w-[240px] flex gap-1.5 justify-between">
-                {/* Day-of-week labels on left: M, W, F, S */}
-                <div className="flex flex-col justify-between text-[9px] font-bold text-[var(--text-secondary)] pr-1 select-none pt-4">
-                  <span>M</span>
-                  <span>W</span>
-                  <span>F</span>
-                  <span>S</span>
+              <div className="min-w-[240px]">
+                {/* Month labels aligned above corresponding week columns */}
+                <div className="flex pl-5 mb-1 select-none">
+                  <div
+                    className="flex-1 grid gap-1.5"
+                    style={{ gridTemplateColumns: "repeat(13, minmax(0, 1fr))" }}
+                  >
+                    {Array.from({ length: 13 }).map((_, c) => {
+                      const found = monthLabels.find((ml) => ml.colIndex === c);
+                      return (
+                        <div
+                          key={c}
+                          className="text-[10px] font-bold text-[var(--accent-text)] text-left truncate"
+                        >
+                          {found ? found.label : ""}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* 13 Week Columns */}
-                <div className="flex-1 grid grid-flow-col grid-rows-7 gap-1.5 auto-cols-fr">
-                  {heatmapCells.map((cell) => {
-                    const isSelected = cell.date === selectedDateKey;
-                    const c = cell.completedCount;
+                <div className="flex gap-1.5 justify-between">
+                  {/* Day-of-week labels on left: M, W, F, S */}
+                  <div className="flex flex-col justify-between text-[9px] font-bold text-[var(--text-secondary)] pr-1 select-none py-0.5">
+                    <span>M</span>
+                    <span>W</span>
+                    <span>F</span>
+                    <span>S</span>
+                  </div>
 
-                    // Fallback style followed by color-mix style
-                    let cellBg = "var(--surface-2)";
-                    let cellColorMix = "var(--surface-2)";
-                    let shadowGlow = "none";
+                  {/* 13 Week Columns */}
+                  <div className="flex-1 grid grid-flow-col grid-rows-7 gap-1.5 auto-cols-fr">
+                    {heatmapCells.map((cell) => {
+                      const isSelected = cell.date === selectedDateKey;
+                      const c = cell.completedCount;
 
-                    if (c >= 5) {
-                      cellBg = "var(--accent)";
-                      cellColorMix = "var(--accent)";
-                      shadowGlow = "0 0 6px var(--accent-glow)";
-                    } else if (c >= 3) {
-                      cellBg = "rgba(212, 175, 55, 0.6)";
-                      cellColorMix = "color-mix(in srgb, var(--accent) 60%, var(--surface-2))";
-                    } else if (c >= 1) {
-                      cellBg = "rgba(212, 175, 55, 0.28)";
-                      cellColorMix = "color-mix(in srgb, var(--accent) 28%, var(--surface-2))";
-                    }
+                      // High contrast empty vs logged cells
+                      let cellBg = "rgba(255, 255, 255, 0.06)";
+                      let cellColorMix = "rgba(255, 255, 255, 0.06)";
+                      let shadowGlow = "none";
 
-                    return (
-                      <button
-                        key={cell.date}
-                        type="button"
-                        onClick={() => setSelectedDate(cell.dateObj)}
-                        title={`${cell.date}: ${cell.completedCount}/5 prayers${cell.fasted ? " • Fasted" : ""}`}
-                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[4px] relative flex items-center justify-center transition-all ${getCellBg(
-                          c,
-                          isSelected
-                        )}`}
-                        style={{
-                          backgroundColor: cellBg,
-                          background: cellColorMix,
-                          boxShadow: isSelected ? "0 0 0 2px var(--accent)" : shadowGlow,
-                        }}
-                      >
-                        {/* Fasted Day indicator: tiny inner accent ring/dot */}
-                        {cell.fasted && (
-                          <span
-                            className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)] block pointer-events-none"
-                            style={{ boxShadow: "0 0 2px rgba(0,0,0,0.8)" }}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
+                      if (c >= 5) {
+                        cellBg = "var(--accent)";
+                        cellColorMix = "var(--accent)";
+                        shadowGlow = "0 0 6px var(--accent-glow)";
+                      } else if (c >= 3) {
+                        cellBg = "rgba(212, 175, 55, 0.65)";
+                        cellColorMix = "color-mix(in srgb, var(--accent) 65%, transparent)";
+                      } else if (c >= 1) {
+                        cellBg = "rgba(212, 175, 55, 0.32)";
+                        cellColorMix = "color-mix(in srgb, var(--accent) 32%, transparent)";
+                      }
+
+                      return (
+                        <button
+                          key={cell.date}
+                          type="button"
+                          onClick={() => setSelectedDate(cell.dateObj)}
+                          title={`${cell.date}: ${cell.completedCount}/5 prayers${cell.fasted ? " • Fasted" : ""}`}
+                          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[4px] relative flex items-center justify-center transition-all ${
+                            isSelected
+                              ? "border-2 border-[var(--accent)]"
+                              : "border border-[var(--border)]"
+                          }`}
+                          style={{
+                            backgroundColor: cellBg,
+                            background: cellColorMix,
+                            boxShadow: isSelected ? "0 0 0 2px var(--accent)" : shadowGlow,
+                          }}
+                        >
+                          {/* Fasted Day indicator: crisp bright accent ring/dot */}
+                          {cell.fasted && (
+                            <span
+                              className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)] block pointer-events-none"
+                              style={{ boxShadow: "0 0 4px var(--accent)" }}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

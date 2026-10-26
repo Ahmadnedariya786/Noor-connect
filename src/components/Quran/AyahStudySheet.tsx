@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTilawah } from '@/contexts/TilawahContext';
 import {
   BOOKMARK_COLORS,
@@ -64,39 +65,70 @@ const TRANSLATION_EDITIONS: TranslationEdition[] = [
   { id: 'hi.hindi', name: 'Suhel Farooq Khan & Shafi', lang: 'Hindi' },
 ];
 
-interface TafsirEdition {
+export interface TafsirEdition {
+  id: number;
   slug: string;
   name: string;
   author: string;
   lang: string;
+  isRtl?: boolean;
+  lineHeight?: number;
 }
 
-const TAFSIR_EDITIONS: TafsirEdition[] = [
+export const TAFSIR_EDITIONS: TafsirEdition[] = [
   {
+    id: 169,
     slug: 'en-tafisr-ibn-kathir',
-    name: 'Tafsir Ibn Kathir',
+    name: 'Ibn Kathir (EN)',
     author: 'Ibn Kathir (English)',
     lang: 'English',
+    isRtl: false,
+    lineHeight: 1.7,
   },
   {
+    id: 168,
     slug: 'en-tafsir-maarif-ul-quran',
     name: "Ma'arif al-Qur'an",
     author: 'Mufti Muhammad Shafi (English)',
     lang: 'English',
+    isRtl: false,
+    lineHeight: 1.7,
   },
   {
+    id: 16,
     slug: 'ar-tafsir-muyassar',
-    name: 'Al-Tafsir Al-Muyassar',
+    name: 'Al-Muyassar (AR)',
     author: 'King Fahd Complex (Arabic)',
     lang: 'Arabic',
+    isRtl: true,
+    lineHeight: 2.25,
   },
   {
+    id: 160,
     slug: 'ur-tafsir-ibn-kathir',
-    name: 'Tafsir Ibn Kathir',
+    name: 'Ibn Kathir (اردو)',
     author: 'Ibn Kathir (Urdu)',
     lang: 'Urdu',
+    isRtl: true,
+    lineHeight: 2.35,
   },
 ];
+
+export function cleanTafsirHtml(html: string): string {
+  if (!html) return '';
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 const TAFSIR_CACHE_KEY = 'noor_tafsir_cache_lru';
 
@@ -234,16 +266,18 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
     };
   }, [surahNumber, activeAyah, surahInfo]);
 
-  // Fetch Tafsir on Demand with LRU Cache
+  // Fetch Tafsir on Demand with LRU Cache (Quran.com v4 API primary + spa5k fallback)
   useEffect(() => {
     if (activeTab !== 'tafsir') return;
 
     let cancelled = false;
     const fetchTafsir = async () => {
       setIsTafsirLoading(true);
-      const cacheSubKey = `${selectedTafsirSlug}_${surahNumber}_${activeAyah}`;
+      const targetEdition =
+        TAFSIR_EDITIONS.find((t) => t.slug === selectedTafsirSlug) || TAFSIR_EDITIONS[0];
+      const cacheSubKey = `qdc_v4_${targetEdition.id}_${surahNumber}_${activeAyah}`;
 
-      // Check LRU cache in localStorage
+      // 1. Check LRU cache in localStorage
       try {
         const rawCache = localStorage.getItem(TAFSIR_CACHE_KEY);
         if (rawCache) {
@@ -260,25 +294,58 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
         // Safe cache check
       }
 
+      // 2. Primary: Official CORS-enabled Quran.com v4 API
       try {
-        const cdnUrl = `https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${selectedTafsirSlug}/${surahNumber}/${activeAyah}.json`;
+        const qdcUrl = `https://api.quran.com/api/v4/tafsirs/${targetEdition.id}/by_ayah/${surahNumber}:${activeAyah}`;
+        const res = await fetch(qdcUrl, { signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          const data = await res.json();
+          const rawHtml = data?.tafsir?.text || '';
+          const cleanedText = cleanTafsirHtml(rawHtml);
+          if (cleanedText && !cancelled) {
+            setTafsirText(cleanedText);
+            setIsTafsirLoading(false);
+
+            // Save to LRU cache (cap ~50 entries)
+            try {
+              const rawCache = localStorage.getItem(TAFSIR_CACHE_KEY);
+              const lru = rawCache ? JSON.parse(rawCache) : {};
+              lru[cacheSubKey] = cleanedText;
+              const keys = Object.keys(lru);
+              if (keys.length > 50) {
+                delete lru[keys[0]];
+              }
+              localStorage.setItem(TAFSIR_CACHE_KEY, JSON.stringify(lru));
+            } catch {
+              // Ignore cache write
+            }
+            return;
+          }
+        }
+      } catch {
+        // Fallback to secondary CDN
+      }
+
+      // 3. Secondary Fallback: jsDelivr spa5k repository
+      try {
+        const cdnUrl = `https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${targetEdition.slug}/${surahNumber}/${activeAyah}.json`;
         const res = await fetch(cdnUrl, { signal: AbortSignal.timeout(4500) });
         if (res.ok) {
           const data = await res.json();
-          const text = data.text || data.tafsir || 'Tafsir commentary not available for this ayah.';
+          const rawText = data.text || data.tafsir || '';
+          const text = cleanTafsirHtml(rawText) || 'Tafsir commentary not available for this ayah.';
           if (!cancelled) {
             setTafsirText(text);
             setIsTafsirLoading(false);
           }
 
-          // Save to LRU cache (cap ~50 entries)
           try {
             const rawCache = localStorage.getItem(TAFSIR_CACHE_KEY);
             const lru = rawCache ? JSON.parse(rawCache) : {};
             lru[cacheSubKey] = text;
             const keys = Object.keys(lru);
             if (keys.length > 50) {
-              delete lru[keys[0]]; // remove oldest entry
+              delete lru[keys[0]];
             }
             localStorage.setItem(TAFSIR_CACHE_KEY, JSON.stringify(lru));
           } catch {
@@ -384,6 +451,11 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
     });
   }, [colorBookmarks, surahNumber, activeAyah]);
 
+  const activeColorObj = useMemo(() => {
+    if (!activeBookmarkOnAyah) return null;
+    return BOOKMARK_COLORS.find((c) => c.id === activeBookmarkOnAyah) || null;
+  }, [activeBookmarkOnAyah]);
+
   // Handle Hifz Start
   const handleStartHifz = () => {
     startHifzLoop({
@@ -398,12 +470,20 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Ayah Study & Hifz"
-      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 flex flex-col justify-end backdrop-blur-md animate-in fade-in duration-200"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9995,
+        backgroundColor: 'rgba(0, 0, 0, 0.78)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}
       onTouchMove={(e) => e.stopPropagation()}
     >
       <div
@@ -502,7 +582,10 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
         </div>
 
         {/* Scrollable Body */}
-        <div className="px-5 py-4 overflow-y-auto space-y-4">
+        <div
+          className="px-5 py-4 overflow-y-auto space-y-4"
+          style={{ paddingBottom: 'calc(28px + env(safe-area-inset-bottom, 0px))' }}
+        >
           {/* Vocalized Uthmani Arabic Card */}
           <div
             className="p-4 rounded-2xl relative overflow-hidden"
@@ -594,9 +677,9 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
             </div>
           </div>
 
-          {/* 5-Colour Smart Bookmarks Row */}
+          {/* 5-Colour Mihrab-Style Smart Bookmark Swatches */}
           <div
-            className="p-3 rounded-2xl space-y-2"
+            className="p-3.5 rounded-2xl space-y-2.5"
             style={{
               backgroundColor: 'var(--surface)',
               border: '1px solid var(--border)',
@@ -605,9 +688,11 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
             <div className="flex items-center justify-between px-1">
               <span
                 className="text-[11px] font-bold uppercase tracking-wider"
-                style={{ color: 'var(--text-secondary)' }}
+                style={{ color: 'var(--accent-text)' }}
               >
-                ★ 5-Colour Bookmarks
+                {activeColorObj
+                  ? `★ Bookmark • ${activeColorObj.name} (Moves as you read)`
+                  : '★ 5-Colour Bookmarks'}
               </span>
               {activeBookmarkOnAyah && (
                 <div className="flex items-center gap-2">
@@ -626,8 +711,8 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
               )}
             </div>
 
-            {/* 5 Jewel-Toned Buttons */}
-            <div className="grid grid-cols-5 gap-1.5">
+            {/* 5 Circular Jewel Swatches in a Single Row */}
+            <div className="flex items-center justify-between px-2 pt-1 pb-0.5">
               {BOOKMARK_COLORS.map((col) => {
                 const bm = colorBookmarks[col.id];
                 const isPlacedHere =
@@ -640,35 +725,31 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                     key={col.id}
                     type="button"
                     onClick={() => handleToggleColor(col.id)}
-                    className="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative group"
+                    className="relative flex items-center justify-center transition-all active:scale-95 group"
                     style={{
-                      backgroundColor: isPlacedHere ? col.bgHex : 'var(--surface-2)',
-                      border: isPlacedHere
-                        ? `1.5px solid ${col.hex}`
-                        : '1px solid var(--border)',
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '9999px',
+                      backgroundColor: col.hex,
+                      boxShadow: isPlacedHere
+                        ? `0 0 0 3px var(--bg-elev), 0 0 0 5px ${col.hex}, 0 0 16px ${col.hex}`
+                        : '0 2px 8px rgba(0, 0, 0, 0.35)',
+                      opacity: isPlacedHere ? 1 : 0.82,
                     }}
                     title={`${col.name} Bookmark ${
                       isPlacedHere
-                        ? '(Active here)'
+                        ? '(Active here — Tap to remove)'
                         : isPlacedElsewhere
-                        ? `(At Surah ${bm.surah}:${bm.ayah})`
-                        : '(Empty)'
+                        ? `(Currently at ${bm.surah}:${bm.ayah} — Tap to move here)`
+                        : '(Tap to place here)'
                     }`}
+                    aria-label={`${col.name} Bookmark`}
                   >
-                    <div
-                      className="w-4 h-4 rounded-full shadow-sm mb-1"
-                      style={{ backgroundColor: col.hex }}
-                    />
-                    <span
-                      className="text-[10px] font-bold truncate max-w-full"
-                      style={{ color: isPlacedHere ? col.textColor : 'var(--text-primary)' }}
-                    >
-                      {col.name}
-                    </span>
-
-                    {/* Badge if placed elsewhere */}
+                    {isPlacedHere && (
+                      <Check className="w-5 h-5 text-white stroke-[3] drop-shadow-sm" />
+                    )}
                     {isPlacedElsewhere && !isPlacedHere && (
-                      <span className="text-[8px] text-[var(--text-secondary)] font-mono leading-none mt-0.5 truncate">
+                      <span className="text-[8px] text-white font-mono font-bold drop-shadow-md select-none opacity-85">
                         {bm.surah}:{bm.ayah}
                       </span>
                     )}
@@ -998,4 +1079,6 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

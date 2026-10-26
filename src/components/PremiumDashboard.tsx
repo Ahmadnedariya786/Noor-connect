@@ -22,6 +22,7 @@ import { UpdateBanner } from "@/components/UpdateBanner";
 import { ClockHero } from "@/components/clocks/ClockHero";
 import { hasHomeEntranceCompleted } from "@/lib/home-entrance";
 import { PrayerTimesSection } from "@/components/PrayerTimesSection";
+import { getDayWorshipLog, formatDateKey } from "@/lib/worship-log";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -117,6 +118,15 @@ function PremiumDashboardInner({
   const { tier } = useAnimationTier();
   const { isRamadan, ramadanDay } = useIslamicCalendar();
   const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>([]);
+  const [todayWorship, setTodayWorship] = useState(() => getDayWorshipLog(formatDateKey(new Date())));
+
+  useEffect(() => {
+    const handleWorshipSync = () => {
+      setTodayWorship(getDayWorshipLog(formatDateKey(new Date())));
+    };
+    window.addEventListener('salah-updated', handleWorshipSync);
+    return () => window.removeEventListener('salah-updated', handleWorshipSync);
+  }, []);
 
   const qiblaBearing = React.useMemo(() => {
     if (location?.latitude && location?.longitude) {
@@ -323,11 +333,11 @@ function PremiumDashboardInner({
                       setLoadingAPI(false);
                     }
                   }}
-                  disabled={location.isDetecting || loadingAPI}
+                  disabled={location.isDetecting}
                   className="w-full h-12 rounded-2xl font-bold text-[var(--on-accent)] gap-2 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] border-none hover:opacity-90 transition-opacity"
                 >
-                  {location.isDetecting || loadingAPI ? <Activity className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
-                  {location.isDetecting || loadingAPI ? "Detecting..." : "Auto-Detect (GPS/IP)"}
+                  {location.isDetecting ? <Activity className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
+                  {location.isDetecting ? "Detecting..." : "Auto-Detect (GPS/IP)"}
                 </Button>
 
                 <div className="flex items-center gap-3 py-2">
@@ -500,18 +510,33 @@ function PremiumDashboardInner({
                             style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
                           />
                         </div>
-                        <div
-                          className="px-2.5 py-1 rounded-full text-xs font-bold ltr-num"
-                          dir="ltr"
-                          style={{
-                            background: 'var(--accent-soft)',
-                            color: 'var(--accent-text)',
-                            border: '1px solid var(--border)',
-                            direction: 'ltr',
-                            unicodeBidi: 'isolate',
-                          }}
-                        >
-                          <span className="ltr-num" dir="ltr">{completedCount} / 5</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => navigate('/services/salah-tracker')}
+                            className="px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
+                            style={{
+                              background: 'var(--accent-soft)',
+                              color: 'var(--accent-text)',
+                              borderColor: 'var(--accent)',
+                            }}
+                          >
+                            <span>Journal & Fasting</span>
+                            <ChevronRight className="w-3 h-3 text-[var(--accent)]" />
+                          </button>
+                          <div
+                            className="px-2.5 py-1 rounded-full text-xs font-bold ltr-num"
+                            dir="ltr"
+                            style={{
+                              background: 'var(--surface-2)',
+                              color: 'var(--text-primary)',
+                              border: '1px solid var(--border)',
+                              direction: 'ltr',
+                              unicodeBidi: 'isolate',
+                            }}
+                          >
+                            <span className="ltr-num" dir="ltr">{completedCount} / 5</span>
+                          </div>
                         </div>
                       </div>
 
@@ -607,6 +632,58 @@ function PremiumDashboardInner({
                           );
                         })}
                       </div>
+
+                      {/* Compact Live Status Chips for Sunnah Rawatib & Fasting */}
+                      {(() => {
+                        const sunnahCount =
+                          (todayWorship.sunnah?.fajr || 0) +
+                          (todayWorship.sunnah?.dhuhr || 0) +
+                          (todayWorship.sunnah?.asr || 0) +
+                          (todayWorship.sunnah?.maghrib || 0) +
+                          (todayWorship.sunnah?.isha || 0);
+                        const isFasted = todayWorship.fasted;
+                        return (
+                          <div className="mt-3 pt-3 border-t border-[var(--border)] grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => navigate('/services/salah-tracker')}
+                              className="py-1.5 px-2.5 rounded-xl border flex items-center justify-between gap-1 transition-all hover:border-[var(--accent)] active:scale-98"
+                              style={{
+                                background: 'var(--surface-2)',
+                                borderColor: 'var(--border)',
+                              }}
+                            >
+                              <span className="text-[11px] font-medium text-[var(--text-secondary)] truncate">
+                                ✦ Sunnah
+                              </span>
+                              <span className="text-xs font-bold text-[var(--accent-text)] shrink-0">
+                                {sunnahCount > 0 ? `${sunnahCount}/12` : 'Log →'}
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/services/salah-tracker')}
+                              className="py-1.5 px-2.5 rounded-xl border flex items-center justify-between gap-1 transition-all hover:border-[var(--accent)] active:scale-98"
+                              style={{
+                                background: 'var(--surface-2)',
+                                borderColor: isFasted ? 'var(--accent)' : 'var(--border)',
+                              }}
+                            >
+                              <span className="text-[11px] font-medium text-[var(--text-secondary)] truncate">
+                                🌕 Fasting
+                              </span>
+                              <span
+                                className={`text-xs font-bold shrink-0 ${
+                                  isFasted ? 'text-emerald-400' : 'text-[var(--text-secondary)]'
+                                }`}
+                              >
+                                {isFasted ? '✓ Kept' : 'Log →'}
+                              </span>
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </m.div>
                   );
                 }

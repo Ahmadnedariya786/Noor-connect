@@ -111,14 +111,16 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
   const isCooldownActive = cooldownSec > 0;
   const displayTitle = actionTitle.replace(/^🔒\s*/, '').trim();
 
+  if (!isOpen) return null;
+
   const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in duration-200"
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
-        backgroundColor: 'rgba(0, 0, 0, 0.82)',
+        zIndex: 9995,
+        backgroundColor: 'rgba(0, 0, 0, 0.78)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}

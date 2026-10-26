@@ -2,6 +2,7 @@ import React, { useState, useEffect, memo } from 'react';
 import { useClockStyle } from '@/lib/clock-style';
 import { ClockRenderer } from './ClockRenderer';
 import { getPrayerDisplayName } from '@/lib/prayer-utils';
+import { LivingSkyAura } from './LivingSkyAura';
 
 interface ClockHeroProps {
   hijriDate: string;
@@ -94,16 +95,19 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
     .replace(/ō/g, 'ū');
 
   return (
-    <div className="w-full flex justify-center items-center" key="clock-hero-wrapper">
-      <ClockRenderer
-        key={`clock-${clockStyle}`}
-        styleId={clockStyle}
-        now={now}
-        timeFormat={normalizedTimeFormat}
-        hijriDate={sanitizedHijriDate}
-        nextPrayer={normalizedNext}
-        previousPrayer={normalizedPrev}
-      />
+    <div className="w-full flex justify-center items-center relative overflow-hidden rounded-[26px]" key="clock-hero-wrapper">
+      <LivingSkyAura nextPrayerName={nextPrayer?.name} currentHour={now.getHours()} />
+      <div className="relative z-10 w-full flex justify-center items-center">
+        <ClockRenderer
+          key={`clock-${clockStyle}`}
+          styleId={clockStyle}
+          now={now}
+          timeFormat={normalizedTimeFormat}
+          hijriDate={sanitizedHijriDate}
+          nextPrayer={normalizedNext}
+          previousPrayer={normalizedPrev}
+        />
+      </div>
     </div>
   );
 });

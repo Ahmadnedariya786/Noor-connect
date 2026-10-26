@@ -158,6 +158,7 @@ export default function SurahList() {
 
   // Khatmah Planner State
   const [khatmahPlan, setKhatmahPlan] = useState<KhatmahPlan | null>(() => getKhatmahPlan());
+  const [isKhatmahExpanded, setIsKhatmahExpanded] = useState(false);
   const [customDays, setCustomDays] = useState("30");
   const [showCustomModal, setShowCustomModal] = useState(false);
 
@@ -173,7 +174,14 @@ export default function SurahList() {
     arabicName?: string;
     page?: number;
     totalPages?: number;
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const saved = localStorage.getItem('quran-last-read');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [bookmarkedSurahs, setBookmarkedSurahs] = useState<number[]>(() => {
     try {
@@ -447,278 +455,310 @@ export default function SurahList() {
         {/* Subtle geometric pattern backdrop */}
         <div className="absolute top-0 left-0 right-0 h-48 opacity-[0.03] bg-[radial-gradient(circle_at_2px_2px,_var(--accent)_1px,_transparent_0)] bg-[length:32px_32px] pointer-events-none" />
 
-        {/* Illuminated Semantic Header */}
-        <div className="max-w-2xl mx-auto px-4 pt-3 pb-2 safe-top">
+        {/* Compact Illuminated Header (Mihrab-Inspired) */}
+        <div className="max-w-2xl mx-auto px-4 pt-2 pb-1 safe-top">
           <div
-            className="relative overflow-hidden p-5 sm:p-6 mb-3"
+            className="relative overflow-hidden mb-2 rounded-2xl flex items-center justify-between"
             style={{
-              background: "linear-gradient(145deg, rgba(16, 85, 60, 0.28), var(--surface))",
+              padding: "12px 14px",
+              background: "linear-gradient(145deg, rgba(16, 85, 60, 0.22), var(--surface))",
               border: "1px solid var(--border)",
               boxShadow: "inset 0 1px 0 var(--card-sheen)",
-              borderRadius: "22px",
             }}
           >
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <p className="font-arabic text-sm sm:text-base text-[var(--accent-text)] font-semibold mb-1 drop-shadow-sm select-none">
-                بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ • ٱلْقُرْآنُ ٱلْكَرِيمُ
+            <div>
+              <p className="font-arabic text-xs text-[var(--accent-text)] font-semibold mb-0.5 select-none">
+                بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
               </p>
-              <h1 className="text-2xl sm:text-3xl font-arabic font-bold text-[var(--text-primary)] tracking-wide">
+              <h1 className="text-lg sm:text-xl font-arabic font-bold text-[var(--text-primary)] tracking-wide leading-tight">
                 Al-Quran Al-Kareem
               </h1>
-              <p className="text-[var(--text-secondary)] text-xs font-medium max-w-[280px] leading-relaxed mt-1">
-                Read, listen, and contemplate the divine revelation
+              <p className="text-[var(--text-secondary)] text-[11px] font-medium leading-tight mt-0.5">
+                114 Surahs • 30 Juz • 604 Pages
               </p>
-
-              {/* Recessed Metric Pods */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm mt-3.5">
-                {[
-                  { label: "SURAHS", value: "114" },
-                  { label: "AYAHS", value: "6,236" },
-                  { label: "JUZ", value: "30" },
-                ].map((stat, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[14px] p-2 sm:p-2.5 text-center shadow-inner"
-                  >
-                    <p className="text-[var(--accent-text)] text-base font-black tracking-tight leading-none">
-                      {stat.value}
-                    </p>
-                    <p className="text-[var(--text-secondary)] text-[9px] uppercase font-bold tracking-wider mt-1 truncate">
-                      {stat.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
+            </div>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
+              style={{
+                background: "var(--surface-2)",
+                color: "var(--accent-text)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+              }}
+            >
+              <BookOpen className="w-5 h-5" />
             </div>
           </div>
         </div>
 
-        {/* 🎧 TILAWAH AUDIO PLAYER ENTRY BANNER */}
-        <div className="max-w-2xl mx-auto px-4 mb-3.5">
-          <div
-            onClick={openPlayer}
-            role="button"
-            tabIndex={0}
-            className="p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] group shadow-md"
-            style={{
-              background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
-              border: "1.5px solid var(--accent)",
-              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)",
-            }}
-          >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
-                style={{
-                  background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
-                  color: "var(--on-accent)",
-                }}
-              >
-                <Headphones className="w-5 h-5 fill-current" />
+        {/* Slim 1-Line Continue Reading Banner */}
+        {lastRead && (
+          <div className="max-w-2xl mx-auto px-4 mb-2">
+            <div
+              onClick={() => handleSurahClick(lastRead.number)}
+              role="button"
+              tabIndex={0}
+              className="px-3.5 py-2 rounded-xl flex items-center justify-between gap-2 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] group border"
+              style={{
+                background: "var(--surface)",
+                borderColor: "var(--border)",
+                boxShadow: "inset 0 1px 0 var(--card-sheen)",
+              }}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shrink-0" />
+                <span className="text-xs font-bold text-[var(--text-primary)] truncate">
+                  Continue: {lastRead.englishName || `Surah #${lastRead.number}`}
+                </span>
+                <span className="text-[11px] text-[var(--text-secondary)] shrink-0">
+                  • Page {lastRead.page || 1}
+                </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate">
-                    🎧 Tilawah Player & Sleep Timer
-                  </h3>
-                  {isPlaying && (
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-[var(--text-secondary)] truncate mt-0.5">
-                  {isPlaying
-                    ? `Now Playing: Surah ${currentSurah}:${currentAyah} • ${reciter.shortName}`
-                    : "6 Reciters • Ayah-by-Ayah • Gapless Audio • Sleep Timer"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span
-                className="text-xs font-bold px-3 py-1.5 rounded-full border shadow-sm flex items-center gap-1.5 transition-colors"
-                style={{
-                  backgroundColor: isPlaying ? "var(--accent)" : "var(--surface-2)",
-                  color: isPlaying ? "var(--on-accent)" : "var(--accent-text)",
-                  borderColor: "var(--accent)",
-                }}
-              >
-                {isPlaying ? (
-                  <>
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    <span>Active</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Listen</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </>
-                )}
+              <span className="text-xs font-bold text-[var(--accent-text)] group-hover:underline flex items-center gap-1 shrink-0">
+                Resume →
               </span>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* SMART PACED KHATMAH PLANNER CARD (604 Mushaf Pages) */}
-        <div className="max-w-2xl mx-auto px-4 mb-3.5">
-          <Card
-            className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md space-y-3"
-            style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)]">
-                  <BookOpen className="w-4 h-4" />
+        {/* 2-COLUMN SIDE-BY-SIDE ACTION TILES (Khatmah + Tilawah) */}
+        <div className="max-w-2xl mx-auto px-4 mb-2.5">
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Left Tile: Khatmah */}
+            <div
+              onClick={() => setIsKhatmahExpanded(!isKhatmahExpanded)}
+              role="button"
+              tabIndex={0}
+              className="p-3 rounded-2xl border flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] group shadow-sm"
+              style={{
+                background: "var(--surface)",
+                borderColor: isKhatmahExpanded ? "var(--accent)" : "var(--border)",
+                boxShadow: isKhatmahExpanded ? "0 0 12px var(--accent-soft)" : "inset 0 1px 0 var(--card-sheen)",
+              }}
+            >
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="p-1 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] shrink-0">
+                    <BookOpen className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-bold text-[var(--text-primary)] truncate">
+                    📖 Khatmah
+                  </span>
                 </div>
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                    Smart Khatmah Planner
-                  </h3>
-                  <span className="text-[10px] text-[var(--text-secondary)]">604 Mushaf Pages</span>
-                </div>
+                <span className="text-[10px] text-[var(--accent-text)] font-semibold shrink-0">
+                  {isKhatmahExpanded ? "Hide ▲" : "View ▼"}
+                </span>
               </div>
-
-              {portionInfo ? (
-                <Badge
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
-                  style={{
-                    background: "var(--accent-soft)",
-                    color: "var(--accent-text)",
-                    borderColor: "var(--border)",
-                  }}
-                >
-                  Page {khatmahPlan?.currentPage} / 604 ({portionInfo.percent}%)
-                </Badge>
-              ) : (
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">No active plan</span>
-              )}
+              <p className="text-[11px] text-[var(--text-secondary)] truncate">
+                {portionInfo && khatmahPlan
+                  ? `Page ${khatmahPlan.currentPage}/604 • Portion`
+                  : "Start 30-90d Plan"}
+              </p>
             </div>
 
-            {/* Active Plan View */}
-            {portionInfo && khatmahPlan ? (
-              <div className="space-y-3">
-                {/* Progress Bar */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-medium">
-                    <span className="text-[var(--text-secondary)]">
-                      {portionInfo.daysRemaining} {portionInfo.daysRemaining === 1 ? "day" : "days"} left
-                    </span>
-                    <span className="text-[var(--accent-text)] font-mono font-bold">
-                      {portionInfo.pagesPerDay} {portionInfo.pagesPerDay === 1 ? "page" : "pages"}/day
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-[var(--surface-2)] overflow-hidden border border-[var(--border)]">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.max(2, portionInfo.percent)}%`,
-                        background: "linear-gradient(90deg, var(--accent), var(--accent-2))",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Today's Calculated Portion Box */}
-                <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] block">
-                      Today's Portion ({portionInfo.portionPages} Pages)
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate block">
-                      Pages {portionInfo.startPage}–{portionInfo.endPage}
-                    </span>
-                    <span className="text-[10px] text-[var(--accent-text)] truncate block">
-                      Starts in Surah {portionInfo.startSurahName}
-                    </span>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    onClick={() => handleOpenPortion(portionInfo.startPage)}
-                    className="h-8 px-3 rounded-xl text-xs font-bold shrink-0"
+            {/* Right Tile: Tilawah */}
+            <div
+              onClick={openPlayer}
+              role="button"
+              tabIndex={0}
+              className="p-3 rounded-2xl border flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] group shadow-sm"
+              style={{
+                background: "var(--surface)",
+                borderColor: isPlaying ? "var(--accent)" : "var(--border)",
+                boxShadow: isPlaying ? "0 0 12px var(--accent-soft)" : "inset 0 1px 0 var(--card-sheen)",
+              }}
+            >
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div
+                    className="p-1 rounded-lg shrink-0"
                     style={{
-                      background: "var(--accent)",
-                      color: "var(--on-accent)",
+                      background: isPlaying ? "var(--accent)" : "var(--accent-soft)",
+                      color: isPlaying ? "var(--on-accent)" : "var(--accent)",
                     }}
                   >
-                    <BookOpen className="w-3.5 h-3.5 mr-1" />
-                    Read Now
-                  </Button>
+                    <Headphones className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-bold text-[var(--text-primary)] truncate">
+                    🎧 Tilawah
+                  </span>
                 </div>
-
-                {/* Quick Pacing Action Grid */}
-                <div className="grid grid-cols-3 gap-1.5" style={{ minWidth: 0 }}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAdvancePage}
-                    style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
-                    className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)]"
-                  >
-                    <Plus className="w-3 h-3 mr-1 shrink-0" />
-                    <span>+1 Page</span>
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCompleteTodayPortion}
-                    style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
-                    className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-emerald-400"
-                  >
-                    <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400 shrink-0" />
-                    <span>✓ Done Today</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleResetKhatmah}
-                    style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
-                    className="h-8 rounded-xl font-bold text-[var(--text-secondary)] hover:text-rose-400"
-                  >
-                    <RotateCcw className="w-3 h-3 mr-1 shrink-0" />
-                    <span>↺ Reset</span>
-                  </Button>
-                </div>
+                {isPlaying && (
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
+                  </span>
+                )}
               </div>
-            ) : (
-              /* No Active Plan: Preset Chooser */
-              <div className="space-y-2.5">
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                  Start a paced Quran Khatmah tailored to your target duration:
-                </p>
-                <div className="grid grid-cols-4 gap-1.5" style={{ minWidth: 0 }}>
-                  {[
-                    { days: 30, label: "30 Days", sub: "~20 p/d" },
-                    { days: 60, label: "60 Days", sub: "~10 p/d" },
-                    { days: 90, label: "90 Days", sub: "~7 p/d" },
-                  ].map((p) => (
+              <p className="text-[11px] text-[var(--text-secondary)] truncate">
+                {isPlaying
+                  ? `Playing ${currentSurah}:${currentAyah}`
+                  : "6 Reciters • Gapless"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* EXPANDABLE SMART PACED KHATMAH PLANNER CARD */}
+        {isKhatmahExpanded && (
+          <div className="max-w-2xl mx-auto px-4 mb-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
+            <Card
+              className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md space-y-3"
+              style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)]">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                      Smart Khatmah Planner
+                    </h3>
+                    <span className="text-[10px] text-[var(--text-secondary)]">604 Mushaf Pages</span>
+                  </div>
+                </div>
+
+                {portionInfo ? (
+                  <Badge
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                    style={{
+                      background: "var(--accent-soft)",
+                      color: "var(--accent-text)",
+                      borderColor: "var(--border)",
+                    }}
+                  >
+                    Page {khatmahPlan?.currentPage} / 604 ({portionInfo.percent}%)
+                  </Badge>
+                ) : (
+                  <span className="text-[10px] font-semibold text-[var(--text-secondary)]">No active plan</span>
+                )}
+              </div>
+
+              {/* Active Plan View */}
+              {portionInfo && khatmahPlan ? (
+                <div className="space-y-3">
+                  {/* Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-medium">
+                      <span className="text-[var(--text-secondary)]">
+                        {portionInfo.daysRemaining} {portionInfo.daysRemaining === 1 ? "day" : "days"} left
+                      </span>
+                      <span className="text-[var(--accent-text)] font-mono font-bold">
+                        {portionInfo.pagesPerDay} {portionInfo.pagesPerDay === 1 ? "page" : "pages"}/day
+                      </span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-[var(--surface-2)] overflow-hidden border border-[var(--border)]">
+                      <div
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{
+                          width: `${Math.max(2, portionInfo.percent)}%`,
+                          background: "linear-gradient(90deg, var(--accent), var(--accent-2))",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Today's Calculated Portion Box */}
+                  <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] block">
+                        Today's Portion ({portionInfo.portionPages} Pages)
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate block">
+                        Pages {portionInfo.startPage}–{portionInfo.endPage}
+                      </span>
+                      <span className="text-[10px] text-[var(--accent-text)] truncate block">
+                        Starts in Surah {portionInfo.startSurahName}
+                      </span>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      onClick={() => handleOpenPortion(portionInfo.startPage)}
+                      className="h-8 px-3 rounded-xl text-xs font-bold shrink-0"
+                      style={{
+                        background: "var(--accent)",
+                        color: "var(--on-accent)",
+                      }}
+                    >
+                      <BookOpen className="w-3.5 h-3.5 mr-1" />
+                      Read Now
+                    </Button>
+                  </div>
+
+                  {/* Quick Pacing Action Grid */}
+                  <div className="grid grid-cols-3 gap-1.5" style={{ minWidth: 0 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAdvancePage}
+                      style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
+                      className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)]"
+                    >
+                      <Plus className="w-3 h-3 mr-1 shrink-0" />
+                      <span>+1 Page</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCompleteTodayPortion}
+                      style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
+                      className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-emerald-400"
+                    >
+                      <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400 shrink-0" />
+                      <span>✓ Done Today</span>
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResetKhatmah}
+                      style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
+                      className="h-8 rounded-xl font-bold text-[var(--text-secondary)] hover:text-rose-400"
+                    >
+                      <RotateCcw className="w-3 h-3 mr-1 shrink-0" />
+                      <span>↺ Reset</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* No Active Plan: Preset Chooser */
+                <div className="space-y-2.5">
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Start a paced Quran Khatmah tailored to your target duration:
+                  </p>
+                  <div className="grid grid-cols-4 gap-1.5" style={{ minWidth: 0 }}>
+                    {[
+                      { days: 30, label: "30 Days", sub: "~20 p/d" },
+                      { days: 60, label: "60 Days", sub: "~10 p/d" },
+                      { days: 90, label: "90 Days", sub: "~7 p/d" },
+                    ].map((p) => (
+                      <button
+                        key={p.days}
+                        type="button"
+                        onClick={() => handleStartPreset(p.days)}
+                        className="p-2 rounded-xl text-center bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] transition-all active:scale-[0.98]"
+                      >
+                        <span className="block text-xs font-bold text-[var(--text-primary)] leading-tight">{p.label}</span>
+                        <span className="block text-[9px] text-[var(--accent-text)] font-mono">{p.sub}</span>
+                      </button>
+                    ))}
+
                     <button
-                      key={p.days}
                       type="button"
-                      onClick={() => handleStartPreset(p.days)}
+                      onClick={() => setShowCustomModal(true)}
                       className="p-2 rounded-xl text-center bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] transition-all active:scale-[0.98]"
                     >
-                      <span className="block text-xs font-bold text-[var(--text-primary)] leading-tight">{p.label}</span>
-                      <span className="block text-[9px] text-[var(--accent-text)] font-mono">{p.sub}</span>
+                      <span className="block text-xs font-bold text-[var(--text-primary)] leading-tight">Custom</span>
+                      <span className="block text-[9px] text-[var(--text-secondary)] font-mono">7-365 d</span>
                     </button>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomModal(true)}
-                    className="p-2 rounded-xl text-center bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] transition-all active:scale-[0.98]"
-                  >
-                    <span className="block text-xs font-bold text-[var(--text-primary)] leading-tight">Custom</span>
-                    <span className="block text-[9px] text-[var(--text-secondary)] font-mono">7-365 d</span>
-                  </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </Card>
-        </div>
+              )}
+            </Card>
+          </div>
+        )}
 
         {/* OFTEN READ SUNNAH SURAHS STRIP */}
         <div className="max-w-2xl mx-auto px-4 mb-3.5">
@@ -777,11 +817,7 @@ export default function SurahList() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]/60 pointer-events-none" />
               <input
                 type="text"
-                placeholder={
-                  activeMainTab === "juz"
-                    ? "Search Juz name or number..."
-                    : "Search Surah name or number..."
-                }
+                placeholder="Search Surah, Juz or Page..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full border border-[var(--border)] rounded-[14px] py-2.5 pl-11 pr-10 text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] transition-colors bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 shadow-sm"

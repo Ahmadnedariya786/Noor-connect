@@ -30,6 +30,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasCompletedSearch, setHasCompletedSearch] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [regionFilter, setRegionFilter] = useState<'saved' | 'india' | 'international' | 'all'>('saved');
   const [savedLocations, setSavedLocations] = useState<SavedLocation[]>(() => getSavedLocations());
@@ -80,13 +81,17 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
 
   // Debounced search (350ms)
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (searchQuery.trim().length < 2) {
-        setSuggestions([]);
-        return;
-      }
+    if (searchQuery.trim().length < 2) {
+      setSuggestions([]);
+      setIsSearching(false);
+      setHasCompletedSearch(false);
+      return;
+    }
 
-      setIsSearching(true);
+    setIsSearching(true);
+    setHasCompletedSearch(false);
+
+    const timer = setTimeout(async () => {
       try {
         const results = await GeocodingService.searchLocation(searchQuery);
         setSuggestions(results);
@@ -95,6 +100,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
         // Safe catch for search failures
       } finally {
         setIsSearching(false);
+        setHasCompletedSearch(true);
       }
     }, 350); // 350ms debounce
 
@@ -237,7 +243,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
             disabled={isLoading || isSearching || !searchQuery.trim()}
             className="w-full"
           >
-            {isLoading || isSearching ? (
+            {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Setting Location...
@@ -256,7 +262,11 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
           <div className="mt-4 space-y-2" onTouchMove={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-bold text-[var(--accent-text)]">
-                {isSearching ? "Searching locations..." : suggestions.length > 0 ? `Results (${suggestions.length})` : "No matching locations"}
+                {isSearching || !hasCompletedSearch
+                  ? "Searching locations..."
+                  : suggestions.length > 0
+                  ? `Results (${suggestions.length})`
+                  : "No matching locations"}
               </span>
               <button
                 type="button"

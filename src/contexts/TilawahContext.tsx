@@ -159,6 +159,7 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const preloadAudioRef = useRef<HTMLAudioElement | null>(null);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTransitioningRef = useRef<boolean>(false);
+  const activeRequestIdRef = useRef<number>(0);
 
   // Surah info
   const surahInfo = useMemo(() => {
@@ -369,6 +370,8 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
         pauseTimerRef.current = null;
       }
 
+      const currentReqId = ++activeRequestIdRef.current;
+
       setIsLoading(true);
       setCurrentSurah(surah);
       setCurrentAyah(ayah);
@@ -382,21 +385,33 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // Setup secondary CDN fallback on primary error
       const handleError = () => {
+        if (currentReqId !== activeRequestIdRef.current) return;
         if (audio.src === primaryUrl) {
           audio.src = secondaryUrl;
-          audio.play().catch(() => {
+          audio.play().catch((err: any) => {
+            if (currentReqId !== activeRequestIdRef.current) return;
+            if (err?.name === 'AbortError' || err?.code === 20) return;
             // Both CDNs failed or device is offline
             setIsPlaying(false);
             setIsLoading(false);
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+              toast({
+                title: 'Recitation Offline',
+                description: 'Could not connect to Tilawah audio server. Check internet connection.',
+                variant: 'destructive',
+              });
+            }
+          });
+        } else {
+          setIsPlaying(false);
+          setIsLoading(false);
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
             toast({
               title: 'Recitation Offline',
               description: 'Could not connect to Tilawah audio server. Check internet connection.',
               variant: 'destructive',
             });
-          });
-        } else {
-          setIsPlaying(false);
-          setIsLoading(false);
+          }
         }
       };
 
@@ -404,11 +419,17 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       try {
         await audio.play();
+        if (currentReqId !== activeRequestIdRef.current) return;
         setIsPlaying(true);
         setIsLoading(false);
         // Preload next ayah for seamless transition
         preloadNextAyah(surah, ayah, reciterObj.id);
-      } catch {
+      } catch (err: any) {
+        if (currentReqId !== activeRequestIdRef.current) return;
+        if (err?.name === 'AbortError' || err?.code === 20) {
+          // Play was intentionally aborted due to fast switching/pause
+          return;
+        }
         // Autoplay policy or offline
         setIsLoading(false);
       }

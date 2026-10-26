@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTilawah, PlaybackSpeed, SleepTimerOption } from '@/contexts/TilawahContext';
 import { TILAWAH_RECITERS } from '@/lib/tilawah-data';
@@ -105,12 +106,20 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
     navigate(`/quran/surah-${currentSurah}`);
   };
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Tilawah Audio Player"
-      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 flex flex-col justify-end backdrop-blur-md animate-in fade-in duration-200"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9995,
+        backgroundColor: 'rgba(0, 0, 0, 0.78)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}
       onTouchMove={(e) => e.stopPropagation()}
     >
       <div
@@ -145,7 +154,10 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
         </div>
 
         {/* Scrollable Content */}
-        <div className="px-5 pb-6 overflow-y-auto space-y-5">
+        <div
+          className="px-5 overflow-y-auto space-y-5"
+          style={{ paddingBottom: 'calc(28px + env(safe-area-inset-bottom, 0px))' }}
+        >
           {/* Now Playing Header Card */}
           <div
             className="p-4 rounded-2xl text-center relative overflow-hidden"
@@ -265,6 +277,7 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
               step={1}
               onValueChange={([val]) => seekAyah(val)}
               className="w-full cursor-pointer"
+              style={{ accentColor: 'var(--accent)' }}
             />
           </div>
 
@@ -496,4 +509,6 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

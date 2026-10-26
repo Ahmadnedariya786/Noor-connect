@@ -1,24 +1,46 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Star, BookOpen } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  BookOpen,
+  Sparkles,
+  Play,
+  Pause,
+  Sliders,
+  X,
+} from 'lucide-react';
 import { quranService } from '@/lib/quran-service';
-import { MushafSurahPages, type MushafReadingMode } from '@/components/Quran/MushafSurahPages';
+import {
+  InteractiveMushafPage,
+  type InteractiveMushafSurface,
+} from '@/components/Quran/InteractiveMushafPage';
+import {
+  getPageForSurahAndAyah,
+} from '@/lib/interactive-mushaf';
+import { SURAH_START_PAGES, mushafService } from '@/lib/mushaf-service';
 import { PageTransition } from '@/components/PageTransition';
 import { Preferences } from '@capacitor/preferences';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useTilawah } from '@/contexts/TilawahContext';
 import { quranFeaturesService } from '@/lib/quran-features';
 import { AyahStudySheet } from '@/components/Quran/AyahStudySheet';
 import { updateAutoMovingBookmarks } from '@/lib/quran-bookmarks';
 
 const LS_LAST_SURAH = 'quran-reader-last-surah';
+const LS_LAST_PAGE = 'quran-reader-last-page';
 const BOOKMARKS_KEY = 'quran-bookmarks';
 
 export default function QuranReader() {
   const { effectiveTheme } = useSettings();
-  const isDark = effectiveTheme === 'dark';
+  const isDark = effectiveTheme !== 'desert-scroll';
 
   const { surahName } = useParams<{ surahName: string }>();
   const navigate = useNavigate();
+
+  // Tilawah global player
+  const { isPlaying, currentSurah, currentAyah, playAyah, togglePlay } = useTilawah();
 
   const initialSurah = (() => {
     if (surahName) {
@@ -31,34 +53,68 @@ export default function QuranReader() {
 
   const [surahNum, setSurahNum] = useState(initialSurah);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalSurahPages, setTotalSurahPages] = useState(1);
-  const [, setMaxPageViewed] = useState(1);
+
+  // Global Madinah Mushaf Page (1..604)
+  const [mushafPageNumber, setMushafPageNumber] = useState<number>(() => {
+    const savedPage = localStorage.getItem(LS_LAST_PAGE);
+    if (savedPage) {
+      const p = parseInt(savedPage, 10);
+      if (p >= 1 && p <= 604) return p;
+    }
+    return SURAH_START_PAGES[initialSurah] || 1;
+  });
 
   // Ayah Study & Hifz Sheet state
   const [showStudySheet, setShowStudySheet] = useState(false);
   const [studyInitialAyah, setStudyInitialAyah] = useState(1);
+  const [studySurah, setStudySurah] = useState(initialSurah);
 
-  // Eye-comfort mode persisted in localStorage "noor_mushaf_mode", default: 'parchment'
-  const [mushafMode, setMushafMode] = useState<MushafReadingMode>(() => {
+  // Tajweed toggle
+  const [showTajweed, setShowTajweed] = useState<boolean>(() => {
     try {
-      const saved = localStorage.getItem('noor_mushaf_mode') as MushafReadingMode;
-      if (saved === 'parchment' || saved === 'night' || saved === 'classic') {
+      const saved = localStorage.getItem('noor_show_tajweed');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  // Page slider dialog
+  const [showPageSlider, setShowPageSlider] = useState(false);
+  const [tempPageInput, setTempPageInput] = useState(mushafPageNumber);
+
+  // 4 Reading Surface Modes: jewel (default on dark), parchment, night, classic
+  const [surfaceMode, setSurfaceMode] = useState<InteractiveMushafSurface>(() => {
+    try {
+      const saved = localStorage.getItem('noor_mushaf_surface') as InteractiveMushafSurface;
+      if (saved === 'jewel' || saved === 'parchment' || saved === 'night' || saved === 'classic') {
         return saved;
       }
     } catch {
-      // Fallback to default parchment
+      // Safe fallback
     }
-    return 'parchment';
+    return isDark ? 'jewel' : 'parchment';
   });
 
-  const handleModeChange = (mode: MushafReadingMode) => {
-    setMushafMode(mode);
+  const handleSurfaceChange = (mode: InteractiveMushafSurface) => {
+    setSurfaceMode(mode);
     try {
-      localStorage.setItem('noor_mushaf_mode', mode);
+      localStorage.setItem('noor_mushaf_surface', mode);
     } catch {
       // Ignore storage write error
     }
+  };
+
+  const toggleTajweed = () => {
+    setShowTajweed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('noor_show_tajweed', String(next));
+      } catch {
+        // Safe catch
+      }
+      return next;
+    });
   };
 
   // Sync with route param
@@ -69,23 +125,28 @@ export default function QuranReader() {
         const parsed = parseInt(m[1], 10);
         if (!isNaN(parsed) && parsed >= 1 && parsed <= 114 && parsed !== surahNum) {
           setSurahNum(parsed);
+          const startP = SURAH_START_PAGES[parsed] || 1;
+          setMushafPageNumber(startP);
         }
       }
     }
-  }, [surahName, surahNum]);
+  }, [surahName]);
 
   const surahInfo = quranService.getSurahInfo(surahNum);
 
+  // Save last read position & update streaks
   useEffect(() => {
     localStorage.setItem(LS_LAST_SURAH, String(surahNum));
+    localStorage.setItem(LS_LAST_PAGE, String(mushafPageNumber));
+
     if (surahInfo) {
       const lastReadData = {
         number: surahNum,
         name: surahInfo.englishName,
         englishName: surahInfo.englishName,
         arabicName: surahInfo.name,
-        page: currentPage,
-        totalPages: totalSurahPages,
+        page: mushafPageNumber,
+        totalPages: 604,
       };
       localStorage.setItem('quran-last-read', JSON.stringify(lastReadData));
     }
@@ -94,31 +155,43 @@ export default function QuranReader() {
     const syncId = setTimeout(() => {
       if (!surahInfo) return;
       quranFeaturesService.updateReadingStreak().catch((e) => {
-        // Safe catch for streak update
         console.warn('Streak update warning', e);
       });
-      const completedAyahs = Math.round((currentPage / totalSurahPages) * surahInfo.numberOfAyahs);
-      quranFeaturesService.updateRecitationProgress(
-        surahNum,
-        surahInfo.englishName,
-        surahInfo.numberOfAyahs,
-        completedAyahs,
-        completedAyahs,
-        currentPage,
-        totalSurahPages
-      )
-      .then(() => quranFeaturesService.checkAndUnlockAchievements())
-      .then(() => {
-        window.dispatchEvent(new CustomEvent('noorconnect:quran-progress-changed'));
-      })
-      .catch((e) => {
-        // Safe catch for progress update
-        console.warn('Progress update warning', e);
-      });
+      quranFeaturesService
+        .updateRecitationProgress(
+          surahNum,
+          surahInfo.englishName,
+          surahInfo.numberOfAyahs,
+          1,
+          1,
+          mushafPageNumber,
+          604
+        )
+        .then(() => quranFeaturesService.checkAndUnlockAchievements())
+        .then(() => {
+          window.dispatchEvent(new CustomEvent('noorconnect:quran-progress-changed'));
+        })
+        .catch((e) => {
+          console.warn('Progress update warning', e);
+        });
     }, 1000);
 
     return () => clearTimeout(syncId);
-  }, [surahNum, surahInfo, currentPage, totalSurahPages]);
+  }, [surahNum, surahInfo, mushafPageNumber]);
+
+  // LIVE AUDIO AUTO-PAGE SYNC: Turn page when recitation advances to a new page
+  useEffect(() => {
+    if (isPlaying && currentSurah > 0 && currentAyah > 0) {
+      const audioPage = getPageForSurahAndAyah(currentSurah, currentAyah);
+      if (audioPage !== mushafPageNumber) {
+        setMushafPageNumber(audioPage);
+        if (currentSurah !== surahNum) {
+          setSurahNum(currentSurah);
+          navigate(`/quran/surah-${currentSurah}`, { replace: true });
+        }
+      }
+    }
+  }, [isPlaying, currentSurah, currentAyah]);
 
   const loadBookmark = async () => {
     try {
@@ -167,59 +240,56 @@ export default function QuranReader() {
     }
   };
 
-  const goToPreviousSurah = () => {
-    if (surahNum > 1) {
-      const nextNum = surahNum - 1;
-      setSurahNum(nextNum);
-      navigate(`/quran/surah-${nextNum}`, { replace: true });
+  const goToPage = (targetPage: number) => {
+    if (targetPage < 1 || targetPage > 604) return;
+    setMushafPageNumber(targetPage);
+
+    // Identify which Surah this target page belongs to
+    const targetSurah = mushafService.getSurahForPage(targetPage) || 1;
+    if (targetSurah !== surahNum) {
+      setSurahNum(targetSurah);
+      navigate(`/quran/surah-${targetSurah}`, { replace: true });
     }
-  };
 
-  const goToNextSurah = () => {
-    if (surahNum < 114) {
-      const nextNum = surahNum + 1;
-      setSurahNum(nextNum);
-      navigate(`/quran/surah-${nextNum}`, { replace: true });
-    }
-  };
-
-  const handlePageChange = (page: number, total: number, maxViewed: number) => {
-    setCurrentPage(page);
-    setTotalSurahPages(total);
-    setMaxPageViewed(maxViewed);
-
-    // Auto-moving bookmarks follower: estimate current ayah and advance
-    const numAyahs = surahInfo?.numberOfAyahs || 1;
-    const estimatedAyah = Math.min(
-      numAyahs,
-      Math.max(1, Math.round(((page - 1) / Math.max(1, total - 1)) * numAyahs) + 1)
-    );
+    // Auto-moving bookmarks update
     updateAutoMovingBookmarks(
-      surahNum,
-      surahInfo?.englishName || `Surah ${surahNum}`,
-      estimatedAyah,
-      page,
-      surahInfo?.name
+      targetSurah,
+      quranService.getSurahInfo(targetSurah)?.englishName || `Surah ${targetSurah}`,
+      1,
+      targetPage,
+      quranService.getSurahInfo(targetSurah)?.name
     );
   };
 
-  const handleOpenStudySheet = (ayahNum?: number) => {
-    const numAyahs = surahInfo?.numberOfAyahs || 1;
-    const est = ayahNum || Math.min(
-      numAyahs,
-      Math.max(1, Math.round(((currentPage - 1) / Math.max(1, totalSurahPages - 1)) * numAyahs) + 1)
-    );
-    setStudyInitialAyah(est);
+  const handlePrevPage = () => {
+    if (mushafPageNumber > 1) {
+      goToPage(mushafPageNumber - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (mushafPageNumber < 604) {
+      goToPage(mushafPageNumber + 1);
+    }
+  };
+
+  const handleOpenStudySheet = (sNum?: number, aNum?: number) => {
+    const s = sNum || surahNum;
+    const a = aNum || 1;
+    setStudySurah(s);
+    setStudyInitialAyah(a);
     setShowStudySheet(true);
   };
 
+  const currentJuz = Math.max(1, Math.min(30, Math.ceil(mushafPageNumber / 20)));
+
   return (
     <PageTransition>
-      <div className="min-h-screen relative overflow-hidden bg-[var(--bg-base)]">
-        {/* Upgraded Top Reader Control Bar */}
+      <div className="min-h-screen relative overflow-hidden bg-[var(--bg-base)] pb-24">
+        {/* TOP READER CONTROL BAR */}
         <div className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)] shadow-sm">
-          <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
-            {/* Left: Clean back button returning to /quran via { replace: true } */}
+          <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
+            {/* Left: Back button returning to /quran via { replace: true } */}
             <button
               type="button"
               onClick={() => navigate('/quran', { replace: true })}
@@ -241,21 +311,21 @@ export default function QuranReader() {
                 {surahInfo?.name}
               </h1>
               <p className="text-xs font-bold text-[var(--text-primary)] truncate">
-                {surahInfo?.englishName}
+                {surahInfo?.englishName} • #{surahNum}
               </p>
               <p
                 className="text-[var(--text-secondary)] font-medium"
                 style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', lineHeight: 1.2 }}
               >
-                Surah #{surahNum} • {totalSurahPages} Pages
+                Page {mushafPageNumber} / 604 • Juz {currentJuz}
               </p>
             </div>
 
-            {/* Right: Prev / Next compact pill buttons + Study & Hifz + Bookmark button */}
+            {/* Right: Study & Hifz + Star Bookmark */}
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
-                onClick={() => handleOpenStudySheet()}
+                onClick={() => handleOpenStudySheet(surahNum, 1)}
                 title="Study & Hifz Memorization"
                 className="rounded-lg font-bold border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent-text)] hover:border-[var(--accent)] transition-colors select-none flex items-center gap-1 shadow-sm"
                 style={{ padding: '5px 8px', fontSize: '0.72rem' }}
@@ -266,29 +336,9 @@ export default function QuranReader() {
 
               <button
                 type="button"
-                onClick={goToPreviousSurah}
-                disabled={surahNum <= 1}
-                title="Previous Surah"
-                className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
-                style={{ padding: '5px 7px', fontSize: '0.72rem' }}
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                onClick={goToNextSurah}
-                disabled={surahNum >= 114}
-                title="Next Surah"
-                className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] disabled:opacity-20 disabled:cursor-not-allowed text-[var(--text-primary)] hover:border-[var(--accent)]/50 transition-colors select-none"
-                style={{ padding: '5px 7px', fontSize: '0.72rem' }}
-              >
-                ›
-              </button>
-              <button
-                type="button"
                 onClick={() => {
                   toggleBookmark();
-                  handleOpenStudySheet();
+                  handleOpenStudySheet(surahNum, 1);
                 }}
                 title={isBookmarked ? 'Remove Star / Manage Bookmarks' : 'Bookmark Surah & Ayah'}
                 className={`rounded-lg border transition-all select-none ${
@@ -298,54 +348,246 @@ export default function QuranReader() {
                 }`}
                 style={{ padding: '5px 7px' }}
               >
-                <Star className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
+                <Star
+                  className={`w-3.5 h-3.5 ${
+                    isBookmarked ? 'fill-[var(--accent)] text-[var(--accent)]' : ''
+                  }`}
+                />
               </button>
             </div>
           </div>
 
-          {/* 3-Mode Eye-Comfort Reading Filter Bar */}
-          <div className="border-t border-[var(--border)]/60 bg-[var(--surface)] px-3 py-1.5 flex items-center justify-center gap-2">
-            {[
-              { mode: 'parchment' as const, icon: '📜', label: 'Parchment' },
-              { mode: 'night' as const, icon: '🌙', label: 'Night Ink' },
-              { mode: 'classic' as const, icon: '☀️', label: 'Classic' },
-            ].map((item) => {
-              const isActive = mushafMode === item.mode;
-              return (
-                <button
-                  key={item.mode}
-                  type="button"
-                  onClick={() => handleModeChange(item.mode)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all select-none ${
-                    isActive
-                      ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-[0_2px_10px_var(--accent-glow)]'
-                      : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--surface)]'
-                  }`}
-                >
-                  <span className="text-xs leading-none">{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+          {/* 4-Mode Surface Bar + Tajweed Toggle */}
+          <div className="border-t border-[var(--border)]/60 bg-[var(--surface)] px-3 py-1.5 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+            {/* 4 Surface Modes */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {[
+                { mode: 'jewel' as const, icon: '✦', label: 'Jewel Ink' },
+                { mode: 'parchment' as const, icon: '📜', label: 'Parchment' },
+                { mode: 'night' as const, icon: '🌙', label: 'Night' },
+                { mode: 'classic' as const, icon: '🖼', label: 'Scan' },
+              ].map((item) => {
+                const isActive = surfaceMode === item.mode;
+                return (
+                  <button
+                    key={item.mode}
+                    type="button"
+                    onClick={() => handleSurfaceChange(item.mode)}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all select-none ${
+                      isActive
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                        : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    <span className="text-[11px] leading-none">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tajweed Toggle Chip */}
+            <button
+              type="button"
+              onClick={toggleTajweed}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0 transition-all ${
+                showTajweed
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
+                  : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] opacity-70'
+              }`}
+            >
+              <Sparkles className="w-3 h-3 text-emerald-400" />
+              <span>🎨 Tajweed</span>
+            </button>
           </div>
         </div>
 
-        {/* Mushaf Pages — vertical scroll with eye-comfort styling */}
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <MushafSurahPages
+        {/* INTERACTIVE MUSHAF PAGE CANVAS */}
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 py-4">
+          <InteractiveMushafPage
+            pageNumber={mushafPageNumber}
             surahNumber={surahNum}
-            mushafMode={mushafMode}
-            onPageChange={handlePageChange}
+            surfaceMode={surfaceMode}
+            showTajweed={showTajweed}
+            onOpenStudySheet={handleOpenStudySheet}
+            onPageTurnRequest={goToPage}
           />
         </div>
 
-        {/* Interactive Ayah Study, Multi-Tafsir & Hifz Sheet */}
+        {/* IMMERSIVE DISTRACTION-FREE MUSHAF FOOTER BAR (Hides main BottomNav) */}
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md border-t shadow-lg safe-bottom"
+          style={{
+            background: 'var(--surface)',
+            borderColor: 'var(--border)',
+            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.35)',
+            paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
+          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
+            {/* ‹ Prev Page */}
+            <button
+              type="button"
+              onClick={handlePrevPage}
+              disabled={mushafPageNumber <= 1}
+              className="px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <ChevronLeft className="w-4 h-4 text-[var(--accent-text)]" />
+              <span>Prev</span>
+            </button>
+
+            {/* Center: Interactive Page Slider Launcher */}
+            <button
+              type="button"
+              onClick={() => {
+                setTempPageInput(mushafPageNumber);
+                setShowPageSlider(true);
+              }}
+              className="flex-1 py-1.5 px-3 rounded-xl border flex items-center justify-center gap-2 transition-all hover:border-[var(--accent)] active:scale-98"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <Sliders className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <div className="text-center">
+                <span className="block text-xs font-bold text-[var(--text-primary)]">
+                  Page {mushafPageNumber} / 604
+                </span>
+                <span className="block text-[10px] text-[var(--text-secondary)]">
+                  Juz {currentJuz} • Tap to Jump
+                </span>
+              </div>
+            </button>
+
+            {/* Tilawah Play / Pause for this Surah */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isPlaying) {
+                  togglePlay();
+                } else {
+                  playAyah(surahNum, 1);
+                }
+              }}
+              className="p-2.5 rounded-xl border flex items-center justify-center transition-all active:scale-95 shadow-sm"
+              style={{
+                background: isPlaying ? 'var(--accent)' : 'var(--surface-2)',
+                borderColor: 'var(--accent)',
+                color: isPlaying ? 'var(--on-accent)' : 'var(--accent)',
+              }}
+              title={isPlaying ? 'Pause Tilawah' : 'Play Tilawah'}
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+            </button>
+
+            {/* Next Page › */}
+            <button
+              type="button"
+              onClick={handleNextPage}
+              disabled={mushafPageNumber >= 604}
+              className="px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <span>Next</span>
+              <ChevronRight className="w-4 h-4 text-[var(--accent-text)]" />
+            </button>
+          </div>
+        </div>
+
+        {/* QUICK PAGE SCRUBBER / JUMP MODAL */}
+        {showPageSlider && (
+          <div
+            className="fixed inset-0 z-[9996] flex items-end sm:items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+            onClick={() => setShowPageSlider(false)}
+          >
+            <div
+              className="w-full max-w-sm p-5 rounded-3xl border shadow-2xl space-y-4 animate-in slide-in-from-bottom duration-200"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--border)',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 var(--card-sheen)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                  Jump to Mushaf Page
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowPageSlider(false)}
+                  className="p-1 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="text-center py-2">
+                <span className="text-3xl font-bold font-mono text-[var(--accent-text)]">
+                  Page {tempPageInput}
+                </span>
+                <span className="block text-xs text-[var(--text-secondary)] mt-1">
+                  Juz {Math.max(1, Math.min(30, Math.ceil(tempPageInput / 20)))} • 604 Pages Total
+                </span>
+              </div>
+
+              {/* Slider */}
+              <input
+                type="range"
+                min="1"
+                max="604"
+                value={tempPageInput}
+                onChange={(e) => setTempPageInput(parseInt(e.target.value, 10))}
+                className="w-full h-2 rounded-lg cursor-pointer"
+                style={{ accentColor: 'var(--accent)' }}
+              />
+
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPageSlider(false)}
+                  className="py-2.5 rounded-xl text-xs font-bold border bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    goToPage(tempPageInput);
+                    setShowPageSlider(false);
+                  }}
+                  className="py-2.5 rounded-xl text-xs font-bold border transition-all active:scale-98"
+                  style={{
+                    background: 'var(--accent)',
+                    borderColor: 'var(--accent)',
+                    color: 'var(--on-accent)',
+                  }}
+                >
+                  Go to Page
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Interactive Ayah Study, Multi-Tafsir & Hifz Sheet (Portaled to document.body) */}
         <AyahStudySheet
           isOpen={showStudySheet}
           onClose={() => setShowStudySheet(false)}
-          surahNumber={surahNum}
+          surahNumber={studySurah}
           initialAyah={studyInitialAyah}
-          currentPage={currentPage}
+          currentPage={mushafPageNumber}
         />
       </div>
     </PageTransition>

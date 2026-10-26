@@ -159,7 +159,7 @@ const GROUPS: SettingsGroup[] = [
         id: 'storage',
         title: 'Storage & Cache',
         titleKey: 'storageAndCache',
-        subtitle: 'Cached audio & local storage',
+        subtitle: 'Cached media & data',
         icon: HardDrive,
         gradient: 'from-rose-500/10 via-rose-500/5 to-transparent border-rose-500/20',
         iconColor: 'text-rose-600 dark:text-rose-400',
