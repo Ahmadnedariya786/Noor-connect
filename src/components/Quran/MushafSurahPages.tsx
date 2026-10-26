@@ -7,6 +7,7 @@ export type MushafReadingMode = 'parchment' | 'night' | 'classic';
 
 interface MushafSurahPagesProps {
   surahNumber: number;
+  pageNumber?: number;
   mushafMode?: MushafReadingMode;
   onSwipe?: (direction: 'left' | 'right') => void;
   onPageChange?: (currentPage: number, totalPages: number, maxPageViewed: number) => void;
@@ -155,6 +156,7 @@ function PageSlot({ page, pageInSurah, totalPages, isNearActive, mushafMode }: P
 
 export function MushafSurahPages({
   surahNumber,
+  pageNumber,
   mushafMode = 'parchment',
   onPageChange,
 }: MushafSurahPagesProps) {
@@ -163,6 +165,13 @@ export function MushafSurahPages({
 
   const { start, end } = useMemo(() => getSurahPageRange(surahNumber), [surahNumber]);
   const totalPages = end - start + 1;
+
+  // Prefetch surrounding pages when pageNumber is provided
+  useEffect(() => {
+    if (typeof pageNumber === 'number' && pageNumber >= 1 && pageNumber <= 604) {
+      prefetchSurroundingPages(pageNumber, 1, 604);
+    }
+  }, [pageNumber]);
 
   const [localPage, setLocalPage] = useState(0);
   const maxPageViewedRef = useRef(0);
@@ -177,7 +186,7 @@ export function MushafSurahPages({
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
-  }, [surahNumber]);
+  }, [surahNumber, totalPages, onPageChange]);
 
   // Track visible page via scroll position
   const rafRef = useRef(0);
@@ -216,6 +225,24 @@ export function MushafSurahPages({
     for (let p = start; p <= end; p++) arr.push(p);
     return arr;
   }, [start, end]);
+
+  // If a single pageNumber is targeted (e.g. from InteractiveMushafPage or auto-turn),
+  // render that specific page cleanly so all 4 modes (including Scan) flip in sync!
+  if (typeof pageNumber === 'number' && pageNumber >= 1 && pageNumber <= 604) {
+    const pageInSurah = Math.max(1, Math.min(totalPages, pageNumber - start + 1));
+    return (
+      <div className="w-full">
+        <PageSlot
+          page={pageNumber}
+          pageInSurah={pageInSurah}
+          totalPages={totalPages}
+          isDark={isDark}
+          isNearActive={true}
+          mushafMode={mushafMode}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

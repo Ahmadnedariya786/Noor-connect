@@ -165,6 +165,94 @@ export function sanitizeTajweedHtml(rawHtml: string): string {
 
 const PAGE_CACHE_PREFIX = 'noor_mushaf_page_v1_';
 const TAJWEED_CACHE_PREFIX = 'noor_mushaf_tajweed_v1_';
+export const AYAH_PAGE_CACHE_KEY = 'noor_ayah_page_map_v1';
+
+// In-memory Verse-to-Page Index (e.g. "17:8" -> 283, "2:30" -> 6)
+const verseToPageMap = new Map<string, number>();
+
+// Seed initial known milestone and boundary verses
+const INITIAL_SEED_MAP: Record<string, number> = {
+  // Surah 1 & 2 boundaries
+  '1:1': 1, '1:2': 1, '1:3': 1, '1:4': 1, '1:5': 1, '1:6': 1, '1:7': 1,
+  '2:1': 2, '2:2': 2, '2:3': 2, '2:4': 2, '2:5': 2,
+  '2:25': 5, '2:26': 5, '2:27': 5, '2:28': 5, '2:29': 5,
+  '2:30': 6,
+  // Al-Isra & Al-Kahf boundaries
+  '17:1': 282, '17:2': 282, '17:3': 282, '17:4': 282, '17:5': 282, '17:6': 282, '17:7': 282,
+  '17:8': 283,
+  '17:105': 293, '17:106': 293, '17:107': 293, '17:108': 293, '17:109': 293, '17:110': 293, '17:111': 293,
+  '18:1': 293, '18:2': 293, '18:3': 293, '18:4': 293,
+  '18:5': 294,
+};
+
+// Seed start page for Ayah 1 of all 114 Surahs
+Object.entries(SURAH_START_PAGES).forEach(([sStr, page]) => {
+  const sNum = parseInt(sStr, 10);
+  if (!isNaN(sNum) && page >= 1 && page <= 604) {
+    INITIAL_SEED_MAP[`${sNum}:1`] = page;
+  }
+});
+
+// Populate initial seeds
+Object.entries(INITIAL_SEED_MAP).forEach(([k, p]) => {
+  verseToPageMap.set(k, p);
+});
+
+// Restore persisted map from localStorage
+try {
+  if (typeof localStorage !== 'undefined') {
+    const raw = localStorage.getItem(AYAH_PAGE_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        Object.entries(parsed).forEach(([k, p]) => {
+          if (typeof p === 'number' && p >= 1 && p <= 604) {
+            verseToPageMap.set(k, p);
+          }
+        });
+      }
+    }
+  }
+} catch {
+  // Safe storage parse fallback
+}
+
+let saveMapTimer: ReturnType<typeof setTimeout> | null = null;
+function persistVersePageMap(): void {
+  if (typeof localStorage === 'undefined') return;
+  if (saveMapTimer) clearTimeout(saveMapTimer);
+  saveMapTimer = setTimeout(() => {
+    try {
+      const obj: Record<string, number> = {};
+      verseToPageMap.forEach((p, k) => {
+        obj[k] = p;
+      });
+      localStorage.setItem(AYAH_PAGE_CACHE_KEY, JSON.stringify(obj));
+    } catch {
+      // Safe catch for storage limits
+    }
+  }, 400);
+}
+
+export function registerVersesForPage(
+  pageNumber: number,
+  verses: Array<{ verse_key?: string; surah_number?: number; verse_number?: number }>
+): void {
+  if (!Array.isArray(verses) || pageNumber < 1 || pageNumber > 604) return;
+  let hasNew = false;
+  for (const v of verses) {
+    const key =
+      v.verse_key ||
+      (v.surah_number && v.verse_number ? `${v.surah_number}:${v.verse_number}` : null);
+    if (key && verseToPageMap.get(key) !== pageNumber) {
+      verseToPageMap.set(key, pageNumber);
+      hasNew = true;
+    }
+  }
+  if (hasNew) {
+    persistVersePageMap();
+  }
+}
 
 export async function fetchMushafPage(
   pageNumber: number,
@@ -201,6 +289,7 @@ export async function fetchMushafPage(
 
   // If already cached and tajweed matches requirement, return immediately
   if (cachedVerses && (!includeTajweed || cachedTajweed)) {
+    registerVersesForPage(pageNumber, cachedVerses);
     return buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
   }
 
@@ -289,6 +378,7 @@ export async function fetchMushafPage(
     }
 
     if (fetchedVerses.length > 0) {
+      registerVersesForPage(pageNumber, fetchedVerses);
       return buildPageData(pageNumber, fetchedVerses, tajweedMap, false);
     }
   } catch (err) {
@@ -298,11 +388,41 @@ export async function fetchMushafPage(
 
   // If online failed but we have any cached data, use that
   if (cachedVerses && cachedVerses.length > 0) {
+    registerVersesForPage(pageNumber, cachedVerses);
     return buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
   }
 
   // Full offline fallback: construct structured page data from metadata
   return buildOfflineFallbackPage(pageNumber);
+}
+
+const prefetchingPages = new Set<number>();
+
+/**
+ * Background Preload of next page (P + 1) with low priority.
+ * Ensures zero-delay and zero-spinner page turns during recitation.
+ */
+export function prefetchNextMushafPage(currentPage: number, includeTajweed: boolean = true): void {
+  const nextPage = currentPage + 1;
+  if (nextPage > 604 || prefetchingPages.has(nextPage)) return;
+
+  prefetchingPages.add(nextPage);
+
+  const executePrefetch = () => {
+    fetchMushafPage(nextPage, includeTajweed)
+      .catch(() => {
+        // Handled silent background prefetch failure
+      })
+      .finally(() => {
+        prefetchingPages.delete(nextPage);
+      });
+  };
+
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(executePrefetch, { timeout: 2500 });
+  } else {
+    setTimeout(executePrefetch, 250);
+  }
 }
 
 function buildPageData(
@@ -382,9 +502,75 @@ function buildOfflineFallbackPage(pageNumber: number): InteractivePageData {
 }
 
 /**
+ * Returns the exact known page number for an Ayah if present in memory/localStorage cache.
+ */
+export function getKnownPageForAyah(surah: number, ayah: number): number | null {
+  const key = `${surah}:${ayah}`;
+  const known = verseToPageMap.get(key);
+  if (typeof known === 'number' && known >= 1 && known <= 604) {
+    return known;
+  }
+  return null;
+}
+
+/**
+ * Resolves exact Madinah Mushaf Page (1..604) for any (surah, ayah) with 3-tier lookup:
+ * 1. Synchronous Cache Hit (0ms)
+ * 2. Quran.com API lookup (~80ms, 3500ms timeout)
+ * 3. Offline calculated progression fallback
+ */
+export async function resolveMushafPageForAyah(surah: number, ayah: number): Promise<number> {
+  if (surah < 1 || surah > 114) return 1;
+  if (ayah < 1) ayah = 1;
+
+  const key = `${surah}:${ayah}`;
+
+  // 1. Synchronous Cache Hit (0ms)
+  const cachedPage = verseToPageMap.get(key);
+  if (typeof cachedPage === 'number' && cachedPage >= 1 && cachedPage <= 604) {
+    return cachedPage;
+  }
+
+  // 2. Live API Lookup (~80ms, 3500ms timeout)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(
+      `https://api.quran.com/api/v4/verses/by_key/${surah}:${ayah}?fields=page_number`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      const pageNum = data?.verse?.page_number;
+      if (typeof pageNum === 'number' && pageNum >= 1 && pageNum <= 604) {
+        verseToPageMap.set(key, pageNum);
+        persistVersePageMap();
+        return pageNum;
+      }
+    }
+  } catch {
+    // Network offline or timeout - proceed to fallback without throwing
+  }
+
+  // 3. Airplane-Mode Safe Fallback
+  return getPageForSurahAndAyah(surah, ayah);
+}
+
+/**
  * Lookup the exact Madinah Mushaf page (1..604) for any Surah and Ayah.
+ * Checks known index first, with safe interpolation fallback.
  */
 export function getPageForSurahAndAyah(surahNumber: number, ayahNumber: number): number {
+  if (surahNumber < 1 || surahNumber > 114) return 1;
+  if (ayahNumber < 1) ayahNumber = 1;
+
+  // 1. Check known index
+  const known = getKnownPageForAyah(surahNumber, ayahNumber);
+  if (known !== null) {
+    return known;
+  }
+
   const startPage = SURAH_START_PAGES[surahNumber] || 1;
   const nextSurahStart = surahNumber < 114 ? (SURAH_START_PAGES[surahNumber + 1] || 604) : 605;
   const surahPages = Math.max(1, nextSurahStart - startPage);

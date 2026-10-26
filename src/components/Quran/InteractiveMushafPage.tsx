@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   fetchMushafPage,
+  prefetchNextMushafPage,
   toArabicDigits,
   sanitizeTajweedHtml,
   TAJWEED_RULES,
@@ -24,6 +25,7 @@ interface InteractiveMushafPageProps {
   showTajweed: boolean;
   onOpenStudySheet: (surah: number, ayah: number) => void;
   onPageTurnRequest?: (newPage: number) => void;
+  onPageLoaded?: (data: InteractivePageData) => void;
 }
 
 export function InteractiveMushafPage({
@@ -33,6 +35,7 @@ export function InteractiveMushafPage({
   showTajweed,
   onOpenStudySheet,
   onPageTurnRequest,
+  onPageLoaded,
 }: InteractiveMushafPageProps) {
   const [pageData, setPageData] = useState<InteractivePageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +54,7 @@ export function InteractiveMushafPage({
   // Tilawah live recitation sync
   const { currentSurah, currentAyah, isPlaying } = useTilawah();
 
-  // Load interactive page data
+  // Load interactive page data & prefetch next page
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -61,6 +64,9 @@ export function InteractiveMushafPage({
         if (isMounted) {
           setPageData(data);
           setLoading(false);
+          onPageLoaded?.(data);
+          // Zero-delay preload: silently prefetch next page in background
+          prefetchNextMushafPage(pageNumber, showTajweed);
         }
       })
       .catch((err) => {
@@ -75,15 +81,26 @@ export function InteractiveMushafPage({
     };
   }, [pageNumber, showTajweed]);
 
-  // Scroll active recited verse into view smoothly
+  // Scroll active recited verse into view smoothly with double-RAF DOM guarantee
   useEffect(() => {
-    if (isPlaying && activeVerseRef.current) {
-      activeVerseRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
+    if (isPlaying && currentSurah > 0 && currentAyah > 0) {
+      const activeKey = `${currentSurah}:${currentAyah}`;
+      const frameId = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el =
+            activeVerseRef.current ||
+            document.querySelector<HTMLElement>(`[data-ayah-key="${activeKey}"]`);
+          if (el) {
+            el.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+          }
+        });
       });
+      return () => cancelAnimationFrame(frameId);
     }
-  }, [currentSurah, currentAyah, isPlaying]);
+  }, [currentSurah, currentAyah, isPlaying, pageData]);
 
   // Clean up audio on unmount
   useEffect(() => {
@@ -138,6 +155,7 @@ export function InteractiveMushafPage({
     return (
       <MushafSurahPages
         surahNumber={surahNumber}
+        pageNumber={pageNumber}
         mushafMode={classicMode}
       />
     );
@@ -287,6 +305,7 @@ export function InteractiveMushafPage({
                   {/* Verse Span Container with Tilawah Active Recitation Highlight */}
                   <span
                     ref={isVersePlaying ? activeVerseRef : null}
+                    data-ayah-key={`${verse.surah_number}:${verse.verse_number}`}
                     className={`interactive-verse-span rounded-lg px-1 transition-all duration-300 inline ${
                       isVersePlaying
                         ? 'bg-[var(--accent-soft)] ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent shadow-sm'

@@ -21,6 +21,9 @@ import {
 } from '@/components/Quran/InteractiveMushafPage';
 import {
   getPageForSurahAndAyah,
+  resolveMushafPageForAyah,
+  getKnownPageForAyah,
+  type InteractivePageData,
 } from '@/lib/interactive-mushaf';
 import { SURAH_START_PAGES, mushafService } from '@/lib/mushaf-service';
 import { PageTransition } from '@/components/PageTransition';
@@ -45,7 +48,10 @@ export default function QuranReader() {
 
   // Tilawah global player
   const { isPlaying, currentSurah, currentAyah, playAyah, togglePlay } = useTilawah();
-  const lastAudioKeyRef = useRef<string | null>(null);
+  const [autoFollow, setAutoFollow] = useState<boolean>(true);
+  const [currentPageData, setCurrentPageData] = useState<InteractivePageData | null>(null);
+  const pageDataRef = useRef<InteractivePageData | null>(null);
+  const lastObservedVerseRef = useRef<string | null>(null);
 
   const initialSurah = (() => {
     if (surahName) {
@@ -203,84 +209,26 @@ export default function QuranReader() {
     return () => clearTimeout(syncId);
   }, [surahNum, surahOnPage, currentSurahInfo, mushafPageNumber]);
 
-  // LIVE AUDIO AUTO-PAGE SYNC: Turn page ONLY when recitation transitions from one ayah to the next
-  useEffect(() => {
-    if (isPlaying && currentSurah > 0 && currentAyah > 0) {
-      const currentKey = `${currentSurah}:${currentAyah}`;
-      if (lastAudioKeyRef.current !== null && lastAudioKeyRef.current !== currentKey) {
-        const audioPage = getPageForSurahAndAyah(currentSurah, currentAyah);
-        if (audioPage !== mushafPageNumber) {
-          setMushafPageNumber(audioPage);
-          const targetSurah = mushafService.getSurahForPage(audioPage) || currentSurah;
-          if (targetSurah !== surahNum) {
-            setSurahNum(targetSurah);
-            navigate(`/quran/surah-${targetSurah}?page=${audioPage}`, { replace: true });
-          }
-        }
-      }
-      lastAudioKeyRef.current = currentKey;
-    } else {
-      lastAudioKeyRef.current = null;
-    }
-  }, [isPlaying, currentSurah, currentAyah, mushafPageNumber, surahNum]);
-
-  const loadBookmark = async () => {
-    try {
-      const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
-      const bookmarks = value ? JSON.parse(value) : [];
-      setIsBookmarked(bookmarks.includes(surahNum));
-    } catch {
-      try {
-        const bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
-        setIsBookmarked(bookmarks.includes(surahNum));
-      } catch {
-        setIsBookmarked(false);
-      }
-    }
-  };
-
-  const toggleBookmark = async () => {
-    try {
-      const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
-      let bookmarks = value ? JSON.parse(value) : [];
-
-      if (bookmarks.includes(surahNum)) {
-        bookmarks = bookmarks.filter((b: number) => b !== surahNum);
-      } else {
-        bookmarks.push(surahNum);
-      }
-
-      await Preferences.set({ key: BOOKMARKS_KEY, value: JSON.stringify(bookmarks) });
-      localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-      setIsBookmarked(bookmarks.includes(surahNum));
-      window.dispatchEvent(new CustomEvent('noorconnect:quran-bookmarks-changed', { detail: bookmarks }));
-    } catch {
-      try {
-        let bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
-        if (bookmarks.includes(surahNum)) {
-          bookmarks = bookmarks.filter((b: number) => b !== surahNum);
-        } else {
-          bookmarks.push(surahNum);
-        }
-        localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-        setIsBookmarked(bookmarks.includes(surahNum));
-        window.dispatchEvent(new CustomEvent('noorconnect:quran-bookmarks-changed', { detail: bookmarks }));
-      } catch {
-        setIsBookmarked(!isBookmarked);
-      }
-    }
-  };
-
-  const goToPage = (targetPage: number) => {
+  const goToMushafPage = (
+    targetPage: number,
+    options?: { source?: 'user' | 'audio' }
+  ) => {
     if (targetPage < 1 || targetPage > 604) return;
+    const isUserAction = options?.source === 'user';
+
+    if (isUserAction && isPlaying) {
+      // User manually browsed/peeked at another page while recitation is playing
+      setAutoFollow(false);
+    }
+
     setMushafPageNumber(targetPage);
 
     // Identify which Surah this target page belongs to
     const targetSurah = mushafService.getSurahForPage(targetPage) || 1;
-    if (targetSurah !== surahNum) {
-      setSurahNum(targetSurah);
-      navigate(`/quran/surah-${targetSurah}`, { replace: true });
-    }
+    setSurahNum(targetSurah);
+
+    // Synchronize URL in lockstep with replace: true
+    navigate(`/quran/surah-${targetSurah}?page=${targetPage}`, { replace: true });
 
     // Auto-moving bookmarks update
     updateAutoMovingBookmarks(
@@ -292,15 +240,113 @@ export default function QuranReader() {
     );
   };
 
+  // LIVE AUDIO AUTO-PAGE ADVANCE ENGINE
+  useEffect(() => {
+    if (!isPlaying || !autoFollow || currentSurah <= 0 || currentAyah <= 0) {
+      if (!isPlaying) {
+        lastObservedVerseRef.current = null;
+      }
+      return;
+    }
+
+    const currentKey = `${currentSurah}:${currentAyah}`;
+
+    // Helper to advance page cleanly
+    const advanceToPage = (targetPage: number) => {
+      if (targetPage >= 1 && targetPage <= 604 && targetPage !== mushafPageNumber) {
+        goToMushafPage(targetPage, { source: 'audio' });
+      }
+    };
+
+    // 1. Check if current verse is on the currently loaded page
+    const loadedVerses = currentPageData?.verses || pageDataRef.current?.verses || [];
+    const isCurrentVerseOnThisPage = loadedVerses.some(
+      (v) => v.surah_number === currentSurah && v.verse_number === currentAyah
+    );
+
+    if (isCurrentVerseOnThisPage) {
+      // Same page: verse is rendered on this page. Within-page auto-scroll handles it!
+      lastObservedVerseRef.current = currentKey;
+      return;
+    }
+
+    // 2. The verse is NOT on the currently displayed page.
+    // Check if the previous verse was the last verse on the current page:
+    const lastVerseOnCurrentPage =
+      loadedVerses.length > 0 ? loadedVerses[loadedVerses.length - 1] : null;
+    const wasLastVerseOnCurrentPage =
+      lastVerseOnCurrentPage &&
+      lastObservedVerseRef.current ===
+        `${lastVerseOnCurrentPage.surah_number}:${lastVerseOnCurrentPage.verse_number}`;
+
+    if (wasLastVerseOnCurrentPage && mushafPageNumber < 604) {
+      // Immediate next page transition!
+      const nextPage = mushafPageNumber + 1;
+      advanceToPage(nextPage);
+      lastObservedVerseRef.current = currentKey;
+      return;
+    }
+
+    // 3. Otherwise, resolve exact page for this verse (via synchronous map or API lookup)
+    const knownPage = getKnownPageForAyah(currentSurah, currentAyah);
+    if (typeof knownPage === 'number' && knownPage >= 1 && knownPage <= 604) {
+      advanceToPage(knownPage);
+      lastObservedVerseRef.current = currentKey;
+      return;
+    }
+
+    // Async fallback resolution
+    let isCancelled = false;
+    resolveMushafPageForAyah(currentSurah, currentAyah).then((resolvedPage) => {
+      if (!isCancelled && resolvedPage >= 1 && resolvedPage <= 604) {
+        advanceToPage(resolvedPage);
+      }
+    });
+
+    lastObservedVerseRef.current = currentKey;
+    return () => {
+      isCancelled = true;
+    };
+  }, [isPlaying, currentSurah, currentAyah, autoFollow, mushafPageNumber, currentPageData]);
+
+  const handleFooterPlayToggle = () => {
+    if (isPlaying) {
+      // If playing on the current page, toggle pause
+      const loadedVerses = currentPageData?.verses || pageDataRef.current?.verses || [];
+      const isPlayingOnThisPage = loadedVerses.some(
+        (v) => v.surah_number === currentSurah && v.verse_number === currentAyah
+      );
+
+      if (isPlayingOnThisPage) {
+        togglePlay();
+      } else {
+        // Playing on a different page: switch to first verse of this viewed page and keep autoFollow on
+        const firstVerse = loadedVerses[0];
+        const targetS = firstVerse?.surah_number || surahOnPage;
+        const targetA = firstVerse?.verse_number || 1;
+        setAutoFollow(true);
+        playAyah(targetS, targetA);
+      }
+    } else {
+      // Stopped or paused: play first verse on this viewed page with autoFollow enabled
+      const loadedVerses = currentPageData?.verses || pageDataRef.current?.verses || [];
+      const firstVerse = loadedVerses[0];
+      const targetS = firstVerse?.surah_number || surahOnPage;
+      const targetA = firstVerse?.verse_number || 1;
+      setAutoFollow(true);
+      playAyah(targetS, targetA);
+    }
+  };
+
   const handlePrevPage = () => {
     if (mushafPageNumber > 1) {
-      goToPage(mushafPageNumber - 1);
+      goToMushafPage(mushafPageNumber - 1, { source: 'user' });
     }
   };
 
   const handleNextPage = () => {
     if (mushafPageNumber < 604) {
-      goToPage(mushafPageNumber + 1);
+      goToMushafPage(mushafPageNumber + 1, { source: 'user' });
     }
   };
 
@@ -441,8 +487,8 @@ export default function QuranReader() {
             </div>
           </div>
 
-          {/* Sub-header Bar: Tajweed Colors Toggle & Guidance */}
-          <div className="border-t border-[var(--border)]/40 bg-[var(--surface)] px-3 py-1 flex items-center justify-between text-xs max-w-md mx-auto">
+          {/* Sub-header Bar: Tajweed Colors Toggle, Auto-Page / Sync Audio Pill, & Guidance */}
+          <div className="border-t border-[var(--border)]/40 bg-[var(--surface)] px-3 py-1 flex items-center justify-between text-xs max-w-md mx-auto gap-2">
             <button
               type="button"
               onClick={toggleTajweed}
@@ -455,6 +501,46 @@ export default function QuranReader() {
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               <span>🎨 Tajweed</span>
             </button>
+
+            {/* LIVE TILAWAH AUTO-FOLLOW / SYNC AUDIO CHIP */}
+            {isPlaying && (
+              <div className="shrink-0">
+                {autoFollow ? (
+                  <button
+                    type="button"
+                    onClick={() => setAutoFollow(false)}
+                    title="Automatic Mushaf page turn is active. Tap to pause auto-flip."
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all animate-pulse"
+                    style={{
+                      background: 'var(--accent-soft)',
+                      color: 'var(--accent-text)',
+                      borderColor: 'var(--accent)',
+                    }}
+                  >
+                    <span>🔄 Auto-Page ON</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAutoFollow(true);
+                      const audioPage = getPageForSurahAndAyah(currentSurah, currentAyah);
+                      goToMushafPage(audioPage, { source: 'audio' });
+                    }}
+                    title="Tap to snap back to the reciting page and re-enable auto-page turn"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all shadow-sm"
+                    style={{
+                      background: 'var(--accent)',
+                      color: 'var(--on-accent)',
+                      borderColor: 'var(--accent)',
+                    }}
+                  >
+                    <span>📍 Sync Audio</span>
+                  </button>
+                )}
+              </div>
+            )}
+
             <div
               style={{
                 fontSize: '0.68rem',
@@ -463,7 +549,9 @@ export default function QuranReader() {
                 fontWeight: 600,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                paddingLeft: '6px',
+                paddingLeft: '4px',
+                textAlign: 'right',
+                flex: 1,
               }}
             >
               <span>Tap word: Meaning • Tap ﴿١﴾: Tafsir</span>
@@ -479,7 +567,11 @@ export default function QuranReader() {
             surfaceMode={surfaceMode}
             showTajweed={showTajweed}
             onOpenStudySheet={handleOpenStudySheet}
-            onPageTurnRequest={goToPage}
+            onPageTurnRequest={(p) => goToMushafPage(p, { source: 'user' })}
+            onPageLoaded={(data) => {
+              pageDataRef.current = data;
+              setCurrentPageData(data);
+            }}
           />
         </div>
 
@@ -554,16 +646,10 @@ export default function QuranReader() {
               </div>
             </button>
 
-            {/* Tilawah Play / Pause for this Surah */}
+            {/* Tilawah Play / Pause for this Page */}
             <button
               type="button"
-              onClick={() => {
-                if (isPlaying) {
-                  togglePlay();
-                } else {
-                  playAyah(surahNum, 1);
-                }
-              }}
+              onClick={handleFooterPlayToggle}
               className="rounded-xl border flex items-center justify-center transition-all active:scale-95 shadow-sm"
               style={{
                 background: isPlaying ? 'var(--accent)' : 'var(--surface-2)',
@@ -573,7 +659,7 @@ export default function QuranReader() {
                 height: '42px',
                 flexShrink: 0,
               }}
-              title={isPlaying ? 'Pause Tilawah' : 'Play Tilawah'}
+              title={isPlaying ? 'Pause Tilawah' : 'Play Tilawah from this page'}
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
             </button>
@@ -660,7 +746,7 @@ export default function QuranReader() {
                 <button
                   type="button"
                   onClick={() => {
-                    goToPage(tempPageInput);
+                    goToMushafPage(tempPageInput, { source: 'user' });
                     setShowPageSlider(false);
                   }}
                   className="py-2.5 rounded-xl text-xs font-bold border transition-all active:scale-98"

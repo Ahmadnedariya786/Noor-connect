@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { getPageForSurahAndAyah } from '@/lib/interactive-mushaf';
 import { Badge } from '@/components/ui/badge';
 
 interface TilawahPlayerModalProps {
@@ -103,7 +104,8 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
 
   const handleOpenInReader = () => {
     handleClose();
-    navigate(`/quran/surah-${currentSurah}`);
+    const ayahPage = getPageForSurahAndAyah(currentSurah, currentAyah);
+    navigate(`/quran/surah-${currentSurah}?page=${ayahPage}&ayah=${currentAyah}`);
   };
 
   const modalContent = (

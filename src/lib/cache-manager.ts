@@ -114,6 +114,8 @@ export function isTemporaryCacheKey(key: string): boolean {
   if (
     key.startsWith('noor_mushaf_') ||
     key.startsWith('mushaf_page_') ||
+    key === 'noor_ayah_page_map_v1' ||
+    key.startsWith('noor_ayah_') ||
     key.includes('tafsir_cache') ||
     key.startsWith('tafsir_text_') ||
     key.startsWith('tafsir_data_') ||
