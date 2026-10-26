@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   fetchMushafPage,
   toArabicDigits,
+  sanitizeTajweedHtml,
   TAJWEED_RULES,
   type InteractivePageData,
   type InteractiveVerse,
@@ -316,34 +317,25 @@ export function InteractiveMushafPage({
                       backgroundColor: isVersePlaying ? 'var(--accent-soft)' : undefined,
                     }}
                   >
-                    {/* Render Words or Tajweed HTML */}
-                    {showTajweed && verse.text_tajweed ? (
-                      <span
-                        className="cursor-pointer"
-                        dangerouslySetInnerHTML={{ __html: verse.text_tajweed }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onOpenStudySheet(verse.surah_number, verse.verse_number);
-                        }}
-                      />
-                    ) : (
-                      verse.words.map((w) => {
-                        if (w.char_type_name === 'end') {
-                          return null;
-                        }
-                        return (
-                          <span
-                            key={w.id}
-                            onClick={(e) =>
-                              handleWordClick(e, w, verse.surah_number, verse.verse_number)
-                            }
-                            className="interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-transform hover:scale-110 active:scale-95 hover:text-[var(--accent-text)]"
-                          >
-                            {w.text_uthmani}{' '}
-                          </span>
-                        );
-                      })
-                    )}
+                    {/* Render Words: Every individual word opens Word-by-Word Popover */}
+                    {verse.words.map((w) => {
+                      if (w.char_type_name === 'end') {
+                        return null;
+                      }
+                      const wordHtml = showTajweed && w.text_uthmani_tajweed
+                        ? sanitizeTajweedHtml(w.text_uthmani_tajweed)
+                        : w.text_uthmani;
+                      return (
+                        <span
+                          key={w.id}
+                          onClick={(e) =>
+                            handleWordClick(e, w, verse.surah_number, verse.verse_number)
+                          }
+                          className="interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-transform hover:scale-110 active:scale-95 hover:text-[var(--accent-text)]"
+                          dangerouslySetInnerHTML={{ __html: wordHtml + ' ' }}
+                        />
+                      );
+                    })}
 
                     {/* Clickable Golden Ayah Medallion */}
                     <button
@@ -431,13 +423,13 @@ export function InteractiveMushafPage({
               "{selectedWord.word.translation?.text || 'Meaning loading...'}"
             </p>
 
-            {/* Action Buttons: 1-Tap Hear Word Audio + Study Ayah */}
-            <div className="grid grid-cols-2 gap-1.5">
+            {/* Action Buttons: 1-Tap Hear Word Audio + Tafsir & Hifz */}
+            <div className="flex flex-col gap-1.5">
               <button
                 type="button"
                 disabled={!selectedWord.word.audio_url || playingWordAudio}
                 onClick={() => handlePlayWordAudio(selectedWord.word.audio_url)}
-                className="py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
                 style={{
                   background: 'var(--surface-2)',
                   borderColor: 'var(--border)',
@@ -456,7 +448,7 @@ export function InteractiveMushafPage({
                   setSelectedWord(null);
                   onOpenStudySheet(s, a);
                 }}
-                className="py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95"
                 style={{
                   background: 'var(--accent)',
                   borderColor: 'var(--accent)',
@@ -464,7 +456,7 @@ export function InteractiveMushafPage({
                 }}
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Study Ayah</span>
+                <span>📚 Tafsir & Hifz ({selectedWord.surahNumber}:{selectedWord.verseNumber})</span>
               </button>
             </div>
           </div>

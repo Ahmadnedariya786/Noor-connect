@@ -1,19 +1,33 @@
 /**
- * Noor Connect — Global Persistent Tilawah Mini-Player Bar
+ * Noor Connect — Global Persistent Tilawah Floating Mini-Player Dock
  *
- * Renders a sleek 42px persistent top bar whenever Quran recitation is active.
- * Follows the user across all app routes without interrupting playback.
+ * Renders an elevated floating jewel capsule in the bottom thumb zone above the bottom navigation bar.
+ * Zero collision with Android system status bar.
+ * Follows the user across all app routes with ergonomic one-handed controls.
  */
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTilawah } from '@/contexts/TilawahContext';
-import { BookOpen, Headphones, Play, Pause, X, Loader2 } from 'lucide-react';
+import { getPageForSurahAndAyah } from '@/lib/interactive-mushaf';
+import {
+  Headphones,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  BookOpen,
+  X,
+  Loader2,
+} from 'lucide-react';
 
 export const GlobalTilawahBar: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const {
     isBarVisible,
+    isPlayerOpen,
     isPlaying,
     isLoading,
     currentSurah,
@@ -22,140 +36,217 @@ export const GlobalTilawahBar: React.FC = () => {
     reciter,
     progressPercent,
     togglePlay,
+    nextAyah,
+    prevAyah,
     openPlayer,
     dismissBar,
   } = useTilawah();
 
-  if (!isBarVisible) return null;
+  const isQuranReader = useMemo(() => {
+    return /^\/quran\/.+/.test(location.pathname);
+  }, [location.pathname]);
 
-  const handleOpenReader = () => {
-    navigate(`/quran/surah-${currentSurah}`, { replace: false });
+  const shouldShow =
+    isBarVisible &&
+    !isPlayerOpen &&
+    currentSurah > 0 &&
+    currentAyah > 0;
+
+  // Manage dynamic bottom dock spacing CSS variable
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (shouldShow) {
+        document.documentElement.style.setProperty('--tilawah-dock-space', '68px');
+      } else {
+        document.documentElement.style.setProperty('--tilawah-dock-space', '0px');
+      }
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.setProperty('--tilawah-dock-space', '0px');
+      }
+    };
+  }, [shouldShow]);
+
+  if (!shouldShow) return null;
+
+  const ayahMushafPage = getPageForSurahAndAyah(currentSurah, currentAyah);
+
+  const handleOpenReader = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/quran/surah-${currentSurah}?page=${ayahMushafPage}&ayah=${currentAyah}`, {
+      replace: false,
+    });
   };
+
+  const handleTogglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    togglePlay();
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    nextAyah();
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    prevAyah();
+  };
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dismissBar();
+  };
+
+  // Bottom offset: 80px above floating BottomNav on regular pages, 74px above Mushaf footer on /quran/:id
+  const bottomOffset = isQuranReader
+    ? 'calc(74px + env(safe-area-inset-bottom, 0px))'
+    : 'calc(80px + env(safe-area-inset-bottom, 0px))';
 
   return (
     <aside
       role="region"
       aria-label="Quran Tilawah Mini Player"
-      className="sticky top-0 z-40 w-full print:hidden select-none"
+      className="fixed z-[60] left-3 right-3 max-w-lg mx-auto print:hidden select-none animate-in fade-in slide-in-from-bottom-3 duration-200"
       style={{
-        height: '42px',
-        backgroundColor: 'var(--surface-2)',
-        borderBottom: '1px solid var(--border)',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.28)',
+        bottom: bottomOffset,
+        height: '58px',
+        backgroundColor: 'var(--bg-elev)',
+        border: '1px solid var(--accent)',
+        borderRadius: '18px',
+        boxShadow: '0 10px 28px rgba(0, 0, 0, 0.55), 0 0 16px var(--accent-glow)',
       }}
     >
-      <div className="max-w-4xl mx-auto h-full px-3 flex items-center justify-between gap-2">
-        {/* Left: Pulsing Dot + Surah & Ayah Reference + Reciter Short Name */}
+      <div className="relative w-full h-full px-2.5 flex items-center justify-between gap-2 overflow-hidden">
+        {/* Left: Tappable Info Area (opens TilawahPlayerModal) */}
         <div
           onClick={openPlayer}
           role="button"
           tabIndex={0}
-          className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer group"
-          title="Open Tilawah Player"
+          className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer group"
+          title="Open Full Tilawah Player"
         >
-          {/* Pulsing Accent Dot */}
-          <div className="relative flex items-center justify-center shrink-0 w-3 h-3">
-            {isPlaying && (
-              <span
-                className="absolute w-3 h-3 rounded-full animate-ping opacity-75"
-                style={{ backgroundColor: 'var(--accent)' }}
-              />
+          {/* Jewel Badge Icon with Live Waveform Animation */}
+          <div
+            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
+            style={{
+              background: 'var(--accent-soft)',
+              color: 'var(--accent-text)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+            ) : isPlaying ? (
+              <span className="flex items-end gap-0.5 h-3.5">
+                <span className="w-0.5 h-full bg-[var(--accent)] animate-pulse" />
+                <span className="w-0.5 h-2.5 bg-[var(--accent)] animate-pulse" style={{ animationDelay: '150ms' }} />
+                <span className="w-0.5 h-3 bg-[var(--accent)] animate-pulse" style={{ animationDelay: '300ms' }} />
+              </span>
+            ) : (
+              <Headphones className="w-4 h-4 fill-current" />
             )}
-            <span
-              className="relative w-2 h-2 rounded-full"
-              style={{
-                backgroundColor: isPlaying ? 'var(--accent)' : 'var(--text-secondary)',
-              }}
-            />
           </div>
 
-          {/* Reference & Reciter */}
-          <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+          {/* 2-Line Crisp Reference & Reciter */}
+          <div className="flex flex-col min-w-0 flex-1 truncate">
             <span
-              className="font-bold text-xs group-hover:text-[var(--accent-text)] transition-colors truncate"
+              className="text-xs font-bold truncate group-hover:text-[var(--accent-text)] transition-colors leading-tight"
               style={{ color: 'var(--text-primary)' }}
             >
-              {surahInfo?.englishName || `Surah ${currentSurah}`} {currentSurah}:{currentAyah}
+              {surahInfo?.englishName || `Surah ${currentSurah}`} • {currentSurah}:{currentAyah}
             </span>
             <span
-              className="text-[11px] font-medium shrink-0 truncate opacity-75"
-              style={{ color: 'var(--text-secondary)' }}
+              className="text-[10px] text-[var(--text-secondary)] font-medium truncate mt-0.5"
             >
-              • {reciter.shortName}
+              {reciter.shortName} • Tap to expand
             </span>
           </div>
         </div>
 
-        {/* Right: 4 Compact Icon Buttons (32px × 32px each) */}
+        {/* Right: Thumb-Friendly Control Buttons */}
         <div className="flex items-center gap-1 shrink-0">
-          {/* 1. Open Mushaf Reader */}
+          {/* Previous Ayah */}
           <button
             type="button"
-            onClick={handleOpenReader}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface)] text-[var(--accent-text)]"
-            title="Read in Mushaf"
-            aria-label="Read in Mushaf"
+            onClick={handlePrev}
+            className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-transform active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+            title="Previous Ayah"
+            aria-label="Previous Ayah"
           >
-            <BookOpen className="w-4 h-4" />
+            <SkipBack className="w-4 h-4" />
           </button>
 
-          {/* 2. Full Player & Sleep Timer */}
+          {/* Prominent Circular Play / Pause Jewel */}
           <button
             type="button"
-            onClick={openPlayer}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface)] text-[var(--text-primary)]"
-            title="Tilawah Audio Player & Sleep Timer"
-            aria-label="Tilawah Audio Player & Sleep Timer"
-          >
-            <Headphones className="w-4 h-4" />
-          </button>
-
-          {/* 3. Play / Pause Toggle */}
-          <button
-            type="button"
-            onClick={togglePlay}
+            onClick={handleTogglePlay}
             disabled={isLoading}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-95 text-[var(--on-accent)] shadow-sm"
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 text-[var(--on-accent)] shadow-md"
             style={{
               backgroundColor: 'var(--accent)',
+              boxShadow: '0 0 12px var(--accent-glow)',
             }}
             title={isPlaying ? 'Pause Recitation' : 'Play Recitation'}
             aria-label={isPlaying ? 'Pause Recitation' : 'Play Recitation'}
           >
             {isLoading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : isPlaying ? (
-              <Pause className="w-3.5 h-3.5 fill-current" />
+              <Pause className="w-4 h-4 fill-current" />
             ) : (
-              <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+              <Play className="w-4 h-4 fill-current ml-0.5" />
             )}
           </button>
 
-          {/* 4. Dismiss Mini-Player */}
+          {/* Next Ayah */}
           <button
             type="button"
-            onClick={dismissBar}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-400"
+            onClick={handleNext}
+            className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-transform active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+            title="Next Ayah"
+            aria-label="Next Ayah"
+          >
+            <SkipForward className="w-4 h-4" />
+          </button>
+
+          {/* Open Mushaf Reader at exact Ayah */}
+          <button
+            type="button"
+            onClick={handleOpenReader}
+            className="w-8 h-8 rounded-[10px] flex items-center justify-center transition-colors hover:bg-[var(--surface-2)] text-[var(--accent-text)]"
+            title={`Read Ayah in Mushaf (Page ${ayahMushafPage})`}
+            aria-label="Read in Mushaf"
+          >
+            <BookOpen className="w-4 h-4" />
+          </button>
+
+          {/* Dismiss Mini-Player */}
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="w-8 h-8 rounded-[10px] flex items-center justify-center transition-colors hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-400"
             title="Close Tilawah Player"
             aria-label="Close Tilawah Player"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
-      </div>
 
-      {/* Bottom Edge: 2px Progress Hairline */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden"
-        style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
-      >
+        {/* Bottom Progress Hairline */}
         <div
-          className="h-full transition-all duration-300"
-          style={{
-            width: `${Math.min(100, Math.max(0, progressPercent))}%`,
-            backgroundColor: 'var(--accent)',
-          }}
-        />
+          className="absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden"
+          style={{ backgroundColor: 'var(--surface-2)' }}
+        >
+          <div
+            className="h-full transition-all duration-300"
+            style={{
+              width: `${Math.min(100, Math.max(0, progressPercent))}%`,
+              backgroundColor: 'var(--accent)',
+            }}
+          />
+        </div>
       </div>
     </aside>
   );

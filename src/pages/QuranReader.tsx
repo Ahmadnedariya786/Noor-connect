@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,6 +9,7 @@ import {
   Play,
   Pause,
   Sliders,
+  Info,
   X,
 } from 'lucide-react';
 import { quranService } from '@/lib/quran-service';
@@ -37,10 +38,12 @@ export default function QuranReader() {
   const isDark = effectiveTheme !== 'desert-scroll';
 
   const { surahName } = useParams<{ surahName: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   // Tilawah global player
   const { isPlaying, currentSurah, currentAyah, playAyah, togglePlay } = useTilawah();
+  const lastAudioKeyRef = useRef<string | null>(null);
 
   const initialSurah = (() => {
     if (surahName) {
@@ -56,6 +59,11 @@ export default function QuranReader() {
 
   // Global Madinah Mushaf Page (1..604)
   const [mushafPageNumber, setMushafPageNumber] = useState<number>(() => {
+    const pageParam = searchParams.get('page');
+    if (pageParam) {
+      const p = parseInt(pageParam, 10);
+      if (p >= 1 && p <= 604) return p;
+    }
     const savedPage = localStorage.getItem(LS_LAST_PAGE);
     if (savedPage) {
       const p = parseInt(savedPage, 10);
@@ -117,9 +125,19 @@ export default function QuranReader() {
     });
   };
 
-  // Sync with route param
+  // Sync with route param and query searchParams (?page=)
   useEffect(() => {
-    if (surahName) {
+    const pageParam = searchParams.get('page');
+    if (pageParam) {
+      const parsedPage = parseInt(pageParam, 10);
+      if (!isNaN(parsedPage) && parsedPage >= 1 && parsedPage <= 604 && parsedPage !== mushafPageNumber) {
+        setMushafPageNumber(parsedPage);
+        const derivedSurah = mushafService.getSurahForPage(parsedPage);
+        if (derivedSurah && derivedSurah !== surahNum) {
+          setSurahNum(derivedSurah);
+        }
+      }
+    } else if (surahName) {
       const m = surahName.match(/surah-(\d+)/);
       if (m) {
         const parsed = parseInt(m[1], 10);
@@ -130,21 +148,24 @@ export default function QuranReader() {
         }
       }
     }
-  }, [surahName]);
+  }, [surahName, searchParams]);
 
   const surahInfo = quranService.getSurahInfo(surahNum);
+  // Dynamic header metadata derived from actual Surah on mushafPageNumber
+  const surahOnPage = mushafService.getSurahForPage(mushafPageNumber) || surahNum;
+  const currentSurahInfo = quranService.getSurahInfo(surahOnPage) || surahInfo;
 
   // Save last read position & update streaks
   useEffect(() => {
     localStorage.setItem(LS_LAST_SURAH, String(surahNum));
     localStorage.setItem(LS_LAST_PAGE, String(mushafPageNumber));
 
-    if (surahInfo) {
+    if (currentSurahInfo) {
       const lastReadData = {
-        number: surahNum,
-        name: surahInfo.englishName,
-        englishName: surahInfo.englishName,
-        arabicName: surahInfo.name,
+        number: surahOnPage,
+        name: currentSurahInfo.englishName,
+        englishName: currentSurahInfo.englishName,
+        arabicName: currentSurahInfo.name,
         page: mushafPageNumber,
         totalPages: 604,
       };
@@ -153,15 +174,15 @@ export default function QuranReader() {
     loadBookmark();
 
     const syncId = setTimeout(() => {
-      if (!surahInfo) return;
+      if (!currentSurahInfo) return;
       quranFeaturesService.updateReadingStreak().catch((e) => {
         console.warn('Streak update warning', e);
       });
       quranFeaturesService
         .updateRecitationProgress(
-          surahNum,
-          surahInfo.englishName,
-          surahInfo.numberOfAyahs,
+          surahOnPage,
+          currentSurahInfo.englishName,
+          currentSurahInfo.numberOfAyahs,
           1,
           1,
           mushafPageNumber,
@@ -177,21 +198,28 @@ export default function QuranReader() {
     }, 1000);
 
     return () => clearTimeout(syncId);
-  }, [surahNum, surahInfo, mushafPageNumber]);
+  }, [surahNum, surahOnPage, currentSurahInfo, mushafPageNumber]);
 
-  // LIVE AUDIO AUTO-PAGE SYNC: Turn page when recitation advances to a new page
+  // LIVE AUDIO AUTO-PAGE SYNC: Turn page ONLY when recitation transitions from one ayah to the next
   useEffect(() => {
     if (isPlaying && currentSurah > 0 && currentAyah > 0) {
-      const audioPage = getPageForSurahAndAyah(currentSurah, currentAyah);
-      if (audioPage !== mushafPageNumber) {
-        setMushafPageNumber(audioPage);
-        if (currentSurah !== surahNum) {
-          setSurahNum(currentSurah);
-          navigate(`/quran/surah-${currentSurah}`, { replace: true });
+      const currentKey = `${currentSurah}:${currentAyah}`;
+      if (lastAudioKeyRef.current !== null && lastAudioKeyRef.current !== currentKey) {
+        const audioPage = getPageForSurahAndAyah(currentSurah, currentAyah);
+        if (audioPage !== mushafPageNumber) {
+          setMushafPageNumber(audioPage);
+          const targetSurah = mushafService.getSurahForPage(audioPage) || currentSurah;
+          if (targetSurah !== surahNum) {
+            setSurahNum(targetSurah);
+            navigate(`/quran/surah-${targetSurah}?page=${audioPage}`, { replace: true });
+          }
         }
       }
+      lastAudioKeyRef.current = currentKey;
+    } else {
+      lastAudioKeyRef.current = null;
     }
-  }, [isPlaying, currentSurah, currentAyah]);
+  }, [isPlaying, currentSurah, currentAyah, mushafPageNumber, surahNum]);
 
   const loadBookmark = async () => {
     try {
@@ -285,7 +313,10 @@ export default function QuranReader() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen relative overflow-hidden bg-[var(--bg-base)] pb-24">
+      <div
+        className="min-h-screen relative overflow-hidden bg-[var(--bg-base)]"
+        style={{ paddingBottom: 'calc(96px + var(--tilawah-dock-space, 0px))' }}
+      >
         {/* TOP READER CONTROL BAR */}
         <div className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)] shadow-sm">
           <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
@@ -300,7 +331,7 @@ export default function QuranReader() {
               <span>Quran</span>
             </button>
 
-            {/* Center: Arabic Surah Title + English Surah Name + Subtitle */}
+            {/* Center: Arabic Surah Title + English Surah Name + Subtitle (Derived from Surah on currentPage) */}
             <div
               className="cursor-pointer select-none"
               style={{ flex: 1, minWidth: 0, textAlign: 'center', padding: '0 4px' }}
@@ -308,10 +339,10 @@ export default function QuranReader() {
               title="Return to Quran index"
             >
               <h1 className="font-arabic font-bold text-base sm:text-lg text-[var(--accent-text)] leading-tight truncate">
-                {surahInfo?.name}
+                {currentSurahInfo?.name}
               </h1>
               <p className="text-xs font-bold text-[var(--text-primary)] truncate">
-                {surahInfo?.englishName} • #{surahNum}
+                {currentSurahInfo?.englishName} • #{surahOnPage}
               </p>
               <p
                 className="text-[var(--text-secondary)] font-medium"
@@ -325,7 +356,7 @@ export default function QuranReader() {
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
-                onClick={() => handleOpenStudySheet(surahNum, 1)}
+                onClick={() => handleOpenStudySheet(surahOnPage, 1)}
                 title="Study & Hifz Memorization"
                 className="rounded-lg font-bold border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent-text)] hover:border-[var(--accent)] transition-colors select-none flex items-center gap-1 shadow-sm"
                 style={{ padding: '5px 8px', fontSize: '0.72rem' }}
@@ -338,7 +369,7 @@ export default function QuranReader() {
                 type="button"
                 onClick={() => {
                   toggleBookmark();
-                  handleOpenStudySheet(surahNum, 1);
+                  handleOpenStudySheet(surahOnPage, 1);
                 }}
                 title={isBookmarked ? 'Remove Star / Manage Bookmarks' : 'Bookmark Surah & Ayah'}
                 className={`rounded-lg border transition-all select-none ${
@@ -357,13 +388,15 @@ export default function QuranReader() {
             </div>
           </div>
 
-          {/* 4-Mode Surface Bar + Tajweed Toggle */}
-          <div className="border-t border-[var(--border)]/60 bg-[var(--surface)] px-3 py-1.5 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
-            {/* 4 Surface Modes */}
-            <div className="flex items-center gap-1.5 shrink-0">
+          {/* 4-Mode Surface Bar - Equal 4-Column Segmented Row */}
+          <div className="border-t border-[var(--border)]/60 bg-[var(--surface)] px-3 py-1.5">
+            <div
+              className="grid max-w-md mx-auto"
+              style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}
+            >
               {[
-                { mode: 'jewel' as const, icon: '✦', label: 'Jewel Ink' },
-                { mode: 'parchment' as const, icon: '📜', label: 'Parchment' },
+                { mode: 'jewel' as const, icon: '✦', label: 'Jewel' },
+                { mode: 'parchment' as const, icon: '📜', label: 'Paper' },
                 { mode: 'night' as const, icon: '🌙', label: 'Night' },
                 { mode: 'classic' as const, icon: '🖼', label: 'Scan' },
               ].map((item) => {
@@ -373,11 +406,12 @@ export default function QuranReader() {
                     key={item.mode}
                     type="button"
                     onClick={() => handleSurfaceChange(item.mode)}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all select-none ${
+                    className={`flex items-center justify-center gap-1 py-1.5 px-1 rounded-xl text-xs font-bold transition-all select-none ${
                       isActive
                         ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                         : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]'
                     }`}
+                    style={{ whiteSpace: 'nowrap' }}
                   >
                     <span className="text-[11px] leading-none">{item.icon}</span>
                     <span>{item.label}</span>
@@ -385,20 +419,26 @@ export default function QuranReader() {
                 );
               })}
             </div>
+          </div>
 
-            {/* Tajweed Toggle Chip */}
+          {/* Sub-header Bar: Tajweed Colors Toggle & Guidance */}
+          <div className="border-t border-[var(--border)]/40 bg-[var(--surface)] px-3 py-1 flex items-center justify-between text-xs max-w-md mx-auto">
             <button
               type="button"
               onClick={toggleTajweed}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0 transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all ${
                 showTajweed
                   ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
                   : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] opacity-70'
               }`}
             >
-              <Sparkles className="w-3 h-3 text-emerald-400" />
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               <span>🎨 Tajweed</span>
             </button>
+            <div className="text-[11px] font-semibold text-[var(--text-secondary)] flex items-center gap-1">
+              <Info className="w-3 h-3 text-[var(--accent)]" />
+              <span>Tap words to study</span>
+            </div>
           </div>
         </div>
 
@@ -448,20 +488,36 @@ export default function QuranReader() {
                 setTempPageInput(mushafPageNumber);
                 setShowPageSlider(true);
               }}
-              className="flex-1 py-1.5 px-3 rounded-xl border flex items-center justify-center gap-2 transition-all hover:border-[var(--accent)] active:scale-98"
+              className="flex-1 py-1 px-2 rounded-xl border flex items-center justify-center gap-1.5 transition-all hover:border-[var(--accent)] active:scale-98"
               style={{
                 background: 'var(--surface-2)',
                 borderColor: 'var(--border)',
+                minWidth: 0,
               }}
             >
-              <Sliders className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <div className="text-center">
-                <span className="block text-xs font-bold text-[var(--text-primary)]">
+              <Sliders className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+              <div className="text-center min-w-0" style={{ whiteSpace: 'nowrap' }}>
+                <div
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    whiteSpace: 'nowrap',
+                    lineHeight: 1.2,
+                  }}
+                >
                   Page {mushafPageNumber} / 604
-                </span>
-                <span className="block text-[10px] text-[var(--text-secondary)]">
-                  Juz {currentJuz} • Tap to Jump
-                </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: '0.66rem',
+                    color: 'var(--text-secondary)',
+                    whiteSpace: 'nowrap',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Juz {currentJuz} • Jump ▴
+                </div>
               </div>
             </button>
 

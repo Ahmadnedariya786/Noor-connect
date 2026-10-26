@@ -371,7 +371,8 @@ export default function PrayerStats() {
                       return (
                         <div
                           key={c}
-                          className="text-[10px] font-bold text-[var(--accent-text)] text-left truncate"
+                          className="text-[10px] font-bold text-[var(--accent-text)] text-left select-none"
+                          style={{ overflow: 'visible', whiteSpace: 'nowrap' }}
                         >
                           {found ? found.label : ""}
                         </div>

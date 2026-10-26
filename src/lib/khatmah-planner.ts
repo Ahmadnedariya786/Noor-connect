@@ -78,6 +78,11 @@ export const saveKhatmahPlan = (plan: KhatmahPlan): void => {
 
     localStorage.setItem(QURAN_PROGRESS_KEY, JSON.stringify(progressPayload));
 
+    // Mark unique page in deduplicated read pages set
+    if (pagesRead >= 1 && pagesRead <= totalPages) {
+      quranFeaturesService.markPageRead(pagesRead);
+    }
+
     // Also update recitation progress in quranFeaturesService for overall progress sync
     quranFeaturesService.updateRecitationProgress(
       surahNum,
@@ -85,8 +90,8 @@ export const saveKhatmahPlan = (plan: KhatmahPlan): void => {
       surahInfo?.numberOfAyahs || 286,
       Math.round((pagesRead / totalPages) * (surahInfo?.numberOfAyahs || 286)),
       1,
-      pagesRead,
-      totalPages
+      1,
+      surahInfo?.numberOfAyahs || 286
     ).catch(() => {
       // Safe catch for features service sync
     });
@@ -232,23 +237,23 @@ export const prepareReaderRouteForPage = (targetPage: number): string => {
   const pageNum = Math.min(604, Math.max(1, targetPage));
   const surahNum = mushafService.getSurahForPage(pageNum) || 1;
   const surahInfo = quranService.getSurahInfo(surahNum);
-  const surahStartPage = mushafService.getPageForSurah(surahNum);
-  const pageInSurah = Math.max(1, pageNum - surahStartPage + 1);
 
-  // Store into quran-last-read so reader immediately opens on the exact page
+  // Store global 1..604 page into quran-last-read
   try {
     const lastReadData = {
       number: surahNum,
       name: surahInfo?.name || 'Al-Fatihah',
       englishName: surahInfo?.englishName || 'Al-Fatihah',
       arabicName: surahInfo?.name || 'الفاتحة',
-      page: pageInSurah,
-      totalPages: 10,
+      page: pageNum,
+      totalPages: 604,
     };
     localStorage.setItem('quran-last-read', JSON.stringify(lastReadData));
+    localStorage.setItem('quran-reader-last-page', String(pageNum));
+    localStorage.setItem('quran-reader-last-surah', String(surahNum));
   } catch {
     // Storage fallback
   }
 
-  return `/quran/surah-${surahNum}`;
+  return `/quran/surah-${surahNum}?page=${pageNum}`;
 };

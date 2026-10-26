@@ -11,6 +11,7 @@ export interface InteractiveWord {
   audio_url: string | null;
   char_type_name: 'word' | 'end';
   text_uthmani: string;
+  text_uthmani_tajweed?: string;
   line_number?: number;
   translation?: {
     text: string;
@@ -148,8 +149,8 @@ export function sanitizeTajweedHtml(rawHtml: string): string {
   // Clean out any end marks or outer scripts
   let cleaned = rawHtml.replace(/<span class=["']?end["']?>.*?<\/span>/gi, '');
 
-  // Replace <tajweed class=XYZ> with <span style="color: ...">
-  cleaned = cleaned.replace(/<tajweed class=["']?([a-z0-9_]+)["']?>([\s\S]*?)<\/tajweed>/gi, (_, cls, inner) => {
+  // Replace <tajweed class=XYZ> or <rule class=XYZ> with <span style="color: ...">
+  cleaned = cleaned.replace(/<(?:tajweed|rule) class=["']?([a-z0-9_-]+)["']?>([\s\S]*?)<\/(?:tajweed|rule)>/gi, (_, cls, inner) => {
     const color = TAJWEED_CLASS_COLOR_MAP[cls];
     if (color) {
       return `<span style="color: ${color}; font-weight: 600;" data-tajweed="${cls}">${inner}</span>`;
@@ -208,7 +209,7 @@ export async function fetchMushafPage(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?words=true&word_fields=text_uthmani,audio_url,line_number&per_page=50`;
+    const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?words=true&word_fields=text_uthmani,text_uthmani_tajweed,audio_url,line_number&per_page=50`;
     const tajweedUrl = `https://api.quran.com/api/v4/quran/verses/uthmani_tajweed?page_number=${pageNumber}`;
 
     const [versesRes, tajweedRes] = await Promise.allSettled([
@@ -234,6 +235,7 @@ export async function fetchMushafPage(
                 audio_url: w.audio_url || null,
                 char_type_name: w.char_type_name === 'end' ? 'end' : 'word',
                 text_uthmani: w.text_uthmani || w.text || '',
+                text_uthmani_tajweed: w.text_uthmani_tajweed || undefined,
                 line_number: w.line_number,
                 translation: w.translation ? { text: w.translation.text, language_name: 'english' } : undefined,
                 transliteration: w.transliteration ? { text: w.transliteration.text, language_name: 'english' } : undefined,

@@ -500,9 +500,12 @@ function PremiumDashboardInner({
                         boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen)',
                       }}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
+                      <div className="flex items-center justify-between gap-2 mb-2" style={{ whiteSpace: 'nowrap' }}>
+                        <div className="shrink-0">
+                          <h3
+                            className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]"
+                            style={{ whiteSpace: 'nowrap' }}
+                          >
                             {t('dailySalah') || 'Daily Salah'}
                           </h3>
                           <div
@@ -510,7 +513,7 @@ function PremiumDashboardInner({
                             style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
                           />
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0" style={{ whiteSpace: 'nowrap' }}>
                           <button
                             type="button"
                             onClick={() => navigate('/services/salah-tracker')}
@@ -519,10 +522,10 @@ function PremiumDashboardInner({
                               background: 'var(--accent-soft)',
                               color: 'var(--accent-text)',
                               borderColor: 'var(--accent)',
+                              whiteSpace: 'nowrap',
                             }}
                           >
-                            <span>Journal & Fasting</span>
-                            <ChevronRight className="w-3 h-3 text-[var(--accent)]" />
+                            <span>Journal →</span>
                           </button>
                           <div
                             className="px-2.5 py-1 rounded-full text-xs font-bold ltr-num"
@@ -533,6 +536,7 @@ function PremiumDashboardInner({
                               border: '1px solid var(--border)',
                               direction: 'ltr',
                               unicodeBidi: 'isolate',
+                              whiteSpace: 'nowrap',
                             }}
                           >
                             <span className="ltr-num" dir="ltr">{completedCount} / 5</span>
@@ -678,7 +682,7 @@ function PremiumDashboardInner({
                                   isFasted ? 'text-emerald-400' : 'text-[var(--text-secondary)]'
                                 }`}
                               >
-                                {isFasted ? '✓ Kept' : 'Log →'}
+                                {isFasted ? 'Fasted ✓' : 'Log Fast →'}
                               </span>
                             </button>
                           </div>

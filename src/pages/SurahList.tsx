@@ -4,7 +4,6 @@ import {
   Search,
   X,
   Sparkles,
-  History,
   ArrowRight,
   Star,
   BookOpen,
@@ -494,7 +493,14 @@ export default function SurahList() {
         {lastRead && (
           <div className="max-w-2xl mx-auto px-4 mb-2">
             <div
-              onClick={() => handleSurahClick(lastRead.number)}
+              onClick={() => {
+                if (lastRead.page) {
+                  const url = prepareReaderRouteForPage(lastRead.page);
+                  navigate(url, { replace: true });
+                } else {
+                  handleSurahClick(lastRead.number);
+                }
+              }}
               role="button"
               tabIndex={0}
               className="px-3.5 py-2 rounded-xl flex items-center justify-between gap-2 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] group border"
@@ -507,7 +513,7 @@ export default function SurahList() {
               <div className="flex items-center gap-2 min-w-0">
                 <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shrink-0" />
                 <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                  Continue: {lastRead.englishName || `Surah #${lastRead.number}`}
+                  Continue: {lastReadInfo?.englishName || lastRead.englishName || `Surah #${lastRead.number}`}
                 </span>
                 <span className="text-[11px] text-[var(--text-secondary)] shrink-0">
                   • Page {lastRead.page || 1}
@@ -540,18 +546,15 @@ export default function SurahList() {
                   <div className="p-1 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] shrink-0">
                     <BookOpen className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                    📖 Khatmah
+                  <span className="text-xs font-bold text-[var(--text-primary)]" style={{ whiteSpace: 'nowrap' }}>
+                    📖 Khatmah {isKhatmahExpanded ? "▲" : "▾"}
                   </span>
                 </div>
-                <span className="text-[10px] text-[var(--accent-text)] font-semibold shrink-0">
-                  {isKhatmahExpanded ? "Hide ▲" : "View ▼"}
-                </span>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] truncate">
                 {portionInfo && khatmahPlan
-                  ? `Page ${khatmahPlan.currentPage}/604 • Portion`
-                  : "Start 30-90d Plan"}
+                  ? `Page ${khatmahPlan.currentPage}/604`
+                  : "Start 30–90d Plan"}
               </p>
             </div>
 
@@ -904,58 +907,6 @@ export default function SurahList() {
             </div>
           )}
         </div>
-
-        {/* CONTINUE READING LUXURY CARD */}
-        {lastRead && (
-          <div className="max-w-2xl mx-auto px-4 mb-3.5">
-            <div
-              onClick={() => {
-                if ("vibrate" in navigator) navigator.vibrate(15);
-                startTransition(() => {
-                  navigate(`/quran/surah-${lastRead.number}`, { replace: true });
-                });
-              }}
-              className="w-full flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-[18px] border border-[var(--accent)] cursor-pointer active:scale-[0.98] transition-transform duration-150"
-              style={{
-                background: "linear-gradient(135deg, var(--surface), var(--surface-2))",
-                boxShadow: "0 4px 18px var(--accent-glow)",
-              }}
-            >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[var(--accent-soft)] border border-[var(--accent)] text-[var(--accent-text)]">
-                  <History className="w-5 h-5" />
-                </div>
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="text-[10px] font-bold text-[var(--accent-text)] uppercase tracking-wider mb-0.5">
-                    CONTINUE READING
-                  </p>
-                  <h3 className="text-sm sm:text-base font-bold text-[var(--text-primary)] truncate">
-                    Surah {lastReadInfo?.englishName || lastRead.name}
-                  </h3>
-                  <p className="text-[11px] text-[var(--text-secondary)] truncate">
-                    Surah #{lastRead.number}{lastRead.page ? ` • Page ${lastRead.page}` : ""}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-end gap-1.5 shrink-0 text-right">
-                <span className="font-arabic font-bold text-base sm:text-lg text-[var(--accent-text)] leading-tight select-none">
-                  {lastReadInfo?.name || lastRead.arabicName || ""}
-                </span>
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-tight shadow-sm select-none"
-                  style={{
-                    background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
-                    color: "var(--on-accent)",
-                  }}
-                >
-                  <span>Resume</span>
-                  <ArrowRight className="w-3 h-3" />
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* VERSE OF THE DAY CARD (On Surahs Tab) */}
         {activeMainTab === "surahs" && (
