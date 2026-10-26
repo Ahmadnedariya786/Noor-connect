@@ -9,6 +9,8 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  pathname?: string;
+  resetKeys?: any[];
 }
 
 interface State {
@@ -25,6 +27,26 @@ export class ErrorBoundary extends Component<Props, State> {
       error: null,
       errorInfo: null,
     };
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError) {
+      const pathnameChanged =
+        this.props.pathname !== undefined && prevProps.pathname !== this.props.pathname;
+      const resetKeysChanged =
+        this.props.resetKeys &&
+        prevProps.resetKeys &&
+        (this.props.resetKeys.length !== prevProps.resetKeys.length ||
+          this.props.resetKeys.some((val, idx) => val !== prevProps.resetKeys?.[idx]));
+
+      if (pathnameChanged || resetKeysChanged) {
+        this.setState({
+          hasError: false,
+          error: null,
+          errorInfo: null,
+        });
+      }
+    }
   }
 
   static getDerivedStateFromError(error: Error): State {

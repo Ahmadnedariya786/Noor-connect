@@ -68,8 +68,9 @@ try {
     const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
     const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, './');
 
+    const rootNames = Array.from(new Set([...(parsed.fileNames || []), ...allSrcFiles]));
     const program = ts.createProgram({
-      rootNames: parsed.fileNames,
+      rootNames,
       options: parsed.options,
     });
 
@@ -84,8 +85,8 @@ try {
       ];
 
       for (const diag of fileDiags) {
-        // Flag undefined variables (TS2304: Cannot find name), suggestions (TS2552), or missing modules (TS2307)
-        if (diag.code === 2304 || diag.code === 2552) {
+        // Flag undefined variables (TS2304: Cannot find name), suggestions (TS2552), missing modules (TS2307)
+        if (diag.code === 2304 || diag.code === 2552 || diag.code === 2307) {
           const pos = sourceFile.getLineAndCharacterOfPosition(diag.start);
           const msg = ts.flattenDiagnosticMessageText(diag.messageText, '\n');
           logError(fileName, pos.line + 1, `[TS${diag.code}] ${msg}`);

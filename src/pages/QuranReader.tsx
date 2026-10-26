@@ -57,6 +57,8 @@ export default function QuranReader() {
     if (surahName) {
       const m = surahName.match(/surah-(\d+)/);
       if (m) return parseInt(m[1], 10);
+      const direct = parseInt(surahName, 10);
+      if (!isNaN(direct) && direct >= 1 && direct <= 114) return direct;
     }
     const saved = localStorage.getItem(LS_LAST_SURAH);
     return saved ? parseInt(saved, 10) : 1;
@@ -147,14 +149,18 @@ export default function QuranReader() {
         }
       }
     } else if (surahName) {
+      let parsed = NaN;
       const m = surahName.match(/surah-(\d+)/);
       if (m) {
-        const parsed = parseInt(m[1], 10);
-        if (!isNaN(parsed) && parsed >= 1 && parsed <= 114 && parsed !== surahNum) {
-          setSurahNum(parsed);
-          const startP = SURAH_START_PAGES[parsed] || 1;
-          setMushafPageNumber(startP);
-        }
+        parsed = parseInt(m[1], 10);
+      } else {
+        const direct = parseInt(surahName, 10);
+        if (!isNaN(direct)) parsed = direct;
+      }
+      if (!isNaN(parsed) && parsed >= 1 && parsed <= 114 && parsed !== surahNum) {
+        setSurahNum(parsed);
+        const startP = SURAH_START_PAGES[parsed] || 1;
+        setMushafPageNumber(startP);
       }
     }
   }, [surahName, searchParams]);
@@ -308,6 +314,49 @@ export default function QuranReader() {
       isCancelled = true;
     };
   }, [isPlaying, currentSurah, currentAyah, autoFollow, mushafPageNumber, currentPageData]);
+
+  const loadBookmark = async () => {
+    try {
+      const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
+      const bookmarks = value ? JSON.parse(value) : [];
+      setIsBookmarked(Array.isArray(bookmarks) && bookmarks.includes(surahNum));
+    } catch {
+      try {
+        const bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
+        setIsBookmarked(Array.isArray(bookmarks) && bookmarks.includes(surahNum));
+      } catch {
+        setIsBookmarked(false);
+      }
+    }
+  };
+
+  const toggleBookmark = async () => {
+    try {
+      let bookmarks: number[] = [];
+      try {
+        const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
+        bookmarks = value ? JSON.parse(value) : [];
+      } catch {
+        bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
+      }
+      if (!Array.isArray(bookmarks)) bookmarks = [];
+
+      if (bookmarks.includes(surahNum)) {
+        bookmarks = bookmarks.filter((b: number) => b !== surahNum);
+      } else {
+        bookmarks.push(surahNum);
+      }
+
+      await Preferences.set({ key: BOOKMARKS_KEY, value: JSON.stringify(bookmarks) });
+      localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+      setIsBookmarked(bookmarks.includes(surahNum));
+      window.dispatchEvent(
+        new CustomEvent('noorconnect:quran-bookmarks-changed', { detail: bookmarks })
+      );
+    } catch (err) {
+      console.warn('Failed to toggle bookmark:', err);
+    }
+  };
 
   const handleFooterPlayToggle = () => {
     if (isPlaying) {
@@ -554,7 +603,13 @@ export default function QuranReader() {
                 flex: 1,
               }}
             >
-              <span>Tap word: Meaning • Tap ﴿١﴾: Tafsir</span>
+              <span>
+                Tap word: Meaning • Tap{' '}
+                <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
+                  ﴿١﴾
+                </span>
+                : Tafsir
+              </span>
             </div>
           </div>
         </div>

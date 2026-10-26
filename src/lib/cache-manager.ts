@@ -154,6 +154,8 @@ export function isTemporaryCacheKey(key: string): boolean {
 export interface StorageBreakdown {
   temporaryBytes: number;
   temporaryFormatted: string;
+  tempFormatted: string;
+  tempCacheFormatted: string;
   protectedBytes: number;
   protectedFormatted: string;
   ebooksBytes: number;
@@ -225,10 +227,13 @@ export async function getStorageBreakdown(): Promise<StorageBreakdown> {
 
   const temporaryBytes = tempLocalStorageBytes + ebooksBytes + cacheStorageBytes;
   const totalStorageBytes = temporaryBytes + protectedBytes;
+  const formattedTemp = formatFileSize(temporaryBytes);
 
   return {
     temporaryBytes,
-    temporaryFormatted: formatFileSize(temporaryBytes),
+    temporaryFormatted: formattedTemp,
+    tempFormatted: formattedTemp,
+    tempCacheFormatted: formattedTemp,
     protectedBytes,
     protectedFormatted: formatFileSize(protectedBytes),
     ebooksBytes,
@@ -245,6 +250,7 @@ export async function getStorageBreakdown(): Promise<StorageBreakdown> {
  */
 export async function clearTemporaryCache(): Promise<{
   freedBytes: number;
+  freedFormatted: string;
   formattedFreed: string;
   breakdown: StorageBreakdown;
 }> {
@@ -310,7 +316,7 @@ export async function clearTemporaryCache(): Promise<{
     }
   }
 
-  const formattedFreed = formatFileSize(freedBytes > 0 ? freedBytes : 1024 * 1024 * 1.3);
+  const freedFormatted = freedBytes > 0 ? formatFileSize(freedBytes) : '0 B';
   const newBreakdown = await getStorageBreakdown();
 
   // 5. Notify the rest of the app (e.g. Profile.tsx, Settings.tsx)
@@ -324,7 +330,8 @@ export async function clearTemporaryCache(): Promise<{
 
   return {
     freedBytes,
-    formattedFreed,
+    freedFormatted,
+    formattedFreed: freedFormatted,
     breakdown: newBreakdown,
   };
 }

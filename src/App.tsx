@@ -403,6 +403,11 @@ function AppRoutes() {
   );
 }
 
+function RoutedErrorBoundary({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  return <ErrorBoundary pathname={location.pathname}>{children}</ErrorBoundary>;
+}
+
 function AppContent({ splashActive }: { splashActive?: boolean }) {
   const { animationEnabled, greetingEnabled } = useSettings();
   const tier = useAnimationTier();
@@ -428,12 +433,12 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
               </div>
 
               <LayoutManager>
-                <ErrorBoundary>
+                <RoutedErrorBoundary>
                   <HardwareBackButtonHandler />
                   <RouteBreadcrumbTracker />
                   <DeepLinkListener />
                   <AppRoutes />
-                </ErrorBoundary>
+                </RoutedErrorBoundary>
               </LayoutManager>
             </div>
 

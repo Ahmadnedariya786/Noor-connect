@@ -103,7 +103,8 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
   if (!isOpen) return null;
 
   const handleOpenInReader = () => {
-    handleClose();
+    closePlayer();
+    propOnClose?.();
     const ayahPage = getPageForSurahAndAyah(currentSurah, currentAyah);
     navigate(`/quran/surah-${currentSurah}?page=${ayahPage}&ayah=${currentAyah}`);
   };
@@ -272,15 +273,23 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
               <span style={{ color: 'var(--accent-text)' }}>Ayah {currentAyah}</span>
               <span style={{ color: 'var(--text-secondary)' }}>Total: {totalAyahs}</span>
             </div>
-            <Slider
-              value={[currentAyah]}
-              min={1}
-              max={totalAyahs}
-              step={1}
-              onValueChange={([val]) => seekAyah(val)}
-              className="w-full cursor-pointer"
-              style={{ accentColor: 'var(--accent)' }}
-            />
+            <div className="relative flex items-center w-full h-5">
+              <input
+                type="range"
+                min={1}
+                max={Math.max(1, totalAyahs)}
+                step={1}
+                value={currentAyah}
+                onChange={(e) => seekAyah(parseInt(e.target.value, 10))}
+                className="tilawah-ayah-slider w-full h-2 rounded-full cursor-pointer appearance-none outline-none"
+                style={{
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${((currentAyah - 1) / Math.max(1, totalAyahs - 1)) * 100}%, var(--surface-2) ${((currentAyah - 1) / Math.max(1, totalAyahs - 1)) * 100}%, var(--surface-2) 100%)`,
+                }}
+                aria-label={`Ayah ${currentAyah} of ${totalAyahs}`}
+              />
+            </div>
           </div>
 
           {/* Transport Controls (⏮ Prev • ▶/⏸ Jewel • ⏭ Next) */}

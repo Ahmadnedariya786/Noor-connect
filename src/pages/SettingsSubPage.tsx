@@ -145,7 +145,7 @@ const SettingsSubPage: React.FC = () => {
   const { clockStyle } = useClockStyle();
   const currentClockStyleName = CLOCK_STYLES.find(s => s.id === clockStyle)?.name || 'Digital Bold';
   const { currentTheme, theme } = useAppTheme();
-  const currentThemeName = theme?.name || THEMES[currentTheme]?.name || 'Oxford Gold';
+  const currentThemeName = theme?.name || 'Oxford Gold';
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
@@ -568,9 +568,13 @@ const SettingsSubPage: React.FC = () => {
     const updated = await getStorageBreakdown();
     setStorageBreakdown(updated);
     setStorageStats({ totalBooks: 0, totalSize: 0 });
+    const description =
+      res.freedBytes > 0
+        ? `Cleared ${res.freedFormatted} of temporary cache. Personal data is safe.`
+        : 'Temporary cache is already clean (0 B). Personal data is safe.';
     toast({
       title: 'Temporary Cache Cleared',
-      description: `Cleared ${res.freedFormatted} of temporary cache. Personal data is safe.`,
+      description,
     });
     setShowClearCacheDialog(false);
   };
@@ -578,7 +582,7 @@ const SettingsSubPage: React.FC = () => {
   const handleClearQuranDownloads = async () => {
     try {
       await downloadManager.clearAll();
-      setQuranDownloads({ count: 0, size: 0 });
+      setQuranDownloads({ count: 0, size: 0, reciters: 0 });
       toast({ title: 'Offline surahs deleted', description: 'All downloaded Quran audio has been removed from this device.' });
     } catch {
       toast({ title: 'Could not delete downloads', variant: 'destructive' });
@@ -1144,7 +1148,7 @@ const SettingsSubPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold">
                 <span className="text-[var(--text-primary)]">Temporary Mushaf, Tafsir & API Cache</span>
                 <span className="text-[var(--accent)] text-xs sm:text-sm font-bold">
-                  {storageBreakdown ? storageBreakdown.tempFormatted : '0 B'}
+                  {storageBreakdown ? `${storageBreakdown.temporaryFormatted || storageBreakdown.tempFormatted || '0 B'} • Safe to clear anytime` : '0 B • Safe to clear anytime'}
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm font-semibold border-t border-[var(--border)] pt-2">

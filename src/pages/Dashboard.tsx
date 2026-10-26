@@ -27,7 +27,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { formatTime } from "@/utils/formatTime";
 import { useLocationState } from "@/lib/location-state";
 import { CURRENT_APP_VERSION } from "@/lib/constants";
-import { AladhanAPI } from "@/lib/aladhan-api";
+import { AladhanAPI, type AladhanPrayerTime } from "@/lib/aladhan-api";
 import { type PrayerTime } from "@/lib/local-notifications";
 import { useToast } from "@/hooks/use-toast";
 import { LocationCardSkeleton, LoadingSpinner } from "@/components/LoadingSkeleton";

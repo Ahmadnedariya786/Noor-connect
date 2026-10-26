@@ -173,6 +173,14 @@ export default function SurahList() {
     }
   });
 
+  useEffect(() => {
+    const handleDismissed = () => {
+      setShowWelcomeBanner(false);
+    };
+    window.addEventListener('noorconnect:quran-guide-dismissed', handleDismissed);
+    return () => window.removeEventListener('noorconnect:quran-guide-dismissed', handleDismissed);
+  }, []);
+
   // # Jump Modal State
   const [showJumpModal, setShowJumpModal] = useState(false);
   const [jumpCategory, setJumpCategory] = useState<"page" | "juz" | "surah">("page");
@@ -529,7 +537,7 @@ export default function SurahList() {
                     Explore New Quran Tools
                   </h4>
                   <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-1">
-                    Tap words for meaning, use Hifz loops, color Tajweed & Smart Khatmah
+                    Word meaning, Hifz & Tajweed
                   </p>
                 </div>
               </div>

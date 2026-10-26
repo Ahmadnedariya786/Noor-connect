@@ -11,8 +11,8 @@ interface GuideFeature {
   id: string;
   icon: React.ReactNode;
   badge: string;
-  title: string;
-  description: string;
+  title: React.ReactNode;
+  description: React.ReactNode;
   tip: string;
 }
 
@@ -35,6 +35,7 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
   const handleDismiss = () => {
     try {
       localStorage.setItem('noor_quran_guide_dismissed_v1', 'true');
+      window.dispatchEvent(new CustomEvent('noorconnect:quran-guide-dismissed'));
     } catch {
       // Ignore quota error in private mode
     }
@@ -54,8 +55,23 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
       id: 'tafsir',
       icon: <BookOpen size={20} style={{ color: 'var(--accent)' }} />,
       badge: 'Tafsir & Translations',
-      title: '﴿١﴾ Tafsir & Multi-Translation',
-      description: 'Tap any verse number medallion ﴿١﴾ or the top 📚 Study button to open comprehensive verse study.',
+      title: (
+        <span>
+          <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
+            ﴿١﴾
+          </span>{' '}
+          Tafsir & Multi-Translation
+        </span>
+      ),
+      description: (
+        <span>
+          Tap any verse number medallion{' '}
+          <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
+            ﴿١﴾
+          </span>{' '}
+          or the top 📚 Study button to open comprehensive verse study.
+        </span>
+      ),
       tip: "Switch between English (Sahih Int'l, Pickthall), Urdu & Hindi, plus Ibn Kathir & Ma'arif al-Qur'an Tafsirs.",
     },
     {

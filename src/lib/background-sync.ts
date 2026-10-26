@@ -1,5 +1,4 @@
 import { Capacitor } from '@capacitor/core';
-import { BackgroundRunner } from '@capacitor/background-runner';
 import { offlineSyncService } from './offline-sync-service';
 import { offlineQuranStorage } from './offline-quran-storage';
 
@@ -67,7 +66,7 @@ export class BackgroundSyncManager {
     // Check if BackgroundRunner plugin is available
     try {
       // Use a more compatible approach to check plugin availability
-      return typeof BackgroundRunner !== 'undefined';
+      return typeof (Capacitor as any).Plugins?.BackgroundRunner !== 'undefined';
     } catch {
       return false;
     }

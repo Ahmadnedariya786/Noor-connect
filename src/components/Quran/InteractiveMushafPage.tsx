@@ -50,9 +50,22 @@ export function InteractiveMushafPage({
 
   const wordAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeVerseRef = useRef<HTMLSpanElement | null>(null);
+  const wasTilawahPlayingRef = useRef(false);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tilawah live recitation sync
-  const { currentSurah, currentAyah, isPlaying } = useTilawah();
+  const { currentSurah, currentAyah, isPlaying, pause: pauseTilawah, resume: resumeTilawah } = useTilawah();
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) {
+        clearTimeout(resumeTimerRef.current);
+      }
+      if (wordAudioRef.current) {
+        wordAudioRef.current.pause();
+      }
+    };
+  }, []);
 
   // Load interactive page data & prefetch next page
   useEffect(() => {
@@ -134,6 +147,15 @@ export function InteractiveMushafPage({
     if (wordAudioRef.current) {
       wordAudioRef.current.pause();
     }
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+
+    if (isPlaying) {
+      wasTilawahPlayingRef.current = true;
+      pauseTilawah();
+    }
 
     const fullUrl = audioUrl.startsWith('http')
       ? audioUrl
@@ -143,9 +165,20 @@ export function InteractiveMushafPage({
     wordAudioRef.current = audio;
     setPlayingWordAudio(true);
 
-    audio.onended = () => setPlayingWordAudio(false);
-    audio.onerror = () => setPlayingWordAudio(false);
-    audio.play().catch(() => setPlayingWordAudio(false));
+    const onAudioDone = () => {
+      setPlayingWordAudio(false);
+      if (wasTilawahPlayingRef.current) {
+        wasTilawahPlayingRef.current = false;
+        resumeTimerRef.current = setTimeout(() => {
+          resumeTilawah();
+          resumeTimerRef.current = null;
+        }, 250);
+      }
+    };
+
+    audio.onended = onAudioDone;
+    audio.onerror = onAudioDone;
+    audio.play().catch(() => onAudioDone());
   };
 
   // If Classic Scan mode is selected, or if fallback failed to load verses, render classic scan
