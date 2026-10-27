@@ -40,11 +40,20 @@ const SERVICE_CATEGORIES: Record<string, string> = {
 };
 
 export default function Services() {
-    const { t } = useLanguage();
+    const { t, ui, isRTL } = useLanguage();
     const navigate = useNavigate();
     const { isEidAlFitr, isEidAlAdha, islamicInfo, isLoading } = useIslamicCalendar();
     const { animationEnabled } = useSettings();
     const [searchQuery, setSearchQuery] = useState("");
+
+    const categoryNames: Record<string, string> = useMemo(() => ({
+        Worship: ui.catWorship,
+        Audio: ui.catAudio,
+        Live: ui.catLive,
+        Knowledge: ui.catKnowledge,
+        Wellness: ui.catWellness,
+        Tools: ui.catTools,
+    }), [ui]);
 
     const shouldShowFitranaCalculator = (() => {
         if (isLoading || !islamicInfo) return false;
@@ -69,46 +78,45 @@ export default function Services() {
 
     const showNoorCycle = shouldShowMenstrualFeatures();
 
-    const baseServices = [
-        { title: "Salah Tracker", subtitle: "Worship & fasting journal", path: "/services/salah-tracker", icon: CheckCircle },
-        { title: "Qaza Tracker", subtitle: "Missed prayer makeup", path: "/qaza", icon: AlertTriangle },
-        { title: "Quran Audio", subtitle: "289 reciters & HD audio", path: "/quran-audio", icon: Headphones },
-        { title: "Nasheeds", subtitle: "400 vocals-only tracks", path: "/nasheeds", icon: Music },
-        { title: "Live Mecca", subtitle: "24/7 Makkah & Madinah", path: "/live", icon: Tv },
-        { title: "Hadith", subtitle: "16 authentic books", path: "/hadith/collections", icon: BookText },
-        { title: t('seerah') || "Seerah", subtitle: "Prophetic biography", path: "/seerah", icon: BookOpen },
-        { title: t('qisas') || "Prophets", subtitle: "25 Quranic stories", path: "/qisas", icon: Users },
-        { title: "Radio", subtitle: "24/7 live stations", path: "/quran-radio", icon: Radio },
-        { title: "Habits", subtitle: "Daily Sunnah deeds", path: "/habit-tracker", icon: Target },
-        { title: "Duas", subtitle: "80 authentic duas", path: "/duas", icon: Heart },
-        ...(showNoorCycle ? [{ title: "Noor Cycle", subtitle: "Menstrual & worship guidance", path: "/noor-cycle", icon: HeartPulse as React.ComponentType<any> }] : []),
-        { title: "Remedies", subtitle: "Mood-based healing", path: "/islamic-remedies", icon: HeartHandshake },
-        { title: t('tasbih') || "Tasbih", subtitle: "Tactile dhikr counter", path: "/tasbeeh", icon: Calculator },
-        { title: "Names", subtitle: "99 Asma'ul Husna", path: "/names-of-allah", icon: Star },
-        { title: "Quiz", subtitle: "Islamic knowledge quiz", path: "/quiz", icon: Trophy },
-        { title: "Zakat", subtitle: "Nisab & wealth calc", path: "/zakat", icon: Coins },
-        { title: "Calendar", subtitle: "Hijri dates & events", path: "/calendar", icon: Calendar },
-        { title: "E-Books", subtitle: "Islamic book library", path: "/ebooks", icon: Library },
-        { title: "Tafsir", subtitle: "Ayah commentary", path: "/tafsir", icon: BookOpen },
-    ];
+    const baseServices = useMemo(() => [
+        { title: ui.salahTracker, subtitle: ui.salahTrackerSub, path: "/services/salah-tracker", icon: CheckCircle },
+        { title: ui.qazaTracker, subtitle: ui.qazaTrackerSub, path: "/qaza", icon: AlertTriangle },
+        { title: ui.quranAudio, subtitle: ui.quranAudioSub, path: "/quran-audio", icon: Headphones },
+        { title: ui.nasheeds, subtitle: ui.nasheedsSub, path: "/nasheeds", icon: Music },
+        { title: ui.liveMecca, subtitle: ui.liveMeccaSub, path: "/live", icon: Tv },
+        { title: ui.hadith, subtitle: ui.hadithSub, path: "/hadith/collections", icon: BookText },
+        { title: ui.seerah, subtitle: ui.seerahSub, path: "/seerah", icon: BookOpen },
+        { title: ui.prophets, subtitle: ui.prophetsSub, path: "/qisas", icon: Users },
+        { title: ui.radio, subtitle: ui.radioSub, path: "/quran-radio", icon: Radio },
+        { title: ui.habits, subtitle: ui.habitsSub, path: "/habit-tracker", icon: Target },
+        { title: ui.duas, subtitle: ui.duasSub, path: "/duas", icon: Heart },
+        ...(showNoorCycle ? [{ title: ui.noorCycle, subtitle: ui.noorCycleSub, path: "/noor-cycle", icon: HeartPulse as React.ComponentType<any> }] : []),
+        { title: ui.remedies, subtitle: ui.remediesSub, path: "/islamic-remedies", icon: HeartHandshake },
+        { title: ui.tasbih, subtitle: ui.tasbihSub, path: "/tasbeeh", icon: Calculator },
+        { title: ui.namesOfAllah, subtitle: ui.namesOfAllahSub, path: "/names-of-allah", icon: Star },
+        { title: ui.quiz, subtitle: ui.quizSub, path: "/quiz", icon: Trophy },
+        { title: ui.zakat, subtitle: ui.zakatSub, path: "/zakat", icon: Coins },
+        { title: ui.calendar, subtitle: ui.calendarSub, path: "/calendar", icon: Calendar },
+        { title: ui.ebooks, subtitle: ui.ebooksSub, path: "/ebooks", icon: Library },
+        { title: ui.tafsir, subtitle: ui.tafsirSub, path: "/tafsir", icon: BookOpen },
+    ], [ui, showNoorCycle]);
 
-    const conditionalServices = [];
-    if (shouldShowFitranaCalculator) {
-        conditionalServices.push(
-            { title: "Fitrana Calc", subtitle: "Ramadan charity calculation", path: "/fitrana-calculator", icon: Calculator }
-        );
-    }
-    if (shouldShowEidChecklist) {
-        conditionalServices.push(
-            { title: "Eid Checklist", subtitle: "Sunnahs & preparation guide", path: "/eid-checklist", icon: Moon }
-        );
-    }
+    const conditionalServices = useMemo(() => {
+        const list = [];
+        if (shouldShowFitranaCalculator) {
+            list.push({ title: ui.fitranaCalc, subtitle: ui.fitranaCalcSub, path: "/fitrana-calculator", icon: Calculator });
+        }
+        if (shouldShowEidChecklist) {
+            list.push({ title: ui.eidChecklist, subtitle: ui.eidChecklistSub, path: "/eid-checklist", icon: Moon });
+        }
+        return list;
+    }, [shouldShowFitranaCalculator, shouldShowEidChecklist, ui]);
 
-    const allServices = [
+    const allServices = useMemo(() => [
         ...baseServices.slice(0, 6),
         ...conditionalServices,
         ...baseServices.slice(6)
-    ];
+    ], [baseServices, conditionalServices]);
 
     const filteredServices = useMemo(() => {
         if (!searchQuery.trim()) return allServices;
@@ -124,7 +132,7 @@ export default function Services() {
         <PageTransition>
             <div className="min-h-screen bg-[var(--bg-base)] pb-36 transition-colors duration-300">
                 {/* No back button on root bottom-nav tab */}
-                <AppBar title={t("services") || "Services"} showBack={false} />
+                <AppBar title={ui.services} showBack={false} />
 
                 {/* Premium Featured Header Card */}
                 <div className="px-4 sm:px-5 pt-4 mb-4">
@@ -153,13 +161,13 @@ export default function Services() {
                         <div className="relative z-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] backdrop-blur-md border border-[var(--border)] mb-3">
                                 <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                                <span className="text-[var(--accent-text)] text-[11px] font-bold uppercase tracking-[0.18em]">Islamic Hub</span>
+                                <span className="text-[var(--accent-text)] text-[11px] font-bold uppercase tracking-[0.18em]">{ui.islamicHub}</span>
                             </div>
                             <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] leading-tight tracking-tight mb-1.5 font-serif italic">
-                                Discover Resources
+                                {ui.discoverResources}
                             </h2>
                             <p className="text-[var(--text-secondary)] text-xs sm:text-sm font-medium max-w-[90%] leading-relaxed">
-                                Complete spiritual companion tools for prayer, knowledge, and daily Sunnah.
+                                {ui.servicesSubtitle}
                             </p>
                         </div>
                     </motion.div>
@@ -173,7 +181,7 @@ export default function Services() {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search 17 Islamic tools..."
+                            placeholder={ui.searchServices}
                             className="w-full h-11 pl-10 pr-9 rounded-xl text-xs sm:text-sm font-medium transition-all outline-none"
                             style={{
                                 background: 'var(--surface)',
@@ -198,7 +206,8 @@ export default function Services() {
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <AnimatePresence mode="popLayout">
                             {filteredServices.map((item, idx) => {
-                                const category = SERVICE_CATEGORIES[item.path] || "Tools";
+                                const rawCategory = SERVICE_CATEGORIES[item.path] || "Tools";
+                                const category = categoryNames[rawCategory] || rawCategory;
                                 return (
                                     <motion.button
                                         key={item.path}
@@ -312,22 +321,18 @@ export default function Services() {
 
                                         {/* Bottom Row: Explore → Micro-Link */}
                                         <div
-                                            className="ltr-num"
-                                            dir="ltr"
                                             style={{
                                                 fontSize: '0.66rem',
                                                 fontWeight: 600,
                                                 color: 'var(--accent-text)',
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
-                                                gap: '3px',
+                                                gap: '4px',
                                                 marginTop: '2px',
-                                                direction: 'ltr',
-                                                unicodeBidi: 'isolate',
                                             }}
                                         >
-                                            <span>Explore</span>
-                                            <span style={{ transition: 'transform 0.15s ease' }} className="group-hover:translate-x-0.5">→</span>
+                                            <span>{ui.explore}</span>
+                                            <span style={{ transition: 'transform 0.15s ease' }} className="group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5">{isRTL ? '←' : '→'}</span>
                                         </div>
 
                                         {/* Subtle Ambient Sheen */}

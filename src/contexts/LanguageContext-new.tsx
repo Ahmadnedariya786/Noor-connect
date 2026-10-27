@@ -14,11 +14,14 @@ import { Preferences } from '@capacitor/preferences';
 
 const PREF_KEY = 'app-language';
 
+import { getAppUIStrings, type AppUIStrings } from '@/lib/i18n-ui';
+
 interface LanguageContextType {
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
   t: (key: string) => string;
   isRTL: boolean;
+  ui: AppUIStrings;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -30,8 +33,8 @@ interface LanguageProviderProps {
 // ─── Side-effects applied whenever the language changes ───
 
 function applyLanguageSideEffects(lang: LanguageCode) {
-  const config = LANGUAGES[lang];
-  const rtl = config.dir === 'rtl';
+  const config = LANGUAGES[lang] || LANGUAGES.en;
+  const rtl = lang === 'ar' || lang === 'ur' || config.dir === 'rtl';
   const dir = rtl ? 'rtl' : 'ltr';
 
   // 1. Force HTML dir + lang attributes (critical for RTL layouts)
@@ -49,18 +52,18 @@ function applyLanguageSideEffects(lang: LanguageCode) {
   root.setProperty('--lang-font-size-adjust', config.typography.fontSizeAdjust);
 
   // 4. Apply a local Urdu-friendly font stack via CSS variable
-  // Using setProperty to set a CSS custom property is preferred over direct style.fontFamily
   if (lang === 'ur') {
     root.setProperty('--lang-font-family', "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif");
   } else {
-    root.setProperty('--lang-font-family', 'var(--font-sans)'); // Reset to default
+    root.setProperty('--lang-font-family', 'var(--font-sans)');
   }
 }
 
-// ─── Persistence: Capacitor Preferences is the ONLY source of truth ───
+// ─── Persistence: Synchronous localStorage + Capacitor Preferences ───
 
 async function persistLanguage(lang: LanguageCode) {
   try {
+    localStorage.setItem(PREF_KEY, lang);
     await Preferences.set({ key: PREF_KEY, value: lang });
   } catch (e) {
     console.warn('Failed to save language to Preferences:', e);
@@ -69,6 +72,10 @@ async function persistLanguage(lang: LanguageCode) {
 
 async function loadSavedLanguageCode(): Promise<LanguageCode | null> {
   try {
+    const localSaved = localStorage.getItem(PREF_KEY);
+    if (localSaved && SUPPORTED_CODES.includes(localSaved as LanguageCode)) {
+      return localSaved as LanguageCode;
+    }
     const { value } = await Preferences.get({ key: PREF_KEY });
     if (value && SUPPORTED_CODES.includes(value as LanguageCode)) {
       return value as LanguageCode;
@@ -79,14 +86,13 @@ async function loadSavedLanguageCode(): Promise<LanguageCode | null> {
   return null;
 }
 
-   // ─── System-first detection via @capacitor/device ───
+// ─── System-first detection via @capacitor/device ───
 
-  async function detectSystemLanguage(): Promise<LanguageCode> {
-    if (isNativePlatform()) {
+async function detectSystemLanguage(): Promise<LanguageCode> {
+  if (isNativePlatform()) {
     try {
       const { Device } = await import('@capacitor/device');
       const info = await Device.getLanguageCode();
-      // info.value is e.g. "en-US" or "ar" — take the first 2 chars
       const twoLetter = (info.value || '').slice(0, 2).toLowerCase();
       if (SUPPORTED_CODES.includes(twoLetter as LanguageCode)) {
         return twoLetter as LanguageCode;
@@ -104,53 +110,59 @@ async function loadSavedLanguageCode(): Promise<LanguageCode | null> {
   return DEFAULT_LANGUAGE;
 }
 
-   // ─── "Dumb Widget" bridge: send only the strings the widget needs ───
+// ─── "Dumb Widget" bridge: send only the strings the widget needs ───
 
-    async function sendWidgetStrings(tFn: (key: string) => string) {
-      if (!isNativePlatform()) return;
-      try {
-        const { registerPlugin, Capacitor } = await import('@capacitor/core');
-        if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('WidgetPlugin')) {
-          return;
-        }
-
-        // Build a tiny JSON payload of only the widget-relevant strings
-        const payload: Record<string, string> = {};
-        for (const key of WIDGET_STRING_KEYS) {
-          payload[key] = tFn(key);
-        }
-
-        const WidgetPlugin = registerPlugin<{
-          setWidgetStrings: (opts: { strings: string }) => Promise<{ status: string }>;
-        }>('WidgetPlugin');
-        await WidgetPlugin.setWidgetStrings({ strings: JSON.stringify(payload) });
-      } catch (e: any) {
-        // WidgetPlugin optional or not registered on this build
-        const msg = String(e?.message || e || '').toLowerCase();
-        if (!msg.includes('not implemented') && !msg.includes('unimplemented')) {
-          console.warn('Failed to send widget strings:', e);
-        }
-      }
+async function sendWidgetStrings(tFn: (key: string) => string) {
+  if (!isNativePlatform()) return;
+  try {
+    const { registerPlugin, Capacitor } = await import('@capacitor/core');
+    if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('WidgetPlugin')) {
+      return;
     }
+
+    const payload: Record<string, string> = {};
+    for (const key of WIDGET_STRING_KEYS) {
+      payload[key] = tFn(key);
+    }
+
+    const WidgetPlugin = registerPlugin<{
+      setWidgetStrings: (opts: { strings: string }) => Promise<{ status: string }>;
+    }>('WidgetPlugin');
+    await WidgetPlugin.setWidgetStrings({ strings: JSON.stringify(payload) });
+  } catch (e: any) {
+    const msg = String(e?.message || e || '').toLowerCase();
+    if (!msg.includes('not implemented') && !msg.includes('unimplemented')) {
+      console.warn('Failed to send widget strings:', e);
+    }
+  }
+}
 
 // ─── Provider ────────────────────────────────────────────
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
   const { t } = useTranslation(undefined, { i18n });
-  const [language, setLanguageState] = useState<LanguageCode>(DEFAULT_LANGUAGE);
+  const [language, setLanguageState] = useState<LanguageCode>(() => {
+    try {
+      const saved = localStorage.getItem(PREF_KEY);
+      if (saved && SUPPORTED_CODES.includes(saved as LanguageCode)) {
+        return saved as LanguageCode;
+      }
+    } catch {
+      // Fallback to default language if localStorage read fails
+    }
+    return DEFAULT_LANGUAGE;
+  });
 
-  const isLanguageRTL = checkRTL(language);
+  const isLanguageRTL = language === 'ar' || language === 'ur' || checkRTL(language);
+  const ui = useMemo(() => getAppUIStrings(language), [language]);
 
   // ── Load saved language on mount ──
   useEffect(() => {
     const bootstrap = async () => {
-      // 1. Check Capacitor Preferences (sole source of truth)
       let lang = await loadSavedLanguageCode();
 
-      // 2. First boot — no preference saved yet → detect from system
       if (!lang) {
         lang = await detectSystemLanguage();
-        // Persist so we don't re-detect every launch
         await persistLanguage(lang);
       }
 
@@ -158,7 +170,6 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       i18n.changeLanguage(lang);
       applyLanguageSideEffects(lang);
 
-      // Also push strings to the widget on boot
       sendWidgetStrings(i18n.t.bind(i18n));
     };
 
@@ -173,13 +184,20 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   // ── Public setter ──
   const setLanguage = useCallback(
     (lang: LanguageCode) => {
+      try {
+        localStorage.setItem(PREF_KEY, lang);
+      } catch {
+        // Safe catch for storage quota or privacy mode write error
+      }
+      document.documentElement.dir = (lang === 'ar' || lang === 'ur') ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
       setLanguageState(lang);
       i18n.changeLanguage(lang);
       applyLanguageSideEffects(lang);
       persistLanguage(lang);
 
-      // After i18next switches, send updated strings to native widget
-      // Use a microtask so i18n.t() returns the new language's values
+      window.dispatchEvent(new CustomEvent('noor:language-changed', { detail: lang }));
+
       queueMicrotask(() => {
         sendWidgetStrings(i18n.t.bind(i18n));
       });
@@ -187,13 +205,14 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     [i18n]
   );
 
-  // Memoize context value to prevent unnecessary re-renders
+  // Memoize context value to prevent unnecessary re-renders while updating on language change
   const value = useMemo(() => ({
     language,
     setLanguage,
     t,
     isRTL: isLanguageRTL,
-  }), [language, setLanguage, isLanguageRTL]);
+    ui,
+  }), [language, setLanguage, t, isLanguageRTL, ui]);
 
   return (
     <LanguageContext.Provider value={value}>
@@ -212,4 +231,4 @@ export function useLanguage() {
 
 // Re-export for convenience
 export type { LanguageCode };
-export { LANGUAGES, SUPPORTED_CODES };
+export { LANGUAGES, SUPPORTED_CODES, getAppUIStrings };

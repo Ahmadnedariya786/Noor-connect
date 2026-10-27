@@ -30,7 +30,7 @@ interface QuranProgressWidgetProps {
 
 export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const [progress, setProgress] = useState<OverallProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -157,7 +157,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-between text-[var(--text-primary)]">
           <span className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-[var(--accent-text)]" />
-            Quran Progress
+            {ui.quranProgress}
           </span>
           <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest">
             <achievement.icon className="w-3 h-3" />
@@ -254,7 +254,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
                 {Math.round(pct)}%
               </span>
               <span className="text-[9px] uppercase font-bold tracking-widest text-[var(--text-secondary)] mt-0.5">
-                Completed
+                {ui.completed}
               </span>
             </div>
           </div>
@@ -263,19 +263,19 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         {/* 2 Recessed Stat Tiles */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="p-3 rounded-[14px] bg-[var(--surface-2)] border border-[var(--border)] text-center">
-            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--accent-text)] ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
-              <span className="ltr-num" dir="ltr">{progress.completedSurahs}</span> <span className="text-[11px] text-[var(--text-secondary)] font-normal ltr-num" dir="ltr">/ {progress.totalSurahs}</span>
+            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--accent-text)]">
+              <span dir="ltr" className="inline-block tabular-nums font-mono">{progress.completedSurahs} / {progress.totalSurahs}</span>
             </p>
             <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)] mt-0.5">
-              Surahs Completed
+              {ui.surahsCompleted}
             </p>
           </div>
           <div className="p-3 rounded-[14px] bg-[var(--surface-2)] border border-[var(--border)] text-center">
-            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--text-primary)] ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
-              <span className="ltr-num" dir="ltr">{progress.pagesRead}</span> <span className="text-[11px] text-[var(--text-secondary)] font-normal ltr-num" dir="ltr">/ {progress.totalPages}</span>
+            <p className="text-base sm:text-lg font-black tabular-nums text-[var(--text-primary)]">
+              <span dir="ltr" className="inline-block tabular-nums font-mono">{progress.pagesRead} / {progress.totalPages}</span>
             </p>
             <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)] mt-0.5">
-              Pages Read
+              {ui.pagesRead}
             </p>
           </div>
         </div>
@@ -293,7 +293,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)] text-center">
-            <span className="ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>{progress.completedAyahs?.toLocaleString() || 0} / {progress.totalAyahs?.toLocaleString() || 6236}</span> TOTAL AYAHS
+            <span dir="ltr" className="inline-block tabular-nums font-mono">{progress.completedAyahs?.toLocaleString() || 0} / {progress.totalAyahs?.toLocaleString() || 6236}</span> {ui.totalAyahs}
           </p>
         </div>
 
@@ -338,7 +338,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
                 color: 'var(--on-accent)',
               }}
             />
-            Continue Reading
+            {ui.continueReading}
           </button>
           <button
             type="button"
@@ -374,7 +374,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
                 color: 'var(--accent-text)',
               }}
             />
-            View Details
+            {ui.viewDetails}
           </button>
         </div>
       </CardContent>

@@ -163,7 +163,7 @@ let cachedCollectionsHadith: EnhancedHadith | null = null;
 
 export function EnhancedDailyHadith() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const [hadith, setHadith] = useState<Hadith | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -391,7 +391,7 @@ export function EnhancedDailyHadith() {
             >
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[var(--accent)]">
-                  Daily Wisdom
+                  {ui.dailyWisdom}
                 </span>
                 {isGradeValid ? (
                   <Badge variant="outline" className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${getGradeBadgeClass(hadith.grade)}`}>
@@ -412,7 +412,7 @@ export function EnhancedDailyHadith() {
                   lineHeight: 1.25,
                 }}
               >
-                {t('dailyHadith') || 'Daily Hadith'}
+                {ui.dailyHadith}
               </h3>
               <span
                 style={{
@@ -548,7 +548,7 @@ export function EnhancedDailyHadith() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-text)] hover:text-[var(--accent)] transition-colors py-1 px-2.5 rounded-lg bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 border border-[var(--border)] active:scale-95 cursor-pointer"
                 aria-expanded={isExpanded}
               >
-                <span>{isExpanded ? "Show Less" : "Read Full Hadith"}</span>
+                <span>{isExpanded ? ui.showLess : ui.readMore}</span>
                 {isExpanded ? (
                   <ChevronUp className="w-3.5 h-3.5" />
                 ) : (
@@ -612,7 +612,7 @@ export function EnhancedDailyHadith() {
             onClick={() => navigate('/hadith/bookmarks')}
           >
             <Bookmark className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>Bookmarks</span>
+            <span>{ui.bookmarks}</span>
           </button>
           <button
             type="button"
@@ -620,7 +620,7 @@ export function EnhancedDailyHadith() {
             onClick={() => navigate('/hadith/collections')}
           >
             <BookOpen className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>More Hadith</span>
+            <span>{ui.moreHadith}</span>
           </button>
         </div>
       </CardContent>

@@ -63,6 +63,7 @@ const TRANSLATION_EDITIONS: TranslationEdition[] = [
   { id: 'en.pickthall', name: 'Pickthall', lang: 'English' },
   { id: 'ur.jalandhry', name: 'Urdu', lang: 'Urdu' },
   { id: 'hi.hindi', name: 'Hindi', lang: 'Hindi' },
+  { id: 'gu.omari', name: 'Gujarati (ઓમારી)', lang: 'Gujarati' },
 ];
 
 export interface TafsirEdition {
@@ -198,7 +199,19 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
     let cancelled = false;
     const fetchAyahTranslations = async () => {
       setIsTranslationLoading(true);
-      const cacheKey = `noor_study_trans_${surahNumber}_${activeAyah}`;
+      const cacheKey = `noor_translation_v2_${surahNumber}_${activeAyah}`;
+
+      // Purge any stale legacy translation cache entries
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('noor_study_trans_')) {
+            localStorage.removeItem(k);
+          }
+        }
+      } catch {
+        // Safe cache purge
+      }
 
       try {
         const cached = localStorage.getItem(cacheKey);
@@ -206,7 +219,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
           const parsed = JSON.parse(cached);
           if (!cancelled) {
             setArabicText(parsed.arabic);
-            setTranslationsMap(parsed.translations);
+            setTranslationsMap(parsed.translations || {});
             setIsTranslationLoading(false);
           }
           return;
@@ -216,38 +229,59 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
       }
 
       try {
-        const url = `https://api.alquran.cloud/v1/ayah/${surahNumber}:${activeAyah}/editions/quran-uthmani,en.sahih,en.pickthall,ur.jalandhry,hi.hindi`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(4500) });
-        if (res.ok) {
-          const json = await res.json();
+        const alQuranUrl = `https://api.alquran.cloud/v1/ayah/${surahNumber}:${activeAyah}/editions/quran-uthmani,en.sahih,en.pickthall,ur.jalandhry,hi.hindi`;
+        const gujaratiUrl = `https://quranenc.com/api/v1/translation/aya/gujarati_omari/${surahNumber}/${activeAyah}`;
+
+        const [alQuranRes, gujaratiRes] = await Promise.allSettled([
+          fetch(alQuranUrl, { signal: AbortSignal.timeout(4500) }),
+          fetch(gujaratiUrl, { signal: AbortSignal.timeout(4500) }),
+        ]);
+
+        let ar = '';
+        const trans: Record<string, string> = {};
+
+        if (alQuranRes.status === 'fulfilled' && alQuranRes.value.ok) {
+          const json = await alQuranRes.value.json();
           if (json.data && Array.isArray(json.data)) {
-            let ar = '';
-            const trans: Record<string, string> = {};
             json.data.forEach((item: any) => {
-              if (item.edition.identifier === 'quran-uthmani') {
+              const id = item?.edition?.identifier;
+              if (id === 'quran-uthmani') {
                 ar = item.text;
-              } else {
-                trans[item.edition.identifier] = item.text;
+              } else if (id) {
+                trans[id] = item.text;
               }
             });
-
-            if (!cancelled) {
-              setArabicText(ar);
-              setTranslationsMap(trans);
-              setIsTranslationLoading(false);
-            }
-
-            try {
-              localStorage.setItem(
-                cacheKey,
-                JSON.stringify({ arabic: ar, translations: trans })
-              );
-            } catch {
-              // Ignore cache write
-            }
-            return;
           }
         }
+
+        if (gujaratiRes.status === 'fulfilled' && gujaratiRes.value.ok) {
+          try {
+            const guJson = await gujaratiRes.value.json();
+            const rawGu = guJson?.result?.translation || '';
+            const cleanedGu = rawGu.replace(/^[૦-૯0-9]+\.\s*/, '').trim();
+            if (cleanedGu) {
+              trans['gu.omari'] = cleanedGu;
+            }
+          } catch {
+            // Handled Gujarati parsing
+          }
+        }
+
+        if (!cancelled) {
+          if (ar) setArabicText(ar);
+          setTranslationsMap(trans);
+          setIsTranslationLoading(false);
+        }
+
+        try {
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ arabic: ar, translations: trans })
+          );
+        } catch {
+          // Ignore cache write
+        }
+        return;
       } catch {
         // Handled offline fallback
       }
@@ -871,9 +905,12 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                   </div>
                 ) : (
                   <p
+                    dir={selectedEdition === 'ur.jalandhry' ? 'rtl' : 'ltr'}
                     className="text-sm leading-relaxed"
                     style={{
                       color: 'var(--text-primary)',
+                      lineHeight: selectedEdition === 'ur.jalandhry' ? '2.1' : '1.65',
+                      fontFamily: selectedEdition === 'ur.jalandhry' ? 'var(--font-urdu, "Noto Nastaliq Urdu", serif)' : undefined,
                       filter:
                         hideMode === 'translation' && !isRevealed ? 'blur(7px)' : 'none',
                       transition: 'filter 0.25s ease',

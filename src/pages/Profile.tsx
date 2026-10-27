@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
@@ -48,166 +48,152 @@ interface SettingsGroup {
   rows: SettingsRow[];
 }
 
-const GROUPS: SettingsGroup[] = [
-  {
-    id: 'appearance',
-    title: 'Appearance & Personalization',
-    titleKey: 'appearanceAndPersonalization',
-    badge: 'Display',
-    rows: [
-      {
-        id: 'appearance',
-        title: 'Theme & Appearance',
-        titleKey: 'themeAndAppearance',
-        subtitle: '5 royal themes',
-        icon: Palette,
-        gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
-        iconColor: 'text-amber-600 dark:text-amber-400',
-        route: '/settings/appearance',
-        asyncKey: 'theme',
-      },
-      {
-        id: 'clock-style',
-        title: 'Clock Style',
-        titleKey: 'clockStyle',
-        subtitle: '6 watch faces',
-        icon: Clock,
-        gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
-        iconColor: 'text-amber-600 dark:text-amber-400',
-        route: '/settings/clock-style',
-        asyncKey: 'clockStyle',
-      },
-      {
-        id: 'haptics',
-        title: 'Haptic Feedback',
-        titleKey: 'hapticFeedback',
-        subtitle: 'Vibration & pulse intensity',
-        icon: Vibrate,
-        gradient: 'from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/20',
-        iconColor: 'text-purple-600 dark:text-purple-400',
-        route: '/settings/haptics',
-        asyncKey: 'haptic',
-      },
-      {
-        id: 'personal',
-        title: 'Personal Information',
-        titleKey: 'personalInformation',
-        subtitle: 'Gender mode & Zakat currency',
-        icon: User,
-        gradient: 'from-blue-500/10 via-blue-500/5 to-transparent border-blue-500/20',
-        iconColor: 'text-blue-600 dark:text-blue-400',
-        route: '/settings/personal',
-      },
-    ],
-  },
-  {
-    id: 'prayer',
-    title: 'Prayer & Adhan',
-    titleKey: 'prayerAndAdhan',
-    badge: 'Spiritual',
-    rows: [
-      {
-        id: 'prayer',
-        title: 'Prayer Calculation',
-        titleKey: 'prayerCalculation',
-        subtitle: 'Angles, Madhab & Hijri offset',
-        icon: Clock,
-        gradient: 'from-teal-500/10 via-teal-500/5 to-transparent border-teal-500/20',
-        iconColor: 'text-teal-600 dark:text-teal-400',
-        route: '/settings/prayer',
-        asyncKey: 'prayer',
-      },
-      {
-        id: 'notifications',
-        title: 'Prayer Notifications',
-        titleKey: 'prayerNotifications',
-        subtitle: 'Daily reminders & Sunnah alerts',
-        icon: Bell,
-        gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
-        iconColor: 'text-[var(--accent)]',
-        route: '/settings/notifications',
-        asyncKey: 'notifications',
-      },
-      {
-        id: 'adhan',
-        title: 'Adhan Sounds & Reciters',
-        titleKey: 'adhanAndSounds',
-        subtitle: 'Muadhin voices & custom MP3s',
-        icon: Volume2,
-        gradient: 'from-cyan-500/10 via-cyan-500/20 to-transparent border-cyan-500/20',
-        iconColor: 'text-cyan-600 dark:text-cyan-400',
-        route: '/settings/adhan',
-      },
-    ],
-  },
-  {
-    id: 'data',
-    title: 'Data & Storage',
-    titleKey: 'dataAndStorage',
-    badge: 'System',
-    rows: [
-      {
-        id: 'backup',
-        title: 'Backup & Restore',
-        titleKey: 'backupAndRestore',
-        subtitle: 'Auto-backup & JSON file export',
-        icon: Database,
-        gradient: 'from-indigo-500/10 via-indigo-500/5 to-transparent border-indigo-500/20',
-        iconColor: 'text-indigo-600 dark:text-indigo-400',
-        route: '/settings/backup',
-      },
-      {
-        id: 'storage',
-        title: 'Storage & Cache',
-        titleKey: 'storageAndCache',
-        subtitle: 'Cached media & data',
-        icon: HardDrive,
-        gradient: 'from-rose-500/10 via-rose-500/5 to-transparent border-rose-500/20',
-        iconColor: 'text-rose-600 dark:text-rose-400',
-        route: '/settings/storage',
-        asyncKey: 'storage',
-      },
-      {
-        id: 'privacy',
-        title: 'Privacy & Security',
-        titleKey: 'privacyAndSecurity',
-        subtitle: '100% local data & app permissions',
-        icon: ShieldCheck,
-        gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
-        iconColor: 'text-[var(--accent)]',
-        route: '/settings/privacy',
-      },
-    ],
-  },
-  {
-    id: 'about',
-    title: 'About & Community',
-    titleKey: 'trustAndIdentity',
-    badge: 'Noor',
-    rows: [
-      {
-        id: 'about',
-        title: 'About Noor Connect',
-        titleKey: 'aboutNoorConnect',
-        subtitle: `Version ${CURRENT_APP_VERSION}, changelog & updates`,
-        icon: Info,
-        gradient: 'from-orange-500/10 via-orange-500/5 to-transparent border-orange-500/20',
-        iconColor: 'text-orange-600 dark:text-orange-400',
-        route: '/settings/about',
-      },
-      {
-        id: 'contact',
-        title: 'Contact & Feedback',
-        titleKey: 'contactAndFeedback',
-        subtitle: "We'd love to hear from you",
-        icon: Mail,
-        gradient: 'from-violet-500/10 via-violet-500/5 to-transparent border-violet-500/20',
-        iconColor: 'text-violet-600 dark:text-violet-400',
-        route: '/settings/contact',
-      },
-    ],
-  },
-];
+function getSettingsGroups(ui: any): SettingsGroup[] {
+  return [
+    {
+      id: 'appearance',
+      title: ui.appearanceGroup,
+      badge: ui.badgeDisplay,
+      rows: [
+        {
+          id: 'appearance',
+          title: ui.themeAndAppearance,
+          subtitle: ui.themeAndAppearanceSub,
+          icon: Palette,
+          gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
+          iconColor: 'text-amber-600 dark:text-amber-400',
+          route: '/settings/appearance',
+          asyncKey: 'theme',
+        },
+        {
+          id: 'clock-style',
+          title: ui.clockStyle,
+          subtitle: ui.clockStyleSub,
+          icon: Clock,
+          gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
+          iconColor: 'text-amber-600 dark:text-amber-400',
+          route: '/settings/clock-style',
+          asyncKey: 'clockStyle',
+        },
+        {
+          id: 'haptics',
+          title: ui.hapticFeedback,
+          subtitle: ui.hapticFeedbackSub,
+          icon: Vibrate,
+          gradient: 'from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/20',
+          iconColor: 'text-purple-600 dark:text-purple-400',
+          route: '/settings/haptics',
+          asyncKey: 'haptic',
+        },
+        {
+          id: 'personal',
+          title: ui.personalInformation,
+          subtitle: ui.personalInformationSub,
+          icon: User,
+          gradient: 'from-blue-500/10 via-blue-500/5 to-transparent border-blue-500/20',
+          iconColor: 'text-blue-600 dark:text-blue-400',
+          route: '/settings/personal',
+        },
+      ],
+    },
+    {
+      id: 'prayer',
+      title: ui.prayerGroup,
+      badge: ui.badgeSpiritual,
+      rows: [
+        {
+          id: 'prayer',
+          title: ui.prayerCalculation,
+          subtitle: ui.prayerCalculationSub,
+          icon: Clock,
+          gradient: 'from-teal-500/10 via-teal-500/5 to-transparent border-teal-500/20',
+          iconColor: 'text-teal-600 dark:text-teal-400',
+          route: '/settings/prayer',
+          asyncKey: 'prayer',
+        },
+        {
+          id: 'notifications',
+          title: ui.prayerNotifications,
+          subtitle: ui.prayerNotificationsSub,
+          icon: Bell,
+          gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
+          iconColor: 'text-[var(--accent)]',
+          route: '/settings/notifications',
+          asyncKey: 'notifications',
+        },
+        {
+          id: 'adhan',
+          title: ui.adhanAndSounds,
+          subtitle: ui.adhanAndSoundsSub,
+          icon: Volume2,
+          gradient: 'from-cyan-500/10 via-cyan-500/20 to-transparent border-cyan-500/20',
+          iconColor: 'text-cyan-600 dark:text-cyan-400',
+          route: '/settings/adhan',
+        },
+      ],
+    },
+    {
+      id: 'data',
+      title: ui.dataGroup,
+      badge: ui.badgeSystem,
+      rows: [
+        {
+          id: 'backup',
+          title: ui.backupAndRestore,
+          subtitle: ui.backupAndRestoreSub,
+          icon: Database,
+          gradient: 'from-indigo-500/10 via-indigo-500/5 to-transparent border-indigo-500/20',
+          iconColor: 'text-indigo-600 dark:text-indigo-400',
+          route: '/settings/backup',
+        },
+        {
+          id: 'storage',
+          title: ui.storageAndCache,
+          subtitle: ui.storageAndCacheSub,
+          icon: HardDrive,
+          gradient: 'from-rose-500/10 via-rose-500/5 to-transparent border-rose-500/20',
+          iconColor: 'text-rose-600 dark:text-rose-400',
+          route: '/settings/storage',
+          asyncKey: 'storage',
+        },
+        {
+          id: 'privacy',
+          title: ui.privacyAndSecurity,
+          subtitle: ui.privacyAndSecuritySub,
+          icon: ShieldCheck,
+          gradient: 'from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border-[var(--border)]',
+          iconColor: 'text-[var(--accent)]',
+          route: '/settings/privacy',
+        },
+      ],
+    },
+    {
+      id: 'about',
+      title: ui.trustGroup,
+      badge: ui.badgeNoor,
+      rows: [
+        {
+          id: 'about',
+          title: ui.aboutNoorConnect,
+          subtitle: ui.aboutNoorConnectSub,
+          icon: Info,
+          gradient: 'from-orange-500/10 via-orange-500/5 to-transparent border-orange-500/20',
+          iconColor: 'text-orange-600 dark:text-orange-400',
+          route: '/settings/about',
+        },
+        {
+          id: 'contact',
+          title: ui.contactAndFeedback,
+          subtitle: ui.contactAndFeedbackSub,
+          icon: Mail,
+          gradient: 'from-violet-500/10 via-violet-500/5 to-transparent border-violet-500/20',
+          iconColor: 'text-violet-600 dark:text-violet-400',
+          route: '/settings/contact',
+        },
+      ],
+    },
+  ];
+}
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -260,7 +246,8 @@ function getCalcMethodDisplay(val: string | null): string | null {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, ui, isRTL } = useLanguage();
+  const groups = useMemo(() => getSettingsGroups(ui), [ui]);
   const [asyncValues, setAsyncValues] = useState<Record<string, string | null>>(() => {
     const initial: Record<string, string | null> = {};
     try {
@@ -394,15 +381,15 @@ const Profile: React.FC = () => {
               className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-all"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
             </button>
             <div>
               <h1 className="text-lg font-bold text-[var(--text-primary)] leading-none flex items-center gap-2">
-                Settings
+                {ui.settings}
                 <Sparkles className="w-4 h-4 text-[var(--accent)] animate-pulse" />
               </h1>
               <p className="text-[11px] font-medium tracking-wide text-[var(--text-secondary)] mt-0.5">
-                Noor Connect • Mobile Control Hub
+                {ui.settingsSubtitle}
               </p>
             </div>
           </div>
@@ -437,13 +424,13 @@ const Profile: React.FC = () => {
                   }}
                 >
                   <CheckCircle2 className="w-3 h-3 text-[var(--accent)]" />
-                  Performance Optimized
+                  {ui.performanceOptimized}
                 </div>
                 <h2 className="text-base font-bold tracking-tight text-[var(--text-primary)]">
-                  Islamic Mobile Experience
+                  {ui.islamicMobileExp}
                 </h2>
                 <p className="text-xs text-[var(--text-secondary)] max-w-[260px] leading-relaxed">
-                  Configure prayer alerts, themes, and notifications with zero lag.
+                  {ui.heroDesc}
                 </p>
               </div>
 
@@ -465,7 +452,7 @@ const Profile: React.FC = () => {
                 className="py-1.5 px-1 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
                 style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
-                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Theme</span>
+                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">{ui.podTheme}</span>
                 <span
                   className="font-bold text-[var(--accent-text)]"
                   style={{
@@ -484,7 +471,7 @@ const Profile: React.FC = () => {
                 className="py-1.5 px-2 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
                 style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
-                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Clock</span>
+                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">{ui.podClock}</span>
                 <span className="text-[11px] font-bold text-[var(--accent-text)] truncate w-full">
                   {asyncValues['clockStyle'] || 'Prayer Arc'}
                 </span>
@@ -493,9 +480,9 @@ const Profile: React.FC = () => {
                 className="py-1.5 px-2 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
                 style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
-                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Personal Data</span>
+                <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">{ui.podPersonalData}</span>
                 <span className="text-[11px] font-bold text-[var(--accent-text)] truncate w-full">
-                  100% Local
+                  {ui.podLocal}
                 </span>
               </div>
             </div>
@@ -506,13 +493,12 @@ const Profile: React.FC = () => {
         </div>
 
         {/* Group Cards */}
-        {GROUPS.map((group) => {
-          const groupTitle = group.titleKey && t(group.titleKey) !== group.titleKey ? t(group.titleKey) : group.title;
+        {groups.map((group) => {
           return (
             <section key={group.id} className="space-y-2">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                  {groupTitle}
+                  {group.title}
                 </h2>
                 {group.badge && (
                   <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
@@ -526,7 +512,6 @@ const Profile: React.FC = () => {
                   const IconComponent = row.icon;
                   const hasAsyncKey = !!row.asyncKey;
                   const val = hasAsyncKey ? asyncValues[row.asyncKey!] : undefined;
-                  const rowTitle = row.titleKey && t(row.titleKey) !== row.titleKey ? t(row.titleKey) : row.title;
 
                   return (
                     <div
@@ -541,7 +526,7 @@ const Profile: React.FC = () => {
 
                         <div className="min-w-0 flex-1 pe-2">
                           <div className="text-[14px] font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors leading-tight">
-                            {rowTitle}
+                            {row.title}
                           </div>
                           <div
                             className="font-normal text-[var(--text-secondary)] mt-0.5 truncate bidi-plaintext"
@@ -566,7 +551,7 @@ const Profile: React.FC = () => {
                           </span>
                         ) : null
                       )}
-                      <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] opacity-50 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all" />
+                      <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] opacity-50 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all rtl:rotate-180" />
                     </div>
                   </div>
                 );
@@ -580,11 +565,9 @@ const Profile: React.FC = () => {
         <div className="pt-4 text-center space-y-2">
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] text-xs font-medium border border-[var(--border)]"
-            dir="ltr"
-            style={{ unicodeBidi: 'isolate' }}
           >
             <Lock className="w-3 h-3" />
-            100% Private • Local Data Security
+            {ui.privacyNotice}
           </div>
 
           <p className="text-xs text-[var(--text-secondary)] font-medium">

@@ -156,6 +156,7 @@ export default function SurahList() {
   const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === "dark";
   const { language } = useLanguage();
+  const isRTL = language === 'ar' || language === 'ur';
   const uiStrings = useMemo(() => getQuranUIStrings(language), [language]);
   const navigate = useNavigate();
 
@@ -600,14 +601,19 @@ export default function SurahList() {
               <div className="flex items-center gap-2 min-w-0">
                 <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shrink-0" />
                 <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                  {uiStrings.continueReading} {lastReadInfo?.englishName || lastRead.englishName || `Surah #${lastRead.number}`}
+                  {uiStrings.continueReading}{" "}
+                  {isRTL ? (
+                    <bdi>{lastReadInfo?.name || lastRead.arabicName || lastReadInfo?.englishName || lastRead.englishName || `سورة #${lastRead.number}`}</bdi>
+                  ) : (
+                    <bdi>{lastReadInfo?.englishName || lastRead.englishName || `Surah #${lastRead.number}`}</bdi>
+                  )}
                 </span>
                 <span className="text-[11px] text-[var(--text-secondary)] shrink-0">
-                  • {uiStrings.page} {lastRead.page || 1}
+                  • {uiStrings.page} <span dir="ltr" className="inline-block tabular-nums">{lastRead.page || 1}</span>
                 </span>
               </div>
               <span className="text-xs font-bold text-[var(--accent-text)] group-hover:underline flex items-center gap-1 shrink-0">
-                {uiStrings.resume}
+                {uiStrings.resume} {isRTL ? '←' : '→'}
               </span>
             </div>
           </div>
@@ -1015,7 +1021,7 @@ export default function SurahList() {
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-[var(--accent)]" />
                   <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">
-                    {dailyAyah?.title || uiStrings.verseOfTheDay}
+                    {uiStrings.verseOfTheDay}
                   </span>
                 </div>
 
@@ -1033,7 +1039,7 @@ export default function SurahList() {
                     {dailySurahNumber ? (
                       <span className="text-xs font-semibold text-[var(--accent-text)] inline-flex items-center gap-1">
                         <span>{uiStrings.readInSurah}</span>
-                        <ArrowRight className="w-3 h-3" />
+                        <ArrowRight className="w-3 h-3 rtl:rotate-180" />
                       </span>
                     ) : null}
                   </div>

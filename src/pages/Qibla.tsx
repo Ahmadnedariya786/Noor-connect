@@ -5,12 +5,12 @@ import { useLanguage } from "@/contexts/LanguageContext-new";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const Qibla = () => {
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-[var(--bg-base)] pb-20">
-        <AppBar title={t("qibla") || "Qibla"} />
+        <AppBar title={ui.qibla || t("qibla") || "Qibla"} />
         <div className="flex flex-col min-h-[calc(100vh-64px)]">
           <div className="flex-grow">
             <ErrorBoundary
@@ -38,10 +38,7 @@ const Qibla = () => {
             </ErrorBoundary>
           </div>
           <p className="text-center text-xs text-[var(--text-secondary)]/75 px-6 pb-8 italic leading-relaxed">
-            {t(
-              "qiblaCalibrationTip",
-              "Tip: Keep your phone flat away from metal/magnetic cases and move it in a figure-8 motion to calibrate the compass sensor."
-            )}
+            {ui.qiblaCalibrationTip || t("qiblaCalibrationTip")}
           </p>
         </div>
       </div>

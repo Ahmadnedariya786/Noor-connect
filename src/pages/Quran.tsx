@@ -23,7 +23,7 @@ interface Surah {
 
 const Quran = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, ui, isRTL } = useLanguage();
   const { t: ti18n } = useI18n();
   const { animationEnabled } = useSettings();
   const dailyAyah = useMemo(() => getDailyAyah(), []);
@@ -191,7 +191,7 @@ const Quran = () => {
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-4 h-4 text-[var(--accent-text)]" />
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-text)]">
-                  {dailyAyah?.title || 'Verse of the Day'}
+                  {ui.verseOfTheDay}
                 </span>
               </div>
 
@@ -210,12 +210,10 @@ const Quran = () => {
                         e.stopPropagation();
                         navigate(`/quran/surah-${dailySurahNumber}`, { replace: true });
                       }}
-                      className="text-xs font-semibold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1 group/btn ltr-num"
-                      dir="ltr"
-                      style={{ direction: 'ltr', unicodeBidi: 'isolate' }}
+                      className="text-xs font-semibold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1 group/btn"
                     >
-                      <span>Read in Surah</span>
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+                      <span>{ui.readInSurah}</span>
+                      <ArrowRight className={`w-3.5 h-3.5 transition-transform ${isRTL ? "rotate-180" : "group-hover/btn:translate-x-0.5"}`} />
                     </button>
                   ) : null}
                 </div>

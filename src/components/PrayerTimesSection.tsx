@@ -306,7 +306,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   locationLabel,
 }) => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, ui, isRTL } = useLanguage();
   const location = useLocationState();
   const { timeFormat } = useSettings();
 
@@ -369,12 +369,12 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       hijriPart = ` • ${h.day} ${m}`;
     }
 
-    if (selectedDateOffset === 0) return `Today, ${monthShort} ${dayNum}${hijriPart}`;
+    if (selectedDateOffset === 0) return `${ui.today}, ${monthShort} ${dayNum}${hijriPart}`;
     if (selectedDateOffset === -1) return `Yesterday, ${monthShort} ${dayNum}${hijriPart}`;
-    if (selectedDateOffset === 1) return `Tomorrow, ${monthShort} ${dayNum}${hijriPart}`;
+    if (selectedDateOffset === 1) return `${ui.tomorrow}, ${monthShort} ${dayNum}${hijriPart}`;
     const weekday = viewedDate.toLocaleString('en-US', { weekday: 'short' });
     return `${weekday}, ${monthShort} ${dayNum}${hijriPart}`;
-  }, [selectedDateOffset, viewedDate, offsetSchedule]);
+  }, [selectedDateOffset, viewedDate, offsetSchedule, ui]);
 
   const displayedPrayers = useMemo(() => {
     if (selectedDateOffset === 0 && prayers.length > 0) return prayers;
@@ -493,10 +493,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
   // Subtitle next to or below progress bar
   const remainingSubtitle = useMemo(() => {
-    if (countdownText === 'due now') return 'Time for prayer';
-    if (countdownText.startsWith('In ')) return `${countdownText.slice(3)} remaining`;
-    return `${countdownText} remaining`;
-  }, [countdownText]);
+    if (countdownText === 'due now') return ui.dueNow;
+    if (countdownText.startsWith('In ')) return `${countdownText.slice(3)} ${ui.remainingSuffix}`;
+    return `${countdownText} ${ui.remainingSuffix}`;
+  }, [countdownText, ui]);
 
   return (
     <div className="w-full flex flex-col">
@@ -504,7 +504,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       <div className="flex items-center justify-between px-1 mb-3">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
-            {t('prayerTimes') || 'Prayer Times'}
+            {ui.prayerTimes}
           </h2>
           <div
             className="w-6 h-[3px] rounded-full mt-1.5"
@@ -517,7 +517,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             onClick={onLocationClick}
             className="text-xs font-semibold uppercase tracking-widest transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           >
-            {locationLabel ? 'Change City' : 'Set City'}
+            {locationLabel ? ui.changeCity : ui.setCity}
           </button>
         )}
       </div>
@@ -623,7 +623,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   display: 'inline-block',
                 }}
               >
-                NEXT
+                {ui.next}
               </span>
             </div>
             <span
@@ -750,7 +750,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             }}
           >
             <span>
-              {previousPrayer?.name ? `After ${previousPrayer.name}` : `Starts at ${nextPrayer.time}`}
+              {previousPrayer?.name ? `${ui.afterPrefix} ${previousPrayer.name}` : `Starts at ${nextPrayer.time}`}
             </span>
             <span>{remainingSubtitle}</span>
           </div>
@@ -783,7 +783,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
         >
           <Moon className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-text)' }} />
           <span style={{ color: 'var(--text-secondary)' }}>
-            {t('suhoor') || 'Suhoor'}
+            {ui.suhoor}
           </span>
           <span
             className="font-semibold tabular-nums shrink-0 ltr-num"
@@ -816,7 +816,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
         >
           <Sunset className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-text)' }} />
           <span style={{ color: 'var(--text-secondary)' }}>
-            {t('iftaar') || 'Iftaar'}
+            {ui.iftaar}
           </span>
           <span
             className="font-semibold tabular-nums shrink-0 ltr-num"
@@ -856,7 +856,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               onClick={() => setSelectedDateOffset(0)}
               className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-sm active:scale-95 transition-all shrink-0 whitespace-nowrap"
             >
-              Back to today
+              {ui.backToToday}
             </button>
           )}
         </div>
@@ -998,15 +998,15 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             <span className="text-base shrink-0">📅</span>
             <div className="flex flex-col text-left min-w-0">
               <span className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate">
-                Monthly Prayer Timetable
+                {ui.monthlyTimetable}
               </span>
               <span className="text-[10px] text-[var(--text-secondary)] truncate">
-                Share image or print A4 PDF
+                {ui.shareOrPrint}
               </span>
             </div>
           </div>
           <span className="text-xs font-bold text-[var(--accent-text)] flex items-center gap-1 shrink-0 whitespace-nowrap ml-2">
-            View →
+            {ui.view} {isRTL ? '←' : '→'}
           </span>
         </button>
       </div>

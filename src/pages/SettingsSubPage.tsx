@@ -130,7 +130,7 @@ const SettingsSubPage: React.FC = () => {
   const { sectionId = 'appearance' } = useParams<{ sectionId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, ui, isRTL } = useLanguage();
   const appearanceStrings = useMemo(() => getAppearanceUIStrings(language), [language]);
   const {
     animationEnabled,
@@ -173,6 +173,11 @@ const SettingsSubPage: React.FC = () => {
     islamicKnowledge: true,
     motivationalMessages: true,
     maxDailyNotifications: 5,
+    tahajjudReminders: true,
+    duhaReminders: true,
+    fastingDaysReminders: true,
+    quranTrackerReminders: true,
+    bedtimeDuaReminders: true,
   });
 
   const { isEnabled: isAlarmEnabled, testAdhan, enableAlarm, disableAlarm } = usePrayerAlarm();
@@ -250,13 +255,99 @@ const SettingsSubPage: React.FC = () => {
     });
   };
 
-  const sectionConfig = SECTION_TITLES[sectionId];
-  const translatedTitle = sectionConfig?.titleKey ? t(sectionConfig.titleKey) : undefined;
-  const meta = {
-    title: (translatedTitle && translatedTitle !== sectionConfig?.titleKey) ? translatedTitle : (sectionConfig?.title || 'Settings'),
-    subtitle: sectionConfig?.subtitle || 'Noor Connect Preferences',
-    icon: sectionConfig?.icon || Palette,
-  };
+  const meta = useMemo(() => {
+    const icon = SECTION_TITLES[sectionId]?.icon || Palette;
+    if (sectionId === 'appearance') {
+      return {
+        title: ui.appearanceSubpageTitle,
+        subtitle: ui.appearanceSubpageSubtitle,
+        icon,
+      };
+    }
+    if (sectionId === 'clock-style') {
+      return {
+        title: ui.clockStyle,
+        subtitle: ui.clockStyleSub,
+        icon,
+      };
+    }
+    if (sectionId === 'haptics') {
+      return {
+        title: ui.hapticFeedback,
+        subtitle: ui.hapticFeedbackSub,
+        icon,
+      };
+    }
+    if (sectionId === 'personal') {
+      return {
+        title: ui.personalInformation,
+        subtitle: ui.personalInformationSub,
+        icon,
+      };
+    }
+    if (sectionId === 'prayer') {
+      return {
+        title: ui.prayerCalculation,
+        subtitle: ui.prayerCalculationSub,
+        icon,
+      };
+    }
+    if (sectionId === 'notifications') {
+      return {
+        title: ui.prayerNotifications,
+        subtitle: ui.prayerNotificationsSub,
+        icon,
+      };
+    }
+    if (sectionId === 'adhan') {
+      return {
+        title: ui.adhanAndSounds,
+        subtitle: ui.adhanAndSoundsSub,
+        icon,
+      };
+    }
+    if (sectionId === 'backup') {
+      return {
+        title: ui.backupAndRestore,
+        subtitle: ui.backupAndRestoreSub,
+        icon,
+      };
+    }
+    if (sectionId === 'storage') {
+      return {
+        title: ui.storageAndCache,
+        subtitle: ui.storageAndCacheSub,
+        icon,
+      };
+    }
+    if (sectionId === 'privacy') {
+      return {
+        title: ui.privacyAndSecurity,
+        subtitle: ui.privacyAndSecuritySub,
+        icon,
+      };
+    }
+    if (sectionId === 'about') {
+      return {
+        title: ui.aboutNoorConnect,
+        subtitle: ui.aboutNoorConnectSub,
+        icon,
+      };
+    }
+    if (sectionId === 'contact') {
+      return {
+        title: ui.contactAndFeedback,
+        subtitle: ui.contactAndFeedbackSub,
+        icon,
+      };
+    }
+    const sectionConfig = SECTION_TITLES[sectionId];
+    return {
+      title: sectionConfig?.title || ui.settings,
+      subtitle: sectionConfig?.subtitle || ui.settingsSubtitle,
+      icon,
+    };
+  }, [sectionId, ui]);
   const IconComponent = meta.icon;
 
   const [diagnosticEvents, setDiagnosticEvents] = useState<DiagnosticEvent[]>([]);
@@ -617,7 +708,7 @@ const SettingsSubPage: React.FC = () => {
             className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-all"
             aria-label="Go back to Profile"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
           </button>
           <div className="flex-1">
             <h1 className="text-base font-bold text-[var(--text-primary)] leading-tight">
@@ -634,7 +725,7 @@ const SettingsSubPage: React.FC = () => {
       </header>
 
       {/* Main Content Body */}
-      <main className="max-w-md mx-auto px-4 pt-5 space-y-5 pb-32" style={{ paddingBottom: '132px' }}>
+      <main className="max-w-md mx-auto px-4 pt-5 space-y-5 pb-40" style={{ paddingBottom: '148px' }}>
         {/* APPEARANCE SECTION */}
         {sectionId === 'appearance' && (
           <div className="space-y-4">
@@ -675,7 +766,7 @@ const SettingsSubPage: React.FC = () => {
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
                     {currentThemeName}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
 

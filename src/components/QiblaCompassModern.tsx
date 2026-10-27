@@ -15,6 +15,7 @@ import {
   type QiblaResult,
 } from '@/lib/qibla';
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 // ─── Types ────────────────────────────────────────────────────
 type CompassState =
@@ -176,6 +177,8 @@ const RubElHizbStar = ({ size = 48, isAligned = false }: { size?: number; isAlig
 
 // ─── Component ────────────────────────────────────────────────
 const QiblaCompassModern = () => {
+  const { t, ui, isRTL } = useLanguage();
+
   // ── Location State ───────────────────────────────────────────
   const [bootLocation] = useState(loadInitialLocation);
   const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
@@ -610,7 +613,7 @@ const QiblaCompassModern = () => {
         </div>
 
         <p className="text-[var(--accent-text)] text-xs tracking-[0.25em] uppercase font-bold">
-          Qibla Direction
+          {ui.qiblaDirection}
         </p>
 
         {/* Large Degree Display */}
@@ -646,7 +649,7 @@ const QiblaCompassModern = () => {
               }}
             >
               <Check className="h-3.5 w-3.5 stroke-[3]" />
-              <span>✓ Aligned with Qibla (Baitullah)</span>
+              <span>✓ {ui.alignedWithQibla}</span>
             </div>
           ) : isLiveCompass ? (
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] shadow-sm">
@@ -657,17 +660,17 @@ const QiblaCompassModern = () => {
                 }}
               />
               <span>
-                Turn{' '}
+                {ui.turnPrefix}{' '}
                 <span className="text-[var(--accent-text)] font-bold">
                   {Math.abs(Math.round(angleDelta))}°
                 </span>{' '}
-                {angleDelta > 0 ? 'Right' : 'Left'}
+                {angleDelta > 0 ? ui.right : ui.left}
               </span>
             </div>
           ) : (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-secondary)] text-xs">
               <Compass className="h-3.5 w-3.5 text-[var(--accent-text)]" />
-              <span>Tap Enable Live Compass below</span>
+              <span>{ui.tapEnableCompass}</span>
             </div>
           )}
         </div>
@@ -950,7 +953,7 @@ const QiblaCompassModern = () => {
             }}
           />
           <span className="text-[var(--text-primary)] font-bold">
-            {compassSignal !== null ? `Compass signal ${compassSignal}%` : 'Compass sensor offline'}
+            {compassSignal !== null ? ui.compassSignal.replace('{n}', String(compassSignal)) : ui.compassSensorOffline}
           </span>
           <span
             className="w-4 h-4 rounded-full flex items-center justify-center text-[var(--accent)] font-bold text-[11px] border border-[var(--border)]"
@@ -1021,7 +1024,7 @@ const QiblaCompassModern = () => {
               <div className="space-y-0.5">
                 <p className="text-[11px] font-bold text-[var(--accent-text)] uppercase tracking-wider flex items-center gap-1.5">
                   <Navigation className="w-3.5 h-3.5" />
-                  Distance to Baitullah
+                  {ui.distanceToBaitullah}
                 </p>
                 <div className="flex items-baseline gap-1.5 ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
                   <span className="text-3xl font-black text-[var(--text-primary)] tracking-tight ltr-num" dir="ltr">
@@ -1044,7 +1047,7 @@ const QiblaCompassModern = () => {
                   )}
                 >
                   <Car className="w-3 h-3" />
-                  <span>Road</span>
+                  <span>{ui.road}</span>
                 </button>
                 <button
                   type="button"
@@ -1057,7 +1060,7 @@ const QiblaCompassModern = () => {
                   )}
                 >
                   <Plane className="w-3 h-3" />
-                  <span>Flight</span>
+                  <span>{ui.flight}</span>
                 </button>
               </div>
             </div>
@@ -1071,7 +1074,7 @@ const QiblaCompassModern = () => {
                     <MapPin className="w-4 h-4" />
                   </div>
                   <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mt-1.5 truncate max-w-[70px]">
-                    You
+                    {ui.you}
                   </span>
                 </div>
 
@@ -1095,7 +1098,7 @@ const QiblaCompassModern = () => {
                     <KaabaVector size={18} />
                   </div>
                   <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mt-1.5">
-                    Makkah
+                    {ui.makkah}
                   </span>
                 </div>
               </div>
@@ -1104,12 +1107,12 @@ const QiblaCompassModern = () => {
               <div className="mt-4 p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1">
                 <p className="text-[11px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-                  The Journey Estimate
+                  {ui.theJourneyEstimate}
                 </p>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                   {travelMode === 'road'
-                    ? `A spiritual road journey would take approx. ${drivingHours} hours of driving via regional highways.`
-                    : `A direct flight would take approx. ${flightHours} hours to King Abdulaziz International Airport (JED).`}
+                    ? ui.roadEstimate(drivingHours)
+                    : ui.flightEstimate(flightHours)}
                 </p>
               </div>
             </div>
@@ -1121,7 +1124,7 @@ const QiblaCompassModern = () => {
           {/* Left Column: CURRENT HEADING */}
           <div className="rounded-2xl p-3.5 border border-[var(--border)] bg-[var(--surface)] shadow-sm space-y-1">
             <p className="text-[var(--text-secondary)] text-[11px] font-bold uppercase tracking-wider">
-              Current Heading
+              {ui.currentHeading}
             </p>
             <div className="flex items-baseline gap-1">
               <span className="text-xl font-black text-[var(--text-primary)]">
@@ -1132,18 +1135,18 @@ const QiblaCompassModern = () => {
               <span className="text-xs font-semibold text-[var(--accent-text)]">
                 {isLiveCompass && deviceHeading !== null
                   ? getCardinalDirection(deviceHeading)
-                  : '(Standby)'}
+                  : `(${ui.standby})`}
               </span>
             </div>
             <p className="text-[var(--text-secondary)]/70 text-[10px]">
-              {isLiveCompass ? 'Phone Azimuth' : 'Compass Paused'}
+              {isLiveCompass ? ui.phoneAzimuth : ui.compassPaused}
             </p>
           </div>
 
           {/* Right Column: QIBLA OFFSET */}
           <div className="rounded-2xl p-3.5 border border-[var(--border)] bg-[var(--surface)] shadow-sm space-y-1">
             <p className="text-[var(--text-secondary)] text-[11px] font-bold uppercase tracking-wider">
-              Qibla Offset
+              {ui.qiblaOffset}
             </p>
             <div className="flex items-baseline gap-1">
               <span className="text-xl font-black text-[var(--text-primary)]">
@@ -1156,19 +1159,19 @@ const QiblaCompassModern = () => {
               <span className="text-xs font-semibold text-[var(--accent-text)]">
                 {isLiveCompass && deviceHeading !== null
                   ? isAligned
-                    ? 'Locked'
+                    ? ui.locked
                     : angleDelta > 0
-                    ? 'Right'
-                    : 'Left'
-                  : 'Sensor Idle'}
+                    ? ui.right
+                    : ui.left
+                  : ui.sensorIdle}
               </span>
             </div>
             <p className="text-[var(--text-secondary)]/70 text-[10px]">
               {isLiveCompass
                 ? isAligned
-                  ? '✓ Perfectly Aligned'
-                  : 'Turn device to align'
-                : 'Standby'}
+                  ? `✓ ${ui.perfectlyAligned}`
+                  : ui.turnDeviceToAlign
+                : ui.standby}
             </p>
           </div>
         </div>
@@ -1207,17 +1210,17 @@ const QiblaCompassModern = () => {
           {compassState === 'activating' ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Starting Compass...</span>
+              <span>{ui.startingCompass}</span>
             </>
           ) : compassState === 'active' ? (
             <>
               <Compass className="h-4 w-4" />
-              <span>Pause Live Compass</span>
+              <span>{ui.pauseLiveCompass}</span>
             </>
           ) : (
             <>
               <Compass className="h-4 w-4" />
-              <span>Enable Live Compass</span>
+              <span>{ui.enableLiveCompass}</span>
             </>
           )}
         </button>

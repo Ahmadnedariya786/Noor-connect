@@ -114,7 +114,7 @@ function PremiumDashboardInner({
 }: PremiumDashboardProps) {
   const navigate = useNavigate();
   const { animationEnabled, timeFormat } = useSettings();
-  const { t } = useLanguage();
+  const { t, ui, isRTL } = useLanguage();
   const { tier } = useAnimationTier();
   const { isRamadan, ramadanDay } = useIslamicCalendar();
   const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>([]);
@@ -428,7 +428,7 @@ function PremiumDashboardInner({
                 aria-label={`Qibla direction ${qiblaBearing} degrees`}
               >
                 <Compass className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-                <span className="whitespace-nowrap font-mono">{qiblaBearing}°</span>
+                <span dir="ltr" className="whitespace-nowrap font-mono inline-block">{qiblaBearing}°</span>
               </button>
             )}
 
@@ -506,7 +506,7 @@ function PremiumDashboardInner({
                             className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]"
                             style={{ whiteSpace: 'nowrap' }}
                           >
-                            {t('dailySalah') || 'Daily Salah'}
+                            {ui.dailySalah}
                           </h3>
                           <div
                             className="w-6 h-[3px] rounded-full mt-1.5"
@@ -525,21 +525,18 @@ function PremiumDashboardInner({
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            <span>Journal →</span>
+                            <span>{ui.journal} {isRTL ? '←' : '→'}</span>
                           </button>
                           <div
-                            className="px-2.5 py-1 rounded-full text-xs font-bold ltr-num"
-                            dir="ltr"
+                            className="px-2.5 py-1 rounded-full text-xs font-bold"
                             style={{
                               background: 'var(--surface-2)',
                               color: 'var(--text-primary)',
                               border: '1px solid var(--border)',
-                              direction: 'ltr',
-                              unicodeBidi: 'isolate',
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            <span className="ltr-num" dir="ltr">{completedCount} / 5</span>
+                            <span dir="ltr" className="inline-block tabular-nums">{completedCount} / 5</span>
                           </div>
                         </div>
                       </div>
@@ -668,10 +665,10 @@ function PremiumDashboardInner({
                               }}
                             >
                               <span className="font-semibold text-[var(--text-primary)]">
-                                ✦ Sunnah {sunnahCount}/12
+                                ✦ {ui.sunnah} <span dir="ltr" className="inline-block tabular-nums">{sunnahCount} / 12</span>
                               </span>
                               <span className="text-[var(--accent-text)] font-bold text-xs ml-1">
-                                →
+                                {isRTL ? '←' : '→'}
                               </span>
                             </button>
 
@@ -692,7 +689,7 @@ function PremiumDashboardInner({
                                   isFasted ? 'text-emerald-400' : 'text-[var(--text-primary)]'
                                 }`}
                               >
-                                {isFasted ? '🌕 Fast Kept ✓' : '🌕 Fast • Log →'}
+                                {isFasted ? `🌕 ${ui.fastKept} ✓` : `🌕 ${ui.fastLog} ${isRTL ? '←' : '→'}`}
                               </span>
                             </button>
                           </div>

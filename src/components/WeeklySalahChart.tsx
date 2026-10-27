@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Calendar } from "lucide-react";
 import { getPrayerHistory, type DailyPrayers } from "@/lib/salah-tracker";
 import { useI18n } from "@/hooks/useI18n";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 import { cn } from "@/lib/utils";
 
 export interface ExtendedChartData {
@@ -14,6 +15,7 @@ export interface ExtendedChartData {
 }
 
 export const WeeklySalahChart = memo(function WeeklySalahChart() {
+  const { ui } = useLanguage();
   const { t: ti18n } = useI18n();
   const [chartData, setChartData] = useState<ExtendedChartData[]>([]);
   const [weeklyStats, setWeeklyStats] = useState({ completed: 0, total: 0, percentage: 0 });
@@ -95,7 +97,7 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-secondary)] flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5 text-[var(--accent)]" />
-            {ti18n('weeklyProgress')}
+            {ui.weeklyProgress}
           </CardTitle>
           <div
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
@@ -114,13 +116,13 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
         {/* Stats Summary */}
         <div className="flex items-center justify-between mb-3 text-xs font-semibold text-[var(--text-secondary)]">
           <span>
-            <span className="ltr-num font-mono" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+            <span dir="ltr" className="inline-block tabular-nums font-mono">
               {weeklyStats.completed} / {weeklyStats.total}
             </span>{' '}
-            {ti18n('prayersThisWeek')}
+            {ui.prayersThisWeek}
           </span>
           <span className="text-[11px] font-medium opacity-80 bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
-            Past 7 Days
+            {ui.past7Days}
           </span>
         </div>
 

@@ -31,7 +31,7 @@ interface QazaTrackerProps {
 }
 
 export function QazaTracker({ compact = false }: QazaTrackerProps) {
-  const { t } = useLanguage();
+  const { t, ui, isRTL } = useLanguage();
   const [prayers, setPrayers] = useState<Record<PrayerName, number>>({
     fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0
   });
@@ -93,7 +93,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-secondary)] flex items-center gap-2">
               <AlertCircle className="w-3.5 h-3.5 text-[var(--accent)]" />
-              {t('qazaPrayers') || 'Qaza Prayers'}
+              {ui.qazaPrayers}
             </CardTitle>
             {stats.total > 0 ? (
               <span
@@ -104,7 +104,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                   border: '1px solid var(--accent)',
                 }}
               >
-                {stats.total} to make up
+                <span dir="ltr" className="inline-block tabular-nums font-mono">{stats.total}</span> {ui.toMakeUp}
               </span>
             ) : (
               <span
@@ -115,7 +115,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                   border: '1px solid var(--accent)',
                 }}
               >
-                0 pending
+                <span dir="ltr" className="inline-block tabular-nums font-mono">0</span> {ui.pending}
               </span>
             )}
           </div>
@@ -131,6 +131,13 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
             {prayerLabels.map((prayer) => {
               const count = prayers[prayer.id] || 0;
               const hasPending = count > 0;
+              const prayerDisplayName =
+                prayer.id === 'fajr' ? ui.fajr :
+                prayer.id === 'dhuhr' ? ui.dhuhr :
+                prayer.id === 'asr' ? ui.asr :
+                prayer.id === 'maghrib' ? ui.maghrib :
+                prayer.id === 'isha' ? ui.isha : prayer.label;
+
               return (
                 <div
                   key={prayer.id}
@@ -164,8 +171,8 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                   >
                     {hasPending ? (
                       <>
-                        <span className="group-hover/btn:hidden text-xs font-bold leading-none">{count}</span>
-                        <span className="hidden group-hover/btn:inline text-[10px] font-black tracking-tighter leading-none">-1</span>
+                        <span dir="ltr" className="group-hover/btn:hidden text-xs font-bold leading-none inline-block tabular-nums font-mono">{count}</span>
+                        <span dir="ltr" className="hidden group-hover/btn:inline text-[10px] font-black tracking-tighter leading-none font-mono">-1</span>
                       </>
                     ) : (
                       <Check className="w-4 h-4 stroke-[2.5] text-[var(--success,#10b981)]" />
@@ -182,15 +189,15 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                       color: hasPending ? 'var(--text-primary)' : 'var(--text-secondary)',
                     }}
                   >
-                    {prayer.label}
+                    {prayerDisplayName}
                   </span>
                   {hasPending ? (
                     <span className="text-[9px] text-[var(--text-secondary)] font-medium tracking-tight">
-                      tap -1
+                      {ui.tapMinusOne}
                     </span>
                   ) : (
                     <span className="text-[9px] text-[var(--success,#10b981)] font-medium tracking-tight">
-                      done
+                      {ui.done}
                     </span>
                   )}
                 </div>
