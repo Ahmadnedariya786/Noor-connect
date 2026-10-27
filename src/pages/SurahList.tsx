@@ -52,6 +52,8 @@ import {
 } from "@/lib/khatmah-planner";
 import { JUZ_LIST, type JuzItem } from "@/data/juz-data";
 
+import { REVELATION_TYPE_I18N } from "@/lib/home-prayer-i18n";
+
 const BOOKMARKS_KEY = "quran-bookmarks";
 
 interface SurahCardProps {
@@ -65,6 +67,11 @@ interface SurahCardProps {
 
 const SurahCard = memo(
   function SurahCard({ surah, isBookmarked, ayahsLabel, onClick }: SurahCardProps) {
+    const { language } = useLanguage();
+    const revPack = REVELATION_TYPE_I18N[language] || REVELATION_TYPE_I18N.en;
+    const isMeccan = (surah.revelationType || '').toLowerCase().includes('mecc');
+    const revLabel = isMeccan ? revPack.meccan : revPack.medinan;
+
     return (
       <button
         onClick={() => onClick(surah.number)}
@@ -106,7 +113,7 @@ const SurahCard = memo(
                     padding: "2px 7px",
                   }}
                 >
-                  {surah.revelationType.toUpperCase()}
+                  {revLabel}
                 </span>
                 <span className="text-[var(--text-secondary)] text-[0.72rem] font-semibold whitespace-nowrap shrink-0">
                   • {surah.numberOfAyahs}&nbsp;{ayahsLabel || 'AYAHS'}

@@ -107,7 +107,7 @@ export default function MonthlyTimetable() {
   const { toast } = useToast();
   const location = useLocationState();
   const { timeFormat } = useSettings();
-  const is24h = timeFormat === "24" || timeFormat === "24h";
+  const is24h = timeFormat === "24h";
 
   const [currentYear, setCurrentYear] = useState<number>(() => new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(() => new Date().getMonth() + 1);

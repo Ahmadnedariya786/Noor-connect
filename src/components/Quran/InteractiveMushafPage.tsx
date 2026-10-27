@@ -7,6 +7,7 @@ import {
   prefetchNextMushafPage,
   toArabicDigits,
   sanitizeTajweedHtml,
+  getPageForSurahAndAyah,
   TAJWEED_RULES,
   type InteractivePageData,
   type InteractiveVerse,
@@ -14,6 +15,11 @@ import {
 } from '@/lib/interactive-mushaf';
 import { quranService } from '@/lib/quran-service';
 import { useTilawah } from '@/contexts/TilawahContext';
+import {
+  getWordTimingsForVerse,
+  getActiveWordPosition,
+  type WordSegment,
+} from '@/lib/word-timings';
 import { Volume2, BookOpen, Info, X, Sparkles, Loader2 } from 'lucide-react';
 import { MushafSurahPages, type MushafReadingMode } from './MushafSurahPages';
 
@@ -57,7 +63,81 @@ export function InteractiveMushafPage({
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tilawah live recitation sync
-  const { currentSurah, currentAyah, isPlaying, pause: pauseTilawah, resume: resumeTilawah } = useTilawah();
+  const {
+    currentSurah,
+    currentAyah,
+    isPlaying,
+    playbackTimeMs,
+    duration,
+    reciter,
+    pause: pauseTilawah,
+    resume: resumeTilawah,
+  } = useTilawah();
+
+  const [verseSegments, setVerseSegments] = useState<WordSegment[] | null>(null);
+  const [activeWordPos, setActiveWordPos] = useState<number | null>(null);
+
+  // Fetch word-by-word timestamp segments for active recited Ayah
+  useEffect(() => {
+    let isMounted = true;
+    if (isPlaying && currentSurah > 0 && currentAyah > 0) {
+      getWordTimingsForVerse(reciter.id, currentSurah, currentAyah)
+        .then((segs) => {
+          if (isMounted) {
+            setVerseSegments(segs);
+          }
+        })
+        .catch(() => {
+          if (isMounted) setVerseSegments(null);
+        });
+    } else {
+      setVerseSegments(null);
+      setActiveWordPos(null);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [isPlaying, currentSurah, currentAyah, reciter.id]);
+
+  // Compute live active recited word at 16–33ms resolution
+  useEffect(() => {
+    if (!isPlaying || currentSurah <= 0 || currentAyah <= 0 || !pageData) {
+      setActiveWordPos(null);
+      return;
+    }
+
+    const activeVerse = pageData.verses.find(
+      (v) => v.surah_number === currentSurah && v.verse_number === currentAyah
+    );
+
+    if (!activeVerse) {
+      setActiveWordPos(null);
+      return;
+    }
+
+    const pos = getActiveWordPosition(
+      verseSegments,
+      playbackTimeMs,
+      Math.round(duration * 1000),
+      activeVerse.words
+    );
+    setActiveWordPos(pos);
+  }, [isPlaying, currentSurah, currentAyah, playbackTimeMs, duration, verseSegments, pageData]);
+
+  // Auto Page Turn: when Tilawah advances past the verses on this page, turn page automatically
+  useEffect(() => {
+    if (isPlaying && currentSurah > 0 && currentAyah > 0 && pageData && !loading) {
+      const isAyahOnPage = pageData.verses.some(
+        (v) => v.surah_number === currentSurah && v.verse_number === currentAyah
+      );
+      if (!isAyahOnPage) {
+        const targetPage = getPageForSurahAndAyah(currentSurah, currentAyah);
+        if (targetPage !== pageNumber) {
+          onPageTurnRequest?.(targetPage);
+        }
+      }
+    }
+  }, [isPlaying, currentSurah, currentAyah, pageData, loading, pageNumber, onPageTurnRequest]);
 
   useEffect(() => {
     return () => {
@@ -403,13 +483,32 @@ export function InteractiveMushafPage({
                       const wordHtml = showTajweed && w.text_uthmani_tajweed
                         ? sanitizeTajweedHtml(w.text_uthmani_tajweed)
                         : w.text_uthmani;
+                      const isWordRecited = isVersePlaying && activeWordPos === w.position;
+
                       return (
                         <span
                           key={w.id}
                           onClick={(e) =>
                             handleWordClick(e, w, verse.surah_number, verse.verse_number)
                           }
-                          className="interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-transform hover:scale-110 active:scale-95 hover:text-[var(--accent-text)]"
+                          className={`interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-all duration-100 ${
+                            isWordRecited
+                              ? 'scale-105 z-10 [&_*]:!text-[var(--on-accent)]'
+                              : 'hover:scale-110 active:scale-95 hover:text-[var(--accent-text)]'
+                          }`}
+                          style={
+                            isWordRecited
+                              ? {
+                                  background: 'var(--accent)',
+                                  color: 'var(--on-accent)',
+                                  borderRadius: '6px',
+                                  boxShadow: '0 0 10px var(--accent-glow)',
+                                  transition: 'background-color 120ms ease',
+                                  padding: '0 2px',
+                                  margin: '0 -2px',
+                                }
+                              : undefined
+                          }
                           dangerouslySetInnerHTML={{ __html: wordHtml + ' ' }}
                         />
                       );

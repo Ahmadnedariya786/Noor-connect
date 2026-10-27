@@ -4,7 +4,9 @@ import android.app.AlarmManager;
 import android.app.DownloadManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -249,6 +251,125 @@ public class MainActivity extends BridgeActivity {
                                 startActivity(chooser);
                             } catch (Throwable t) {
                                 Log.e(TAG, "Failed to share timetable image natively", t);
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void syncWidgetCustomization(String jsonConfig) {
+                        runOnUiThread(() -> {
+                            try {
+                                if (jsonConfig == null || jsonConfig.trim().isEmpty()) {
+                                    return;
+                                }
+                                com.noorconnect.ummah.widgets.WidgetPrefs.INSTANCE.saveWidgetStyleConfig(MainActivity.this, jsonConfig);
+
+                                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(MainActivity.this);
+                                ComponentName nextPrayerCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.class);
+                                int[] nextPrayerIds = appWidgetManager.getAppWidgetIds(nextPrayerCn);
+                                if (nextPrayerIds != null && nextPrayerIds.length > 0) {
+                                    Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, nextPrayerIds);
+                                    sendBroadcast(updateIntent);
+                                    for (int id : nextPrayerIds) {
+                                        com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
+                                    }
+                                }
+                                com.noorconnect.ummah.widgets.WidgetRefreshWorker.Companion.enqueueImmediate(MainActivity.this);
+                                Log.i(TAG, "syncWidgetCustomization: synced successfully");
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Error syncing widget customization", t);
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public boolean hasDndPolicyAccess() {
+                        try {
+                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            if (nm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                return nm.isNotificationPolicyAccessGranted();
+                            }
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Error checking DND policy access", t);
+                        }
+                        return true;
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void openDndPolicySettings() {
+                        runOnUiThread(() -> {
+                            try {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                }
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Failed to launch DND policy settings", t);
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void configurePrayerAutoDnd(String jsonConfig) {
+                        runOnUiThread(() -> {
+                            try {
+                                PrayerDndReceiver.configureAutoDnd(MainActivity.this, jsonConfig);
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Failed configuring Prayer Auto-DND", t);
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void setAlarmStreamEnabled(boolean enabled) {
+                        try {
+                            getSharedPreferences("noor_smart_salah", MODE_PRIVATE)
+                                    .edit()
+                                    .putBoolean("alarm_stream_enabled", enabled)
+                                    .apply();
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Error saving alarm_stream_enabled", t);
+                        }
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void setFullScreenAlertsEnabled(boolean enabled) {
+                        try {
+                            getSharedPreferences("noor_smart_salah", MODE_PRIVATE)
+                                    .edit()
+                                    .putBoolean("fullscreen_alerts_enabled", enabled)
+                                    .apply();
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Error saving fullscreen_alerts_enabled", t);
+                        }
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void updateLivePrayerCountdown(String jsonPayload) {
+                        runOnUiThread(() -> {
+                            try {
+                                LiveCountdownNotificationHelper.updateCountdown(MainActivity.this, jsonPayload);
+                            } catch (Throwable t) {
+                                Log.w(TAG, "Error updating live prayer countdown", t);
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void setLiveCountdownEnabled(boolean enabled) {
+                        runOnUiThread(() -> {
+                            try {
+                                getSharedPreferences("noor_smart_salah", MODE_PRIVATE)
+                                        .edit()
+                                        .putBoolean("live_countdown_enabled", enabled)
+                                        .apply();
+                                if (!enabled) {
+                                    LiveCountdownNotificationHelper.cancel(MainActivity.this);
+                                }
+                            } catch (Throwable t) {
+                                Log.w(TAG, "Error setting live countdown enabled", t);
                             }
                         });
                     }

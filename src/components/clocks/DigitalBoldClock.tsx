@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { type ClockProps } from '@/types/clock';
 import { cn } from '@/lib/utils';
 import { getPrayerDisplayName } from '@/lib/prayer-utils';
+import { useLanguage } from '@/contexts/LanguageContext-new';
+import { getLocalizedPrayerName, formatLocalizedCountdown } from '@/lib/home-prayer-i18n';
 
 export const DigitalBoldClock: React.FC<ClockProps> = ({
   now,
@@ -10,6 +12,7 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
   nextPrayer,
   isStaticPreview = false,
 }) => {
+  const { language } = useLanguage();
   const is12 = timeFormat === '12h';
   const hours = now.getHours();
   const minutes = now.getMinutes();
@@ -22,20 +25,18 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
   const displaySeconds = String(seconds).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
 
-  // Live countdown string for mini status pill
+  // Live countdown string for mini status pill, fully localized
   const countdownText = useMemo(() => {
-    if (isStaticPreview) return 'in 2h 22m';
+    if (isStaticPreview) return formatLocalizedCountdown(2 * 3600 * 1000 + 22 * 60 * 1000, language);
     if (!nextPrayer?.targetTime) return '';
     const diff = nextPrayer.targetTime.getTime() - now.getTime();
-    if (diff <= 0) return 'due now';
-    const h = Math.floor(diff / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
-  }, [now, nextPrayer?.targetTime, isStaticPreview]);
+    return formatLocalizedCountdown(diff, language);
+  }, [now, nextPrayer?.targetTime, isStaticPreview, language]);
 
   const prayerName = useMemo(() => {
-    return getPrayerDisplayName(nextPrayer?.name, nextPrayer?.targetTime || now) || 'Next';
-  }, [nextPrayer?.name, nextPrayer?.targetTime, now]);
+    const raw = getPrayerDisplayName(nextPrayer?.name, nextPrayer?.targetTime || now) || 'Next';
+    return getLocalizedPrayerName(raw, language);
+  }, [nextPrayer?.name, nextPrayer?.targetTime, now, language]);
 
   return (
     <div

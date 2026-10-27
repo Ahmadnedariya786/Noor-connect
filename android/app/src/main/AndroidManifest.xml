@@ -21,6 +21,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
 
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
@@ -227,6 +228,24 @@
         <receiver android:name=".BatteryOptimizationReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.os.action.POWER_SAVE_MODE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Full-Screen Lockscreen Prayer Alert Activity -->
+        <activity
+            android:name=".FullScreenPrayerAlertActivity"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <!-- Prayer Auto-DND Receiver -->
+        <receiver
+            android:name=".PrayerDndReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.noorconnect.ummah.PRAYER_DND_START" />
+                <action android:name="com.noorconnect.ummah.PRAYER_DND_END" />
             </intent-filter>
         </receiver>
 

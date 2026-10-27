@@ -22,6 +22,7 @@ object WidgetPrefs {
     private const val KEY_DAILY_CONTENT_PAYLOAD = "daily_content_payload"
     private const val KEY_QURAN_PROGRESS_PAYLOAD = "quran_progress_payload"
     private const val KEY_TASBEEH_STATE = "tasbeeh_state"
+    private const val KEY_WIDGET_STYLE_CONFIG = "widget_style_config"
 
     // Sync metadata
     private const val KEY_LAST_PRAYER_SYNC = "last_prayer_sync_ms"
@@ -53,6 +54,17 @@ object WidgetPrefs {
 
     fun lastPrayerSyncMs(context: Context): Long =
         privatePrefs(context).getLong(KEY_LAST_PRAYER_SYNC, 0L)
+
+    // ─────────── Widget Customizer Style ───────────
+
+    fun saveWidgetStyleConfig(context: Context, jsonConfig: String) {
+        privatePrefs(context).edit {
+            putString(KEY_WIDGET_STYLE_CONFIG, jsonConfig)
+        }
+    }
+
+    fun getWidgetStyleConfig(context: Context): String? =
+        privatePrefs(context).getString(KEY_WIDGET_STYLE_CONFIG, null)
 
     // ─────────── Daily Content ───────────
 

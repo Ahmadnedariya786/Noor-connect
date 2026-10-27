@@ -192,6 +192,7 @@ const HaidhTracker = lazy(() => import("./pages/HaidhTracker"));
 const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
 const MonthlyTimetable = lazy(() => import("./pages/MonthlyTimetable"));
+const WidgetSettings = lazy(() => import("./pages/WidgetSettings"));
 
 function AnimationInitializer() {
   useEffect(() => {
@@ -327,6 +328,7 @@ function AppRoutes() {
               <Route path="/support" element={<Navigate to="/settings/about" replace />} />
               <Route path="/donate" element={<Navigate to="/settings/about" replace />} />
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
+              <Route path="/settings/widgets" element={<WidgetSettings />} />
               <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -393,6 +395,7 @@ function AppRoutes() {
               <Route path="/support" element={<Navigate to="/settings/about" replace />} />
               <Route path="/donate" element={<Navigate to="/settings/about" replace />} />
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
+              <Route path="/settings/widgets" element={<WidgetSettings />} />
               <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

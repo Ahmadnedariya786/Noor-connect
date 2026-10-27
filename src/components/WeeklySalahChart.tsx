@@ -15,7 +15,7 @@ export interface ExtendedChartData {
 }
 
 export const WeeklySalahChart = memo(function WeeklySalahChart() {
-  const { ui } = useLanguage();
+  const { ui, language } = useLanguage();
   const { t: ti18n } = useI18n();
   const [chartData, setChartData] = useState<ExtendedChartData[]>([]);
   const [weeklyStats, setWeeklyStats] = useState({ completed: 0, total: 0, percentage: 0 });
@@ -41,14 +41,18 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
     lastHistoryHashRef.current = historyHash;
 
     const todayStr = new Date().toDateString();
+    const activeLocale = language || 'en';
     // Do not mutate in place
     const data: ExtendedChartData[] = [...history].reverse().map((day: DailyPrayers) => {
       const completed = [day.fajr, day.dhuhr, day.asr, day.maghrib, day.isha].filter(Boolean).length;
       const date = new Date(day.date);
       const isToday = date.toDateString() === todayStr;
+      const rawDay = date.toLocaleDateString(activeLocale, { weekday: 'short' });
+      // Keep compact 2-3 characters for capsule header
+      const dayLabel = rawDay.length > 3 ? rawDay.slice(0, 3) : rawDay;
       return {
-        day: date.toLocaleDateString('en', { weekday: 'short' }).slice(0, 2),
-        fullDate: date.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+        day: dayLabel,
+        fullDate: date.toLocaleDateString(activeLocale, { month: 'short', day: 'numeric' }),
         completed,
         total: 5,
         isToday,
@@ -69,7 +73,7 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
         percentage: Math.round((totalCompleted / totalPossible) * 100)
       });
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     refreshData(true);
@@ -115,11 +119,17 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
       <CardContent className="pb-4 px-5">
         {/* Stats Summary */}
         <div className="flex items-center justify-between mb-3 text-xs font-semibold text-[var(--text-secondary)]">
-          <span>
-            <span dir="ltr" className="inline-block tabular-nums font-mono">
-              {weeklyStats.completed} / {weeklyStats.total}
-            </span>{' '}
-            {ui.prayersThisWeek}
+          <span className="flex items-center gap-1">
+            <bdi>
+              <span
+                dir="ltr"
+                style={{ direction: 'ltr', unicodeBidi: 'isolate' }}
+                className="inline-block tabular-nums font-mono"
+              >
+                {weeklyStats.completed} / {weeklyStats.total}
+              </span>
+            </bdi>{' '}
+            <span>{ui.prayersThisWeek}</span>
           </span>
           <span className="text-[11px] font-medium opacity-80 bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
             {ui.past7Days}

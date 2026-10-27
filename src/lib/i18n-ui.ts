@@ -32,6 +32,8 @@ export interface AppUIStrings {
   // 12 Settings Row Titles & Subtitles
   themeAndAppearance: string;
   themeAndAppearanceSub: string;
+  homeWidgets: string;
+  homeWidgetsSub: string;
   clockStyle: string;
   clockStyleSub: string;
   hapticFeedback: string;
@@ -242,6 +244,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'Noor',
     themeAndAppearance: 'Theme & Appearance',
     themeAndAppearanceSub: '5 royal themes',
+    homeWidgets: 'Home Screen Widgets',
+    homeWidgetsSub: 'Customize opacity, colors & layout',
     clockStyle: 'Clock Style',
     clockStyleSub: '6 watch faces',
     hapticFeedback: 'Haptic Feedback',
@@ -440,6 +444,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'نور',
     themeAndAppearance: 'المظهر والثيمات',
     themeAndAppearanceSub: '5 ثيمات إسلامية ملكية',
+    homeWidgets: 'عناصر الشاشة الرئيسية',
+    homeWidgetsSub: 'تخصيص الشفافية والألوان والتنسيق',
     clockStyle: 'نمط الساعة',
     clockStyleSub: '6 واجهات ساعات أنيقة',
     hapticFeedback: 'الاستجابة اللمسية',
@@ -638,6 +644,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'نور',
     themeAndAppearance: 'تھیم اور ظاہری شکل',
     themeAndAppearanceSub: '5 شاہی اسلامی تھیمز',
+    homeWidgets: 'ہوم اسکرین وجٹس',
+    homeWidgetsSub: 'شفافیت، رنگ اور لے آؤٹ سیٹ کریں',
     clockStyle: 'گھڑی کا انداز',
     clockStyleSub: '6 خوبصورت ڈائلز',
     hapticFeedback: 'ہیپٹک فیڈ بیک',
@@ -836,6 +844,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'નૂર',
     themeAndAppearance: 'થીમ અને દેખાવ',
     themeAndAppearanceSub: '5 શાહી થીમ્સ',
+    homeWidgets: 'હોમ સ્ક્રીન વિજેટ્સ',
+    homeWidgetsSub: 'પારદર્શિતા, રંગો અને લેઆઉટ પસંદ કરો',
     clockStyle: 'ઘડિયાળ શૈલી',
     clockStyleSub: '6 સુંદર ઘડિયાળો',
     hapticFeedback: 'હેપ્ટિક વાઇબ્રેશન',
@@ -1034,6 +1044,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'नूर',
     themeAndAppearance: 'थीम और दिखावट',
     themeAndAppearanceSub: '5 शाही इस्लामी थीम्स',
+    homeWidgets: 'होम स्क्रीन विजेट्स',
+    homeWidgetsSub: 'पारदर्शिता, रंग और लेआउट कस्टमाइज़ करें',
     clockStyle: 'घड़ी का अंदाज़',
     clockStyleSub: '6 खूबसूरत वॉच डायल',
     hapticFeedback: 'हैप्टिक फीडबैक',
@@ -1232,6 +1244,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'নূর',
     themeAndAppearance: 'থিম ও রূপরেখা',
     themeAndAppearanceSub: '৫টি রাজকীয় থিম',
+    homeWidgets: 'হোম স্ক্রিন উইজেটস',
+    homeWidgetsSub: 'স্বচ্ছতা, রঙ এবং লেআউট পরিবর্তন করুন',
     clockStyle: 'ঘড়ির ধরন',
     clockStyleSub: '৬টি দৃষ্টিনন্দন ডায়াল',
     hapticFeedback: 'হ্যাপটিক ভাইব্রেশন',
@@ -1430,6 +1444,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'Нур',
     themeAndAppearance: 'Тема и оформление',
     themeAndAppearanceSub: '5 благородных тем',
+    homeWidgets: 'Виджеты на главном экране',
+    homeWidgetsSub: 'Настройте прозрачность, цвета и макет',
     clockStyle: 'Стиль часов',
     clockStyleSub: '6 стильных циферблатов',
     hapticFeedback: 'Тактильный отклик',
@@ -1628,6 +1644,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeNoor: 'Noor',
     themeAndAppearance: 'Thème & Apparence',
     themeAndAppearanceSub: '5 thèmes royaux',
+    homeWidgets: "Widgets de l'écran d'accueil",
+    homeWidgetsSub: "Personnalisez l'opacité, les couleurs et la disposition",
     clockStyle: "Style d'Horloge",
     clockStyleSub: '6 cadrans élégants',
     hapticFeedback: 'Retour Haptique',

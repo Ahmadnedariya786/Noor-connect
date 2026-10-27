@@ -158,9 +158,65 @@ class NextPrayerWidget : AppWidgetProvider() {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
-            views.setOnClickPendingIntent(R.id.widget_root, pi)
+            // ─── Customizer Styling (Phase 4A) ───
+            applyCustomStyles(context, views, appWidgetId)
 
             mgr.updateAppWidget(appWidgetId, views)
+        }
+
+        private fun applyCustomStyles(context: Context, views: RemoteViews, appWidgetId: Int) {
+            val configJson = WidgetPrefs.getWidgetStyleConfig(context) ?: return
+            try {
+                val json = org.json.JSONObject(configJson)
+                val surfaceStyle = json.optString("surfaceStyle", "theme")
+                val opacity = json.optInt("opacity", 85)
+                val accentPreset = json.optString("accentPreset", "ivory")
+                val showCity = json.optBoolean("showCity", true)
+                val showCountdown = json.optBoolean("showCountdown", true)
+                val fontScale = json.optInt("fontScale", 100)
+
+                // 1. Calculate background color with alpha (standard RemoteViews method, NO reflection)
+                val alpha = (opacity * 255 / 100).coerceIn(0, 255)
+                val baseRgb = when (surfaceStyle) {
+                    "oled" -> 0x000000
+                    "frosted" -> 0x121826
+                    else -> 0x0F172A // theme default dark
+                }
+                val bgColor = (alpha shl 24) or (baseRgb and 0x00FFFFFF)
+                views.setInt(R.id.widget_root, "setBackgroundColor", bgColor)
+
+                // 2. Resolve accent and text colors
+                val accentColor = when (accentPreset.lowercase()) {
+                    "white" -> 0xFFFFFFFF.toInt()
+                    "parchment" -> 0xFFE6C280.toInt()
+                    "mint" -> 0xFF10B981.toInt()
+                    "sapphire" -> 0xFF38BDF8.toInt()
+                    "rose" -> 0xFFF43F5E.toInt()
+                    else -> 0xFFD4AF37.toInt() // ivory & gold
+                }
+                val textColor = when (accentPreset.lowercase()) {
+                    "white" -> 0xFFFFFFFF.toInt()
+                    "parchment" -> 0xFFFDF6E2.toInt()
+                    "mint" -> 0xFFECFDF5.toInt()
+                    "sapphire" -> 0xFFF0F9FF.toInt()
+                    "rose" -> 0xFFFFF1F2.toInt()
+                    else -> 0xFFFDFBF7.toInt()
+                }
+
+                views.setTextColor(R.id.widget_clock, accentColor)
+                views.setTextColor(R.id.widget_countdown, accentColor)
+                views.setTextColor(R.id.widget_prayer_name, textColor)
+
+                // 3. Visibility toggles
+                views.setViewVisibility(R.id.widget_location, if (showCity) View.VISIBLE else View.GONE)
+                views.setViewVisibility(R.id.widget_countdown, if (showCountdown) View.VISIBLE else View.GONE)
+
+                // 4. Font scale using standard RemoteViews API
+                val scaledSp = (32f * fontScale / 100f).coerceIn(24f, 40f)
+                views.setTextViewTextSize(R.id.widget_prayer_name, android.util.TypedValue.COMPLEX_UNIT_SP, scaledSp)
+            } catch (e: Exception) {
+                Log.w(TAG, "Error applying custom widget styles", e)
+            }
         }
 
         private fun formatCountdown(remainingMs: Long): String {

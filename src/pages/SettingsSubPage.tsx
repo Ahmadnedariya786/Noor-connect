@@ -40,7 +40,20 @@ import {
   Calendar,
   Bookmark,
   BookOpen,
+  LayoutGrid,
 } from 'lucide-react';
+import { WidgetSettings } from './WidgetSettings';
+import {
+  loadSmartSalahConfig,
+  saveSmartSalahConfig,
+  syncSmartSalahToNative,
+  hasNativeDndAccess,
+  openNativeDndSettings,
+  getSmartSalahI18n,
+  type SmartSalahConfig,
+  type AdvanceReminderMinutes,
+  type AutoDndDurationMinutes,
+} from '@/lib/smart-salah';
 import { Capacitor } from '@capacitor/core';
 import { rerunPermissionOnboarding } from '@/lib/onboarding-permissions';
 import {
@@ -109,6 +122,7 @@ import { AutoBackupCard } from '@/components/AutoBackupCard';
 
 const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: any; titleKey?: string }> = {
   appearance: { title: 'Theme & Appearance', subtitle: 'Display, animations & splash settings', icon: Palette, titleKey: 'themeAndAppearance' },
+  widgets: { title: 'Home Screen Widgets', subtitle: 'Customize opacity, colors & layout', icon: LayoutGrid, titleKey: 'homeWidgets' },
   'app-theme': { title: 'App Theme', subtitle: 'Choose your full-app color theme', icon: Palette, titleKey: 'appTheme' },
   'clock-style': { title: 'Clock Style', subtitle: 'Select home screen clock design', icon: Clock, titleKey: 'clockStyle' },
   haptics: { title: 'Haptic Feedback', subtitle: 'Vibration & tactile feedback settings', icon: Vibrate, titleKey: 'hapticFeedback' },
@@ -181,6 +195,31 @@ const SettingsSubPage: React.FC = () => {
   });
 
   const { isEnabled: isAlarmEnabled, testAdhan, enableAlarm, disableAlarm } = usePrayerAlarm();
+
+  const [smartSalah, setSmartSalah] = useState<SmartSalahConfig>(() => loadSmartSalahConfig());
+  const [hasDndAccess, setHasDndAccess] = useState<boolean>(() => hasNativeDndAccess());
+  const smartSalahStrings = useMemo(() => getSmartSalahI18n(language), [language]);
+
+  const updateSmartSalah = (patch: Partial<SmartSalahConfig>) => {
+    setSmartSalah((prev) => {
+      const next = { ...prev, ...patch };
+      saveSmartSalahConfig(next);
+      try {
+        const rawPayload = localStorage.getItem('cached_prayer_times');
+        const prayerData = rawPayload ? JSON.parse(rawPayload) : undefined;
+        syncSmartSalahToNative(next, prayerData);
+      } catch {
+        syncSmartSalahToNative(next);
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const checkDnd = () => setHasDndAccess(hasNativeDndAccess());
+    window.addEventListener('focus', checkDnd);
+    return () => window.removeEventListener('focus', checkDnd);
+  }, []);
 
   useEffect(() => {
     if (sectionId === 'support' || sectionId === 'donate') {
@@ -725,7 +764,7 @@ const SettingsSubPage: React.FC = () => {
       </header>
 
       {/* Main Content Body */}
-      <main className="max-w-md mx-auto px-4 pt-5 space-y-5 pb-40" style={{ paddingBottom: '148px' }}>
+      <main className="max-w-md mx-auto px-4 pt-5 space-y-5" style={{ paddingBottom: 'calc(156px + var(--tilawah-dock-space, 0px))' }}>
         {/* APPEARANCE SECTION */}
         {sectionId === 'appearance' && (
           <div className="space-y-4">
@@ -751,7 +790,7 @@ const SettingsSubPage: React.FC = () => {
               </Select>
             </Card>
 
-            <Card className="p-4 space-y-4 rounded-2xl" style={{ paddingBottom: '18px', overflow: 'visible', maxHeight: 'none' }}>
+            <Card className="p-4 space-y-4 rounded-2xl" style={{ paddingBottom: '20px', overflow: 'visible', maxHeight: 'none' }}>
               <div
                 className="flex items-center justify-between py-1 cursor-pointer group"
                 onClick={() => navigate('/settings/app-theme', { replace: true })}
@@ -815,6 +854,9 @@ const SettingsSubPage: React.FC = () => {
             </Card>
           </div>
         )}
+
+        {/* WIDGETS SECTION */}
+        {sectionId === 'widgets' && <WidgetSettings />}
 
         {/* APP THEME SECTION */}
         {sectionId === 'app-theme' && (
@@ -998,6 +1040,157 @@ const SettingsSubPage: React.FC = () => {
         {/* NOTIFICATIONS SECTION */}
         {sectionId === 'notifications' && (
           <div className="space-y-4">
+            {/* SMART SALAH ALERTS & AUTO-DND CARD */}
+            <Card className="p-4 space-y-4 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <div>
+                <Label className="text-sm font-bold flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-[var(--accent-text)]" />
+                  Smart Salah & Alert Engine
+                </Label>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  Advance reminders, alarm volume, Auto-DND & live countdown
+                </p>
+              </div>
+
+              {/* 1. Advance Pre-Prayer Reminder */}
+              <div className="pt-2 border-t border-[var(--border)]">
+                <div className="mb-2">
+                  <Label className="text-sm font-bold">{smartSalahStrings.advanceTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{smartSalahStrings.advanceSub}</p>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5 pt-1">
+                  {([0, 5, 10, 15, 30] as AdvanceReminderMinutes[]).map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => updateSmartSalah({ advanceReminderMinutes: mins })}
+                      className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all text-center active:scale-95 ${
+                        smartSalah.advanceReminderMinutes === mins
+                          ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)] ring-2 ring-[var(--accent)]/30'
+                          : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                      }`}
+                    >
+                      {mins === 0 ? smartSalahStrings.advanceOff : `${mins}m`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Play Adhan as Alarm Volume */}
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
+                <div className="pe-2">
+                  <Label className="text-sm font-bold">{smartSalahStrings.alarmStreamTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{smartSalahStrings.alarmStreamSub}</p>
+                </div>
+                <Switch
+                  checked={smartSalah.playAdhanAsAlarm}
+                  onCheckedChange={(checked) => updateSmartSalah({ playAdhanAsAlarm: checked })}
+                />
+              </div>
+
+              {/* 3. Full-Screen Lockscreen Prayer Alert */}
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
+                <div className="pe-2">
+                  <Label className="text-sm font-bold">{smartSalahStrings.fullScreenTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{smartSalahStrings.fullScreenSub}</p>
+                </div>
+                <Switch
+                  checked={smartSalah.fullScreenAlerts}
+                  onCheckedChange={(checked) => updateSmartSalah({ fullScreenAlerts: checked })}
+                />
+              </div>
+
+              {/* 4. Silence Phone at Prayer Time (Auto-DND) */}
+              <div className="border-t border-[var(--border)] pt-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="pe-2">
+                    <Label className="text-sm font-bold">{smartSalahStrings.dndTitle}</Label>
+                    <p className="text-xs text-[var(--text-secondary)]">{smartSalahStrings.dndSub}</p>
+                  </div>
+                  <Switch
+                    checked={smartSalah.autoDndEnabled}
+                    onCheckedChange={(checked) => {
+                      updateSmartSalah({ autoDndEnabled: checked });
+                      if (checked && !hasDndAccess) {
+                        openNativeDndSettings();
+                      }
+                    }}
+                  />
+                </div>
+
+                {smartSalah.autoDndEnabled && (
+                  <div className="space-y-3 pt-2">
+                    {/* DND Permission Prompt Card if missing access */}
+                    {!hasDndAccess && (
+                      <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold">
+                          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                          <span>{smartSalahStrings.dndPermissionTitle}</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed">
+                          {smartSalahStrings.dndPermissionDesc}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={openNativeDndSettings}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 transition-all active:scale-95 inline-flex items-center gap-1"
+                        >
+                          {smartSalahStrings.dndGrantButton}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Silence Duration Pills */}
+                    <div>
+                      <Label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                        {smartSalahStrings.dndDurationLabel}
+                      </Label>
+                      <div className="grid grid-cols-3 gap-2 pt-1.5">
+                        {([15, 20, 30] as AutoDndDurationMinutes[]).map((dur) => (
+                          <button
+                            key={dur}
+                            type="button"
+                            onClick={() => updateSmartSalah({ autoDndDuration: dur })}
+                            className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all text-center active:scale-95 ${
+                              smartSalah.autoDndDuration === dur
+                                ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)] ring-2 ring-[var(--accent)]/30'
+                                : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)]'
+                            }`}
+                          >
+                            {dur} min
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Friday Extended */}
+                    <div className="flex items-center justify-between py-1 pt-2 border-t border-[var(--border)]">
+                      <div>
+                        <Label className="text-xs font-bold">{smartSalahStrings.dndFridayExtendedLabel}</Label>
+                        <p className="text-[11px] text-[var(--text-secondary)]">{smartSalahStrings.dndFridayExtendedSub}</p>
+                      </div>
+                      <Switch
+                        checked={smartSalah.autoDndFridayExtended}
+                        onCheckedChange={(checked) => updateSmartSalah({ autoDndFridayExtended: checked })}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Pinned Live Prayer Countdown Notification */}
+              <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
+                <div className="pe-2">
+                  <Label className="text-sm font-bold">{smartSalahStrings.countdownTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{smartSalahStrings.countdownSub}</p>
+                </div>
+                <Switch
+                  checked={smartSalah.liveCountdownEnabled}
+                  onCheckedChange={(checked) => updateSmartSalah({ liveCountdownEnabled: checked })}
+                />
+              </div>
+            </Card>
+
             {/* Top Summary Banner */}
             <div
               className="p-4 rounded-2xl border flex items-center justify-between gap-3 shadow-sm"

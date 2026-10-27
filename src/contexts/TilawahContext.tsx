@@ -54,6 +54,7 @@ export interface TilawahContextValue {
   currentTime: number;
   duration: number;
   progressPercent: number;
+  playbackTimeMs: number;
 
   // Active Ayah synchronized text
   activeAyahArabic: string;
@@ -71,7 +72,7 @@ export interface TilawahContextValue {
   isPlayerOpen: boolean;
 
   // Actions
-  playAyah: (surah: number, ayah: number, reciterId?: string) => Promise<void>;
+  playAyah: (surah: number, ayah: number, reciterParam?: string | TilawahReciter) => Promise<void>;
   togglePlay: () => void;
   pause: () => void;
   resume: () => void;
@@ -128,6 +129,7 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
+  const [playbackTimeMs, setPlaybackTimeMs] = useState<number>(0);
 
   // Synchronized text state
   const [activeAyahArabic, setActiveAyahArabic] = useState<string>('');
@@ -327,6 +329,29 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, []);
 
+  // High-precision (16–33ms) audio playback time polling for word-by-word highlight
+  useEffect(() => {
+    if (!isPlaying) {
+      setPlaybackTimeMs(0);
+      return;
+    }
+    let animId: number;
+    let lastMs = -1;
+    const tick = () => {
+      const audio = audioRef.current;
+      if (audio && !audio.paused) {
+        const ms = Math.round(audio.currentTime * 1000);
+        if (ms !== lastMs) {
+          lastMs = ms;
+          setPlaybackTimeMs(ms);
+        }
+      }
+      animId = requestAnimationFrame(tick);
+    };
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [isPlaying]);
+
   // Update MediaSession lock-screen & notification metadata
   useEffect(() => {
     if (typeof window === 'undefined' || !('mediaSession' in navigator) || !surahInfo) return;
@@ -361,7 +386,13 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Execute playback of a given ayah
   const playAyahInternal = useCallback(
-    async (surah: number, ayah: number, reciterObj = reciter) => {
+    async (surah: number, ayah: number, reciterParam?: string | TilawahReciter) => {
+      let reciterObj = reciter;
+      if (typeof reciterParam === 'string') {
+        reciterObj = TILAWAH_RECITERS.find((r) => r.id === reciterParam) || reciter;
+      } else if (reciterParam) {
+        reciterObj = reciterParam;
+      }
       const audio = audioRef.current;
       if (!audio) return;
 
@@ -740,6 +771,7 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
       currentTime,
       duration,
       progressPercent,
+      playbackTimeMs,
       activeAyahArabic,
       activeAyahTranslation,
       sleepTimerOption,
@@ -776,6 +808,7 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
       currentTime,
       duration,
       progressPercent,
+      playbackTimeMs,
       activeAyahArabic,
       activeAyahTranslation,
       sleepTimerOption,

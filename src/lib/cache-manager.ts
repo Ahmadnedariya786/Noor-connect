@@ -16,6 +16,7 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
   /^(?:noor[_-])?mushaf[_-]surface$/,
   /^(?:noor[_-])?time[_-]format$/,
   /^timeFormat$/,
+  /^(?:noor[_-])?widget[_-]style(?:[_-]v1)?$/,
   /^(?:salam[_-])?greeting[_-]enabled$/,
   /^splash[_-](?:greeting[_-])?enabled$/,
   /^animations?[_-]enabled$/,
@@ -104,6 +105,7 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
 
   // Notifications
   /^notification[_-](?:preferences|history|last[_-]asked|permission[_-]timestamp|permission[_-]denied)$/,
+  /^(?:smart[_-]salah|prayer[_-]dnd|prayer[_-]advance|prayer[_-]alarm|prayer[_-]fullscreen|prayer[_-]countdown)(?:[_-].+)?$/,
 ];
 
 export function isProtectedPersonalKey(key: string): boolean {
@@ -119,6 +121,8 @@ export function isTemporaryCacheKey(key: string): boolean {
 
   // Explicit temporary cache patterns ONLY
   return (
+    key.startsWith('noor_word_timings_') ||
+    key.includes('word_timing') ||
     key.startsWith('noor_mushaf_page_') ||
     key.startsWith('mushaf_page_') ||
     key === 'noor_mushaf_image_cache' ||

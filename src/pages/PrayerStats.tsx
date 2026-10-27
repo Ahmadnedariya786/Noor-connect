@@ -46,6 +46,8 @@ import {
 } from "@/lib/worship-log";
 import { formatTimetableTime } from "@/lib/prayer-utils";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useLanguage } from "@/contexts/LanguageContext-new";
+import { getWorshipJournalStrings } from "@/lib/worship-journal-i18n";
 
 const PRAYERS: { key: PrayerName; label: string; sunnahMax: number; sunnahCycleLabel: string }[] = [
   { key: "fajr", label: "Fajr", sunnahMax: 2, sunnahCycleLabel: "2 Sunnah Before" },
@@ -57,7 +59,9 @@ const PRAYERS: { key: PrayerName; label: string; sunnahMax: number; sunnahCycleL
 
 export default function PrayerStats() {
   const { timeFormat } = useSettings();
-  const is24h = timeFormat === "24" || timeFormat === "24h";
+  const { language, ui, isRTL } = useLanguage();
+  const wj = useMemo(() => getWorshipJournalStrings(language), [language]);
+  const is24h = timeFormat === "24h";
 
   // Selected date for Daily Worship Editor
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
@@ -211,14 +215,6 @@ export default function PrayerStats() {
     setHeatmapCells(get3MonthHeatmapData());
   };
 
-  // Cell color resolver for GitHub heatmap
-  const getCellBg = (count: number, isSelected: boolean) => {
-    if (isSelected) {
-      return "border-2 border-[var(--accent)]";
-    }
-    return "border border-[var(--border)]";
-  };
-
   // Compute month abbreviations aligned above 13 week columns
   const monthLabels = useMemo(() => {
     const labels: { colIndex: number; label: string }[] = [];
@@ -229,22 +225,22 @@ export default function PrayerStats() {
         const m = cell.dateObj.getMonth();
         if (m !== lastMonth) {
           lastMonth = m;
-          const monthShort = cell.dateObj.toLocaleDateString("en-US", { month: "short" });
+          const monthShort = cell.dateObj.toLocaleDateString(language || "en", { month: "short" });
           labels.push({ colIndex: c, label: monthShort });
         }
       }
     }
     return labels;
-  }, [heatmapCells]);
+  }, [heatmapCells, language]);
 
   // Format Gregorian & Hijri dates for switcher header
   const formattedGregorian = useMemo(() => {
-    return selectedDate.toLocaleDateString("en-US", {
+    return selectedDate.toLocaleDateString(language || "en", {
       weekday: "short",
       month: "short",
       day: "numeric",
     });
-  }, [selectedDate]);
+  }, [selectedDate, language]);
 
   const formattedHijri = useMemo(() => {
     if (daySchedule?.date?.hijri) {
@@ -272,10 +268,10 @@ export default function PrayerStats() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-32">
-        <AppBar title="Worship & Fasting Journal" showBack={true} />
+        <AppBar title={wj.pageTitle} showBack={true} />
 
         <div className="max-w-2xl mx-auto px-3.5 sm:px-4 pt-3 space-y-4">
-          {/* TOP 4 WORSHIP KPI PODS (Clean 2x2 Grid, Zero Truncation) */}
+          {/* TOP 4 WORSHIP KPI PODS (Clean 2x2 Grid, Zero Truncation, Isolated BiDi) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {/* KPI 1: On-Time Streak */}
             <Card
@@ -284,12 +280,19 @@ export default function PrayerStats() {
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Flame className="w-4 h-4 text-[var(--accent)]" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Streak</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  {wj.streak}
+                </span>
               </div>
               <div className="text-lg font-black text-[var(--accent-text)] tracking-tight leading-none">
-                {kpis.onTimeStreak} {kpis.onTimeStreak === 1 ? "Day" : "Days"}
+                <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                  {kpis.onTimeStreak}
+                </span>{" "}
+                <bdi>{kpis.onTimeStreak === 1 ? wj.day : wj.days}</bdi>
               </div>
-              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">On-time Salah</span>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">
+                {wj.ontimeSalah}
+              </span>
             </Card>
 
             {/* KPI 2: Sunnah Kept % */}
@@ -299,12 +302,18 @@ export default function PrayerStats() {
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Sparkles className="w-4 h-4 text-[var(--accent-2)]" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Sunnah</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  {wj.sunnah}
+                </span>
               </div>
               <div className="text-lg font-black text-[var(--text-primary)] tracking-tight leading-none">
-                {kpis.sunnahKeptPercent}%
+                <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                  {kpis.sunnahKeptPercent}%
+                </span>
               </div>
-              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">Rawatib this mo.</span>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
+                {wj.rawatibThisMo}
+              </span>
             </Card>
 
             {/* KPI 3: Fasted Days */}
@@ -314,12 +323,19 @@ export default function PrayerStats() {
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Moon className="w-4 h-4 text-[var(--accent)]" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Fasted</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  {wj.fasted}
+                </span>
               </div>
               <div className="text-lg font-black text-[var(--accent-text)] tracking-tight leading-none">
-                {kpis.fastedDaysThisMonth} {kpis.fastedDaysThisMonth === 1 ? "Day" : "Days"}
+                <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                  {kpis.fastedDaysThisMonth}
+                </span>{" "}
+                <bdi>{kpis.fastedDaysThisMonth === 1 ? wj.day : wj.days}</bdi>
               </div>
-              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">This month</span>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">
+                {wj.thisMonth}
+              </span>
             </Card>
 
             {/* KPI 4: Qaza Owed */}
@@ -329,32 +345,56 @@ export default function PrayerStats() {
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Qaza Owed</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  {wj.qazaOwed}
+                </span>
               </div>
               <div
                 className={`text-lg font-black tracking-tight leading-none ${
                   kpis.qazaOwedTotal === 0 ? "text-emerald-400" : "text-amber-400"
                 }`}
               >
-                {kpis.qazaOwedTotal === 0 ? "0 • Clear" : `${kpis.qazaOwedTotal} Left`}
+                {kpis.qazaOwedTotal === 0 ? (
+                  wj.clearZero
+                ) : (
+                  <>
+                    <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                      {kpis.qazaOwedTotal}
+                    </span>{" "}
+                    <bdi>{wj.left}</bdi>
+                  </>
+                )}
               </div>
-              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">Pending makeup</span>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">
+                {wj.pendingMakeup}
+              </span>
             </Card>
           </div>
 
-          {/* INTERACTIVE 3-MONTH GITHUB-STYLE HEATMAP (13 Weeks x 7 Days = 91 Cells) */}
+          {/* INTERACTIVE 3-MONTH GITHUB-STYLE HEATMAP — Flexbox Header Fix with Zero Text Overlap */}
           <Card
             className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md"
             style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "8px",
+                flexWrap: "wrap",
+                marginBottom: "12px",
+              }}
+            >
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shrink-0" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                  3-Month Consistency Heatmap
+                  {wj.heatmapTitle}
                 </h3>
               </div>
-              <span className="text-[11px] text-[var(--text-secondary)]">Tap cell to edit</span>
+              <span className="text-[11px] text-[var(--text-secondary)] shrink-0">
+                {wj.tapCellToEdit}
+              </span>
             </div>
 
             {/* Heatmap Grid Container (Horizontal scroll safe for 360px) */}
@@ -384,10 +424,9 @@ export default function PrayerStats() {
                 <div className="flex gap-1.5 justify-between">
                   {/* Day-of-week labels on left: M, W, F, S */}
                   <div className="flex flex-col justify-between text-[9px] font-bold text-[var(--text-secondary)] pr-1 select-none py-0.5">
-                    <span>M</span>
-                    <span>W</span>
-                    <span>F</span>
-                    <span>S</span>
+                    {wj.weekdays.map((d, idx) => (
+                      <span key={idx}>{d}</span>
+                    ))}
                   </div>
 
                   {/* 13 Week Columns */}
@@ -418,7 +457,7 @@ export default function PrayerStats() {
                           key={cell.date}
                           type="button"
                           onClick={() => setSelectedDate(cell.dateObj)}
-                          title={`${cell.date}: ${cell.completedCount}/5 prayers${cell.fasted ? " • Fasted" : ""}`}
+                          title={`${cell.date}: ${cell.completedCount}/5${cell.fasted ? " • " + wj.fastedDay : ""}`}
                           className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[4px] relative flex items-center justify-center transition-all ${
                             isSelected
                               ? "border-2 border-[var(--accent)]"
@@ -448,10 +487,10 @@ export default function PrayerStats() {
             {/* Heatmap Legend */}
             <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] mt-3 pt-2.5 border-t border-[var(--border)]">
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)]" /> Fasted day
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)]" /> {wj.fastedDay}
               </span>
               <div className="flex items-center gap-1.5">
-                <span>Less</span>
+                <span>{wj.less}</span>
                 <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--surface-2)]" />
                 <span
                   className="w-2.5 h-2.5 rounded-[2px]"
@@ -468,7 +507,9 @@ export default function PrayerStats() {
                   }}
                 />
                 <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--accent)]" />
-                <span>5/5</span>
+                <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="tabular-nums font-mono">
+                  5/5
+                </span>
               </div>
             </div>
           </Card>
@@ -482,19 +523,19 @@ export default function PrayerStats() {
               className="h-8 w-8 p-0 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               aria-label="Previous day"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
             </Button>
 
             <div className="flex items-center gap-2 min-w-0 flex-1 justify-center text-center">
               <div className="min-w-0">
                 <h2 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">
-                  {isSelectedDateToday ? "Today" : formattedGregorian}
+                  {isSelectedDateToday ? wj.today : formattedGregorian}
                   {formattedHijri ? ` • ${formattedHijri}` : ""}
                 </h2>
                 {isOfflineTimes && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-medium">
                     <WifiOff className="w-2.5 h-2.5" />
-                    <span>offline times</span>
+                    <span>{wj.offlineTimes}</span>
                   </span>
                 )}
               </div>
@@ -504,9 +545,9 @@ export default function PrayerStats() {
                   variant="outline"
                   size="sm"
                   onClick={handleBackToToday}
-                  className="h-6 px-2 text-[10px] font-bold rounded-lg bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)]"
+                  className="h-6 px-2 text-[10px] font-bold rounded-lg bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] shrink-0"
                 >
-                  Back to today
+                  {wj.backToToday}
                 </Button>
               )}
             </div>
@@ -518,7 +559,7 @@ export default function PrayerStats() {
               className="h-8 w-8 p-0 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               aria-label="Next day"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
             </Button>
           </div>
 
@@ -528,6 +569,7 @@ export default function PrayerStats() {
               const currentStatus = dayLog.statuses[prayer.key] || "none";
               const prayerTime = prayerTimesMap ? (prayerTimesMap as any)[prayer.key] : "...";
               const sunnahCount = dayLog.sunnah[prayer.key] || 0;
+              const prayerDisplayName = (ui as any)[prayer.key] || prayer.label;
 
               return (
                 <Card
@@ -539,8 +581,10 @@ export default function PrayerStats() {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
-                      <span className="font-bold text-sm text-[var(--text-primary)]">{prayer.label}</span>
-                      <span className="text-xs text-[var(--accent-text)] font-mono font-semibold">{prayerTime}</span>
+                      <span className="font-bold text-sm text-[var(--text-primary)]">{prayerDisplayName}</span>
+                      <span dir="ltr" className="text-xs text-[var(--accent-text)] font-mono font-semibold tabular-nums">
+                        {prayerTime}
+                      </span>
                     </div>
 
                     {/* Interactive Sunnah Rawatib Chip */}
@@ -557,7 +601,12 @@ export default function PrayerStats() {
                         title={`Tap to cycle Sunnah: ${sunnahCount}/${prayer.sunnahMax}`}
                       >
                         <Sparkles className="w-2.5 h-2.5" />
-                        <span>Sunnah {sunnahCount}/{prayer.sunnahMax}</span>
+                        <span>
+                          <bdi>{wj.sunnahLabel}</bdi>{" "}
+                          <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="tabular-nums font-mono">
+                            {sunnahCount}/{prayer.sunnahMax}
+                          </span>
+                        </span>
                       </button>
                     )}
                   </div>
@@ -565,10 +614,10 @@ export default function PrayerStats() {
                   {/* 4-Pill Status Selector (Fitting 360px with repeat(4, 1fr)) */}
                   <div className="grid grid-cols-4 gap-1.5" style={{ minWidth: 0 }}>
                     {[
-                      { key: "ontime" as PrayerStatus, label: "On time" },
-                      { key: "late" as PrayerStatus, label: "Late" },
-                      { key: "missed" as PrayerStatus, label: "Missed" },
-                      { key: "makeup" as PrayerStatus, label: "Make-up" },
+                      { key: "ontime" as PrayerStatus, label: wj.statusOnTime },
+                      { key: "late" as PrayerStatus, label: wj.statusLate },
+                      { key: "missed" as PrayerStatus, label: wj.statusMissed },
+                      { key: "makeup" as PrayerStatus, label: wj.statusMakeup },
                     ].map((pill) => {
                       const isActive = currentStatus === pill.key;
                       let activeStyle = {};
@@ -614,7 +663,7 @@ export default function PrayerStats() {
             <div className="flex items-center gap-2">
               <Moon className="w-4 h-4 text-[var(--accent)]" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                Night Worship (Qiyam & Witr)
+                {wj.nightWorship}
               </h3>
             </div>
 
@@ -630,7 +679,7 @@ export default function PrayerStats() {
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{dayLog.witr ? "Witr Prayed ✓" : "Witr Prayed"}</span>
+                <span>{dayLog.witr ? wj.witrPrayedDone : wj.witrPrayed}</span>
               </button>
 
               {/* Qiyam Stepper in Steps of 2 */}
@@ -648,9 +697,12 @@ export default function PrayerStats() {
 
                 <div className="text-center">
                   <span className="text-xs font-bold text-[var(--text-primary)]">
-                    {dayLog.qiyam} {dayLog.qiyam === 1 ? "Rak'at" : "Rak'ats"}
+                    <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                      {dayLog.qiyam}
+                    </span>{" "}
+                    <bdi>{wj.rakats}</bdi>
                   </span>
-                  <span className="block text-[8.5pt] text-[var(--text-secondary)] leading-none">Qiyam</span>
+                  <span className="block text-[8.5pt] text-[var(--text-secondary)] leading-none">{wj.qiyam}</span>
                 </div>
 
                 <Button
@@ -676,7 +728,7 @@ export default function PrayerStats() {
               <div className="flex items-center gap-2">
                 <Sun className="w-4 h-4 text-[var(--accent)]" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                  Fasting Journal
+                  {wj.fastingJournal}
                 </h3>
               </div>
 
@@ -698,17 +750,17 @@ export default function PrayerStats() {
             <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-center">
               <div>
                 <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] block">
-                  Suhoor (Fajr/Imsak)
+                  {wj.suhoor}
                 </span>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span dir="ltr" className="text-xs font-mono font-bold text-[var(--accent-text)] tabular-nums">
                   {prayerTimesMap?.suhoor || "..."}
                 </span>
               </div>
-              <div className="border-l border-[var(--border)] pl-2">
+              <div className="border-l border-[var(--border)] pl-2 rtl:border-l-0 rtl:border-r rtl:pr-2">
                 <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] block">
-                  Iftaar (Maghrib)
+                  {wj.iftaar}
                 </span>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span dir="ltr" className="text-xs font-mono font-bold text-[var(--accent-text)] tabular-nums">
                   {prayerTimesMap?.iftaar || "..."}
                 </span>
               </div>
@@ -717,10 +769,10 @@ export default function PrayerStats() {
             {/* Fast Category Selector Pills */}
             <div className="grid grid-cols-4 gap-1.5" style={{ minWidth: 0 }}>
               {[
-                { key: "sunnah" as FastCategory, label: "Sunnah" },
-                { key: "ramadan" as FastCategory, label: "Ramadan" },
-                { key: "qaza" as FastCategory, label: "Qaza" },
-                { key: "nafl" as FastCategory, label: "Nafl" },
+                { key: "sunnah" as FastCategory, label: wj.catSunnah },
+                { key: "ramadan" as FastCategory, label: wj.catRamadan },
+                { key: "qaza" as FastCategory, label: wj.catQaza },
+                { key: "nafl" as FastCategory, label: wj.catNafl },
               ].map((cat) => {
                 const isCatActive = selectedFastCategory === cat.key;
                 return (
@@ -755,12 +807,12 @@ export default function PrayerStats() {
               {dayLog.fasted ? (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>✓ Fast Kept — BarakAllahu Feek</span>
+                  <span>{wj.fastKept}</span>
                 </>
               ) : (
                 <>
                   <Moon className="w-4 h-4" />
-                  <span>Mark as Fasted Today</span>
+                  <span>{wj.markFasted}</span>
                 </>
               )}
             </Button>
@@ -770,3 +822,4 @@ export default function PrayerStats() {
     </PageTransition>
   );
 }
+

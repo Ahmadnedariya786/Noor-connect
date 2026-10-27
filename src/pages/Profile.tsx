@@ -18,6 +18,7 @@ import {
   Sparkles,
   CheckCircle2,
   Lock,
+  LayoutGrid,
 } from 'lucide-react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -64,6 +65,15 @@ function getSettingsGroups(ui: any): SettingsGroup[] {
           iconColor: 'text-amber-600 dark:text-amber-400',
           route: '/settings/appearance',
           asyncKey: 'theme',
+        },
+        {
+          id: 'widgets',
+          title: ui.homeWidgets,
+          subtitle: ui.homeWidgetsSub,
+          icon: LayoutGrid,
+          gradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20',
+          iconColor: 'text-emerald-600 dark:text-emerald-400',
+          route: '/settings/widgets',
         },
         {
           id: 'clock-style',
@@ -529,8 +539,8 @@ const Profile: React.FC = () => {
                             {row.title}
                           </div>
                           <div
-                            className="font-normal text-[var(--text-secondary)] mt-0.5 truncate bidi-plaintext"
-                            style={{ fontSize: '0.70rem', unicodeBidi: 'plaintext' }}
+                            className="font-normal text-[var(--text-secondary)] mt-0.5 bidi-plaintext"
+                            style={{ fontSize: '0.70rem', unicodeBidi: 'plaintext', whiteSpace: 'normal', lineHeight: 1.35 }}
                           >
                             {row.subtitle}
                           </div>
@@ -543,11 +553,11 @@ const Profile: React.FC = () => {
                           <div className="w-8 h-4 bg-[var(--surface-2)] rounded-full animate-pulse" />
                         ) : val !== null ? (
                           <span
-                            className="rounded-full font-semibold bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] shrink-0"
-                            style={{ fontSize: '0.68rem', padding: '3px 8px' }}
+                            className="rounded-full font-semibold bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] shrink-0 truncate max-w-[128px]"
+                            style={{ fontSize: '0.68rem', padding: '3px 8px', maxWidth: '128px', flexShrink: 0 }}
                             dir="ltr"
                           >
-                            <span style={{ unicodeBidi: 'isolate' }}>{val}</span>
+                            <span style={{ unicodeBidi: 'isolate' }} className="truncate block max-w-[112px]">{val}</span>
                           </span>
                         ) : null
                       )}

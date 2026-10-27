@@ -13,6 +13,7 @@ import { getMadhab } from './storage';
 import { getPrayerMinuteOffsets, applyOffsetsToTimings } from './prayer-offsets';
 
 export interface LivePrayerTiming {
+  [key: string]: string;
   Fajr: string;
   Sunrise: string;
   Dhuhr: string;

@@ -12,6 +12,7 @@ import {
     CheckCircle, AlertTriangle, Users, HeartPulse, Music, Search, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SERVICES_TOOLS_BANNER_I18N } from "@/lib/home-prayer-i18n";
 const SERVICE_CATEGORIES: Record<string, string> = {
     "/prayer-stats": "Worship",
     "/services/salah-tracker": "Worship",
@@ -40,7 +41,7 @@ const SERVICE_CATEGORIES: Record<string, string> = {
 };
 
 export default function Services() {
-    const { t, ui, isRTL } = useLanguage();
+    const { t, ui, isRTL, language } = useLanguage();
     const navigate = useNavigate();
     const { isEidAlFitr, isEidAlAdha, islamicInfo, isLoading } = useIslamicCalendar();
     const { animationEnabled } = useSettings();
@@ -357,7 +358,7 @@ export default function Services() {
 
                 <div className="px-8 mt-12 text-center opacity-40 pb-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-                        Noor Connect • 17 Spiritual Tools
+                        {SERVICES_TOOLS_BANNER_I18N[language] || SERVICES_TOOLS_BANNER_I18N.en}
                     </p>
                 </div>
             </div>

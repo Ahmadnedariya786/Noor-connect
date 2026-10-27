@@ -13,6 +13,7 @@ import { BookOpen, TrendingUp, Award, Calendar } from 'lucide-react';
 import { quranFeaturesService } from '@/lib/quran-features';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext-new';
+import { QURAN_PROGRESS_I18N } from '@/lib/home-prayer-i18n';
 
 interface OverallProgress {
   totalSurahs: number;
@@ -30,7 +31,7 @@ interface QuranProgressWidgetProps {
 
 export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   const navigate = useNavigate();
-  const { t, ui } = useLanguage();
+  const { t, ui, language, isRTL } = useLanguage();
   const [progress, setProgress] = useState<OverallProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -68,20 +69,22 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
     };
   }, []);
 
+  const i18nPack = QURAN_PROGRESS_I18N[language] || QURAN_PROGRESS_I18N.en;
+
   const getAchievementBadge = (percentage: number) => {
-    if (percentage >= 100) return { icon: Award, text: 'Completed' };
-    if (percentage >= 75) return { icon: TrendingUp, text: 'Advanced' };
-    if (percentage >= 50) return { icon: BookOpen, text: 'Progressing' };
-    if (percentage >= 25) return { icon: Calendar, text: 'Started' };
-    return { icon: BookOpen, text: 'Beginner' };
+    if (percentage >= 100) return { icon: Award, text: i18nPack.badges.completed };
+    if (percentage >= 75) return { icon: TrendingUp, text: i18nPack.badges.advanced };
+    if (percentage >= 50) return { icon: BookOpen, text: i18nPack.badges.progressing };
+    if (percentage >= 25) return { icon: Calendar, text: i18nPack.badges.started };
+    return { icon: BookOpen, text: i18nPack.badges.beginner };
   };
 
   const getMotivationalMessage = (percentage: number) => {
-    if (percentage >= 100) return '🎉 Congratulations! You have completed the entire Quran!';
-    if (percentage >= 75) return "🌟 Excellent progress! You're almost there!";
-    if (percentage >= 50) return '💪 Great job! Half way through the Quran!';
-    if (percentage >= 25) return "📚 Keep going! You're building momentum!";
-    return '🌱 Start your Quran journey today!';
+    if (percentage >= 100) return i18nPack.messages.completed;
+    if (percentage >= 75) return i18nPack.messages.advanced;
+    if (percentage >= 50) return i18nPack.messages.progressing;
+    if (percentage >= 25) return i18nPack.messages.started;
+    return i18nPack.messages.beginner;
   };
 
   if (loading) {
@@ -264,7 +267,11 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
         <div className="grid grid-cols-2 gap-2.5">
           <div className="p-3 rounded-[14px] bg-[var(--surface-2)] border border-[var(--border)] text-center">
             <p className="text-base sm:text-lg font-black tabular-nums text-[var(--accent-text)]">
-              <span dir="ltr" className="inline-block tabular-nums font-mono">{progress.completedSurahs} / {progress.totalSurahs}</span>
+              <bdi>
+                <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                  {progress.completedSurahs} / {progress.totalSurahs}
+                </span>
+              </bdi>
             </p>
             <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)] mt-0.5">
               {ui.surahsCompleted}
@@ -272,7 +279,11 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
           </div>
           <div className="p-3 rounded-[14px] bg-[var(--surface-2)] border border-[var(--border)] text-center">
             <p className="text-base sm:text-lg font-black tabular-nums text-[var(--text-primary)]">
-              <span dir="ltr" className="inline-block tabular-nums font-mono">{progress.pagesRead} / {progress.totalPages}</span>
+              <bdi>
+                <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                  {progress.pagesRead} / {progress.totalPages}
+                </span>
+              </bdi>
             </p>
             <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)] mt-0.5">
               {ui.pagesRead}
@@ -293,7 +304,12 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
             />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)] text-center">
-            <span dir="ltr" className="inline-block tabular-nums font-mono">{progress.completedAyahs?.toLocaleString() || 0} / {progress.totalAyahs?.toLocaleString() || 6236}</span> {ui.totalAyahs}
+            <bdi>
+              <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                {(progress.completedAyahs ?? 0).toLocaleString('en-US')} / {(progress.totalAyahs ?? 6236).toLocaleString('en-US')}
+              </span>
+            </bdi>{' '}
+            <span>{ui.totalAyahs}</span>
           </p>
         </div>
 

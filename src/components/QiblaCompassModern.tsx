@@ -1027,10 +1027,12 @@ const QiblaCompassModern = () => {
                   {ui.distanceToBaitullah}
                 </p>
                 <div className="flex items-baseline gap-1.5 ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
-                  <span className="text-3xl font-black text-[var(--text-primary)] tracking-tight ltr-num" dir="ltr">
-                    {Math.round(distanceKm).toLocaleString()}
-                  </span>
-                  <span className="text-sm font-bold text-[var(--text-secondary)] ltr-num" dir="ltr">km</span>
+                  <bdi>
+                    <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono text-3xl font-black text-[var(--text-primary)] tracking-tight">
+                      {Math.round(distanceKm).toLocaleString('en-US')}
+                    </span>
+                  </bdi>
+                  <span className="text-sm font-bold text-[var(--text-secondary)]">km</span>
                 </div>
               </div>
 
@@ -1088,7 +1090,11 @@ const QiblaCompassModern = () => {
                     ) : (
                       <Plane className="w-3.5 h-3.5" />
                     )}
-                    <span>{Math.round(distanceKm).toLocaleString()} km</span>
+                    <bdi>
+                      <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono">
+                        {Math.round(distanceKm).toLocaleString('en-US')} km
+                      </span>
+                    </bdi>
                   </div>
                 </div>
 

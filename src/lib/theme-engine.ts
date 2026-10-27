@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { type ThemeId, type ThemeTokens, type AppTheme } from '@/types/theme';
+export type { ThemeId, ThemeTokens, AppTheme } from '@/types/theme';
 import { recordBreadcrumb } from './diagnostics-engine';
 
 export const THEME_STORAGE_KEY = 'noor_theme';

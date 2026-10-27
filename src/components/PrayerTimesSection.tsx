@@ -8,6 +8,12 @@ import { OnlinePrayerAPI, type LiveDaySchedule } from '@/lib/online-prayer-api';
 import { useSettings } from '@/contexts/SettingsContext';
 import { formatPrayerTime } from '@/lib/time-formatter';
 import { getPrayerMinuteOffsets, applyOffsetsToTimings, PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
+import {
+  getLocalizedPrayerName,
+  formatLocalizedCountdown,
+  formatLocalizedAfterPrayer,
+} from '@/lib/home-prayer-i18n';
+import type { LanguageCode } from '@/lib/language-config';
 
 export interface PrayerItem {
   name: string;
@@ -260,16 +266,13 @@ function MosqueSilhouette() {
 }
 
 /**
- * Formats countdown string from target Date object cleanly with no jitter.
+ * Formats countdown string from target Date object cleanly with no jitter and full 8-language localization.
  */
-function useCountdownText(targetTime?: Date | null): string {
+function useCountdownText(targetTime?: Date | null, lang: LanguageCode = 'en'): string {
   const [text, setText] = useState<string>(() => {
     if (!targetTime) return 'In --';
     const diff = targetTime.getTime() - Date.now();
-    if (diff <= 0) return 'due now';
-    const h = Math.floor(diff / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return h > 0 ? `In ${h}h ${m}m` : `In ${m}m`;
+    return formatLocalizedCountdown(diff, lang);
   });
 
   useEffect(() => {
@@ -280,19 +283,13 @@ function useCountdownText(targetTime?: Date | null): string {
 
     const update = () => {
       const diff = targetTime.getTime() - Date.now();
-      if (diff <= 0) {
-        setText('due now');
-        return;
-      }
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      setText(h > 0 ? `In ${h}h ${m}m` : `In ${m}m`);
+      setText(formatLocalizedCountdown(diff, lang));
     };
 
     update();
     const timerId = setInterval(update, 5000);
     return () => clearInterval(timerId);
-  }, [targetTime]);
+  }, [targetTime, lang]);
 
   return text;
 }
@@ -306,7 +303,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   locationLabel,
 }) => {
   const navigate = useNavigate();
-  const { t, ui, isRTL } = useLanguage();
+  const { t, ui, isRTL, language } = useLanguage();
   const location = useLocationState();
   const { timeFormat } = useSettings();
 
@@ -395,12 +392,13 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     return localStorage.getItem('prayer-notifications-enabled') !== 'false';
   });
 
-  const countdownText = useCountdownText(nextPrayer.targetTime);
+  const countdownText = useCountdownText(nextPrayer.targetTime, language);
 
-  // Resolved Display Name for Next Prayer (ensures Friday Dhuhr is "Jummah")
+  // Resolved Display Name for Next Prayer (ensures Friday Dhuhr is "Jummah", localized)
   const resolvedNextDisplayName = useMemo(() => {
-    return getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime || new Date());
-  }, [nextPrayer.name, nextPrayer.targetTime]);
+    const raw = getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime || new Date());
+    return getLocalizedPrayerName(raw, language);
+  }, [nextPrayer.name, nextPrayer.targetTime, language]);
 
   // Match prayer time with the floating prayer list row to guarantee 100% AM/PM consistency
   const matchingPrayer = useMemo(() => {
@@ -446,13 +444,13 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     isha: 'ٱلْعِشَاء',
   };
 
-  const baseWaqtKey = (resolvedNextDisplayName || nextPrayer.name || '')
+  const baseWaqtKey = (nextPrayer.name || '')
     .toLowerCase()
     .split(' ')[0]
     .replace(/[^a-z]/g, '');
   const arabicWaqtEmblem = WAQT_CALLIGRAPHY_MAP[baseWaqtKey] || 'ٱلصَّلَاة';
 
-  // Compact 5-waqt strip items without AM/PM suffix
+  // Compact 5-waqt strip items without AM/PM suffix, fully localized
   const fiveWaqts = useMemo(() => {
     const isFriday = (nextPrayer.targetTime || new Date()).getDay() === 5;
     const slots = [
@@ -484,19 +482,17 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
       return {
         key: slot.key,
-        label: slot.label,
+        label: getLocalizedPrayerName(slot.label, language),
         time: compactTime,
         isActive,
       };
     });
-  }, [prayers, nextPrayer.name, nextPrayer.targetTime, resolvedNextDisplayName]);
+  }, [prayers, nextPrayer.name, nextPrayer.targetTime, resolvedNextDisplayName, language]);
 
   // Subtitle next to or below progress bar
   const remainingSubtitle = useMemo(() => {
-    if (countdownText === 'due now') return ui.dueNow;
-    if (countdownText.startsWith('In ')) return `${countdownText.slice(3)} ${ui.remainingSuffix}`;
-    return `${countdownText} ${ui.remainingSuffix}`;
-  }, [countdownText, ui]);
+    return countdownText;
+  }, [countdownText]);
 
   return (
     <div className="w-full flex flex-col">
@@ -750,9 +746,11 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             }}
           >
             <span>
-              {previousPrayer?.name ? `${ui.afterPrefix} ${previousPrayer.name}` : `Starts at ${nextPrayer.time}`}
+              {previousPrayer?.name ? formatLocalizedAfterPrayer(previousPrayer.name, language) : `Starts at ${nextPrayer.time}`}
             </span>
-            <span>{remainingSubtitle}</span>
+            <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="tabular-nums font-mono">
+              {remainingSubtitle}
+            </span>
           </div>
         </div>
       </div>
@@ -843,7 +841,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           aria-label="Previous day prayer times"
           className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] active:scale-90 transition-all shrink-0"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
         </button>
 
         <div className="flex items-center gap-2 min-w-0 px-1 text-center justify-center">
@@ -867,7 +865,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           aria-label="Next day prayer times"
           className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] active:scale-90 transition-all shrink-0"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
@@ -885,14 +883,15 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       >
         {displayedPrayers.map((prayer) => {
           const rawName = prayer.originalName || prayer.name;
-          const displayName = getPrayerDisplayName(prayer.name, prayer.date);
+          const canonicalName = getPrayerDisplayName(prayer.name, prayer.date);
+          const localizedName = getLocalizedPrayerName(canonicalName, language);
           const isRowActive = Boolean(
             selectedDateOffset === 0 && (
               prayer.isActive ||
               isMatchingPrayer(prayer.name, nextPrayer.name) ||
               isMatchingPrayer(prayer.originalName, nextPrayer.name) ||
-              isMatchingPrayer(displayName, nextPrayer.name) ||
-              isMatchingPrayer(displayName, resolvedNextDisplayName)
+              isMatchingPrayer(canonicalName, nextPrayer.name) ||
+              isMatchingPrayer(canonicalName, resolvedNextDisplayName)
             )
           );
 
@@ -932,7 +931,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                     fontSize: '1rem',
                   }}
                 >
-                  {displayName}
+                  {localizedName}
                 </span>
               </div>
 
@@ -963,7 +962,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 {/* Per-Prayer Notification Bell Button: wires to Prayer Notifications settings per Guard 2 */}
                 <button
                   type="button"
-                  aria-label={`Notification settings for ${displayName}`}
+                  aria-label={`Notification settings for ${localizedName}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/settings/notifications');

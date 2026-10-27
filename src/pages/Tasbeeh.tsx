@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
 import { AppBar } from "@/components/AppBar";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { TASBEEH_I18N } from "@/lib/home-prayer-i18n";
 
 export interface ChainStep {
   id: number;
@@ -91,7 +92,8 @@ type FeedbackMode = 'all' | 'vibrate' | 'silent';
 
 const Tasbeeh = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language, isRTL } = useLanguage();
+  const tasbeehPack = TASBEEH_I18N[language] || TASBEEH_I18N.en;
   const [count, setCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedDhikr, setSelectedDhikr] = useState(DHIKR_OPTIONS[0].value);
@@ -418,7 +420,7 @@ const Tasbeeh = () => {
             setZenMode(false);
             triggerHapticFeedback('reset');
           }}
-          className="absolute top-4 left-4 select-none active:scale-95 transition-transform cursor-pointer"
+          className="absolute top-4 start-4 select-none active:scale-95 transition-transform cursor-pointer"
           style={{
             background: 'var(--surface-2)',
             border: '1px solid var(--border)',
@@ -430,7 +432,7 @@ const Tasbeeh = () => {
             zIndex: 50,
           }}
         >
-          ✕ Exit Zen
+          {tasbeehPack.exitZen}
         </button>
 
         <div className="absolute top-16 left-0 right-0 text-center px-4 max-w-sm mx-auto pointer-events-none select-none">
@@ -475,9 +477,13 @@ const Tasbeeh = () => {
         </span>
 
         <div className="absolute bottom-28 pb-4 left-0 right-0 text-center pointer-events-none select-none">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] mb-1" style={{ color: 'var(--text-secondary)' }}>Goal Progress</p>
+          <p className="text-xs font-bold uppercase tracking-[0.3em] mb-1" style={{ color: 'var(--text-secondary)' }}>
+            {tasbeehPack.goalProgress}
+          </p>
           <p className="text-2xl font-bold italic" style={{ color: 'var(--accent-text)' }}>
-            {targetGoal === Infinity ? '∞' : `${count % targetGoal} / ${targetGoal}`}
+            <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+              {targetGoal === Infinity ? '∞' : `${count % targetGoal} / ${targetGoal}`}
+            </span>
           </p>
         </div>
       </div>
@@ -513,7 +519,7 @@ const Tasbeeh = () => {
                   color: 'var(--text-primary)',
                 }}
               >
-                Set: <span style={{ color: 'var(--accent-text)' }}>{setNumber}</span>
+                {tasbeehPack.set}: <span style={{ color: 'var(--accent-text)' }}>{setNumber}</span>
               </div>
 
               <div
@@ -543,7 +549,7 @@ const Tasbeeh = () => {
                 title={isLocked ? "Touch is locked to prevent accidental taps" : "Lock screen controls"}
               >
                 {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                <span>{isLocked ? 'Locked' : 'Lock'}</span>
+                <span>{isLocked ? tasbeehPack.locked : tasbeehPack.lock}</span>
               </button>
 
               <button
@@ -595,7 +601,7 @@ const Tasbeeh = () => {
               }}
             >
               <Link2 className="w-3.5 h-3.5" />
-              <span>{isChainMode ? `⛓ Sunnah Chain: ON (${chainStepIndex + 1}/6)` : '⛓ Sunnah Chain Mode'}</span>
+              <span>{isChainMode ? `${tasbeehPack.sunnahChainOn} (${chainStepIndex + 1}/6)` : tasbeehPack.sunnahChainMode}</span>
             </button>
           </div>
 
@@ -656,7 +662,7 @@ const Tasbeeh = () => {
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <span>Set {chainStepIndex + 1} of 6 • Target {activeChainStep.target}</span>
+                  <span>{tasbeehPack.setOfTarget.replace('{step}', String(chainStepIndex + 1)).replace('{target}', String(activeChainStep.target))}</span>
                 </div>
 
                 <button
@@ -671,7 +677,7 @@ const Tasbeeh = () => {
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
                 </button>
               </div>
             ) : (
@@ -698,7 +704,7 @@ const Tasbeeh = () => {
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Center Pill (Dropdown Trigger): Dhikr X of Y • Change ⌄ */}
@@ -725,10 +731,10 @@ const Tasbeeh = () => {
                       padding: '3px 12px',
                     }}
                   >
-                    <span>Dhikr {currentIndex + 1} of {DHIKR_OPTIONS.length} • Change</span>
+                    <span>{tasbeehPack.dhikrOfChange.replace('{current}', String(currentIndex + 1)).replace('{total}', String(DHIKR_OPTIONS.length))}</span>
                   </SelectTrigger>
                   <SelectContent
-                    className="max-h-[280px] overflow-y-auto"
+                    className="max-h-[280px] overflow-y-auto w-[calc(100vw-36px)] max-w-sm"
                     style={{
                       background: 'var(--bg-elev)',
                       borderColor: 'var(--border)',
@@ -745,11 +751,11 @@ const Tasbeeh = () => {
                         className="cursor-pointer"
                         style={{ padding: '10px 12px', whiteSpace: 'normal' }}
                       >
-                        <div className="flex flex-col text-left w-full max-w-[280px]" style={{ whiteSpace: 'normal', lineHeight: 1.35 }}>
-                          <span className="font-arabic text-base" style={{ color: 'var(--accent-text)', lineHeight: 1.8, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                        <div className="flex flex-col text-start w-full min-w-0" style={{ whiteSpace: 'normal', lineHeight: 1.35, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                          <span className="font-arabic text-base" style={{ color: 'var(--accent-text)', lineHeight: 1.8, whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                             {dhikr.label}
                           </span>
-                          <span className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: 1.35, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: 1.35, whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                             {dhikr.transliteration}
                           </span>
                         </div>
@@ -839,8 +845,8 @@ const Tasbeeh = () => {
                 title={isChainMode ? "Target preset by Sunnah Chain" : "Tap to change target goal"}
               >
                 {isChainMode
-                  ? `SET ${chainStepIndex + 1} OF 6 • TARGET: ${activeChainStep.target} • ${progress}%`
-                  : `GOAL: ${targetGoal === Infinity ? '∞' : targetGoal} • ${progress}% ✎`}
+                  ? `${tasbeehPack.set.toUpperCase()} ${chainStepIndex + 1}/6 • ${tasbeehPack.goal.toUpperCase()}: ${activeChainStep.target} • ${progress}%`
+                  : `${tasbeehPack.goal}: ${targetGoal === Infinity ? '∞' : targetGoal} • ${progress}% ✎`}
               </button>
 
               {/* Sleek 4px progress bar */}
@@ -876,12 +882,12 @@ const Tasbeeh = () => {
                     className="px-2 py-0.5 rounded-lg border text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 flex items-center gap-1 text-[11px]"
                     style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
                   >
-                    <ArrowLeft className="w-3 h-3" />
-                    <span>Prev</span>
+                    <ArrowLeft className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+                    <span>{tasbeehPack.prev}</span>
                   </button>
 
                   <div className="flex items-center gap-1 text-center truncate px-1">
-                    <span className="text-[var(--text-secondary)] text-[11px]">Next:</span>
+                    <span className="text-[var(--text-secondary)] text-[11px]">{tasbeehPack.next}:</span>
                     <span className="text-[var(--accent-text)] font-bold truncate text-[11px]">
                       {NEXT_CHAIN_PREVIEWS[chainStepIndex] || 'Alhamdulillah ×33'}
                     </span>
@@ -894,8 +900,8 @@ const Tasbeeh = () => {
                     className="px-2 py-0.5 rounded-lg border text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 text-[11px]"
                     style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
                   >
-                    <span>Skip</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <span>{tasbeehPack.skip}</span>
+                    <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
               )}
@@ -1065,7 +1071,7 @@ const Tasbeeh = () => {
                     pointerEvents: 'none',
                   }}
                 >
-                  TAP TO COUNT
+                  {tasbeehPack.tapToCount}
                 </span>
               </button>
             </div>
@@ -1086,7 +1092,7 @@ const Tasbeeh = () => {
               }}
             >
               <RotateCcw className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-              <span>Reset</span>
+              <span>{tasbeehPack.reset}</span>
             </button>
 
             {/* Center Primary Pill: Auto Rhythm Counter */}
@@ -1106,7 +1112,7 @@ const Tasbeeh = () => {
               {isAutoCounting ? (
                 <>
                   <Pause className="w-3.5 h-3.5" />
-                  <span>Auto</span>
+                  <span>{tasbeehPack.auto}</span>
                   <span
                     onClick={cycleAutoPace}
                     className="text-[10px] opacity-80 underline cursor-pointer px-0.5 py-0.5 rounded"
@@ -1117,7 +1123,7 @@ const Tasbeeh = () => {
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Auto</span>
+                  <span>{tasbeehPack.auto}</span>
                 </>
               )}
             </button>
@@ -1136,19 +1142,19 @@ const Tasbeeh = () => {
               {feedbackMode === 'all' && (
                 <>
                   <Volume2 className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-                  <span>Sound</span>
+                  <span>{tasbeehPack.sound}</span>
                 </>
               )}
               {feedbackMode === 'vibrate' && (
                 <>
                   <Smartphone className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-                  <span>Vibrate</span>
+                  <span>{tasbeehPack.vibrate}</span>
                 </>
               )}
               {feedbackMode === 'silent' && (
                 <>
                   <VolumeX className="w-3.5 h-3.5" style={{ color: 'var(--text-secondary)' }} />
-                  <span style={{ color: 'var(--text-secondary)' }}>Mute</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>{tasbeehPack.mute}</span>
                 </>
               )}
             </button>
@@ -1177,20 +1183,22 @@ const Tasbeeh = () => {
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-                    Total Dhikr Recorded
+                    {tasbeehPack.totalDhikrRecorded}
                   </p>
                   <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                    Lifetime count across sessions
+                    {tasbeehPack.lifetimeCount}
                   </p>
                 </div>
               </div>
 
               <div className="text-right">
                 <p className="text-xl font-black tabular-nums" style={{ color: 'var(--accent-text)' }}>
-                  {totalCount.toLocaleString()}
+                  <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+                    {totalCount.toLocaleString()}
+                  </span>
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
-                  Total
+                  {tasbeehPack.total}
                 </p>
               </div>
             </div>
@@ -1226,8 +1234,8 @@ const Tasbeeh = () => {
                     <RotateCcw className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Reset Counter</h3>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Reset current counter to 0?</p>
+                    <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{tasbeehPack.resetCounter}</h3>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{tasbeehPack.resetConfirmText}</p>
                   </div>
                 </div>
 
@@ -1242,7 +1250,7 @@ const Tasbeeh = () => {
                     }}
                     onClick={() => setShowResetDialog(false)}
                   >
-                    Cancel
+                    {tasbeehPack.cancel}
                   </Button>
                   <Button
                     className="flex-1 rounded-xl h-11 font-bold shadow-md transition-all"
@@ -1252,7 +1260,7 @@ const Tasbeeh = () => {
                     }}
                     onClick={confirmReset}
                   >
-                    Reset
+                    {tasbeehPack.reset}
                   </Button>
                 </div>
               </motion.div>
