@@ -59,11 +59,12 @@ interface SurahCardProps {
   index: number;
   isDark: boolean;
   isBookmarked: boolean;
+  ayahsLabel?: string;
   onClick: (number: number) => void;
 }
 
 const SurahCard = memo(
-  function SurahCard({ surah, isBookmarked, onClick }: SurahCardProps) {
+  function SurahCard({ surah, isBookmarked, ayahsLabel, onClick }: SurahCardProps) {
     return (
       <button
         onClick={() => onClick(surah.number)}
@@ -108,7 +109,7 @@ const SurahCard = memo(
                   {surah.revelationType.toUpperCase()}
                 </span>
                 <span className="text-[var(--text-secondary)] text-[0.72rem] font-semibold whitespace-nowrap shrink-0">
-                  • {surah.numberOfAyahs}&nbsp;AYAHS
+                  • {surah.numberOfAyahs}&nbsp;{ayahsLabel || 'AYAHS'}
                 </span>
               </div>
             </div>
@@ -499,7 +500,7 @@ export default function SurahList() {
                 Al-Quran Al-Kareem
               </h1>
               <p className="text-[var(--text-secondary)] text-[11px] font-medium leading-tight mt-0.5">
-                114 Surahs • 30 Juz • 604 Pages
+                {uiStrings.subtitleStats}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -599,14 +600,14 @@ export default function SurahList() {
               <div className="flex items-center gap-2 min-w-0">
                 <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shrink-0" />
                 <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                  Continue: {lastReadInfo?.englishName || lastRead.englishName || `Surah #${lastRead.number}`}
+                  {uiStrings.continueReading} {lastReadInfo?.englishName || lastRead.englishName || `Surah #${lastRead.number}`}
                 </span>
                 <span className="text-[11px] text-[var(--text-secondary)] shrink-0">
-                  • Page {lastRead.page || 1}
+                  • {uiStrings.page} {lastRead.page || 1}
                 </span>
               </div>
               <span className="text-xs font-bold text-[var(--accent-text)] group-hover:underline flex items-center gap-1 shrink-0">
-                Resume →
+                {uiStrings.resume}
               </span>
             </div>
           </div>
@@ -633,14 +634,14 @@ export default function SurahList() {
                     <BookOpen className="w-3.5 h-3.5" />
                   </div>
                   <span className="text-xs font-bold text-[var(--text-primary)]" style={{ whiteSpace: 'nowrap' }}>
-                    📖 Khatmah {isKhatmahExpanded ? "▲" : "▾"}
+                    📖 {uiStrings.khatmah} {isKhatmahExpanded ? "▲" : "▾"}
                   </span>
                 </div>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] truncate">
                 {portionInfo && khatmahPlan
-                  ? `Page ${khatmahPlan.currentPage}/604`
-                  : "Start 30–90d Plan"}
+                  ? `${uiStrings.page} ${khatmahPlan.currentPage}/604`
+                  : uiStrings.startPlan}
               </p>
             </div>
 
@@ -668,7 +669,7 @@ export default function SurahList() {
                     <Headphones className="w-3.5 h-3.5" />
                   </div>
                   <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                    🎧 Tilawah
+                    🎧 {uiStrings.tilawah}
                   </span>
                 </div>
                 {isPlaying && (
@@ -681,7 +682,7 @@ export default function SurahList() {
               <p className="text-[11px] text-[var(--text-secondary)] truncate">
                 {isPlaying
                   ? `Playing ${currentSurah}:${currentAyah}`
-                  : "6 Reciters • Gapless"}
+                  : uiStrings.tilawahSub}
               </p>
             </div>
           </div>
@@ -853,7 +854,7 @@ export default function SurahList() {
         <div className="max-w-2xl mx-auto px-4 mb-3.5">
           <div className="flex items-center justify-between mb-1.5 px-0.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-              Often Read Sunnah Surahs
+              {uiStrings.oftenRead}
             </span>
           </div>
 
@@ -906,7 +907,7 @@ export default function SurahList() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]/60 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search Surah, Juz, Page..."
+                placeholder={uiStrings.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{ fontSize: '0.78rem' }}
@@ -935,16 +936,16 @@ export default function SurahList() {
               className="h-10 px-3 rounded-[14px] bg-[var(--surface)] border-[var(--border)] text-[var(--accent-text)] font-bold text-xs shrink-0 flex items-center gap-1 hover:border-[var(--accent)]"
             >
               <Hash className="w-3.5 h-3.5" />
-              <span>Jump</span>
+              <span>{uiStrings.jump}</span>
             </Button>
           </div>
 
           {/* MAIN TABS: SURAHS | JUZ (1-30) | SAVED */}
           <div className="w-full grid grid-cols-3 gap-1.5" style={{ minWidth: 0 }}>
             {[
-              { key: "surahs" as MainTab, label: "Surahs" },
-              { key: "juz" as MainTab, label: "Juz (1-30)" },
-              { key: "saved" as MainTab, label: "★ Saved" },
+              { key: "surahs" as MainTab, label: uiStrings.surahsTab },
+              { key: "juz" as MainTab, label: uiStrings.juzTab },
+              { key: "saved" as MainTab, label: uiStrings.savedTab },
             ].map((tab) => {
               const isActive = activeMainTab === tab.key;
               return (
@@ -971,9 +972,9 @@ export default function SurahList() {
           {activeMainTab === "surahs" && (
             <div className="flex items-center gap-1.5 pt-1">
               {[
-                { key: "all" as SurahSubFilter, label: "All" },
-                { key: "meccan" as SurahSubFilter, label: "Meccan" },
-                { key: "medinan" as SurahSubFilter, label: "Medinan" },
+                { key: "all" as SurahSubFilter, label: uiStrings.all },
+                { key: "meccan" as SurahSubFilter, label: uiStrings.meccan },
+                { key: "medinan" as SurahSubFilter, label: uiStrings.medinan },
               ].map((sub) => {
                 const isSubActive = surahSubFilter === sub.key;
                 return (
@@ -1014,7 +1015,7 @@ export default function SurahList() {
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-[var(--accent)]" />
                   <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">
-                    {dailyAyah?.title || "Verse of the Day"}
+                    {dailyAyah?.title || uiStrings.verseOfTheDay}
                   </span>
                 </div>
 
@@ -1031,7 +1032,7 @@ export default function SurahList() {
                     </Badge>
                     {dailySurahNumber ? (
                       <span className="text-xs font-semibold text-[var(--accent-text)] inline-flex items-center gap-1">
-                        <span>Read in Surah</span>
+                        <span>{uiStrings.readInSurah}</span>
                         <ArrowRight className="w-3 h-3" />
                       </span>
                     ) : null}
@@ -1217,6 +1218,7 @@ export default function SurahList() {
                             index={index}
                             isDark={isDark}
                             isBookmarked={bookmarkedSurahs.includes(surah.number)}
+                            ayahsLabel={uiStrings.ayahs}
                             onClick={handleSurahClick}
                           />
                         </div>
@@ -1247,6 +1249,7 @@ export default function SurahList() {
                       index={index}
                       isDark={isDark}
                       isBookmarked={bookmarkedSurahs.includes(surah.number)}
+                      ayahsLabel={uiStrings.ayahs}
                       onClick={handleSurahClick}
                     />
                   </div>

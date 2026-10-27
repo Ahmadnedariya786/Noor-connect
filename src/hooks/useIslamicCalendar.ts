@@ -1,3 +1,4 @@
+
 /**
  * Islamic Calendar Hook (Maghrib-aware)
  * 
@@ -47,17 +48,6 @@ export interface UseIslamicCalendarReturn {
   refresh: () => Promise<void>;
 }
 
-/**
- * Parse a time string like "17:45 (PKT)" into minutes since midnight
- */
-function parseTimeToMinutes(timeStr: string): number {
-  const cleaned = timeStr.replace(/\s*\(.*?\)\s*/g, '').trim();
-  const parts = cleaned.split(':');
-  const hours = parseInt(parts[0], 10);
-  const minutes = parseInt(parts[1], 10);
-  if (isNaN(hours) || isNaN(minutes)) return -1;
-  return hours * 60 + minutes;
-}
 
 export function useIslamicCalendar(): UseIslamicCalendarReturn {
   const location = useLocationState();
@@ -124,7 +114,7 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
               let newMonth = newHijri.month.number;
               let newYear = newHijri.year;
 
-              const getHijriMonthLength = (month: number, year: number) => {
+              const getHijriMonthLength = (month: number) => {
                 if (month % 2 === 1) return 30; // Odd months: 30 days
                 if (month === 12) {
                   // Leap year check: year mod 30 gives cycle position, leap years are specific ones
@@ -140,9 +130,9 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
                   newMonth = 12;
                   newYear -= 1;
                 }
-                newDay = getHijriMonthLength(newMonth, newYear) + newDay;
+                newDay = getHijriMonthLength(newMonth) + newDay;
               } else {
-                const monthLength = getHijriMonthLength(newMonth, newYear);
+                const monthLength = getHijriMonthLength(newMonth);
                 if (newDay > monthLength) {
                   newDay = newDay - monthLength;
                   newMonth += 1;
@@ -251,25 +241,42 @@ export function useIslamicCalendar(): UseIslamicCalendarReturn {
         .replace(/ō/g, 'ū')
     : '';
 
-  const islamicInfo = hijriDay ? {
-    currentDate: {
-      hijri: {
-        day: hijriDay,
-        month: { number: hijriMonthNumber, en: hijriMonthEn, ar: hijriMonthAr },
-        year: hijriYear,
-        weekday: hijriWeekday,
-        holidays: hijriHolidays,
+  const islamicInfo = useMemo(() => {
+    if (!hijriDay) return null;
+    return {
+      currentDate: {
+        hijri: {
+          day: hijriDay,
+          month: { number: hijriMonthNumber, en: hijriMonthEn, ar: hijriMonthAr },
+          year: hijriYear,
+          weekday: hijriWeekday,
+          holidays: hijriHolidays,
+        },
       },
-    },
+      isRamadan,
+      ramadanDay,
+      daysUntilRamadan,
+      isEidAlFitr,
+      isEidAlAdha,
+      hijriMonth: hijriMonthNumber,
+      hijriDay: hijriDayNumber,
+      hijriYear: parseInt(hijriYear) || 0,
+    };
+  }, [
+    hijriDay,
+    hijriMonthNumber,
+    hijriMonthEn,
+    hijriMonthAr,
+    hijriYear,
+    hijriWeekday,
+    hijriHolidays,
     isRamadan,
     ramadanDay,
     daysUntilRamadan,
     isEidAlFitr,
     isEidAlAdha,
-    hijriMonth: hijriMonthNumber,
-    hijriDay: hijriDayNumber,
-    hijriYear: parseInt(hijriYear) || 0,
-  } : null;
+    hijriDayNumber,
+  ]);
 
   return useMemo(() => ({
     islamicInfo,

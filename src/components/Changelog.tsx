@@ -78,7 +78,7 @@ const ChangelogItem = ({ change }: { change: VersionChangelog }) => {
           </p>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
             <Calendar className="w-3.5 h-3.5" />
-            {new Date(change.date).toLocaleDateString('en-US', {
+            {new Date(change.date + 'T12:00:00').toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'

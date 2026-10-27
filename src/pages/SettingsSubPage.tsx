@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getAppearanceUIStrings } from '@/lib/quran-guide-i18n';
 import {
   ArrowLeft,
   Palette,
@@ -129,6 +131,7 @@ const SettingsSubPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
+  const appearanceStrings = useMemo(() => getAppearanceUIStrings(language), [language]);
   const {
     animationEnabled,
     setAnimationEnabled,
@@ -631,14 +634,14 @@ const SettingsSubPage: React.FC = () => {
       </header>
 
       {/* Main Content Body */}
-      <main className="max-w-md mx-auto px-4 pt-5 space-y-5 pb-32" style={{ paddingBottom: '128px' }}>
+      <main className="max-w-md mx-auto px-4 pt-5 space-y-5 pb-32" style={{ paddingBottom: '132px' }}>
         {/* APPEARANCE SECTION */}
         {sectionId === 'appearance' && (
           <div className="space-y-4">
             <Card className="p-4 space-y-4 rounded-2xl">
               <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-2">
                 <Globe className="w-4 h-4" />
-                Language
+                {appearanceStrings.language}
               </Label>
               <Select value={language} onValueChange={(v) => setLanguage(v as any)}>
                 <SelectTrigger className="w-full h-11 rounded-xl">
@@ -657,7 +660,7 @@ const SettingsSubPage: React.FC = () => {
               </Select>
             </Card>
 
-            <Card className="p-4 space-y-4 rounded-2xl">
+            <Card className="p-4 space-y-4 rounded-2xl" style={{ paddingBottom: '18px', overflow: 'visible', maxHeight: 'none' }}>
               <div
                 className="flex items-center justify-between py-1 cursor-pointer group"
                 onClick={() => navigate('/settings/app-theme', { replace: true })}
@@ -665,8 +668,8 @@ const SettingsSubPage: React.FC = () => {
                 tabIndex={0}
               >
                 <div>
-                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">App Theme</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Choose your full-app color theme</p>
+                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">{appearanceStrings.appThemeTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{appearanceStrings.appThemeSubtitle}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
@@ -678,40 +681,40 @@ const SettingsSubPage: React.FC = () => {
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
-                  <Label className="text-sm font-bold">Fluid Animations</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Enable smooth UI transitions</p>
+                  <Label className="text-sm font-bold">{appearanceStrings.fluidAnimationsTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{appearanceStrings.fluidAnimationsSubtitle}</p>
                 </div>
                 <Switch checked={animationEnabled} onCheckedChange={setAnimationEnabled} />
               </div>
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
-                  <Label className="text-sm font-bold">Salam Greeting</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Show daily salam on home screen</p>
+                  <Label className="text-sm font-bold">{appearanceStrings.salamGreetingTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{appearanceStrings.salamGreetingSubtitle}</p>
                 </div>
                 <Switch checked={greetingEnabled} onCheckedChange={setGreetingEnabled} />
               </div>
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
-                  <Label className="text-sm font-bold">Splash Welcome</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Show "Islamic Companion" on launch</p>
+                  <Label className="text-sm font-bold">{appearanceStrings.splashWelcomeTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{appearanceStrings.splashWelcomeSubtitle}</p>
                 </div>
                 <Switch checked={splashGreetingEnabled} onCheckedChange={setSplashGreetingEnabled} />
               </div>
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
-                  <Label className="text-sm font-bold">Splash Screen</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">Enable app startup animation</p>
+                  <Label className="text-sm font-bold">{appearanceStrings.splashScreenTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)]">{appearanceStrings.splashScreenSubtitle}</p>
                 </div>
                 <Switch checked={splashEnabled} onCheckedChange={setSplashEnabled} />
               </div>
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>
-                  <Label className="text-sm font-bold bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>24-Hour Time Format</Label>
-                  <p className="text-xs text-[var(--text-secondary)] bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>Use 24-hour clock (17:30) instead of 12-hour AM/PM</p>
+                  <Label className="text-sm font-bold bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>{appearanceStrings.timeFormat24Title}</Label>
+                  <p className="text-xs text-[var(--text-secondary)] bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>{appearanceStrings.timeFormat24Subtitle}</p>
                 </div>
                 <Switch
                   checked={timeFormat === '24h'}
@@ -2146,10 +2149,25 @@ const SettingsSubPage: React.FC = () => {
                 setIsOwnerUnlocked(false);
               }}
             />
-          </div>
-        )}
+              </div>
+            )}
 
-            {showChangelog && <Changelog onClose={() => setShowChangelog(false)} />}
+            {showChangelog &&
+              createPortal(
+                <div
+                  className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
+                  style={{ position: 'fixed', inset: 0, zIndex: 9996 }}
+                  onClick={() => setShowChangelog(false)}
+                >
+                  <div
+                    className="w-full max-w-2xl max-h-[85vh] flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Changelog onClose={() => setShowChangelog(false)} />
+                  </div>
+                </div>,
+                document.body
+              )}
           </div>
         )}
 

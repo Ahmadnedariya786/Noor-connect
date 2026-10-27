@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Star,
@@ -428,15 +429,16 @@ export default function QuranReader() {
               padding: '8px 10px',
             }}
           >
-            {/* Left: < Quran pill */}
+            {/* Left: Sleek 36x36 circular Back button freeing +46px for center title */}
             <button
               type="button"
               onClick={() => navigate('/quran', { replace: true })}
-              className="flex items-center gap-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] font-bold text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors shrink-0 select-none shadow-sm active:scale-95"
-              style={{ height: '36px', padding: '0 10px', fontSize: '0.76rem' }}
+              title={uiStrings.quranBack || 'Back to Quran'}
+              aria-label={uiStrings.quranBack || 'Back to Quran'}
+              className="rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--accent-text)] hover:border-[var(--accent)] transition-all shrink-0 select-none shadow-sm active:scale-95 flex items-center justify-center"
+              style={{ width: '36px', height: '36px' }}
             >
-              <ChevronLeft className="w-4 h-4 text-[var(--accent-text)]" />
-              <span>{uiStrings.quranBack}</span>
+              <ArrowLeft className="w-4 h-4" />
             </button>
 
             {/* Center: Arabic Surah Title + English Surah Name + Page & Juz */}
@@ -546,10 +548,10 @@ export default function QuranReader() {
               style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}
             >
               {[
-                { mode: 'jewel' as const, icon: '✦', label: 'Jewel' },
-                { mode: 'parchment' as const, icon: '📜', label: 'Paper' },
-                { mode: 'night' as const, icon: '🌙', label: 'Night' },
-                { mode: 'classic' as const, icon: '🖼', label: 'Scan' },
+                { mode: 'jewel' as const, icon: '✦', label: uiStrings.jewel },
+                { mode: 'parchment' as const, icon: '📜', label: uiStrings.paper },
+                { mode: 'night' as const, icon: '🌙', label: uiStrings.night },
+                { mode: 'classic' as const, icon: '🖼', label: uiStrings.scan },
               ].map((item) => {
                 const isActive = surfaceMode === item.mode;
                 return (
@@ -584,7 +586,7 @@ export default function QuranReader() {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>🎨 Tajweed</span>
+              <span>🎨 {uiStrings.tajweed}</span>
             </button>
 
             {/* LIVE TILAWAH AUTO-FOLLOW / SYNC AUDIO CHIP */}
@@ -658,6 +660,7 @@ export default function QuranReader() {
           <InteractiveMushafPage
             pageNumber={mushafPageNumber}
             surahNumber={surahNum}
+            targetSurahNumber={routeSurahId}
             surfaceMode={surfaceMode}
             showTajweed={showTajweed}
             onOpenStudySheet={handleOpenStudySheet}
@@ -697,7 +700,7 @@ export default function QuranReader() {
               }}
             >
               <ChevronLeft className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-              <span>Prev</span>
+              <span>{uiStrings.prev}</span>
             </button>
 
             {/* Center: Interactive Page Slider Launcher */}
@@ -726,7 +729,7 @@ export default function QuranReader() {
                   lineHeight: 1.2,
                 }}
               >
-                Page {mushafPageNumber} / 604
+                {uiStrings.page} {mushafPageNumber} / 604
               </div>
               <div
                 style={{
@@ -736,7 +739,7 @@ export default function QuranReader() {
                   lineHeight: 1.2,
                 }}
               >
-                Juz {currentJuz} • Jump ▴
+                {uiStrings.juz} {currentJuz} • {uiStrings.jump} ▴
               </div>
             </button>
 
@@ -774,7 +777,7 @@ export default function QuranReader() {
                 flexShrink: 0,
               }}
             >
-              <span>Next</span>
+              <span>{uiStrings.next}</span>
               <ChevronRight className="w-3.5 h-3.5 text-[var(--accent-text)]" />
             </button>
           </div>

@@ -12,6 +12,7 @@ import {
   type InteractiveVerse,
   type InteractiveWord,
 } from '@/lib/interactive-mushaf';
+import { quranService } from '@/lib/quran-service';
 import { useTilawah } from '@/contexts/TilawahContext';
 import { Volume2, BookOpen, Info, X, Sparkles, Loader2 } from 'lucide-react';
 import { MushafSurahPages, type MushafReadingMode } from './MushafSurahPages';
@@ -21,6 +22,7 @@ export type InteractiveMushafSurface = 'jewel' | 'parchment' | 'night' | 'classi
 interface InteractiveMushafPageProps {
   pageNumber: number;
   surahNumber: number;
+  targetSurahNumber?: number;
   surfaceMode: InteractiveMushafSurface;
   showTajweed: boolean;
   onOpenStudySheet: (surah: number, ayah: number) => void;
@@ -31,6 +33,7 @@ interface InteractiveMushafPageProps {
 export function InteractiveMushafPage({
   pageNumber,
   surahNumber,
+  targetSurahNumber,
   surfaceMode,
   showTajweed,
   onOpenStudySheet,
@@ -114,6 +117,26 @@ export function InteractiveMushafPage({
       return () => cancelAnimationFrame(frameId);
     }
   }, [currentSurah, currentAyah, isPlaying, pageData]);
+
+  // Auto-scroll directly to the selected Surah's opening banner on shared pages (e.g. Al-Kahf on Page 293)
+  useEffect(() => {
+    if (!loading && pageData && targetSurahNumber && targetSurahNumber > 0) {
+      const firstVerse = pageData.verses[0];
+      if (firstVerse && firstVerse.surah_number !== targetSurahNumber) {
+        const frameId = requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const bannerEl = document.querySelector<HTMLElement>(
+              `[data-surah-opening="${targetSurahNumber}"]`
+            );
+            if (bannerEl) {
+              bannerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
+        });
+        return () => cancelAnimationFrame(frameId);
+      }
+    }
+  }, [loading, pageData, targetSurahNumber]);
 
   // Clean up audio on unmount
   useEffect(() => {
@@ -287,25 +310,49 @@ export function InteractiveMushafPage({
               textAlignLast: 'center',
             }}
           >
-            {pageData.verses.map((verse, index) => {
+            {/* Understated Muted Indicator for Preceding Continuation Verses if page starts mid-Surah */}
+            {(() => {
+              const firstV = pageData.verses[0];
+              if (!firstV || firstV.verse_number <= 1) return null;
+              const contSurah = firstV.surah_number;
+              const contVerses = pageData.verses.filter((v) => v.surah_number === contSurah);
+              const minAyah = contVerses[0]?.verse_number || firstV.verse_number;
+              const maxAyah = contVerses[contVerses.length - 1]?.verse_number || firstV.verse_number;
+              const sInfo = quranService.getSurahInfo(contSurah);
+              return (
+                <div
+                  className="text-xs font-arabic text-[var(--accent-text)] opacity-70 text-right mb-3 px-1 not-sr-only select-none"
+                  dir="rtl"
+                >
+                  سُورَةُ {sInfo?.name || ''} ({toArabicDigits(minAyah)}–{toArabicDigits(maxAyah)})
+                </div>
+              );
+            })()}
+
+            {pageData.verses.map((verse) => {
               const isVersePlaying =
                 isPlaying &&
                 currentSurah === verse.surah_number &&
                 currentAyah === verse.verse_number;
 
-              // Check if Surah Header is needed before this verse
-              const surahHeader = pageData.surah_headers.find(
-                (h) => h.surah_number === verse.surah_number && h.at_verse_number === verse.verse_number
-              );
+              // Authentic Madinah Mushaf Rule: Surah Banner appears ONLY at Ayah 1
+              const surahHeader =
+                verse.verse_number === 1
+                  ? pageData.surah_headers.find(
+                      (h) => h.surah_number === verse.surah_number && h.at_verse_number === 1
+                    )
+                  : undefined;
 
               return (
                 <React.Fragment key={verse.verse_key}>
-                  {/* Ornate Surah Header Banner */}
+                  {/* Ornate Surah Header Banner (ayah === 1 ONLY!) */}
                   {surahHeader && (
                     <div
+                      data-surah-opening={surahHeader.surah_number}
                       className="my-5 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
                       dir="rtl"
                       style={{
+                        scrollMarginTop: '116px',
                         background: surfaceStyles.headerBg,
                         borderColor: surfaceStyles.headerBorder,
                         boxShadow: 'inset 0 1px 0 var(--card-sheen)',

@@ -42,6 +42,49 @@ export interface QuranUIStrings {
   };
   autoPageOn: string;
   syncAudio: string;
+  subtitleStats: string;
+  continueReading: string;
+  resume: string;
+  khatmah: string;
+  startPlan: string;
+  tilawah: string;
+  tilawahSub: string;
+  oftenRead: string;
+  searchPlaceholder: string;
+  jump: string;
+  surahsTab: string;
+  juzTab: string;
+  savedTab: string;
+  all: string;
+  meccan: string;
+  medinan: string;
+  verseOfTheDay: string;
+  readInSurah: string;
+  study: string;
+  jewel: string;
+  paper: string;
+  night: string;
+  scan: string;
+  tajweed: string;
+  prev: string;
+  next: string;
+  ayahs: string;
+}
+
+export interface AppearanceUIStrings {
+  language: string;
+  appThemeTitle: string;
+  appThemeSubtitle: string;
+  fluidAnimationsTitle: string;
+  fluidAnimationsSubtitle: string;
+  salamGreetingTitle: string;
+  salamGreetingSubtitle: string;
+  splashWelcomeTitle: string;
+  splashWelcomeSubtitle: string;
+  splashScreenTitle: string;
+  splashScreenSubtitle: string;
+  timeFormat24Title: string;
+  timeFormat24Subtitle: string;
 }
 
 const GUIDE_TRANSLATIONS: Record<LanguageCode, QuranGuideData> = {
@@ -432,6 +475,33 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 Auto-Page ON',
     syncAudio: '📍 Sync Audio',
+    subtitleStats: '114 Surahs • 30 Juz • 604 Pages',
+    continueReading: 'Continue:',
+    resume: 'Resume →',
+    khatmah: 'Khatmah',
+    startPlan: 'Start 30–90d Plan',
+    tilawah: 'Tilawah',
+    tilawahSub: '6 Reciters • Gapless',
+    oftenRead: 'Often Read Sunnah Surahs',
+    searchPlaceholder: 'Search Surah, Juz, Page...',
+    jump: 'Jump',
+    surahsTab: 'Surahs',
+    juzTab: 'Juz (1–30)',
+    savedTab: '★ Saved',
+    all: 'All',
+    meccan: 'Meccan',
+    medinan: 'Medinan',
+    verseOfTheDay: 'Verse of the Day',
+    readInSurah: 'Read in Surah',
+    study: 'Study',
+    jewel: 'Jewel',
+    paper: 'Paper',
+    night: 'Night',
+    scan: 'Scan',
+    tajweed: 'Tajweed',
+    prev: 'Prev',
+    next: 'Next',
+    ayahs: 'AYAHS',
   },
   ur: {
     welcomeBannerTitle: 'قرآن کے نئے فیچرز دریافت کریں',
@@ -450,6 +520,33 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 خودکار صفحہ فعال',
     syncAudio: '📍 آڈیو پر جائیں',
+    subtitleStats: '۱۱۴ سورتیں • ۳۰ پارے • ۶۰۴ صفحات',
+    continueReading: 'جاری رکھیں:',
+    resume: 'دوبارہ شروع کریں ←',
+    khatmah: 'ختمہ',
+    startPlan: '۳۰–۹۰ دن کا منصوبہ شروع کریں',
+    tilawah: 'تلاوت',
+    tilawahSub: '۶ قاری • مسلسل تلاوت',
+    oftenRead: 'اکثر پڑھی جانے والی مسنون سورتیں',
+    searchPlaceholder: 'سورہ، پارہ، یا صفحہ تلاش کریں...',
+    jump: 'چھلانگ',
+    surahsTab: 'سورتیں',
+    juzTab: 'پارے (۱–۳۰)',
+    savedTab: '★ محفوظ شدہ',
+    all: 'تمام',
+    meccan: 'مکی',
+    medinan: 'مدنی',
+    verseOfTheDay: 'آج کی آیت',
+    readInSurah: 'سورہ میں پڑھیں',
+    study: 'مطالعہ',
+    jewel: 'جواہر',
+    paper: 'کاغذ',
+    night: 'رات',
+    scan: 'اسکین',
+    tajweed: 'تجوید',
+    prev: 'پچھلا',
+    next: 'اگلا',
+    ayahs: 'آیات',
   },
   gu: {
     welcomeBannerTitle: 'કુર્આનના નવા સાધનો શોધો',
@@ -468,6 +565,33 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 ઑટો-પેજ ચાલુ',
     syncAudio: '📍 ઑડિયો મેળવો',
+    subtitleStats: '114 સૂરાહ • 30 જુઝ • 604 પૃષ્ઠો',
+    continueReading: 'ચાલુ રાખો:',
+    resume: 'આગળ વધો →',
+    khatmah: 'ખતમહ',
+    startPlan: '30–90 દિવસનો પ્લાન શરૂ કરો',
+    tilawah: 'તિલાવત',
+    tilawahSub: '6 ક્વારીઓ • અવિરત',
+    oftenRead: 'વારંવાર પઢાતી સુન્નત સૂરાઓ',
+    searchPlaceholder: 'સૂરાહ, જુઝ, પૃષ્ઠ શોધો...',
+    jump: 'જમ્પ',
+    surahsTab: 'સૂરાઓ',
+    juzTab: 'જુઝ (1–30)',
+    savedTab: '★ સાચવેલ',
+    all: 'બધા',
+    meccan: 'મક્કી',
+    medinan: 'મદની',
+    verseOfTheDay: 'આજની આયત',
+    readInSurah: 'સૂરાહમાં વાંચો',
+    study: 'અભ્યાસ',
+    jewel: 'ઝવેરાત',
+    paper: 'કાગળ',
+    night: 'રાત્રિ',
+    scan: 'સ્કેન',
+    tajweed: 'તજવીદ',
+    prev: 'પાછળ',
+    next: 'આગળ',
+    ayahs: 'આયતો',
   },
   ar: {
     welcomeBannerTitle: 'اكتشف أدوات القرآن الجديدة',
@@ -486,6 +610,33 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 تقليب تلقائي',
     syncAudio: '📍 مزامنة التلاوة',
+    subtitleStats: '١١٤ سورة • ٣٠ جزء • ٦٠٤ صفحة',
+    continueReading: 'متابعة:',
+    resume: 'استئناف ←',
+    khatmah: 'ختمة',
+    startPlan: 'ابدأ خطة ٣٠–٩٠ يوم',
+    tilawah: 'تلاوة',
+    tilawahSub: '٦ قراء • بدون انقطاع',
+    oftenRead: 'سور مسنونة متكررة القراءة',
+    searchPlaceholder: 'ابحث عن سورة، جزء، صفحة...',
+    jump: 'انتقال',
+    surahsTab: 'السور',
+    juzTab: 'الأجزاء (١–٣٠)',
+    savedTab: '★ المحفوظات',
+    all: 'الكل',
+    meccan: 'مكية',
+    medinan: 'مدنية',
+    verseOfTheDay: 'آية اليوم',
+    readInSurah: 'اقرأ في السورة',
+    study: 'دراسة',
+    jewel: 'جوهر',
+    paper: 'ورق',
+    night: 'ليلي',
+    scan: 'مسح',
+    tajweed: 'تجويد',
+    prev: 'السابق',
+    next: 'التالي',
+    ayahs: 'آيات',
   },
   hi: {
     welcomeBannerTitle: 'क़ुरआन के नए टूल्स जानें',
@@ -504,6 +655,33 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 ऑटो-पेज चालू',
     syncAudio: '📍 ऑडियो सिंक',
+    subtitleStats: '114 सूरह • 30 जुज़ • 604 पृष्ठ',
+    continueReading: 'जारी रखें:',
+    resume: 'आगे पढ़ें →',
+    khatmah: 'खत्मह',
+    startPlan: '30–90 दिन की योजना शुरू करें',
+    tilawah: 'तिलावत',
+    tilawahSub: '6 कारी • निरंतर',
+    oftenRead: 'अक्सर पढ़ी जाने वाली सुन्नत सूरह',
+    searchPlaceholder: 'सूरह, जुज़, पृष्ठ खोजें...',
+    jump: 'जाएं',
+    surahsTab: 'सूरह',
+    juzTab: 'जुज़ (1–30)',
+    savedTab: '★ सहेजे गए',
+    all: 'सभी',
+    meccan: 'मक्की',
+    medinan: 'मदनी',
+    verseOfTheDay: 'आज की आयत',
+    readInSurah: 'सूरह में पढ़ें',
+    study: 'अध्ययन',
+    jewel: 'रत्न',
+    paper: 'कागज़',
+    night: 'रात्रि',
+    scan: 'स्कैन',
+    tajweed: 'तजवीद',
+    prev: 'पिछला',
+    next: 'अगला',
+    ayahs: 'आयात',
   },
   bn: {
     welcomeBannerTitle: 'কুরআনের নতুন ফিচারসমূহ জানুন',
@@ -522,6 +700,33 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 অটো-পৃষ্ঠা চালু',
     syncAudio: '📍 অডিও মিলান',
+    subtitleStats: '১১৪ টি সূরা • ৩০ পারা • ৬০৪ পৃষ্ঠা',
+    continueReading: 'চালিয়ে যান:',
+    resume: 'পুনরায় শুরু →',
+    khatmah: 'খতম',
+    startPlan: '৩০–৯০ দিনের পরিকল্পনা শুরু করুন',
+    tilawah: 'তিলাওয়াত',
+    tilawahSub: '৬ জন ক্বারী • বিরতিহীন',
+    oftenRead: 'নিয়মিত পঠিত সুন্নাত সূরাসমূহ',
+    searchPlaceholder: 'সূরা, পারা, পৃষ্ঠা খুঁজুন...',
+    jump: 'যান',
+    surahsTab: 'সূরাসমূহ',
+    juzTab: 'পারা (১–৩০)',
+    savedTab: '★ সংরক্ষিত',
+    all: 'সব',
+    meccan: 'মাক্কী',
+    medinan: 'মাদানী',
+    verseOfTheDay: 'আজকের আয়াত',
+    readInSurah: 'সূরা থেকে পড়ুন',
+    study: 'অধ্যয়ন',
+    jewel: 'রত্ন',
+    paper: 'কাগজ',
+    night: 'রাত',
+    scan: 'স্ক্যান',
+    tajweed: 'তাজবীদ',
+    prev: 'পূর্ববর্তী',
+    next: 'পরবর্তী',
+    ayahs: 'আয়াত',
   },
   ru: {
     welcomeBannerTitle: 'Новые инструменты для Корана',
@@ -540,6 +745,33 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 Авто-страница ВКЛ',
     syncAudio: '📍 К аудио',
+    subtitleStats: '114 сур • 30 джузов • 604 страницы',
+    continueReading: 'Продолжить:',
+    resume: 'Продолжить →',
+    khatmah: 'Хатма',
+    startPlan: 'Начать план 30–90 дней',
+    tilawah: 'Тиляват',
+    tilawahSub: '6 чтецов • Без пауз',
+    oftenRead: 'Часто читаемые сунна-суры',
+    searchPlaceholder: 'Поиск суры, джуза, страницы...',
+    jump: 'Перейти',
+    surahsTab: 'Суры',
+    juzTab: 'Джузы (1–30)',
+    savedTab: '★ Закладки',
+    all: 'Все',
+    meccan: 'Мекканские',
+    medinan: 'Мединские',
+    verseOfTheDay: 'Аят дня',
+    readInSurah: 'Читать в суре',
+    study: 'Изучение',
+    jewel: 'Жемчуг',
+    paper: 'Бумага',
+    night: 'Ночь',
+    scan: 'Скан',
+    tajweed: 'Таджвид',
+    prev: 'Назад',
+    next: 'Вперед',
+    ayahs: 'АЯТОВ',
   },
   fr: {
     welcomeBannerTitle: 'Découvrez les nouveaux outils du Coran',
@@ -558,6 +790,156 @@ const UI_STRINGS: Record<LanguageCode, QuranUIStrings> = {
     },
     autoPageOn: '🔄 Auto-Page ACTIF',
     syncAudio: '📍 Sync Audio',
+    subtitleStats: '114 Sourates • 30 Juz • 604 Pages',
+    continueReading: 'Continuer :',
+    resume: 'Reprendre →',
+    khatmah: 'Khatmah',
+    startPlan: 'Démarrer plan 30–90j',
+    tilawah: 'Tilawah',
+    tilawahSub: '6 Récitateurs • Sans pause',
+    oftenRead: 'Sourates de la Sunnah souvent lues',
+    searchPlaceholder: 'Rechercher sourate, juz, page...',
+    jump: 'Aller',
+    surahsTab: 'Sourates',
+    juzTab: 'Juz (1–30)',
+    savedTab: '★ Enregistrés',
+    all: 'Tous',
+    meccan: 'Mecquoise',
+    medinan: 'Médinoise',
+    verseOfTheDay: 'Verset du Jour',
+    readInSurah: 'Lire dans la sourate',
+    study: 'Étude',
+    jewel: 'Joyau',
+    paper: 'Papier',
+    night: 'Nuit',
+    scan: 'Scan',
+    tajweed: 'Tajweed',
+    prev: 'Préc.',
+    next: 'Suiv.',
+    ayahs: 'VERSETS',
+  },
+};
+
+const APPEARANCE_STRINGS: Record<LanguageCode, AppearanceUIStrings> = {
+  en: {
+    language: 'Language',
+    appThemeTitle: 'App Theme',
+    appThemeSubtitle: 'Choose your full-app color theme',
+    fluidAnimationsTitle: 'Fluid Animations',
+    fluidAnimationsSubtitle: 'Enable smooth UI transitions',
+    salamGreetingTitle: 'Salam Greeting',
+    salamGreetingSubtitle: 'Show daily salam on home screen',
+    splashWelcomeTitle: 'Splash Welcome',
+    splashWelcomeSubtitle: 'Show "Islamic Companion" on launch',
+    splashScreenTitle: 'Splash Screen',
+    splashScreenSubtitle: 'Enable app startup animation',
+    timeFormat24Title: '24-Hour Time Format',
+    timeFormat24Subtitle: 'Use 24-hour clock (17:30) instead of 12-hour AM/PM',
+  },
+  ur: {
+    language: 'زبان',
+    appThemeTitle: 'ایپ تھیم',
+    appThemeSubtitle: 'اپنی پوری ایپ کا رنگ منتخب کریں',
+    fluidAnimationsTitle: 'ہموار اینیمیشنز',
+    fluidAnimationsSubtitle: 'ہموار انٹرفیس ٹرانزیشنز فعال کریں',
+    salamGreetingTitle: 'سلام و تحیات',
+    salamGreetingSubtitle: 'ہوم اسکرین پر روزانہ سلام دکھائیں',
+    splashWelcomeTitle: 'ویلکم اسپلش',
+    splashWelcomeSubtitle: 'ایپ کھلتے وقت "Islamic Companion" دکھائیں',
+    splashScreenTitle: 'اسپلش اسکرین',
+    splashScreenSubtitle: 'ایپ شروع ہونے کی اینیمیشن فعال کریں',
+    timeFormat24Title: '۲۴ گھنٹے فارمیٹ',
+    timeFormat24Subtitle: '۱۲ گھنٹے AM/PM کے بجائے ۲۴ گھنٹے کی گھڑی (17:30) استعمال کریں',
+  },
+  gu: {
+    language: 'ભાષા',
+    appThemeTitle: 'એપ થીમ',
+    appThemeSubtitle: 'તમારી આખી એપની કલર થીમ પસંદ કરો',
+    fluidAnimationsTitle: 'ફ્લુઇડ એનિમેશન',
+    fluidAnimationsSubtitle: 'સરળ UI ટ્રાન્ઝિશન સક્ષમ કરો',
+    salamGreetingTitle: 'સલામ અભિવાદન',
+    salamGreetingSubtitle: 'હોમ સ્ક્રીન પર દૈનિક સલામ દર્શાવો',
+    splashWelcomeTitle: 'સ્પ્લેશ સ્વાગત',
+    splashWelcomeSubtitle: 'શરૂઆતમાં "Islamic Companion" દર્શાવો',
+    splashScreenTitle: 'સ્પ્લેશ સ્ક્રીન',
+    splashScreenSubtitle: 'એપ શરૂઆતનું એનિમેશન સક્ષમ કરો',
+    timeFormat24Title: '24-કલાકનું સમય ફોર્મેટ',
+    timeFormat24Subtitle: '12-કલાક AM/PM ને બદલે 24-કલાકની ઘડિયાળ (17:30) નો ઉપયોગ કરો',
+  },
+  ar: {
+    language: 'اللغة',
+    appThemeTitle: 'مظهر التطبيق',
+    appThemeSubtitle: 'اختر نسق الألوان لجميع شاشات التطبيق',
+    fluidAnimationsTitle: 'الحركات السلسة',
+    fluidAnimationsSubtitle: 'تفعيل الانتقالات السلسة بين الشاشات',
+    salamGreetingTitle: 'تحية السلام',
+    salamGreetingSubtitle: 'إظهار تحية السلام اليومية على الشاشة الرئيسية',
+    splashWelcomeTitle: 'شاشة الترحيب',
+    splashWelcomeSubtitle: 'إظهار "الرفيق الإسلامي" عند تشغيل التطبيق',
+    splashScreenTitle: 'شاشة البدء',
+    splashScreenSubtitle: 'تفعيل حركة بدء تشغيل التطبيق',
+    timeFormat24Title: 'تنسيق الوقت ٢٤ ساعة',
+    timeFormat24Subtitle: 'استخدام نظام ٢٤ ساعة (١٧:٣٠) بدلاً من نظام ١٢ ساعة',
+  },
+  hi: {
+    language: 'भाषा',
+    appThemeTitle: 'ऐप थीम',
+    appThemeSubtitle: 'अपनी संपूर्ण ऐप के लिए रंग थीम चुनें',
+    fluidAnimationsTitle: 'सहज एनिमेशन',
+    fluidAnimationsSubtitle: 'सहज इंटरफ़ेस बदलाव सक्षम करें',
+    salamGreetingTitle: 'सलाम अभिवादन',
+    salamGreetingSubtitle: 'होम स्क्रीन पर दैनिक सलाम दिखाएं',
+    splashWelcomeTitle: 'प्रारंभिक स्वागत',
+    splashWelcomeSubtitle: 'शुरू में "Islamic Companion" दिखाएं',
+    splashScreenTitle: 'स्प्लैश स्क्रीन',
+    splashScreenSubtitle: 'ऐप स्टार्टअप एनिमेशन सक्षम करें',
+    timeFormat24Title: '24-घंटे समय प्रारूप',
+    timeFormat24Subtitle: '12-घंटे AM/PM के बजाय 24-घंटे की घड़ी (17:30) का उपयोग करें',
+  },
+  bn: {
+    language: 'ভাষা',
+    appThemeTitle: 'অ্যাপের থিম',
+    appThemeSubtitle: 'আপনার পুরো অ্যাপের রঙের থিম নির্বাচন করুন',
+    fluidAnimationsTitle: 'সাবলীল অ্যানিমেশন',
+    fluidAnimationsSubtitle: 'সহজ UI রূপান্তর সক্রিয় করুন',
+    salamGreetingTitle: 'সালাম অভিবাদন',
+    salamGreetingSubtitle: 'হোম স্ক্রিনে প্রতিদিনের সালাম প্রদর্শন করুন',
+    splashWelcomeTitle: 'স্প্ল্যাশ স্বাগতম',
+    splashWelcomeSubtitle: 'অ্যাপ খোলার সময় "Islamic Companion" দেখান',
+    splashScreenTitle: 'স্প্ল্যাশ স্ক্রিন',
+    splashScreenSubtitle: 'অ্যাপ স্টার্টআপ অ্যানিমেশন সক্রিয় করুন',
+    timeFormat24Title: '২৪ ঘণ্টার সময় বিন্যাস',
+    timeFormat24Subtitle: '১২-ঘণ্টা AM/PM এর পরিবর্তে ২৪-ঘণ্টা ঘড়ি (17:30) ব্যবহার করুন',
+  },
+  ru: {
+    language: 'Язык',
+    appThemeTitle: 'Тема приложения',
+    appThemeSubtitle: 'Выберите цветовую тему оформления приложения',
+    fluidAnimationsTitle: 'Плавные анимации',
+    fluidAnimationsSubtitle: 'Включить плавные переходы интерфейса',
+    salamGreetingTitle: 'Приветствие Салам',
+    salamGreetingSubtitle: 'Показывать ежедневное приветствие на главном экране',
+    splashWelcomeTitle: 'Приветственный экран',
+    splashWelcomeSubtitle: 'Показывать "Исламский спутник" при запуске',
+    splashScreenTitle: 'Заставка запуска',
+    splashScreenSubtitle: 'Включить анимацию запуска приложения',
+    timeFormat24Title: '24-часовой формат времени',
+    timeFormat24Subtitle: 'Использовать 24-часовой формат (17:30) вместо 12-часового AM/PM',
+  },
+  fr: {
+    language: 'Langue',
+    appThemeTitle: "Thème de l'application",
+    appThemeSubtitle: "Choisissez le thème de couleur de l'application",
+    fluidAnimationsTitle: 'Animations fluides',
+    fluidAnimationsSubtitle: "Activer les transitions fluides de l'interface",
+    salamGreetingTitle: 'Salutations de Salam',
+    salamGreetingSubtitle: "Afficher le salam quotidien sur l'écran d'accueil",
+    splashWelcomeTitle: 'Accueil Splash',
+    splashWelcomeSubtitle: 'Afficher "Compagnon Islamique" au lancement',
+    splashScreenTitle: 'Écran de démarrage',
+    splashScreenSubtitle: "Activer l'animation de démarrage",
+    timeFormat24Title: "Format de l'heure 24h",
+    timeFormat24Subtitle: "Utiliser le format 24h (17:30) au lieu de 12h AM/PM",
   },
 };
 
@@ -573,6 +955,13 @@ export function getQuranUIStrings(lang: LanguageCode | string | undefined): Qura
     return UI_STRINGS[lang as LanguageCode];
   }
   return UI_STRINGS.en;
+}
+
+export function getAppearanceUIStrings(lang: LanguageCode | string | undefined): AppearanceUIStrings {
+  if (lang && lang in APPEARANCE_STRINGS) {
+    return APPEARANCE_STRINGS[lang as LanguageCode];
+  }
+  return APPEARANCE_STRINGS.en;
 }
 
 export function formatStepBadge(stepIdx: number, lang: LanguageCode | string | undefined): string {

@@ -438,18 +438,18 @@ function buildPageData(
       v.text_tajweed = tajweedMap[v.verse_key];
     }
 
-    // If this verse is ayah 1 of a surah OR it's the first verse on the page and starts a surah
-    if (v.verse_number === 1 || !surahHeaderMap.has(v.surah_number)) {
+    // Authentic Madinah Mushaf Rule: A Surah Opening Header is ONLY registered at Ayah 1 (v.verse_number === 1)
+    if (v.verse_number === 1 && !surahHeaderMap.has(v.surah_number)) {
       const sInfo = quranService.getSurahInfo(v.surah_number);
-      if (sInfo && !surahHeaderMap.has(v.surah_number)) {
+      if (sInfo) {
         surahHeaderMap.set(v.surah_number, {
           surah_number: v.surah_number,
           name_arabic: sInfo.name,
           name_english: sInfo.englishName,
           ayah_count: sInfo.numberOfAyahs,
           revelation_type: sInfo.revelationType,
-          at_verse_number: v.verse_number,
-          show_bismillah: v.surah_number !== 9 && v.verse_number === 1 && v.surah_number !== 1,
+          at_verse_number: 1,
+          show_bismillah: v.surah_number !== 1 && v.surah_number !== 9,
         });
       }
     }
@@ -478,11 +478,12 @@ function buildOfflineFallbackPage(pageNumber: number): InteractivePageData {
 
   const sInfo = quranService.getSurahInfo(surahNum);
   const juz = Math.max(1, Math.min(30, Math.ceil(pageNumber / 20)));
+  const isStartPage = SURAH_START_PAGES[surahNum] === pageNumber;
 
   return {
     page_number: pageNumber,
     juz_number: juz,
-    surah_headers: sInfo
+    surah_headers: sInfo && isStartPage
       ? [
           {
             surah_number: surahNum,

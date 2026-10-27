@@ -32,7 +32,7 @@ const STORAGE_KEYS = {
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
     version: '2.2.1',
-    date: '2026-08-22',
+    date: '2026-10-27',
     title: 'Phase 3 & Phase 2 Polish — Tilawah, Hifz, Heatmaps & Dark-Jewel Themes',
     changes: [
       { type: 'feature', description: 'Online-First Live Prayer Engine & 1-Page A4 Masjid Timetable PDF: High-precision calculation with AlAdhan live sync, manual minute offsets, and 1-tap print/export.' },
