@@ -8,6 +8,8 @@ import { SUPPORTED_CODES, DEFAULT_LANGUAGE } from '@/lib/language-config';
 import enTranslations from '../locales/en.json';
 import arTranslations from '../locales/ar.json';
 import urTranslations from '../locales/ur.json';
+import guTranslations from '../locales/gu.json';
+import hiTranslations from '../locales/hi.json';
 import bnTranslations from '../locales/bn.json';
 import ruTranslations from '../locales/ru.json';
 import frTranslations from '../locales/fr.json';
@@ -17,6 +19,8 @@ const resources = {
   en: { translation: enTranslations },
   ar: { translation: arTranslations },
   ur: { translation: urTranslations },
+  gu: { translation: guTranslations },
+  hi: { translation: hiTranslations },
   bn: { translation: bnTranslations },
   ru: { translation: ruTranslations },
   fr: { translation: frTranslations },

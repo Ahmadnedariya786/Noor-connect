@@ -20,8 +20,11 @@ import {
 } from "lucide-react";
 import { QuranGuideModal } from "@/components/Quran/QuranGuideModal";
 import { quranService, type SurahInfo } from "@/lib/quran-service";
+import { SURAH_START_PAGES } from "@/lib/mushaf-service";
 import { PageTransition } from "@/components/PageTransition";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useLanguage } from "@/contexts/LanguageContext-new";
+import { getQuranUIStrings } from "@/lib/quran-guide-i18n";
 import { useTilawah } from "@/contexts/TilawahContext";
 import {
   BOOKMARK_COLORS,
@@ -151,6 +154,8 @@ type SurahSubFilter = "all" | "meccan" | "medinan";
 export default function SurahList() {
   const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === "dark";
+  const { language } = useLanguage();
+  const uiStrings = useMemo(() => getQuranUIStrings(language), [language]);
   const navigate = useNavigate();
 
   const [activeMainTab, setActiveMainTab] = useState<MainTab>("surahs");
@@ -380,16 +385,17 @@ export default function SurahList() {
 
   const handleSurahClick = (surahNumber: number) => {
     if ("vibrate" in navigator) navigator.vibrate(15);
+    const startPage = SURAH_START_PAGES[surahNumber] || 1;
     startTransition(() => {
-      navigate(`/quran/surah-${surahNumber}`, { replace: true });
+      navigate(`/quran/${surahNumber}?page=${startPage}`, { replace: true });
     });
   };
 
   const handleJuzClick = (juz: JuzItem) => {
     if ("vibrate" in navigator) navigator.vibrate(15);
-    const url = prepareReaderRouteForPage(juz.startPage);
+    const startSurah = juz.startSurahNumber;
     startTransition(() => {
-      navigate(url, { replace: true });
+      navigate(`/quran/${startSurah}?page=${juz.startPage}`, { replace: true });
     });
   };
 
@@ -452,14 +458,14 @@ export default function SurahList() {
       const juzNum = Math.min(30, Math.max(1, val));
       const found = JUZ_LIST.find((j) => j.number === juzNum);
       if (found) {
-        const url = prepareReaderRouteForPage(found.startPage);
         setShowJumpModal(false);
-        navigate(url, { replace: true });
+        navigate(`/quran/${found.startSurahNumber}?page=${found.startPage}`, { replace: true });
       }
     } else if (jumpCategory === "surah") {
       const surahNum = Math.min(114, Math.max(1, val));
+      const startPage = SURAH_START_PAGES[surahNum] || 1;
       setShowJumpModal(false);
-      navigate(`/quran/surah-${surahNum}`, { replace: true });
+      navigate(`/quran/${surahNum}?page=${startPage}`, { replace: true });
     }
   };
 
@@ -504,7 +510,7 @@ export default function SurahList() {
                 className="px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)] font-bold text-xs flex items-center gap-1 hover:border-[var(--accent)] transition-all shadow-sm active:scale-95"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span>? Guide</span>
+                <span>{uiStrings.guideBtn}</span>
               </button>
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
@@ -534,10 +540,10 @@ export default function SurahList() {
                 <span className="text-base leading-none">✨</span>
                 <div className="min-w-0">
                   <h4 className="text-xs font-bold text-[var(--text-primary)] leading-tight">
-                    Explore New Quran Tools
+                    {uiStrings.welcomeBannerTitle}
                   </h4>
                   <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-1">
-                    Word meaning, Hifz & Tajweed
+                    {uiStrings.welcomeBannerDesc}
                   </p>
                 </div>
               </div>
@@ -547,7 +553,7 @@ export default function SurahList() {
                   onClick={() => setShowGuideModal(true)}
                   className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[var(--accent)] text-[var(--on-accent)] shrink-0 hover:opacity-90 active:scale-95 transition-all"
                 >
-                  See How →
+                  {uiStrings.seeHow}
                 </button>
                 <button
                   type="button"
@@ -999,7 +1005,8 @@ export default function SurahList() {
                   if ("vibrate" in navigator) navigator.vibrate(15);
                   startTransition(() => {
                     if (dailySurahNumber) {
-                      navigate(`/quran/surah-${dailySurahNumber}`, { replace: true });
+                      const startPage = SURAH_START_PAGES[dailySurahNumber] || 1;
+                      navigate(`/quran/${dailySurahNumber}?page=${startPage}`, { replace: true });
                     }
                   });
                 }}
@@ -1171,7 +1178,7 @@ export default function SurahList() {
                             <div className="flex items-center gap-1.5 shrink-0">
                               <Button
                                 size="sm"
-                                onClick={() => navigate(`/quran/surah-${bm.surah}`)}
+                                onClick={() => navigate(`/quran/${bm.surah}?page=${bm.page}`, { replace: true })}
                                 className="h-8 rounded-xl text-xs font-bold gap-1 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] border-none"
                               >
                                 <span>Resume</span>

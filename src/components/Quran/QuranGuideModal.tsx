@@ -1,22 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, BookOpen, Volume2, Repeat, Palette, Bookmark, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext-new';
+import { getQuranGuideData, formatStepBadge } from '@/lib/quran-guide-i18n';
 
 interface QuranGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface GuideFeature {
-  id: string;
-  icon: React.ReactNode;
-  badge: string;
-  title: React.ReactNode;
-  description: React.ReactNode;
-  tip: string;
-}
-
 export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClose }) => {
+  const { language, isRTL } = useLanguage();
+  const guideData = useMemo(() => getQuranGuideData(language), [language]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -42,69 +38,30 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
     onClose();
   };
 
-  const features: GuideFeature[] = [
-    {
-      id: 'wbw',
-      icon: <Volume2 size={20} style={{ color: 'var(--accent)' }} />,
-      badge: 'Word Study',
-      title: '👆 Word-by-Word Study & Audio',
-      description: 'Tap any Arabic word on the Mushaf page to view its exact English meaning, transliteration, and root word.',
-      tip: 'Tap the audio button in the popup to hear that exact word pronounced clearly by the Qari.',
-    },
-    {
-      id: 'tafsir',
-      icon: <BookOpen size={20} style={{ color: 'var(--accent)' }} />,
-      badge: 'Tafsir & Translations',
-      title: (
-        <span>
-          <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
-            ﴿١﴾
-          </span>{' '}
-          Tafsir & Multi-Translation
-        </span>
-      ),
-      description: (
-        <span>
-          Tap any verse number medallion{' '}
-          <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
-            ﴿١﴾
-          </span>{' '}
-          or the top 📚 Study button to open comprehensive verse study.
-        </span>
-      ),
-      tip: "Switch between English (Sahih Int'l, Pickthall), Urdu & Hindi, plus Ibn Kathir & Ma'arif al-Qur'an Tafsirs.",
-    },
-    {
-      id: 'hifz',
-      icon: <Repeat size={20} style={{ color: 'var(--accent)' }} />,
-      badge: 'Hifz Engine',
-      title: '🔁 Hifz (Memorization) Engine',
-      description: 'Inside 📚 Study → Hifz, loop any verse or custom verse range 3× to 10× to commit it to memory.',
-      tip: 'Enable Recite Pause to recite aloud after the Qari, and use the Blur Words slider to test recall.',
-    },
-    {
-      id: 'modes',
-      icon: <Palette size={20} style={{ color: 'var(--accent)' }} />,
-      badge: '4 Reading Modes',
-      title: '🎨 4 Reading Modes & Tajweed Colours',
-      description: 'Choose your preferred Mushaf experience: Jewel (deep luxury), Paper (Madinah cream), Night (OLED black), or Scan (original print).',
-      tip: 'Tap 🎨 Tajweed to color-code Ghunnah, Idgham, Qalqalah & Madd recitation rules with the interactive rules guide.',
-    },
-    {
-      id: 'khatmah',
-      icon: <Bookmark size={20} style={{ color: 'var(--accent)' }} />,
-      badge: 'Smart Progress',
-      title: '📖 Smart Khatmah & 5-Colour Auto-Bookmarks',
-      description: 'Set a 30, 60, or 90-day Khatmah goal that automatically recalibrates daily targets if you read extra or miss a day.',
-      tip: 'Assign 5 distinct colored bookmarks (Emerald, Ruby, Amber, etc.) with Auto-move so your ribbon advances with each page turn.',
-    },
-  ];
+  const getFeatureIcon = (id: string) => {
+    switch (id) {
+      case 'wbw':
+        return <Volume2 size={20} style={{ color: 'var(--accent)' }} />;
+      case 'tafsir':
+        return <BookOpen size={20} style={{ color: 'var(--accent)' }} />;
+      case 'hifz':
+        return <Repeat size={20} style={{ color: 'var(--accent)' }} />;
+      case 'modes':
+        return <Palette size={20} style={{ color: 'var(--accent)' }} />;
+      case 'khatmah':
+        return <Bookmark size={20} style={{ color: 'var(--accent)' }} />;
+      default:
+        return <BookOpen size={20} style={{ color: 'var(--accent)' }} />;
+    }
+  };
+
+  const lineHeight = isRTL ? 1.9 : 1.5;
 
   return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Quran Feature Guide"
+      aria-label={guideData.title}
       style={{
         position: 'fixed',
         inset: 0,
@@ -122,6 +79,7 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
       }}
     >
       <div
+        dir={isRTL ? 'rtl' : 'ltr'}
         style={{
           width: '100%',
           maxWidth: '460px',
@@ -134,6 +92,7 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
           boxShadow: '0 20px 40px rgba(0,0,0,0.45)',
           overflow: 'hidden',
           animation: 'fadeScaleIn 0.22s ease-out',
+          textAlign: isRTL ? 'right' : 'left',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -161,6 +120,7 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--accent)',
+                flexShrink: 0,
               }}
             >
               <BookOpen size={18} />
@@ -173,18 +133,20 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
                   fontWeight: 700,
                   color: 'var(--text-primary)',
                   letterSpacing: '-0.01em',
+                  lineHeight: isRTL ? 1.6 : 1.2,
                 }}
               >
-                Quran Features Guide
+                {guideData.title}
               </h2>
               <p
                 style={{
                   margin: '2px 0 0 0',
                   fontSize: '0.74rem',
                   color: 'var(--text-secondary)',
+                  lineHeight: isRTL ? 1.6 : 1.2,
                 }}
               >
-                Tap-to-learn interactive tools & smart workflows
+                {guideData.subtitle}
               </p>
             </div>
           </div>
@@ -219,9 +181,9 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {features.map((feature, idx) => (
+          {guideData.cards.map((card, idx) => (
             <div
-              key={feature.id}
+              key={card.id}
               style={{
                 backgroundColor: 'var(--surface)',
                 border: '1px solid var(--border)',
@@ -233,7 +195,7 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                   <div
                     style={{
                       width: '28px',
@@ -246,7 +208,7 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
                       flexShrink: 0,
                     }}
                   >
-                    {feature.icon}
+                    {getFeatureIcon(card.id)}
                   </div>
                   <h3
                     style={{
@@ -254,9 +216,19 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
                       fontSize: '0.84rem',
                       fontWeight: 700,
                       color: 'var(--text-primary)',
+                      lineHeight: isRTL ? 1.6 : 1.25,
                     }}
                   >
-                    {feature.title}
+                    {card.id === 'tafsir' ? (
+                      <span>
+                        <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
+                          ﴿١﴾
+                        </span>{' '}
+                        {card.title}
+                      </span>
+                    ) : (
+                      card.title
+                    )}
                   </h3>
                 </div>
                 <span
@@ -270,9 +242,10 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
                     border: '1px solid var(--border)',
                     letterSpacing: '0.02em',
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
                   }}
                 >
-                  Step {idx + 1}
+                  {formatStepBadge(idx, language)}
                 </span>
               </div>
 
@@ -280,11 +253,20 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
                 style={{
                   margin: 0,
                   fontSize: '0.77rem',
-                  lineHeight: 1.45,
+                  lineHeight,
                   color: 'var(--text-secondary)',
                 }}
               >
-                {feature.description}
+                {card.id === 'tafsir' ? (
+                  <span>
+                    {card.description}{' '}
+                    <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
+                      ﴿١﴾
+                    </span>
+                  </span>
+                ) : (
+                  card.description
+                )}
               </p>
 
               <div
@@ -312,11 +294,11 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
                 <span
                   style={{
                     fontSize: '0.71rem',
-                    lineHeight: 1.35,
+                    lineHeight,
                     color: 'var(--text-primary)',
                   }}
                 >
-                  {feature.tip}
+                  {card.tip}
                 </span>
               </div>
             </div>
@@ -336,8 +318,8 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-            Available anytime via <strong style={{ color: 'var(--text-primary)' }}>? Guide</strong>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: isRTL ? 1.5 : 1.2 }}>
+            {guideData.footer} <strong style={{ color: 'var(--text-primary)' }}>{guideData.footerHighlight}</strong>
           </span>
           <button
             type="button"
@@ -355,10 +337,11 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
               alignItems: 'center',
               gap: '6px',
               transition: 'transform 0.15s ease',
+              flexShrink: 0,
             }}
           >
             <CheckCircle2 size={16} />
-            Got It
+            {guideData.gotIt}
           </button>
         </div>
       </div>

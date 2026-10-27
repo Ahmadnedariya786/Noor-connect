@@ -91,6 +91,9 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
   // Security, Permissions & Diagnostics
   /^user[_-]onboarded$/,
   /^permissions[_-]granted$/,
+  /^onboarding_step_a_done$/,
+  /^onboarding_step_b_done$/,
+  /^onboarding_perms_v2_done$/,
   /^noor[_-]permission[_-]onboarded[_-]v1$/,
   /^noor[_-]owner[_-]/,
   /^noor[_-]upgradation[_-]lock[_-]v1$/,
@@ -107,20 +110,27 @@ export function isProtectedPersonalKey(key: string): boolean {
   return PROTECTED_KEY_PATTERNS.some((pattern) => pattern.test(key));
 }
 
+/**
+ * Checks whether a key is strictly an explicit temporary cache key.
+ * Any key not matching an explicit temporary-cache pattern returns false and remains 100% untouched!
+ */
 export function isTemporaryCacheKey(key: string): boolean {
   if (isProtectedPersonalKey(key)) return false;
 
-  // Explicit temporary cache patterns
-  if (
-    key.startsWith('noor_mushaf_') ||
+  // Explicit temporary cache patterns ONLY
+  return (
+    key.startsWith('noor_mushaf_page_') ||
     key.startsWith('mushaf_page_') ||
+    key === 'noor_mushaf_image_cache' ||
     key === 'noor_ayah_page_map_v1' ||
     key.startsWith('noor_ayah_') ||
     key.includes('tafsir_cache') ||
+    key.startsWith('noor_tafsir_') ||
     key.startsWith('tafsir_text_') ||
     key.startsWith('tafsir_data_') ||
     key.startsWith('tafsir_edition_cache_') ||
     key.includes('translation_cache') ||
+    key.startsWith('noor_translation_') ||
     key.startsWith('ayah_trans_') ||
     key.startsWith('quran_trans_') ||
     key.startsWith('quran_text_') ||
@@ -131,6 +141,7 @@ export function isTemporaryCacheKey(key: string): boolean {
     key === 'prayer-times-today' ||
     key.startsWith('aladhan_') ||
     key.includes('online_prayer') ||
+    key.includes('prayer_calendar_cache') ||
     key.includes('calendar_cache') ||
     key.startsWith('nominatim_') ||
     key.startsWith('geocode_') ||
@@ -143,12 +154,25 @@ export function isTemporaryCacheKey(key: string): boolean {
     key.includes('release_cache') ||
     key.startsWith('temp_') ||
     key.includes('_cache_')
-  ) {
-    return true;
-  }
+  );
+}
 
-  // Any other key not explicitly protected is considered cache
-  return true;
+/**
+ * Returns all keys currently in localStorage that strictly match temporary cache criteria.
+ */
+export function getTemporaryCacheKeys(): string[] {
+  const keys: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && isTemporaryCacheKey(key)) {
+        keys.push(key);
+      }
+    }
+  } catch {
+    // LocalStorage iteration fallback
+  }
+  return keys;
 }
 
 export interface StorageBreakdown {
@@ -179,10 +203,10 @@ export async function getStorageBreakdown(): Promise<StorageBreakdown> {
       const val = localStorage.getItem(key) || '';
       const byteSize = (key.length + val.length) * 2;
 
-      if (isProtectedPersonalKey(key)) {
-        protectedBytes += byteSize;
-      } else {
+      if (isTemporaryCacheKey(key)) {
         tempLocalStorageBytes += byteSize;
+      } else {
+        protectedBytes += byteSize;
       }
     }
   } catch {
@@ -258,13 +282,7 @@ export async function clearTemporaryCache(): Promise<{
 
   // 1. Purge temporary keys from localStorage
   try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && isTemporaryCacheKey(key)) {
-        keysToRemove.push(key);
-      }
-    }
+    const keysToRemove = getTemporaryCacheKeys();
 
     for (const key of keysToRemove) {
       const val = localStorage.getItem(key) || '';

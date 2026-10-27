@@ -21,6 +21,7 @@ import {
   ONBOARDING_STEP_A_KEY,
   ONBOARDING_STEP_B_KEY,
   ONBOARDING_PERMS_V2_KEY,
+  healPermissionOnboardingFlags,
 } from '@/lib/onboarding-permissions';
 
 export type DiagnosticCategory =
@@ -1020,9 +1021,20 @@ export async function runDeepSystemHealthScan(): Promise<DeepHealthScanReport> {
   // 8. Permission Onboarding Flags
   try {
     const isNative = Capacitor.isNativePlatform();
-    const stepA = typeof localStorage !== 'undefined' ? localStorage.getItem(ONBOARDING_STEP_A_KEY) : null;
-    const stepB = typeof localStorage !== 'undefined' ? localStorage.getItem(ONBOARDING_STEP_B_KEY) : null;
-    const permsV2 = typeof localStorage !== 'undefined' ? localStorage.getItem(ONBOARDING_PERMS_V2_KEY) : null;
+    let stepA = typeof localStorage !== 'undefined' ? localStorage.getItem(ONBOARDING_STEP_A_KEY) : null;
+    let stepB = typeof localStorage !== 'undefined' ? localStorage.getItem(ONBOARDING_STEP_B_KEY) : null;
+    let permsV2 = typeof localStorage !== 'undefined' ? localStorage.getItem(ONBOARDING_PERMS_V2_KEY) : null;
+
+    if (isNative && (stepA !== 'true' || (stepB !== 'true' && permsV2 !== 'true'))) {
+      try {
+        const healed = await healPermissionOnboardingFlags();
+        if (healed.stepA) stepA = 'true';
+        if (healed.stepB) stepB = 'true';
+        if (healed.permsV2) permsV2 = 'true';
+      } catch {
+        // Safe heal catch
+      }
+    }
 
     if (!isNative) {
       checks.push({

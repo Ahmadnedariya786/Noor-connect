@@ -29,7 +29,7 @@ import { useAutoBackup } from "@/hooks/useAutoBackup";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { preloadCriticalResources, isLowEndDevice, monitorFPS } from "@/lib/performance-optimizations";
 import { applyTieredVisualOverrides, getAnimationTier } from "@/lib/device-performance";
-import { runFirstLaunchPermissionOnboarding } from "@/lib/onboarding-permissions";
+import { runFirstLaunchPermissionOnboarding, healPermissionOnboardingFlags } from "@/lib/onboarding-permissions";
 import { ExactAlarmPermissionDialog } from "@/components/ExactAlarmPermissionDialog";
 import { HardwareBackButtonHandler } from "@/components/HardwareBackButtonHandler";
 import { recordBreadcrumb } from "@/lib/diagnostics-engine";
@@ -676,6 +676,9 @@ function AppShell() {
     markStartupStep('onboarding-permissions-init');
     try {
       if (Capacitor.isNativePlatform()) {
+        healPermissionOnboardingFlags().catch(() => {
+          // Safe startup heal fallback
+        });
         runFirstLaunchPermissionOnboarding()
           .catch((err) => {
             // Handled non-critical error during first-launch permission onboarding
@@ -697,7 +700,10 @@ function AppShell() {
       // Check pending onboarding Step B (if Step A completed but Step B was interrupted/missed)
       try {
         if (Capacitor.isNativePlatform()) {
-          import('@/lib/onboarding-permissions').then(({ checkPendingOnboardingStepB }) => {
+          import('@/lib/onboarding-permissions').then(({ checkPendingOnboardingStepB, healPermissionOnboardingFlags }) => {
+            healPermissionOnboardingFlags?.().catch(() => {
+              // Safe resume heal fallback
+            });
             checkPendingOnboardingStepB?.().catch((err) => {
               // Handled resume pending onboarding check error
               console.warn('Resume onboarding check error:', err);

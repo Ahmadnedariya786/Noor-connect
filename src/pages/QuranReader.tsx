@@ -29,6 +29,8 @@ import { SURAH_START_PAGES, mushafService } from '@/lib/mushaf-service';
 import { PageTransition } from '@/components/PageTransition';
 import { Preferences } from '@capacitor/preferences';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useLanguage } from '@/contexts/LanguageContext-new';
+import { getQuranUIStrings } from '@/lib/quran-guide-i18n';
 import { useTilawah } from '@/contexts/TilawahContext';
 import { quranFeaturesService } from '@/lib/quran-features';
 import { AyahStudySheet } from '@/components/Quran/AyahStudySheet';
@@ -40,53 +42,51 @@ const BOOKMARKS_KEY = 'quran-bookmarks';
 
 export default function QuranReader() {
   const { effectiveTheme } = useSettings();
-  const isDark = effectiveTheme !== 'desert-scroll';
+  const isDark = effectiveTheme === 'dark';
+  const { language } = useLanguage();
+  const uiStrings = useMemo(() => getQuranUIStrings(language), [language]);
 
-  const { surahName } = useParams<{ surahName: string }>();
+  const { surahName, id } = useParams<{ surahName?: string; id?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   // Tilawah global player
   const { isPlaying, currentSurah, currentAyah, playAyah, togglePlay } = useTilawah();
-  const [autoFollow, setAutoFollow] = useState<boolean>(true);
   const [currentPageData, setCurrentPageData] = useState<InteractivePageData | null>(null);
   const pageDataRef = useRef<InteractivePageData | null>(null);
   const lastObservedVerseRef = useRef<string | null>(null);
 
-  const initialSurah = (() => {
-    if (surahName) {
-      const m = surahName.match(/surah-(\d+)/);
-      if (m) return parseInt(m[1], 10);
-      const direct = parseInt(surahName, 10);
-      if (!isNaN(direct) && direct >= 1 && direct <= 114) return direct;
-    }
-    const saved = localStorage.getItem(LS_LAST_SURAH);
-    return saved ? parseInt(saved, 10) : 1;
-  })();
+  const routeSurahId = useMemo(() => {
+    const raw = id ?? surahName ?? '1';
+    return Math.min(114, Math.max(1, parseInt(String(raw).replace(/\D+/g, ''), 10) || 1));
+  }, [id, surahName]);
 
-  const [surahNum, setSurahNum] = useState(initialSurah);
+  const [surahNum, setSurahNum] = useState<number>(routeSurahId);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
+  // Auto-follow: default true unless playing a DIFFERENT surah in background
+  const [autoFollow, setAutoFollow] = useState<boolean>(() => {
+    if (!isPlaying) return true;
+    return currentSurah === routeSurahId;
+  });
+
   // Global Madinah Mushaf Page (1..604)
+  // Priority: 1. Valid ?page= query param; 2. Canonical SURAH_START_PAGES for routeSurahId
+  // NEVER let stale LS_LAST_PAGE hijack direct Surah navigation!
   const [mushafPageNumber, setMushafPageNumber] = useState<number>(() => {
     const pageParam = searchParams.get('page');
     if (pageParam) {
       const p = parseInt(pageParam, 10);
-      if (p >= 1 && p <= 604) return p;
+      if (!isNaN(p) && p >= 1 && p <= 604) return p;
     }
-    const savedPage = localStorage.getItem(LS_LAST_PAGE);
-    if (savedPage) {
-      const p = parseInt(savedPage, 10);
-      if (p >= 1 && p <= 604) return p;
-    }
-    return SURAH_START_PAGES[initialSurah] || 1;
+    return SURAH_START_PAGES[routeSurahId] || 1;
   });
 
   // Ayah Study & Hifz Sheet state
   const [showStudySheet, setShowStudySheet] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [studyInitialAyah, setStudyInitialAyah] = useState(1);
-  const [studySurah, setStudySurah] = useState(initialSurah);
+  const [studySurah, setStudySurah] = useState(routeSurahId);
 
   // Tajweed toggle
   const [showTajweed, setShowTajweed] = useState<boolean>(() => {
@@ -139,31 +139,27 @@ export default function QuranReader() {
   // Sync with route param and query searchParams (?page=)
   useEffect(() => {
     const pageParam = searchParams.get('page');
+    let targetPage = SURAH_START_PAGES[routeSurahId] || 1;
     if (pageParam) {
       const parsedPage = parseInt(pageParam, 10);
-      if (!isNaN(parsedPage) && parsedPage >= 1 && parsedPage <= 604 && parsedPage !== mushafPageNumber) {
-        setMushafPageNumber(parsedPage);
-        const derivedSurah = mushafService.getSurahForPage(parsedPage);
-        if (derivedSurah && derivedSurah !== surahNum) {
-          setSurahNum(derivedSurah);
-        }
-      }
-    } else if (surahName) {
-      let parsed = NaN;
-      const m = surahName.match(/surah-(\d+)/);
-      if (m) {
-        parsed = parseInt(m[1], 10);
-      } else {
-        const direct = parseInt(surahName, 10);
-        if (!isNaN(direct)) parsed = direct;
-      }
-      if (!isNaN(parsed) && parsed >= 1 && parsed <= 114 && parsed !== surahNum) {
-        setSurahNum(parsed);
-        const startP = SURAH_START_PAGES[parsed] || 1;
-        setMushafPageNumber(startP);
+      if (!isNaN(parsedPage) && parsedPage >= 1 && parsedPage <= 604) {
+        targetPage = parsedPage;
       }
     }
-  }, [surahName, searchParams]);
+
+    if (targetPage !== mushafPageNumber) {
+      setMushafPageNumber(targetPage);
+    }
+    if (routeSurahId !== surahNum) {
+      setSurahNum(routeSurahId);
+    }
+
+    // If navigated to a DIFFERENT surah while audio is playing in background,
+    // turn off autoFollow so the reader is not yanked back to the playing surah!
+    if (isPlaying && currentSurah > 0 && currentSurah !== routeSurahId) {
+      setAutoFollow(false);
+    }
+  }, [routeSurahId, searchParams]);
 
   const surahInfo = quranService.getSurahInfo(surahNum);
   // Dynamic header metadata derived from actual Surah on mushafPageNumber
@@ -234,7 +230,7 @@ export default function QuranReader() {
     setSurahNum(targetSurah);
 
     // Synchronize URL in lockstep with replace: true
-    navigate(`/quran/surah-${targetSurah}?page=${targetPage}`, { replace: true });
+    navigate(`/quran/${targetSurah}?page=${targetPage}`, { replace: true });
 
     // Auto-moving bookmarks update
     updateAutoMovingBookmarks(
@@ -422,64 +418,97 @@ export default function QuranReader() {
       >
         {/* TOP READER CONTROL BAR */}
         <div className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)] shadow-sm">
-          <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
-            {/* Left: Back button returning to /quran via { replace: true } */}
+          <div
+            className="max-w-2xl mx-auto"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '6px',
+              padding: '8px 10px',
+            }}
+          >
+            {/* Left: < Quran pill */}
             <button
               type="button"
               onClick={() => navigate('/quran', { replace: true })}
-              className="flex items-center gap-1 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] font-bold text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors shrink-0 select-none"
-              style={{ padding: '5px 8px', fontSize: '0.72rem' }}
+              className="flex items-center gap-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] font-bold text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors shrink-0 select-none shadow-sm active:scale-95"
+              style={{ height: '36px', padding: '0 10px', fontSize: '0.76rem' }}
             >
-              <ChevronLeft className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-              <span>Quran</span>
+              <ChevronLeft className="w-4 h-4 text-[var(--accent-text)]" />
+              <span>{uiStrings.quranBack}</span>
             </button>
 
-            {/* Center: Arabic Surah Title + English Surah Name + Subtitle (Derived from Surah on currentPage) */}
+            {/* Center: Arabic Surah Title + English Surah Name + Page & Juz */}
             <div
-              className="cursor-pointer select-none"
-              style={{ flex: 1, minWidth: 0, textAlign: 'center', padding: '0 4px' }}
+              className="cursor-pointer select-none text-center"
+              style={{ flex: 1, minWidth: 0, overflow: 'hidden', padding: '0 4px' }}
               onClick={() => navigate('/quran', { replace: true })}
               title="Return to Quran index"
             >
-              <h1 className="font-arabic font-bold text-base sm:text-lg text-[var(--accent-text)] leading-tight truncate">
-                {currentSurahInfo?.name}
-              </h1>
-              <p className="text-xs font-bold text-[var(--text-primary)] truncate">
-                {currentSurahInfo?.englishName} • #{surahOnPage}
-              </p>
-              <p
-                className="text-[var(--text-secondary)] font-medium"
-                style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', lineHeight: 1.2 }}
-              >
-                Page {mushafPageNumber} / 604 • Juz {currentJuz}
-              </p>
+              <div className="truncate font-bold text-[0.84rem] leading-tight text-[var(--text-primary)]">
+                {currentSurahInfo?.englishName || `Surah ${surahOnPage}`}{' '}
+                <span className="font-arabic text-[var(--accent-text)]">
+                  {currentSurahInfo?.name || ''}
+                </span>
+              </div>
+              <div className="truncate text-[0.68rem] leading-tight text-[var(--text-secondary)]">
+                Page {mushafPageNumber} • Juz {currentJuz}
+              </div>
             </div>
 
             {/* Right: Guide, Study & Hifz + Star Bookmark */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div
+              className="shrink-0"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              {/* Guide Button: 36x36 circular button with single HelpCircle icon */}
               <button
                 type="button"
                 onClick={() => setShowGuideModal(true)}
                 title="Quran Features Guide"
-                className="rounded-lg font-bold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors select-none flex items-center gap-1 shadow-sm"
-                style={{ padding: '5px 7px', fontSize: '0.72rem' }}
+                aria-label="Quran Guide"
+                className="hover:border-[var(--accent)] transition-all shadow-sm active:scale-95 select-none"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--accent-text)',
+                }}
               >
-                <HelpCircle className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                <span className="hidden xs:inline">? Guide</span>
-                <span className="xs:hidden">?</span>
+                <HelpCircle style={{ width: '18px', height: '18px' }} />
               </button>
 
+              {/* Study Button: 36px height pill with single BookOpen icon + localized label */}
               <button
                 type="button"
                 onClick={() => handleOpenStudySheet(surahOnPage, 1)}
                 title="Study & Hifz Memorization"
-                className="rounded-lg font-bold border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent-text)] hover:border-[var(--accent)] transition-colors select-none flex items-center gap-1 shadow-sm"
-                style={{ padding: '5px 8px', fontSize: '0.72rem' }}
+                className="hover:border-[var(--accent)] transition-all shadow-sm active:scale-95 select-none font-bold"
+                style={{
+                  height: '36px',
+                  padding: '0 11px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  background: 'var(--accent-soft)',
+                  border: '1px solid var(--accent)',
+                  color: 'var(--accent-text)',
+                  fontSize: '0.76rem',
+                }}
               >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>📚 Study</span>
+                <BookOpen className="w-4 h-4" />
+                <span>{uiStrings.studyBtn}</span>
               </button>
 
+              {/* Star Bookmark Button: 36x36 circle matching Guide button */}
               <button
                 type="button"
                 onClick={() => {
@@ -487,15 +516,22 @@ export default function QuranReader() {
                   handleOpenStudySheet(surahOnPage, 1);
                 }}
                 title={isBookmarked ? 'Remove Star / Manage Bookmarks' : 'Bookmark Surah & Ayah'}
-                className={`rounded-lg border transition-all select-none ${
-                  isBookmarked
-                    ? 'bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent)] shadow-sm'
-                    : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:text-[var(--text-primary)]'
-                }`}
-                style={{ padding: '5px 7px' }}
+                aria-label={isBookmarked ? 'Bookmarked' : 'Add bookmark'}
+                className="transition-all select-none shadow-sm active:scale-95"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: isBookmarked ? 'var(--accent-soft)' : 'var(--surface-2)',
+                  border: `1px solid ${isBookmarked ? 'var(--accent)' : 'var(--border)'}`,
+                  color: isBookmarked ? 'var(--accent-text)' : 'var(--text-secondary)',
+                }}
               >
                 <Star
-                  className={`w-3.5 h-3.5 ${
+                  className={`w-4 h-4 ${
                     isBookmarked ? 'fill-[var(--accent)] text-[var(--accent)]' : ''
                   }`}
                 />
@@ -590,27 +626,30 @@ export default function QuranReader() {
               </div>
             )}
 
-            <div
-              style={{
-                fontSize: '0.68rem',
-                whiteSpace: 'nowrap',
-                color: 'var(--text-secondary)',
-                fontWeight: 600,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                paddingLeft: '4px',
-                textAlign: 'right',
-                flex: 1,
-              }}
-            >
-              <span>
-                Tap word: Meaning • Tap{' '}
-                <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
-                  ﴿١﴾
+            {/* Static hint is hidden during active playback to prevent 'Tap word: M...' clipping */}
+            {!isPlaying && (
+              <div
+                style={{
+                  fontSize: '0.68rem',
+                  whiteSpace: 'nowrap',
+                  color: 'var(--text-secondary)',
+                  fontWeight: 600,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  paddingLeft: '4px',
+                  textAlign: 'right',
+                  flex: 1,
+                }}
+              >
+                <span>
+                  {uiStrings.subToolbarHint.tapWord}: {uiStrings.subToolbarHint.meaning} • {uiStrings.subToolbarHint.tapMedallion}{' '}
+                  <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
+                    ﴿١﴾
+                  </span>
+                  : {uiStrings.subToolbarHint.tafsir}
                 </span>
-                : Tafsir
-              </span>
-            </div>
+              </div>
+            )}
           </div>
         </div>
 

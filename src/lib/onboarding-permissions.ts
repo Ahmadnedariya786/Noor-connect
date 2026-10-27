@@ -264,6 +264,49 @@ export async function checkPendingOnboardingStepB(): Promise<void> {
 }
 
 /**
+ * Self-heal cleared onboarding flags on existing install:
+ * If native bridge checks (canScheduleExactAlarms / isIgnoringBatteryOptimizations) return true
+ * while the localStorage markers were cleared by a previous cache clear, automatically restore those
+ * markers in localStorage so the user's device immediately returns to 8/8 Subsystems Passed.
+ */
+export async function healPermissionOnboardingFlags(): Promise<{
+  stepA: boolean;
+  stepB: boolean;
+  permsV2: boolean;
+}> {
+  if (!Capacitor.isNativePlatform()) {
+    return { stepA: true, stepB: true, permsV2: true };
+  }
+
+  let stepA = localStorage.getItem(ONBOARDING_STEP_A_KEY) === 'true';
+  let stepB = localStorage.getItem(ONBOARDING_STEP_B_KEY) === 'true';
+  let permsV2 = localStorage.getItem(ONBOARDING_PERMS_V2_KEY) === 'true';
+
+  try {
+    const [batteryStatus, canSchedule] = await Promise.all([
+      BatteryOptimization.isIgnoringBatteryOptimizations().catch(() => ({ isIgnoring: false })),
+      nativeAdhan.canScheduleExactAlarms().catch(() => false),
+    ]);
+
+    if (batteryStatus?.isIgnoring && !stepA) {
+      localStorage.setItem(ONBOARDING_STEP_A_KEY, 'true');
+      stepA = true;
+    }
+    if (canSchedule && (!stepB || !permsV2)) {
+      localStorage.setItem(ONBOARDING_STEP_B_KEY, 'true');
+      localStorage.setItem(ONBOARDING_PERMS_V2_KEY, 'true');
+      stepB = true;
+      permsV2 = true;
+    }
+  } catch (err) {
+    // Handled bridge check error
+    console.warn('healPermissionOnboardingFlags bridge error:', err);
+  }
+
+  return { stepA, stepB, permsV2 };
+}
+
+/**
  * Debug trigger for testing:
  * Clears onboarding flags and immediately runs the full sequence (native only).
  */
@@ -278,9 +321,17 @@ export async function rerunPermissionOnboarding(): Promise<void> {
   await runFirstLaunchPermissionOnboarding(true);
 }
 
-// Auto-attach lifecycle listener for Step B self-healing recovery on native resume
+// Auto-attach lifecycle listener for Step B and self-healing recovery on native resume
 if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+  // Run eager heal on startup
+  healPermissionOnboardingFlags().catch(() => {
+    // Safe startup heal fallback
+  });
+
   CapacitorApp.addListener('resume', () => {
+    healPermissionOnboardingFlags().catch(() => {
+      // Safe resume heal fallback
+    });
     checkPendingOnboardingStepB().catch((err) => {
       // Handled background resume Step B recovery error
       console.warn('Resume Step B check failed:', err);

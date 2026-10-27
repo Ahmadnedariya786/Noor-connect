@@ -648,6 +648,8 @@ const SettingsSubPage: React.FC = () => {
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="ar">العربية (Arabic)</SelectItem>
                   <SelectItem value="ur">اردو (Urdu)</SelectItem>
+                  <SelectItem value="gu">ગુજરાતી (Gujarati)</SelectItem>
+                  <SelectItem value="hi">हिन्दी (Hindi)</SelectItem>
                   <SelectItem value="bn">বাংলা (Bengali)</SelectItem>
                   <SelectItem value="ru">Русский (Russian)</SelectItem>
                   <SelectItem value="fr">Français (French)</SelectItem>
