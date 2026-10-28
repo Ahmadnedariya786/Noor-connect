@@ -21,6 +21,7 @@ import {
 import { calculatePrayerTimes, formatPrayerTime, getCalculationMethod } from './prayer-calculator';
 import { getMadhab } from './storage';
 import { isNativePlatform } from './capacitor-utils';
+import { getDailyAyah, getDailyHadith } from './daily-content';
 import i18n from './i18n-new';
 import type {
   PrayerPayload,
@@ -171,59 +172,77 @@ function buildPrayerPayload(
   };
 }
 
-function getStoredQuranVerse(): AyahContent | null {
+function getStoredQuranVerse(): AyahContent {
   try {
-    const raw = localStorage.getItem('daily-ayah-cache');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    const arabic = parsed.arabic || parsed.text_arabic || parsed.textArabic || '';
-    const translation = parsed.translation || parsed.englishTranslation || '';
-    const transliteration = parsed.translit || parsed.transliteration || '';
-    const reference = parsed.reference || parsed.ref || '';
-    const surahNumber = parsed.surahNumber || parsed.surah_number || 1;
-    const ayahNumber = parsed.ayahNumber || parsed.ayah_number || 1;
-    if (!arabic && !translation) return null;
-    return { arabic, translation, transliteration, reference, surahNumber, ayahNumber, lastUpdated: parsed.lastUpdated || Date.now() };
-  } catch {
-    return null;
+    const raw = localStorage.getItem('daily-ayah-cache') || localStorage.getItem('enhanced-daily-ayah');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const arabic = parsed.arabic || parsed.text_arabic || parsed.textArabic || '';
+      const translation = parsed.translation || parsed.englishTranslation || parsed.english || '';
+      const transliteration = parsed.translit || parsed.transliteration || '';
+      const reference = parsed.reference || parsed.ref || '';
+      const surahNumber = parsed.surahNumber || parsed.surah_number || 1;
+      const ayahNumber = parsed.ayahNumber || parsed.ayah_number || 1;
+      if (arabic || translation) {
+        return { arabic, translation, transliteration, reference, surahNumber, ayahNumber, lastUpdated: parsed.lastUpdated || Date.now() };
+      }
+    }
+  } catch (err) {
+    console.warn('[WidgetService] getStoredQuranVerse parse error:', err);
   }
-}
 
-function getStoredHadith(): HadithContent | null {
-  try {
-    const raw = localStorage.getItem('daily-hadith-cache');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return {
-      arabic:      parsed.arabic ?? '',
-      translation: parsed.englishTranslation || parsed.translation || '',
-      narrator:    parsed.narrator ?? '',
-      source:      parsed.source ?? '',
-      grade:       parsed.grade || 'Sahih',
-      collection:  parsed.collection ?? 'bukhari',
-      bookNumber:  Number(parsed.bookNumber ?? 0),
-      hadithNumber: Number(parsed.hadithNumber ?? 0),
-      lastUpdated: parsed.lastUpdated || Date.now(),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function buildDailyContentPayload(): DailyContentPayload | null {
-  const ayah = getStoredQuranVerse();
-  if (!ayah) return null;
-  const hadith = getStoredHadith() ?? {
-    arabic: '',
-    translation: '',
-    narrator: '',
-    source: 'Daily Hadith',
-    grade: 'Sahih',
-    collection: 'bukhari',
-    bookNumber: 0,
-    hadithNumber: 0,
+  const fallback = getDailyAyah();
+  return {
+    arabic: fallback.arabic,
+    translation: fallback.translation,
+    transliteration: '',
+    reference: fallback.reference,
+    surahNumber: 2,
+    ayahNumber: 255,
     lastUpdated: Date.now(),
   };
+}
+
+function getStoredHadith(): HadithContent {
+  try {
+    const raw = localStorage.getItem('daily-hadith-cache') || localStorage.getItem('enhanced-daily-hadith');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.arabic || parsed.translation || parsed.englishTranslation || parsed.english) {
+        return {
+          arabic:      parsed.arabic ?? '',
+          translation: parsed.englishTranslation || parsed.translation || parsed.english || '',
+          narrator:    parsed.narrator ?? '',
+          source:      parsed.source ?? parsed.reference ?? 'Sahih al-Bukhari',
+          grade:       parsed.grade || 'Sahih',
+          collection:  parsed.collection ?? 'bukhari',
+          bookNumber:  Number(parsed.bookNumber ?? 0),
+          hadithNumber: Number(parsed.hadithNumber ?? 0),
+          lastUpdated: parsed.lastUpdated || Date.now(),
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[WidgetService] getStoredHadith parse error:', err);
+  }
+
+  const fallback = getDailyHadith();
+  return {
+    arabic: fallback.arabic,
+    translation: fallback.translation,
+    narrator: (fallback as any).narrator || '',
+    source: fallback.reference || 'Sahih al-Bukhari',
+    grade: 'Sahih',
+    collection: 'bukhari',
+    bookNumber: 1,
+    hadithNumber: 1,
+    lastUpdated: Date.now(),
+  };
+}
+
+function buildDailyContentPayload(): DailyContentPayload {
+  const ayah = getStoredQuranVerse();
+  const hadith = getStoredHadith();
   return { ayah, hadith, locale: getCurrentLocale(), lastUpdated: Date.now() };
 }
 

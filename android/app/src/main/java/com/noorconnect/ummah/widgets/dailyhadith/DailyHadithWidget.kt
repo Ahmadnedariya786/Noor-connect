@@ -74,11 +74,16 @@ class DailyHadithWidget : AppWidgetProvider() {
                     val textCol = Color.parseColor(style.textHex)
                     val subCol = Color.parseColor(style.subHex)
 
+                    views.setTextColor(R.id.widget_hadith_title_bar, accentCol)
                     views.setTextColor(R.id.widget_hadith_source, accentCol)
                     views.setTextColor(R.id.widget_hadith_arabic, textCol)
                     views.setTextColor(R.id.widget_hadith_translation, subCol)
                     views.setTextColor(R.id.widget_hadith_narrator, subCol)
                 } catch (_: Throwable) {}
+
+                // Stale badge permanently gone
+                views.setViewVisibility(R.id.widget_stale_badge, View.GONE)
+                views.setViewVisibility(R.id.widget_hadith_grade, View.GONE)
 
                 // ─── 4. Font Scaling ───
                 val scaledArabic = (19f * style.fontScale / 100f).coerceIn(15f, 26f)

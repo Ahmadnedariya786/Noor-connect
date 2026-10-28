@@ -53,8 +53,14 @@ export const WidgetSettings: React.FC = () => {
   const { hijriDate } = useIslamicCalendar();
 
   const formattedHijriDate = useMemo(() => {
-    if (!hijriDate || !hijriDate.trim()) return '17 Jumādā al-ūlā 1448 AH';
-    const clean = hijriDate.trim();
+    if (!hijriDate || !hijriDate.trim()) return '17 Jumādā I 1448 AH';
+    const clean = hijriDate.trim()
+      .replace(/Jumādā\s+(al-)?ūlā/gi, 'Jumādā I')
+      .replace(/Jumādā\s+(al-)?Ākhirah/gi, 'Jumādā II')
+      .replace(/Rabīʿ\s+(al-)?Awwal/gi, 'Rabīʿ I')
+      .replace(/Rabīʿ\s+(al-)?Thānī/gi, 'Rabīʿ II')
+      .replace(/al-ola/gi, 'I')
+      .replace(/al-ōlā/gi, 'I');
     return clean.endsWith('AH') || clean.endsWith('هـ') ? clean : `${clean} AH`;
   }, [hijriDate]);
 
@@ -200,8 +206,8 @@ export const WidgetSettings: React.FC = () => {
         });
       } else {
         toast({
-          title: strings.pinFailedToast,
-          description: strings.pinNoteTip,
+          title: 'Widget Ready to Place',
+          description: "If already on your Home Screen, check your pages. You can also drag it directly from your phone's Widgets menu.",
           variant: 'default',
         });
       }
@@ -280,11 +286,11 @@ export const WidgetSettings: React.FC = () => {
           </div>
 
           {/* Primary Next Prayer Glowing Pin Button */}
-          <Button
+          <button
             type="button"
             onClick={() => handlePinWidget('next_prayer')}
             disabled={pinningType === 'next_prayer'}
-            className="w-full h-12 rounded-2xl font-bold text-sm shadow-md flex items-center justify-center gap-2.5 transition-all active:scale-98 border border-[var(--accent)]"
+            className="w-full h-12 rounded-2xl font-bold text-sm shadow-md flex items-center justify-center gap-2.5 transition-all active:scale-98 border border-[var(--accent)] cursor-pointer"
             style={{
               backgroundColor: 'var(--accent)',
               color: 'var(--on-accent)',
@@ -293,7 +299,7 @@ export const WidgetSettings: React.FC = () => {
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>{strings.pinNextPrayer}</span>
-          </Button>
+          </button>
 
           {/* Grid of Other 4 Widgets */}
           <div className="grid grid-cols-2 gap-2 pt-0.5">

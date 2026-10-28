@@ -186,10 +186,8 @@ class NextPrayerWidget : AppWidgetProvider() {
                 updateFivePrayerStrip(views, payload, nextPrayer.name, style)
                 views.setViewVisibility(R.id.widget_five_prayer_strip, if (style.showFivePrayerStrip) View.VISIBLE else View.GONE)
 
-                // ─── 10. Stale data badge ───
-                val staleThreshold = 4 * 60 * 60 * 1000L // 4 hours
-                val isStale = rawPayload != null && (now - payload.lastUpdated) > staleThreshold
-                views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
+                // ─── 10. Stale data badge (permanently gone) ───
+                views.setViewVisibility(R.id.widget_stale_badge, View.GONE)
 
                 // ─── 11. Accessibility ───
                 val contentDesc = context.getString(R.string.widget_a11y_next_prayer, nextPrayer.name, countdownStr)

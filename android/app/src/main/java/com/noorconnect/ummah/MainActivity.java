@@ -265,24 +265,35 @@ public class MainActivity extends BridgeActivity {
                                     Class<?> widgetClass;
                                     switch (type) {
                                         case "daily_ayah":
+                                        case "ayah":
                                             widgetClass = com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget.class;
                                             break;
                                         case "daily_hadith":
+                                        case "hadith":
                                             widgetClass = com.noorconnect.ummah.widgets.dailyhadith.DailyHadithWidget.class;
                                             break;
                                         case "quran_progress":
+                                        case "quran":
                                             widgetClass = com.noorconnect.ummah.widgets.quranprogress.QuranProgressWidget.class;
                                             break;
                                         case "tasbeeh":
+                                        case "dhikr":
                                             widgetClass = com.noorconnect.ummah.widgets.tasbeeh.TasbeehWidget.class;
                                             break;
                                         case "next_prayer":
+                                        case "prayer":
+                                        case "prayer_times":
+                                        case "nextprayer":
                                         default:
                                             widgetClass = com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.class;
                                             break;
                                     }
                                     ComponentName provider = new ComponentName(MainActivity.this, widgetClass);
-                                    return appWidgetManager.requestPinAppWidget(provider, null, null);
+                                    boolean requested = appWidgetManager.requestPinAppWidget(provider, null, null);
+                                    Log.i(TAG, "requestPinWidget: type=" + widgetType + " -> " + widgetClass.getSimpleName() + " result=" + requested);
+                                    return requested;
+                                } else {
+                                    Log.w(TAG, "requestPinAppWidget is not supported on this launcher");
                                 }
                             }
                         } catch (Throwable t) {
@@ -308,6 +319,7 @@ public class MainActivity extends BridgeActivity {
                                 int[] nextPrayerIds = appWidgetManager.getAppWidgetIds(nextPrayerCn);
                                 if (nextPrayerIds != null && nextPrayerIds.length > 0) {
                                     Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.setComponent(nextPrayerCn);
                                     updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, nextPrayerIds);
                                     sendBroadcast(updateIntent);
                                     for (int id : nextPrayerIds) {
@@ -320,6 +332,7 @@ public class MainActivity extends BridgeActivity {
                                 int[] dailyAyahIds = appWidgetManager.getAppWidgetIds(dailyAyahCn);
                                 if (dailyAyahIds != null && dailyAyahIds.length > 0) {
                                     Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.setComponent(dailyAyahCn);
                                     updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, dailyAyahIds);
                                     sendBroadcast(updateIntent);
                                     for (int id : dailyAyahIds) {
@@ -332,6 +345,7 @@ public class MainActivity extends BridgeActivity {
                                 int[] dailyHadithIds = appWidgetManager.getAppWidgetIds(dailyHadithCn);
                                 if (dailyHadithIds != null && dailyHadithIds.length > 0) {
                                     Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.setComponent(dailyHadithCn);
                                     updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, dailyHadithIds);
                                     sendBroadcast(updateIntent);
                                     for (int id : dailyHadithIds) {
@@ -344,6 +358,7 @@ public class MainActivity extends BridgeActivity {
                                 int[] quranProgressIds = appWidgetManager.getAppWidgetIds(quranProgressCn);
                                 if (quranProgressIds != null && quranProgressIds.length > 0) {
                                     Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.setComponent(quranProgressCn);
                                     updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, quranProgressIds);
                                     sendBroadcast(updateIntent);
                                     for (int id : quranProgressIds) {
@@ -356,6 +371,7 @@ public class MainActivity extends BridgeActivity {
                                 int[] tasbeehIds = appWidgetManager.getAppWidgetIds(tasbeehCn);
                                 if (tasbeehIds != null && tasbeehIds.length > 0) {
                                     Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.setComponent(tasbeehCn);
                                     updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, tasbeehIds);
                                     sendBroadcast(updateIntent);
                                     for (int id : tasbeehIds) {

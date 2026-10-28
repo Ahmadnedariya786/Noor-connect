@@ -198,6 +198,7 @@ export function EnhancedDailyHadith() {
 
       // Save initial selection to storage
       localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(selectedHadith));
+      localStorage.setItem('daily-hadith-cache', JSON.stringify(selectedHadith));
       localStorage.setItem(LAST_UPDATE_KEY, today);
 
       // After rendering the fast hadith, try to enrich from collections in background
@@ -205,6 +206,7 @@ export function EnhancedDailyHadith() {
         const enriched = mapEnhancedHadithToWidget(cachedCollectionsHadith);
         setHadith(enriched);
         localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(enriched));
+        localStorage.setItem('daily-hadith-cache', JSON.stringify(enriched));
       } else {
         // Fetch from hadith collections in background
         getDailyHadithFromCollections(dayOfYear + 1)
@@ -214,6 +216,7 @@ export function EnhancedDailyHadith() {
               const enriched = mapEnhancedHadithToWidget(importedHadith);
               setHadith(enriched);
               localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(enriched));
+              localStorage.setItem('daily-hadith-cache', JSON.stringify(enriched));
             }
           })
           .catch((err) => {

@@ -49,7 +49,7 @@
     <string name="widget_hadith_narrator_default">Unknown narrator</string>
 
     <!-- Quran Progress -->
-    <string name="widget_quran_progress_section">QURAN READING</string>
+    <string name="widget_quran_progress_section">QURAN PROGRESS</string>
     <string name="widget_quran_progress_streak_format">%1$d day streak</string>
     <string name="widget_quran_progress_streak_default">— day streak</string>
     <string name="widget_quran_progress_last_read_format">Last read: %1$s</string>
@@ -58,8 +58,8 @@
     <string name="widget_quran_progress_juz_default">Juz — of 30</string>
     <string name="widget_quran_progress_pages_format">%1$d / 604 pages</string>
     <string name="widget_quran_progress_pages_default">— / 604 pages</string>
-    <string name="widget_quran_progress_goal_format">Ramadan goal: %1$d%%</string>
-    <string name="widget_quran_progress_goal_default">Ramadan goal: —%</string>
+    <string name="widget_quran_progress_goal_format">Khatmah Progress: %1$d%%</string>
+    <string name="widget_quran_progress_goal_default">Khatmah Progress: 0%</string>
     <string name="widget_quran_progress_percent_format">%1$d%%</string>
 
     <!-- Tasbeeh -->

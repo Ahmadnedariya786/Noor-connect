@@ -78,11 +78,8 @@ class DailyAyahWidget : AppWidgetProvider() {
                 val scaledTrans = (12f * style.fontScale / 100f).coerceIn(10f, 16f)
                 views.setTextViewTextSize(R.id.widget_quran_translation, TypedValue.COMPLEX_UNIT_SP, scaledTrans)
 
-                // ─── 5. Stale data badge ───
-                val now = System.currentTimeMillis()
-                val lastSync = WidgetPrefs.lastContentSyncMs(context)
-                val isStale = lastSync > 0 && (now - lastSync) > 4 * 60 * 60 * 1000L
-                views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
+                // ─── 5. Stale data badge (permanently gone) ───
+                views.setViewVisibility(R.id.widget_stale_badge, View.GONE)
 
                 // ─── 6. Accessibility ───
                 val contentDesc = if (payload != null) {

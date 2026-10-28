@@ -91,6 +91,14 @@ object WidgetStyleHelper {
     }
 
     @JvmStatic
+    fun createRoundedBackgroundBitmap(
+        surfaceStyle: String,
+        themeHex: String,
+        opacityPercent: Int,
+        accentHex: String
+    ): Bitmap = renderBackgroundBitmap(surfaceStyle, themeHex, opacityPercent, accentHex)
+
+    @JvmStatic
     fun renderBackgroundBitmap(
         surfaceStyle: String,
         themeHex: String,

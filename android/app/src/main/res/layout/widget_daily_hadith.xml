@@ -41,41 +41,21 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- نور brand -->
+            <!-- نور • DAILY HADITH (single line, flexible weight) -->
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/amiri_quran"
-                android:text="نور"
-                android:textColor="@color/widget_accent_emerald"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <!-- Dot separator -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
-                android:text="·"
-                android:textColor="@color/widget_accent_gold"
-                android:alpha="0.5"
-                android:textSize="14sp" />
-
-            <!-- Section label -->
-            <TextView
+                android:id="@+id/widget_hadith_title_bar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:letterSpacing="0.15"
-                android:text="@string/widget_daily_hadith_section"
-                android:textAllCaps="true"
+                android:fontFamily="@font/amiri_quran"
+                android:text="نور • DAILY HADITH"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="8sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:alpha="0.7" />
+                android:singleLine="true"
+                android:ellipsize="end" />
 
-            <!-- Stale badge -->
+            <!-- Stale badge (permanently gone) -->
             <TextView
                 android:id="@+id/widget_stale_badge"
                 android:layout_width="wrap_content"
@@ -92,7 +72,7 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <!-- Grade badge (color set programmatically) -->
+            <!-- Grade badge (kept hidden to give 100% room to title and source) -->
             <TextView
                 android:id="@+id/widget_hadith_grade"
                 android:layout_width="wrap_content"
@@ -106,9 +86,10 @@
                 android:text="@string/widget_hadith_grade_default"
                 android:textColor="@color/widget_grade_sahih"
                 android:textSize="9sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone" />
 
-            <!-- Source chip -->
+            <!-- Single compact source badge -->
             <TextView
                 android:id="@+id/widget_hadith_source"
                 android:layout_width="wrap_content"
@@ -118,6 +99,12 @@
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
                 android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="@string/widget_hadith_source_default"
+                android:textColor="@color/widget_accent_gold"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:singleLine="true" />
                 android:paddingBottom="3dp"
                 android:text="@string/widget_hadith_source_default"
                 android:textColor="@color/widget_accent_gold"

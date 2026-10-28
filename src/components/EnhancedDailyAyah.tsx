@@ -196,6 +196,7 @@ export function EnhancedDailyAyah() {
       const selectedAyah = ayahCollection[index];
       
       localStorage.setItem(AYAH_STORAGE_KEY, JSON.stringify(selectedAyah));
+      localStorage.setItem('daily-ayah-cache', JSON.stringify(selectedAyah));
       localStorage.setItem(LAST_UPDATE_KEY, today);
       return selectedAyah;
     }

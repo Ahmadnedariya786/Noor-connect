@@ -73,10 +73,9 @@ class QuranProgressWidget : AppWidgetProvider() {
                     views.setTextViewText(R.id.widget_juz, context.getString(R.string.widget_quran_progress_juz_format, payload.currentJuz))
                     views.setTextViewText(R.id.widget_pages, context.getString(R.string.widget_quran_progress_pages_format, payload.totalPagesRead))
 
-                    // Goal
-                    val goalInt = payload.goalPercent.toInt().coerceIn(0, 100)
-                    views.setTextViewText(R.id.widget_goal_label, context.getString(R.string.widget_quran_progress_goal_format, goalInt))
-                    views.setProgressBar(R.id.widget_goal_bar, 100, goalInt, false)
+                    // Active Khatmah Progress bar
+                    views.setTextViewText(R.id.widget_goal_label, context.getString(R.string.widget_quran_progress_goal_format, pctInt))
+                    views.setProgressBar(R.id.widget_goal_bar, 100, pctInt, false)
 
                     // Ring fill
                     val progressFraction = (payload.totalPercent / 100f).coerceIn(0f, 1f)
@@ -101,10 +100,8 @@ class QuranProgressWidget : AppWidgetProvider() {
                 val scaledTitle = (15f * style.fontScale / 100f).coerceIn(12f, 20f)
                 views.setTextViewTextSize(R.id.widget_last_read, TypedValue.COMPLEX_UNIT_SP, scaledTitle)
 
-                // ─── 5. Stale data badge ───
-                val now = System.currentTimeMillis()
-                val isStale = payload?.let { (now - it.lastReadTimestamp) > 4 * 60 * 60 * 1000L } ?: false
-                views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
+                // ─── 5. Stale data badge (permanently gone) ───
+                views.setViewVisibility(R.id.widget_stale_badge, View.GONE)
 
                 // ─── 6. Accessibility ───
                 val streakVal = payload?.dailyStreak ?: 0
