@@ -42,9 +42,18 @@ function getHijriDateString(): string {
       month: 'long',
       year: 'numeric',
     });
-    return fmt.format(new Date());
+    const formatted = fmt.format(new Date());
+    const normalized = formatted
+      .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+      .replace(/al-ola/gi, 'al-ūlā')
+      .replace(/al-ōlā/gi, 'al-ūlā')
+      .replace(/ō/g, 'ū')
+      .replace(/\bBC\b/g, 'AH')
+      .replace(/\bBCE\b/g, 'AH')
+      .trim();
+    return normalized.endsWith('AH') || normalized.endsWith('هـ') ? normalized : `${normalized} AH`;
   } catch {
-    return '';
+    return '17 Jumādā al-ūlā 1448 AH';
   }
 }
 

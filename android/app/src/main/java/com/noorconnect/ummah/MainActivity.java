@@ -301,6 +301,7 @@ public class MainActivity extends BridgeActivity {
                                 com.noorconnect.ummah.widgets.WidgetPrefs.INSTANCE.saveWidgetStyleConfig(MainActivity.this, jsonConfig);
 
                                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(MainActivity.this);
+                                if (appWidgetManager == null) return;
 
                                 // Update Next Prayer Widgets
                                 ComponentName nextPrayerCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.class);
@@ -318,6 +319,9 @@ public class MainActivity extends BridgeActivity {
                                 ComponentName dailyAyahCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget.class);
                                 int[] dailyAyahIds = appWidgetManager.getAppWidgetIds(dailyAyahCn);
                                 if (dailyAyahIds != null && dailyAyahIds.length > 0) {
+                                    Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, dailyAyahIds);
+                                    sendBroadcast(updateIntent);
                                     for (int id : dailyAyahIds) {
                                         com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
                                     }
@@ -327,6 +331,9 @@ public class MainActivity extends BridgeActivity {
                                 ComponentName dailyHadithCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.dailyhadith.DailyHadithWidget.class);
                                 int[] dailyHadithIds = appWidgetManager.getAppWidgetIds(dailyHadithCn);
                                 if (dailyHadithIds != null && dailyHadithIds.length > 0) {
+                                    Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, dailyHadithIds);
+                                    sendBroadcast(updateIntent);
                                     for (int id : dailyHadithIds) {
                                         com.noorconnect.ummah.widgets.dailyhadith.DailyHadithWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
                                     }
@@ -336,6 +343,9 @@ public class MainActivity extends BridgeActivity {
                                 ComponentName quranProgressCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.quranprogress.QuranProgressWidget.class);
                                 int[] quranProgressIds = appWidgetManager.getAppWidgetIds(quranProgressCn);
                                 if (quranProgressIds != null && quranProgressIds.length > 0) {
+                                    Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, quranProgressIds);
+                                    sendBroadcast(updateIntent);
                                     for (int id : quranProgressIds) {
                                         com.noorconnect.ummah.widgets.quranprogress.QuranProgressWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
                                     }
@@ -345,6 +355,9 @@ public class MainActivity extends BridgeActivity {
                                 ComponentName tasbeehCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.tasbeeh.TasbeehWidget.class);
                                 int[] tasbeehIds = appWidgetManager.getAppWidgetIds(tasbeehCn);
                                 if (tasbeehIds != null && tasbeehIds.length > 0) {
+                                    Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, tasbeehIds);
+                                    sendBroadcast(updateIntent);
                                     for (int id : tasbeehIds) {
                                         com.noorconnect.ummah.widgets.tasbeeh.TasbeehWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
                                     }

@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext-new';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
+import { useIslamicCalendar } from '@/hooks/useIslamicCalendar';
 import { loadStoredLocation } from '@/lib/location-state';
 import { getNextPrayer, getFormattedPrayerTimes } from '@/lib/prayer-calculator';
 import { WidgetService } from '@/lib/widget-service';
@@ -40,6 +41,7 @@ import {
   syncWidgetStyleToNative,
   pinWidgetNative,
   getWidgetCustomizerI18n,
+  getActiveThemeHex,
 } from '@/lib/widget-customizer';
 import { getLocalizedPrayerName } from '@/lib/home-prayer-i18n';
 
@@ -48,6 +50,13 @@ export const WidgetSettings: React.FC = () => {
   const { toast } = useToast();
   const { language } = useLanguage();
   const strings = useMemo(() => getWidgetCustomizerI18n(language), [language]);
+  const { hijriDate } = useIslamicCalendar();
+
+  const formattedHijriDate = useMemo(() => {
+    if (!hijriDate || !hijriDate.trim()) return '17 Jumādā al-ūlā 1448 AH';
+    const clean = hijriDate.trim();
+    return clean.endsWith('AH') || clean.endsWith('هـ') ? clean : `${clean} AH`;
+  }, [hijriDate]);
 
   const { prayerTimes, location } = usePrayerTimes();
   const [config, setConfig] = useState<WidgetStyleConfig>(() => loadWidgetStyleConfig());
@@ -68,16 +77,6 @@ export const WidgetSettings: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Update helper
-  const updateConfig = useCallback((patch: Partial<WidgetStyleConfig>) => {
-    setConfig((prev) => {
-      const next = { ...prev, ...patch };
-      saveWidgetStyleConfig(next);
-      syncWidgetStyleToNative(next);
-      return next;
-    });
-  }, []);
-
   // Location resolution: hook -> localStorage -> Chhapi, India
   const activeLocation = useMemo(() => {
     if (location && location.locationName) return location;
@@ -94,10 +93,85 @@ export const WidgetSettings: React.FC = () => {
   const lat = activeLocation?.latitude ?? 24.0167;
   const lon = activeLocation?.longitude ?? 72.3833;
 
+  // Next prayer dynamic info
+  const nextPrayerData = useMemo(() => {
+    try {
+      const next = getNextPrayer(lat, lon);
+      if (next) {
+        const localizedName = getLocalizedPrayerName(next.name.toLowerCase() as Parameters<typeof getLocalizedPrayerName>[0], language);
+        const timeStr = next.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        return {
+          name: localizedName,
+          rawName: next.name.toLowerCase(),
+          timeStr,
+          timeUntil: `in ${next.timeUntil}`,
+        };
+      }
+    } catch (err) {
+      console.warn('[WidgetSettings] getNextPrayer error:', err);
+    }
+    return {
+      name: getLocalizedPrayerName('fajr', language),
+      rawName: 'fajr',
+      timeStr: '05:27 AM',
+      timeUntil: 'in 2h 15m',
+    };
+  }, [lat, lon, language]);
+
+  const prayerNameFajr = getLocalizedPrayerName('fajr', language);
+  const prayerNameDhuhr = getLocalizedPrayerName('dhuhr', language);
+  const prayerNameAsr = getLocalizedPrayerName('asr', language);
+  const prayerNameMaghrib = getLocalizedPrayerName('maghrib', language);
+  const prayerNameIsha = getLocalizedPrayerName('isha', language);
+
+  const formatTimeStr = (t: string | Date | undefined | null): string => {
+    if (!t) return '--:--';
+    if (t instanceof Date) {
+      return t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    return String(t);
+  };
+
+  const prayerStripTimes = useMemo(() => {
+    const calcTimes = getFormattedPrayerTimes(lat, lon, new Date(), '12h');
+    return [
+      { id: 'fajr', name: prayerNameFajr, time: formatTimeStr(prayerTimes?.fajr || calcTimes.fajr), active: nextPrayerData.rawName === 'fajr' },
+      { id: 'dhuhr', name: prayerNameDhuhr, time: formatTimeStr(prayerTimes?.dhuhr || calcTimes.dhuhr), active: nextPrayerData.rawName === 'dhuhr' },
+      { id: 'asr', name: prayerNameAsr, time: formatTimeStr(prayerTimes?.asr || calcTimes.asr), active: nextPrayerData.rawName === 'asr' },
+      { id: 'maghrib', name: prayerNameMaghrib, time: formatTimeStr(prayerTimes?.maghrib || calcTimes.maghrib), active: nextPrayerData.rawName === 'maghrib' },
+      { id: 'isha', name: prayerNameIsha, time: formatTimeStr(prayerTimes?.isha || calcTimes.isha), active: nextPrayerData.rawName === 'isha' },
+    ];
+  }, [lat, lon, prayerTimes, prayerNameFajr, prayerNameDhuhr, prayerNameAsr, prayerNameMaghrib, prayerNameIsha, nextPrayerData.rawName]);
+
+  // Full Native Sync Payload Helper
+  const buildFullPayload = useCallback(() => {
+    return {
+      themeHex: getActiveThemeHex(),
+      city: displayCity,
+      hijriDateFormatted: formattedHijriDate,
+      prayers: prayerStripTimes.map((p) => ({
+        id: p.id,
+        name: p.name,
+        time: p.time,
+        active: p.active,
+      })),
+    };
+  }, [displayCity, formattedHijriDate, prayerStripTimes]);
+
+  // Update helper
+  const updateConfig = useCallback((patch: Partial<WidgetStyleConfig>) => {
+    setConfig((prev) => {
+      const next = { ...prev, ...patch };
+      saveWidgetStyleConfig(next);
+      syncWidgetStyleToNative(next, buildFullPayload());
+      return next;
+    });
+  }, [buildFullPayload]);
+
   // Manual Apply & Refresh Button
   const handleApply = async () => {
     saveWidgetStyleConfig(config);
-    syncWidgetStyleToNative(config);
+    syncWidgetStyleToNative(config, buildFullPayload());
 
     try {
       await WidgetService.updateWidget(lat, lon, displayCity, prayerTimes || undefined);
@@ -158,56 +232,6 @@ export const WidgetSettings: React.FC = () => {
     return `rgba(15, 23, 42, ${alpha})`;
   }, [config.surfaceStyle, config.opacity]);
 
-  // Next prayer dynamic info
-  const nextPrayerData = useMemo(() => {
-    try {
-      const next = getNextPrayer(lat, lon);
-      if (next) {
-        const localizedName = getLocalizedPrayerName(next.name.toLowerCase() as Parameters<typeof getLocalizedPrayerName>[0], language);
-        const timeStr = next.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-        return {
-          name: localizedName,
-          rawName: next.name.toLowerCase(),
-          timeStr,
-          timeUntil: `in ${next.timeUntil}`,
-        };
-      }
-    } catch (err) {
-      console.warn('[WidgetSettings] getNextPrayer error:', err);
-    }
-    return {
-      name: getLocalizedPrayerName('fajr', language),
-      rawName: 'fajr',
-      timeStr: '05:27 AM',
-      timeUntil: 'in 2h 15m',
-    };
-  }, [lat, lon, language]);
-
-  const prayerNameFajr = getLocalizedPrayerName('fajr', language);
-  const prayerNameDhuhr = getLocalizedPrayerName('dhuhr', language);
-  const prayerNameAsr = getLocalizedPrayerName('asr', language);
-  const prayerNameMaghrib = getLocalizedPrayerName('maghrib', language);
-  const prayerNameIsha = getLocalizedPrayerName('isha', language);
-
-  const formatTimeStr = (t: string | Date | undefined | null): string => {
-    if (!t) return '--:--';
-    if (t instanceof Date) {
-      return t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    }
-    return String(t);
-  };
-
-  const prayerStripTimes = useMemo(() => {
-    const calcTimes = getFormattedPrayerTimes(lat, lon, new Date(), '12h');
-    return [
-      { id: 'fajr', name: prayerNameFajr, time: formatTimeStr(prayerTimes?.fajr || calcTimes.fajr), active: nextPrayerData.rawName === 'fajr' },
-      { id: 'dhuhr', name: prayerNameDhuhr, time: formatTimeStr(prayerTimes?.dhuhr || calcTimes.dhuhr), active: nextPrayerData.rawName === 'dhuhr' },
-      { id: 'asr', name: prayerNameAsr, time: formatTimeStr(prayerTimes?.asr || calcTimes.asr), active: nextPrayerData.rawName === 'asr' },
-      { id: 'maghrib', name: prayerNameMaghrib, time: formatTimeStr(prayerTimes?.maghrib || calcTimes.maghrib), active: nextPrayerData.rawName === 'maghrib' },
-      { id: 'isha', name: prayerNameIsha, time: formatTimeStr(prayerTimes?.isha || calcTimes.isha), active: nextPrayerData.rawName === 'isha' },
-    ];
-  }, [lat, lon, prayerTimes, prayerNameFajr, prayerNameDhuhr, prayerNameAsr, prayerNameMaghrib, prayerNameIsha, nextPrayerData.rawName]);
-
   return (
     <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-12">
       {/* Header */}
@@ -246,10 +270,10 @@ export const WidgetSettings: React.FC = () => {
               <Pin className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-sm font-bold text-[var(--text-primary)] truncate">
+              <h2 className="text-sm font-bold text-[var(--text-primary)]" style={{ whiteSpace: 'normal', lineHeight: 1.3 }}>
                 {strings.pinSectionTitle}
               </h2>
-              <p className="text-[11px] text-[var(--text-secondary)] truncate">
+              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5" style={{ whiteSpace: 'normal' }}>
                 {strings.pinSectionSub}
               </p>
             </div>
@@ -277,40 +301,44 @@ export const WidgetSettings: React.FC = () => {
               type="button"
               onClick={() => handlePinWidget('daily_ayah')}
               disabled={pinningType === 'daily_ayah'}
-              className="py-2.5 px-3 rounded-xl text-xs font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              className="rounded-xl font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              style={{ fontSize: '0.73rem', padding: '8px 6px', whiteSpace: 'nowrap' }}
             >
               <BookOpen className="w-3.5 h-3.5 text-[var(--accent-text)] flex-shrink-0" />
-              <span className="truncate">{strings.pinDailyAyah}</span>
+              <span>{strings.pinDailyAyah}</span>
             </button>
 
             <button
               type="button"
               onClick={() => handlePinWidget('daily_hadith')}
               disabled={pinningType === 'daily_hadith'}
-              className="py-2.5 px-3 rounded-xl text-xs font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              className="rounded-xl font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              style={{ fontSize: '0.73rem', padding: '8px 6px', whiteSpace: 'nowrap' }}
             >
               <Scroll className="w-3.5 h-3.5 text-[var(--accent-text)] flex-shrink-0" />
-              <span className="truncate">{strings.pinDailyHadith}</span>
+              <span>{strings.pinDailyHadith}</span>
             </button>
 
             <button
               type="button"
               onClick={() => handlePinWidget('quran_progress')}
               disabled={pinningType === 'quran_progress'}
-              className="py-2.5 px-3 rounded-xl text-xs font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              className="rounded-xl font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              style={{ fontSize: '0.73rem', padding: '8px 6px', whiteSpace: 'nowrap' }}
             >
               <TrendingUp className="w-3.5 h-3.5 text-[var(--accent-text)] flex-shrink-0" />
-              <span className="truncate">{strings.pinQuranProgress}</span>
+              <span>{strings.pinQuranProgress}</span>
             </button>
 
             <button
               type="button"
               onClick={() => handlePinWidget('tasbeeh')}
               disabled={pinningType === 'tasbeeh'}
-              className="py-2.5 px-3 rounded-xl text-xs font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              className="rounded-xl font-semibold border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)]/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              style={{ fontSize: '0.73rem', padding: '8px 6px', whiteSpace: 'nowrap' }}
             >
               <CircleDot className="w-3.5 h-3.5 text-[var(--accent-text)] flex-shrink-0" />
-              <span className="truncate">{strings.pinTasbeeh}</span>
+              <span>{strings.pinTasbeeh}</span>
             </button>
           </div>
 
@@ -360,14 +388,14 @@ export const WidgetSettings: React.FC = () => {
                 </span>
                 <span className="opacity-40 text-xs">·</span>
                 <span
-                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full border truncate max-w-[140px]"
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.06)',
                     borderColor: activePreset.borderHex,
                     color: activePreset.accentHex,
                   }}
                 >
-                  1448 AH
+                  {formattedHijriDate}
                 </span>
               </div>
 

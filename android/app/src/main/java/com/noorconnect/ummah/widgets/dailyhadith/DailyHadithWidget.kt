@@ -4,7 +4,10 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.graphics.Color
 import android.util.Log
+import android.util.TypedValue
+import android.view.View
 import android.widget.RemoteViews
 import com.noorconnect.ummah.R
 import com.noorconnect.ummah.widgets.dailyhadith.HadithBundle
@@ -12,6 +15,7 @@ import com.noorconnect.ummah.widgets.WidgetDeeplink
 import com.noorconnect.ummah.widgets.WidgetForegroundService
 import com.noorconnect.ummah.widgets.WidgetPrefs
 import com.noorconnect.ummah.widgets.WidgetRefreshWorker
+import com.noorconnect.ummah.widgets.WidgetStyleHelper
 
 /**
  * Daily Hadith Widget (4×2)
@@ -19,7 +23,7 @@ import com.noorconnect.ummah.widgets.WidgetRefreshWorker
  * Shows:
  *  - Source chip ("Sahih Bukhari 1:1")
  *  - Grade badge (color-coded: Sahih=emerald, Hasan=gold, Daif=red)
- *  - Arabic hadith (RTL, Scheherazade New font)
+ *  - Arabic hadith (RTL, Amiri Quran font)
  *  - Translation
  *  - Narrator row
  *
@@ -34,7 +38,17 @@ class DailyHadithWidget : AppWidgetProvider() {
             try {
                 val views = RemoteViews(context.packageName, R.layout.widget_daily_hadith)
 
-                // Try pushed payload first
+                // ─── 1. Customizer Styles (Background & Colors) ───
+                val style = WidgetStyleHelper.parseConfig(context)
+                val bgBitmap = WidgetStyleHelper.renderBackgroundBitmap(
+                    surfaceStyle = style.surfaceStyle,
+                    themeHex = style.themeHex,
+                    opacityPercent = style.opacity,
+                    accentHex = style.accentHex
+                )
+                views.setImageViewBitmap(R.id.widget_bg_image, bgBitmap)
+
+                // ─── 2. Data Content ───
                 val payload = WidgetPrefs.getDailyContent(context)
                 val hadith = payload?.hadith ?: HadithBundle.getFallbackHadith(context)
 
@@ -54,7 +68,26 @@ class DailyHadithWidget : AppWidgetProvider() {
                 }
                 views.setTextViewText(R.id.widget_hadith_narrator, narratorDisplay)
 
-                // Tap → deep-link /hadith?collection=X&book=N&number=N
+                // ─── 3. Swatches & Colors ───
+                try {
+                    val accentCol = Color.parseColor(style.accentHex)
+                    val textCol = Color.parseColor(style.textHex)
+                    val subCol = Color.parseColor(style.subHex)
+
+                    views.setTextColor(R.id.widget_hadith_source, accentCol)
+                    views.setTextColor(R.id.widget_hadith_arabic, textCol)
+                    views.setTextColor(R.id.widget_hadith_translation, subCol)
+                    views.setTextColor(R.id.widget_hadith_narrator, subCol)
+                } catch (_: Throwable) {}
+
+                // ─── 4. Font Scaling ───
+                val scaledArabic = (19f * style.fontScale / 100f).coerceIn(15f, 26f)
+                views.setTextViewTextSize(R.id.widget_hadith_arabic, TypedValue.COMPLEX_UNIT_SP, scaledArabic)
+
+                val scaledTrans = (12f * style.fontScale / 100f).coerceIn(10f, 16f)
+                views.setTextViewTextSize(R.id.widget_hadith_translation, TypedValue.COMPLEX_UNIT_SP, scaledTrans)
+
+                // ─── 5. Tap → deep-link /hadith?collection=X&book=N&number=N ───
                 val deeplink = WidgetDeeplink.buildHadith(
                     hadith.collection.ifEmpty { "bukhari" },
                     hadith.bookNumber,
@@ -78,15 +111,14 @@ class DailyHadithWidget : AppWidgetProvider() {
         private fun applyGradeColor(context: Context, views: RemoteViews, grade: String) {
             try {
                 val colorRes = when (grade.lowercase()) {
-                    "sahih", "صحيح" -> R.color.widget_grade_sahih
-                    "hasan", "hasan sahih", "حسن" -> R.color.widget_grade_hasan
-                    "daif", "da'if", "ضعيف" -> R.color.widget_grade_daif
+                    "sahih" -> R.color.widget_grade_sahih
+                    "hasan" -> R.color.widget_grade_hasan
+                    "daif", "da'if" -> R.color.widget_grade_daif
                     else -> R.color.widget_grade_sahih
                 }
-                val color = androidx.core.content.ContextCompat.getColor(context, colorRes)
-                views.setTextColor(R.id.widget_hadith_grade, color)
+                views.setTextColor(R.id.widget_hadith_grade, androidx.core.content.ContextCompat.getColor(context, colorRes))
             } catch (t: Throwable) {
-                Log.w(TAG, "Failed applying grade color", t)
+                Log.w(TAG, "Failed to apply grade color", t)
             }
         }
     }
@@ -110,7 +142,7 @@ class DailyHadithWidget : AppWidgetProvider() {
             val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
             val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
             val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-            
+
             Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
             updateWidget(context, appWidgetManager, appWidgetId)
         } catch (t: Throwable) {

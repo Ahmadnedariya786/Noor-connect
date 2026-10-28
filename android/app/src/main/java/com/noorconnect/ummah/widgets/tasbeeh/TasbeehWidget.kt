@@ -6,19 +6,21 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.VibrationEffect
-import android.os.VibratorManager
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
+import android.util.TypedValue
 import android.widget.RemoteViews
 import com.noorconnect.ummah.R
-import com.noorconnect.ummah.widgets.WidgetAccent
+import com.noorconnect.ummah.widgets.TasbeehState
 import com.noorconnect.ummah.widgets.WidgetDeeplink
 import com.noorconnect.ummah.widgets.WidgetForegroundService
 import com.noorconnect.ummah.widgets.WidgetPrefs
 import com.noorconnect.ummah.widgets.WidgetRefreshWorker
-import com.noorconnect.ummah.widgets.TasbeehState
+import com.noorconnect.ummah.widgets.WidgetStyleHelper
 
 /**
  * Tasbeeh Counter Widget (2×2)
@@ -43,13 +45,39 @@ class TasbeehWidget : AppWidgetProvider() {
             try {
                 val views = RemoteViews(context.packageName, R.layout.widget_tasbeeh)
 
+                // ─── 1. Customizer Styles (Background & Colors) ───
+                val style = WidgetStyleHelper.parseConfig(context)
+                val bgBitmap = WidgetStyleHelper.renderBackgroundBitmap(
+                    surfaceStyle = style.surfaceStyle,
+                    themeHex = style.themeHex,
+                    opacityPercent = style.opacity,
+                    accentHex = style.accentHex
+                )
+                views.setImageViewBitmap(R.id.widget_bg_image, bgBitmap)
+
+                // ─── 2. Data State ───
                 val state = WidgetPrefs.getTasbeehState(context)
 
                 views.setTextViewText(R.id.widget_dhikr_name, localizedDhikr(context, state.currentDhikr))
                 views.setTextViewText(R.id.widget_count, state.sessionCount.toString())
-                views.setTextColor(R.id.widget_count, WidgetAccent.resolve(context, appWidgetId))
                 views.setTextViewText(R.id.widget_target, context.getString(R.string.widget_tasbeeh_target_format, state.targetPerSession))
                 views.setTextViewText(R.id.widget_total_today, context.getString(R.string.widget_tasbeeh_total_today_format, state.totalCount))
+
+                // ─── 3. Swatches & Colors ───
+                try {
+                    val accentCol = Color.parseColor(style.accentHex)
+                    val textCol = Color.parseColor(style.textHex)
+                    val subCol = Color.parseColor(style.subHex)
+
+                    views.setTextColor(R.id.widget_count, accentCol)
+                    views.setTextColor(R.id.widget_dhikr_name, accentCol)
+                    views.setTextColor(R.id.widget_target, subCol)
+                    views.setTextColor(R.id.widget_total_today, textCol)
+                } catch (_: Throwable) {}
+
+                // ─── 4. Font Scaling ───
+                val scaledCount = (48f * style.fontScale / 100f).coerceIn(36f, 60f)
+                views.setTextViewTextSize(R.id.widget_count, TypedValue.COMPLEX_UNIT_SP, scaledCount)
 
                 // Tap-to-increment: large PendingIntent covering the whole root.
                 val incrementIntent = Intent(context, TasbeehReceiver::class.java).apply {
@@ -78,15 +106,14 @@ class TasbeehWidget : AppWidgetProvider() {
                 views.setOnClickPendingIntent(R.id.widget_reset, resetPi)
 
                 // Open-app icon → deep-link /tasbeeh
-                val deeplink = WidgetDeeplink.buildTasbeeh()
-                val openIntent = WidgetDeeplink.toIntent(context, deeplink)
-                val openPi = PendingIntent.getActivity(
+                val openAppIntent = WidgetDeeplink.toIntent(context, WidgetDeeplink.buildTasbeeh())
+                val openAppPi = PendingIntent.getActivity(
                     context,
                     appWidgetId * 10 + 3,
-                    openIntent,
+                    openAppIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
-                views.setOnClickPendingIntent(R.id.widget_open_app, openPi)
+                views.setOnClickPendingIntent(R.id.widget_open_app, openAppPi)
 
                 mgr.updateAppWidget(appWidgetId, views)
             } catch (t: Throwable) {
@@ -142,13 +169,13 @@ class TasbeehWidget : AppWidgetProvider() {
             }
         }
 
-        private fun localizedDhikr(context: Context, key: String): String {
-            return when (key) {
+        private fun localizedDhikr(context: Context, dhikr: String): String {
+            return when (dhikr) {
                 "SubhanAllah" -> context.getString(R.string.widget_tasbeeh_subhanallah)
                 "Alhamdulillah" -> context.getString(R.string.widget_tasbeeh_alhamdulillah)
                 "Allahu Akbar" -> context.getString(R.string.widget_tasbeeh_allahuakbar)
-                "La ilaha illa Allah" -> context.getString(R.string.widget_tasbeeh_lailaha)
-                else -> key
+                "La ilaha illa Allah", "La ilaha illallah" -> context.getString(R.string.widget_tasbeeh_lailaha)
+                else -> dhikr
             }
         }
     }
@@ -172,7 +199,7 @@ class TasbeehWidget : AppWidgetProvider() {
             val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
             val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
             val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-            
+
             Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
             updateWidget(context, appWidgetManager, appWidgetId)
         } catch (t: Throwable) {
@@ -183,7 +210,7 @@ class TasbeehWidget : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         try {
             WidgetForegroundService.start(context)
-            Log.d(TAG, "Widget enabled — foreground service started")
+            Log.d(TAG, "Widget enabled")
         } catch (t: Throwable) {
             Log.e(TAG, "onEnabled error", t)
         }

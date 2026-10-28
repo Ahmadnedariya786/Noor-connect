@@ -4,31 +4,29 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
-import android.content.Intent
+import android.graphics.Color
 import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import com.noorconnect.ummah.R
 import com.noorconnect.ummah.widgets.PrayerEntry
 import com.noorconnect.ummah.widgets.PrayerPayload
-import com.noorconnect.ummah.widgets.WidgetAccent
 import com.noorconnect.ummah.widgets.WidgetAlarmScheduler
 import com.noorconnect.ummah.widgets.WidgetDeeplink
 import com.noorconnect.ummah.widgets.WidgetForegroundService
 import com.noorconnect.ummah.widgets.WidgetPrefs
-import com.noorconnect.ummah.widgets.WidgetRefreshWorker
+import com.noorconnect.ummah.widgets.WidgetStyleHelper
+import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 /**
  * Next Prayer Widget (4×2 Universal Grid)
  *
  * Shows:
- *  - Hijri date chip
- *  - "NEXT PRAYER" section label
- *  - Prayer name (hero text)
- *  - Location (Chhapi, India or user location)
- *  - Progress ring around a live TextClock (zero battery cost — system-rendered)
- *  - Countdown label ("in 3h 24m")
+ *  - Top row: Arabic brand glyph "نور" + Hijri date pill + Live TextClock + Countdown pill
+ *  - Middle row: "NEXT PRAYER" + large bold Prayer name + City pill | Prayer time + Circular progress ring
+ *  - Bottom row: Full 5-prayer strip (FAJR, DHUHR, ASR, MAGHRIB, ISHA) with next prayer highlighted
  *
  * Tap → deep-link to /prayers?focus=next
  */
@@ -50,12 +48,12 @@ class NextPrayerWidget : AppWidgetProvider() {
             }
 
             val prayers = listOf(
-                PrayerEntry("Fajr", makePrayerTime(5, 27), "05:27 AM"),
+                PrayerEntry("Fajr", makePrayerTime(5, 28), "05:28 AM"),
                 PrayerEntry("Sunrise", makePrayerTime(6, 45), "06:45 AM"),
                 PrayerEntry("Dhuhr", makePrayerTime(12, 24), "12:24 PM"),
-                PrayerEntry("Asr", makePrayerTime(16, 29), "04:29 PM"),
-                PrayerEntry("Maghrib", makePrayerTime(18, 5), "06:05 PM"),
-                PrayerEntry("Isha", makePrayerTime(19, 17), "07:17 PM")
+                PrayerEntry("Asr", makePrayerTime(16, 28), "04:28 PM"),
+                PrayerEntry("Maghrib", makePrayerTime(18, 4), "06:04 PM"),
+                PrayerEntry("Isha", makePrayerTime(19, 16), "07:16 PM")
             )
 
             var nextIdx = 0
@@ -72,7 +70,7 @@ class NextPrayerWidget : AppWidgetProvider() {
             return PrayerPayload(
                 prayers = prayers,
                 nextPrayerIndex = nextIdx,
-                hijriDate = "Noor Connect",
+                hijriDate = WidgetStyleHelper.computeFallbackHijri(),
                 gregorianDate = "",
                 locationLabel = "Chhapi, India",
                 madhab = "HANAFI",
@@ -94,31 +92,80 @@ class NextPrayerWidget : AppWidgetProvider() {
                 }
 
                 views.setViewVisibility(R.id.layout_empty, View.GONE)
-                views.setViewVisibility(R.id.widget_root, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_content_container, View.VISIBLE)
 
+                // ─── Parse Customizer Style & Theme ───
+                val style = WidgetStyleHelper.parseConfig(context)
+
+                // ─── 1. Background Bitmap via Canvas Offscreen Render (Opacity 0..100%) ───
+                val bgBitmap = WidgetStyleHelper.renderBackgroundBitmap(
+                    surfaceStyle = style.surfaceStyle,
+                    themeHex = style.themeHex,
+                    opacityPercent = style.opacity,
+                    accentHex = style.accentHex
+                )
+                views.setImageViewBitmap(R.id.widget_bg_image, bgBitmap)
+
+                // ─── 2. Hijri Date (Canonical Islamic month + AH, NEVER BC!) ───
+                val candidateHijri = when {
+                    style.hijriDateFormatted.isNotBlank() -> style.hijriDateFormatted
+                    payload.hijriDate.isNotBlank() && !payload.hijriDate.equals("Noor Connect", ignoreCase = true) -> payload.hijriDate
+                    else -> null
+                }
+                val hijriDisplay = WidgetStyleHelper.formatHijriDate(candidateHijri)
+                views.setTextViewText(R.id.widget_hijri_date, hijriDisplay)
+                try {
+                    views.setTextColor(R.id.widget_hijri_date, Color.parseColor(style.accentHex))
+                } catch (_: Throwable) {}
+
+                // ─── 3. Location / City ───
+                val locDisplay = when {
+                    style.city.isNotBlank() -> style.city
+                    payload.locationLabel.isNotBlank() -> payload.locationLabel
+                    else -> "Chhapi, India"
+                }
+                views.setTextViewText(R.id.widget_location, locDisplay)
+                views.setViewVisibility(R.id.widget_city_container, if (style.showCity) View.VISIBLE else View.GONE)
+
+                // ─── 4. Next Prayer Calculation ───
                 val prayers = payload.prayers
                 val nextIdx = payload.nextPrayerIndex.coerceIn(0, prayers.size - 1)
                 val nextPrayer = prayers.getOrNull(nextIdx) ?: prayers[0]
 
-                // ─── Header ───
-                val hijriDisplay = payload.hijriDate.ifEmpty { context.getString(R.string.widget_hijri_default) }
-                views.setTextViewText(R.id.widget_hijri_date, hijriDisplay)
-
-                val locDisplay = payload.locationLabel.ifEmpty { "Chhapi, India" }
-                views.setTextViewText(R.id.widget_location, locDisplay)
-
-                // ─── Prayer name + time ───
                 views.setTextViewText(R.id.widget_prayer_name, nextPrayer.name)
                 views.setTextViewText(R.id.widget_prayer_time, nextPrayer.formattedTime)
 
-                // ─── Countdown ───
+                // ─── 5. Countdown Pill ───
                 val now = System.currentTimeMillis()
                 val remaining = nextPrayer.time - now
                 val countdownStr = formatCountdown(remaining)
-                views.setTextViewText(R.id.widget_countdown, countdownStr)
-                views.setTextColor(R.id.widget_countdown, WidgetAccent.resolve(context, appWidgetId))
+                views.setTextViewText(R.id.widget_countdown_pill, countdownStr)
+                views.setViewVisibility(R.id.widget_countdown_pill, if (style.showCountdown) View.VISIBLE else View.GONE)
 
-                // ─── Progress ring fill ───
+                // ─── 6. Swatch Color Application ───
+                try {
+                    val accentCol = Color.parseColor(style.accentHex)
+                    val textCol = Color.parseColor(style.textHex)
+                    val subCol = Color.parseColor(style.subHex)
+
+                    views.setTextColor(R.id.widget_clock, accentCol)
+                    views.setTextColor(R.id.widget_countdown_pill, accentCol)
+                    views.setTextColor(R.id.widget_prayer_name, textCol)
+                    views.setTextColor(R.id.widget_prayer_time, textCol)
+                    views.setTextColor(R.id.widget_section_label, subCol)
+                    views.setTextColor(R.id.widget_location, subCol)
+                } catch (e: Throwable) {
+                    Log.w(TAG, "Color parsing error", e)
+                }
+
+                // ─── 7. Font Scaling ───
+                val scaledHeroSp = (26f * style.fontScale / 100f).coerceIn(20f, 36f)
+                views.setTextViewTextSize(R.id.widget_prayer_name, TypedValue.COMPLEX_UNIT_SP, scaledHeroSp)
+
+                val scaledTimeSp = (19f * style.fontScale / 100f).coerceIn(15f, 26f)
+                views.setTextViewTextSize(R.id.widget_prayer_time, TypedValue.COMPLEX_UNIT_SP, scaledTimeSp)
+
+                // ─── 8. Progress Ring (Clean circular ring, zero text overlap) ───
                 val prevTime = if (nextIdx > 0) {
                     prayers[nextIdx - 1].time
                 } else {
@@ -135,16 +182,20 @@ class NextPrayerWidget : AppWidgetProvider() {
                 } else 0f
                 views.setInt(R.id.widget_ring_progress, "setImageLevel", (progress * 10000).toInt())
 
-                // ─── Stale data badge (only if truly stale and real payload) ───
+                // ─── 9. Full 5-Prayer Strip ───
+                updateFivePrayerStrip(views, payload, nextPrayer.name, style)
+                views.setViewVisibility(R.id.widget_five_prayer_strip, if (style.showFivePrayerStrip) View.VISIBLE else View.GONE)
+
+                // ─── 10. Stale data badge ───
                 val staleThreshold = 4 * 60 * 60 * 1000L // 4 hours
                 val isStale = rawPayload != null && (now - payload.lastUpdated) > staleThreshold
                 views.setViewVisibility(R.id.widget_stale_badge, if (isStale) View.VISIBLE else View.GONE)
 
-                // ─── Accessibility content description ───
+                // ─── 11. Accessibility ───
                 val contentDesc = context.getString(R.string.widget_a11y_next_prayer, nextPrayer.name, countdownStr)
                 views.setContentDescription(R.id.widget_root, contentDesc)
 
-                // ─── Tap → deep-link /prayers?focus=next ───
+                // ─── 12. Deep Link Intent ───
                 val deeplink = WidgetDeeplink.buildPrayers(focus = "next")
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
                 val pi = PendingIntent.getActivity(
@@ -155,68 +206,53 @@ class NextPrayerWidget : AppWidgetProvider() {
                 )
                 views.setOnClickPendingIntent(R.id.widget_root, pi)
 
-                // ─── Customizer Styling (Phase 4A - Crash Proof) ───
-                applyCustomStyles(context, views, appWidgetId)
-
                 mgr.updateAppWidget(appWidgetId, views)
             } catch (t: Throwable) {
                 Log.e(TAG, "Critical error updating NextPrayerWidget $appWidgetId", t)
             }
         }
 
-        private fun applyCustomStyles(context: Context, views: RemoteViews, appWidgetId: Int) {
-            val configJson = WidgetPrefs.getWidgetStyleConfig(context) ?: return
-            try {
-                val json = org.json.JSONObject(configJson)
-                val surfaceStyle = json.optString("surfaceStyle", "theme")
-                val opacity = json.optInt("opacity", 85)
-                val accentPreset = json.optString("accentPreset", "ivory")
-                val showCity = json.optBoolean("showCity", true)
-                val showCountdown = json.optBoolean("showCountdown", true)
-                val fontScale = json.optInt("fontScale", 100)
+        private fun updateFivePrayerStrip(
+            views: RemoteViews,
+            payload: PrayerPayload,
+            activePrayerName: String,
+            style: WidgetStyleHelper.ResolvedStyle
+        ) {
+            val prayerEntries = payload.prayers
+            fun findPrayerTime(name: String): String {
+                val match = prayerEntries.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                return match?.formattedTime ?: "--:--"
+            }
 
-                // 1. Safe background tint overlay (preserves rounded corners and border, NO reflection)
-                val alpha = (opacity * 255 / 100).coerceIn(0, 255)
-                val baseRgb = when (surfaceStyle) {
-                    "oled" -> 0xFF000000.toInt()
-                    "frosted" -> 0xFF121826.toInt()
-                    else -> 0xFF0B101B.toInt() // dark jewel default
+            val prayers = listOf(
+                Triple("FAJR", findPrayerTime("Fajr"), R.id.widget_col_fajr to (R.id.widget_name_fajr to R.id.widget_time_fajr)),
+                Triple("DHUHR", findPrayerTime("Dhuhr"), R.id.widget_col_dhuhr to (R.id.widget_name_dhuhr to R.id.widget_time_dhuhr)),
+                Triple("ASR", findPrayerTime("Asr"), R.id.widget_col_asr to (R.id.widget_name_asr to R.id.widget_time_asr)),
+                Triple("MAGHRIB", findPrayerTime("Maghrib"), R.id.widget_col_maghrib to (R.id.widget_name_maghrib to R.id.widget_time_maghrib)),
+                Triple("ISHA", findPrayerTime("Isha"), R.id.widget_col_isha to (R.id.widget_name_isha to R.id.widget_time_isha))
+            )
+
+            val accentCol = try { Color.parseColor(style.accentHex) } catch (_: Throwable) { Color.parseColor("#D4AF37") }
+            val textCol = try { Color.parseColor(style.textHex) } catch (_: Throwable) { Color.parseColor("#FDFBF7") }
+            val subCol = try { Color.parseColor(style.subHex) } catch (_: Throwable) { Color.parseColor("#C5A059") }
+
+            for ((name, time, viewIds) in prayers) {
+                val (colId, labelIds) = viewIds
+                val (nameId, timeId) = labelIds
+
+                views.setTextViewText(nameId, name)
+                views.setTextViewText(timeId, time)
+
+                val isActive = name.equals(activePrayerName, ignoreCase = true)
+                if (isActive) {
+                    views.setInt(colId, "setBackgroundResource", R.drawable.widget_chip_shape)
+                    views.setTextColor(nameId, accentCol)
+                    views.setTextColor(timeId, textCol)
+                } else {
+                    views.setInt(colId, "setBackgroundColor", Color.TRANSPARENT)
+                    views.setTextColor(nameId, subCol)
+                    views.setTextColor(timeId, textCol)
                 }
-                views.setViewVisibility(R.id.widget_bg_tint, View.VISIBLE)
-                views.setInt(R.id.widget_bg_tint, "setColorFilter", baseRgb)
-                views.setInt(R.id.widget_bg_tint, "setImageAlpha", alpha)
-
-                // 2. Resolve accent and text colors
-                val accentColor = when (accentPreset.lowercase()) {
-                    "white" -> 0xFFFFFFFF.toInt()
-                    "parchment" -> 0xFFE6C280.toInt()
-                    "mint" -> 0xFF10B981.toInt()
-                    "sapphire" -> 0xFF38BDF8.toInt()
-                    "rose" -> 0xFFF43F5E.toInt()
-                    else -> 0xFFD4AF37.toInt() // ivory & gold
-                }
-                val textColor = when (accentPreset.lowercase()) {
-                    "white" -> 0xFFFFFFFF.toInt()
-                    "parchment" -> 0xFFFDF6E2.toInt()
-                    "mint" -> 0xFFECFDF5.toInt()
-                    "sapphire" -> 0xFFF0F9FF.toInt()
-                    "rose" -> 0xFFFFF1F2.toInt()
-                    else -> 0xFFFDFBF7.toInt()
-                }
-
-                views.setTextColor(R.id.widget_clock, accentColor)
-                views.setTextColor(R.id.widget_countdown, accentColor)
-                views.setTextColor(R.id.widget_prayer_name, textColor)
-
-                // 3. Visibility toggles
-                views.setViewVisibility(R.id.widget_location, if (showCity) View.VISIBLE else View.GONE)
-                views.setViewVisibility(R.id.widget_countdown, if (showCountdown) View.VISIBLE else View.GONE)
-
-                // 4. Font scale using standard RemoteViews API
-                val scaledSp = (32f * fontScale / 100f).coerceIn(24f, 40f)
-                views.setTextViewTextSize(R.id.widget_prayer_name, android.util.TypedValue.COMPLEX_UNIT_SP, scaledSp)
-            } catch (e: Throwable) {
-                Log.w(TAG, "Error applying custom widget styles", e)
             }
         }
 
@@ -231,7 +267,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                 else -> {
                     val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingMs)
                     val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingMs) - minutes * 60
-                    "in ${minutes}m ${seconds}s"
+                    if (minutes > 0) "in ${minutes}m" else "in ${seconds}s"
                 }
             }
         }
@@ -256,7 +292,7 @@ class NextPrayerWidget : AppWidgetProvider() {
             val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
             val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
             val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-            
+
             Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
             updateWidget(context, appWidgetManager, appWidgetId)
         } catch (t: Throwable) {

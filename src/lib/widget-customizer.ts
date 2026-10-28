@@ -128,14 +128,49 @@ export function saveWidgetStyleConfig(config: WidgetStyleConfig): void {
   }
 }
 
+export interface WidgetSyncPayload extends WidgetStyleConfig {
+  themeHex?: string;
+  themeName?: string;
+  city?: string;
+  hijriDateFormatted?: string;
+  prayers?: Array<{ id: string; name: string; time: string; active?: boolean }>;
+}
+
+export const THEME_HEX_MAP: Record<string, string> = {
+  'oxford-gold': '#0B101B',
+  'madinah-emerald': '#071A12',
+  'imperial-violet': '#130D26',
+  'burgundy-velvet': '#1C0B13',
+  'desert-scroll': '#1C150E',
+};
+
+export function getActiveThemeHex(): string {
+  try {
+    const theme = (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme'))
+      || (typeof localStorage !== 'undefined' && localStorage.getItem('noor-theme'))
+      || 'oxford-gold';
+    return THEME_HEX_MAP[theme] || '#0B101B';
+  } catch {
+    return '#0B101B';
+  }
+}
+
 /**
  * Dispatch widget style configuration to Native Android Bridge.
  */
-export function syncWidgetStyleToNative(config: WidgetStyleConfig): boolean {
+export function syncWidgetStyleToNative(config: WidgetStyleConfig, extra?: Partial<WidgetSyncPayload>): boolean {
   try {
     const bridge = (window as any).AndroidBridge;
     if (bridge && typeof bridge.syncWidgetCustomization === 'function') {
-      bridge.syncWidgetCustomization(JSON.stringify(config));
+      const fullPayload: WidgetSyncPayload = {
+        ...config,
+        themeHex: extra?.themeHex || getActiveThemeHex(),
+        city: extra?.city || 'Chhapi, India',
+        hijriDateFormatted: extra?.hijriDateFormatted || '',
+        prayers: extra?.prayers,
+        ...extra,
+      };
+      bridge.syncWidgetCustomization(JSON.stringify(fullPayload));
       return true;
     }
   } catch (err) {
@@ -244,8 +279,8 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'Touch and drag your desired widget to your home screen.',
     sampleCity: 'Makkah al-Mukarramah',
     nextPrayerLabel: 'NEXT PRAYER',
-    pinSectionTitle: '📌 Add Widget to Home Screen (1-Tap)',
-    pinSectionSub: 'Pin widgets directly without manual drag-and-drop',
+    pinSectionTitle: '📌 Pin Widget to Home Screen',
+    pinSectionSub: 'Add widgets in 1 tap without dragging',
     pinNextPrayer: '+ Pin Next Prayer Widget',
     pinDailyAyah: '+ Daily Ayah',
     pinDailyHadith: '+ Daily Hadith',

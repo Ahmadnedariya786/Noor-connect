@@ -109,13 +109,33 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
         document.documentElement.classList.add("splash-active");
         document.body.classList.add("splash-active");
 
-        // Keep <SplashScreen /> mounted at opacity: 1 (100% solid opaque) BEFORE removing #initial-splash.
-        // Remove #initial-splash inside requestAnimationFrame right after <SplashScreen /> paints at opacity: 1.
+        // Immediately hide and remove #initial-splash synchronously the moment SplashScreen mounts
+        try {
+            const elInitial = document.getElementById("initial-splash");
+            if (elInitial) {
+                elInitial.style.display = "none";
+                elInitial.remove();
+            }
+            const elStatic = document.getElementById("static-splash");
+            if (elStatic) {
+                elStatic.style.display = "none";
+                elStatic.remove();
+            }
+        } catch {
+            // Ignore safely
+        }
+
         const rafId = requestAnimationFrame(() => {
             const elInitial = document.getElementById("initial-splash");
-            if (elInitial) elInitial.remove();
+            if (elInitial) {
+                elInitial.style.display = "none";
+                elInitial.remove();
+            }
             const elStatic = document.getElementById("static-splash");
-            if (elStatic) elStatic.remove();
+            if (elStatic) {
+                elStatic.style.display = "none";
+                elStatic.remove();
+            }
         });
 
         if (!shouldAnimate) {
@@ -178,7 +198,9 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 height: '100dvh',
                 zIndex: 99999,
                 backgroundColor: 'var(--bg-base)',
-                backgroundImage: 'radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%)',
+                backgroundImage: isFading
+                    ? 'none'
+                    : 'radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%)',
                 color: 'var(--text-primary)',
                 opacity: isFading ? 0 : 1,
                 transform: isFading ? 'scale(0.98)' : 'scale(1)',
@@ -188,12 +210,16 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
             }}
         >
             {/* Stars Background */}
-            <CelestialStars enabled={shouldAnimate} />
+            <CelestialStars enabled={shouldAnimate && !isFading} />
 
             {/* Main Content: 100% Pixel-Identical Match with index.html initial-splash */}
             <div
                 className="relative z-10 flex flex-col items-center justify-center text-center select-none"
-                style={{ padding: '24px' }}
+                style={{
+                    padding: '24px',
+                    opacity: isFading ? 0 : 1,
+                    transition: 'opacity 120ms ease-out',
+                }}
             >
                 {/* 1. Celestial Rub el Hizb Medallion (170x170 center, 88x88 squircle, 56px SVG) */}
                 <NoorLogoCrest size="lg" animated={shouldAnimate} />
