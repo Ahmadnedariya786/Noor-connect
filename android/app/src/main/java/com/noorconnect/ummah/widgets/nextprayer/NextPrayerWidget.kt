@@ -50,12 +50,12 @@ class NextPrayerWidget : AppWidgetProvider() {
             }
 
             val prayers = listOf(
-                PrayerEntry("Fajr", makePrayerTime(5, 27), "05:27 AM", isNext = false),
-                PrayerEntry("Sunrise", makePrayerTime(6, 45), "06:45 AM", isNext = false),
-                PrayerEntry("Dhuhr", makePrayerTime(12, 24), "12:24 PM", isNext = false),
-                PrayerEntry("Asr", makePrayerTime(16, 29), "04:29 PM", isNext = false),
-                PrayerEntry("Maghrib", makePrayerTime(18, 5), "06:05 PM", isNext = false),
-                PrayerEntry("Isha", makePrayerTime(19, 17), "07:17 PM", isNext = false)
+                PrayerEntry("Fajr", makePrayerTime(5, 27), "05:27 AM"),
+                PrayerEntry("Sunrise", makePrayerTime(6, 45), "06:45 AM"),
+                PrayerEntry("Dhuhr", makePrayerTime(12, 24), "12:24 PM"),
+                PrayerEntry("Asr", makePrayerTime(16, 29), "04:29 PM"),
+                PrayerEntry("Maghrib", makePrayerTime(18, 5), "06:05 PM"),
+                PrayerEntry("Isha", makePrayerTime(19, 17), "07:17 PM")
             )
 
             var nextIdx = 0
