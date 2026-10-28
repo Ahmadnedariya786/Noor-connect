@@ -158,6 +158,8 @@ export function syncSmartSalahToNative(config: SmartSalahConfig, prayerData?: an
 // ─────────────────────────────────────────────────────────
 
 export interface SmartSalahI18n {
+  engineTitle: string;
+  engineSub: string;
   advanceTitle: string;
   advanceSub: string;
   advanceOff: string;
@@ -187,6 +189,8 @@ export interface SmartSalahI18n {
 
 const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
   en: {
+    engineTitle: 'Smart Salah & Alert Engine',
+    engineSub: 'Advance reminders, alarm volume, Auto-DND & live countdown',
     advanceTitle: 'Advance Pre-Prayer Reminder',
     advanceSub: 'Gentle notification before prayer for Wudu & preparation',
     advanceOff: 'Off',
@@ -214,6 +218,8 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     min45: '45 min',
   },
   ar: {
+    engineTitle: 'محرك تنبيهات الصلاة الذكي',
+    engineSub: 'تذكير مسبق، ومستوى صوت المنبه، والوضع الصامت التلقائي',
     advanceTitle: 'تذكير مبكر قبل الصلاة',
     advanceSub: 'إشعار لطيف قبل دخول الوقت للوضوء والاستعداد',
     advanceOff: 'معطل',
@@ -241,6 +247,8 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     min45: '٤٥ دقيقة',
   },
   ur: {
+    engineTitle: 'سمارٹ نماز الرٹ انجن',
+    engineSub: 'قبل از وقت یاددہانی، الارم والیوم، خودکار خاموشی اور لائیو کاؤنٹ ڈاؤن',
     advanceTitle: 'نماز سے پہلے یاد دہانی',
     advanceSub: 'وضو اور تیاری کے لیے نماز سے چند منٹ قبل ہلکا الرٹ',
     advanceOff: 'بند',
@@ -268,6 +276,8 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     min45: '45 منٹ',
   },
   gu: {
+    engineTitle: 'સ્માર્ટ નમાઝ એલર્ટ એન્જિન',
+    engineSub: 'અગાઉથી રિમાઇન્ડર, એલાર્મ અવાજ, ઓટો સાઇલેન્ટ અને લાઇવ કાઉન્ટડાઉન',
     advanceTitle: 'નમાઝ પહેલાં અગાઉથી યાદ અપાવો',
     advanceSub: 'વુઝૂ અને તૈયારી માટે નમાઝથી થોડી મિનિટો પહેલાં સૂચના',
     advanceOff: 'બંધ',
@@ -295,6 +305,8 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     min45: '૪૫ મિનિટ',
   },
   hi: {
+    engineTitle: 'स्मार्ट नमाज़ अलर्ट इंजन',
+    engineSub: 'समय पूर्व सूचना, अलार्म आवाज़, ऑटो साइलेंट व लाइव काउंटडाउन',
     advanceTitle: 'नमाज़ से पहले अग्रिम अनुस्मारक',
     advanceSub: 'वुज़ू और तैयारी के लिए नमाज़ से कुछ मिनट पहले सौम्य सूचना',
     advanceOff: 'बंद',
@@ -322,6 +334,8 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     min45: '45 मिनट',
   },
   bn: {
+    engineTitle: 'স্মার্ট সালাত ও অ্যালার্ট ইঞ্জিন',
+    engineSub: 'অগ্রিম রিমাইন্ডার, অ্যালার্ম ভলিউম, অটো-সাইলেন্ট এবং লাইভ কাউন্টডাউন',
     advanceTitle: 'নামাজের পূর্বে অগ্রিম স্মরণ',
     advanceSub: 'ওযু এবং প্রস্তুতির জন্য নামাজের কয়েক মিনিট পূর্বে সতর্কবার্তা',
     advanceOff: 'বন্ধ',
@@ -349,6 +363,8 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     min45: '৪৫ মিনিট',
   },
   ru: {
+    engineTitle: 'Умные уведомления намаза',
+    engineSub: 'Предварительное напоминание, громкость будильника и авто-беззвучный режим',
     advanceTitle: 'Предварительное напоминание',
     advanceSub: 'Мягкое оповещение до намаза для совершения омовения и подготовки',
     advanceOff: 'Откл',
@@ -376,6 +392,8 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     min45: '45 мин',
   },
   fr: {
+    engineTitle: 'Moteur intelligent d’alertes de prière',
+    engineSub: 'Rappels préalables, volume d’alarme, mode Ne pas déranger auto et compte à rebours',
     advanceTitle: 'Rappel avant la prière',
     advanceSub: 'Notification douce avant la prière pour le Wudu et la préparation',
     advanceOff: 'Désactivé',

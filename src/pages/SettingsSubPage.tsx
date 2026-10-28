@@ -1045,10 +1045,10 @@ const SettingsSubPage: React.FC = () => {
               <div>
                 <Label className="text-sm font-bold flex items-center gap-2">
                   <Bell className="w-4 h-4 text-[var(--accent-text)]" />
-                  Smart Salah & Alert Engine
+                  {smartSalahStrings.engineTitle}
                 </Label>
                 <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                  Advance reminders, alarm volume, Auto-DND & live countdown
+                  {smartSalahStrings.engineSub}
                 </p>
               </div>
 

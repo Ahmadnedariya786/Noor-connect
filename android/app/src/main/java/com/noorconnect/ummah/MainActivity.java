@@ -256,6 +256,42 @@ public class MainActivity extends BridgeActivity {
                     }
 
                     @android.webkit.JavascriptInterface
+                    public boolean requestPinWidget(String widgetType) {
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(MainActivity.this);
+                                if (appWidgetManager != null && appWidgetManager.isRequestPinAppWidgetSupported()) {
+                                    String type = (widgetType != null) ? widgetType.toLowerCase().trim() : "next_prayer";
+                                    Class<?> widgetClass;
+                                    switch (type) {
+                                        case "daily_ayah":
+                                            widgetClass = com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget.class;
+                                            break;
+                                        case "daily_hadith":
+                                            widgetClass = com.noorconnect.ummah.widgets.dailyhadith.DailyHadithWidget.class;
+                                            break;
+                                        case "quran_progress":
+                                            widgetClass = com.noorconnect.ummah.widgets.quranprogress.QuranProgressWidget.class;
+                                            break;
+                                        case "tasbeeh":
+                                            widgetClass = com.noorconnect.ummah.widgets.tasbeeh.TasbeehWidget.class;
+                                            break;
+                                        case "next_prayer":
+                                        default:
+                                            widgetClass = com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.class;
+                                            break;
+                                    }
+                                    ComponentName provider = new ComponentName(MainActivity.this, widgetClass);
+                                    return appWidgetManager.requestPinAppWidget(provider, null, null);
+                                }
+                            }
+                        } catch (Throwable t) {
+                            Log.e(TAG, "requestPinWidget failed for type: " + widgetType, t);
+                        }
+                        return false;
+                    }
+
+                    @android.webkit.JavascriptInterface
                     public void syncWidgetCustomization(String jsonConfig) {
                         runOnUiThread(() -> {
                             try {
@@ -265,6 +301,8 @@ public class MainActivity extends BridgeActivity {
                                 com.noorconnect.ummah.widgets.WidgetPrefs.INSTANCE.saveWidgetStyleConfig(MainActivity.this, jsonConfig);
 
                                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(MainActivity.this);
+
+                                // Update Next Prayer Widgets
                                 ComponentName nextPrayerCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.class);
                                 int[] nextPrayerIds = appWidgetManager.getAppWidgetIds(nextPrayerCn);
                                 if (nextPrayerIds != null && nextPrayerIds.length > 0) {
@@ -275,8 +313,45 @@ public class MainActivity extends BridgeActivity {
                                         com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
                                     }
                                 }
+
+                                // Update Daily Ayah Widgets
+                                ComponentName dailyAyahCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget.class);
+                                int[] dailyAyahIds = appWidgetManager.getAppWidgetIds(dailyAyahCn);
+                                if (dailyAyahIds != null && dailyAyahIds.length > 0) {
+                                    for (int id : dailyAyahIds) {
+                                        com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
+                                    }
+                                }
+
+                                // Update Daily Hadith Widgets
+                                ComponentName dailyHadithCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.dailyhadith.DailyHadithWidget.class);
+                                int[] dailyHadithIds = appWidgetManager.getAppWidgetIds(dailyHadithCn);
+                                if (dailyHadithIds != null && dailyHadithIds.length > 0) {
+                                    for (int id : dailyHadithIds) {
+                                        com.noorconnect.ummah.widgets.dailyhadith.DailyHadithWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
+                                    }
+                                }
+
+                                // Update Quran Progress Widgets
+                                ComponentName quranProgressCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.quranprogress.QuranProgressWidget.class);
+                                int[] quranProgressIds = appWidgetManager.getAppWidgetIds(quranProgressCn);
+                                if (quranProgressIds != null && quranProgressIds.length > 0) {
+                                    for (int id : quranProgressIds) {
+                                        com.noorconnect.ummah.widgets.quranprogress.QuranProgressWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
+                                    }
+                                }
+
+                                // Update Tasbeeh Widgets
+                                ComponentName tasbeehCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.tasbeeh.TasbeehWidget.class);
+                                int[] tasbeehIds = appWidgetManager.getAppWidgetIds(tasbeehCn);
+                                if (tasbeehIds != null && tasbeehIds.length > 0) {
+                                    for (int id : tasbeehIds) {
+                                        com.noorconnect.ummah.widgets.tasbeeh.TasbeehWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
+                                    }
+                                }
+
                                 com.noorconnect.ummah.widgets.WidgetRefreshWorker.Companion.enqueueImmediate(MainActivity.this);
-                                Log.i(TAG, "syncWidgetCustomization: synced successfully");
+                                Log.i(TAG, "syncWidgetCustomization: synced all widgets successfully");
                             } catch (Throwable t) {
                                 Log.e(TAG, "Error syncing widget customization", t);
                             }

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { radioStations, type RadioStation } from "@/data/radio-stations";
 import { extraRadioStations, type RadioCategory } from "@/data/radio-stations-extra";
 import { useGlobalRadio } from "@/lib/global-radio";
+import { useLanguage } from "@/contexts/LanguageContext-new";
 
 // A unified station view: base stations + extra API stations.
 interface StationView {
@@ -59,6 +60,261 @@ const CATEGORY_LABELS: Record<RadioCategory, string> = {
   stories: "Stories",
   mosque: "Main / Mix",
   fatwa: "Fatwa",
+};
+
+interface RadioI18n {
+  title: string;
+  subtitle: string;
+  searchPlaceholder: string;
+  tabAll: string;
+  categories: Record<RadioCategory, string>;
+  heroLive: string;
+  heroLine1: string;
+  heroLine2: string;
+  heroSub: string;
+  nowPlaying: string;
+  paused: string;
+  featuredReciters: string;
+  pinned: string;
+  allStations: string;
+  noStations: string;
+  noStationsSub: string;
+  clearFilters: string;
+}
+
+const RADIO_I18N: Record<string, RadioI18n> = {
+  en: {
+    title: "Quran Radio",
+    subtitle: "Live Quran recitation 24/7",
+    searchPlaceholder: "Search reciter or station…",
+    tabAll: "All",
+    categories: {
+      reciter: "Reciters",
+      translation: "Translations",
+      tafsir: "Tafsir",
+      hadith: "Hadith",
+      surah: "Surahs",
+      adhkar: "Adhkar",
+      stories: "Stories",
+      mosque: "Main / Mix",
+      fatwa: "Fatwa",
+    },
+    heroLive: "Live",
+    heroLine1: "Listen to the Quran,",
+    heroLine2: "anytime.",
+    heroSub: "Live Quran recitation 24/7 around the globe",
+    nowPlaying: "Now Playing",
+    paused: "Paused",
+    featuredReciters: "Featured Reciters",
+    pinned: "Pinned",
+    allStations: "All Stations",
+    noStations: "No stations found",
+    noStationsSub: "Try a different search or category.",
+    clearFilters: "Clear filters",
+  },
+  ar: {
+    title: "إذاعة القرآن",
+    subtitle: "تلاوات قرآنية مباشرة على مدار الساعة",
+    searchPlaceholder: "ابحث عن قارئ أو إذاعة...",
+    tabAll: "الكل",
+    categories: {
+      reciter: "القراء",
+      translation: "الترجمات",
+      tafsir: "التفسير",
+      hadith: "الحديث",
+      surah: "السور",
+      adhkar: "الأذكار",
+      stories: "القصص",
+      mosque: "إذاعات منوعة",
+      fatwa: "الفتاوى",
+    },
+    heroLive: "مباشر",
+    heroLine1: "استمع إلى القرآن الكريم",
+    heroLine2: "في أي وقت",
+    heroSub: "بث مباشر على مدار الساعة",
+    nowPlaying: "قيد التشغيل",
+    paused: "متوقف مؤقتاً",
+    featuredReciters: "قراء مختارون",
+    pinned: "المثبتة",
+    allStations: "جميع الإذاعات",
+    noStations: "لم يتم العثور على إذاعات",
+    noStationsSub: "جرب بحثاً مختلفاً أو فئة أخرى.",
+    clearFilters: "مسح التصفية",
+  },
+  ur: {
+    title: "قرآن ریڈیو",
+    subtitle: "24/7 براہ راست قرآن کی تلاوت",
+    searchPlaceholder: "قاری یا اسٹیشن تلاش کریں...",
+    tabAll: "سب",
+    categories: {
+      reciter: "قراء",
+      translation: "ترجمے",
+      tafsir: "تفسیر",
+      hadith: "حدیث",
+      surah: "سورتیں",
+      adhkar: "اذکار",
+      stories: "قصے",
+      mosque: "مرکزی و متفرق",
+      fatwa: "فتاویٰ",
+    },
+    heroLive: "لائیو",
+    heroLine1: "قرآن پاک سنیں",
+    heroLine2: "کسی بھی وقت",
+    heroSub: "24/7 براہ راست نشریات",
+    nowPlaying: "اب چل رہا ہے",
+    paused: "روک دیا گیا",
+    featuredReciters: "نمایاں قراء",
+    pinned: "پن شدہ",
+    allStations: "تمام اسٹیشنز",
+    noStations: "کوئی اسٹیشن نہیں ملا",
+    noStationsSub: "مختلف تلاش یا زمرہ منتخب کریں۔",
+    clearFilters: "فلٹرز صاف کریں",
+  },
+  gu: {
+    title: "કુરાન રેડિયો",
+    subtitle: "24/7 લાઈવ કુરાન પઠન",
+    searchPlaceholder: "વાચક અથવા સ્ટેશન શોધો...",
+    tabAll: "બધા",
+    categories: {
+      reciter: "વાચકો",
+      translation: "અનુવાદો",
+      tafsir: "તફસીર",
+      hadith: "હદીસ",
+      surah: "સૂરાઓ",
+      adhkar: "અઝકાર",
+      stories: "વાર્તાઓ",
+      mosque: "મુખ્ય / મિશ્ર",
+      fatwa: "ફતવા",
+    },
+    heroLive: "લાઈવ",
+    heroLine1: "કુરાન મજીદ સાંભળો,",
+    heroLine2: "કોઈપણ સમયે.",
+    heroSub: "24/7 વિશ્વભરમાં લાઈવ પઠન",
+    nowPlaying: "હવે વાગી રહ્યું છે",
+    paused: "રોકેલું છે",
+    featuredReciters: "વિશેષ વાચકો",
+    pinned: "પિન કરેલા",
+    allStations: "બધા સ્ટેશનો",
+    noStations: "કોઈ સ્ટેશન મળ્યું નથી",
+    noStationsSub: "બીજી શોધ અથવા શ્રેણી અજમાવો.",
+    clearFilters: "ફિલ્ટર્સ સાફ કરો",
+  },
+  hi: {
+    title: "क़ुरआन रेडियो",
+    subtitle: "24/7 लाइव क़ुरआन पाठ",
+    searchPlaceholder: "क़ारी या स्टेशन खोजें...",
+    tabAll: "सभी",
+    categories: {
+      reciter: "क़ारी",
+      translation: "अनुवाद",
+      tafsir: "तफ़सीर",
+      hadith: "हदीस",
+      surah: "सूरा",
+      adhkar: "अज़कार",
+      stories: "क़िस्से",
+      mosque: "मुख्य / मिश्रित",
+      fatwa: "फ़तवा",
+    },
+    heroLive: "लाइव",
+    heroLine1: "क़ुरआन पाक सुनें,",
+    heroLine2: "किसी भी समय।",
+    heroSub: "24/7 दुनिया भर में लाइव क़ुरआन पाठ",
+    nowPlaying: "अब बज रहा है",
+    paused: "रोका गया",
+    featuredReciters: "प्रमुख क़ारी",
+    pinned: "पिन किए गए",
+    allStations: "सभी स्टेशन",
+    noStations: "कोई स्टेशन नहीं मिला",
+    noStationsSub: "कोई अन्य खोज या श्रेणी आज़माएं।",
+    clearFilters: "फ़िल्टर साफ़ करें",
+  },
+  bn: {
+    title: "কোরআন রেডিও",
+    subtitle: "২৪/৭ লাইভ কোরআন তেলাওয়াত",
+    searchPlaceholder: "তেলাওয়াতকারী বা স্টেশন খুঁজুন...",
+    tabAll: "সব",
+    categories: {
+      reciter: "ক্বারীগণ",
+      translation: "অনুবাদ",
+      tafsir: "তাফসীর",
+      hadith: "হাদিস",
+      surah: "সূরাসমূহ",
+      adhkar: "আযকার",
+      stories: "কাহিনী",
+      mosque: "প্রধান / মিশ্র",
+      fatwa: "ফতোয়া",
+    },
+    heroLive: "লাইভ",
+    heroLine1: "পবিত্র কোরআন শুনুন,",
+    heroLine2: "যেকোনো সময়।",
+    heroSub: "সারাবিশ্বে ২৪/৭ লাইভ কোরআন তেলাওয়াত",
+    nowPlaying: "এখন চলছে",
+    paused: "বিরতি",
+    featuredReciters: "নির্বাচিত ক্বারীগণ",
+    pinned: "পিন করা",
+    allStations: "সকল স্টেশন",
+    noStations: "কোনো স্টেশন পাওয়া যায়নি",
+    noStationsSub: "অন্য কোনো অনুসন্ধান বা বিভাগ চেষ্টা করুন।",
+    clearFilters: "ফিল্টার সাফ করুন",
+  },
+  ru: {
+    title: "Коран Радио",
+    subtitle: "Прямой эфир чтения Корана 24/7",
+    searchPlaceholder: "Поиск чтеца или радиостанции…",
+    tabAll: "Все",
+    categories: {
+      reciter: "Чтецы",
+      translation: "Переводы",
+      tafsir: "Тафсир",
+      hadith: "Хадисы",
+      surah: "Суры",
+      adhkar: "Азкары",
+      stories: "Истории",
+      mosque: "Главное / Микс",
+      fatwa: "Фетвы",
+    },
+    heroLive: "В эфире",
+    heroLine1: "Слушайте Священный Коран,",
+    heroLine2: "в любое время.",
+    heroSub: "Круглосуточный прямой эфир по всему миру",
+    nowPlaying: "Сейчас играет",
+    paused: "Приостановлено",
+    featuredReciters: "Избранные чтецы",
+    pinned: "Закреплённые",
+    allStations: "Все радиостанции",
+    noStations: "Станции не найдены",
+    noStationsSub: "Попробуйте другой поиск или категорию.",
+    clearFilters: "Сбросить фильтры",
+  },
+  fr: {
+    title: "Radio Coran",
+    subtitle: "Récitations du Coran en direct 24/7",
+    searchPlaceholder: "Rechercher un récitateur ou une station…",
+    tabAll: "Tout",
+    categories: {
+      reciter: "Récitateurs",
+      translation: "Traductions",
+      tafsir: "Tafsir",
+      hadith: "Hadith",
+      surah: "Sourates",
+      adhkar: "Adhkar",
+      stories: "Histoires",
+      mosque: "Général / Mix",
+      fatwa: "Fatwas",
+    },
+    heroLive: "En direct",
+    heroLine1: "Écoutez le Saint Coran,",
+    heroLine2: "à tout moment.",
+    heroSub: "Récitation du Coran 24h/24 dans le monde entier",
+    nowPlaying: "En cours de lecture",
+    paused: "En pause",
+    featuredReciters: "Récitateurs en vedette",
+    pinned: "Épinglés",
+    allStations: "Toutes les stations",
+    noStations: "Aucune station trouvée",
+    noStationsSub: "Essayez une autre recherche ou catégorie.",
+    clearFilters: "Effacer les filtres",
+  },
 };
 
 const loadPinned = (): Set<string> => {
@@ -116,6 +372,12 @@ function avatarGradientSafe(i: number): string {
 
 const QuranRadio = () => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const strings = useMemo(() => {
+    const code = (language || "en").toLowerCase().split("-")[0];
+    return RADIO_I18N[code] || RADIO_I18N.en;
+  }, [language]);
+
   const globalRadio = useGlobalRadio();
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -240,14 +502,14 @@ const QuranRadio = () => {
               className="rounded-full"
               style={{ color: "var(--text-primary)" }}
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
             </Button>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold leading-tight" style={{ color: "var(--text-primary)" }}>
-                Quran Radio
+                {strings.title}
               </h1>
               <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                Live Quran recitation 24/7
+                {strings.subtitle}
               </p>
             </div>
             <Button
@@ -270,14 +532,14 @@ const QuranRadio = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search reciter or station…"
+              placeholder={strings.searchPlaceholder}
               className="ps-9 pe-9 h-10 rounded-full border transition-all"
               style={{
                 background: "var(--bg-elev)",
                 borderColor: "var(--border)",
                 color: "var(--text-primary)",
               }}
-              aria-label="Search reciter or station"
+              aria-label={strings.searchPlaceholder}
             />
             {search && (
               <button
@@ -293,10 +555,12 @@ const QuranRadio = () => {
 
           {/* Category chips */}
           <div className="mt-2.5 flex gap-2 overflow-x-auto pb-1.5 -mx-4 px-4" role="tablist" aria-label="Station categories">
-            <Chip active={activeCategory === "all"} onClick={() => setActiveCategory("all")}>All</Chip>
+            <Chip active={activeCategory === "all"} onClick={() => setActiveCategory("all")}>
+              {strings.tabAll}
+            </Chip>
             {categories.map((cat) => (
               <Chip key={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)}>
-                {CATEGORY_LABELS[cat]}
+                {strings.categories[cat] || CATEGORY_LABELS[cat]}
               </Chip>
             ))}
           </div>
@@ -333,23 +597,21 @@ const QuranRadio = () => {
                     }}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
-                    Live
+                    {strings.heroLive}
                   </span>
                   <h2
                     className="mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    Listen to the Quran,
+                    <span>{strings.heroLine1}</span>
                     <br />
-                    <span style={{ color: "var(--accent)" }}>anytime.</span>
+                    <span style={{ color: "var(--accent)" }}>{strings.heroLine2}</span>
                   </h2>
                   <p
                     className="mt-1.5 text-sm"
                     style={{ color: "var(--text-secondary)" }}
-                    lang="ar"
-                    dir="rtl"
                   >
-                    بث مباشر على مدار الساعة
+                    {strings.heroSub}
                   </p>
                 </div>
 
@@ -378,7 +640,7 @@ const QuranRadio = () => {
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                    {globalRadio.isPlaying ? "Now Playing" : "Paused"}
+                    {globalRadio.isPlaying ? strings.nowPlaying : strings.paused}
                   </p>
                   <p className="text-sm font-semibold text-foreground truncate" lang="ar">
                     {globalRadio.currentStation.name}
@@ -399,12 +661,12 @@ const QuranRadio = () => {
             )}
 
             {/* ── Featured carousel ── */}
-            <SectionHeader icon={Star} title="Featured Reciters" count={featuredStations.length} />
+            <SectionHeader icon={Star} title={strings.featuredReciters} count={featuredStations.length} />
             <div
               className="-mx-4 px-4 pb-2 flex gap-3 overflow-x-auto"
               style={{ scrollSnapType: "x mandatory" }}
               role="list"
-              aria-label="Featured reciters"
+              aria-label={strings.featuredReciters}
             >
               {featuredStations.map((station) => (
                 <FeaturedTile
@@ -420,7 +682,7 @@ const QuranRadio = () => {
             {/* ── Pinned rows ── */}
             {pinnedStations.length > 0 && (
               <>
-                <SectionHeader icon={Pin} title="Pinned" count={pinnedStations.length} />
+                <SectionHeader icon={Pin} title={strings.pinned} count={pinnedStations.length} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                   {pinnedStations.map((station) => (
                     <PinnedRow
@@ -437,11 +699,14 @@ const QuranRadio = () => {
             )}
 
             {/* ── All stations ── */}
-            <SectionHeader icon={Radio} title="All Stations" count={filtered.length} />
+            <SectionHeader icon={Radio} title={strings.allStations} count={filtered.length} />
             {filtered.length === 0 ? (
               <EmptyState
                 hasFilters={!!search || activeCategory !== "all"}
                 onClear={() => { setSearch(""); setActiveCategory("all"); }}
+                title={strings.noStations}
+                sub={strings.noStationsSub}
+                clear={strings.clearFilters}
               />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="All stations">
@@ -791,16 +1056,28 @@ const StationTile = memo<GridTileProps>(({ station, isPlaying, isPending, onSele
 
 /* ── Empty state ─────────────────────────────────────────────── */
 
-const EmptyState = ({ hasFilters, onClear }: { hasFilters: boolean; onClear: () => void }) => (
+const EmptyState = ({
+  hasFilters,
+  onClear,
+  title = "No stations found",
+  sub = "Try a different search or category.",
+  clear = "Clear filters",
+}: {
+  hasFilters: boolean;
+  onClear: () => void;
+  title?: string;
+  sub?: string;
+  clear?: string;
+}) => (
   <div className="text-center py-14 rounded-3xl border border-dashed border-border">
     <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
       <Radio className="w-6 h-6 text-muted-foreground/70" aria-hidden="true" />
     </div>
-    <p className="text-lg font-semibold text-foreground">No stations found</p>
-    <p className="text-sm text-muted-foreground mt-1">Try a different search or category.</p>
+    <p className="text-lg font-semibold text-foreground">{title}</p>
+    <p className="text-sm text-muted-foreground mt-1">{sub}</p>
     {hasFilters && (
       <Button variant="outline" size="sm" className="mt-4 rounded-full" onClick={onClear}>
-        Clear filters
+        {clear}
       </Button>
     )}
   </div>

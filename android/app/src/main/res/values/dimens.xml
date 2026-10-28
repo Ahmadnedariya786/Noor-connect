@@ -24,14 +24,14 @@
     <dimen name="widget_text_arabic_verse">22sp</dimen>
     <dimen name="widget_text_arabic_headline">20sp</dimen>
 
-    <dimen name="widget_min_width_2x2">160dp</dimen>
-    <dimen name="widget_min_height_2x2">160dp</dimen>
-    <dimen name="widget_min_width_4x1">320dp</dimen>
+    <dimen name="widget_min_width_2x2">110dp</dimen>
+    <dimen name="widget_min_height_2x2">110dp</dimen>
+    <dimen name="widget_min_width_4x1">250dp</dimen>
     <dimen name="widget_min_height_4x1">80dp</dimen>
-    <dimen name="widget_min_width_4x2">320dp</dimen>
-    <dimen name="widget_min_height_4x2">160dp</dimen>
-    <dimen name="widget_min_width_4x3">320dp</dimen>
-    <dimen name="widget_min_height_4x3">240dp</dimen>
+    <dimen name="widget_min_width_4x2">250dp</dimen>
+    <dimen name="widget_min_height_4x2">110dp</dimen>
+    <dimen name="widget_min_width_4x3">250dp</dimen>
+    <dimen name="widget_min_height_4x3">200dp</dimen>
 
     <dimen name="widget_max_width_4x3">520dp</dimen>
     <dimen name="widget_max_height_4x3">400dp</dimen>

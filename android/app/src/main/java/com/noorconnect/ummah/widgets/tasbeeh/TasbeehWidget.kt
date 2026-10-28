@@ -27,13 +27,6 @@ import com.noorconnect.ummah.widgets.TasbeehState
  *  - Tap anywhere on the widget body → increment count via [TasbeehReceiver]
  *  - Tap reset icon (bottom-left) → reset session count
  *  - Tap open-app icon (bottom-right) → deep-link to /tasbeeh
- *
- * The increment is delivered as a broadcast to [TasbeehReceiver], which
- * updates SharedPreferences atomically and refreshes all Tasbeeh widgets.
- *
- * Haptic feedback: short tick on each tap, plus a longer "completion"
- * pattern when sessionCount reaches targetPerSession (which auto-advances
- * to the next dhikr in the cycle: SubhanAllah → Alhamdulillah → Allahu Akbar).
  */
 class TasbeehWidget : AppWidgetProvider() {
 
@@ -47,67 +40,72 @@ class TasbeehWidget : AppWidgetProvider() {
         const val EXTRA_APPWIDGET_IDS = "appWidgetIds"
 
         fun updateWidget(context: Context, mgr: AppWidgetManager, appWidgetId: Int) {
-            val views = RemoteViews(context.packageName, R.layout.widget_tasbeeh)
+            try {
+                val views = RemoteViews(context.packageName, R.layout.widget_tasbeeh)
 
-            val state = WidgetPrefs.getTasbeehState(context)
+                val state = WidgetPrefs.getTasbeehState(context)
 
-            views.setTextViewText(R.id.widget_dhikr_name, localizedDhikr(context, state.currentDhikr))
-            views.setTextViewText(R.id.widget_count, state.sessionCount.toString())
-            views.setTextColor(R.id.widget_count, WidgetAccent.resolve(context, appWidgetId))
-            views.setTextViewText(R.id.widget_target, context.getString(R.string.widget_tasbeeh_target_format, state.targetPerSession))
-            views.setTextViewText(R.id.widget_total_today, context.getString(R.string.widget_tasbeeh_total_today_format, state.totalCount))
+                views.setTextViewText(R.id.widget_dhikr_name, localizedDhikr(context, state.currentDhikr))
+                views.setTextViewText(R.id.widget_count, state.sessionCount.toString())
+                views.setTextColor(R.id.widget_count, WidgetAccent.resolve(context, appWidgetId))
+                views.setTextViewText(R.id.widget_target, context.getString(R.string.widget_tasbeeh_target_format, state.targetPerSession))
+                views.setTextViewText(R.id.widget_total_today, context.getString(R.string.widget_tasbeeh_total_today_format, state.totalCount))
 
-            // Tap-to-increment: large PendingIntent covering the whole root.
-            // Use a unique requestCode per appWidgetId so multiple widgets don't collide.
-            val incrementIntent = Intent(context, TasbeehReceiver::class.java).apply {
-                action = ACTION_INCREMENT
-                putExtra(EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                // Tap-to-increment: large PendingIntent covering the whole root.
+                val incrementIntent = Intent(context, TasbeehReceiver::class.java).apply {
+                    action = ACTION_INCREMENT
+                    putExtra(EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                }
+                val incrementPi = PendingIntent.getBroadcast(
+                    context,
+                    appWidgetId * 10 + 1,
+                    incrementIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_root, incrementPi)
+
+                // Reset icon → reset session
+                val resetIntent = Intent(context, TasbeehReceiver::class.java).apply {
+                    action = ACTION_RESET
+                    putExtra(EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                }
+                val resetPi = PendingIntent.getBroadcast(
+                    context,
+                    appWidgetId * 10 + 2,
+                    resetIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_reset, resetPi)
+
+                // Open-app icon → deep-link /tasbeeh
+                val deeplink = WidgetDeeplink.buildTasbeeh()
+                val openIntent = WidgetDeeplink.toIntent(context, deeplink)
+                val openPi = PendingIntent.getActivity(
+                    context,
+                    appWidgetId * 10 + 3,
+                    openIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_open_app, openPi)
+
+                mgr.updateAppWidget(appWidgetId, views)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Critical error updating TasbeehWidget $appWidgetId", t)
             }
-            val incrementPi = PendingIntent.getBroadcast(
-                context,
-                appWidgetId * 10 + 1,
-                incrementIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            views.setOnClickPendingIntent(R.id.widget_root, incrementPi)
-
-            // Reset icon → reset session
-            val resetIntent = Intent(context, TasbeehReceiver::class.java).apply {
-                action = ACTION_RESET
-                putExtra(EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
-            }
-            val resetPi = PendingIntent.getBroadcast(
-                context,
-                appWidgetId * 10 + 2,
-                resetIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            views.setOnClickPendingIntent(R.id.widget_reset, resetPi)
-
-            // Open-app icon → deep-link /tasbeeh
-            val deeplink = WidgetDeeplink.buildTasbeeh()
-            val openIntent = WidgetDeeplink.toIntent(context, deeplink)
-            val openPi = PendingIntent.getActivity(
-                context,
-                appWidgetId * 10 + 3,
-                openIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            views.setOnClickPendingIntent(R.id.widget_open_app, openPi)
-
-            mgr.updateAppWidget(appWidgetId, views)
         }
 
         fun updateAllWidgets(context: Context) {
-            val mgr = AppWidgetManager.getInstance(context)
-            val ids = mgr.getAppWidgetIds(ComponentName(context, TasbeehWidget::class.java))
-            ids.forEach { updateWidget(context, mgr, it) }
+            try {
+                val mgr = AppWidgetManager.getInstance(context)
+                val ids = mgr.getAppWidgetIds(ComponentName(context, TasbeehWidget::class.java))
+                ids.forEach { updateWidget(context, mgr, it) }
+            } catch (t: Throwable) {
+                Log.e(TAG, "updateAllWidgets failed", t)
+            }
         }
 
         /**
          * Haptic feedback for tasbeeh taps.
-         *  - Normal tap: 20ms tick
-         *  - Target reached (auto-advance): 50-30-50 pattern
          */
         fun hapticTick(context: Context, completed: Boolean = false) {
             try {
@@ -123,20 +121,24 @@ class TasbeehWidget : AppWidgetProvider() {
         }
 
         private fun vibrate(context: Context, pattern: LongArray, repeat: Int) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-                val effect = VibrationEffect.createWaveform(pattern, repeat)
-                vm?.defaultVibrator?.vibrate(effect)
-            } else {
-                @Suppress("DEPRECATION")
-                val v = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
                     val effect = VibrationEffect.createWaveform(pattern, repeat)
-                    v?.vibrate(effect)
+                    vm?.defaultVibrator?.vibrate(effect)
                 } else {
                     @Suppress("DEPRECATION")
-                    v?.vibrate(pattern, repeat)
+                    val v = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        val effect = VibrationEffect.createWaveform(pattern, repeat)
+                        v?.vibrate(effect)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        v?.vibrate(pattern, repeat)
+                    }
                 }
+            } catch (t: Throwable) {
+                Log.w(TAG, "Vibrate exception", t)
             }
         }
 
@@ -152,7 +154,11 @@ class TasbeehWidget : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        try {
+            appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        } catch (t: Throwable) {
+            Log.e(TAG, "onUpdate fatal error", t)
+        }
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -161,26 +167,36 @@ class TasbeehWidget : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: android.os.Bundle
     ) {
-        val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-        val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-        val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
-        val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-        
-        Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
-        
-        updateWidget(context, appWidgetManager, appWidgetId)
+        try {
+            val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+            val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+            val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+            val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+            
+            Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
+            updateWidget(context, appWidgetManager, appWidgetId)
+        } catch (t: Throwable) {
+            Log.e(TAG, "onAppWidgetOptionsChanged error", t)
+        }
     }
 
     override fun onEnabled(context: Context) {
-        WidgetForegroundService.start(context)
-        Log.d(TAG, "Widget enabled — foreground service started")
+        try {
+            WidgetForegroundService.start(context)
+            Log.d(TAG, "Widget enabled — foreground service started")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onEnabled error", t)
+        }
     }
 
     override fun onDisabled(context: Context) {
-        // Only stop the shared foreground service when NO widget of ANY type remains
-        if (!WidgetForegroundService.hasActiveWidgets(context)) {
-            WidgetForegroundService.stop(context)
+        try {
+            if (!WidgetForegroundService.hasActiveWidgets(context)) {
+                WidgetForegroundService.stop(context)
+            }
+            Log.d(TAG, "Widget disabled")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onDisabled error", t)
         }
-        Log.d(TAG, "Widget disabled")
     }
 }

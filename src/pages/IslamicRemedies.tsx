@@ -42,16 +42,328 @@ const containerVariants = {
 
 const moodCardVariants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } },
 };
 
 const viewerTextVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
+};
+
+interface RemediesI18n {
+  title: string;
+  howFeeling: string;
+  selectMoodDesc: string;
+  searchPlaceholder: string;
+  allTab: string;
+  surahTab: string;
+  ayahTab: string;
+  duaTab: string;
+  hadithTab: string;
+  dhikrTab: string;
+  playSurah: string;
+  copy: string;
+  copied: string;
+  next: string;
+  chooseDifferentMood: string;
+  todaysRemedy: string;
+  remedyCompleteToast: string;
+  copiedToast: string;
+  savedFavoriteToast: string;
+  removedFavoriteToast: string;
+  moods: Record<string, string>;
+}
+
+const REMEDIES_I18N: Record<string, RemediesI18n> = {
+  en: {
+    title: "Islamic Wellness & Remedies",
+    howFeeling: "How are you feeling?",
+    selectMoodDesc: "Select your mood to receive guidance from the Quran and Sunnah.",
+    searchPlaceholder: "Search moods or remedies...",
+    allTab: "All",
+    surahTab: "Surah",
+    ayahTab: "Ayah",
+    duaTab: "Dua",
+    hadithTab: "Hadith",
+    dhikrTab: "Dhikr",
+    playSurah: "Play Surah",
+    copy: "Copy",
+    copied: "Copied!",
+    next: "Next",
+    chooseDifferentMood: "Choose a different mood",
+    todaysRemedy: "Today's Remedy",
+    remedyCompleteToast: "Daily remedy complete! +25 XP",
+    copiedToast: "Copied to clipboard",
+    savedFavoriteToast: "Saved to favorites",
+    removedFavoriteToast: "Removed from favorites",
+    moods: {
+      anxious: "Anxious",
+      sad: "Sad",
+      happy: "Happy",
+      lost: "Lost",
+      tired: "Tired",
+      stressed: "Stressed",
+      angry: "Angry",
+      confused: "Confused",
+      lonely: "Lonely",
+      sick: "Sick",
+      motivated: "Motivated",
+    },
+  },
+  ar: {
+    title: "السكينة والعلاج الإسلامي",
+    howFeeling: "كيف تشعر اليوم؟",
+    selectMoodDesc: "اختر حالتك لتتلقى إرشادات من القرآن والسنة النبوية.",
+    searchPlaceholder: "ابحث في المشاعر أو الأدعية...",
+    allTab: "الكل",
+    surahTab: "سورة",
+    ayahTab: "آية",
+    duaTab: "دعاء",
+    hadithTab: "حديث",
+    dhikrTab: "ذكر",
+    playSurah: "تشغيل السورة",
+    copy: "نسخ",
+    copied: "تم النسخ!",
+    next: "التالي",
+    chooseDifferentMood: "اختر حالة أخرى",
+    todaysRemedy: "علاج اليوم",
+    remedyCompleteToast: "تم إكمال علاج اليوم! +25 XP",
+    copiedToast: "تم النسخ إلى الحافظة",
+    savedFavoriteToast: "تم الحفظ في المفضلة",
+    removedFavoriteToast: "تمت الإزالة من المفضلة",
+    moods: {
+      anxious: "قلق",
+      sad: "حزين",
+      happy: "سعيد",
+      lost: "تائه",
+      tired: "متعب",
+      stressed: "مضغوط",
+      angry: "غاضب",
+      confused: "محتار",
+      lonely: "وحيد",
+      sick: "مريض",
+      motivated: "متحمس",
+    },
+  },
+  ur: {
+    title: "اسلامی سکون و علاج",
+    howFeeling: "آپ کیسا محسوس کر رہے ہیں؟",
+    selectMoodDesc: "قرآن و سنت سے رہنمائی حاصل کرنے کے لیے اپنا موڈ منتخب کریں۔",
+    searchPlaceholder: "موڈ یا علاج تلاش کریں...",
+    allTab: "سب",
+    surahTab: "سورۃ",
+    ayahTab: "آیت",
+    duaTab: "دعا",
+    hadithTab: "حدیث",
+    dhikrTab: "ذکر",
+    playSurah: "سورۃ سنیں",
+    copy: "کاپی",
+    copied: "!کاپی ہو گیا",
+    next: "اگلا",
+    chooseDifferentMood: "مختلف موڈ منتخب کریں",
+    todaysRemedy: "آج کا علاج",
+    remedyCompleteToast: "آج کا علاج مکمل! +25 XP",
+    copiedToast: "کلپ بورڈ پر کاپی ہو گیا",
+    savedFavoriteToast: "پسندیدہ میں محفوظ کر لیا گیا",
+    removedFavoriteToast: "پسندیدہ سے ہٹا دیا گیا",
+    moods: {
+      anxious: "بے چین",
+      sad: "اداس",
+      happy: "خوش",
+      lost: "راہ گم",
+      tired: "تھکا ہوا",
+      stressed: "پریشان",
+      angry: "غصے میں",
+      confused: "الجھن زدہ",
+      lonely: "تنہا",
+      sick: "بیمار",
+      motivated: "پرعزم",
+    },
+  },
+  gu: {
+    title: "ઇસ્લામિક ઉપચાર અને સુખાકારી",
+    howFeeling: "તમે કેવું અનુભવી રહ્યા છો?",
+    selectMoodDesc: "કુરાન અને સુન્નતમાંથી માર્ગદર્શન મેળવવા માટે તમારો મૂડ પસંદ કરો.",
+    searchPlaceholder: "મૂડ અથવા ઉપાયો શોધો...",
+    allTab: "બધા",
+    surahTab: "સૂરા",
+    ayahTab: "આયત",
+    duaTab: "દુઆ",
+    hadithTab: "હદીસ",
+    dhikrTab: "ઝિક્ર",
+    playSurah: "સૂરા ચલાવો",
+    copy: "કૉપિ",
+    copied: "કૉપિ થઈ ગયું!",
+    next: "આગળ",
+    chooseDifferentMood: "બીજો મૂડ પસંદ કરો",
+    todaysRemedy: "આજનો ઉપાય",
+    remedyCompleteToast: "દૈનિક ઉપાય પૂર્ણ! +25 XP",
+    copiedToast: "ક્લિપબોર્ડ પર કૉપિ થઈ ગયું",
+    savedFavoriteToast: "મનપસંદમાં સાચવ્યું",
+    removedFavoriteToast: "મનપસંદમાંથી હટાવ્યું",
+    moods: {
+      anxious: "ચિંતિત",
+      sad: "ઉદાસ",
+      happy: "ખુશ",
+      lost: "દિશાહીન",
+      tired: "થાકેલું",
+      stressed: "તણાવગ્રસ્ત",
+      angry: "ગુસ્સામાં",
+      confused: "મૂંઝવણમાં",
+      lonely: "એકલવાયું",
+      sick: "બીમાર",
+      motivated: "પ્રેરિત",
+    },
+  },
+  hi: {
+    title: "इस्लामिक सुकून व उपचार",
+    howFeeling: "आप कैसा महसूस कर रहे हैं?",
+    selectMoodDesc: "क़ुरआन और सुन्नत से मार्गदर्शन पाने के लिए अपना मूड चुनें।",
+    searchPlaceholder: "मूड या उपाय खोजें...",
+    allTab: "सभी",
+    surahTab: "सूरा",
+    ayahTab: "आयत",
+    duaTab: "दुआ",
+    hadithTab: "हदीस",
+    dhikrTab: "ज़िक्र",
+    playSurah: "सूरा सुनें",
+    copy: "कॉपी",
+    copied: "कॉपी हो गया!",
+    next: "अगला",
+    chooseDifferentMood: "अलग मूड चुनें",
+    todaysRemedy: "आज का उपाय",
+    remedyCompleteToast: "दैनिक उपाय पूरा हुआ! +25 XP",
+    copiedToast: "क्लिपबोर्ड पर कॉपी हो गया",
+    savedFavoriteToast: "पसंदीदा में सहेजा गया",
+    removedFavoriteToast: "पसंदीदा से हटाया गया",
+    moods: {
+      anxious: "चिंतित",
+      sad: "उदास",
+      happy: "प्रसन्न",
+      lost: "दिशाहीन",
+      tired: "थका हुआ",
+      stressed: "तनावग्रस्त",
+      angry: "क्रोधित",
+      confused: "उलझन में",
+      lonely: "अकेला",
+      sick: "बीमार",
+      motivated: "प्रेरित",
+    },
+  },
+  bn: {
+    title: "ইসলামিক নিরাময় ও সুস্থতা",
+    howFeeling: "আপনি কেমন অনুভব করছেন?",
+    selectMoodDesc: "কোরআন ও সুন্নাহ থেকে নির্দেশনা পেতে আপনার অনুভূতি নির্বাচন করুন।",
+    searchPlaceholder: "অনুভূতি বা প্রতিকার খুঁজুন...",
+    allTab: "সব",
+    surahTab: "সূরা",
+    ayahTab: "আয়াত",
+    duaTab: "দোয়া",
+    hadithTab: "হাদিস",
+    dhikrTab: "যিকির",
+    playSurah: "সূরা শুনুন",
+    copy: "কপি",
+    copied: "কপি হয়েছে!",
+    next: "পরবর্তী",
+    chooseDifferentMood: "অন্য অনুভূতি নির্বাচন করুন",
+    todaysRemedy: "আজকের সমাধান",
+    remedyCompleteToast: "আজকের প্রতিকার সম্পন্ন! +২৫ XP",
+    copiedToast: "ক্লিপবোর্ডে কপি করা হয়েছে",
+    savedFavoriteToast: "পছন্দতালিকায় সংরক্ষিত",
+    removedFavoriteToast: "পছন্দতালিকা থেকে অপসারিত",
+    moods: {
+      anxious: "উদ্বিগ্ন",
+      sad: "দুঃখিত",
+      happy: "খুশি",
+      lost: "দিশেহারা",
+      tired: "ক্লান্ত",
+      stressed: "চাপগ্রস্ত",
+      angry: "ক্রোধান্বিত",
+      confused: "বিভ্রান্ত",
+      lonely: "একাকী",
+      sick: "অসুস্থ",
+      motivated: "অনুপ্রাণিত",
+    },
+  },
+  ru: {
+    title: "Исламское исцеление и покой",
+    howFeeling: "Как вы себя чувствуете?",
+    selectMoodDesc: "Выберите своё состояние, чтобы получить наставление из Корана и Сунны.",
+    searchPlaceholder: "Поиск по состояниям или дуа...",
+    allTab: "Все",
+    surahTab: "Сура",
+    ayahTab: "Аят",
+    duaTab: "Дуа",
+    hadithTab: "Хадис",
+    dhikrTab: "Зикр",
+    playSurah: "Включить суру",
+    copy: "Копировать",
+    copied: "Скопировано!",
+    next: "Далее",
+    chooseDifferentMood: "Выбрать другое состояние",
+    todaysRemedy: "Напоминание дня",
+    remedyCompleteToast: "Напоминание выполнено! +25 XP",
+    copiedToast: "Скопировано в буфер",
+    savedFavoriteToast: "Добавлено в избранное",
+    removedFavoriteToast: "Удалено из избранного",
+    moods: {
+      anxious: "Тревога",
+      sad: "Грусть",
+      happy: "Радость",
+      lost: "Растерянность",
+      tired: "Усталость",
+      stressed: "Стресс",
+      angry: "Гнев",
+      confused: "Замешательство",
+      lonely: "Одиночество",
+      sick: "Болезнь",
+      motivated: "Мотивация",
+    },
+  },
+  fr: {
+    title: "Bien-être et remèdes islamiques",
+    howFeeling: "Comment vous sentez-vous ?",
+    selectMoodDesc: "Sélectionnez votre humeur pour recevoir des conseils du Coran et de la Sunna.",
+    searchPlaceholder: "Rechercher une humeur ou un remède...",
+    allTab: "Tout",
+    surahTab: "Sourate",
+    ayahTab: "Verset",
+    duaTab: "Invocation",
+    hadithTab: "Hadith",
+    dhikrTab: "Dhikr",
+    playSurah: "Écouter la sourate",
+    copy: "Copier",
+    copied: "Copié !",
+    next: "Suivant",
+    chooseDifferentMood: "Choisir une autre humeur",
+    todaysRemedy: "Remède du jour",
+    remedyCompleteToast: "Remède quotidien complété ! +25 XP",
+    copiedToast: "Copié dans le presse-papiers",
+    savedFavoriteToast: "Enregistré dans les favoris",
+    removedFavoriteToast: "Retiré des favoris",
+    moods: {
+      anxious: "Anxieux",
+      sad: "Triste",
+      happy: "Heureux",
+      lost: "Perdu",
+      tired: "Fatigué",
+      stressed: "Stressé",
+      angry: "En colère",
+      confused: "Confus",
+      lonely: "Seul",
+      sick: "Malade",
+      motivated: "Motivé",
+    },
+  },
 };
 
 export default function IslamicRemedies() {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const strings = useMemo(() => {
+    const code = (language || "en").toLowerCase().split("-")[0];
+    return REMEDIES_I18N[code] || REMEDIES_I18N.en;
+  }, [language]);
+
   const navigate = useNavigate();
   const [phase, setPhase] = useState<"prompt" | "viewing">("prompt");
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
@@ -75,13 +387,15 @@ export default function IslamicRemedies() {
   const filteredMoods = useMemo(() => {
     if (!searchQuery && typeFilter === "all") return moods;
     return moods.filter(m => {
+      const localizedMood = strings.moods[m.id] || m.label;
       const matchesSearch = !searchQuery ||
         m.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        localizedMood.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.content.some(c => c.text.toLowerCase().includes(searchQuery.toLowerCase()) || c.reference.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesType = typeFilter === "all" || m.content.some(c => c.type === typeFilter);
       return matchesSearch && matchesType;
     });
-  }, [searchQuery, typeFilter]);
+  }, [searchQuery, typeFilter, strings.moods]);
 
   const handleMoodClick = (mood: Mood) => {
     setSelectedMood(mood);
@@ -108,7 +422,7 @@ export default function IslamicRemedies() {
       return;
     }
     playSurah(currentItem.surahNumber, currentItem.reference, reciter);
-    toast({ title: "Playing Surah", description: `Now playing ${currentItem.reference}.` });
+    toast({ title: strings.playSurah, description: `Now playing ${currentItem.reference}.` });
   };
 
   const handleCopy = async () => {
@@ -117,7 +431,7 @@ export default function IslamicRemedies() {
       await navigator.clipboard.writeText(toCopyText(currentItem));
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-      toast({ title: "Copied to clipboard" });
+      toast({ title: strings.copiedToast });
     } catch {
       toast({ title: "Copy failed", description: "Clipboard is not available on this device.", variant: "destructive" });
     }
@@ -127,7 +441,7 @@ export default function IslamicRemedies() {
     if (!currentItem || !selectedMood) return;
     if (isFav) {
       remedyGamification.removeFromFavorites(remedyId);
-      toast({ title: "Removed from favorites" });
+      toast({ title: strings.removedFavoriteToast });
     } else {
       remedyGamification.addToFavorites({
         id: remedyId,
@@ -137,7 +451,7 @@ export default function IslamicRemedies() {
         reference: currentItem.reference,
         type: currentItem.type,
       });
-      toast({ title: "Saved to favorites" });
+      toast({ title: strings.savedFavoriteToast });
     }
   };
 
@@ -159,7 +473,7 @@ export default function IslamicRemedies() {
                 <selectedMood.icon className={cn("w-5 h-5", selectedMood.color)} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{selectedMood.label}</p>
+                <p className="text-sm font-bold text-foreground truncate">{strings.moods[selectedMood.id] || selectedMood.label}</p>
                 <p className="text-xs text-muted-foreground truncate">{currentItem.reference}</p>
               </div>
               <button onClick={handleToggleFavorite} className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0", isFav ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground hover:text-rose-500")}>
@@ -202,21 +516,21 @@ export default function IslamicRemedies() {
             <m.div variants={viewerTextVariants} initial="hidden" animate="visible" className="flex flex-wrap gap-3 pt-2">
               {currentItem.type === "surah" && currentItem.surahNumber && (
                 <button onClick={handlePlaySurah} className="flex items-center gap-2 rounded-full px-5 py-2.5 bg-[var(--accent)] hover:brightness-105 text-[var(--on-accent)] text-xs font-bold transition-all shadow-md shadow-black/20">
-                  <Play className="w-3.5 h-3.5" /> Play Surah
+                  <Play className="w-3.5 h-3.5" /> {strings.playSurah}
                 </button>
               )}
               <button onClick={handleCopy} className="flex items-center gap-2 rounded-full px-5 py-2.5 border border-border bg-card hover:bg-muted text-xs font-bold text-foreground transition-colors">
                 {copied ? <Check className="w-3.5 h-3.5 text-[var(--success)]" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copied!" : "Copy"}
+                {copied ? strings.copied : strings.copy}
               </button>
               <button onClick={handleNext} className="flex items-center gap-2 rounded-full px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors shadow-lg shadow-primary/20 ml-auto">
-                Next <ArrowRight className="w-3.5 h-3.5" />
+                {strings.next} <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
               </button>
             </m.div>
 
             <m.div variants={viewerTextVariants} initial="hidden" animate="visible" className="text-center">
               <button onClick={handleCloseViewer} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                Choose a different mood
+                {strings.chooseDifferentMood}
               </button>
             </m.div>
           </div>
@@ -229,9 +543,9 @@ export default function IslamicRemedies() {
     <PageTransition>
       <div className="min-h-screen bg-background pb-32">
         <AppBar
-          title={t("islamicWellness") || "Islamic Wellness"}
+          title={strings.title}
           showBack={true}
-          action={
+          actions={
             <button onClick={() => navigate("/remedy-favorites")} className="relative">
               <Heart className="w-5 h-5 text-foreground/80" />
               {favorites.length > 0 && (
@@ -250,14 +564,14 @@ export default function IslamicRemedies() {
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-0.5">Today's Remedy</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-0.5">{strings.todaysRemedy}</p>
                 <p className="text-sm font-medium text-foreground truncate">{dailyRemedy.content}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{dailyRemedy.reference}</p>
               </div>
               <button
                 onClick={() => {
                   remedyGamification.completeDailyRemedy();
-                  toast({ title: "Daily remedy complete! +25 XP" });
+                  toast({ title: strings.remedyCompleteToast });
                 }}
                 className="shrink-0 w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center hover:bg-primary/25 hover:scale-105 active:scale-95 transition-all duration-200"
               >
@@ -271,19 +585,23 @@ export default function IslamicRemedies() {
               <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center mb-3 border border-primary/10 shadow-inner">
                 <HeartHandshake className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-2xl font-black text-foreground tracking-tight">How are you feeling?</h2>
-              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">Select your mood to receive guidance from the Quran and Sunnah.</p>
+              <h2 className="text-2xl font-black text-foreground tracking-tight">
+                {strings.howFeeling}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                {strings.selectMoodDesc}
+              </p>
             </div>
 
             <div className="space-y-2">
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {[
-                  { id: "all", label: `All (${moods.length})` },
-                  { id: "surah", label: "Surah" },
-                  { id: "ayah", label: "Ayah" },
-                  { id: "dua", label: "Dua" },
-                  { id: "hadith", label: "Hadith" },
-                  { id: "dhikr", label: "Dhikr" },
+                  { id: "all", label: `${strings.allTab} (${moods.length})` },
+                  { id: "surah", label: strings.surahTab },
+                  { id: "ayah", label: strings.ayahTab },
+                  { id: "dua", label: strings.duaTab },
+                  { id: "hadith", label: strings.hadithTab },
+                  { id: "dhikr", label: strings.dhikrTab },
                 ].map(({ id, label }) => (
                   <button
                     key={id}
@@ -300,13 +618,13 @@ export default function IslamicRemedies() {
                 ))}
               </div>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search moods or remedies..."
+                  placeholder={strings.searchPlaceholder}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-2xl bg-card border border-border/50 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all"
+                  className="w-full ps-10 pe-4 py-2 rounded-2xl bg-card border border-border/50 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all"
                 />
               </div>
             </div>
@@ -332,7 +650,9 @@ export default function IslamicRemedies() {
                     )}>
                       <Icon className={cn("w-7 h-7", mood.color)} />
                     </div>
-                    <span className="text-xs font-bold text-foreground text-center leading-tight">{mood.label}</span>
+                    <span className="text-xs font-bold text-foreground text-center leading-tight">
+                      {strings.moods[mood.id] || mood.label}
+                    </span>
                   </m.button>
                 );
               })}

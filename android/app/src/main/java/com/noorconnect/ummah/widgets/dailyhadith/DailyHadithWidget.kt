@@ -23,11 +23,6 @@ import com.noorconnect.ummah.widgets.WidgetRefreshWorker
  *  - Translation
  *  - Narrator row
  *
- * Picks today's hadith:
- *  1. If web side pushed a fresh [DailyContentPayload], use that.
- *  2. Otherwise, pick from bundled `assets/widget_hadiths.json` using
- *     DAY_OF_YEAR % hadiths.size for deterministic daily rotation.
- *
  * Tap → deep-link to /hadith?collection=X&book=N&number=N
  */
 class DailyHadithWidget : AppWidgetProvider() {
@@ -36,60 +31,72 @@ class DailyHadithWidget : AppWidgetProvider() {
         private const val TAG = "DailyHadithWidget"
 
         fun updateWidget(context: Context, mgr: AppWidgetManager, appWidgetId: Int) {
-            val views = RemoteViews(context.packageName, R.layout.widget_daily_hadith)
+            try {
+                val views = RemoteViews(context.packageName, R.layout.widget_daily_hadith)
 
-            // Try pushed payload first
-            val payload = WidgetPrefs.getDailyContent(context)
-            val hadith = payload?.hadith ?: HadithBundle.getFallbackHadith(context)
+                // Try pushed payload first
+                val payload = WidgetPrefs.getDailyContent(context)
+                val hadith = payload?.hadith ?: HadithBundle.getFallbackHadith(context)
 
-            // Source + grade
-            views.setTextViewText(R.id.widget_hadith_source, hadith.source.ifEmpty { context.getString(R.string.widget_hadith_source_default) })
-            views.setTextViewText(R.id.widget_hadith_grade, hadith.grade.ifEmpty { context.getString(R.string.widget_hadith_grade_default) })
-            applyGradeColor(context, views, hadith.grade)
+                // Source + grade
+                views.setTextViewText(R.id.widget_hadith_source, hadith.source.ifEmpty { context.getString(R.string.widget_hadith_source_default) })
+                views.setTextViewText(R.id.widget_hadith_grade, hadith.grade.ifEmpty { context.getString(R.string.widget_hadith_grade_default) })
+                applyGradeColor(context, views, hadith.grade)
 
-            // Arabic + translation + narrator
-            views.setTextViewText(R.id.widget_hadith_arabic, hadith.arabic.ifEmpty { context.getString(R.string.widget_hadith_arabic_default) })
-            views.setTextViewText(R.id.widget_hadith_translation, hadith.translation.ifEmpty { context.getString(R.string.widget_hadith_translation_default) })
+                // Arabic + translation + narrator
+                views.setTextViewText(R.id.widget_hadith_arabic, hadith.arabic.ifEmpty { context.getString(R.string.widget_hadith_arabic_default) })
+                views.setTextViewText(R.id.widget_hadith_translation, hadith.translation.ifEmpty { context.getString(R.string.widget_hadith_translation_default) })
 
-            val narratorDisplay = if (hadith.narrator.isBlank()) {
-                context.getString(R.string.widget_hadith_narrator_default)
-            } else {
-                context.getString(R.string.widget_hadith_narrator_format, hadith.narrator)
+                val narratorDisplay = if (hadith.narrator.isBlank()) {
+                    context.getString(R.string.widget_hadith_narrator_default)
+                } else {
+                    context.getString(R.string.widget_hadith_narrator_format, hadith.narrator)
+                }
+                views.setTextViewText(R.id.widget_hadith_narrator, narratorDisplay)
+
+                // Tap → deep-link /hadith?collection=X&book=N&number=N
+                val deeplink = WidgetDeeplink.buildHadith(
+                    hadith.collection.ifEmpty { "bukhari" },
+                    hadith.bookNumber,
+                    hadith.hadithNumber
+                )
+                val intent = WidgetDeeplink.toIntent(context, deeplink)
+                val pi = PendingIntent.getActivity(
+                    context,
+                    102,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_root, pi)
+
+                mgr.updateAppWidget(appWidgetId, views)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Critical error updating DailyHadithWidget $appWidgetId", t)
             }
-            views.setTextViewText(R.id.widget_hadith_narrator, narratorDisplay)
-
-            // Tap → deep-link /hadith?collection=X&book=N&number=N
-            val deeplink = WidgetDeeplink.buildHadith(
-                hadith.collection.ifEmpty { "bukhari" },
-                hadith.bookNumber,
-                hadith.hadithNumber
-            )
-            val intent = WidgetDeeplink.toIntent(context, deeplink)
-            val pi = PendingIntent.getActivity(
-                context,
-                102,
-                intent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            views.setOnClickPendingIntent(R.id.widget_root, pi)
-
-            mgr.updateAppWidget(appWidgetId, views)
         }
 
         private fun applyGradeColor(context: Context, views: RemoteViews, grade: String) {
-            val colorRes = when (grade.lowercase()) {
-                "sahih", "صحيح" -> R.color.widget_grade_sahih
-                "hasan", "hasan sahih", "حسن" -> R.color.widget_grade_hasan
-                "daif", "da'if", "ضعيف" -> R.color.widget_grade_daif
-                else -> R.color.widget_grade_sahih
+            try {
+                val colorRes = when (grade.lowercase()) {
+                    "sahih", "صحيح" -> R.color.widget_grade_sahih
+                    "hasan", "hasan sahih", "حسن" -> R.color.widget_grade_hasan
+                    "daif", "da'if", "ضعيف" -> R.color.widget_grade_daif
+                    else -> R.color.widget_grade_sahih
+                }
+                val color = androidx.core.content.ContextCompat.getColor(context, colorRes)
+                views.setTextColor(R.id.widget_hadith_grade, color)
+            } catch (t: Throwable) {
+                Log.w(TAG, "Failed applying grade color", t)
             }
-            val color = androidx.core.content.ContextCompat.getColor(context, colorRes)
-            views.setTextColor(R.id.widget_hadith_grade, color)
         }
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        try {
+            appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        } catch (t: Throwable) {
+            Log.e(TAG, "onUpdate fatal error", t)
+        }
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -98,27 +105,37 @@ class DailyHadithWidget : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: android.os.Bundle
     ) {
-        val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-        val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-        val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
-        val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-        
-        Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
-        
-        updateWidget(context, appWidgetManager, appWidgetId)
+        try {
+            val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+            val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+            val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+            val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+            
+            Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
+            updateWidget(context, appWidgetManager, appWidgetId)
+        } catch (t: Throwable) {
+            Log.e(TAG, "onAppWidgetOptionsChanged error", t)
+        }
     }
 
     override fun onEnabled(context: Context) {
-        WidgetForegroundService.start(context)
-        WidgetRefreshWorker.enqueuePeriodic(context)
-        Log.d(TAG, "Widget enabled")
+        try {
+            WidgetForegroundService.start(context)
+            WidgetRefreshWorker.enqueuePeriodic(context)
+            Log.d(TAG, "Widget enabled")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onEnabled error", t)
+        }
     }
 
     override fun onDisabled(context: Context) {
-        // Only stop the shared foreground service when NO widget of ANY type remains
-        if (!WidgetForegroundService.hasActiveWidgets(context)) {
-            WidgetForegroundService.stop(context)
+        try {
+            if (!WidgetForegroundService.hasActiveWidgets(context)) {
+                WidgetForegroundService.stop(context)
+            }
+            Log.d(TAG, "Widget disabled")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onDisabled error", t)
         }
-        Log.d(TAG, "Widget disabled")
     }
 }

@@ -144,6 +144,21 @@ export function syncWidgetStyleToNative(config: WidgetStyleConfig): boolean {
   return false;
 }
 
+/**
+ * Request system 1-tap widget pin prompt.
+ */
+export function pinWidgetNative(widgetType: string): boolean {
+  try {
+    const bridge = (window as any).AndroidBridge;
+    if (bridge && typeof bridge.requestPinWidget === 'function') {
+      return Boolean(bridge.requestPinWidget(widgetType));
+    }
+  } catch (err) {
+    console.warn('[WidgetCustomizer] pinWidgetNative error:', err);
+  }
+  return false;
+}
+
 // ─────────────────────────────────────────────────────────
 // Full 8-Language Localization for Widget Customizer
 // ─────────────────────────────────────────────────────────
@@ -181,6 +196,18 @@ export interface WidgetCustomizerI18n {
   howToAddStep4: string;
   sampleCity: string;
   nextPrayerLabel: string;
+  pinSectionTitle: string;
+  pinSectionSub: string;
+  pinNextPrayer: string;
+  pinDailyAyah: string;
+  pinDailyHadith: string;
+  pinQuranProgress: string;
+  pinTasbeeh: string;
+  pinNoteTip: string;
+  pinSuccessToast: string;
+  pinSuccessDesc: string;
+  pinFailedToast: string;
+  pinFailedDesc: string;
 }
 
 const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
@@ -217,6 +244,18 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'Touch and drag your desired widget to your home screen.',
     sampleCity: 'Makkah al-Mukarramah',
     nextPrayerLabel: 'NEXT PRAYER',
+    pinSectionTitle: '📌 Add Widget to Home Screen (1-Tap)',
+    pinSectionSub: 'Pin widgets directly without manual drag-and-drop',
+    pinNextPrayer: '+ Pin Next Prayer Widget',
+    pinDailyAyah: '+ Daily Ayah',
+    pinDailyHadith: '+ Daily Hadith',
+    pinQuranProgress: '+ Quran Progress',
+    pinTasbeeh: '+ Tasbeeh',
+    pinNoteTip: "Note: If dragging the widget onto your Home Screen doesn't add it, tap '+ Pin Next Prayer Widget' above or ensure your Home Screen has at least 2 empty rows (without app icons).",
+    pinSuccessToast: 'Pin Request Sent',
+    pinSuccessDesc: "Please confirm 'Add to Home screen' on the system dialog.",
+    pinFailedToast: 'Pinning Not Available',
+    pinFailedDesc: 'Please add widgets manually from your home screen widget menu.',
   },
   ar: {
     title: 'عناصر الشاشة الرئيسية',
@@ -251,6 +290,17 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'المس مع الاستمرار العنصر واسحبه إلى شاشتك.',
     sampleCity: 'مكة المكرمة',
     nextPrayerLabel: 'الصلاة القادمة',
+    pinSectionTitle: '📌 إضافة العنصر للشاشة الرئيسية (بنقرة واحدة)',
+    pinSectionSub: 'تثبيت عناصر واجهة المستخدم مباشرة دون سحب يدوي',
+    pinNextPrayer: '+ تثبيت عنصر الصلاة القادمة',
+    pinDailyAyah: '+ آية اليوم',
+    pinDailyHadith: '+ حديث اليوم',
+    pinQuranProgress: '+ تقدم الختمة',
+    pinTasbeeh: '+ التسبيح',
+    pinNoteTip: 'ملاحظة: إذا تعذر إضافة العنصر بالسحب إلى الشاشة الرئيسية، اضغط على زر التثبيت أعلاه أو تأكد من وجود صفين فارغين على الأقل بدون أيقونات تطبيقات.',
+    pinSuccessToast: 'تم إرسال طلب التثبيت',
+    pinSuccessDesc: "يرجى تأكيد 'الإضافة إلى الشاشة الرئيسية' في نافذة النظام.",
+    pinFailedToast: 'التثبيت التلقائي غير مدعوم',
   },
   ur: {
     title: 'ہوم اسکرین وجٹس',
@@ -285,6 +335,18 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'اپنے پسندیدہ وجٹ کو دبائے رکھ کر ہوم اسکرین پر لے آئیں۔',
     sampleCity: 'مکہ مکرمہ',
     nextPrayerLabel: 'اگلی نماز',
+    pinSectionTitle: '📌 ہوم اسکرین پر وجٹ لگائیں (1-ٹیپ)',
+    pinSectionSub: 'بغیر ڈریگ اور ڈراپ کے براہِ راست وجٹ ہوم اسکرین پر پن کریں',
+    pinNextPrayer: '+ پن اگلی نماز وجٹ',
+    pinDailyAyah: '+ روزانہ کی آیت',
+    pinDailyHadith: '+ روزانہ کی حدیث',
+    pinQuranProgress: '+ قرآن پروگریس',
+    pinTasbeeh: '+ تسبیح کاؤنٹر',
+    pinNoteTip: 'نوٹ: اگر ہوم اسکرین پر ڈریگ کرتے وقت وجٹ ایڈ نہ ہو، تو اوپر "+ پن اگلی نماز وجٹ" دبائیں یا ہوم اسکرین پر کم از کم 2 خالی قطاریں (بغیر کسی ایپ آئیکن کے) رکھیں۔',
+    pinSuccessToast: 'پن کرنے کی درخواست بھیج دی گئی',
+    pinSuccessDesc: 'سسٹم کے پاپ اپ پر "Add to Home screen" کی تصدیق کریں۔',
+    pinFailedToast: 'براہِ راست پن دستیاب نہیں',
+    pinFailedDesc: 'براہِ کرم ہوم اسکرین کے وجٹس مینو سے دستی طور پر شامل کریں۔',
   },
   gu: {
     title: 'હોમ સ્ક્રીન વિજેટ્સ',
@@ -319,6 +381,18 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'વિજેટને પકડીને તમારી હોમ સ્ક્રીન પર મૂકો.',
     sampleCity: 'મક્કા મુકર્રમા',
     nextPrayerLabel: 'આગામી નમાઝ',
+    pinSectionTitle: '📌 હોમ સ્ક્રીન પર વિજેટ પિન કરો (1-ટેપ)',
+    pinSectionSub: 'ડ્રેગ કર્યા વગર સીધું હોમ સ્ક્રીન પર વિજેટ ઉમેરો',
+    pinNextPrayer: '+ આગામી નમાઝ વિજેટ પિન કરો',
+    pinDailyAyah: '+ દૈનિક આયત',
+    pinDailyHadith: '+ દૈનિક હદીસ',
+    pinQuranProgress: '+ કુરાન પ્રગતિ',
+    pinTasbeeh: '+ તસ્બીહ કાઉન્ટર',
+    pinNoteTip: "નોંધ: જો હોમ સ્ક્રીન પર ડ્રેગ કરતી વખતે વિજેટ ન ઉમેરાય, તો ઉપર '+ આગામી નમાઝ વિજેટ પિન કરો' દબાવો અથવા હોમ સ્ક્રીન પર ઓછામાં ઓછી 2 ખાલી પંક્તિઓ (એપ આઇકોન વગર) રાખો.",
+    pinSuccessToast: 'પિન વિનંતી મોકલાઈ',
+    pinSuccessDesc: "સિસ્ટમ પોપઅપ પર 'Add to Home screen' ની પુષ્ટિ કરો.",
+    pinFailedToast: 'પિનિંગ ઉપલબ્ધ નથી',
+    pinFailedDesc: 'કૃપા કરીને હોમ સ્ક્રીનના વિજેટ મેનૂમાંથી જાતે ઉમેરો.',
   },
   hi: {
     title: 'होम स्क्रीन विजेट्स',
@@ -353,6 +427,18 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'विजेट को दबाकर अपनी होम स्क्रीन पर खींचें।',
     sampleCity: 'मक्का मुकर्रमा',
     nextPrayerLabel: 'अगली नमाज़',
+    pinSectionTitle: '📌 होम स्क्रीन पर विजेट लगाएं (1-टैप)',
+    pinSectionSub: 'बिना ड्रैग-एंड-ड्रॉप के सीधे होम स्क्रीन पर विजेट पिन करें',
+    pinNextPrayer: '+ पिन अगली नमाज़ विजेट',
+    pinDailyAyah: '+ दैनिक आयत',
+    pinDailyHadith: '+ दैनिक हदीस',
+    pinQuranProgress: '+ क़ुरआन प्रगति',
+    pinTasbeeh: '+ तस्बीह काउंटर',
+    pinNoteTip: 'नोट: यदि होम स्क्रीन पर ड्रैग करते समय विजेट न जुड़े, तो ऊपर "+ पिन अगली नमाज़ विजेट" दबाएं या होम स्क्रीन पर कम से कम 2 खाली पंक्तियाँ (बिना ऐप आइकन के) रखें।',
+    pinSuccessToast: 'पिन अनुरोध भेजा गया',
+    pinSuccessDesc: 'सिस्टम डायलॉग पर "Add to Home screen" की पुष्टि करें।',
+    pinFailedToast: 'पिनिंग समर्थित नहीं है',
+    pinFailedDesc: 'कृपया होम स्क्रीन विजेट मेनू से मैन्युअल रूप से जोड़ें।',
   },
   bn: {
     title: 'হোম স্ক্রিন উইজেটস',
@@ -387,6 +473,18 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'পছন্দের উইজেটটি চেপে ধরে হোম স্ক্রিনে টেনে আনুন।',
     sampleCity: 'মক্কা আল-মুকাররমা',
     nextPrayerLabel: 'পরবর্তী নামাজ',
+    pinSectionTitle: '📌 হোম স্ক্রিনে উইজেট পিন করুন (১-ট্যাপ)',
+    pinSectionSub: 'টেনে না এনে সরাসরি হোম স্ক্রিনে উইজেট পিন করুন',
+    pinNextPrayer: '+ পরবর্তী নামাজ উইজেট পিন করুন',
+    pinDailyAyah: '+ দৈনিক আয়াত',
+    pinDailyHadith: '+ দৈনিক হাদিস',
+    pinQuranProgress: '+ কুরআন অগ্রগতি',
+    pinTasbeeh: '+ তাসবীহ কাউন্টার',
+    pinNoteTip: "নোট: হোম স্ক্রিনে টেনে আনার সময় উইজেট যোগ না হলে, উপরের '+ পরবর্তী নামাজ উইজেট পিন করুন' বোতামে চাপুন বা হোম স্ক্রিনে অন্তত ২টি খালি সারি রাখুন।",
+    pinSuccessToast: 'পিন অনুরোধ পাঠানো হয়েছে',
+    pinSuccessDesc: "সিস্টেম ডায়ালগে 'Add to Home screen' নিশ্চিত করুন।",
+    pinFailedToast: 'সরাসরি পিন করা সমর্থিত নয়',
+    pinFailedDesc: 'অনুগ্রহ করে হোম স্ক্রিন উইজেট মেনু থেকে নিজে যুক্ত করুন।',
   },
   ru: {
     title: 'Виджеты на главном экране',
@@ -421,6 +519,18 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'Перетащите нужный виджет на свой экран.',
     sampleCity: 'Мекка аль-Мукаррама',
     nextPrayerLabel: 'СЛЕДУЮЩИЙ НАМАЗ',
+    pinSectionTitle: '📌 Добавить виджет на экран (1 касание)',
+    pinSectionSub: 'Закрепите виджеты прямо без перетаскивания',
+    pinNextPrayer: '+ Закрепить намаз-виджет',
+    pinDailyAyah: '+ Аят дня',
+    pinDailyHadith: '+ Хадис дня',
+    pinQuranProgress: '+ Прогресс Корана',
+    pinTasbeeh: '+ Тасбих',
+    pinNoteTip: 'Примечание: если виджет не добавляется перетаскиванием, нажмите кнопку выше или убедитесь, что на экране есть минимум 2 свободные строки.',
+    pinSuccessToast: 'Запрос на закрепление отправлен',
+    pinSuccessDesc: "Подтвердите 'Добавить на главный экран' в системном окне.",
+    pinFailedToast: 'Закрепление не поддерживается',
+    pinFailedDesc: 'Пожалуйста, добавьте виджет вручную из меню виджетов.',
   },
   fr: {
     title: "Widgets de l'écran d'accueil",
@@ -455,6 +565,18 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     howToAddStep4: 'Faites glisser le widget souhaité vers votre écran.',
     sampleCity: 'La Mecque al-Mukarramah',
     nextPrayerLabel: 'PROCHAINE PRIÈRE',
+    pinSectionTitle: "📌 Épingler le widget à l'écran (1 geste)",
+    pinSectionSub: 'Épinglez des widgets directement sans glisser-déposer',
+    pinNextPrayer: '+ Épingler Prochaine Prière',
+    pinDailyAyah: '+ Verset du jour',
+    pinDailyHadith: '+ Hadith du jour',
+    pinQuranProgress: '+ Progression Coran',
+    pinTasbeeh: '+ Tasbih',
+    pinNoteTip: "Remarque : Si le glisser-déposer ne fonctionne pas, appuyez sur le bouton ci-dessus ou assurez-vous d'avoir au moins 2 lignes vides sur l'écran d'accueil.",
+    pinSuccessToast: "Demande d'épinglage envoyée",
+    pinSuccessDesc: "Veuillez confirmer 'Ajouter à l'écran d'accueil' sur la boîte de dialogue système.",
+    pinFailedToast: 'Épinglage non disponible',
+    pinFailedDesc: "Veuillez ajouter les widgets manuellement depuis le menu d'accueil.",
   },
 };
 
