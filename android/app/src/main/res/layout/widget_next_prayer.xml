@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:text="نور • NEXT PRAYER"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="11sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 android:singleLine="true" />
 
@@ -72,23 +72,9 @@
                 android:ellipsize="end"
                 android:text="17 Jumādā I 1448"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="9sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
-                android:layout_marginEnd="5dp" />
-
-            <!-- Live TextClock -->
-            <TextClock
-                android:id="@+id/widget_clock"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:format12Hour="h:mm"
-                android:format24Hour="HH:mm"
-                android:fontFamily="sans-serif-condensed"
-                android:includeFontPadding="false"
-                android:textColor="@color/widget_accent_gold"
-                android:textSize="11.5sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="5dp" />
+                android:layout_marginEnd="6dp" />
 
             <!-- Countdown pill -->
             <TextView
@@ -96,15 +82,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/widget_chip_emerald"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:text="In 46m"
                 android:textColor="@color/widget_accent_emerald"
-                android:textSize="9sp"
+                android:textSize="10.5sp"
                 android:textStyle="bold" />
+
+            <!-- Legacy Clock stub (kept hidden to free top bar room and avoid clipping) -->
+            <TextClock
+                android:id="@+id/widget_clock"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- ══════ MIDDLE MAIN ROW ══════ -->

@@ -148,6 +148,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                 val countdownStr = formatCountdown(remaining)
                 views.setTextViewText(R.id.widget_countdown_pill, countdownStr)
                 views.setViewVisibility(R.id.widget_countdown_pill, if (style.showCountdown) View.VISIBLE else View.GONE)
+                views.setViewVisibility(R.id.widget_clock, View.GONE)
 
                 // ─── 6. Swatch Color Application ───
                 try {

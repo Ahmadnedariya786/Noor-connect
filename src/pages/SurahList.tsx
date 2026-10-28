@@ -13,9 +13,7 @@ import {
   CheckCircle2,
   Bookmark,
   Hash,
-  Moon,
   Headphones,
-  Zap,
   HelpCircle,
 } from "lucide-react";
 import { QuranGuideModal } from "@/components/Quran/QuranGuideModal";
@@ -26,6 +24,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { getQuranUIStrings } from "@/lib/quran-guide-i18n";
 import { useTilawah } from "@/contexts/TilawahContext";
+import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { getActivePrayerWindow, getOrderedSunnahSurahs } from "@/lib/sunnah-spotlight";
 import {
   BOOKMARK_COLORS,
   getColorBookmarks,
@@ -147,15 +147,6 @@ const SurahCard = memo(
     prevProps.isBookmarked === nextProps.isBookmarked
 );
 
-// Often Read Sunnah Surahs strip definition
-const SUNNAH_SURAHS = [
-  { number: 18, name: "Al-Kahf", arabic: "الكهف", badge: "friday" },
-  { number: 67, name: "Al-Mulk", arabic: "الملك", badge: "night" },
-  { number: 36, name: "Ya-Sin", arabic: "يس", badge: null },
-  { number: 55, name: "Ar-Rahman", arabic: "الرحمن", badge: null },
-  { number: 56, name: "Al-Waqi'ah", arabic: "الواقعة", badge: null },
-];
-
 type MainTab = "surahs" | "juz" | "saved";
 type SurahSubFilter = "all" | "meccan" | "medinan";
 
@@ -226,7 +217,8 @@ export default function SurahList() {
     }
   });
 
-  const { isPlaying, currentSurah, currentAyah, reciter, openPlayer } = useTilawah();
+  const { isPlaying, currentSurah, currentAyah, reciter, openPlayer, playAyah } = useTilawah();
+  const { prayerTimes } = usePrayerTimes();
   const [colorBookmarks, setColorBookmarks] = useState<Record<BookmarkColorId, ColorBookmark | null>>(() =>
     getColorBookmarks()
   );
@@ -258,12 +250,15 @@ export default function SurahList() {
   const dailyAyah = useMemo(() => getDailyAyah(), []);
   const allSurahs = useMemo(() => quranService.getAllSurahs(), []);
 
-  // Time & day awareness for Sunnah badges
+  // Time & day awareness for Sunnah badges and 5-Waqt Spotlight
   const isFridayToday = useMemo(() => new Date().getDay() === 5, []);
-  const isNightTime = useMemo(() => {
-    const h = new Date().getHours();
-    return h >= 18 || h <= 4;
-  }, []);
+  const activePrayerWindow = useMemo(() => {
+    return getActivePrayerWindow(new Date(), prayerTimes);
+  }, [prayerTimes]);
+
+  const { orderedList: sunnahList, featuredSurah, virtue: spotlightVirtue } = useMemo(() => {
+    return getOrderedSunnahSurahs(activePrayerWindow, isFridayToday, language);
+  }, [activePrayerWindow, isFridayToday, language]);
 
   const tokenizedReference = useMemo(() => {
     const raw = dailyAyah?.reference || dailyAyah?.subtitle || "Al-Baqarah 2:45";
@@ -620,7 +615,7 @@ export default function SurahList() {
                 </span>
               </div>
               <span className="text-xs font-bold text-[var(--accent-text)] group-hover:underline flex items-center gap-1 shrink-0">
-                {uiStrings.resume} {isRTL ? '←' : '→'}
+                {uiStrings.resume.replace(/[→←\s]+$/, '')} {isRTL ? '←' : '→'}
               </span>
             </div>
           </div>
@@ -647,7 +642,7 @@ export default function SurahList() {
                     <BookOpen className="w-3.5 h-3.5" />
                   </div>
                   <span className="text-xs font-bold text-[var(--text-primary)]" style={{ whiteSpace: 'nowrap' }}>
-                    📖 {uiStrings.khatmah} {isKhatmahExpanded ? "▲" : "▾"}
+                    {uiStrings.khatmah} {isKhatmahExpanded ? "▲" : "▾"}
                   </span>
                 </div>
               </div>
@@ -682,7 +677,7 @@ export default function SurahList() {
                     <Headphones className="w-3.5 h-3.5" />
                   </div>
                   <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                    🎧 {uiStrings.tilawah}
+                    {uiStrings.tilawah}
                   </span>
                 </div>
                 {isPlaying && (
@@ -863,52 +858,133 @@ export default function SurahList() {
           </div>
         )}
 
-        {/* OFTEN READ SUNNAH SURAHS STRIP */}
-        <div className="max-w-2xl mx-auto px-4 mb-3.5">
+        {/* 5-WAQT SUNNAH SURAH SPIRITUAL SPOTLIGHT STRIP */}
+        <div className="max-w-2xl mx-auto px-4 mb-2">
           <div className="flex items-center justify-between mb-1.5 px-0.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               {uiStrings.oftenRead}
             </span>
+            <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--accent-text)]">
+              {spotlightVirtue.prayerLabel} • 5-WAQT SUNNAH
+            </span>
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
-            {SUNNAH_SURAHS.map((surah) => {
-              const isKahfFriday = surah.badge === "friday" && isFridayToday;
-              const isMulkNight = surah.badge === "night" && isNightTime;
+            {sunnahList.map((surah, index) => {
+              const isFeatured = index === 0;
 
               return (
                 <button
                   key={surah.number}
                   type="button"
                   onClick={() => handleSurahClick(surah.number)}
-                  className={`px-3 py-2 rounded-xl border flex items-center gap-2 shrink-0 transition-all active:scale-[0.97] ${
-                    isKahfFriday
-                      ? "bg-gradient-to-r from-emerald-950/80 to-[var(--surface)] border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                      : isMulkNight
-                      ? "bg-gradient-to-r from-indigo-950/80 to-[var(--surface)] border-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.25)]"
-                      : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--accent)]"
-                  }`}
-                  style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+                  className="px-3 py-2 rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] min-w-[136px]"
+                  style={{
+                    background: isFeatured ? "var(--surface-2)" : "var(--surface)",
+                    backgroundImage: isFeatured
+                      ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, var(--surface-2)), var(--surface))"
+                      : undefined,
+                    borderColor: isFeatured ? "var(--accent)" : "var(--border)",
+                    boxShadow: isFeatured
+                      ? "0 6px 20px -4px var(--accent-glow), inset 0 1px 0 var(--card-sheen)"
+                      : "inset 0 1px 0 var(--card-sheen)",
+                    borderWidth: isFeatured ? "1.5px" : "1px",
+                  }}
                 >
-                  <div className="text-left">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-[var(--text-primary)] truncate">{surah.name}</span>
-                      {isKahfFriday && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                          ✦ Jumu'ah
-                        </span>
-                      )}
-                      {isMulkNight && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-                          🌙 Night
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-[var(--accent-text)] font-arabic">{surah.arabic} • #{surah.number}</span>
+                  <div className="flex items-center justify-between gap-1 w-full mb-1">
+                    <span className="text-xs font-bold text-[var(--text-primary)] truncate">{surah.name}</span>
+                    {isFeatured ? (
+                      <span
+                        className="font-bold text-[0.65rem] rounded-full px-2 py-0.5 truncate shrink-0"
+                        style={{
+                          background: "var(--accent)",
+                          color: "var(--on-accent)",
+                        }}
+                      >
+                        {surah.badgeLabel}
+                      </span>
+                    ) : surah.isSpecialFriday ? (
+                      <span
+                        className="font-bold text-[9px] rounded-full px-1.5 py-0.2 border truncate shrink-0"
+                        style={{
+                          background: "var(--accent-soft)",
+                          color: "var(--accent-text)",
+                          borderColor: "var(--accent)",
+                        }}
+                      >
+                        {surah.badgeLabel}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div dir="ltr" className="flex items-center justify-between gap-1 w-full text-[11px]">
+                    <span dir="ltr" className="tabular-nums text-[0.70rem] text-[var(--text-secondary)]">
+                      #{surah.number} • {surah.readTime}
+                    </span>
+                    <span dir="rtl" className="font-arabic text-[0.92rem] text-[var(--accent-text)]">
+                      {surah.arabicName}
+                    </span>
                   </div>
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* FAZILAT SPOTLIGHT INVITATION CARD */}
+        <div className="max-w-2xl mx-auto px-4 mb-3.5">
+          <div
+            className="p-3 rounded-[16px] border flex items-center justify-between gap-3 shadow-sm transition-all"
+            style={{
+              background: "var(--surface)",
+              borderColor: "var(--border)",
+              borderLeft: "3.5px solid var(--accent)",
+              boxShadow: "0 4px 16px -4px var(--accent-soft), inset 0 1px 0 var(--card-sheen)",
+            }}
+          >
+            {/* Left: Micro-label + Fazilat Hook */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--accent-text)]">
+                  {spotlightVirtue.recommendedHeader}
+                </span>
+              </div>
+              <p className="text-[0.74rem] leading-[1.35] text-[var(--text-secondary)]">
+                {spotlightVirtue.fazilatText}
+              </p>
+            </div>
+
+            {/* Right: Quick Actions (Read -> and 🎧 Tilawah) */}
+            <div className="shrink-0 flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleSurahClick(featuredSurah.number)}
+                className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                style={{
+                  background: "var(--accent)",
+                  color: "var(--on-accent)",
+                }}
+              >
+                <span>{spotlightVirtue.readAction}</span>
+                <span className="rtl:rotate-180">→</span>
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await playAyah(featuredSurah.number, 1);
+                    openPlayer();
+                  } catch (e) {
+                    console.warn("Failed to start tilawah for featured surah", e);
+                  }
+                }}
+                className="w-8 h-8 rounded-xl border flex items-center justify-center transition-all active:scale-95 hover:border-[var(--accent)] text-[var(--accent-text)] bg-[var(--surface-2)]"
+                style={{ borderColor: "var(--border)" }}
+                title={`Play Tilawah: ${featuredSurah.name}`}
+                aria-label={`Play Tilawah: ${featuredSurah.name}`}
+              >
+                <Headphones className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -980,41 +1056,15 @@ export default function SurahList() {
               );
             })}
           </div>
-
-          {/* SURAH SUB-FILTERS (All, Meccan, Medinan) when on Surahs tab */}
-          {activeMainTab === "surahs" && (
-            <div className="flex items-center gap-1.5 pt-1">
-              {[
-                { key: "all" as SurahSubFilter, label: uiStrings.all },
-                { key: "meccan" as SurahSubFilter, label: uiStrings.meccan },
-                { key: "medinan" as SurahSubFilter, label: uiStrings.medinan },
-              ].map((sub) => {
-                const isSubActive = surahSubFilter === sub.key;
-                return (
-                  <button
-                    key={sub.key}
-                    type="button"
-                    onClick={() => setSurahSubFilter(sub.key)}
-                    className={`py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
-                      isSubActive
-                        ? "bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent)]"
-                        : "bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]"
-                    }`}
-                  >
-                    {sub.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
         {/* VERSE OF THE DAY CARD (On Surahs Tab) */}
         {activeMainTab === "surahs" && (
-          <div className="max-w-2xl mx-auto px-4 mb-3.5">
+          <div className="max-w-2xl mx-auto px-4 mb-3">
             <CSSOnlyTransition hoverScale={0.99} tapScale={0.98} duration={150}>
               <div
-                className="relative overflow-hidden rounded-[20px] bg-[var(--surface)] border border-[var(--border)] shadow-md cursor-pointer active:scale-[0.98] transition-transform p-4 sm:p-5"
+                className="relative overflow-hidden rounded-[16px] bg-[var(--surface)] border border-[var(--border)] shadow-sm cursor-pointer active:scale-[0.98] transition-transform p-3"
+                style={{ borderLeft: "3.5px solid var(--accent)" }}
                 onClick={() => {
                   if ("vibrate" in navigator) navigator.vibrate(15);
                   startTransition(() => {
@@ -1025,38 +1075,27 @@ export default function SurahList() {
                   });
                 }}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-[var(--accent)]" />
-                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">
-                    {uiStrings.verseOfTheDay}
-                  </span>
-                </div>
-
-                <div
-                  className="bg-[var(--surface-2)] rounded-xl p-3 sm:p-3.5 border border-[var(--border)] mb-2 shadow-sm"
-                  style={{ borderLeft: "3px solid var(--accent)" }}
-                >
-                  <p className="text-[var(--text-primary)] text-xs sm:text-sm font-medium leading-relaxed mb-2">
-                    "{dailyAyah?.content || "Loading..."}"
-                  </p>
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] text-[10px] font-semibold px-2 py-0.5">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                    <span className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[var(--accent)]">
+                      {uiStrings.verseOfTheDay}
+                    </span>
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] text-[9.5px] font-semibold px-1.5 py-0">
                       {tokenizedReference}
                     </Badge>
-                    {dailySurahNumber ? (
-                      <span className="text-xs font-semibold text-[var(--accent-text)] inline-flex items-center gap-1">
-                        <span>{uiStrings.readInSurah}</span>
-                        <ArrowRight className="w-3 h-3 rtl:rotate-180" />
-                      </span>
-                    ) : null}
                   </div>
+                  {dailySurahNumber ? (
+                    <span className="text-[11px] font-semibold text-[var(--accent-text)] inline-flex items-center gap-1 shrink-0">
+                      <span>{uiStrings.readInSurah}</span>
+                      <ArrowRight className="w-3 h-3 rtl:rotate-180" />
+                    </span>
+                  ) : null}
                 </div>
 
-                {dailyAyah?.reflection && (
-                  <p className="text-[var(--text-secondary)] text-[11px] italic leading-relaxed">
-                    {dailyAyah.reflection}
-                  </p>
-                )}
+                <p className="text-[var(--text-primary)] text-xs font-medium leading-relaxed line-clamp-2">
+                  "{dailyAyah?.content || "Loading..."}"
+                </p>
               </div>
             </CSSOnlyTransition>
           </div>
@@ -1255,6 +1294,34 @@ export default function SurahList() {
               </div>
             ) : filteredSurahs.length > 0 ? (
               <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between px-1 mb-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    {uiStrings.surahsTab} ({filteredSurahs.length})
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { key: "all" as SurahSubFilter, label: uiStrings.all },
+                      { key: "meccan" as SurahSubFilter, label: uiStrings.meccan },
+                      { key: "medinan" as SurahSubFilter, label: uiStrings.medinan },
+                    ].map((sub) => {
+                      const isSubActive = surahSubFilter === sub.key;
+                      return (
+                        <button
+                          key={sub.key}
+                          type="button"
+                          onClick={() => setSurahSubFilter(sub.key)}
+                          className={`py-0.5 px-2 rounded-full text-[9.5px] font-bold uppercase tracking-wider transition-all border ${
+                            isSubActive
+                              ? "bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent)]"
+                              : "bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:text-[var(--text-primary)]"
+                          }`}
+                        >
+                          {sub.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 {filteredSurahs.map((surah, index) => (
                   <div key={surah.number} style={{ contentVisibility: "auto", containIntrinsicSize: "88px" }}>
                     <SurahCard
