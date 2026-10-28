@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Next Prayer Widget (4×2) — 2026 Redesign Matching In-App Live Preview
-  ─────────────────────────────────────────────────────────────────────
-  TOP    : Left "نور" + Hijri Date Pill · Right Current Time + Live Countdown Pill
-  MIDDLE : Left "NEXT PRAYER" + Large Bold Prayer Name + City Pill
-           Right Large Crisp Prayer Time + Circular Progress Ring (Zero Text Overlap)
+  Next Prayer Widget (4×2) — 100% RemoteViews-Safe Architecture
+  ─────────────────────────────────────────────────────────────
+  TOP    : Left "نور • NEXT PRAYER" · Right Hijri Date + Clock + Countdown Pill
+  MIDDLE : Left Prayer Name + City Pill · Right Large Prayer Time + Safe ProgressBar
   BOTTOM : Full 5-Prayer Strip (FAJR, DHUHR, ASR, MAGHRIB, ISHA) with Active Highlight
-  ─────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────
+  ZERO <View> tags allowed (avoids InflateException in RemoteViews)
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -27,40 +27,36 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
         android:paddingTop="10dp"
         android:paddingBottom="8dp"
         android:layoutDirection="locale"
         android:textDirection="locale">
 
-        <!-- ══════ TOP ROW ══════ -->
+        <!-- ══════ TOP BAR ══════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Arabic brand mark "نور" -->
+            <!-- Title: "نور • NEXT PRAYER" -->
             <TextView
+                android:id="@+id/widget_header_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/amiri_quran"
-                android:text="نور"
-                android:textColor="@color/widget_accent_emerald"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <!-- Dot divider -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:text="·"
+                android:text="نور • NEXT PRAYER"
                 android:textColor="@color/widget_accent_gold"
-                android:alpha="0.6"
-                android:textSize="14sp" />
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:singleLine="true" />
+
+            <!-- RemoteViews-Safe Spacer (FrameLayout, NEVER <View>) -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
             <!-- Hijri Date pill -->
             <TextView
@@ -68,22 +64,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/widget_chip_shape"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:ellipsize="end"
-                android:text="17 Jumādā al-ūlā 1448 AH"
+                android:text="17 Jumādā I 1448"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="9.5sp"
-                android:textStyle="bold" />
-
-            <!-- Spacer -->
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="5dp" />
 
             <!-- Live TextClock -->
             <TextClock
@@ -95,24 +86,24 @@
                 android:fontFamily="sans-serif-condensed"
                 android:includeFontPadding="false"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="13sp"
+                android:textSize="11.5sp"
                 android:textStyle="bold"
-                android:layout_marginEnd="6dp" />
+                android:layout_marginEnd="5dp" />
 
-            <!-- Countdown pill (android:id="@+id/widget_countdown_pill") -->
+            <!-- Countdown pill -->
             <TextView
                 android:id="@+id/widget_countdown_pill"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/widget_chip_emerald"
-                android:paddingStart="7dp"
-                android:paddingEnd="7dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:singleLine="true"
-                android:text="in 42m"
+                android:text="In 46m"
                 android:textColor="@color/widget_accent_emerald"
-                android:textSize="9.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -126,7 +117,7 @@
             android:layout_marginTop="2dp"
             android:layout_marginBottom="2dp">
 
-            <!-- Left: NEXT PRAYER + hero prayer name + city pill -->
+            <!-- Left: NEXT PRAYER + Hero Prayer Name + City Pill -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -138,7 +129,7 @@
                     android:id="@+id/widget_section_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="0.15"
+                    android:letterSpacing="0.10"
                     android:text="@string/widget_next_prayer_section"
                     android:textAllCaps="true"
                     android:textColor="@color/widget_accent_gold"
@@ -152,23 +143,23 @@
                     android:layout_height="wrap_content"
                     android:text="@string/prayer_maghrib"
                     android:textColor="@color/widget_text_primary"
-                    android:textSize="26sp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
                     android:includeFontPadding="false"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
-                <!-- City pill (android:id="@+id/widget_city_container") -->
+                <!-- City pill -->
                 <LinearLayout
                     android:id="@+id/widget_city_container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="2dp"
                     android:background="@drawable/widget_chip_shape"
                     android:paddingStart="6dp"
                     android:paddingEnd="8dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
+                    android:paddingTop="1.5dp"
+                    android:paddingBottom="1.5dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
@@ -185,36 +176,26 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:maxWidth="140dp"
+                        android:maxWidth="130dp"
                         android:text="@string/widget_location_default"
                         android:textColor="@color/widget_text_secondary"
-                        android:textSize="9.5sp" />
+                        android:textSize="9sp" />
                 </LinearLayout>
 
-                <!-- Stale badge -->
+                <!-- Stale badge (permanently gone) -->
                 <TextView
                     android:id="@+id/widget_stale_badge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:background="@drawable/widget_stale_badge"
-                    android:paddingStart="6dp"
-                    android:paddingEnd="6dp"
-                    android:paddingTop="1dp"
-                    android:paddingBottom="1dp"
-                    android:text="@string/widget_stale_badge_text"
-                    android:textColor="@android:color/white"
-                    android:textSize="8sp"
-                    android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
 
-            <!-- Right: Large crisp Prayer Time + clean circular progress ring -->
+            <!-- Right: Prayer Time + Safe Horizontal ProgressBar -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:orientation="vertical"
+                android:gravity="end|center_vertical">
 
                 <TextView
                     android:id="@+id/widget_prayer_time"
@@ -223,32 +204,19 @@
                     android:text="@string/widget_time_default"
                     android:textColor="@color/widget_text_primary"
                     android:fontFamily="sans-serif-condensed"
-                    android:textSize="19sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:letterSpacing="-0.02"
                     android:includeFontPadding="false" />
 
-                <!-- Circular Progress Ring (42dp × 42dp, zero overlapping text) -->
-                <FrameLayout
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_gravity="center_vertical">
-
-                    <ImageView
-                        android:id="@+id/widget_ring_track"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@null"
-                        android:src="@drawable/widget_progress_ring_bg" />
-
-                    <ImageView
-                        android:id="@+id/widget_ring_progress"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@null"
-                        android:src="@drawable/widget_progress_ring_fg" />
-                </FrameLayout>
+                <ProgressBar
+                    android:id="@+id/widget_progress_bar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="85dp"
+                    android:layout_height="5dp"
+                    android:layout_marginTop="3dp"
+                    android:max="100"
+                    android:progress="0" />
             </LinearLayout>
         </LinearLayout>
 
@@ -279,7 +247,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="FAJR"
-                    android:textSize="7.5sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:textColor="@color/widget_accent_gold" />
                 <TextView
@@ -309,7 +277,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="DHUHR"
-                    android:textSize="7.5sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:textColor="@color/widget_accent_gold" />
                 <TextView
@@ -339,7 +307,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="ASR"
-                    android:textSize="7.5sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:textColor="@color/widget_accent_gold" />
                 <TextView
@@ -369,7 +337,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MAGHRIB"
-                    android:textSize="7.5sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:textColor="@color/widget_accent_gold" />
                 <TextView
@@ -399,7 +367,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="ISHA"
-                    android:textSize="7.5sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:textColor="@color/widget_accent_gold" />
                 <TextView

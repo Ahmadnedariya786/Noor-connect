@@ -49,9 +49,9 @@
     <string name="widget_hadith_narrator_default">Unknown narrator</string>
 
     <!-- Quran Progress -->
-    <string name="widget_quran_progress_section">QURAN PROGRESS</string>
-    <string name="widget_quran_progress_streak_format">%1$d day streak</string>
-    <string name="widget_quran_progress_streak_default">— day streak</string>
+    <string name="widget_quran_progress_section">QURAN</string>
+    <string name="widget_quran_progress_streak_format">%1$dd streak</string>
+    <string name="widget_quran_progress_streak_default">—d streak</string>
     <string name="widget_quran_progress_last_read_format">Last read: %1$s</string>
     <string name="widget_quran_progress_last_read_default">Last read: —</string>
     <string name="widget_quran_progress_juz_format">Juz %1$d of 30</string>

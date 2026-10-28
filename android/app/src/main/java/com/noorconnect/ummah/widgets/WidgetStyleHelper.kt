@@ -105,8 +105,8 @@ object WidgetStyleHelper {
         opacityPercent: Int,
         accentHex: String
     ): Bitmap {
-        val width = 480
-        val height = 220
+        val width = 320
+        val height = 160
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
@@ -123,7 +123,7 @@ object WidgetStyleHelper {
             }
         }
 
-        val cornerRadius = 36f
+        val cornerRadius = 26f
         val rect = RectF(2.5f, 2.5f, width - 2.5f, height - 2.5f)
 
         // 1. Draw fill background if opacity > 0 (when 0%, fill is 100% crystal-clear transparent)

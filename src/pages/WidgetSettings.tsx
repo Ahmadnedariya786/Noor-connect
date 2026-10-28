@@ -53,15 +53,18 @@ export const WidgetSettings: React.FC = () => {
   const { hijriDate } = useIslamicCalendar();
 
   const formattedHijriDate = useMemo(() => {
-    if (!hijriDate || !hijriDate.trim()) return '17 Jumādā I 1448 AH';
+    if (!hijriDate || !hijriDate.trim()) return '17 Jumādā I 1448';
     const clean = hijriDate.trim()
       .replace(/Jumādā\s+(al-)?ūlā/gi, 'Jumādā I')
       .replace(/Jumādā\s+(al-)?Ākhirah/gi, 'Jumādā II')
       .replace(/Rabīʿ\s+(al-)?Awwal/gi, 'Rabīʿ I')
       .replace(/Rabīʿ\s+(al-)?Thānī/gi, 'Rabīʿ II')
       .replace(/al-ola/gi, 'I')
-      .replace(/al-ōlā/gi, 'I');
-    return clean.endsWith('AH') || clean.endsWith('هـ') ? clean : `${clean} AH`;
+      .replace(/al-ōlā/gi, 'I')
+      .replace(/\s*AH$/i, '')
+      .replace(/\s*هـ$/, '')
+      .trim();
+    return clean;
   }, [hijriDate]);
 
   const { prayerTimes, location } = usePrayerTimes();

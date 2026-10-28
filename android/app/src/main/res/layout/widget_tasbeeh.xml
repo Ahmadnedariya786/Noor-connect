@@ -31,13 +31,13 @@
         android:contentDescription="@null"
         android:src="@drawable/widget_tasbeeh_target_ring" />
 
-    <!-- Main content (vertical) with 12dp padding -->
+    <!-- Main content (vertical) with 8dp padding for clean 2x2 compact fit -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="12dp"
+        android:padding="8dp"
         android:layoutDirection="locale"
         android:textDirection="locale">
 
@@ -53,16 +53,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/widget_chip_shape"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
-                android:letterSpacing="0.08"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:letterSpacing="0.06"
                 android:text="@string/widget_tasbeeh_subhanallah"
                 android:textAllCaps="true"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end" />
 
             <!-- Stale data badge (permanently gone) -->
             <TextView
@@ -87,12 +89,12 @@
             android:id="@+id/widget_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:fontFamily="sans-serif-condensed"
             android:letterSpacing="-0.04"
             android:text="0"
             android:textColor="@color/widget_accent_emerald"
-            android:textSize="48sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:includeFontPadding="false" />
 
@@ -101,10 +103,10 @@
             android:id="@+id/widget_target"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
+            android:layout_marginTop="0dp"
             android:text="@string/widget_tasbeeh_target_default"
             android:textColor="@color/widget_accent_gold"
-            android:textSize="12sp"
+            android:textSize="10sp"
             android:alpha="0.8" />
 
         <!-- Total today -->
@@ -112,10 +114,10 @@
             android:id="@+id/widget_total_today"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="2dp"
             android:text="@string/widget_tasbeeh_total_today_default"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
     </LinearLayout>
 
     <!-- Reset icon (bottom-left) -->

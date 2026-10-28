@@ -76,7 +76,7 @@ class TasbeehWidget : AppWidgetProvider() {
                 } catch (_: Throwable) {}
 
                 // ─── 4. Font Scaling ───
-                val scaledCount = (48f * style.fontScale / 100f).coerceIn(36f, 60f)
+                val scaledCount = (26f * style.fontScale / 100f).coerceIn(20f, 32f)
                 views.setTextViewTextSize(R.id.widget_count, TypedValue.COMPLEX_UNIT_SP, scaledCount)
 
                 // Tap-to-increment: large PendingIntent covering the whole root.
