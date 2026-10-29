@@ -7,7 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalRadio, getGlobalAudioRef, setGlobalAudioRef } from "@/lib/global-radio";
 import { useGlobalNasheed, getGlobalNasheedAudioRef } from "@/lib/global-nasheed";
-import { getStationImage } from "@/data/radio-stations-extra";
+import { getStationImage, getLocalizedStation } from "@/data/radio-stations-extra";
+import { useContentLanguage } from "@/lib/content-translator";
 import { recordListeningTime } from "@/lib/radio-stats";
 import Hls from 'hls.js';
 
@@ -62,6 +63,7 @@ export function GlobalRadioPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const globalRadio = useGlobalRadio();
+  const { contentLang } = useContentLanguage();
   const { isPlaying: isNasheedPlaying, pause: pauseNasheed } = useGlobalNasheed();
   const location = useLocation();
   const isLiveRoute = location.pathname.startsWith('/live');
@@ -69,6 +71,14 @@ export function GlobalRadioPlayer() {
   const [isVisible, setIsVisible] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 2;
+  const watchdogTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fallback stream when an audio stream hangs or is unreachable
+  const FALLBACK_STREAM = {
+    id: 21,
+    name: "إذاعة تلاوات خاشعة - سكينة",
+    url: "https://backup.qurango.net/radio/salma",
+  };
 
   // Mutual exclusion: pause nasheed if radio starts playing
   useEffect(() => {
@@ -186,6 +196,10 @@ export function GlobalRadioPlayer() {
 
     const handlePlaying = () => {
       isTransitioning.current = false;
+      if (watchdogTimerRef.current) {
+        clearTimeout(watchdogTimerRef.current);
+        watchdogTimerRef.current = null;
+      }
       globalRadio.updateRadioState({ isPlaying: true, sessionStartTime: Date.now() });
       setIsLoading(false);
       setRetryCount(0); // Reset retry count on success
@@ -193,6 +207,10 @@ export function GlobalRadioPlayer() {
 
     const handlePause = () => {
       isTransitioning.current = false;
+      if (watchdogTimerRef.current) {
+        clearTimeout(watchdogTimerRef.current);
+        watchdogTimerRef.current = null;
+      }
 
       // Calculate additional time before updating state
       const additionalTime = globalRadio.sessionStartTime
@@ -223,6 +241,10 @@ export function GlobalRadioPlayer() {
 
     const handleEnded = () => {
       isTransitioning.current = false;
+      if (watchdogTimerRef.current) {
+        clearTimeout(watchdogTimerRef.current);
+        watchdogTimerRef.current = null;
+      }
       globalRadio.updateRadioState({ isPlaying: false });
     };
 
@@ -274,6 +296,23 @@ export function GlobalRadioPlayer() {
             });
           }
         }, 1500);
+        return;
+      }
+
+      if (watchdogTimerRef.current) {
+        clearTimeout(watchdogTimerRef.current);
+        watchdogTimerRef.current = null;
+      }
+
+      // If retries exhausted and not already on fallback stream, switch seamlessly to fallback
+      if (globalRadio.currentStation && globalRadio.currentStation.url !== FALLBACK_STREAM.url) {
+        console.warn("Retries exhausted, falling back to stable radio stream.");
+        setRetryCount(0);
+        globalRadio.playRadio(FALLBACK_STREAM);
+        toast({
+          title: "Stream Recovered",
+          description: "Switched to a stable live backup recitation stream.",
+        });
         return;
       }
 
@@ -411,6 +450,22 @@ export function GlobalRadioPlayer() {
             audio.crossOrigin = "anonymous"; // Handle CORS issues
 
             if (globalRadio.isPlaying) {
+              // Schedule 3.5s watchdog fallback timer in case stream fails to connect
+              if (watchdogTimerRef.current) clearTimeout(watchdogTimerRef.current);
+              watchdogTimerRef.current = setTimeout(() => {
+                const cur = audioRef.current;
+                if (cur && cur.paused && globalRadio.isPlaying) {
+                  console.warn("Watchdog 3.5s: stream stalled, auto-switching to fallback stream");
+                  if (globalRadio.currentStation && globalRadio.currentStation.url !== FALLBACK_STREAM.url) {
+                    globalRadio.playRadio(FALLBACK_STREAM);
+                    toast({
+                      title: "Stream Switched",
+                      description: "Switched to a stable live backup recitation stream.",
+                    });
+                  }
+                }
+              }, 3500);
+
               const promise = audio.play();
               if (promise !== undefined) {
                 promise.catch(e => {
@@ -449,6 +504,22 @@ export function GlobalRadioPlayer() {
       try {
         if (globalRadio.isPlaying && audio.paused) {
           isTransitioning.current = true;
+          // Schedule 3.5s watchdog fallback timer
+          if (watchdogTimerRef.current) clearTimeout(watchdogTimerRef.current);
+          watchdogTimerRef.current = setTimeout(() => {
+            const cur = audioRef.current;
+            if (cur && cur.paused && globalRadio.isPlaying) {
+              console.warn("Watchdog 3.5s: play sync stalled, auto-switching to fallback stream");
+              if (globalRadio.currentStation && globalRadio.currentStation.url !== FALLBACK_STREAM.url) {
+                globalRadio.playRadio(FALLBACK_STREAM);
+                toast({
+                  title: "Stream Switched",
+                  description: "Switched to a stable live backup recitation stream.",
+                });
+              }
+            }
+          }, 3500);
+
           const promise = audio.play();
           if (promise !== undefined) {
             promise.catch(e => {
@@ -462,6 +533,10 @@ export function GlobalRadioPlayer() {
             isTransitioning.current = false;
           }
         } else if (!globalRadio.isPlaying && !audio.paused) {
+          if (watchdogTimerRef.current) {
+            clearTimeout(watchdogTimerRef.current);
+            watchdogTimerRef.current = null;
+          }
           audio.pause();
         }
       } catch (error: any) {
@@ -474,6 +549,7 @@ export function GlobalRadioPlayer() {
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (watchdogTimerRef.current) clearTimeout(watchdogTimerRef.current);
     };
   }, [globalRadio.currentStation?.url, globalRadio.isPlaying]);
 
@@ -572,85 +648,102 @@ export function GlobalRadioPlayer() {
       />
 
       {/* Mini Player UI - only shown when visible and station selected, hidden on Live route */}
-      {globalRadio?.currentStation && isVisible && !isLiveRoute && (
-        <div
-          className="fixed left-0 right-0 z-[100] px-4"
-          style={{ bottom: 'calc(82px + env(safe-area-inset-bottom, 0px))' }}
-        >
-          <Card className="max-w-lg mx-auto shadow-2xl bg-card border-border border shadow-primary/10 overflow-hidden animate-in slide-in-from-bottom duration-300">
-            <div className="p-3">
-              {/* Compact Header with Station Info and Timer */}
-              <div className="flex items-center gap-3">
-                {/* Radio Icon & Station Info */}
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 animate-pulse-slow">
-                    <Radio className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold truncate text-foreground">{globalRadio?.currentTrackInfo || 'Unknown Station'}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                      <Clock className="w-3 h-3" />
-                      <ElapsedTimer
-                        isPlaying={globalRadio.isPlaying}
-                        sessionStartTime={globalRadio.sessionStartTime}
-                        accumulatedTime={globalRadio.accumulatedTime}
-                      />
-                      <span className="text-primary/50">•</span>
-                      <span>{globalRadio.isPlaying ? 'Live' : 'Paused'}</span>
+      {globalRadio?.currentStation && isVisible && !isLiveRoute && (() => {
+        const stationLoc = globalRadio?.currentStation
+          ? getLocalizedStation(globalRadio.currentStation, contentLang)
+          : null;
+        const displayTitle = stationLoc?.title || globalRadio?.currentTrackInfo || 'Unknown Station';
+        const isUrdu = contentLang === 'ur';
+        const liveLabel = isUrdu
+          ? (globalRadio.isPlaying ? 'لائیو' : 'روک دیا گیا')
+          : contentLang === 'gu'
+            ? (globalRadio.isPlaying ? 'લાઈવ' : 'રોકેલું છે')
+            : contentLang === 'hi'
+              ? (globalRadio.isPlaying ? 'लाइव' : 'रोका गया')
+              : (globalRadio.isPlaying ? 'Live' : 'Paused');
+
+        return (
+          <div
+            className="fixed left-0 right-0 z-[100] px-4"
+            style={{ bottom: 'calc(82px + env(safe-area-inset-bottom, 0px))' }}
+          >
+            <Card className="max-w-lg mx-auto shadow-2xl bg-card border-border border shadow-primary/10 overflow-hidden animate-in slide-in-from-bottom duration-300">
+              <div className="p-3">
+                {/* Compact Header with Station Info and Timer */}
+                <div className="flex items-center gap-3">
+                  {/* Radio Icon & Station Info */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 animate-pulse-slow">
+                      <Radio className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-bold truncate text-foreground ${isUrdu ? 'font-urdu text-[15px]' : ''}`}>
+                        {displayTitle}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                        <Clock className="w-3 h-3" />
+                        <ElapsedTimer
+                          isPlaying={globalRadio.isPlaying}
+                          sessionStartTime={globalRadio.sessionStartTime}
+                          accumulatedTime={globalRadio.accumulatedTime}
+                        />
+                        <span className="text-primary/50">•</span>
+                        <span className={isUrdu ? 'font-urdu text-[11px]' : ''}>{liveLabel}</span>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Controls */}
+                  <div className="flex items-center gap-1">
+                    {/* Play/Pause Button */}
+                    <Button
+                      size="icon"
+                      variant="default"
+                      onClick={handlePlayPause}
+                      disabled={isLoading}
+                      className="rounded-full w-10 h-10 shadow-md transform active:scale-95 transition-transform"
+                    >
+                      {isLoading ? (
+                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></div>
+                      ) : globalRadio?.isPlaying ? (
+                        <Pause className="w-4 h-4 fill-current" />
+                      ) : (
+                        <Play className="w-4 h-4 ml-0.5 fill-current" />
+                      )}
+                    </Button>
+
+                    {/* Mute Toggle */}
+                    <Button variant="ghost" size="icon" onClick={toggleMute} className="w-8 h-8 rounded-full">
+                      {globalRadio?.isMuted ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </Button>
+
+                    {/* Close */}
+                    <Button variant="ghost" size="icon" onClick={handleClose} className="w-8 h-8 rounded-full opacity-50 hover:opacity-100">
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Controls */}
-                <div className="flex items-center gap-1">
-                  {/* Play/Pause Button */}
-                  <Button
-                    size="icon"
-                    variant="default"
-                    onClick={handlePlayPause}
-                    disabled={isLoading}
-                    className="rounded-full w-10 h-10 shadow-md transform active:scale-95 transition-transform"
-                  >
-                    {isLoading ? (
-                      <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></div>
-                    ) : globalRadio?.isPlaying ? (
-                      <Pause className="w-4 h-4 fill-current" />
-                    ) : (
-                      <Play className="w-4 h-4 ml-0.5 fill-current" />
-                    )}
-                  </Button>
-
-                  {/* Mute Toggle */}
-                  <Button variant="ghost" size="icon" onClick={toggleMute} className="w-8 h-8 rounded-full">
-                    {globalRadio?.isMuted ? (
-                      <VolumeX className="w-4 h-4" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
-                  </Button>
-
-                  {/* Close */}
-                  <Button variant="ghost" size="icon" onClick={handleClose} className="w-8 h-8 rounded-full opacity-50 hover:opacity-100">
-                    <X className="w-4 h-4" />
-                  </Button>
+                {/* Volume Slider & Progress Visual */}
+                <div className="mt-3 flex items-center gap-2">
+                  <Slider
+                    value={[globalRadio?.volume || 0]}
+                    onValueChange={handleVolumeChange}
+                    max={100}
+                    step={1}
+                    className="flex-1 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-muted-foreground w-8 text-right font-mono">{globalRadio?.volume || 0}%</span>
                 </div>
               </div>
-
-              {/* Volume Slider & Progress Visual */}
-              <div className="mt-3 flex items-center gap-2">
-                <Slider
-                  value={[globalRadio?.volume || 0]}
-                  onValueChange={handleVolumeChange}
-                  max={100}
-                  step={1}
-                  className="flex-1 cursor-pointer"
-                />
-                <span className="text-xs font-bold text-muted-foreground w-8 text-right font-mono">{globalRadio?.volume || 0}%</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+            </Card>
+          </div>
+        );
+      })()}
 
     </>
   );

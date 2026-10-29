@@ -32,21 +32,35 @@ function walk(dir) {
 const allSrcFiles = walk('src');
 console.log(`Inspecting ${allSrcFiles.length} source files for missing helper and hook imports...`);
 
+function stripComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => ' '.repeat(m.length))
+    .replace(/\/\/.*$/gm, (m) => ' '.repeat(m.length));
+}
+
 const helpersToCheck = [
   { name: 'cn', importPattern: /import\s+[^;]*\bcn\b[^;]*from/, defPattern: /(?:function|const|let|var)\s+cn\b/ },
   { name: 'clsx', importPattern: /import\s+[^;]*\bclsx\b[^;]*from/, defPattern: /(?:function|const|let|var)\s+clsx\b/ },
   { name: 'twMerge', importPattern: /import\s+[^;]*\btwMerge\b[^;]*from/, defPattern: /(?:function|const|let|var)\s+twMerge\b/ },
+  { name: 'useState', importPattern: /import\s+[^;]*\buseState\b[^;]*from\s+['"]react['"]/, defPattern: /(?:function|const|let|var)\s+useState\b/ },
+  { name: 'useEffect', importPattern: /import\s+[^;]*\buseEffect\b[^;]*from\s+['"]react['"]/, defPattern: /(?:function|const|let|var)\s+useEffect\b/ },
+  { name: 'useMemo', importPattern: /import\s+[^;]*\buseMemo\b[^;]*from\s+['"]react['"]/, defPattern: /(?:function|const|let|var)\s+useMemo\b/ },
+  { name: 'useCallback', importPattern: /import\s+[^;]*\buseCallback\b[^;]*from\s+['"]react['"]/, defPattern: /(?:function|const|let|var)\s+useCallback\b/ },
+  { name: 'useRef', importPattern: /import\s+[^;]*\buseRef\b[^;]*from\s+['"]react['"]/, defPattern: /(?:function|const|let|var)\s+useRef\b/ },
+  { name: 'useContext', importPattern: /import\s+[^;]*\buseContext\b[^;]*from\s+['"]react['"]/, defPattern: /(?:function|const|let|var)\s+useContext\b/ },
+  { name: 'createPortal', importPattern: /import\s+[^;]*\bcreatePortal\b[^;]*from\s+['"]react-dom['"]/, defPattern: /(?:function|const|let|var)\s+createPortal\b/ },
 ];
 
 for (const f of allSrcFiles) {
-  const content = fs.readFileSync(f, 'utf8');
-  const lines = content.split('\n');
+  const rawContent = fs.readFileSync(f, 'utf8');
+  const cleanContent = stripComments(rawContent);
+  const lines = rawContent.split('\n');
 
   for (const helper of helpersToCheck) {
-    const usageRegex = new RegExp('\\b' + helper.name + '\\(');
-    if (usageRegex.test(content)) {
-      const hasImport = helper.importPattern.test(content);
-      const hasDef = helper.defPattern.test(content);
+    const usageRegex = new RegExp('(?:[^a-zA-Z0-9_.]|^)\\b' + helper.name + '\\s*(?:<|\\()');
+    if (usageRegex.test(cleanContent)) {
+      const hasImport = helper.importPattern.test(rawContent);
+      const hasDef = helper.defPattern.test(rawContent);
       if (!hasImport && !hasDef) {
         // Find line number of first usage
         for (let i = 0; i < lines.length; i++) {

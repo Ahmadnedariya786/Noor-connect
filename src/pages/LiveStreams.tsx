@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import IslamicStreamPlayer from '@/components/IslamicStreamPlayer';
 import { Wifi, Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';

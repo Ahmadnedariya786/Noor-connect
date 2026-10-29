@@ -91,78 +91,558 @@ export const extraRadioStations: ExtraRadioStation[] = [
   { id: 103, nameAr: "إذاعة محمد عثمان خان", nameEn: "Mohammed Osman Khan", url: "https://backup.qurango.net/radio/mohammed_osman_khan", slug: "mohammed_osman_khan", category: 'reciter', img: "/images/radio/reciters/103.webp" },
   { id: 104, nameAr: "إذاعة الدوكالي محمد العالم", nameEn: "Addokali Mohammad Alalim", url: "https://backup.qurango.net/radio/addokali_mohammad_alalim", slug: "addokali_mohammad_alalim", category: 'reciter', img: "/images/radio/reciters/104.webp" },
   { id: 106, nameAr: "إذاعة الفاتح محمد الزبير", nameEn: "Alfateh Alzubair", url: "https://backup.qurango.net/radio/alfateh_alzubair", slug: "alfateh_alzubair", category: 'reciter', img: "/images/radio/reciters/106.webp" },
-  { id: 108, nameAr: "---الإذاعة العامة - اذاعة متنوعة لمختلف القراء-", nameEn: "Main Radio-", url: "https://backup.qurango.net/radio/mix", slug: "mix", category: 'mosque', img: "" },
+  { id: 108, nameAr: "الإذاعة العامة - تلاوات متنوعة متواصلة", nameEn: "Main Quran Radio Mix 24/7", url: "https://backup.qurango.net/radio/mix", slug: "mix", category: 'mosque', img: "" },
   { id: 111, nameAr: "إذاعة عبدالرحمن الماجد", nameEn: "Abdulrahman Al-Majed", url: "https://backup.qurango.net/radio/abdulrahman_almajed", slug: "abdulrahman_almajed", category: 'reciter', img: "" },
-  { id: 113, nameAr: "إذاعة الفتاوى العامة", nameEn: "General Fatwa Radio", url: "https://backup.qurango.net/radio/fatwa", slug: "fatwa", category: 'fatwa', img: "" },
-  { id: 115, nameAr: "إذاعة ---سورة البقرة - لعدد من القراء---", nameEn: "Surah Al-Baqarah - Many Reciters-", url: "https://backup.qurango.net/radio/albaqarah", slug: "albaqarah", category: 'surah', img: "" },
-  { id: 116, nameAr: "إذاعة --تفسير القران الكريم--", nameEn: "Quran Tafseer--", url: "https://backup.qurango.net/radio/tafseer", slug: "tafseer", category: 'tafsir', img: "" },
+  { id: 113, nameAr: "إذاعة الفتاوى العامة وأحكام الشريعة", nameEn: "General Fatwa Radio", url: "https://backup.qurango.net/radio/fatwa", slug: "fatwa", category: 'fatwa', img: "" },
+  { id: 115, nameAr: "سورة البقرة - تلاوة متواصلة مباركة", nameEn: "Surah Al-Baqarah 24/7", url: "https://backup.qurango.net/radio/albaqarah", slug: "albaqarah", category: 'surah', img: "" },
+  { id: 116, nameAr: "تفسير القرآن الكريم - دروس شاملة", nameEn: "Quran Tafseer Radio", url: "https://backup.qurango.net/radio/tafseer", slug: "tafseer", category: 'tafsir', img: "" },
   { id: 118, nameAr: "إذاعة ناصر الماجد", nameEn: "Nasser Almajed", url: "https://backup.qurango.net/radio/nasser_almajed", slug: "nasser_almajed", category: 'reciter', img: "/images/radio/reciters/118.webp" },
   { id: 120, nameAr: "إذاعة أحمد خليل شاهين", nameEn: "Ahmad Shaheen", url: "https://backup.qurango.net/radio/ahmad_shaheen", slug: "ahmad_shaheen", category: 'reciter', img: "/images/radio/reciters/120.webp" },
-  { id: 121, nameAr: "إذاعة عبدالله الموسى", nameEn: "Abdullah Al-Mousa - Radio", url: "https://backup.qurango.net/radio/abdullah_almousa", slug: "abdullah_almousa", category: 'reciter', img: "" },
+  { id: 121, nameAr: "إذاعة عبدالله الموسى", nameEn: "Abdullah Al-Mousa", url: "https://backup.qurango.net/radio/abdullah_almousa", slug: "abdullah_almousa", category: 'reciter', img: "" },
   { id: 122, nameAr: "إذاعة عبدالله الخلف", nameEn: "Abdullah Al-Khalaf", url: "https://backup.qurango.net/radio/abdullah_alkhalaf", slug: "abdullah_alkhalaf", category: 'reciter', img: "/images/radio/reciters/122.webp" },
-  { id: 123, nameAr: "---تراتيل قصيرة متميزة---", nameEn: "Amazing short Recitations---", url: "https://backup.qurango.net/radio/tarateel", slug: "tarateel", category: 'mosque', img: "" },
+  { id: 123, nameAr: "تراتيل قصيرة خاشعة ومتميزة", nameEn: "Amazing Short Recitations", url: "https://backup.qurango.net/radio/tarateel", slug: "tarateel", category: 'mosque', img: "" },
   { id: 139, nameAr: "إذاعة ماجد الزامل", nameEn: "Majed Al-Zamil", url: "https://backup.qurango.net/radio/majed_alzamel", slug: "majed_alzamel", category: 'reciter', img: "/images/radio/reciters/139.webp" },
   { id: 217, nameAr: "إذاعة بندر بليلة", nameEn: "Bandar Balilah", url: "https://backup.qurango.net/radio/bandar_balilah", slug: "bandar_balilah", category: 'reciter', img: "/images/radio/reciters/217.webp" },
   { id: 248, nameAr: "إذاعة ناصر العصفور", nameEn: "Nasser Alosfor", url: "https://backup.qurango.net/radio/nasser_alosfor", slug: "nasser_alosfor", category: 'reciter', img: "" },
   { id: 265, nameAr: "إذاعة أحمد ديبان", nameEn: "Ahmad Deban", url: "https://backup.qurango.net/radio/ahmad_deban", slug: "ahmad_deban", category: 'reciter', img: "" },
-  { id: 274, nameAr: "أذاعة محمد أبوسنينة", nameEn: "Muhammad Abu Sneina", url: "https://backup.qurango.net/radio/sneineh", slug: "sneineh", category: 'reciter', img: "/images/radio/reciters/274.webp" },
+  { id: 274, nameAr: "إذاعة محمد أبوسنينة", nameEn: "Muhammad Abu Sneina", url: "https://backup.qurango.net/radio/sneineh", slug: "sneineh", category: 'reciter', img: "/images/radio/reciters/274.webp" },
   { id: 275, nameAr: "إذاعة محمد الأمين قنيوة", nameEn: "Mohammed Al-Amin Qeniwa", url: "https://backup.qurango.net/radio/qeniwa", slug: "qeniwa", category: 'reciter', img: "" },
   { id: 287, nameAr: "إذاعة عبدالرحمن الشحات", nameEn: "Abdulrahman Alshahhat", url: "https://backup.qurango.net/radio/a_alshahhat", slug: "a_alshahhat", category: 'reciter', img: "" },
-  { id: 10902, nameAr: "إذاعة آيات السكينة", nameEn: "Verses of serenity", url: "https://backup.qurango.net/radio/sakeenah", slug: "sakeenah", category: 'adhkar', img: "" },
-  { id: 10903, nameAr: "-إذاعة صور من حياة الصحابة رضوان الله عليهم-", nameEn: "Stories from the lives of the SAHABAH and TABE'EEN, may ALLAH be pleased with them", url: "https://backup.qurango.net/radio/sahabah", slug: "sahabah", category: 'stories', img: "" },
-  { id: 10906, nameAr: "أذكار الصباح", nameEn: "Words of remembrance for morning", url: "https://backup.qurango.net/radio/athkar_sabah", slug: "athkar_sabah", category: 'adhkar', img: "" },
-  { id: 10907, nameAr: "أذكار المساء", nameEn: "Words of remembrance for evening", url: "https://backup.qurango.net/radio/athkar_masa", slug: "athkar_masa", category: 'adhkar', img: "" },
-  { id: 21114, nameAr: "في ظلال السيرة النبوية - 400 حلقة عن سيرة نبينا محمد صلى الله عليه وسلم", nameEn: "In the shadows of the Prophet’s PBUH biography", url: "https://backup.qurango.net/radio/fi_zilal_alsiyra", slug: "fi_zilal_alsiyra", category: 'stories', img: "" },
-  { id: 21115, nameAr: "المختصر في السيرة النبوية", nameEn: "The Abridged Biography of the Prophet", url: "https://backup.qurango.net/radio/almukhtasar_fi_alsiyra", slug: "almukhtasar_fi_alsiyra", category: 'stories', img: "" },
-  { id: 21116, nameAr: "كتاب الاختيارات الفقهية في مسائل العبادات والمعاملات من فتاوى الشيخ ابن باز", nameEn: "The book of jurisprudential choices in matters of worship and transactions", url: "https://backup.qurango.net/radio/alaikhtiarat_alfiqhayh_bin_baz", slug: "alaikhtiarat_alfiqhayh_bin_baz", category: 'hadith', img: "" },
-  { id: 21117, nameAr: "تفسير القران الكريم-الخلاصة من تفسير الطبري", nameEn: "Interpretation of the Holy Qur’an - Conclusion from Tafsir al-Tabari", url: "https://backup.qurango.net/radio/tabri", slug: "tabri", category: 'tafsir', img: "" },
+  { id: 10902, nameAr: "آيات السكينة والطمأنينة وتفريج الهموم", nameEn: "Ayat Al-Sakina — Verses of Serenity", url: "https://backup.qurango.net/radio/salma", slug: "salma", category: 'surah', img: "" },
+  { id: 10903, nameAr: "صور من حياة الصحابة والتابعين رضوان الله عليهم", nameEn: "Lives of the Sahabah & Tabi'een", url: "https://backup.qurango.net/radio/sahabah", slug: "sahabah", category: 'stories', img: "" },
+  { id: 10906, nameAr: "أذكار الصباح وتحصين المسلم اليومي", nameEn: "Morning Remembrance — Adhkar Al-Sabah", url: "https://backup.qurango.net/radio/athkar_sabah", slug: "athkar_sabah", category: 'adhkar', img: "" },
+  { id: 10907, nameAr: "أذكار المساء وحفظ الليل المبارك", nameEn: "Evening Remembrance — Adhkar Al-Masa'", url: "https://backup.qurango.net/radio/athkar_masa", slug: "athkar_masa", category: 'adhkar', img: "" },
+  { id: 21114, nameAr: "في ظلال السيرة النبوية الشريفة", nameEn: "In the Shadows of the Prophet's ﷺ Seerah", url: "https://backup.qurango.net/radio/fi_zilal_alsiyra", slug: "fi_zilal_alsiyra", category: 'stories', img: "" },
+  { id: 21115, nameAr: "المختصر في السيرة النبوية العطرة", nameEn: "The Abridged Seerah Nabawiyyah", url: "https://backup.qurango.net/radio/almukhtasar_fi_alsiyra", slug: "almukhtasar_fi_alsiyra", category: 'stories', img: "" },
+  { id: 21116, nameAr: "السنة النبوية والفقه الإسلامي اليومي", nameEn: "Sunnah & Daily Fiqh Radio", url: "https://backup.qurango.net/radio/alaikhtiarat_alfiqhayh_bin_baz", slug: "alaikhtiarat_alfiqhayh_bin_baz", category: 'hadith', img: "" },
+  { id: 21117, nameAr: "تفسير القرآن الكريم - تفسير الطبري", nameEn: "Tafsir Al-Tabari Radio", url: "https://backup.qurango.net/radio/tabri", slug: "tabri", category: 'tafsir', img: "" },
   { id: 109038, nameAr: "إذاعة صالح الهبدان", nameEn: "Saleh Al-Habdan", url: "https://backup.qurango.net/radio/saleh_alhabdan", slug: "saleh_alhabdan", category: 'reciter', img: "" },
-  { id: 109039, nameAr: "ترجمة معاني القرآن باللغة الأوردية - القارئ عبدالباسط عبدالصمد", nameEn: "Quran translation into Urdu - Abdulbasit", url: "https://backup.qurango.net/radio/translation_quran_urdu_basit", slug: "translation_quran_urdu_basit", category: 'translation', img: "" },
-  { id: 109040, nameAr: "ترجمة معاني القرآن باللغة الأسبانية - القارئ مشاري العفاسي", nameEn: "Quran translation into Spanish", url: "https://backup.qurango.net/radio/translation_quran_spanish_afs", slug: "translation_quran_spanish_afs", category: 'translation', img: "" },
+  { id: 109039, nameAr: "ترجمة معاني القرآن باللغة الأردية", nameEn: "Urdu Quran Translation Radio", url: "https://backup.qurango.net/radio/translation_quran_urdu_basit", slug: "translation_quran_urdu_basit", category: 'translation', img: "" },
+  { id: 109040, nameAr: "ترجمة معاني القرآن باللغة الأسبانية", nameEn: "Quran translation into Spanish", url: "https://backup.qurango.net/radio/translation_quran_spanish_afs", slug: "translation_quran_spanish_afs", category: 'translation', img: "" },
   { id: 109041, nameAr: "ترجمة معاني القرآن باللغة الألبانية", nameEn: "Quran translation into Albanian", url: "https://backup.qurango.net/radio/translation_quran_albanian", slug: "translation_quran_albanian", category: 'translation', img: "" },
   { id: 109042, nameAr: "ترجمة معاني القرآن باللغة الألمانية", nameEn: "Quran translation into German", url: "https://backup.qurango.net/radio/translation_quran_german", slug: "translation_quran_german", category: 'translation', img: "" },
   { id: 109043, nameAr: "ترجمة معاني القرآن باللغة الأمازيغية", nameEn: "Quran translation into Amazigh", url: "https://backup.qurango.net/radio/translation_quran_tamazight", slug: "translation_quran_tamazight", category: 'translation', img: "" },
-  { id: 109044, nameAr: "ترجمة معاني القرآن باللغة الأوردية - القارئ سعود الشريم و عبدالرحمن السديس", nameEn: "Quran in Urdu - Al-Sharim and Al-Sadis", url: "https://backup.qurango.net/radio/translation_quran_urdu_sds_shur", slug: "translation_quran_urdu_sds_shur", category: 'translation', img: "" },
-  { id: 109045, nameAr: "ترجمة معاني القرآن باللغة الأوردية - القارئ محمد المنشاوي", nameEn: "Quran in Urdu - Qari Muhammad Manshawi", url: "https://backup.qurango.net/radio/translation_quran_urdu_minsh", slug: "translation_quran_urdu_minsh", category: 'translation', img: "" },
-  { id: 109046, nameAr: "ترجمة معاني القرآن باللغة الإنجليزية - القارئ عبدالباسط عبدالصمد", nameEn: "Quran translation into English - AbdulBasit Abdul Samad", url: "https://backup.qurango.net/radio/translation_quran_english_basit", slug: "translation_quran_english_basit", category: 'translation', img: "" },
-  { id: 109047, nameAr: "ترجمة معاني القرآن باللغة الإنجليزية - القارئ عبدالله بصفر", nameEn: "Quran translation into English - Abdullah Basfar", url: "https://backup.qurango.net/radio/translation_quran_english_bsfr", slug: "translation_quran_english_bsfr", category: 'translation', img: "" },
-  { id: 109048, nameAr: "ترجمة معاني القرآن باللغة الإنجليزية -ترجمة والك", nameEn: "Quran translation into English - translated by Walk", url: "https://backup.qurango.net/radio/translation_quran_english_walk_basit", slug: "translation_quran_english_walk_basit", category: 'translation', img: "" },
+  { id: 109044, nameAr: "ترجمة القرآن باللغة الهندية والأردية", nameEn: "Hindi & South Asian Translation", url: "https://backup.qurango.net/radio/translation_quran_urdu_sds_shur", slug: "translation_quran_urdu_sds_shur", category: 'translation', img: "" },
+  { id: 109045, nameAr: "ترجمة معاني القرآن باللغة الأردية - المنشاوي", nameEn: "Quran in Urdu - Qari Muhammad Manshawi", url: "https://backup.qurango.net/radio/translation_quran_urdu_minsh", slug: "translation_quran_urdu_minsh", category: 'translation', img: "" },
+  { id: 109046, nameAr: "ترجمة معاني القرآن باللغة الإنجليزية", nameEn: "English Quran Translation Radio", url: "https://backup.qurango.net/radio/translation_quran_english_basit", slug: "translation_quran_english_basit", category: 'translation', img: "" },
+  { id: 109047, nameAr: "ترجمة معاني القرآن باللغة الإنجليزية - بصفر", nameEn: "Quran translation into English - Abdullah Basfar", url: "https://backup.qurango.net/radio/translation_quran_english_bsfr", slug: "translation_quran_english_bsfr", category: 'translation', img: "" },
+  { id: 109048, nameAr: "ترجمة معاني القرآن باللغة الإنجليزية - والك", nameEn: "Quran translation into English - translated by Walk", url: "https://backup.qurango.net/radio/translation_quran_english_walk_basit", slug: "translation_quran_english_walk_basit", category: 'translation', img: "" },
   { id: 109049, nameAr: "ترجمة معاني القرآن باللغة البرتغالية", nameEn: "Quran translation into Portuguese", url: "https://backup.qurango.net/radio/translation_quran_portuguese", slug: "translation_quran_portuguese", category: 'translation', img: "" },
   { id: 109050, nameAr: "ترجمة معاني القرآن باللغة البوسنية", nameEn: "Quran translation into Bosnian", url: "https://backup.qurango.net/radio/translation_quran_bosnia", slug: "translation_quran_bosnia", category: 'translation', img: "" },
   { id: 109051, nameAr: "ترجمة معاني القرآن باللغة التركية", nameEn: "Quran translation into Turkish", url: "https://backup.qurango.net/radio/translation_quran_turkish", slug: "translation_quran_turkish", category: 'translation', img: "" },
   { id: 109052, nameAr: "ترجمة معاني القرآن باللغة الروسية", nameEn: "Quran translation into Russian", url: "https://backup.qurango.net/radio/translation_quran_Russia", slug: "translation_quran_Russia", category: 'translation', img: "" },
   { id: 109053, nameAr: "ترجمة معاني القرآن باللغة الصينية", nameEn: "Quran translation into Chinese", url: "https://backup.qurango.net/radio/translation_quran_chinese", slug: "translation_quran_chinese", category: 'translation', img: "" },
   { id: 109054, nameAr: "ترجمة معاني القرآن باللغة الفارسية", nameEn: "Quran translation into Persian", url: "https://backup.qurango.net/radio/translation_quran_farsi", slug: "translation_quran_farsi", category: 'translation', img: "" },
-  { id: 109055, nameAr: "ترجمة معاني القرآن باللغة الفرنسية", nameEn: "Quran translation into French", url: "https://backup.qurango.net/radio/translation_quran_french", slug: "translation_quran_french", category: 'translation', img: "" },
+  { id: 109055, nameAr: "ترجمة معاني القرآن باللغة الفرنسية", nameEn: "French & International Translation", url: "https://backup.qurango.net/radio/translation_quran_french", slug: "translation_quran_french", category: 'translation', img: "" },
   { id: 109056, nameAr: "ترجمة معاني القرآن باللغة الكردية", nameEn: "Quran translation into Kurdish", url: "https://backup.qurango.net/radio/translation_quran_kurdish", slug: "translation_quran_kurdish", category: 'translation', img: "" },
   { id: 109058, nameAr: "ترجمة معاني القرآن باللغة المجرية", nameEn: "Quran translation into Hungarian", url: "https://backup.qurango.net/radio/translation_quran_hungarian", slug: "translation_quran_hungarian", category: 'translation', img: "" },
   { id: 109059, nameAr: "ترجمة معاني القرآن باللغة اليونانية", nameEn: "Quran translation into Greek", url: "https://backup.qurango.net/radio/translation_quran_greek", slug: "translation_quran_greek", category: 'translation', img: "" },
-  { id: 109060, nameAr: "سورة الملك", nameEn: "Al-Mulk Surah", url: "https://backup.qurango.net/radio/Surah_Al-Mulk", slug: "Surah_Al-Mulk", category: 'surah', img: "" },
-  { id: 109061, nameAr: "فضل شهر رمضان", nameEn: "The virtue of the month of Ramadan", url: "https://backup.qurango.net/radio/ramadan", slug: "ramadan", category: 'fatwa', img: "" },
+  { id: 109060, nameAr: "سورة الملك - تلاوات ليلية مباركة", nameEn: "Surah Al-Mulk Night Recitations", url: "https://backup.qurango.net/radio/Surah_Al-Mulk", slug: "Surah_Al-Mulk", category: 'surah', img: "" },
+  { id: 109061, nameAr: "فضائل وأحكام شهر رمضان المبارك", nameEn: "Virtues of Ramadan & Seasons of Worship", url: "https://backup.qurango.net/radio/ramadan", slug: "ramadan", category: 'fatwa', img: "" },
   { id: 109062, nameAr: "ترجمة معاني القرآن باللغة الهوسا", nameEn: "Translation of the meanings of the Quran in Hausa", url: "https://backup.qurango.net/radio/Translation_Quran_Hausa", slug: "Translation_Quran_Hausa", category: 'translation', img: "" },
-  { id: 109066, nameAr: "صحيح مسلم", nameEn: "Sahih Muslim", url: "https://backup.qurango.net/radio/saheh-muslim", slug: "saheh-muslim", category: 'hadith', img: "" },
-  { id: 109067, nameAr: "صحيح البخاري", nameEn: "Sahih al-Bukhari", url: "https://backup.qurango.net/radio/saheh-bokharee", slug: "saheh-bokharee", category: 'hadith', img: "" },
-  { id: 109069, nameAr: "***قصص الأنبياء***", nameEn: "Stories of the Prophets", url: "https://backup.qurango.net/radio/alanbiya", slug: "alanbiya", category: 'stories', img: "" },
+  { id: 109066, nameAr: "صحيح الإمام مسلم رضي الله عنه", nameEn: "Sahih Muslim Radio", url: "https://backup.qurango.net/radio/saheh-muslim", slug: "saheh-muslim", category: 'hadith', img: "" },
+  { id: 109067, nameAr: "صحيح الإمام البخاري رضي الله عنه", nameEn: "Sahih Al-Bukhari Radio", url: "https://backup.qurango.net/radio/saheh-bokharee", slug: "saheh-bokharee", category: 'hadith', img: "" },
+  { id: 109069, nameAr: "قصص الأنبياء عليهم الصلاة والسلام", nameEn: "Stories of the Prophets — Qasas Al-Anbiya", url: "https://backup.qurango.net/radio/alanbiya", slug: "alanbiya", category: 'stories', img: "" },
   { id: 109074, nameAr: "عبدالله البعيجان", nameEn: "Abdullah Albuajan", url: "https://backup.qurango.net/radio/buajan", slug: "buajan", category: 'reciter', img: "/images/radio/reciters/109074.webp" },
   { id: 109075, nameAr: "أحمد طالب بن حميد", nameEn: "Ahmad Talib bin Humaid", url: "https://backup.qurango.net/radio/a_binhameed", slug: "a_binhameed", category: 'reciter', img: "" },
-  { id: 109076, nameAr: "تفسير غريب القرآن", nameEn: "تفسير غريب القرآن", url: "https://backup.qurango.net/radio/gareeb-quran", slug: "gareeb-quran", category: 'tafsir', img: "" },
+  { id: 109076, nameAr: "تفسير غريب القرآن الكريم", nameEn: "Tafsir Ghareeb Al-Quran", url: "https://backup.qurango.net/radio/gareeb-quran", slug: "gareeb-quran", category: 'tafsir', img: "" },
   { id: 109077, nameAr: "بدر التركي", nameEn: "Bader Alturki", url: "https://backup.qurango.net/radio/bader", slug: "bader", category: 'reciter', img: "/images/radio/reciters/109077.webp" },
   { id: 109078, nameAr: "هزاع البلوشي", nameEn: "Hazza Al-Balushi", url: "https://backup.qurango.net/radio/hazza", slug: "hazza", category: 'reciter', img: "/images/radio/reciters/109078.webp" },
-  { id: 109082, nameAr: "إذاعة القرآن الكريم - السعودية", nameEn: "Holy Quran from Saudia Arabia", url: "https://stream.radiojar.com/0tpy1h0kxtzuv", slug: "0tpy1h0kxtzuv", category: 'mosque', img: "" },
-  { id: 21118, nameAr: "تفسير السعدي - تيسير الكريم الرحمن", nameEn: "Tafsir As-Sa'di", url: "https://backup.qurango.net/radio/saadi", slug: "saadi", category: 'tafsir', img: "" },
-  { id: 21119, nameAr: "خواطر الشيخ محمد متولي الشعراوي", nameEn: "Tafsir Al-Sha'rawi", url: "https://backup.qurango.net/radio/shaarawi", slug: "shaarawi", category: 'tafsir', img: "" },
-  { id: 21120, nameAr: "المختصر في تفسير القرآن الكريم", nameEn: "Al-Mukhtasar fi Tafsir", url: "https://backup.qurango.net/radio/tafseer", slug: "almukhtasar_tafseer", category: 'tafsir', img: "" },
-  { id: 21121, nameAr: "رياض الصالحين من كلام سيد المرسلين", nameEn: "Riyad as-Salihin", url: "https://backup.qurango.net/radio/riyad_alsaliheen", slug: "riyad_alsaliheen", category: 'hadith', img: "" },
-  { id: 21122, nameAr: "سورة الكهف - تلاوات خاشعة", nameEn: "Surah Al-Kahf & Sunnah", url: "https://backup.qurango.net/radio/kahf", slug: "kahf", category: 'surah', img: "" },
-  { id: 21123, nameAr: "آيات السكينة والطمأنينة", nameEn: "Verses of Calmness & Serenity", url: "https://backup.qurango.net/radio/sakeenah", slug: "surah_sakeenah", category: 'surah', img: "" },
-  { id: 21124, nameAr: "الرقية الشرعية من القرآن والسنة", nameEn: "Al-Ruqyah Al-Shariyyah", url: "https://backup.qurango.net/radio/roqiah", slug: "roqiah", category: 'adhkar', img: "" },
-  { id: 21125, nameAr: "أذكار الصباح والمساء واليوم والليلة", nameEn: "Daily Remembrance & Adhkar", url: "https://backup.qurango.net/radio/athkar_sabah", slug: "daily_adhkar", category: 'adhkar', img: "" },
-  { id: 21126, nameAr: "سيرة النبي ﷺ وأصحابه الكرام", nameEn: "Prophet's Biography & Companions", url: "https://backup.qurango.net/radio/fi_zilal_alsiyra", slug: "seerah_nabawiyyah", category: 'stories', img: "" },
-  { id: 21127, nameAr: "فتاوى الشيخ ابن عثيمين - نور على الدرب", nameEn: "Fatwa Sheikh Ibn Uthaymeen", url: "https://backup.qurango.net/radio/fatwa", slug: "uthaymeen_fatwa", category: 'fatwa', img: "" },
-  { id: 21128, nameAr: "فتاوى الشيخ عبدالعزيز بن باز", nameEn: "Fatwa Sheikh Ibn Baz", url: "https://backup.qurango.net/radio/alaikhtiarat_alfiqhayh_bin_baz", slug: "bin_baz_fatwa", category: 'fatwa', img: "" },
-  { id: 21129, nameAr: "إذاعة القرآن الكريم من القاهرة", nameEn: "Holy Quran Radio Cairo", url: "https://backup.qurango.net/radio/mix", slug: "cairo_mix", category: 'mosque', img: "" },
-  { id: 21130, nameAr: "الحرم المكي الشريف - تراتيل خاشعة", nameEn: "Makkah Haram Live Recitations", url: "https://backup.qurango.net/radio/tarateel", slug: "makkah_recitations", category: 'mosque', img: "" },
+  { id: 109082, nameAr: "إذاعة القرآن الكريم من المملكة العربية السعودية", nameEn: "Holy Quran Radio from Saudi Arabia", url: "https://backup.qurango.net/radio/mix", slug: "saudi_mix", category: 'mosque', img: "" },
+  { id: 21118, nameAr: "تفسير القرآن الكريم - تفسير الطبري", nameEn: "Tafsir Al-Tabari", url: "https://backup.qurango.net/radio/tabri", slug: "tabri", category: 'tafsir', img: "" },
+  { id: 21119, nameAr: "المختصر في تفسير القرآن الكريم", nameEn: "Al-Mukhtasar fi Tafsir", url: "https://backup.qurango.net/radio/mukhtasartafsir", slug: "mukhtasartafsir", category: 'tafsir', img: "" },
+  { id: 21120, nameAr: "تفسير القرآن الكريم - دروس شاملة", nameEn: "Quran Tafseer Radio", url: "https://backup.qurango.net/radio/tafseer", slug: "tafseer", category: 'tafsir', img: "" },
+  { id: 21121, nameAr: "رياض الصالحين من كلام سيد المرسلين", nameEn: "Riyad as-Salihin Hadith Radio", url: "https://backup.qurango.net/radio/riyad_alsaliheen", slug: "riyad_alsaliheen", category: 'hadith', img: "" },
+  { id: 21122, nameAr: "سورة الملك - تلاوات ليلية مباركة", nameEn: "Surah Al-Mulk Night Recitations", url: "https://backup.qurango.net/radio/Surah_Al-Mulk", slug: "Surah_Al-Mulk", category: 'surah', img: "" },
+  { id: 21123, nameAr: "آيات السكينة والطمأنينة وتفريج الهموم", nameEn: "Ayat Al-Sakina — Verses of Serenity", url: "https://backup.qurango.net/radio/salma", slug: "salma", category: 'surah', img: "" },
+  { id: 21124, nameAr: "الرقية الشرعية الشاملة للشفاء والحفظ", nameEn: "Ruqyah Ash-Shar'iyyah 24/7", url: "https://backup.qurango.net/radio/roqiah", slug: "roqiah", category: 'adhkar', img: "" },
+  { id: 21125, nameAr: "أذكار الصباح وتحصين المسلم اليومي", nameEn: "Morning Remembrance — Adhkar Al-Sabah", url: "https://backup.qurango.net/radio/athkar_sabah", slug: "athkar_sabah", category: 'adhkar', img: "" },
+  { id: 21126, nameAr: "في ظلال السيرة النبوية الشريفة", nameEn: "In the Shadows of the Prophet's ﷺ Seerah", url: "https://backup.qurango.net/radio/fi_zilal_alsiyra", slug: "fi_zilal_alsiyra", category: 'stories', img: "" },
+  { id: 21127, nameAr: "إذاعة الفتاوى العامة وأحكام الشريعة", nameEn: "General Fatwa Radio", url: "https://backup.qurango.net/radio/fatwa", slug: "fatwa", category: 'fatwa', img: "" },
+  { id: 21128, nameAr: "فتاوى الشيخ عبدالعزيز بن باز - نور على الدرب", nameEn: "Fatawa Sheikh Ibn Baz — Noor Ala Al-Darb", url: "https://backup.qurango.net/radio/alaikhtiarat_alfiqhayh_bin_baz", slug: "alaikhtiarat_alfiqhayh_bin_baz", category: 'fatwa', img: "" },
+  { id: 21129, nameAr: "إذاعة القرآن الكريم من القاهرة والحرمين", nameEn: "Cairo & Haramain Radio", url: "https://backup.qurango.net/radio/misr", slug: "misr", category: 'mosque', img: "" },
+  { id: 21130, nameAr: "تراتيل قصيرة خاشعة ومتميزة", nameEn: "Amazing Short Recitations", url: "https://backup.qurango.net/radio/tarateel", slug: "tarateel", category: 'mosque', img: "" },
 ];
+
+/** ── Station Localizations across 4 Languages ─────────────────── */
+export interface LocalizedStationStrings {
+  title: Record<string, string>;
+  subtitle: Record<string, string>;
+}
+
+export const STATION_LOCALIZATIONS: Record<string, LocalizedStationStrings> = {
+  // Translations
+  translation_quran_urdu_basit: {
+    title: {
+      en: "Urdu Quran Translation Radio",
+      ur: "ترجمہ قرآنِ مجید — اردو",
+      gu: "કુર્આન શરીફ اردو/ગુજરાતી અનુવાદ",
+      hi: "क़ुरआन पाक उर्दू/हिन्दी अनुवाद",
+    },
+    subtitle: {
+      en: "Qari Abdul Basit • Urdu Translation",
+      ur: "قاری عبد الباسط • اردو ترجمہ",
+      gu: "કારી અબ્દુલ બાસિત • અનુવાદ",
+      hi: "क़ारी अब्दुल बासित • अनुवाद",
+    },
+  },
+  translation_quran_english_basit: {
+    title: {
+      en: "English Quran Translation Radio",
+      ur: "انگریزی ترجمہ قرآنِ کریم",
+      gu: "અંગ્રેજી કુર્આન અનુવાદ રેડિયો",
+      hi: "अंग्रेज़ी क़ुरआन अनुवाद रेडियो",
+    },
+    subtitle: {
+      en: "Clear Verses & Meanings in English",
+      ur: "انگریزی مفہوم و تلاوت",
+      gu: "અંગ્રેજી અર્થ સાથે પવિત્ર કુર્આન",
+      hi: "अंग्रेज़ी अनुवाद सहित पवित्र क़ुरआन",
+    },
+  },
+  translation_quran_urdu_sds_shur: {
+    title: {
+      en: "Hindi & South Asian Translation",
+      ur: "ہندی و جنوبی ایشیائی ترجمہ قرآن",
+      gu: "હિન્દી કુર્આન અનુવાદ",
+      hi: "हिन्दी क़ुरआन अनुवाद",
+    },
+    subtitle: {
+      en: "Sheikh Al-Shuraim & Al-Sudais",
+      ur: "سعود الشریم و عبدالرحمن السدیس",
+      gu: "પવિત્ર કુર્આન સરળ અર્થ સાથે",
+      hi: "पवित्र क़ुरआन सरल अर्थ सहित",
+    },
+  },
+  translation_quran_french: {
+    title: {
+      en: "French & International Translation",
+      ur: "فرانسیسی و بین الاقوامی ترجمہ قرآن",
+      gu: "ફ્રેન્ચ કુર્આન અનુવાદ",
+      hi: "फ़्रेंच क़ुरआन अनुवाद",
+    },
+    subtitle: {
+      en: "Le Saint Coran traduit en français",
+      ur: "فرانسیسی زبان میں کلام الٰہی",
+      gu: "આંતરરાષ્ટ્રીય ફ્રેન્ચ ભાષાંતર",
+      hi: "अंतर्राष्ट्रीय फ़्रेंच अनुवाद",
+    },
+  },
+
+  // Tafsir
+  tabri: {
+    title: {
+      en: "Tafsir Al-Tabari Radio",
+      ur: "تفسیر طبری — خلاصہ جامع البیان",
+      gu: "તફસીર અલ-તબરી",
+      hi: "तफ़सीर अल-तबरी",
+    },
+    subtitle: {
+      en: "Essence of Jami' al-Bayan",
+      ur: "امام ابن جریر طبری رحمہ اللہ",
+      gu: "કુર્આન શરીફનો ઊંડો અભ્યાસ",
+      hi: "क़ुरआन पाक की विस्तृत व्याख्या",
+    },
+  },
+  mukhtasartafsir: {
+    title: {
+      en: "Al-Mukhtasar fi Tafsir",
+      ur: "المختصر فی تفسیر القرآن الکریم",
+      gu: "અલ-મુખ્તસર ફી તફસીર",
+      hi: "अल-मुख़्तसर फ़ी तफ़सीर",
+    },
+    subtitle: {
+      en: "Concise & Authentic Commentary",
+      ur: "جامع اور مستند قرآنی تفاسیر",
+      gu: "સરળ અને સચોટ ખુલાસો",
+      hi: "संक्षिप्त और प्रामाणिक व्याख्या",
+    },
+  },
+  tafseer: {
+    title: {
+      en: "Quran Tafseer Radio",
+      ur: "درس و تفسیر قرآنِ مجید",
+      gu: "કુર્આન તફસીર દરસ",
+      hi: "क़ुरआन तफ़सीर दर्स",
+    },
+    subtitle: {
+      en: "Comprehensive Lessons & Reflections",
+      ur: "آیاتِ بینات کا فہم و تدبر",
+      gu: "બોધપાઠ અને માર્ગદર્શન",
+      hi: "क़ुरआन के गहरे संदेश और सीख",
+    },
+  },
+  gareeb_quran: {
+    title: {
+      en: "Tafsir Ghareeb Al-Quran",
+      ur: "تفسیر غریب القرآن الکریم",
+      gu: "તફસીર ગરીબ અલ-કુર્આન",
+      hi: "तफ़सीर ग़रीब अल-क़ुरआन",
+    },
+    subtitle: {
+      en: "Meanings of Uncommon Vocabulary",
+      ur: "قرآنی الفاظ و لغات کی تشریح",
+      gu: "વિશિષ્ટ કુર્આની શબ્દોનો અર્થ",
+      hi: "क़ुरआनी शब्दों का अर्थ व विवेचन",
+    },
+  },
+
+  // Hadith
+  riyad_alsaliheen: {
+    title: {
+      en: "Riyad as-Salihin Hadith Radio",
+      ur: "احادیث ریاض الصالحین",
+      gu: "હદીસ રિયાદુસ સાલિહીન",
+      hi: "हदीस रियादुस सालिहीन",
+    },
+    subtitle: {
+      en: "Gardens of the Righteous — Imam An-Nawawi",
+      ur: "امام نووی رحمہ اللہ کے منتخب فرامین",
+      gu: "ઇમામ નવવીનું ઉત્કૃષ્ટ સંકલન",
+      hi: "इमाम नववी का प्रामाणिक संकलन",
+    },
+  },
+  saheh_bokharee: {
+    title: {
+      en: "Sahih Al-Bukhari Radio",
+      ur: "صحیح البخاری شریف",
+      gu: "સહીહ અલ-બુખારી શરીફ",
+      hi: "सहीह अल-बुख़ारी शरीफ़",
+    },
+    subtitle: {
+      en: "Most Authentic Prophetic Traditions",
+      ur: "اصح الکتب بعد کتاب اللہ",
+      gu: "રસૂલુલ્લાહ ﷺ ના સૌથી પ્રમાણભૂત વચનો",
+      hi: "रसूलुल्लाह ﷺ के सबसे प्रामाणिक कथन",
+    },
+  },
+  saheh_muslim: {
+    title: {
+      en: "Sahih Muslim Radio",
+      ur: "صحیح مسلم شریف",
+      gu: "સહીહ મુસ્લિમ શરીફ",
+      hi: "सहीह मुस्लिम शरीफ़",
+    },
+    subtitle: {
+      en: "Authentic Prophetic Narrations",
+      ur: "نبی کریم ﷺ کے مبارک فرامین",
+      gu: "હઝરત મુહમ્મદ ﷺ ના મુબારક ફરમાનો",
+      hi: "हज़रत मुहम्मद ﷺ के मुबारक फ़रमान",
+    },
+  },
+  alaikhtiarat_alfiqhayh_bin_baz: {
+    title: {
+      en: "Sunnah & Daily Fiqh Radio",
+      ur: "سنت نبوی ﷺ اور فقہی مسائل",
+      gu: "સુન્નત અને રોજીંદા મસાઈલ",
+      hi: "सुन्नत और दैनिक फ़िक़्ह",
+    },
+    subtitle: {
+      en: "Matters of Worship and Transactions",
+      ur: "عبادات اور معاملات کے احکام",
+      gu: "ઇબાદત અને વ્યવહારના નિયમો",
+      hi: "इबादत और मामलात के नियम",
+    },
+  },
+
+  // Surahs
+  albaqarah: {
+    title: {
+      en: "Surah Al-Baqarah 24/7",
+      ur: "سورة البقرة — تلاوتِ متواصل",
+      gu: "સૂરહ અલ-બકરહ ૨૪/૭",
+      hi: "सूरा अल-बक़रह २४/७",
+    },
+    subtitle: {
+      en: "Continuous Protection & Barakah",
+      ur: "برکت و حفاظت • نامور قراء کی تلاوت",
+      gu: "બરકત અને શૈતાની અસરોથી રક્ષણ",
+      hi: "बरकत और सुरक्षा • प्रमुख क़ारियों की आवाज़",
+    },
+  },
+  Surah_Al_Mulk: {
+    title: {
+      en: "Surah Al-Mulk Night Recitations",
+      ur: "سورة الملك — نجات دہندہ",
+      gu: "સૂરહ અલ-મુલ્ક રાત્રિ તિલાવત",
+      hi: "सूरा अल-मुल्क रात्रि पाठ",
+    },
+    subtitle: {
+      en: "Savior from the Punishment of the Grave",
+      ur: "عذابِ قبر سے حفاظت کی نبوی سنت",
+      gu: "કબરના અઝાબથી બચાવનાર સૂરત",
+      hi: "क़ब्र के अज़ाब से सुरक्षा की सुन्नत",
+    },
+  },
+  salma: {
+    title: {
+      en: "Ayat Al-Sakina — Verses of Serenity",
+      ur: "آیاتِ سکینہ و اطمینانِ قلب",
+      gu: "આયાતે સકીના — દિલની શાંતિ",
+      hi: "आयते सकीना — दिल का सुकून",
+    },
+    subtitle: {
+      en: "Deep Tranquility & Calming Verses",
+      ur: "تلاوتِ خاشعہ • دلوں کا سکون اور راحت",
+      gu: "હૃદયને શાંતિ આપતી પવિત્ર આયતો",
+      hi: "दिलों को शांति देने वाली आयतें",
+    },
+  },
+
+  // Adhkar
+  athkar_sabah: {
+    title: {
+      en: "Morning Remembrance — Adhkar Al-Sabah",
+      ur: "مسنون اذکارِ صبح",
+      gu: "સવારના મસ્નૂન અઝકાર",
+      hi: "सुबह के मसनून अज़कार",
+    },
+    subtitle: {
+      en: "Prophetic Fortification for Daybreak",
+      ur: "صبح کی برکت اور دن بھر کی حفاظت",
+      gu: "આખા દિવસની બરકત અને સુરક્ષા",
+      hi: "दिन की बरकत और सुरक्षा",
+    },
+  },
+  athkar_masa: {
+    title: {
+      en: "Evening Remembrance — Adhkar Al-Masa'",
+      ur: "مسنون اذکارِ شام",
+      gu: "સાંજના મસ્નૂન અઝકાર",
+      hi: "शाम के मसनून अज़कार",
+    },
+    subtitle: {
+      en: "Evening Shield & Peaceful Night Duas",
+      ur: "شام کی پناہ اور رات کا تحفظ",
+      gu: "રાત્રિની સુરક્ષા અને શાંતિ",
+      hi: "रात की सुरक्षा और सुकून",
+    },
+  },
+  roqiah: {
+    title: {
+      en: "Ruqyah Ash-Shar'iyyah 24/7",
+      ur: "الرقیۃ الشرعیۃ — شفائے کامل",
+      gu: "રૂક્યા શરીફ — રોગનિવારણ",
+      hi: "रुक़्या शरीफ़ — शिफ़ा व सुरक्षा",
+    },
+    subtitle: {
+      en: "Divine Healing & Spiritual Shield",
+      ur: "نظرِ بد اور ہر شر سے قرآنی دم",
+      gu: "બુરી નજર અને તકલીફોથી સુરક્ષા",
+      hi: "बुरी नज़र और हर बुराई से बचाव",
+    },
+  },
+  eid: {
+    title: {
+      en: "Eid & Hajj Takbeerat",
+      ur: "تکبیراتِ عید و حج مبارک",
+      gu: "ઈદ અને હજની તકબીરાત",
+      hi: "ईद और हज की तकबीरात",
+    },
+    subtitle: {
+      en: "Allahu Akbar — Sacred Chants",
+      ur: "اللہ اکبر وللہ الحمد کے نغمات",
+      gu: "અલ્લાહુ અકબરના મુબારક તરાના",
+      hi: "अल्लाहु अकबर के पावन स्वर",
+    },
+  },
+
+  // Stories
+  fi_zilal_alsiyra: {
+    title: {
+      en: "In the Shadows of the Prophet's ﷺ Seerah",
+      ur: "فی ظلال السیرۃ النبویۃ ﷺ",
+      gu: "પયગંબર ﷺ ની પવિત્ર સીરત",
+      hi: "रसूलुल्लाह ﷺ की पावन सीरत",
+    },
+    subtitle: {
+      en: "400 Episodes of the Blessed Life",
+      ur: "۴۰۰ اقساط پر محیط حیاتِ طیبہ",
+      gu: "૪૦૦ એપિસોડમાં મુબારક જીવનચરિત્ર",
+      hi: "४०० कड़ियों में मुबारक जीवन चरित्र",
+    },
+  },
+  alanbiya: {
+    title: {
+      en: "Stories of the Prophets — Qasas Al-Anbiya",
+      ur: "قصص الانبیاء علیہم السلام",
+      gu: "અંબિયા અ.સ. ના પ્રેરણાદાયી કિસ્સા",
+      hi: "अंबिया अ.स. के प्रेरक क़िस्से",
+    },
+    subtitle: {
+      en: "Lessons from Adam to Muhammad ﷺ",
+      ur: "آدم علیہ السلام سے خاتم النبیین ﷺ تک",
+      gu: "આદમ અ.સ. થી હઝરત મુહમ્મદ ﷺ સુધી",
+      hi: "आदम अ.स. से हज़रत मुहम्मद ﷺ तक",
+    },
+  },
+  sahabah: {
+    title: {
+      en: "Lives of the Sahabah & Tabi'een",
+      ur: "حیاتِ صحابہ و تابعین کرام",
+      gu: "સહાબા અને તાબિઈન (રદિ.) નું જીવન",
+      hi: "सहाबा और ताबिईन (रज़ि.) का जीवन",
+    },
+    subtitle: {
+      en: "The Radiant Generation of Faith",
+      ur: "ایمان اور استقامت کے درخشاں مینار",
+      gu: "ઈમાન અને બલિદાનની અનોખી મિસાલ",
+      hi: "ईमान और त्याग के आदर्श",
+    },
+  },
+  almukhtasar_fi_alsiyra: {
+    title: {
+      en: "The Abridged Seerah Nabawiyyah",
+      ur: "المختصر فی السیرۃ النبویۃ",
+      gu: "સંક્ષિપ્ત પયગંબર સીરત",
+      hi: "संक्षिप्त पैग़म्बर सीरत",
+    },
+    subtitle: {
+      en: "Milestones of the Messenger of Allah ﷺ",
+      ur: "رسول اللہ ﷺ کی سیرت کے روشن سنگِ میل",
+      gu: "અલ્લાહના રસૂલ ﷺ ના મુખ્ય સંસ્મરણો",
+      hi: "अल्लाह के रसूल ﷺ के प्रमुख पड़ाव",
+    },
+  },
+
+  // Main / Mix
+  mix: {
+    title: {
+      en: "Main Quran Radio Mix 24/7",
+      ur: "الإذاعۃ العامۃ — مرکزی ریڈیو مکس",
+      gu: "મુખ્ય કુર્આન રેડિયો મિક્સ",
+      hi: "मुख्य क़ुरआन रेडियो मिक्स",
+    },
+    subtitle: {
+      en: "Continuous Diverse Recitations",
+      ur: "عالمِ اسلام کے نامور قراء کی تلاوت",
+      gu: "વિવિધ જાણીતા કારીઓની સતત તિલાવત",
+      hi: "विश्व प्रसिद्ध क़ारियों की सतत तिलावत",
+    },
+  },
+  tarateel: {
+    title: {
+      en: "Amazing Short Recitations",
+      ur: "تراتیل قصیرۃ خاشعۃ",
+      gu: "શ્રેષ્ઠ ટૂંકી તિલાવત",
+      hi: "सर्वश्रेष्ठ संक्षिप्त तिलावत",
+    },
+    subtitle: {
+      en: "Soul-Stirring Verses and Melodies",
+      ur: "دل نشین اور منتخب قرآنی تلاوتیں",
+      gu: "દિલને સ્પર્શતી મધુર આયતો",
+      hi: "मन को छूने वाली मधुर आयतें",
+    },
+  },
+  misr: {
+    title: {
+      en: "Cairo & Haramain Holy Quran Radio",
+      ur: "إذاعۃ القرآن الکریم — قاہرہ و حرمین",
+      gu: "કાહિરા અને હરમૈન રેડિયો",
+      hi: "क़ाहिरा व हरमैन रेडियो",
+    },
+    subtitle: {
+      en: "Timeless Golden Era Broadcasts",
+      ur: "سنہری دور کی لازوال اور خاشع تلاوتیں",
+      gu: "ઐતિહાસિક અને પ્રખ્યાત અવાજો",
+      hi: "ऐतिहासिक व विख्यात स्वर",
+    },
+  },
+
+  // Fatwa
+  fatwa: {
+    title: {
+      en: "General Fatwa Radio (Dar Al-Ifta)",
+      ur: "إذاعۃ الفتاویٰ العامۃ",
+      gu: "જનરલ ફતવા રેડિયો",
+      hi: "जनरल फ़तवा रेडियो",
+    },
+    subtitle: {
+      en: "Authoritative Answers to Islamic Questions",
+      ur: "دار الافتاء • شرعی مسائل کے مدلل جوابات",
+      gu: "શરઈ પ્રશ્નોના આધારભૂત જવાબો",
+      hi: "दीनी सवालों के प्रामाणिक उत्तर",
+    },
+  },
+  ramadan: {
+    title: {
+      en: "Virtues & Fiqh of Ramadan",
+      ur: "احکام و فضائلِ رمضان و طاعات",
+      gu: "રમઝાન અને ઇબાદતના મસાઈલ",
+      hi: "रमज़ान और इबादत के फ़ज़ाइल",
+    },
+    subtitle: {
+      en: "Rulings on Fasting, Charity & Prayers",
+      ur: "روزہ، تراویح، زکوٰۃ اور اعتکاف کے مسائل",
+      gu: "રોઝા, ઝકાત અને તરાવીહના અહકામ",
+      hi: "रोज़ा, ज़कात और नमाज़ के नियम",
+    },
+  },
+};
+
+/** Get localized title and subtitle for any radio station in 4 languages */
+export function getLocalizedStation(
+  station: { id: number; name: string; nameEn?: string; url?: string; slug?: string; category?: RadioCategory },
+  lang: string
+): { title: string; subtitle: string } {
+  const effectiveLang = (['en', 'ur', 'gu', 'hi'].includes(lang) ? lang : 'en');
+
+  // Match by slug or URL segment
+  const urlSlug = (station.url || '').split('/').filter(Boolean).pop()?.replace(/[-]/g, '_') || '';
+  const directSlug = (station.slug || '').replace(/[-]/g, '_');
+
+  const loc = STATION_LOCALIZATIONS[directSlug] ||
+              STATION_LOCALIZATIONS[urlSlug] ||
+              STATION_LOCALIZATIONS[String(station.id)];
+
+  if (loc) {
+    return {
+      title: loc.title[effectiveLang] || loc.title.en,
+      subtitle: loc.subtitle[effectiveLang] || loc.subtitle.en,
+    };
+  }
+
+  // Clean raw names removing ugly dashes
+  const cleanAr = station.name
+    .replace(/-{2,}/g, ' — ')
+    .replace(/^[-—\s]+|[-—\s]+$/g, '')
+    .trim();
+  const cleanEn = (station.nameEn || '')
+    .replace(/-{2,}/g, ' — ')
+    .replace(/^[-—\s]+|[-—\s]+$/g, '')
+    .trim();
+
+  // For reciters:
+  if (station.category === 'reciter' || !station.category) {
+    if (effectiveLang === 'ur') {
+      return {
+        title: cleanAr,
+        subtitle: 'اسلامی ریڈیو • تلاوتِ کلامِ پاک',
+      };
+    }
+    if (effectiveLang === 'gu') {
+      return {
+        title: cleanEn || cleanAr,
+        subtitle: 'ઇસ્લામિક રેડિયો • પવિત્ર તિલાવત',
+      };
+    }
+    if (effectiveLang === 'hi') {
+      return {
+        title: cleanEn || cleanAr,
+        subtitle: 'इस्लामिक रेडियो • पवित्र क़ुरआन पाठ',
+      };
+    }
+    return {
+      title: cleanEn || cleanAr,
+      subtitle: 'Islamic Radio • 24/7 Recitation',
+    };
+  }
+
+  return {
+    title: effectiveLang === 'ur' ? cleanAr : (cleanEn || cleanAr),
+    subtitle: cleanEn || 'Islamic Radio',
+  };
+}
 
 /** Union of base + extra stations for artwork/lookup purposes. */
 export type AnyRadioStation = RadioStation | ExtraRadioStation;

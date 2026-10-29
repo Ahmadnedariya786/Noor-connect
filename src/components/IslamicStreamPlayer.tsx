@@ -5,7 +5,7 @@
  * Fallback: Kwikmotion 1080p for Makkah. YouTube removed for F-Droid compliance.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Hls from 'hls.js';
 import { Capacitor } from '@capacitor/core';
 import {

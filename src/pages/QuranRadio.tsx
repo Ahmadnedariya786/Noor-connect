@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { radioStations, type RadioStation } from "@/data/radio-stations";
-import { extraRadioStations, type RadioCategory } from "@/data/radio-stations-extra";
+import { extraRadioStations, type RadioCategory, type ExtraRadioStation, getLocalizedStation } from "@/data/radio-stations-extra";
 import { useGlobalRadio } from "@/lib/global-radio";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useContentLanguage } from "@/lib/content-translator";
@@ -26,22 +26,45 @@ interface StationView {
 
 const PINNED_KEY = "pinned-radio-stations";
 
-const toView = (s: RadioStation | { id: number; nameAr: string; nameEn: string; url: string; img: string; category: RadioCategory }): StationView => {
-  const base = "nameAr" in s;
+const toView = (s: RadioStation | ExtraRadioStation): StationView => {
+  if ("category" in s) {
+    return {
+      id: s.id,
+      name: s.nameAr,
+      nameEn: s.nameEn,
+      url: s.url,
+      img: s.img,
+      category: s.category,
+    };
+  }
+  // Base stations from radioStations
+  let cat: RadioCategory = "reciter";
+  if (s.id === 19 || s.id === 21) cat = "mosque";
+  else if (s.id === 20) cat = "hadith";
+  else if (s.id === 22 || s.id === 23) cat = "adhkar";
+  else if (s.id === 24) cat = "tafsir";
+
   return {
     id: s.id,
-    name: base ? (s as { nameAr: string }).nameAr : s.name,
-    nameEn: base ? (s as { nameEn: string }).nameEn : "",
+    name: s.name,
+    nameEn: "",
     url: s.url,
     img: s.img,
-    category: base ? (s as { category: RadioCategory }).category : "reciter",
+    category: cat,
   };
 };
 
-const allStations: StationView[] = [
-  ...radioStations.map(toView),
-  ...extraRadioStations.map(toView),
-];
+// Deduplicate stations so extraRadioStations (rich metadata) takes precedence and no duplicate cards appear
+const rawAll = [...extraRadioStations.map(toView), ...radioStations.map(toView)];
+const seenUrls = new Set<string>();
+const allStations: StationView[] = [];
+for (const st of rawAll) {
+  const norm = st.url.toLowerCase().trim();
+  if (!seenUrls.has(norm)) {
+    seenUrls.add(norm);
+    allStations.push(st);
+  }
+}
 
 const FEATURED_SLUGS = new Set([
   "mishary_alafasi", "shaik_abu_bakr_al_shatri", "maher",
@@ -428,17 +451,24 @@ const QuranRadio = () => {
       const matchesCat = activeCategory === "all" || s.category === activeCategory;
       if (!matchesCat) return false;
       if (!q) return true;
+      const loc = getLocalizedStation(s, contentLang);
       return (
         s.name.toLowerCase().includes(q) ||
-        s.nameEn.toLowerCase().includes(q)
+        s.nameEn.toLowerCase().includes(q) ||
+        loc.title.toLowerCase().includes(q) ||
+        loc.subtitle.toLowerCase().includes(q)
       );
     });
-  }, [search, activeCategory]);
+  }, [search, activeCategory, contentLang]);
 
-  const pinnedStations = useMemo(
-    () => allStations.filter((s) => pinned.has(s.url)),
-    [pinned]
-  );
+  const visiblePinnedStations = useMemo(() => {
+    if (search) return [];
+    if (activeCategory === "all") {
+      return allStations.filter((s) => pinned.has(s.url));
+    }
+    return allStations.filter((s) => s.category === activeCategory && pinned.has(s.url));
+  }, [pinned, activeCategory, search]);
+
   const categories = useMemo(
     () => Object.keys(CATEGORY_LABELS) as RadioCategory[],
     []
@@ -651,6 +681,7 @@ const QuranRadio = () => {
                     <FeaturedTile
                       key={station.url}
                       station={station}
+                      contentLang={contentLang}
                       isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
                       isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
                       onSelect={handleStationSelect}
@@ -662,41 +693,67 @@ const QuranRadio = () => {
 
             {/* ── Now playing strip ── */}
             {globalRadio.currentStation && (
-              <section className="mb-6 flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 px-3 py-2.5">
-                <span className="shrink-0 w-9 h-9 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+              <section
+                className="mb-6 flex items-center gap-3 rounded-2xl border px-3.5 py-3 shadow-sm transition-all"
+                style={{
+                  background: "var(--surface)",
+                  borderColor: "var(--border)",
+                }}
+              >
+                <span
+                  className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border"
+                  style={{
+                    background: "var(--accent-soft)",
+                    borderColor: "var(--border)",
+                    color: "var(--accent)",
+                  }}
+                >
                   <Equalizer playing={globalRadio.isPlaying} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-[10px] font-bold uppercase tracking-widest text-primary ${contentLang === 'ur' ? 'font-urdu' : ''}`}>
+                  <p
+                    className={`text-[10px] font-bold uppercase tracking-wider ${contentLang === 'ur' ? 'font-urdu text-xs' : ''}`}
+                    style={{ color: "var(--accent)" }}
+                  >
                     {globalRadio.isPlaying ? strings.nowPlaying : strings.paused}
                   </p>
-                  <p className="text-sm font-semibold text-foreground truncate" lang="ar">
-                    {globalRadio.currentStation.name}
-                  </p>
+                  {(() => {
+                    const npLoc = getLocalizedStation(globalRadio.currentStation, contentLang);
+                    return (
+                      <p
+                        className={`text-sm font-semibold truncate ${contentLang === 'ur' ? 'font-urdu text-[15px]' : ''}`}
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {npLoc.title}
+                      </p>
+                    );
+                  })()}
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="rounded-full shrink-0"
+                  style={{ color: "var(--text-primary)" }}
                   onClick={handleHeroPlay}
                   aria-label={globalRadio.isPlaying ? "Pause" : "Play"}
                 >
                   {globalRadio.isPlaying
-                    ? <Pause className="w-5 h-5" />
-                    : <Play className="w-5 h-5 ms-0.5" />}
+                    ? <Pause className="w-5 h-5 fill-current" />
+                    : <Play className="w-5 h-5 fill-current ms-0.5" />}
                 </Button>
               </section>
             )}
 
-            {/* ── Pinned rows ── */}
-            {pinnedStations.length > 0 && (
+            {/* ── Pinned rows: strictly filtered to activeCategory if category selected ── */}
+            {visiblePinnedStations.length > 0 && (
               <>
-                <SectionHeader icon={Pin} title={strings.pinned} count={pinnedStations.length} />
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                  {pinnedStations.map((station) => (
+                <SectionHeader icon={Pin} title={strings.pinned} count={visiblePinnedStations.length} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 mb-6">
+                  {visiblePinnedStations.map((station) => (
                     <PinnedRow
                       key={station.url}
                       station={station}
+                      contentLang={contentLang}
                       isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
                       isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
                       onSelect={handleStationSelect}
@@ -723,6 +780,8 @@ const QuranRadio = () => {
                   <StationTile
                     key={station.url}
                     station={station}
+                    contentLang={contentLang}
+                    isPinned={pinned.has(station.url)}
                     isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
                     isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
                     onSelect={handleStationSelect}
@@ -779,6 +838,26 @@ const SectionHeader = ({ icon: Icon, title, count }: { icon: LucideIcon; title: 
   </div>
 );
 
+/* ── Category icon helper ────────────────────────────────────── */
+
+const CategoryMiniIcon = ({ category, className = "w-4 h-4" }: { category: RadioCategory; className?: string }) => {
+  switch (category) {
+    case "mosque": return <Landmark className={className} />;
+    case "ruqyah":
+    case "adhkar": return <Sparkles className={className} />;
+    case "eid": return <Moon className={className} />;
+    case "tafsir": return <BookMarked className={className} />;
+    case "hadith": return <Headphones className={className} />;
+    case "translation": return <Globe className={className} />;
+    case "surah": return <BookOpen className={className} />;
+    case "stories":
+    case "biography": return <Sparkles className={className} />;
+    case "fatwa": return <Scale className={className} />;
+    case "reciter":
+    default: return <Radio className={className} />;
+  }
+};
+
 /* ── Artwork resolution (shared by tiles & rows) ─────────────── */
 
 const StationArtwork: React.FC<{ station: StationView; className?: string }> = ({ station }) => {
@@ -806,8 +885,7 @@ const StationArtwork: React.FC<{ station: StationView; className?: string }> = (
   return <CategoryArt category={station.category} id={station.id} />;
 };
 
-/* Themed icon per category (non-reciter stations).
-   Palette kept inside the app family: gold/amber + warm slate. */
+/* Themed artwork for large featured carousel cards */
 const CategoryArt: React.FC<{ category: RadioCategory; id: number }> = ({ category, id }) => {
   const styles: Record<string, string> = {
     mosque: "from-[#C9860A] to-[#8B5E0A]",
@@ -861,7 +939,12 @@ interface TileProps {
   onSelect: (s: StationView) => void;
 }
 
-const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect }) => {
+interface FeaturedTileProps extends TileProps {
+  contentLang: string;
+}
+
+const FeaturedTile = memo<FeaturedTileProps>(({ station, contentLang, isPlaying, isPending, onSelect }) => {
+  const loc = getLocalizedStation(station, contentLang);
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -874,20 +957,23 @@ const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect 
       onClick={() => onSelect(station)}
       onKeyDown={handleKeyDown}
       role="listitem"
-      aria-label={`${isPlaying ? "Pause" : "Play"} ${station.nameEn || station.name}`}
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${loc.title}`}
       style={{ scrollSnapAlign: "start" }}
-      className={`relative shrink-0 w-44 h-44 md:w-52 md:h-52 rounded-3xl overflow-hidden text-start shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-[transform,box-shadow] duration-200 motion-safe:hover:-translate-y-1 ${
-        isPlaying ? "ring-2 ring-primary shadow-lg" : ""
+      className={`relative shrink-0 w-44 h-44 md:w-52 md:h-52 rounded-3xl overflow-hidden text-start shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] transition-[transform,box-shadow] duration-200 motion-safe:hover:-translate-y-1 ${
+        isPlaying ? "ring-2 ring-[var(--accent)] shadow-lg" : ""
       }`}
     >
       <StationArtwork station={station} />
-      {/* Static scrim so overlaid text always reads (no filters) */}
+      {/* Static scrim so overlaid text always reads */}
       <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" aria-hidden="true" />
 
       {isPlaying ? (
-        <span className="absolute top-2.5 end-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
+        <span
+          className="absolute top-2.5 end-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+        >
           <Equalizer playing className="h-2.5 [&>span]:w-[2px]" />
-          Live
+          <span className={contentLang === 'ur' ? 'font-urdu' : ''}>{contentLang === 'ur' ? 'لائیو' : 'Live'}</span>
         </span>
       ) : isPending ? (
         <span className="absolute top-2.5 end-2.5 w-7 h-7 rounded-full bg-black/60 border border-[var(--accent)]/30 flex items-center justify-center" aria-hidden="true">
@@ -899,9 +985,10 @@ const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect 
       <span
         className={`absolute bottom-2.5 end-2.5 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-opacity duration-200 ${
           isPlaying
-            ? "bg-primary text-primary-foreground border-primary/60 opacity-100"
-            : "bg-black/55 border-[#C9860A]/35 text-white opacity-85"
+            ? "border-transparent opacity-100"
+            : "bg-black/55 border-[var(--border)] text-white opacity-85"
         }`}
+        style={isPlaying ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}
         aria-hidden="true"
       >
         {isPending ? (
@@ -914,11 +1001,17 @@ const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect 
       </span>
 
       <span className="absolute bottom-0 inset-x-0 p-3 pe-12 pointer-events-none">
-        <span className="block text-sm font-bold text-white leading-snug line-clamp-2" lang="ar">
-          {station.name}
+        <span
+          className={`block text-sm font-bold text-white leading-snug line-clamp-2 ${contentLang === 'ur' ? 'font-urdu text-[15px] leading-relaxed' : ''}`}
+        >
+          {loc.title}
         </span>
-        {station.nameEn && (
-          <span className="block text-[11px] text-white/70 line-clamp-1 mt-0.5">{station.nameEn}</span>
+        {loc.subtitle && (
+          <span
+            className={`block text-[11px] text-white/70 line-clamp-1 mt-0.5 ${contentLang === 'ur' ? 'font-urdu' : ''}`}
+          >
+            {loc.subtitle}
+          </span>
         )}
       </span>
     </button>
@@ -928,10 +1021,12 @@ const FeaturedTile = memo<TileProps>(({ station, isPlaying, isPending, onSelect 
 /* ── Pinned compact row ──────────────────────────────────────── */
 
 interface PinnedRowProps extends TileProps {
+  contentLang: string;
   onTogglePin: (s: StationView) => void;
 }
 
-const PinnedRow = memo<PinnedRowProps>(({ station, isPlaying, isPending, onSelect, onTogglePin }) => {
+const PinnedRow = memo<PinnedRowProps>(({ station, contentLang, isPlaying, isPending, onSelect, onTogglePin }) => {
+  const loc = getLocalizedStation(station, contentLang);
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -943,25 +1038,52 @@ const PinnedRow = memo<PinnedRowProps>(({ station, isPlaying, isPending, onSelec
     <div
       role="button"
       tabIndex={0}
-      aria-label={`${isPlaying ? "Pause" : "Play"} ${station.nameEn || station.name}`}
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${loc.title}`}
       onClick={() => onSelect(station)}
       onKeyDown={handleKeyDown}
-      className={`flex items-center gap-3 rounded-2xl border bg-card p-2 pe-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors duration-150 hover:bg-muted/60 ${
-        isPlaying ? "border-primary/50 bg-primary/5" : "border-border"
+      className={`flex items-center gap-3 rounded-2xl border p-2.5 pe-2.5 cursor-pointer outline-none transition-all duration-150 ${
+        isPlaying ? "shadow-sm" : ""
       }`}
+      style={{
+        background: isPlaying ? "var(--surface-2)" : "var(--surface)",
+        borderColor: isPlaying ? "var(--accent)" : "var(--border)",
+      }}
     >
-      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
-        <StationArtwork station={station} />
+      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-[var(--border)]">
+        {station.img ? (
+          <img src={station.img} alt="" className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+          >
+            <CategoryMiniIcon category={station.category} className="w-5 h-5" />
+          </div>
+        )}
       </div>
+
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate" lang="ar">{station.name}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{station.nameEn || "Islamic Radio"}</p>
+        <p
+          className={`text-sm font-semibold truncate ${contentLang === 'ur' ? 'font-urdu text-[15px]' : ''}`}
+          style={{ color: "var(--text-primary)" }}
+        >
+          {loc.title}
+        </p>
+        <p
+          className={`text-[11px] truncate ${contentLang === 'ur' ? 'font-urdu' : ''}`}
+          style={{ color: "var(--text-secondary)" }}
+        >
+          {loc.subtitle}
+        </p>
       </div>
 
       <span
-        className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border ${
-          isPlaying ? "bg-primary text-primary-foreground border-primary/60" : "bg-muted border-transparent text-foreground"
-        }`}
+        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+        style={
+          isPlaying
+            ? { background: "var(--accent)", color: "var(--on-accent)" }
+            : { background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }
+        }
         aria-hidden="true"
       >
         {isPending ? (
@@ -976,7 +1098,8 @@ const PinnedRow = memo<PinnedRowProps>(({ station, isPlaying, isPending, onSelec
       <button
         onClick={(e) => { e.stopPropagation(); onTogglePin(station); }}
         aria-label="Unpin station"
-        className="relative shrink-0 w-8 h-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors"
+        className="relative shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-100"
+        style={{ color: "var(--text-secondary)" }}
       >
         <span className="absolute -inset-1" aria-hidden="true" />
         <PinOff className="w-4 h-4" />
@@ -985,13 +1108,16 @@ const PinnedRow = memo<PinnedRowProps>(({ station, isPlaying, isPending, onSelec
   );
 });
 
-/* ── All-stations grid tile ──────────────────────────────────── */
+/* ── All-stations grid tile: Clean 3-row layout, zero watermark collision ── */
 
 interface GridTileProps extends TileProps {
+  contentLang: string;
+  isPinned: boolean;
   onTogglePin: (s: StationView) => void;
 }
 
-const StationTile = memo<GridTileProps>(({ station, isPlaying, isPending, onSelect, onTogglePin }) => {
+const StationTile = memo<GridTileProps>(({ station, contentLang, isPinned, isPlaying, isPending, onSelect, onTogglePin }) => {
+  const loc = getLocalizedStation(station, contentLang);
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -1000,66 +1126,138 @@ const StationTile = memo<GridTileProps>(({ station, isPlaying, isPending, onSele
   }, [onSelect, station]);
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(station)}
       onKeyDown={handleKeyDown}
-      role="listitem"
-      aria-label={`${isPlaying ? "Pause" : "Play"} ${station.nameEn || station.name}`}
-      className={`group relative aspect-square rounded-3xl overflow-hidden text-start shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-[transform,box-shadow] duration-200 motion-safe:hover:-translate-y-1 ${
-        isPlaying ? "ring-2 ring-primary shadow-lg" : ""
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${loc.title}`}
+      className={`group relative rounded-2xl border p-3 flex flex-col justify-between text-start cursor-pointer transition-all duration-200 min-h-[160px] sm:min-h-[170px] ${
+        isPlaying ? "shadow-md" : "hover:shadow-sm"
       }`}
+      style={{
+        background: isPlaying ? "var(--surface-2)" : "var(--surface)",
+        borderColor: isPlaying ? "var(--accent)" : "var(--border)",
+        boxShadow: isPlaying ? "0 4px 18px var(--accent-glow)" : undefined,
+      }}
     >
-      <StationArtwork station={station} />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" aria-hidden="true" />
+      {/* ── Top row: 28x28 category icon badge + 28x28 Pin button ── */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-[var(--border)]">
+          {station.img ? (
+            <img src={station.img} alt="" className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+            >
+              <CategoryMiniIcon category={station.category} className="w-4 h-4" />
+            </div>
+          )}
+        </div>
 
-      {/* Pin — 36px visual, ~44px hit area */}
-      <span
-        onClick={(e) => { e.stopPropagation(); onTogglePin(station); }}
-        role="button"
-        tabIndex={-1}
-        aria-label={isPlaying ? undefined : "Pin station"}
-        className="absolute top-2 start-2 z-10 w-9 h-9 rounded-full bg-black/45 flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity"
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePin(station);
+          }}
+          aria-label={isPinned ? "Unpin station" : "Pin station"}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+          style={{
+            background: isPinned ? "var(--accent-soft)" : "transparent",
+            color: isPinned ? "var(--accent)" : "var(--text-secondary)",
+          }}
+        >
+          <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-current" : ""}`} />
+        </button>
+      </div>
+
+      {/* ── Middle row: 2-line station title + 1-line subtitle ── */}
+      <div className="flex-1 flex flex-col justify-center my-2 min-w-0">
+        <h3
+          className={`text-sm font-bold line-clamp-2 leading-snug transition-colors ${
+            contentLang === "ur" ? "font-urdu text-[15px] leading-relaxed" : ""
+          }`}
+          style={{ color: isPlaying ? "var(--accent)" : "var(--text-primary)" }}
+        >
+          {loc.title}
+        </h3>
+        <p
+          className={`text-[11px] line-clamp-1 mt-1 ${
+            contentLang === "ur" ? "font-urdu text-xs" : ""
+          }`}
+          style={{ color: "var(--text-secondary)" }}
+        >
+          {loc.subtitle}
+        </p>
+      </div>
+
+      {/* ── Bottom row: Status/Equalizer + 34x34 Play/Pause button ── */}
+      <div
+        className="flex items-center justify-between gap-2 mt-auto pt-2 border-t"
+        style={{ borderColor: "var(--border)" }}
       >
-        <Pin className={`w-4 h-4 ${isPlaying ? "text-primary fill-primary" : "text-white"}`} />
-      </span>
+        <div className="min-w-0 flex-1">
+          {isPlaying ? (
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+              style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+            >
+              <Equalizer playing className="h-2.5 [&>span]:w-[2px]" />
+              <span className={contentLang === "ur" ? "font-urdu text-[11px]" : ""}>
+                {contentLang === "ur" ? "لائیو" : "Live"}
+              </span>
+            </span>
+          ) : isPending ? (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium" style={{ color: "var(--text-secondary)" }}>
+              <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin motion-reduce:animate-none" />
+              <span>Loading</span>
+            </span>
+          ) : (
+            <span
+              className={`text-[10px] uppercase tracking-wider truncate font-medium block ${
+                contentLang === "ur" ? "font-urdu text-[11px]" : ""
+              }`}
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {CATEGORY_LABELS[station.category] || "Radio"}
+            </span>
+          )}
+        </div>
 
-      {isPlaying ? (
-        <span className="absolute top-2 end-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
-          <Equalizer playing className="[&>span]:w-[2px]" />
-        </span>
-      ) : isPending ? (
-        <span className="absolute top-2 end-2" aria-hidden="true">
-          <span className="block w-4 h-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin motion-reduce:animate-none" />
-        </span>
-      ) : null}
-
-      {/* Play affordance — always visible */}
-      <span
-        className={`absolute bottom-2 end-2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-opacity duration-200 ${
-          isPlaying
-            ? "bg-primary text-primary-foreground border-primary/60"
-            : "bg-black/55 border-[#C9860A]/35 text-white opacity-85 group-hover:opacity-100"
-        }`}
-        aria-hidden="true"
-      >
-        {isPending ? (
-          <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none" />
-        ) : isPlaying ? (
-          <Pause className="w-4 h-4 fill-current" />
-        ) : (
-          <Play className="w-4 h-4 fill-current ms-0.5" />
-        )}
-      </span>
-
-      <span className="absolute bottom-0 inset-x-0 p-2.5 pe-12 pointer-events-none">
-        <span className="block text-sm font-bold text-white leading-snug line-clamp-2" lang="ar">
-          {station.name}
-        </span>
-        <span className="block text-[11px] text-white/65 line-clamp-1 mt-0.5">
-          {station.nameEn || "Islamic Radio"}
-        </span>
-      </span>
-    </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(station);
+          }}
+          aria-label={isPlaying ? "Pause" : "Play"}
+          className="shrink-0 w-[34px] h-[34px] rounded-full flex items-center justify-center shadow transition-all duration-150 active:scale-95"
+          style={
+            isPlaying
+              ? {
+                  background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                  color: "var(--on-accent)",
+                  boxShadow: "0 2px 8px var(--accent-glow)",
+                }
+              : {
+                  background: "var(--surface-2)",
+                  color: "var(--text-primary)",
+                  border: "1px solid var(--border)",
+                }
+          }
+        >
+          {isPending ? (
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none" />
+          ) : isPlaying ? (
+            <Pause className="w-3.5 h-3.5 fill-current" />
+          ) : (
+            <Play className="w-3.5 h-3.5 fill-current ms-0.5" />
+          )}
+        </button>
+      </div>
+    </div>
   );
 });
 
