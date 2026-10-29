@@ -521,7 +521,7 @@ export function EnhancedDailyAyah() {
           <p
             dir={isRtl ? "rtl" : "ltr"}
             className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 bidi-plaintext ${
-              isRtl ? "font-arabic text-right leading-[2.1]" : ""
+              contentLang === 'ur' ? "font-urdu text-right leading-[2.35] text-base" : isRtl ? "font-arabic text-right leading-[2.1]" : ""
             } ${!isTranslationExpanded && isTranslationLong ? "line-clamp-2" : ""}`}
             style={{ unicodeBidi: 'plaintext' }}
           >
@@ -553,7 +553,7 @@ export function EnhancedDailyAyah() {
           <div
             dir={isRtl ? "rtl" : "ltr"}
             className={`p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5 bidi-plaintext ${
-              isRtl ? "font-arabic text-right leading-[2.05]" : ""
+              contentLang === 'ur' ? "font-urdu text-right leading-[2.35] text-base" : isRtl ? "font-arabic text-right leading-[2.05]" : ""
             }`}
             style={{
               background: 'var(--surface-2)',
@@ -563,7 +563,7 @@ export function EnhancedDailyAyah() {
             }}
           >
             <div className={`flex items-start gap-1.5 ${isRtl ? "flex-row-reverse justify-end" : ""}`}>
-              <span className="text-[var(--accent)] font-semibold not-italic shrink-0 inline-block" dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
+              <span className={`text-[var(--accent)] font-semibold not-italic shrink-0 inline-block ${contentLang === 'ur' ? 'font-urdu' : ''}`} dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
                 {contentLang === 'ur' ? 'تدبر و غور:' : contentLang === 'gu' ? 'ચિંતન:' : contentLang === 'hi' ? 'चिंतन:' : 'Reflection:'}
               </span>
               <p
@@ -596,7 +596,7 @@ export function EnhancedDailyAyah() {
         {/* Single Sleek Metadata Chip Row */}
         <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] px-1 font-medium">
           <span className="truncate">
-            Surah {ayah.surah} • Verse {ayah.ayahNumber}
+            {contentLang === 'ur' ? `سورۃ ${ayah.surah} • آیت ${ayah.ayahNumber}` : contentLang === 'gu' ? `સૂરહ ${ayah.surah} • આયત ${ayah.ayahNumber}` : contentLang === 'hi' ? `सूरह ${ayah.surah} • आयत ${ayah.ayahNumber}` : `Surah ${ayah.surah} • Verse ${ayah.ayahNumber}`}
           </span>
           <span className="flex items-center gap-1.5 shrink-0 ml-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />

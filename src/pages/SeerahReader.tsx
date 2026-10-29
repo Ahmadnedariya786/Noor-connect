@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Type,
   Share2,
+  Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence, motion } from "framer-motion";
@@ -18,7 +19,7 @@ import { Slider } from "@/components/ui/slider";
 import { PageTransition } from "@/components/PageTransition";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
-import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { useContentLanguage, translateIslamicText, translateIslamicBatch } from "@/lib/content-translator";
 import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import {
   loadSeerahChapter,
@@ -55,36 +56,84 @@ export default function SeerahReader() {
   const { contentLang, isRtl } = useContentLanguage();
   const [translatedTitle, setTranslatedTitle] = useState("");
   const [translatedContent, setTranslatedContent] = useState("");
+  const [translatedTags, setTranslatedTags] = useState<string[]>([]);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     if (!chapter) return;
     if (contentLang === 'en') {
       setTranslatedTitle(chapter.title);
       setTranslatedContent(chapter.content);
+      setTranslatedTags(chapter.tags || []);
+      setIsTranslating(false);
       return;
     }
+
     let isMounted = true;
+    setIsTranslating(true);
+
+    const paragraphs = chapter.content.split("\n\n").filter(p => p.trim());
+
     Promise.all([
       translateIslamicText(chapter.title, contentLang),
-      translateIslamicText(chapter.content, contentLang),
-    ]).then(([tTitle, tContent]) => {
-      if (isMounted) {
-        setTranslatedTitle(tTitle);
-        setTranslatedContent(tContent);
-      }
-    });
-    return () => { isMounted = false; };
+      translateIslamicBatch(paragraphs, contentLang),
+      chapter.tags?.length ? translateIslamicBatch(chapter.tags, contentLang) : Promise.resolve([]),
+    ])
+      .then(([tTitle, tParas, tTags]) => {
+        if (isMounted) {
+          setTranslatedTitle(tTitle);
+          setTranslatedContent(tParas.join("\n\n"));
+          setTranslatedTags(tTags);
+          setIsTranslating(false);
+        }
+      })
+      .catch((err) => {
+        console.warn("Seerah translation error:", err);
+        if (isMounted) {
+          setTranslatedTitle(chapter.title);
+          setTranslatedContent(chapter.content);
+          setTranslatedTags(chapter.tags || []);
+          setIsTranslating(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [chapter, contentLang]);
 
-  const periodLabels: Record<PeriodKey, string> = useMemo(
-    () => ({
+  const periodLabels: Record<PeriodKey, string> = useMemo(() => {
+    if (contentLang === 'ur') {
+      return {
+        "pre-prophethood": "قبل از نبوت",
+        makkan: "مکی دور",
+        madinan: "مدنی دور",
+        "final-days": "آخری ایام",
+      };
+    }
+    if (contentLang === 'gu') {
+      return {
+        "pre-prophethood": "નબુવ્વત પહેલાં",
+        makkan: "મક્કી દોર",
+        madinan: "મદની દોર",
+        "final-days": "આખરી દિવસો",
+      };
+    }
+    if (contentLang === 'hi') {
+      return {
+        "pre-prophethood": "नुबुव्वत से पहले",
+        makkan: "मक्की दौर",
+        madinan: "मदनी दौर",
+        "final-days": "अंतिम दिन",
+      };
+    }
+    return {
       "pre-prophethood": t("seerahPeriodPreProphethood"),
       makkan: t("seerahPeriodMakkan"),
       madinan: t("seerahPeriodMadinan"),
       "final-days": t("seerahPeriodFinalDays"),
-    }),
-    [t]
-  );
+    };
+  }, [contentLang, t]);
 
   useEffect(() => {
     async function loadData() {
@@ -196,7 +245,11 @@ export default function SeerahReader() {
       }
 
       return (
-        <p key={index} className="mb-4 leading-[1.8]">
+        <p
+          key={index}
+          className={`mb-5 ${contentLang === 'ur' ? 'font-urdu leading-[2.35] py-1 text-right text-base sm:text-lg' : isRtl ? 'font-arabic leading-[2.1] text-right text-base sm:text-lg' : 'leading-[1.8]'}`}
+          dir={isRtl ? 'rtl' : 'ltr'}
+        >
           {paragraph}
         </p>
       );
@@ -232,56 +285,64 @@ export default function SeerahReader() {
         </div>
 
         <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 z-40 safe-top">
-          <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => goBackOrFallback(navigate, '/seerah')}
-                className="rounded-xl"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex-1 min-w-0">
-                <h2
-                  className={`text-lg font-semibold text-foreground truncate ${isRtl ? 'font-arabic text-right' : ''}`}
-                  dir={isRtl ? 'rtl' : 'ltr'}
+          <div className="max-w-3xl mx-auto px-4 pt-3 pb-2 space-y-2.5">
+            {/* Row 1: Navigation & Action Tools */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => goBackOrFallback(navigate, '/seerah')}
+                  className="rounded-xl shrink-0"
                 >
-                  {translatedTitle || chapter.title}
-                </h2>
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div className="flex-1 min-w-0">
+                  <h2
+                    className={`text-base sm:text-lg font-semibold text-foreground truncate ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
+                    dir={isRtl ? 'rtl' : 'ltr'}
+                  >
+                    {translatedTitle || chapter.title}
+                  </h2>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowFontSlider((current) => !current)}
+                  className="rounded-xl h-9 w-9"
+                  title="Font Size"
+                >
+                  <Type className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleShare}
+                  className="rounded-xl h-9 w-9"
+                  title="Share"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleBookmarkToggle}
+                  className="rounded-xl h-9 w-9"
+                  title="Bookmark"
+                >
+                  {isBookmarked ? (
+                    <BookMarked className="w-4 h-4 text-[#D4AF37]" />
+                  ) : (
+                    <Bookmark className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <ContentLanguageBar compact />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowFontSlider((current) => !current)}
-                className="rounded-xl"
-              >
-                <Type className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleShare}
-                className="rounded-xl"
-              >
-                <Share2 className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBookmarkToggle}
-                className="rounded-xl"
-              >
-                {isBookmarked ? (
-                  <BookMarked className="w-5 h-5 text-[#D4AF37]" />
-                ) : (
-                  <Bookmark className="w-5 h-5" />
-                )}
-              </Button>
-            </div>
+
+            {/* Row 2: Full-Width Language Selector Bar */}
+            <ContentLanguageBar fullWidth />
           </div>
 
           <AnimatePresence>
@@ -320,15 +381,15 @@ export default function SeerahReader() {
             <span className="font-medium">{periodLabels[chapter.period]}</span>
             <span>→</span>
             <span>
-              {t("chapter")} {chapter.number} / {allChapters.length}
+              {contentLang === 'ur' ? 'باب' : contentLang === 'gu' ? 'પ્રકરણ' : contentLang === 'hi' ? 'अध्याय' : t("chapter")} {chapter.number} / {allChapters.length}
             </span>
           </div>
           <p className="font-arabic text-2xl text-foreground mb-4" dir="rtl">
             {chapter.arabicTitle}
           </p>
           <div className="flex flex-wrap gap-2">
-            {chapter.tags.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
+            {(translatedTags.length ? translatedTags : chapter.tags).map((tag) => (
+              <Badge key={tag} variant="outline" className={`text-xs ${contentLang === 'ur' ? 'font-urdu' : ''}`}>
                 {tag}
               </Badge>
             ))}
@@ -338,15 +399,35 @@ export default function SeerahReader() {
         <div
           ref={contentRef}
           className="max-w-3xl mx-auto px-4 py-6 overflow-y-auto"
-          style={{ maxHeight: "calc(100vh - 200px)" }}
+          style={{ maxHeight: "calc(100vh - 220px)", paddingBottom: "120px" }}
         >
-          <div
-            className={`text-foreground ${isRtl ? 'font-arabic text-right leading-loose text-lg' : ''}`}
-            dir={isRtl ? 'rtl' : 'ltr'}
-            style={{ fontSize: `${fontSize}px` }}
-          >
-            {parseContent(translatedContent || chapter.content)}
-          </div>
+          {isTranslating ? (
+            <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/60 backdrop-blur-sm space-y-3 animate-pulse text-center my-6">
+              <div className="flex items-center justify-center gap-2 text-sm text-[var(--accent-text)] font-semibold">
+                <Sparkles className="w-4 h-4 animate-spin text-[var(--accent)]" />
+                <span>
+                  {contentLang === 'ur'
+                    ? 'سیرت النبی ﷺ کا مبارک باب اردو میں ترجمہ ہو رہا ہے...'
+                    : contentLang === 'gu'
+                    ? 'સીરત-ઉન-નબી ﷺ પ્રકરણનો અનુવાદ થઈ રહ્યો છે...'
+                    : contentLang === 'hi'
+                    ? 'सीरत-उन-नबी ﷺ अध्याय का अनुवाद हो रहा है...'
+                    : 'Translating Seerah chapter...'}
+                </span>
+              </div>
+              <div className="h-4 bg-muted/40 rounded w-3/4 mx-auto" />
+              <div className="h-4 bg-muted/30 rounded w-5/6 mx-auto" />
+              <div className="h-4 bg-muted/40 rounded w-2/3 mx-auto" />
+            </div>
+          ) : (
+            <div
+              className={`text-foreground ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35] text-lg' : isRtl ? 'font-arabic text-right leading-loose text-lg' : ''}`}
+              dir={isRtl ? 'rtl' : 'ltr'}
+              style={{ fontSize: `${fontSize}px` }}
+            >
+              {parseContent(translatedContent || chapter.content)}
+            </div>
+          )}
         </div>
 
         <AnimatePresence>

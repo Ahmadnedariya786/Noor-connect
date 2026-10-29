@@ -106,7 +106,7 @@ const HadithCard = memo(function HadithCard({ hadith, index, collection, book, b
               <p
                 dir={isRtl ? "rtl" : "ltr"}
                 className={`text-sm text-muted-foreground italic leading-relaxed whitespace-pre-wrap ${
-                  isRtl ? "font-arabic text-right leading-[2.1]" : ""
+                  contentLang === 'ur' ? "font-urdu text-right leading-[2.35] text-base" : isRtl ? "font-arabic text-right leading-[2.1]" : ""
                 }`}
               >
                 {translatedText || hadith.englishTranslation}
@@ -118,10 +118,10 @@ const HadithCard = memo(function HadithCard({ hadith, index, collection, book, b
               <p
                 dir={isRtl ? "rtl" : "ltr"}
                 className={`text-sm font-semibold text-primary mt-3 ${
-                  isRtl ? "font-arabic text-right" : ""
+                  contentLang === 'ur' ? "font-urdu text-right leading-[2.35]" : isRtl ? "font-arabic text-right" : ""
                 }`}
               >
-                {contentLang === 'ur' ? 'راوی:' : contentLang === 'gu' ? 'વર્ણનકર્તા:' : contentLang === 'hi' ? 'वर्णنकर्ता:' : 'Narrated by:'} {translatedNarrator || hadith.narrator}
+                {contentLang === 'ur' ? 'راوی:' : contentLang === 'gu' ? 'વર્ણનકર્તા:' : contentLang === 'hi' ? 'वर्णનकर्ता:' : 'Narrated by:'} {translatedNarrator || hadith.narrator}
               </p>
             )}
 
@@ -162,10 +162,13 @@ export function HadithBookContent() {
   const { collection, book } = useParams<{ collection: string; book: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { contentLang, isRtl } = useContentLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [hadithData, setHadithData] = useState<EnhancedHadith[]>([]);
   const [remoteCollectionData, setRemoteCollectionData] = useState<HadithCollection | null>(null);
+  const [translatedBookName, setTranslatedBookName] = useState("");
+  const [translatedBookDesc, setTranslatedBookDesc] = useState("");
 
   const staticCollectionData = useMemo(() => {
     return collection ? getCollectionByName(collection) : null;
@@ -263,6 +266,26 @@ export function HadithBookContent() {
       description: undefined,
     };
   }, [book, collectionData, hadithData]);
+
+  useEffect(() => {
+    if (!bookInfo) return;
+    if (contentLang === 'en') {
+      setTranslatedBookName(bookInfo.name);
+      setTranslatedBookDesc(bookInfo.description || "");
+      return;
+    }
+    let isMounted = true;
+    Promise.all([
+      bookInfo.name ? translateIslamicText(bookInfo.name, contentLang) : Promise.resolve(""),
+      bookInfo.description ? translateIslamicText(bookInfo.description, contentLang) : Promise.resolve(""),
+    ]).then(([tName, tDesc]) => {
+      if (isMounted) {
+        setTranslatedBookName(tName);
+        setTranslatedBookDesc(tDesc);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [bookInfo, contentLang]);
 
   const filteredHadith = useMemo(() => {
     if (!searchTerm) return hadithData;
@@ -370,32 +393,36 @@ export function HadithBookContent() {
   return (
     <div className="min-h-screen bg-background safe-top">
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4 flex-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(`/hadith/collections/${collection}`)}
-              className="rounded-xl"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-foreground truncate">{bookInfo?.name ?? `Book ${book}`}</h1>
-              {bookInfo?.arabicName && (
-                <p className="text-muted-foreground font-arabic" dir="rtl">
-                  {bookInfo.arabicName}
-                </p>
-              )}
+        {/* Header with Row 1 (Back + Title + Badge) and Row 2 (Full-Width Language Bar) */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(`/hadith/collections/${collection}`)}
+                className="rounded-xl shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <h1 className={`text-xl sm:text-2xl font-bold text-foreground truncate ${contentLang === 'ur' ? 'font-urdu leading-[2.35]' : ''}`}>
+                  {translatedBookName || (bookInfo?.name ?? `Book ${book}`)}
+                </h1>
+                {bookInfo?.arabicName && (
+                  <p className="text-muted-foreground font-arabic truncate" dir="rtl">
+                    {bookInfo.arabicName}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 self-end sm:self-center">
-            <ContentLanguageBar compact />
-            <Badge variant="secondary" className="text-xs">
-              {loading && hadithData.length === 0 ? "Loading..." : `${hadithData.length > 0 ? hadithData.length : (bookInfo?.hadithCount || 0)} Hadith`}
+            <Badge variant="secondary" className="text-xs shrink-0">
+              {loading && hadithData.length === 0
+                ? (contentLang === 'ur' ? 'لوڈ ہو رہا ہے...' : contentLang === 'gu' ? 'લોડ થઈ રહ્યું છે...' : contentLang === 'hi' ? 'लोड हो रहा है...' : 'Loading...')
+                : `${hadithData.length > 0 ? hadithData.length : (bookInfo?.hadithCount || 0)} ${contentLang === 'ur' ? 'احادیث' : contentLang === 'gu' ? 'હદીસ' : contentLang === 'hi' ? 'हदीस' : 'Hadith'}`}
             </Badge>
           </div>
+          <ContentLanguageBar fullWidth />
         </div>
 
         {/* Book Info */}
@@ -403,23 +430,27 @@ export function HadithBookContent() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Book Information</h3>
+                <h3 className="font-semibold text-foreground mb-2">
+                  {contentLang === 'ur' ? 'کتاب کی معلومات' : contentLang === 'gu' ? 'પુસ્તકની માહિતી' : contentLang === 'hi' ? 'किताब की जानकारी' : 'Book Information'}
+                </h3>
                 <div className="space-y-2">
                   <p className="text-sm">
-                    <span className="font-medium">Collection:</span> {collectionData.title}
+                    <span className="font-medium">{contentLang === 'ur' ? 'مجموعہ:' : contentLang === 'gu' ? 'સંગ્રહ:' : contentLang === 'hi' ? 'संग्रह:' : 'Collection:'}</span> {collectionData.title}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">Book Number:</span> {bookInfo?.number ?? book}
+                    <span className="font-medium">{contentLang === 'ur' ? 'کتاب نمبر:' : contentLang === 'gu' ? 'પુસ્તક ક્રમાંક:' : contentLang === 'hi' ? 'किताब क्रमांक:' : 'Book Number:'}</span> {bookInfo?.number ?? book}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">Total Hadith:</span> {hadithData.length > 0 ? hadithData.length : (bookInfo?.hadithCount || 0)}
+                    <span className="font-medium">{contentLang === 'ur' ? 'کل احادیث:' : contentLang === 'gu' ? 'કુલ હદીસ:' : contentLang === 'hi' ? 'कुल हदीस:' : 'Total Hadith:'}</span> {hadithData.length > 0 ? hadithData.length : (bookInfo?.hadithCount || 0)}
                   </p>
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Description</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {bookInfo?.description || "Description is not available for this book."}
+                <h3 className="font-semibold text-foreground mb-2">
+                  {contentLang === 'ur' ? 'تفصیل و تعارف' : contentLang === 'gu' ? 'વર્ણન' : contentLang === 'hi' ? 'विवरण' : 'Description'}
+                </h3>
+                <p className={`text-sm text-muted-foreground leading-relaxed ${contentLang === 'ur' ? 'font-urdu leading-[2.35] text-right' : isRtl ? 'font-arabic text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+                  {translatedBookDesc || bookInfo?.description || "Description is not available for this book."}
                 </p>
               </div>
             </div>
@@ -430,7 +461,7 @@ export function HadithBookContent() {
         <div className="relative max-w-md mx-auto mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search hadith in this book..."
+            placeholder={contentLang === 'ur' ? 'اس کتاب میں حدیث تلاش کریں...' : contentLang === 'gu' ? 'આ પુસ્તકમાં હદીસ શોધો...' : contentLang === 'hi' ? 'इस किताब में हदीस खोजें...' : 'Search hadith in this book...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 rounded-xl border-border/50 focus:border-primary/50"

@@ -92,34 +92,36 @@ export function HadithCollections() {
   return (
     <div className="min-h-screen bg-background safe-top">
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => goBackOrFallback(navigate, '/hadith')}
-            className="rounded-xl"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-foreground truncate">Hadith Collections</h1>
-            <p className="text-muted-foreground text-sm truncate">
-              Explore authentic Hadith from available collections
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ContentLanguageBar compact />
+        {/* Header with Row 1 (Back + Title + Bookmark) and Row 2 (Full-Width Language Bar) */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => goBackOrFallback(navigate, '/hadith')}
+                className="rounded-xl shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">Hadith Collections</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm truncate">
+                  Explore authentic Hadith from available collections
+                </p>
+              </div>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/hadith/bookmarks")}
-              className="rounded-xl"
+              className="rounded-xl shrink-0"
               title="View bookmarked hadith"
             >
               <Bookmark className="w-5 h-5" />
             </Button>
           </div>
+          <ContentLanguageBar fullWidth />
         </div>
 
         {/* Daily Hadith Card - Refined Dark Jewel Manuscript */}
@@ -175,7 +177,7 @@ export function HadithCollections() {
                     </p>
                   )}
                   <p
-                    className={`text-foreground/90 text-sm sm:text-base font-normal leading-relaxed break-words ${isRtl ? 'font-arabic text-right text-lg' : ''}`}
+                    className={`text-foreground/90 text-sm sm:text-base font-normal leading-relaxed break-words ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35] text-lg' : isRtl ? 'font-arabic text-right text-lg' : ''}`}
                     dir={isRtl ? 'rtl' : 'ltr'}
                   >
                     {!isExpanded && (translatedDailyContent || dailyHadith.content).length > 240
@@ -188,7 +190,7 @@ export function HadithCollections() {
                       onClick={() => setIsExpanded(!isExpanded)}
                       className="text-xs font-semibold text-primary hover:underline focus:outline-none transition-colors"
                     >
-                      {isExpanded ? "Show Less" : "Read More"}
+                      {isExpanded ? (contentLang === 'ur' ? 'کم دکھائیں' : contentLang === 'gu' ? 'ઓછું બતાવો' : contentLang === 'hi' ? 'कम दिखाएं' : 'Show Less') : (contentLang === 'ur' ? 'مزید پڑھیں' : contentLang === 'gu' ? 'વધુ વાંચો' : contentLang === 'hi' ? 'अधिक पढ़ें' : 'Read More')}
                     </button>
                   )}
                   <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/40">
@@ -200,7 +202,7 @@ export function HadithCollections() {
                 </div>
                 
                 <p
-                  className={`text-muted-foreground text-xs sm:text-sm font-medium italic ${isRtl ? 'font-arabic text-right' : ''}`}
+                  className={`text-muted-foreground text-xs sm:text-sm font-medium italic ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
                   dir={isRtl ? 'rtl' : 'ltr'}
                   style={{ unicodeBidi: 'isolate' }}
                 >

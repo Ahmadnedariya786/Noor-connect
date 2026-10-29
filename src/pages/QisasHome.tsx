@@ -89,14 +89,53 @@ export default function QisasHome() {
     return () => window.clearTimeout(timer);
   }, [searchTerm]);
 
-  const eraLabels: Record<EraFilter, string> = {
-    all: t("all"),
-    "beginning-of-creation": t("qisasEraBeginning"),
-    "pre-flood": t("qisasEraPreFlood"),
-    patriarchal: t("qisasEraPatriarchal"),
-    israelite: t("qisasEraIsraelite"),
-    "post-israelite": t("qisasEraPostIsraelite"),
-  };
+  const eraLabels: Record<EraFilter, string> = useMemo(() => {
+    if (contentLang === 'ur') {
+      return {
+        all: "تمام ادوار",
+        "beginning-of-creation": "ابتدائے آفرینش",
+        "pre-flood": "طوفانِ نوح سے قبل",
+        patriarchal: "دورِ ابراہیمی",
+        israelite: "بنی اسرائیل کا دور",
+        "post-israelite": "مابعد بنی اسرائیل",
+      };
+    }
+    if (contentLang === 'gu') {
+      return {
+        all: "બધા",
+        "beginning-of-creation": "શરૂઆતનો સમય",
+        "pre-flood": "નૂહ પૂર પહેલાં",
+        patriarchal: "ઇબ્રાહીમ દોર",
+        israelite: "ઇઝરાયલી દોર",
+        "post-israelite": "અન્ય પયગંબરો",
+      };
+    }
+    if (contentLang === 'hi') {
+      return {
+        all: "सभी",
+        "beginning-of-creation": "सृष्टि का आरंभ",
+        "pre-flood": "तूफ़ान-ए-नूह से पूर्व",
+        patriarchal: "इब्राहीमी दौर",
+        israelite: "बनी इस्राईल का दौर",
+        "post-israelite": "अन्य नबी",
+      };
+    }
+    return {
+      all: t("all"),
+      "beginning-of-creation": t("qisasEraBeginning"),
+      "pre-flood": t("qisasEraPreFlood"),
+      patriarchal: t("qisasEraPatriarchal"),
+      israelite: t("qisasEraIsraelite"),
+      "post-israelite": t("qisasEraPostIsraelite"),
+    };
+  }, [contentLang, t]);
+
+  const searchPlaceholder = useMemo(() => {
+    if (contentLang === 'ur') return "انبیاء کرام کے مبارک واقعات تلاش کریں...";
+    if (contentLang === 'gu') return "પયગંબરોની વાતો શોધો...";
+    if (contentLang === 'hi') return "नबियों की मुबारक दास्तानें खोजें...";
+    return t("search");
+  }, [contentLang, t]);
 
   const filteredProphets = useMemo(() => {
     let result = prophets;
@@ -145,27 +184,32 @@ export default function QisasHome() {
     <PageTransition>
       <div className="min-h-screen bg-background pb-24 safe-top">
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => goBackOrFallback(navigate, '/services')}
-              className="rounded-xl"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-foreground truncate">{t("qisas")}</h1>
-              <p className="text-muted-foreground text-sm truncate">{t("qisasDescription")}</p>
+          {/* Header with Row 1 (Back + Title) and Row 2 (Full-Width Language Bar) */}
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => goBackOrFallback(navigate, '/services')}
+                className="rounded-xl"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-bold text-foreground truncate">{t("qisas")}</h1>
+                <p className="text-muted-foreground text-sm truncate">{t("qisasDescription")}</p>
+              </div>
             </div>
-            <ContentLanguageBar compact />
+            <ContentLanguageBar fullWidth />
           </div>
+
           {/* Continue Reading */}
           {(() => {
             const lastReadId = getLastRead("qisas");
             const lastReadProphet = lastReadId ? prophets.find(p => p.id === lastReadId) : null;
             if (lastReadProphet && !loading) {
               const progress = getReadingProgress(lastReadId!, "qisas");
+              const continueLabel = contentLang === 'ur' ? 'مطالعہ جاری رکھیں' : contentLang === 'gu' ? 'વાંચન ચાલુ રાખો' : contentLang === 'hi' ? 'पढ़ना जारी रखें' : 'Continue Reading';
               return (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -180,8 +224,8 @@ export default function QisasHome() {
                         <BookOpen className="w-5 h-5 text-[var(--accent)]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground mb-0.5">Continue Reading</p>
-                        <p className="text-sm font-semibold truncate">{lastReadProphet.name}</p>
+                        <p className="text-xs text-muted-foreground mb-0.5">{continueLabel}</p>
+                        <p className={`text-sm font-semibold truncate ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{lastReadProphet.name}</p>
                         {progress > 0 && (
                           <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-[var(--accent)] rounded-full transition-all" style={{ width: `${progress}%` }} />
@@ -217,7 +261,7 @@ export default function QisasHome() {
               </div>
 
               <h2
-                className={`text-3xl font-bold text-[var(--text-primary)] mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+                className={`text-3xl font-bold text-[var(--text-primary)] mb-2 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
                 dir={isRtl ? 'rtl' : 'ltr'}
               >
                 {translatedMetaTitle || metadata?.title || "Stories of the Prophets"}
@@ -235,7 +279,7 @@ export default function QisasHome() {
               )}
 
               <p
-                className={`text-[var(--text-secondary)] text-sm mb-6 ${isRtl ? 'font-arabic text-right text-base' : ''}`}
+                className={`text-[var(--text-secondary)] text-sm mb-6 ${contentLang === 'ur' ? 'font-urdu text-right text-base leading-[2.35]' : isRtl ? 'font-arabic text-right text-base' : ''}`}
                 dir={isRtl ? 'rtl' : 'ltr'}
               >
                 {translatedMetaDesc || metadata?.description || "Stories of the Prophets from Adam to Isa (peace be upon them all)."}
@@ -255,7 +299,7 @@ export default function QisasHome() {
           <div className="relative max-w-md mx-auto mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder={t("search")}
+              placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className="pl-10 rounded-xl"

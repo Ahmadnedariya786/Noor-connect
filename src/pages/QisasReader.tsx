@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Type,
   Share2,
+  Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence, motion } from "framer-motion";
@@ -18,7 +19,7 @@ import { Slider } from "@/components/ui/slider";
 import { PageTransition } from "@/components/PageTransition";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
-import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { useContentLanguage, translateIslamicText, translateIslamicBatch } from "@/lib/content-translator";
 import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import {
   loadProphetList,
@@ -38,6 +39,33 @@ import {
 
 type EraKey = ProphetSummary["era"];
 
+const PROPHET_NAME_TRANSLATIONS: Record<string, { ur: string; gu: string; hi: string }> = {
+  "prophet-adam": { ur: "حضرت آدم علیہ السلام", gu: "હઝરત આદમ (અ.સ.)", hi: "हज़रत आदम (अ.स.)" },
+  "prophet-idris": { ur: "حضرت ادریس علیہ السلام", gu: "હઝરત ઇદરીસ (અ.સ.)", hi: "हज़रत इदरीस (अ.स.)" },
+  "prophet-nuh": { ur: "حضرت نوح علیہ السلام", gu: "હઝરત નૂહ (અ.સ.)", hi: "हज़रत नूह (अ.स.)" },
+  "prophet-hud": { ur: "حضرت ہود علیہ السلام", gu: "હઝરત હૂદ (અ.સ.)", hi: "हज़रत हूद (अ.स.)" },
+  "prophet-saleh": { ur: "حضرت صالح علیہ السلام", gu: "હઝરત સાલેહ (અ.સ.)", hi: "हज़रत सालेह (अ.स.)" },
+  "prophet-ibrahim": { ur: "حضرت ابراہیم علیہ السلام", gu: "હઝરત ઇબ્રાહીમ (અ.સ.)", hi: "हज़रत इब्राहीम (अ.स.)" },
+  "prophet-ismail": { ur: "حضرت اسماعیل علیہ السلام", gu: "હઝરત ઇસ્માઇલ (અ.સ.)", hi: "हज़रत इस्माईल (अ.स.)" },
+  "prophet-ishaq": { ur: "حضرت اسحاق علیہ السلام", gu: "હઝરત ઇસ્હાક (અ.સ.)", hi: "हज़रत इस्हाक़ (अ.स.)" },
+  "prophet-yaqub": { ur: "حضرت یعقوب علیہ السلام", gu: "હઝરત યાકૂબ (અ.સ.)", hi: "हज़रत याक़ूब (अ.स.)" },
+  "prophet-yusuf": { ur: "حضرت یوسف علیہ السلام", gu: "હઝરત યૂસુફ (અ.સ.)", hi: "हज़रत यूसुफ़ (अ.स.)" },
+  "prophet-ayyub": { ur: "حضرت ایوب علیہ السلام", gu: "હઝરત અય્યૂબ (અ.સ.)", hi: "हज़रत अय्यूब (अ.स.)" },
+  "prophet-shuayb": { ur: "حضرت شعیب علیہ السلام", gu: "હઝરત શુએબ (અ.સ.)", hi: "हज़रत शुऐब (अ.स.)" },
+  "prophet-musa": { ur: "حضرت موسیٰ علیہ السلام", gu: "હઝરત મૂસા (અ.સ.)", hi: "हज़रत मूसा (अ.स.)" },
+  "prophet-harun": { ur: "حضرت ہارون علیہ السلام", gu: "હઝરત હારૂન (અ.સ.)", hi: "हज़रत हारून (अ.स.)" },
+  "prophet-dawud": { ur: "حضرت داؤد علیہ السلام", gu: "હઝરત દાઊદ (અ.સ.)", hi: "हज़रत दाऊद (अ.स.)" },
+  "prophet-sulaiman": { ur: "حضرت سلیمان علیہ السلام", gu: "હઝરત સુલેમાન (અ.સ.)", hi: "हज़रत सुलेमान (अ.स.)" },
+  "prophet-yunus": { ur: "حضرت یونس علیہ السلام", gu: "હઝરત યૂનુસ (અ.સ.)", hi: "हज़रत यूनुस (अ.स.)" },
+  "prophet-ilyas": { ur: "حضرت الیاس علیہ السلام", gu: "હઝરત ઇલ્યાસ (અ.સ.)", hi: "हज़रत इलियास (अ.स.)" },
+  "prophet-al-yasa": { ur: "حضرت الیسع علیہ السلام", gu: "હઝરત અલ-યસા (અ.સ.)", hi: "हज़रत अल-यसा (अ.स.)" },
+  "prophet-dhul-kifl": { ur: "حضرت ذوالکفل علیہ السلام", gu: "હઝરત ઝુલ-કિફ્લ (અ.સ.)", hi: "हज़रत ज़ुल-किफ़्ल (अ.स.)" },
+  "prophet-zakariyya": { ur: "حضرت زکریا علیہ السلام", gu: "હઝરત ઝકરિયા (અ.સ.)", hi: "हज़रत ज़करिया (अ.स.)" },
+  "prophet-yahya": { ur: "حضرت یحییٰ علیہ السلام", gu: "હઝરત યાહ્યા (અ.સ.)", hi: "हज़रत याह्या (अ.स.)" },
+  "prophet-isa": { ur: "حضرت عیسیٰ علیہ السلام", gu: "હઝરત ઈસા (અ.સ.)", hi: "हज़रत ईसा (अ.स.)" },
+  "prophet-muhammad": { ur: "سیدنا محمد رسول اللہ ﷺ", gu: "હઝરત મુહમ્મદ ﷺ", hi: "हज़रत मुहम्मद ﷺ" },
+};
+
 export default function QisasReader() {
   const { prophetId } = useParams<{ prophetId: string }>();
   const navigate = useNavigate();
@@ -56,40 +84,101 @@ export default function QisasReader() {
   const [translatedName, setTranslatedName] = useState("");
   const [translatedTitle, setTranslatedTitle] = useState("");
   const [translatedStory, setTranslatedStory] = useState("");
+  const [translatedTags, setTranslatedTags] = useState<string[]>([]);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     if (!prophet) return;
+
+    // Check curated honorifics first
+    const curated = (contentLang === 'ur' || contentLang === 'gu' || contentLang === 'hi')
+      ? PROPHET_NAME_TRANSLATIONS[prophet.id]?.[contentLang]
+      : null;
+
     if (contentLang === 'en') {
       setTranslatedName(prophet.name);
       setTranslatedTitle(prophet.title);
       setTranslatedStory(prophet.story);
+      setTranslatedTags(prophet.tags || []);
+      setIsTranslating(false);
       return;
     }
-    let isMounted = true;
-    Promise.all([
-      translateIslamicText(prophet.name, contentLang),
-      translateIslamicText(prophet.title, contentLang),
-      translateIslamicText(prophet.story, contentLang),
-    ]).then(([tName, tTitle, tStory]) => {
-      if (isMounted) {
-        setTranslatedName(tName);
-        setTranslatedTitle(tTitle);
-        setTranslatedStory(tStory);
-      }
-    });
-    return () => { isMounted = false; };
-  }, [prophet, contentLang]);
 
-  const eraLabels: Record<EraKey, string> = useMemo(
-    () => ({
+    let isMounted = true;
+    setIsTranslating(true);
+    if (curated) {
+      setTranslatedName(curated);
+    }
+
+    const paragraphs = prophet.story.split("\n\n").filter(p => p.trim());
+
+    Promise.all([
+      curated ? Promise.resolve(curated) : translateIslamicText(prophet.name, contentLang),
+      translateIslamicText(prophet.title, contentLang),
+      translateIslamicBatch(paragraphs, contentLang),
+      prophet.tags?.length ? translateIslamicBatch(prophet.tags, contentLang) : Promise.resolve([]),
+    ])
+      .then(([tName, tTitle, tParas, tTags]) => {
+        if (isMounted) {
+          setTranslatedName(tName);
+          setTranslatedTitle(tTitle);
+          setTranslatedStory(tParas.join("\n\n"));
+          setTranslatedTags(tTags);
+          setIsTranslating(false);
+        }
+      })
+      .catch((err) => {
+        console.warn("Qisas translation error:", err);
+        if (isMounted) {
+          setTranslatedName(curated || prophet.name);
+          setTranslatedTitle(prophet.title);
+          setTranslatedStory(prophet.story);
+          setTranslatedTags(prophet.tags || []);
+          setIsTranslating(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [prophet?.id, contentLang, prophet]);
+
+  const eraLabels: Record<EraKey, string> = useMemo(() => {
+    if (contentLang === 'ur') {
+      return {
+        "beginning-of-creation": "ابتدائے آفرینش",
+        "pre-flood": "طوفانِ نوح سے قبل",
+        patriarchal: "دورِ ابراہیمی",
+        israelite: "بنی اسرائیل کا دور",
+        "post-israelite": "مابعد بنی اسرائیل",
+      };
+    }
+    if (contentLang === 'gu') {
+      return {
+        "beginning-of-creation": "શરૂઆતનો સમય",
+        "pre-flood": "નૂહ પૂર પહેલાં",
+        patriarchal: "ઇબ્રાહીમ દોર",
+        israelite: "ઇઝરાયલી દોર",
+        "post-israelite": "અન્ય પયગંબરો",
+      };
+    }
+    if (contentLang === 'hi') {
+      return {
+        "beginning-of-creation": "सृष्टि का आरंभ",
+        "pre-flood": "तूफ़ान-ए-नूह से पूर्व",
+        patriarchal: "इब्राहीमी दौर",
+        israelite: "बनी इस्राईल का दौर",
+        "post-israelite": "अन्य नबी",
+      };
+    }
+    return {
       "beginning-of-creation": t("qisasEraBeginning"),
       "pre-flood": t("qisasEraPreFlood"),
       patriarchal: t("qisasEraPatriarchal"),
       israelite: t("qisasEraIsraelite"),
       "post-israelite": t("qisasEraPostIsraelite"),
-    }),
-    [t]
-  );
+    };
+  }, [contentLang, t]);
 
   useEffect(() => {
     async function loadData() {
@@ -210,7 +299,11 @@ export default function QisasReader() {
       }
 
       return (
-        <p key={index} className="mb-4 leading-[1.8]">
+        <p
+          key={index}
+          className={`mb-5 ${contentLang === 'ur' ? 'font-urdu leading-[2.35] py-1 text-right text-base sm:text-lg' : isRtl ? 'font-arabic leading-[2.1] text-right text-base sm:text-lg' : 'leading-[1.8]'}`}
+          dir={isRtl ? 'rtl' : 'ltr'}
+        >
           {paragraph}
         </p>
       );
@@ -248,56 +341,64 @@ export default function QisasReader() {
         </div>
 
         <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 z-40 safe-top">
-          <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => goBackOrFallback(navigate, '/qisas')}
-                className="rounded-xl"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex-1 min-w-0">
-                <h2
-                  className={`text-lg font-semibold text-foreground truncate ${isRtl ? 'font-arabic text-right' : ''}`}
-                  dir={isRtl ? 'rtl' : 'ltr'}
+          <div className="max-w-3xl mx-auto px-4 pt-3 pb-2 space-y-2.5">
+            {/* Row 1: Back Button & Story Title & Action Buttons */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => goBackOrFallback(navigate, '/qisas')}
+                  className="rounded-xl shrink-0"
                 >
-                  {translatedName || prophet.name}
-                </h2>
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div className="flex-1 min-w-0">
+                  <h2
+                    className={`text-base sm:text-lg font-semibold text-foreground truncate ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
+                    dir={isRtl ? 'rtl' : 'ltr'}
+                  >
+                    {translatedName || prophet.name}
+                  </h2>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowFontSlider((current) => !current)}
+                  className="rounded-xl h-9 w-9"
+                  title="Font Size"
+                >
+                  <Type className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleShare}
+                  className="rounded-xl h-9 w-9"
+                  title="Share"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleBookmarkToggle}
+                  className="rounded-xl h-9 w-9"
+                  title="Bookmark"
+                >
+                  {isBookmarked ? (
+                    <BookMarked className="w-4 h-4 text-[#D4AF37]" />
+                  ) : (
+                    <Bookmark className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <ContentLanguageBar compact />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowFontSlider((current) => !current)}
-                className="rounded-xl"
-              >
-                <Type className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleShare}
-                className="rounded-xl"
-              >
-                <Share2 className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBookmarkToggle}
-                className="rounded-xl"
-              >
-                {isBookmarked ? (
-                  <BookMarked className="w-5 h-5 text-[#D4AF37]" />
-                ) : (
-                  <Bookmark className="w-5 h-5" />
-                )}
-              </Button>
-            </div>
+
+            {/* Row 2: Full-Width Language Selector Bar */}
+            <ContentLanguageBar fullWidth />
           </div>
 
           <AnimatePresence>
@@ -341,13 +442,13 @@ export default function QisasReader() {
           </div>
 
           <h2
-            className={`text-3xl font-bold text-foreground mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+            className={`text-2xl sm:text-3xl font-bold text-foreground mb-2 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             {translatedName || prophet.name}
           </h2>
           <p
-            className={`text-xl text-muted-foreground mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+            className={`text-lg sm:text-xl text-muted-foreground mb-2 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             {translatedTitle || prophet.title}
@@ -357,7 +458,7 @@ export default function QisasReader() {
           </p>
 
           <div className="inline-flex items-center mb-4">
-            <span className="px-3 py-1 rounded-full text-sm font-medium text-[var(--accent-text)] bg-[var(--accent-soft)] border border-[var(--border)]">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium text-[var(--accent-text)] bg-[var(--accent-soft)] border border-[var(--border)] ${contentLang === 'ur' ? 'font-urdu' : ''}`}>
               {eraLabels[prophet.era]}
             </span>
           </div>
@@ -365,7 +466,7 @@ export default function QisasReader() {
           {prophet.quranMentions.length > 0 && (
             <div className="mb-4">
               <p className="text-sm text-muted-foreground mb-2">
-                {t("qisasQuranMentions")}
+                {contentLang === 'ur' ? 'قرآن مجید میں تذکرہ:' : contentLang === 'gu' ? 'કુરાનમાં ઉલ્લેખ:' : contentLang === 'hi' ? 'क़ुरआन में ज़िक्र:' : t("qisasQuranMentions")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {visibleMentions.map((mention) => (
@@ -387,10 +488,10 @@ export default function QisasReader() {
             </div>
           )}
 
-          {prophet.tags.length > 0 && (
+          {(translatedTags.length ? translatedTags : prophet.tags).length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {prophet.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
+              {(translatedTags.length ? translatedTags : prophet.tags).map((tag) => (
+                <Badge key={tag} variant="outline" className={`text-xs ${contentLang === 'ur' ? 'font-urdu' : ''}`}>
                   {tag}
                 </Badge>
               ))}
@@ -398,22 +499,42 @@ export default function QisasReader() {
           )}
 
           <div className="text-sm text-muted-foreground mb-4">
-            {t("qisasProphetOf")} {prophet.number} / {allProphets.length}
+            {contentLang === 'ur' ? 'سلسلہ انبیاء کرام' : contentLang === 'gu' ? 'પયગંબર નંબર' : contentLang === 'hi' ? 'पैग़म्बर क्रम' : t("qisasProphetOf")} {prophet.number} / {allProphets.length}
           </div>
         </div>
 
         <div
           ref={contentRef}
-          className="max-w-3xl mx-auto px-4 py-6 overflow-y-auto"
-          style={{ maxHeight: "calc(100vh - 300px)" }}
+          className="max-w-3xl mx-auto px-4 py-4 overflow-y-auto"
+          style={{ maxHeight: "calc(100vh - 220px)", paddingBottom: "160px" }}
         >
-          <div
-            className={`text-foreground ${isRtl ? 'font-arabic text-right leading-loose text-lg' : ''}`}
-            dir={isRtl ? 'rtl' : 'ltr'}
-            style={{ fontSize: `${fontSize}px` }}
-          >
-            {parseContent(translatedStory || prophet.story)}
-          </div>
+          {isTranslating ? (
+            <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/60 backdrop-blur-sm space-y-3 animate-pulse text-center my-6">
+              <div className="flex items-center justify-center gap-2 text-sm text-[var(--accent-text)] font-semibold">
+                <Sparkles className="w-4 h-4 animate-spin text-[var(--accent)]" />
+                <span>
+                  {contentLang === 'ur'
+                    ? 'قصص الانبیاءؑ کا مبارک واقعہ اردو میں ترجمہ ہو رہا ہے...'
+                    : contentLang === 'gu'
+                    ? 'પયગંબરની મુબારક વાર્તાનો અનુવાદ થઈ રહ્યો છે...'
+                    : contentLang === 'hi'
+                    ? 'नबी का मुबारक क़िस्सा अनुवाद हो रहा है...'
+                    : 'Translating prophet story...'}
+                </span>
+              </div>
+              <div className="h-4 bg-muted/40 rounded w-3/4 mx-auto" />
+              <div className="h-4 bg-muted/30 rounded w-5/6 mx-auto" />
+              <div className="h-4 bg-muted/40 rounded w-2/3 mx-auto" />
+            </div>
+          ) : (
+            <div
+              className={`text-foreground ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35] text-lg' : isRtl ? 'font-arabic text-right leading-loose text-lg' : ''}`}
+              dir={isRtl ? 'rtl' : 'ltr'}
+              style={{ fontSize: `${fontSize}px` }}
+            >
+              {parseContent(translatedStory || prophet.story)}
+            </div>
+          )}
         </div>
 
         <AnimatePresence>

@@ -35,10 +35,10 @@ export function SeerahChapterCard({ chapter, onClick, index }: SeerahChapterCard
   }, [chapter.title, contentLang]);
 
   const periodLabels: Record<SeerahChapterSummary["period"], string> = {
-    "pre-prophethood": t("seerahPeriodPreProphethood"),
-    makkan: t("seerahPeriodMakkan"),
-    madinan: t("seerahPeriodMadinan"),
-    "final-days": t("seerahPeriodFinalDays"),
+    "pre-prophethood": contentLang === 'ur' ? 'قبل از نبوت' : contentLang === 'gu' ? 'નબુવ્વત પહેલાં' : contentLang === 'hi' ? 'नुबुव्वत से पहले' : t("seerahPeriodPreProphethood"),
+    makkan: contentLang === 'ur' ? 'مکی دور' : contentLang === 'gu' ? 'મક્કી દોર' : contentLang === 'hi' ? 'मक्की दौर' : t("seerahPeriodMakkan"),
+    madinan: contentLang === 'ur' ? 'مدنی دور' : contentLang === 'gu' ? 'મદની દોર' : contentLang === 'hi' ? 'मदनी दौर' : t("seerahPeriodMadinan"),
+    "final-days": contentLang === 'ur' ? 'آخری ایام' : contentLang === 'gu' ? 'આખરી દિવસો' : contentLang === 'hi' ? 'अंतिम दिन' : t("seerahPeriodFinalDays"),
   };
 
   return (
@@ -58,7 +58,7 @@ export function SeerahChapterCard({ chapter, onClick, index }: SeerahChapterCard
       </div>
 
       <h3
-        className={`text-foreground font-semibold text-lg mb-1 ${isRtl ? 'font-arabic text-right' : ''}`}
+        className={`text-foreground font-semibold text-lg mb-1 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
         dir={isRtl ? 'rtl' : 'ltr'}
       >
         {translatedTitle}

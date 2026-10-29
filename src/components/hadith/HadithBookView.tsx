@@ -13,13 +13,29 @@ import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 export function HadithBookView() {
   const { collection } = useParams<{ collection: string }>();
   const navigate = useNavigate();
+  const { contentLang, isRtl } = useContentLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [remoteCollectionData, setRemoteCollectionData] = useState<HadithCollection | null>(null);
   const [metadataLoading, setMetadataLoading] = useState(true);
+  const [translatedCollectionDesc, setTranslatedCollectionDesc] = useState("");
 
   const staticCollectionData = useMemo(() => {
     return collection ? getCollectionByName(collection) : null;
   }, [collection]);
+
+  useEffect(() => {
+    if (!staticCollectionData?.description && !remoteCollectionData?.description) return;
+    const desc = remoteCollectionData?.description || staticCollectionData?.description || "";
+    if (contentLang === 'en' || !desc) {
+      setTranslatedCollectionDesc(desc);
+      return;
+    }
+    let isMounted = true;
+    translateIslamicText(desc, contentLang).then((res) => {
+      if (isMounted) setTranslatedCollectionDesc(res);
+    });
+    return () => { isMounted = false; };
+  }, [contentLang, staticCollectionData?.description, remoteCollectionData?.description]);
 
   useEffect(() => {
     let isMounted = true;
@@ -120,7 +136,7 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
             </div>
             <div>
               <h3
-                className={`font-semibold text-foreground group-hover:text-primary transition-colors ${isRtl ? 'font-arabic text-right' : ''}`}
+                className={`font-semibold text-foreground group-hover:text-primary transition-colors ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
                 dir={isRtl ? 'rtl' : 'ltr'}
               >
                 {translatedName}
@@ -137,14 +153,14 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
           <div className="flex items-center gap-2">
             <Users className="w-3 h-3 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">
-              {book.hadithCount} hadith
+              {book.hadithCount} {contentLang === 'ur' ? 'احادیث' : contentLang === 'gu' ? 'હદીસ' : contentLang === 'hi' ? 'हदीस' : 'hadith'}
             </span>
           </div>
         )}
 
         {book.description && (
           <p
-            className={`text-xs text-muted-foreground line-clamp-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+            className={`text-xs text-muted-foreground line-clamp-2 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             {translatedDesc || book.description}
@@ -191,26 +207,30 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
   return (
     <div className="min-h-screen bg-background safe-top">
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/hadith/collections")}
-            className="rounded-xl"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-foreground truncate">{collectionData.title}</h1>
-            <p className="text-muted-foreground font-arabic truncate" dir="rtl">
-              {collectionData.arabicTitle}
-            </p>
+        {/* Header with Row 1 (Back + Title + Authenticity) and Row 2 (Full-Width Language Bar) */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/hadith/collections")}
+                className="rounded-xl shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{collectionData.title}</h1>
+                <p className="text-muted-foreground font-arabic truncate" dir="rtl">
+                  {collectionData.arabicTitle}
+                </p>
+              </div>
+            </div>
+            <Badge variant="secondary" className="text-xs shrink-0">
+              {collectionData.authenticity}
+            </Badge>
           </div>
-          <ContentLanguageBar compact />
-          <Badge variant="secondary" className="text-xs shrink-0">
-            {collectionData.authenticity}
-          </Badge>
+          <ContentLanguageBar fullWidth />
         </div>
 
         {/* Collection Info */}
@@ -218,25 +238,31 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Compiler</h3>
+                <h3 className="font-semibold text-foreground mb-2">
+                  {contentLang === 'ur' ? 'مؤلف' : contentLang === 'gu' ? 'સંકલનકર્તા' : contentLang === 'hi' ? 'संकलनकर्ता' : 'Compiler'}
+                </h3>
                 <p className="text-sm text-muted-foreground">{collectionData.author}</p>
                 <p className="text-xs text-muted-foreground">{collectionData.compilerPeriod}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Statistics</h3>
+                <h3 className="font-semibold text-foreground mb-2">
+                  {contentLang === 'ur' ? 'اعداد و شمار' : contentLang === 'gu' ? 'આંકડાકીય માહિતી' : contentLang === 'hi' ? 'आंकड़े' : 'Statistics'}
+                </h3>
                 <div className="space-y-1">
                   <p className="text-sm">
-                    <span className="font-medium">{collectionData.totalBooks}</span> Books
+                    <span className="font-medium">{collectionData.totalBooks}</span> {contentLang === 'ur' ? 'کتب' : contentLang === 'gu' ? 'પુસ્તકો' : contentLang === 'hi' ? 'किताबें' : 'Books'}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">{collectionData.totalHadith.toLocaleString()}</span> Hadith
+                    <span className="font-medium">{collectionData.totalHadith.toLocaleString()}</span> {contentLang === 'ur' ? 'احادیث' : contentLang === 'gu' ? 'હદીસ' : contentLang === 'hi' ? 'हदीस' : 'Hadith'}
                   </p>
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Description</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {collectionData.description}
+                <h3 className="font-semibold text-foreground mb-2">
+                  {contentLang === 'ur' ? 'تعارف و تفصیل' : contentLang === 'gu' ? 'વિગતો' : contentLang === 'hi' ? 'विवरण' : 'Description'}
+                </h3>
+                <p className={`text-sm text-muted-foreground leading-relaxed ${contentLang === 'ur' ? 'font-urdu leading-[2.35] text-right' : isRtl ? 'font-arabic text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+                  {translatedCollectionDesc || collectionData.description}
                 </p>
               </div>
             </div>
@@ -247,7 +273,7 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
         <div className="relative max-w-md mx-auto mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search books..."
+            placeholder={contentLang === 'ur' ? 'کتاب یا باب تلاش کریں...' : contentLang === 'gu' ? 'પુસ્તક શોધો...' : contentLang === 'hi' ? 'किताब खोजें...' : 'Search books...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 rounded-xl border-border/50 focus:border-primary/50"

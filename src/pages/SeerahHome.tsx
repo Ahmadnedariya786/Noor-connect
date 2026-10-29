@@ -83,13 +83,49 @@ export default function SeerahHome() {
     return () => window.clearTimeout(timer);
   }, [searchTerm]);
 
-  const periodLabels: Record<PeriodFilter, string> = {
-    all: t("all"),
-    "pre-prophethood": t("seerahPeriodPreProphethood"),
-    makkan: t("seerahPeriodMakkan"),
-    madinan: t("seerahPeriodMadinan"),
-    "final-days": t("seerahPeriodFinalDays"),
-  };
+  const periodLabels: Record<PeriodFilter, string> = useMemo(() => {
+    if (contentLang === 'ur') {
+      return {
+        all: "تمام ادوار",
+        "pre-prophethood": "قبل از نبوت",
+        makkan: "مکی دور",
+        madinan: "مدنی دور",
+        "final-days": "آخری ایام",
+      };
+    }
+    if (contentLang === 'gu') {
+      return {
+        all: "બધા",
+        "pre-prophethood": "નબુવ્વત પહેલાં",
+        makkan: "મક્કી દોર",
+        madinan: "મદની દોર",
+        "final-days": "આખરી દિવસો",
+      };
+    }
+    if (contentLang === 'hi') {
+      return {
+        all: "सभी",
+        "pre-prophethood": "नुबुव्वत से पहले",
+        makkan: "मक्की दौर",
+        madinan: "मदनी दौर",
+        "final-days": "अंतिम दिन",
+      };
+    }
+    return {
+      all: t("all"),
+      "pre-prophethood": t("seerahPeriodPreProphethood"),
+      makkan: t("seerahPeriodMakkan"),
+      madinan: t("seerahPeriodMadinan"),
+      "final-days": t("seerahPeriodFinalDays"),
+    };
+  }, [contentLang, t]);
+
+  const searchPlaceholder = useMemo(() => {
+    if (contentLang === 'ur') return "سیرت مبارکہ کے ابواب تلاش کریں...";
+    if (contentLang === 'gu') return "સીરતના પ્રકરણો શોધો...";
+    if (contentLang === 'hi') return "सीरत के अध्याय खोजें...";
+    return t("search");
+  }, [contentLang, t]);
 
   const filteredChapters = useMemo(() => {
     let result = chapters;
@@ -137,20 +173,23 @@ export default function SeerahHome() {
     <PageTransition>
       <div className="min-h-screen bg-background pb-24 safe-top">
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => goBackOrFallback(navigate, '/services')}
-              className="rounded-xl"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-foreground truncate">{t("seerah")}</h1>
-              <p className="text-muted-foreground text-sm truncate">{t("seerahDescription")}</p>
+          {/* Header with Row 1 (Back + Title) and Row 2 (Full-Width Language Bar) */}
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => goBackOrFallback(navigate, '/services')}
+                className="rounded-xl"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-bold text-foreground truncate">{t("seerah")}</h1>
+                <p className="text-muted-foreground text-sm truncate">{t("seerahDescription")}</p>
+              </div>
             </div>
-            <ContentLanguageBar compact />
+            <ContentLanguageBar fullWidth />
           </div>
 
           <motion.div
@@ -173,7 +212,7 @@ export default function SeerahHome() {
               </div>
 
               <h2
-                className={`text-3xl font-bold text-white mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+                className={`text-3xl font-bold text-white mb-2 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
                 dir={isRtl ? 'rtl' : 'ltr'}
               >
                 {translatedMetaTitle || metadata?.title || "Ar-Raheeq Al-Makhtum (The Sealed Nectar)"}
@@ -191,7 +230,7 @@ export default function SeerahHome() {
               )}
 
               <p
-                className={`text-white/70 text-sm mb-6 ${isRtl ? 'font-arabic text-right text-base' : ''}`}
+                className={`text-white/70 text-sm mb-6 ${contentLang === 'ur' ? 'font-urdu text-right text-base leading-[2.35]' : isRtl ? 'font-arabic text-right text-base' : ''}`}
                 dir={isRtl ? 'rtl' : 'ltr'}
               >
                 {translatedMetaDesc || metadata?.description || "A comprehensive biography of Prophet Muhammad (peace be upon him)."}
@@ -214,6 +253,7 @@ export default function SeerahHome() {
             const lastReadChapter = lastReadId ? chapters.find(c => c.id === lastReadId) : null;
             if (lastReadChapter && !loading) {
               const progress = getReadingProgress(lastReadId!, "seerah");
+              const continueLabel = contentLang === 'ur' ? 'مطالعہ جاری رکھیں' : contentLang === 'gu' ? 'વાંચન ચાલુ રાખો' : contentLang === 'hi' ? 'पढ़ना जारी रखें' : 'Continue Reading';
               return (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -229,8 +269,8 @@ export default function SeerahHome() {
                         <Bookmark className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground mb-0.5">Continue Reading</p>
-                        <p className="text-sm font-semibold truncate">{lastReadChapter.title}</p>
+                        <p className="text-xs text-muted-foreground mb-0.5">{continueLabel}</p>
+                        <p className={`text-sm font-semibold truncate ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{lastReadChapter.title}</p>
                         {progress > 0 && (
                           <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
@@ -249,7 +289,7 @@ export default function SeerahHome() {
           <div className="relative max-w-md mx-auto mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder={t("search")}
+              placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className="pl-10 rounded-xl"
@@ -292,21 +332,21 @@ export default function SeerahHome() {
             className="bg-card rounded-[28px] p-6 border border-border/50"
           >
             <h3 className="text-lg font-semibold text-foreground mb-4">
-              {t("overview")}
+              {contentLang === 'ur' ? 'خلاصہ و ابواب' : contentLang === 'gu' ? 'વિહંગાવલોકન' : contentLang === 'hi' ? 'अवलोकन' : t("overview")}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-[#D4AF37]">
                   {metadata?.totalChapters || chapters.length || 17}
                 </div>
-                <div className="text-sm text-muted-foreground">{t("seerahChapters")}</div>
+                <div className="text-sm text-muted-foreground">{contentLang === 'ur' ? 'کل ابواب' : contentLang === 'gu' ? 'કુલ પ્રકરણો' : contentLang === 'hi' ? 'कुल अध्याय' : t("seerahChapters")}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-500">
                   {chapters.filter((chapter) => chapter.period === "pre-prophethood").length}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {t("seerahPeriodPreProphethood")}
+                  {periodLabels["pre-prophethood"]}
                 </div>
               </div>
               <div className="text-center">
@@ -314,7 +354,7 @@ export default function SeerahHome() {
                   {chapters.filter((chapter) => chapter.period === "makkan").length}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {t("seerahPeriodMakkan")}
+                  {periodLabels["makkan"]}
                 </div>
               </div>
               <div className="text-center">
@@ -322,7 +362,7 @@ export default function SeerahHome() {
                   {chapters.filter((chapter) => chapter.period === "madinan").length}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {t("seerahPeriodMadinan")}
+                  {periodLabels["madinan"]}
                 </div>
               </div>
             </div>

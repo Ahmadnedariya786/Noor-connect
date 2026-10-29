@@ -18,6 +18,7 @@ interface ContentLanguageBarProps {
   value?: ContentLang;
   onChange?: (lang: ContentLang) => void;
   compact?: boolean;
+  fullWidth?: boolean;
   className?: string;
   label?: string;
 }
@@ -26,6 +27,7 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
   value,
   onChange,
   compact = false,
+  fullWidth = false,
   className = '',
   label,
 }) => {
@@ -42,7 +44,11 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 p-1 rounded-full border border-[var(--border)] backdrop-blur-md select-none transition-all ${className}`}
+      className={`${
+        fullWidth
+          ? 'grid grid-cols-4 w-full gap-1.5 p-1 rounded-2xl'
+          : 'inline-flex items-center gap-1.5 p-1 rounded-full'
+      } border border-[var(--border)] backdrop-blur-md select-none transition-all ${className}`}
       style={{
         background: 'var(--surface-2)',
         boxShadow: 'inset 0 1px 0 var(--card-sheen)',
@@ -60,19 +66,21 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
             aria-checked={isActive}
             onClick={() => handleSelect(opt.code)}
             className={`cursor-pointer transition-all duration-200 rounded-full font-medium active:scale-95 flex items-center justify-center ${
-              compact
+              fullWidth
+                ? 'w-full py-1.5 text-xs font-semibold'
+                : compact
                 ? 'px-2.5 py-0.5 text-[11px] leading-tight min-w-[32px]'
                 : 'px-3 py-1 text-xs leading-normal min-w-[56px]'
-            }`}
+            } ${opt.code === 'ur' ? 'font-urdu' : ''}`}
             style={{
               background: isActive ? 'var(--accent)' : 'transparent',
               color: isActive ? 'var(--on-accent)' : 'var(--text-secondary)',
               fontWeight: isActive ? 700 : 500,
               boxShadow: isActive ? '0 2px 8px var(--accent-glow)' : 'none',
-              fontFamily: opt.code === 'ur' ? "'Amiri', 'Traditional Arabic', serif" : 'inherit',
+              fontFamily: opt.code === 'ur' ? 'var(--font-urdu)' : 'inherit',
             }}
           >
-            {compact ? opt.shortLabel : opt.nativeLabel}
+            {compact && !fullWidth ? opt.shortLabel : opt.nativeLabel}
           </button>
         );
       })}

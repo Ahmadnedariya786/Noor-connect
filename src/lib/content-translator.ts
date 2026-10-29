@@ -284,7 +284,11 @@ export function useContentLanguage() {
     };
 
     window.addEventListener('noor-content-lang-change', handleLangChange);
-    return () => window.removeEventListener('noor-content-lang-change', handleLangChange);
+    window.addEventListener('noor-content-lang-changed', handleLangChange);
+    return () => {
+      window.removeEventListener('noor-content-lang-change', handleLangChange);
+      window.removeEventListener('noor-content-lang-changed', handleLangChange);
+    };
   }, [contentLang]);
 
   const setContentLang = useCallback((newLang: ContentLang) => {
@@ -295,6 +299,7 @@ export function useContentLanguage() {
       // Ignore storage error
     }
     window.dispatchEvent(new CustomEvent('noor-content-lang-change', { detail: newLang }));
+    window.dispatchEvent(new CustomEvent('noor-content-lang-changed', { detail: newLang }));
   }, []);
 
   const isRtl = contentLang === 'ur';
@@ -302,7 +307,7 @@ export function useContentLanguage() {
 
   const fontClass = useMemo(() => {
     if (contentLang === 'ur') {
-      return 'font-arabic text-right leading-[2.05] tracking-wide';
+      return 'font-urdu text-right leading-[2.35] tracking-normal pt-1 pb-1';
     }
     return '';
   }, [contentLang]);
@@ -310,10 +315,13 @@ export function useContentLanguage() {
   const contentStyle = useMemo(() => {
     if (contentLang === 'ur') {
       return {
+        fontFamily: 'var(--font-urdu)',
         direction: 'rtl' as const,
         textAlign: 'right' as const,
-        lineHeight: 2.05,
-        fontSize: '0.98rem',
+        lineHeight: 2.35,
+        fontSize: '1.08rem',
+        paddingTop: '4px',
+        paddingBottom: '4px',
       };
     }
     return {

@@ -76,6 +76,7 @@ theme: {
 			fontFamily: {
 				arabic: ['"Amiri"', '"Scheherazade New"', '"Traditional Arabic"', 'ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
 				amiri: ['"Amiri"', '"Scheherazade New"', '"Traditional Arabic"', 'serif'],
+				urdu: ['var(--font-urdu)', '"Jameel Noori Nastaleeq"', '"Jameel Noori Nastaliq"', '"Noto Nastaliq Urdu"', '"Urdu Typesetting"', 'serif'],
 				sans: [
 					'ui-sans-serif',
 					'system-ui',

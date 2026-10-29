@@ -245,7 +245,7 @@ const DuaCard = memo(function DuaCard({
           {/* Translation */}
           {showTranslation && (
             <p
-              className={`leading-relaxed font-medium ${isRtl ? 'font-arabic text-right text-base leading-loose' : ''}`}
+              className={`leading-relaxed font-medium ${contentLang === 'ur' ? 'font-urdu text-right text-base leading-[2.35]' : isRtl ? 'font-arabic text-right text-base leading-loose' : ''}`}
               dir={isRtl ? 'rtl' : 'ltr'}
               style={{
                 fontSize: currentFont.translation,
@@ -394,60 +394,61 @@ const Duas = memo(function Duas() {
   return (
     <div className="min-h-screen bg-background safe-top">
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
-        {/* Header with - A + Font Sizer & Content Language Bar */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-3 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-              className="rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] shrink-0"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="min-w-0">
-              <h1 className="text-2xl font-bold text-[var(--text-primary)] font-serif italic tracking-tight truncate">
-                Duas
-              </h1>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mt-0.5 truncate">
-                {duasData.length} Supplications
-              </p>
+        {/* Header with Row 1 (Back + Title + Font Sizer) and Row 2 (Full-Width Language Bar) */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/")}
+                className="rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold text-[var(--text-primary)] font-serif italic tracking-tight truncate">
+                  Duas
+                </h1>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mt-0.5 truncate">
+                  {duasData.length} Supplications
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <ContentLanguageBar compact />
             {/* Compact [ - ] A [ + ] Font Sizer */}
             <div
-              className="flex items-center gap-1 px-2 py-1 rounded-full border shadow-sm"
+              className="flex items-center gap-1 px-2 py-1 rounded-full border shadow-sm shrink-0"
               style={{
                 background: "var(--surface)",
                 borderColor: "var(--border)",
               }}
               title="Adjust Arabic & translation font size"
             >
-            <button
-              type="button"
-              disabled={fontLevel <= 0}
-              onClick={() => handleFontChange(fontLevel - 1)}
-              className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs disabled:opacity-30 active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
-              aria-label="Decrease supplication font size"
-            >
-              -
-            </button>
-            <span className="text-xs font-bold px-1 text-[var(--accent-text)]">A</span>
-            <button
-              type="button"
-              disabled={fontLevel >= 4}
-              onClick={() => handleFontChange(fontLevel + 1)}
-              className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs disabled:opacity-30 active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
-              aria-label="Increase supplication font size"
-            >
-              +
-            </button>
+              <button
+                type="button"
+                disabled={fontLevel <= 0}
+                onClick={() => handleFontChange(fontLevel - 1)}
+                className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs disabled:opacity-30 active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                aria-label="Decrease supplication font size"
+              >
+                -
+              </button>
+              <span className="text-xs font-bold px-1 text-[var(--accent-text)]">A</span>
+              <button
+                type="button"
+                disabled={fontLevel >= 4}
+                onClick={() => handleFontChange(fontLevel + 1)}
+                className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs disabled:opacity-30 active:scale-95 text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                aria-label="Increase supplication font size"
+              >
+                +
+              </button>
+            </div>
           </div>
+
+          <ContentLanguageBar fullWidth />
         </div>
-      </div>
 
         {/* Search */}
         <div className="relative">

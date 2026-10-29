@@ -179,6 +179,7 @@ export function EnhancedDailyHadith() {
   const [translatedText, setTranslatedText] = useState('');
   const [translatedNarrator, setTranslatedNarrator] = useState('');
   const [translatedReflection, setTranslatedReflection] = useState('');
+  const [translatedCategory, setTranslatedCategory] = useState('');
 
   useEffect(() => {
     if (!hadith) return;
@@ -186,6 +187,7 @@ export function EnhancedDailyHadith() {
       setTranslatedText(hadith.englishTranslation);
       setTranslatedNarrator(activeNarrator || '');
       setTranslatedReflection(hadith.reflection || '');
+      setTranslatedCategory(hadith.category || '');
       return;
     }
 
@@ -194,11 +196,13 @@ export function EnhancedDailyHadith() {
       translateIslamicText(hadith.englishTranslation, contentLang),
       activeNarrator ? translateIslamicText(activeNarrator, contentLang) : Promise.resolve(''),
       hadith.reflection ? translateIslamicText(hadith.reflection, contentLang) : Promise.resolve(''),
-    ]).then(([tText, tNarr, tRefl]) => {
+      hadith.category ? translateIslamicText(hadith.category, contentLang) : Promise.resolve(''),
+    ]).then(([tText, tNarr, tRefl, tCat]) => {
       if (isMounted) {
         setTranslatedText(tText);
         setTranslatedNarrator(tNarr);
         setTranslatedReflection(tRefl);
+        setTranslatedCategory(tCat);
       }
     });
 
@@ -462,7 +466,7 @@ export function EnhancedDailyHadith() {
                   lineHeight: 1.2,
                 }}
               >
-                {isCategoryValid ? hadith.category : (hadith.source || "Prophetic Tradition")}
+                {isCategoryValid ? (translatedCategory || hadith.category) : (hadith.source || "Prophetic Tradition")}
               </span>
             </div>
           </div>
@@ -579,7 +583,7 @@ export function EnhancedDailyHadith() {
           <p
             dir={isRtl ? "rtl" : "ltr"}
             className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 bidi-plaintext ${
-              isRtl ? "font-arabic text-right leading-[2.1]" : ""
+              contentLang === 'ur' ? "font-urdu text-right leading-[2.35] text-base" : isRtl ? "font-arabic text-right leading-[2.1]" : ""
             } ${!isExpanded && isEnglishLong ? "line-clamp-3" : ""}`}
             style={{ unicodeBidi: 'plaintext' }}
           >
@@ -616,7 +620,7 @@ export function EnhancedDailyHadith() {
           <div
             dir={isRtl ? "rtl" : "ltr"}
             className={`p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed bidi-plaintext ${
-              isRtl ? "font-arabic text-right leading-[2.05]" : ""
+              contentLang === 'ur' ? "font-urdu text-right leading-[2.35] text-base" : isRtl ? "font-arabic text-right leading-[2.05]" : ""
             }`}
             style={{
               background: 'var(--surface-2)',
@@ -625,7 +629,7 @@ export function EnhancedDailyHadith() {
               textAlign: isRtl ? 'right' : 'start',
             }}
           >
-            <span className="text-[var(--accent)] font-semibold not-italic mr-1.5 inline-block" dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
+            <span className={`text-[var(--accent)] font-semibold not-italic mr-1.5 inline-block ${contentLang === 'ur' ? 'font-urdu' : ''}`} dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
               {contentLang === 'ur' ? 'تدبر و غور:' : contentLang === 'gu' ? 'ચિંતન:' : contentLang === 'hi' ? 'चिंतन:' : 'Reflection:'}
             </span>
             <span>{translatedReflection || hadith.reflection}</span>
@@ -636,10 +640,10 @@ export function EnhancedDailyHadith() {
         {activeNarrator ? (
           <div className="flex items-center justify-between text-xs px-1 text-[var(--text-secondary)] font-medium">
             <div className={`flex items-center gap-1.5 min-w-0 truncate bidi-plaintext ${isRtl ? "flex-row-reverse" : ""}`} style={{ unicodeBidi: 'plaintext' }}>
-              <span className="text-[var(--accent)] font-semibold shrink-0 inline-block" dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
+              <span className={`text-[var(--accent)] font-semibold shrink-0 inline-block ${contentLang === 'ur' ? 'font-urdu' : ''}`} dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
                 {contentLang === 'ur' ? 'راوی:' : contentLang === 'gu' ? 'વર્ણનકર્તા:' : contentLang === 'hi' ? 'वर्णनकर्ता:' : 'Narrator:'}
               </span>
-              <span className="text-[var(--text-primary)] font-medium truncate">{translatedNarrator || activeNarrator}</span>
+              <span className={`text-[var(--text-primary)] font-medium truncate ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{translatedNarrator || activeNarrator}</span>
             </div>
             <div className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--accent-text)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-md border border-[var(--border)] shrink-0 ml-2">
               <span>{hadith.source}</span>

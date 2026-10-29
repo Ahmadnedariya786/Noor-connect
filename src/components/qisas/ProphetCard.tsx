@@ -71,14 +71,14 @@ export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
       </div>
 
       <h3
-        className={`text-foreground font-semibold text-lg mb-1 ${isRtl ? 'font-arabic text-right' : ''}`}
+        className={`text-foreground font-semibold text-lg mb-1 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
         dir={isRtl ? 'rtl' : 'ltr'}
       >
         {translatedName}
       </h3>
 
       <p
-        className={`text-muted-foreground text-sm mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+        className={`text-muted-foreground text-sm mb-2 ${contentLang === 'ur' ? 'font-urdu text-right leading-[2.35]' : isRtl ? 'font-arabic text-right' : ''}`}
         dir={isRtl ? 'rtl' : 'ltr'}
       >
         {translatedTitle}

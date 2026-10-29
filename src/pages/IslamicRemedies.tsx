@@ -483,21 +483,23 @@ export default function IslamicRemedies() {
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-b from-background via-primary/[0.03] to-primary/[0.08] flex flex-col">
           <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-5 py-6 space-y-6">
-            <div className="flex items-center gap-2">
-              <button onClick={handleCloseViewer} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/70 transition-colors shrink-0">
-                <X className="w-5 h-5" />
-              </button>
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br shrink-0 shadow-md", selectedMood.gradient)}>
-                <selectedMood.icon className={cn("w-5 h-5", selectedMood.color)} />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <button onClick={handleCloseViewer} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/70 transition-colors shrink-0">
+                  <X className="w-5 h-5" />
+                </button>
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br shrink-0 shadow-md", selectedMood.gradient)}>
+                  <selectedMood.icon className={cn("w-5 h-5", selectedMood.color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{strings.moods[selectedMood.id] || selectedMood.label}</p>
+                  <p className="text-xs text-muted-foreground truncate">{currentItem.reference}</p>
+                </div>
+                <button onClick={handleToggleFavorite} className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0", isFav ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground hover:text-rose-500")}>
+                  <Heart className={cn("w-5 h-5", isFav && "fill-current")} />
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{strings.moods[selectedMood.id] || selectedMood.label}</p>
-                <p className="text-xs text-muted-foreground truncate">{currentItem.reference}</p>
-              </div>
-              <ContentLanguageBar compact />
-              <button onClick={handleToggleFavorite} className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0", isFav ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground hover:text-rose-500")}>
-                <Heart className={cn("w-5 h-5", isFav && "fill-current")} />
-              </button>
+              <ContentLanguageBar fullWidth />
             </div>
 
             <m.div
@@ -517,7 +519,7 @@ export default function IslamicRemedies() {
 
               <m.div variants={viewerTextVariants} className="bg-card border border-border/60 rounded-3xl p-5 space-y-4 shadow-sm">
                 <p
-                  className={`text-base leading-relaxed text-foreground/90 ${isRtl ? 'font-arabic text-right text-lg leading-loose' : ''}`}
+                  className={`text-base leading-relaxed text-foreground/90 ${contentLang === 'ur' ? 'font-urdu text-right text-base leading-[2.35]' : isRtl ? 'font-arabic text-right text-lg leading-loose' : ''}`}
                   dir={isRtl ? 'rtl' : 'ltr'}
                 >
                   {translatedRemedyText || currentItem.text}
@@ -568,19 +570,20 @@ export default function IslamicRemedies() {
           title={strings.title}
           showBack={true}
           actions={
-            <div className="flex items-center gap-2">
-              <ContentLanguageBar compact />
-              <button onClick={() => navigate("/remedy-favorites")} className="relative">
-                <Heart className="w-5 h-5 text-foreground/80" />
-                {favorites.length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center">
-                    {favorites.length > 9 ? "9+" : favorites.length}
-                  </span>
-                )}
-              </button>
-            </div>
+            <button onClick={() => navigate("/remedy-favorites")} className="relative p-1">
+              <Heart className="w-5 h-5 text-foreground/80" />
+              {favorites.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center">
+                  {favorites.length > 9 ? "9+" : favorites.length}
+                </span>
+              )}
+            </button>
           }
         />
+
+        <div className="px-5 pt-3">
+          <ContentLanguageBar fullWidth />
+        </div>
 
         <div className="px-5 pt-4 space-y-5">
           {dailyRemedy && !dailyRemedy.completed && (

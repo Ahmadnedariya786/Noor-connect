@@ -906,10 +906,10 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                 ) : (
                   <p
                     dir={selectedEdition === 'ur.jalandhry' ? 'rtl' : 'ltr'}
-                    className="text-sm leading-relaxed"
+                    className={`text-sm leading-relaxed ${selectedEdition === 'ur.jalandhry' ? 'font-urdu text-right text-base' : ''}`}
                     style={{
                       color: 'var(--text-primary)',
-                      lineHeight: selectedEdition === 'ur.jalandhry' ? '2.1' : '1.65',
+                      lineHeight: selectedEdition === 'ur.jalandhry' ? '2.35' : '1.65',
                       fontFamily: selectedEdition === 'ur.jalandhry' ? 'var(--font-urdu, "Noto Nastaliq Urdu", serif)' : undefined,
                       filter:
                         hideMode === 'translation' && !isRevealed ? 'blur(7px)' : 'none',
@@ -967,10 +967,11 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                   </div>
                 ) : (
                   <div
-                    className="whitespace-pre-wrap leading-relaxed"
+                    className={`whitespace-pre-wrap leading-relaxed ${selectedTafsirSlug.startsWith('ur') ? 'font-urdu text-right text-base leading-[2.35]' : ''}`}
                     style={{
                       direction: selectedTafsirSlug.startsWith('ar') || selectedTafsirSlug.startsWith('ur') ? 'rtl' : 'ltr',
-                      fontFamily: selectedTafsirSlug.startsWith('ar') ? "'Amiri', serif" : 'inherit',
+                      fontFamily: selectedTafsirSlug.startsWith('ar') ? "'Amiri', serif" : selectedTafsirSlug.startsWith('ur') ? 'var(--font-urdu, "Noto Nastaliq Urdu", serif)' : 'inherit',
+                      lineHeight: selectedTafsirSlug.startsWith('ur') ? 2.35 : undefined,
                     }}
                   >
                     {tafsirText}
