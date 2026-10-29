@@ -103,6 +103,7 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
       sad: "Sad",
       happy: "Happy",
       lost: "Lost",
+      grateful: "Grateful",
       tired: "Tired",
       stressed: "Stressed",
       angry: "Angry",
@@ -138,6 +139,7 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
       sad: "حزين",
       happy: "سعيد",
       lost: "تائه",
+      grateful: "شاكر",
       tired: "متعب",
       stressed: "مضغوط",
       angry: "غاضب",
@@ -173,6 +175,7 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
       sad: "اداس",
       happy: "خوش",
       lost: "راہ گم",
+      grateful: "شکر گزار",
       tired: "تھکا ہوا",
       stressed: "پریشان",
       angry: "غصے میں",
@@ -208,6 +211,7 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
       sad: "ઉદાસ",
       happy: "ખુશ",
       lost: "દિશાહીન",
+      grateful: "આભારી",
       tired: "થાકેલું",
       stressed: "તણાવગ્રસ્ત",
       angry: "ગુસ્સામાં",
@@ -243,6 +247,7 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
       sad: "उदास",
       happy: "प्रसन्न",
       lost: "दिशाहीन",
+      grateful: "आभारी",
       tired: "थका हुआ",
       stressed: "तनावग्रस्त",
       angry: "क्रोधित",
@@ -386,16 +391,27 @@ export default function IslamicRemedies() {
 
   const { contentLang, isRtl } = useContentLanguage();
   const [translatedRemedyText, setTranslatedRemedyText] = useState("");
+  const [isTranslatingRemedy, setIsTranslatingRemedy] = useState(false);
 
   useEffect(() => {
     if (!currentItem?.text) return;
     if (contentLang === 'en') {
       setTranslatedRemedyText(currentItem.text);
+      setIsTranslatingRemedy(false);
       return;
     }
     let isMounted = true;
+    setIsTranslatingRemedy(true);
     translateIslamicText(currentItem.text, contentLang).then(t => {
-      if (isMounted) setTranslatedRemedyText(t);
+      if (isMounted) {
+        setTranslatedRemedyText(t);
+        setIsTranslatingRemedy(false);
+      }
+    }).catch(() => {
+      if (isMounted) {
+        setTranslatedRemedyText(currentItem.text);
+        setIsTranslatingRemedy(false);
+      }
     });
     return () => { isMounted = false; };
   }, [currentItem?.text, contentLang]);
@@ -417,6 +433,8 @@ export default function IslamicRemedies() {
 
   const handleMoodClick = (mood: Mood) => {
     setSelectedMood(mood);
+    setTranslatedRemedyText("");
+    setIsTranslatingRemedy(contentLang !== 'en');
     setActiveIndexes(prev => {
       if (typeof prev[mood.id] === "number") return prev;
       return { ...prev, [mood.id]: pickMoodIndex(mood) };
@@ -426,6 +444,8 @@ export default function IslamicRemedies() {
 
   const handleNext = () => {
     if (!selectedMood) return;
+    setTranslatedRemedyText("");
+    setIsTranslatingRemedy(contentLang !== 'en');
     const nextIndex = pickMoodIndex(selectedMood, [currentIndex]);
     setActiveIndexes(prev => ({ ...prev, [selectedMood.id]: nextIndex }));
     if (currentItem) {
@@ -518,12 +538,20 @@ export default function IslamicRemedies() {
               )}
 
               <m.div variants={viewerTextVariants} className="bg-card border border-border/60 rounded-3xl p-5 space-y-4 shadow-sm">
-                <p
-                  className={`text-base leading-relaxed text-foreground/90 ${contentLang === 'ur' ? 'font-urdu text-right text-base leading-[2.35]' : isRtl ? 'font-arabic text-right text-lg leading-loose' : ''}`}
-                  dir={isRtl ? 'rtl' : 'ltr'}
-                >
-                  {translatedRemedyText || currentItem.text}
-                </p>
+                {isTranslatingRemedy && contentLang !== 'en' ? (
+                  <div className="space-y-3 py-2 animate-pulse">
+                    <div className="h-4 bg-muted/60 rounded w-3/4 mx-auto" />
+                    <div className="h-4 bg-muted/40 rounded w-5/6 mx-auto" />
+                    <div className="h-4 bg-muted/30 rounded w-1/2 mx-auto" />
+                  </div>
+                ) : (
+                  <p
+                    className={`text-base leading-relaxed text-foreground/90 ${contentLang === 'ur' ? 'font-urdu text-right text-base leading-[2.45]' : isRtl ? 'font-arabic text-right text-lg leading-loose' : ''}`}
+                    dir={isRtl ? 'rtl' : 'ltr'}
+                  >
+                    {translatedRemedyText || currentItem.text}
+                  </p>
+                )}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className={cn("rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1", getTypeStyle(currentItem.type).bg)}>
                     {getTypeStyle(currentItem.type).icon}

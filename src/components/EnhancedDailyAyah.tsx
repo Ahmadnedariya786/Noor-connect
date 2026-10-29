@@ -346,9 +346,32 @@ export function EnhancedDailyAyah() {
 
   if (!ayah) return null;
 
-  // Determine if translation or reflection is long enough to warrant truncation (>2 lines on mobile)
   const isTranslationLong = (ayah.translation?.length || 0) > 95;
   const isReflectionLong = (ayah.reflection?.length || 0) > 80;
+
+  const readMoreText = contentLang === 'ur' ? 'مزید پڑھیں' : contentLang === 'gu' ? 'વધુ વાંચો' : contentLang === 'hi' ? 'और पढ़ें' : (ui.readMore || 'Read More');
+  const showLessText = contentLang === 'ur' ? 'کم دکھائیں' : contentLang === 'gu' ? 'ઓછું બતાવો' : contentLang === 'hi' ? 'कम दिखाएं' : (ui.showLess || 'Show Less');
+
+  const SURAH_URDU_NAMES: Record<string, string> = {
+    "Al-Fatihah": "الفاتحہ",
+    "Al-Baqarah": "البقرۃ",
+    "Ali 'Imran": "آل عمران",
+    "At-Talaq": "الطلاق",
+    "Ash-Sharh": "الشرح",
+    "Ar-Ra'd": "الرعد",
+    "Al-Mulk": "الملک",
+    "Al-Kahf": "الکہف",
+    "Yasin": "یٰس",
+    "Ar-Rahman": "الرحمن",
+    "Al-Waqi'ah": "الواقعہ",
+    "Al-Ikhlas": "الاخلاص",
+    "Al-Falaq": "الفلق",
+    "An-Nas": "الناس",
+  };
+
+  const localizedSurahName = contentLang === 'ur'
+    ? (SURAH_URDU_NAMES[ayah.surah] || ayah.surah)
+    : ayah.surah;
 
   return (
     <Card
@@ -537,7 +560,7 @@ export function EnhancedDailyAyah() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-text)] hover:text-[var(--accent)] transition-colors py-1 px-2.5 rounded-lg bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 border border-[var(--border)] active:scale-95 cursor-pointer"
                 aria-expanded={isTranslationExpanded}
               >
-                <span>{isTranslationExpanded ? ui.showLess : ui.readMore}</span>
+                <span className={contentLang === 'ur' ? 'font-urdu' : ''}>{isTranslationExpanded ? showLessText : readMoreText}</span>
                 {isTranslationExpanded ? (
                   <ChevronUp className="w-3.5 h-3.5" />
                 ) : (
@@ -553,7 +576,7 @@ export function EnhancedDailyAyah() {
           <div
             dir={isRtl ? "rtl" : "ltr"}
             className={`p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5 bidi-plaintext ${
-              contentLang === 'ur' ? "font-urdu text-right leading-[2.35] text-base" : isRtl ? "font-arabic text-right leading-[2.05]" : ""
+              contentLang === 'ur' ? "font-urdu text-right leading-[2.45] text-base" : isRtl ? "font-arabic text-right leading-[2.05]" : ""
             }`}
             style={{
               background: 'var(--surface-2)',
@@ -582,7 +605,7 @@ export function EnhancedDailyAyah() {
                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-text)] hover:text-[var(--accent)] transition-colors py-0.5 px-2 rounded bg-[var(--accent-soft)] border border-[var(--border)] active:scale-95 cursor-pointer"
                 aria-expanded={isReflectionExpanded}
               >
-                <span>{isReflectionExpanded ? ui.showLess : ui.readMore}</span>
+                <span className={contentLang === 'ur' ? 'font-urdu' : ''}>{isReflectionExpanded ? showLessText : readMoreText}</span>
                 {isReflectionExpanded ? (
                   <ChevronUp className="w-3 h-3" />
                 ) : (
@@ -594,13 +617,15 @@ export function EnhancedDailyAyah() {
         )}
 
         {/* Single Sleek Metadata Chip Row */}
-        <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] px-1 font-medium">
-          <span className="truncate">
-            {contentLang === 'ur' ? `سورۃ ${ayah.surah} • آیت ${ayah.ayahNumber}` : contentLang === 'gu' ? `સૂરહ ${ayah.surah} • આયત ${ayah.ayahNumber}` : contentLang === 'hi' ? `सूरह ${ayah.surah} • आयत ${ayah.ayahNumber}` : `Surah ${ayah.surah} • Verse ${ayah.ayahNumber}`}
+        <div className={`flex items-center justify-between text-[11px] text-[var(--text-secondary)] px-1 font-medium ${isRtl ? 'flex-row-reverse' : ''}`}>
+          <span className={`truncate ${contentLang === 'ur' ? 'font-urdu text-[13px]' : ''}`}>
+            {contentLang === 'ur' ? `سورۃ ${localizedSurahName} • آیت ${ayah.ayahNumber}` : contentLang === 'gu' ? `સૂરહ ${ayah.surah} • આયત ${ayah.ayahNumber}` : contentLang === 'hi' ? `सूरह ${ayah.surah} • आयत ${ayah.ayahNumber}` : `Surah ${ayah.surah} • Verse ${ayah.ayahNumber}`}
           </span>
           <span className="flex items-center gap-1.5 shrink-0 ml-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-            Updated daily at Fajr
+            <span className={contentLang === 'ur' ? 'font-urdu text-[11px]' : ''}>
+              {contentLang === 'ur' ? 'فجر کے وقت تجدید' : contentLang === 'gu' ? 'દૈનિક નવીકરણ' : contentLang === 'hi' ? 'दैनिक नवीनीकरण' : 'Updated daily at Fajr'}
+            </span>
           </span>
         </div>
 

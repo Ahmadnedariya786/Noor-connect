@@ -26,6 +26,7 @@ import {
   loadProphetStory,
   type ProphetStory,
   type ProphetSummary,
+  PROPHET_SUBTITLE_TRANSLATIONS,
 } from "@/lib/qisas";
 import {
   getFontSize,
@@ -90,9 +91,12 @@ export default function QisasReader() {
   useEffect(() => {
     if (!prophet) return;
 
-    // Check curated honorifics first
-    const curated = (contentLang === 'ur' || contentLang === 'gu' || contentLang === 'hi')
+    // Check curated honorifics and subtitles first
+    const curatedName = (contentLang === 'ur' || contentLang === 'gu' || contentLang === 'hi')
       ? PROPHET_NAME_TRANSLATIONS[prophet.id]?.[contentLang]
+      : null;
+    const curatedTitle = (contentLang === 'ur' || contentLang === 'gu' || contentLang === 'hi')
+      ? PROPHET_SUBTITLE_TRANSLATIONS[prophet.id]?.[contentLang]
       : null;
 
     if (contentLang === 'en') {
@@ -106,32 +110,72 @@ export default function QisasReader() {
 
     let isMounted = true;
     setIsTranslating(true);
-    if (curated) {
-      setTranslatedName(curated);
-    }
+    if (curatedName) setTranslatedName(curatedName);
+    if (curatedTitle) setTranslatedTitle(curatedTitle);
 
-    const paragraphs = prophet.story.split("\n\n").filter(p => p.trim());
+    const isTranslit = (text: string) => {
+      const trimmed = text.trim();
+      return /^["'“]?(?:Wa |Inna |Qala |Qul |Rabbi |Allahu |Bismillahi |La |Subhana |Ayah |Surah )[a-zA-Z'\-,\s]+["'”]?$/.test(trimmed) ||
+        (/\b(?:jaa'ilun|lil-mala'ikati|khaleefatan|rabbuka|innee|zalimoon|muslimeen|al-ameen|al-azeem)\b/i.test(trimmed));
+    };
+
+    const ARABIC_VERSE_RE = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\s]{12,}/;
+
+    const rawParagraphs = prophet.story.split("\n\n").filter(p => p.trim());
+    const cleanedParagraphs = rawParagraphs.filter(p => !isTranslit(p));
+
+    // Safeguard sacred Arabic verses: don't pass pure Arabic to machine translation
+    const preparedParas: { original: string; toTranslate: string; isPureArabic: boolean }[] = cleanedParagraphs.map(p => {
+      const match = p.match(ARABIC_VERSE_RE);
+      if (match) {
+        const arabicPart = match[0].trim();
+        const nonArabic = p.replace(match[0], "").trim();
+        if (nonArabic.length < 10) {
+          return { original: p, toTranslate: "", isPureArabic: true };
+        }
+        return { original: p, toTranslate: nonArabic, isPureArabic: false };
+      }
+      return { original: p, toTranslate: p, isPureArabic: false };
+    });
+
+    const textsToTranslate = preparedParas.map(item => item.toTranslate).filter(Boolean);
 
     Promise.all([
-      curated ? Promise.resolve(curated) : translateIslamicText(prophet.name, contentLang),
-      translateIslamicText(prophet.title, contentLang),
-      translateIslamicBatch(paragraphs, contentLang),
+      curatedName ? Promise.resolve(curatedName) : translateIslamicText(prophet.name, contentLang),
+      curatedTitle ? Promise.resolve(curatedTitle) : translateIslamicText(prophet.title, contentLang),
+      textsToTranslate.length ? translateIslamicBatch(textsToTranslate, contentLang) : Promise.resolve([]),
       prophet.tags?.length ? translateIslamicBatch(prophet.tags, contentLang) : Promise.resolve([]),
     ])
-      .then(([tName, tTitle, tParas, tTags]) => {
-        if (isMounted) {
-          setTranslatedName(tName);
-          setTranslatedTitle(tTitle);
-          setTranslatedStory(tParas.join("\n\n"));
-          setTranslatedTags(tTags);
-          setIsTranslating(false);
-        }
+      .then(([tName, tTitle, tBatch, tTags]) => {
+        if (!isMounted) return;
+
+        let batchIdx = 0;
+        const reassembledParas = preparedParas.map(item => {
+          if (item.isPureArabic) {
+            return item.original; // untouched sacred Arabic
+          }
+          if (item.toTranslate) {
+            const translatedPart = tBatch[batchIdx++] || item.toTranslate;
+            const match = item.original.match(ARABIC_VERSE_RE);
+            if (match) {
+              return `${match[0].trim()}\n\n${translatedPart}`;
+            }
+            return translatedPart;
+          }
+          return item.original;
+        });
+
+        setTranslatedName(tName);
+        setTranslatedTitle(tTitle);
+        setTranslatedStory(reassembledParas.join("\n\n"));
+        setTranslatedTags(tTags);
+        setIsTranslating(false);
       })
       .catch((err) => {
         console.warn("Qisas translation error:", err);
         if (isMounted) {
-          setTranslatedName(curated || prophet.name);
-          setTranslatedTitle(prophet.title);
+          setTranslatedName(curatedName || prophet.name);
+          setTranslatedTitle(curatedTitle || prophet.title);
           setTranslatedStory(prophet.story);
           setTranslatedTags(prophet.tags || []);
           setIsTranslating(false);
@@ -282,18 +326,45 @@ export default function QisasReader() {
 
   const parseContent = (content: string) => {
     return content.split("\n\n").map((paragraph, index) => {
-      const quranRefMatch = paragraph.match(/^\d+:\d+(?:-\d+)?$/);
+      const trimmed = paragraph.trim();
+      if (!trimmed) return null;
 
+      const quranRefMatch = trimmed.match(/^\d+:\d+(?:-\d+)?$/);
       if (quranRefMatch) {
         return (
           <div
             key={index}
             className="my-4 p-4 bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent-2)]/10 border-l-4 border-[var(--accent)] rounded-r-lg cursor-pointer hover:from-[var(--accent)]/20 hover:to-[var(--accent-2)]/20 transition-all"
-            onClick={() => handleQuranRefClick(paragraph)}
+            onClick={() => handleQuranRefClick(trimmed)}
           >
             <p className="font-arabic text-lg text-foreground" dir="rtl">
-              {paragraph}
+              {trimmed}
             </p>
+          </div>
+        );
+      }
+
+      // Sacred Arabic Quranic verse block detection: render in dedicated ornate card box
+      const arabicMatch = trimmed.match(/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\s]{12,}/);
+      if (arabicMatch) {
+        const arabicVerse = arabicMatch[0].trim();
+        const nonArabic = trimmed.replace(arabicMatch[0], "").trim();
+
+        return (
+          <div key={index} className="my-4 space-y-3">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface)] border border-[var(--border)] shadow-sm text-center">
+              <p className="font-arabic text-xl sm:text-2xl text-[var(--accent-text)] leading-[2.3] select-text" dir="rtl">
+                {arabicVerse}
+              </p>
+            </div>
+            {nonArabic && (
+              <p
+                className={`mb-5 ${contentLang === 'ur' ? 'font-urdu leading-[2.45] py-1 text-right text-base sm:text-lg' : isRtl ? 'font-arabic leading-[2.1] text-right text-base sm:text-lg' : 'leading-[1.8]'}`}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {nonArabic}
+              </p>
+            )}
           </div>
         );
       }
@@ -301,10 +372,10 @@ export default function QisasReader() {
       return (
         <p
           key={index}
-          className={`mb-5 ${contentLang === 'ur' ? 'font-urdu leading-[2.35] py-1 text-right text-base sm:text-lg' : isRtl ? 'font-arabic leading-[2.1] text-right text-base sm:text-lg' : 'leading-[1.8]'}`}
+          className={`mb-5 ${contentLang === 'ur' ? 'font-urdu leading-[2.45] py-1 text-right text-base sm:text-lg' : isRtl ? 'font-arabic leading-[2.1] text-right text-base sm:text-lg' : 'leading-[1.8]'}`}
           dir={isRtl ? 'rtl' : 'ltr'}
         >
-          {paragraph}
+          {trimmed}
         </p>
       );
     });

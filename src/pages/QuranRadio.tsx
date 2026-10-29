@@ -11,6 +11,8 @@ import { radioStations, type RadioStation } from "@/data/radio-stations";
 import { extraRadioStations, type RadioCategory } from "@/data/radio-stations-extra";
 import { useGlobalRadio } from "@/lib/global-radio";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 // A unified station view: base stations + extra API stations.
 interface StationView {
@@ -372,11 +374,10 @@ function avatarGradientSafe(i: number): string {
 
 const QuranRadio = () => {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { contentLang, isRtl } = useContentLanguage();
   const strings = useMemo(() => {
-    const code = (language || "en").toLowerCase().split("-")[0];
-    return RADIO_I18N[code] || RADIO_I18N.en;
-  }, [language]);
+    return RADIO_I18N[contentLang] || RADIO_I18N.en;
+  }, [contentLang]);
 
   const globalRadio = useGlobalRadio();
   const [isLoading, setIsLoading] = useState(true);
@@ -484,7 +485,7 @@ const QuranRadio = () => {
   const heroPlaying = globalRadio.isPlaying;
 
   return (
-    <div className="min-h-screen pb-32" style={{ background: "var(--bg-base)" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-base)", paddingBottom: "calc(180px + env(safe-area-inset-bottom, 0px))" }}>
       {/* ── Functional sticky bar ── */}
       <div
         className="sticky top-0 z-40 backdrop-blur-md border-b safe-top"
@@ -505,10 +506,10 @@ const QuranRadio = () => {
               <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
             </Button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold leading-tight" style={{ color: "var(--text-primary)" }}>
+              <h1 className={`text-lg font-bold leading-tight ${contentLang === 'ur' ? 'font-urdu' : ''}`} style={{ color: "var(--text-primary)" }}>
                 {strings.title}
               </h1>
-              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              <p className={`text-xs ${contentLang === 'ur' ? 'font-urdu text-[13px]' : ''}`} style={{ color: "var(--text-secondary)" }}>
                 {strings.subtitle}
               </p>
             </div>
@@ -523,6 +524,9 @@ const QuranRadio = () => {
             </Button>
           </div>
 
+          {/* 4-Language Selector Bar */}
+          <ContentLanguageBar fullWidth className="mt-2.5" />
+
           {/* Search */}
           <div className="mt-2.5 relative">
             <Search
@@ -533,7 +537,7 @@ const QuranRadio = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={strings.searchPlaceholder}
-              className="ps-9 pe-9 h-10 rounded-full border transition-all"
+              className={`ps-9 pe-9 h-10 rounded-full border transition-all ${contentLang === 'ur' ? 'font-urdu text-sm' : ''}`}
               style={{
                 background: "var(--bg-elev)",
                 borderColor: "var(--border)",
@@ -556,11 +560,11 @@ const QuranRadio = () => {
           {/* Category chips */}
           <div className="mt-2.5 flex gap-2 overflow-x-auto pb-1.5 -mx-4 px-4" role="tablist" aria-label="Station categories">
             <Chip active={activeCategory === "all"} onClick={() => setActiveCategory("all")}>
-              {strings.tabAll}
+              <span className={contentLang === 'ur' ? 'font-urdu' : ''}>{strings.tabAll}</span>
             </Chip>
             {categories.map((cat) => (
               <Chip key={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)}>
-                {strings.categories[cat] || CATEGORY_LABELS[cat]}
+                <span className={contentLang === 'ur' ? 'font-urdu' : ''}>{strings.categories[cat] || CATEGORY_LABELS[cat]}</span>
               </Chip>
             ))}
           </div>
@@ -572,65 +576,89 @@ const QuranRadio = () => {
           <PageSkeleton />
         ) : (
           <>
-            {/* ── Hero banner ── */}
-            <section
-              className="relative overflow-hidden rounded-3xl border mb-6 shadow-lg"
-              style={{
-                background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
-                borderColor: "var(--border)",
-                boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
-              }}
-            >
-              <div
-                className="absolute inset-0 bg-gradient-to-tr from-transparent via-[var(--accent)]/10 to-transparent pointer-events-none"
-                aria-hidden="true"
-              />
-
-              <div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
-                <div className="min-w-0">
-                  <span
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
-                    style={{
-                      background: "var(--accent-soft)",
-                      borderColor: "var(--border)",
-                      color: "var(--accent)",
-                    }}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
-                    {strings.heroLive}
-                  </span>
-                  <h2
-                    className="mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    <span>{strings.heroLine1}</span>
-                    <br />
-                    <span style={{ color: "var(--accent)" }}>{strings.heroLine2}</span>
-                  </h2>
-                  <p
-                    className="mt-1.5 text-sm"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {strings.heroSub}
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleHeroPlay}
-                  aria-label={heroPlaying ? "Pause radio" : "Start listening"}
-                  className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-xl transition-transform duration-150 active:scale-95 motion-safe:hover:scale-105"
+            {/* ── Hero banner & Featured carousel: strictly hidden when activeCategory !== 'all' or active search ── */}
+            {activeCategory === "all" && !search && (
+              <>
+                {/* ── Hero banner ── */}
+                <section
+                  className="relative overflow-hidden rounded-3xl border mb-6 shadow-lg"
                   style={{
-                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
-                    color: "var(--on-accent)",
-                    boxShadow: "0 8px 24px var(--accent-glow)",
+                    background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
+                    borderColor: "var(--border)",
+                    boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
                   }}
                 >
-                  {heroPlaying
-                    ? <Pause className="w-7 h-7 md:w-8 md:h-8 fill-current" aria-hidden="true" />
-                    : <Play className="w-7 h-7 md:w-8 md:h-8 fill-current ms-1" aria-hidden="true" />}
-                </button>
-              </div>
-            </section>
+                  <div
+                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-[var(--accent)]/10 to-transparent pointer-events-none"
+                    aria-hidden="true"
+                  />
+
+                  <div className="relative z-10 flex items-center justify-between gap-4 p-5 md:p-7">
+                    <div className="min-w-0">
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
+                        style={{
+                          background: "var(--accent-soft)",
+                          borderColor: "var(--border)",
+                          color: "var(--accent)",
+                        }}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full bg-red-400 ${heroPlaying ? "animate-pulse motion-reduce:animate-none" : ""}`} />
+                        <span className={contentLang === 'ur' ? 'font-urdu text-xs' : ''}>{strings.heroLive}</span>
+                      </span>
+                      <h2
+                        className={`mt-2.5 text-2xl md:text-3xl font-extrabold tracking-tight leading-tight ${contentLang === 'ur' ? 'font-urdu' : ''}`}
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        <span>{strings.heroLine1}</span>
+                        <br />
+                        <span style={{ color: "var(--accent)" }}>{strings.heroLine2}</span>
+                      </h2>
+                      <p
+                        className={`mt-1.5 text-sm ${contentLang === 'ur' ? 'font-urdu text-[13px]' : ''}`}
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        {strings.heroSub}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleHeroPlay}
+                      aria-label={heroPlaying ? "Pause radio" : "Start listening"}
+                      className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-xl transition-transform duration-150 active:scale-95 motion-safe:hover:scale-105"
+                      style={{
+                        background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+                        color: "var(--on-accent)",
+                        boxShadow: "0 8px 24px var(--accent-glow)",
+                      }}
+                    >
+                      {heroPlaying
+                        ? <Pause className="w-7 h-7 md:w-8 md:h-8 fill-current" aria-hidden="true" />
+                        : <Play className="w-7 h-7 md:w-8 md:h-8 fill-current ms-1" aria-hidden="true" />}
+                    </button>
+                  </div>
+                </section>
+
+                {/* ── Featured carousel ── */}
+                <SectionHeader icon={Star} title={strings.featuredReciters} count={featuredStations.length} />
+                <div
+                  className="-mx-4 px-4 pb-4 flex gap-3 overflow-x-auto"
+                  style={{ scrollSnapType: "x mandatory" }}
+                  role="list"
+                  aria-label={strings.featuredReciters}
+                >
+                  {featuredStations.map((station) => (
+                    <FeaturedTile
+                      key={station.url}
+                      station={station}
+                      isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
+                      isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
+                      onSelect={handleStationSelect}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
 
             {/* ── Now playing strip ── */}
             {globalRadio.currentStation && (
@@ -639,7 +667,7 @@ const QuranRadio = () => {
                   <Equalizer playing={globalRadio.isPlaying} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                  <p className={`text-[10px] font-bold uppercase tracking-widest text-primary ${contentLang === 'ur' ? 'font-urdu' : ''}`}>
                     {globalRadio.isPlaying ? strings.nowPlaying : strings.paused}
                   </p>
                   <p className="text-sm font-semibold text-foreground truncate" lang="ar">
@@ -659,25 +687,6 @@ const QuranRadio = () => {
                 </Button>
               </section>
             )}
-
-            {/* ── Featured carousel ── */}
-            <SectionHeader icon={Star} title={strings.featuredReciters} count={featuredStations.length} />
-            <div
-              className="-mx-4 px-4 pb-2 flex gap-3 overflow-x-auto"
-              style={{ scrollSnapType: "x mandatory" }}
-              role="list"
-              aria-label={strings.featuredReciters}
-            >
-              {featuredStations.map((station) => (
-                <FeaturedTile
-                  key={station.url}
-                  station={station}
-                  isPlaying={isCurrentStation(station) && globalRadio.isPlaying}
-                  isPending={isCurrentStation(station) ? !globalRadio.isPlaying && pendingUrl === station.url : pendingUrl === station.url}
-                  onSelect={handleStationSelect}
-                />
-              ))}
-            </div>
 
             {/* ── Pinned rows ── */}
             {pinnedStations.length > 0 && (

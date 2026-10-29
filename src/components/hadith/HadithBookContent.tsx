@@ -348,6 +348,47 @@ export function HadithBookContent() {
     setDisplayCount(prev => prev + 50);
   };
 
+  const defaultBookDesc = contentLang === 'ur'
+    ? 'احادیث مبارکہ کا مستند اور بابرکت باب جس میں نبی کریم ﷺ کے فرامین محفوظ ہیں۔'
+    : contentLang === 'gu'
+    ? 'આ પુસ્તકમાં રસૂલુલ્લાહ ﷺ ની પ્રમાણભૂત હદીસો સંગ્રહિત છે.'
+    : contentLang === 'hi'
+    ? 'इस अध्याय में अल्लाह के रसूल ﷺ की प्रामाणिक हदीसों का संग्रह है।'
+    : 'Authentic traditions of the Prophet Muhammad ﷺ recorded in this chapter.';
+
+  const remainingCount = filteredHadith.length - displayCount;
+  const showingHadithText = contentLang === 'ur'
+    ? `${filteredHadith.length} میں سے ${displayCount} احادیث دکھائی جا رہی ہیں`
+    : contentLang === 'gu'
+    ? `${filteredHadith.length} માંથી ${displayCount} હદીસ દર્શાવી રહ્યા છીએ`
+    : contentLang === 'hi'
+    ? `${filteredHadith.length} में से ${displayCount} हदीस दिखाई जा रही हैं`
+    : `Showing ${displayCount} of ${filteredHadith.length} hadith`;
+
+  const loadMoreText = contentLang === 'ur'
+    ? `مزید لوڈ کریں (${remainingCount} باقی)`
+    : contentLang === 'gu'
+    ? `વધુ લોડ કરો (${remainingCount} બાકી)`
+    : contentLang === 'hi'
+    ? `और लोड करें (${remainingCount} शेष)`
+    : `Load More (${remainingCount} remaining)`;
+
+  const showAllText = contentLang === 'ur'
+    ? 'تمام دیکھیں'
+    : contentLang === 'gu'
+    ? 'બધા જુઓ'
+    : contentLang === 'hi'
+    ? 'सभी देखें'
+    : 'Show All';
+
+  const noHadithFoundTitle = hadithData.length === 0
+    ? (contentLang === 'ur' ? 'ابھی تک کوئی حدیث امپورٹ نہیں ہوئی' : contentLang === 'gu' ? 'હજુ સુધી કોઈ હદીસ ઇમ્પોર્ટ નથી થઈ' : contentLang === 'hi' ? 'अभी तक कोई हदीस इम्पोर्ट नहीं हुई' : 'No Hadith Imported Yet')
+    : (contentLang === 'ur' ? 'کوئی حدیث نہیں ملی' : contentLang === 'gu' ? 'કોઈ હદીસ મળી નથી' : contentLang === 'hi' ? 'कोई हदीस नहीं मिली' : 'No Hadith Found');
+
+  const noHadithFoundDesc = hadithData.length === 0
+    ? (contentLang === 'ur' ? 'یہ کتاب تشکیل شدہ ہے لیکن ابھی تک کوئی لوکل ڈیٹا فائل موجود نہیں ہے۔' : contentLang === 'gu' ? 'આ પુસ્તક સેટઅપ થયેલ છે પરંતુ હજુ કોઈ લોકલ ડેટા ફાઇલ નથી.' : contentLang === 'hi' ? 'यह किताब सेटअप है लेकिन अभी तक कोई लोकल डेटा फ़ाइल उपलब्ध नहीं है।' : 'This book is configured but has no local hadith data files yet.')
+    : (contentLang === 'ur' ? 'اپنی تلاش کو تبدیل کر کے دوبارہ کوشش کریں۔' : contentLang === 'gu' ? 'તમારા શોધ શબ્દો બદલીને ફરી પ્રયાસ કરો.' : contentLang === 'hi' ? 'खोज शब्दों को बदलकर पुनः प्रयास करें।' : "Try adjusting your search terms to find what you're looking for.");
+
   if (!collectionData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -450,7 +491,7 @@ export function HadithBookContent() {
                   {contentLang === 'ur' ? 'تفصیل و تعارف' : contentLang === 'gu' ? 'વર્ણન' : contentLang === 'hi' ? 'विवरण' : 'Description'}
                 </h3>
                 <p className={`text-sm text-muted-foreground leading-relaxed ${contentLang === 'ur' ? 'font-urdu leading-[2.35] text-right' : isRtl ? 'font-arabic text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
-                  {translatedBookDesc || bookInfo?.description || "Description is not available for this book."}
+                  {translatedBookDesc || bookInfo?.description || defaultBookDesc}
                 </p>
               </div>
             </div>
@@ -509,23 +550,23 @@ export function HadithBookContent() {
             {/* Load More / Show All */}
             {filteredHadith.length > displayCount && (
               <div className="pt-4 pb-8 flex flex-col items-center gap-3">
-                <p className="text-sm text-muted-foreground">
-                  Showing {displayCount} of {filteredHadith.length} hadith
+                <p className={`text-sm text-muted-foreground ${contentLang === 'ur' ? 'font-urdu' : ''}`}>
+                  {showingHadithText}
                 </p>
                 <div className="flex gap-2 w-full max-w-sm">
                   <Button
                     onClick={loadMore}
                     variant="outline"
-                    className="flex-1 rounded-xl border-primary/20 hover:bg-primary/5"
+                    className={`flex-1 rounded-xl border-primary/20 hover:bg-primary/5 ${contentLang === 'ur' ? 'font-urdu text-sm' : ''}`}
                   >
-                    Load More ({filteredHadith.length - displayCount} remaining)
+                    {loadMoreText}
                   </Button>
                   <Button
                     onClick={() => setDisplayCount(Math.min(filteredHadith.length, SHOW_ALL_PAGE_SIZE))}
                     variant="outline"
-                    className="flex-1 rounded-xl border-primary/20 hover:bg-primary/5"
+                    className={`flex-1 rounded-xl border-primary/20 hover:bg-primary/5 ${contentLang === 'ur' ? 'font-urdu text-sm' : ''}`}
                   >
-                    Show All
+                    {showAllText}
                   </Button>
                 </div>
               </div>
@@ -538,13 +579,11 @@ export function HadithBookContent() {
           <div className="text-center py-12">
             <div className="max-w-md mx-auto">
               <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                {hadithData.length === 0 ? "No Hadith Imported Yet" : "No Hadith Found"}
+              <h3 className={`text-lg font-semibold text-foreground mb-2 ${contentLang === 'ur' ? 'font-urdu' : ''}`}>
+                {noHadithFoundTitle}
               </h3>
-              <p className="text-muted-foreground">
-                {hadithData.length === 0
-                  ? "This book is configured but has no local hadith data files yet."
-                  : "Try adjusting your search terms to find what you're looking for."}
+              <p className={`text-muted-foreground ${contentLang === 'ur' ? 'font-urdu leading-[2.35]' : ''}`}>
+                {noHadithFoundDesc}
               </p>
             </div>
           </div>

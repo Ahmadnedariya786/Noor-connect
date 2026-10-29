@@ -149,6 +149,19 @@ export const extraRadioStations: ExtraRadioStation[] = [
   { id: 109077, nameAr: "بدر التركي", nameEn: "Bader Alturki", url: "https://backup.qurango.net/radio/bader", slug: "bader", category: 'reciter', img: "/images/radio/reciters/109077.webp" },
   { id: 109078, nameAr: "هزاع البلوشي", nameEn: "Hazza Al-Balushi", url: "https://backup.qurango.net/radio/hazza", slug: "hazza", category: 'reciter', img: "/images/radio/reciters/109078.webp" },
   { id: 109082, nameAr: "إذاعة القرآن الكريم - السعودية", nameEn: "Holy Quran from Saudia Arabia", url: "https://stream.radiojar.com/0tpy1h0kxtzuv", slug: "0tpy1h0kxtzuv", category: 'mosque', img: "" },
+  { id: 21118, nameAr: "تفسير السعدي - تيسير الكريم الرحمن", nameEn: "Tafsir As-Sa'di", url: "https://backup.qurango.net/radio/saadi", slug: "saadi", category: 'tafsir', img: "" },
+  { id: 21119, nameAr: "خواطر الشيخ محمد متولي الشعراوي", nameEn: "Tafsir Al-Sha'rawi", url: "https://backup.qurango.net/radio/shaarawi", slug: "shaarawi", category: 'tafsir', img: "" },
+  { id: 21120, nameAr: "المختصر في تفسير القرآن الكريم", nameEn: "Al-Mukhtasar fi Tafsir", url: "https://backup.qurango.net/radio/tafseer", slug: "almukhtasar_tafseer", category: 'tafsir', img: "" },
+  { id: 21121, nameAr: "رياض الصالحين من كلام سيد المرسلين", nameEn: "Riyad as-Salihin", url: "https://backup.qurango.net/radio/riyad_alsaliheen", slug: "riyad_alsaliheen", category: 'hadith', img: "" },
+  { id: 21122, nameAr: "سورة الكهف - تلاوات خاشعة", nameEn: "Surah Al-Kahf & Sunnah", url: "https://backup.qurango.net/radio/kahf", slug: "kahf", category: 'surah', img: "" },
+  { id: 21123, nameAr: "آيات السكينة والطمأنينة", nameEn: "Verses of Calmness & Serenity", url: "https://backup.qurango.net/radio/sakeenah", slug: "surah_sakeenah", category: 'surah', img: "" },
+  { id: 21124, nameAr: "الرقية الشرعية من القرآن والسنة", nameEn: "Al-Ruqyah Al-Shariyyah", url: "https://backup.qurango.net/radio/roqiah", slug: "roqiah", category: 'adhkar', img: "" },
+  { id: 21125, nameAr: "أذكار الصباح والمساء واليوم والليلة", nameEn: "Daily Remembrance & Adhkar", url: "https://backup.qurango.net/radio/athkar_sabah", slug: "daily_adhkar", category: 'adhkar', img: "" },
+  { id: 21126, nameAr: "سيرة النبي ﷺ وأصحابه الكرام", nameEn: "Prophet's Biography & Companions", url: "https://backup.qurango.net/radio/fi_zilal_alsiyra", slug: "seerah_nabawiyyah", category: 'stories', img: "" },
+  { id: 21127, nameAr: "فتاوى الشيخ ابن عثيمين - نور على الدرب", nameEn: "Fatwa Sheikh Ibn Uthaymeen", url: "https://backup.qurango.net/radio/fatwa", slug: "uthaymeen_fatwa", category: 'fatwa', img: "" },
+  { id: 21128, nameAr: "فتاوى الشيخ عبدالعزيز بن باز", nameEn: "Fatwa Sheikh Ibn Baz", url: "https://backup.qurango.net/radio/alaikhtiarat_alfiqhayh_bin_baz", slug: "bin_baz_fatwa", category: 'fatwa', img: "" },
+  { id: 21129, nameAr: "إذاعة القرآن الكريم من القاهرة", nameEn: "Holy Quran Radio Cairo", url: "https://backup.qurango.net/radio/mix", slug: "cairo_mix", category: 'mosque', img: "" },
+  { id: 21130, nameAr: "الحرم المكي الشريف - تراتيل خاشعة", nameEn: "Makkah Haram Live Recitations", url: "https://backup.qurango.net/radio/tarateel", slug: "makkah_recitations", category: 'mosque', img: "" },
 ];
 
 /** Union of base + extra stations for artwork/lookup purposes. */

@@ -6,7 +6,7 @@ import { Card } from "./ui/card";
 import { Slider } from "./ui/slider";
 import { useGlobalNasheed, setGlobalNasheedAudioRef } from "@/lib/global-nasheed";
 import { nasheedCache } from "@/lib/nasheed-cache";
-import { useGlobalRadio } from "@/lib/global-radio";
+import { useGlobalRadio, getGlobalAudioRef } from "@/lib/global-radio";
 import { useGlobalQuran } from "@/lib/global-quran";
 import { Equalizer } from "./Equalizer";
 
@@ -73,7 +73,7 @@ export function GlobalNasheedPlayer() {
         nextTrack, prevTrack, toggleShuffle, cycleRepeat,
     } = useGlobalNasheed();
 
-    const { isPlaying: isRadioPlaying, updateRadioState } = useGlobalRadio();
+    const { isPlaying: isRadioPlaying, updateRadioState, stopRadio } = useGlobalRadio();
     const { isPlaying: isQuranPlaying, pause: pauseQuran } = useGlobalQuran();
 
     const [isExpanded, setIsExpanded] = useState(false);
@@ -163,6 +163,23 @@ export function GlobalNasheedPlayer() {
         };
     }, [currentTrack?.url]); // Only re-run when URL actually changes
 
+    // ── Stop all competing audio streams (Radio, Quran) ─────────────────────
+    const stopCompetingAudio = useCallback(() => {
+        try {
+            const radioAudio = getGlobalAudioRef();
+            if (radioAudio && !radioAudio.paused) {
+                radioAudio.pause();
+            }
+            stopRadio();
+            updateRadioState({ isPlaying: false });
+        } catch (e) {
+            console.warn('Could not stop radio audio:', e);
+        }
+        if (isQuranPlaying) {
+            pauseQuran();
+        }
+    }, [stopRadio, updateRadioState, isQuranPlaying, pauseQuran]);
+
     // ── Play / Pause sync ──────────────────────────────────────────────────
     // Responds to isPlaying flag changes that DON'T require a source change.
     useEffect(() => {
@@ -170,9 +187,8 @@ export function GlobalNasheedPlayer() {
         if (!audio || !audio.src) return;
 
         if (isPlaying && audio.paused && audioStatus === 'ready') {
-            // Pause competing players first
-            if (isRadioPlaying) updateRadioState({ isPlaying: false });
-            if (isQuranPlaying) pauseQuran();
+            // Stop competing players completely before playing
+            stopCompetingAudio();
 
             safePlay(audio, () => {
                 updateState({ isPlaying: false });
@@ -181,14 +197,17 @@ export function GlobalNasheedPlayer() {
         } else if (!isPlaying && !audio.paused) {
             audio.pause();
         }
-    }, [isPlaying]);
+    }, [isPlaying, audioStatus, stopCompetingAudio, updateState]);
 
     // ── Pause Nasheed when Radio/Quran starts ──────────────────────────────
     useEffect(() => {
         if ((isRadioPlaying || isQuranPlaying) && isPlaying) {
             pause();
+            if (audioRef.current && !audioRef.current.paused) {
+                audioRef.current.pause();
+            }
         }
-    }, [isRadioPlaying, isQuranPlaying]);
+    }, [isRadioPlaying, isQuranPlaying, isPlaying, pause]);
 
     // ── Volume sync ────────────────────────────────────────────────────────
     useEffect(() => {
@@ -219,8 +238,7 @@ export function GlobalNasheedPlayer() {
             retryCountRef.current = 0; // reset retry counter on success
 
             if (isPlaying) {
-                if (isRadioPlaying) updateRadioState({ isPlaying: false });
-                if (isQuranPlaying) pauseQuran();
+                stopCompetingAudio();
 
                 safePlay(audio, () => {
                     // Only update state if still on this generation

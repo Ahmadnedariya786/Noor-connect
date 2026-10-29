@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
-import type { ProphetSummary } from "@/lib/qisas";
+import { type ProphetSummary, PROPHET_NAME_TRANSLATIONS, PROPHET_SUBTITLE_TRANSLATIONS } from "@/lib/qisas";
 
 interface ProphetCardProps {
   prophet: ProphetSummary;
@@ -21,8 +21,16 @@ const eraColors: Record<ProphetSummary["era"], string> = {
 export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
   const { t } = useLanguage();
   const { contentLang, isRtl } = useContentLanguage();
-  const [translatedName, setTranslatedName] = useState(prophet.name);
-  const [translatedTitle, setTranslatedTitle] = useState(prophet.title);
+
+  const curatedName = (contentLang === 'ur' || contentLang === 'gu' || contentLang === 'hi')
+    ? PROPHET_NAME_TRANSLATIONS[prophet.id]?.[contentLang]
+    : null;
+  const curatedTitle = (contentLang === 'ur' || contentLang === 'gu' || contentLang === 'hi')
+    ? PROPHET_SUBTITLE_TRANSLATIONS[prophet.id]?.[contentLang]
+    : null;
+
+  const [translatedName, setTranslatedName] = useState(curatedName || prophet.name);
+  const [translatedTitle, setTranslatedTitle] = useState(curatedTitle || prophet.title);
 
   useEffect(() => {
     if (contentLang === 'en') {
@@ -30,10 +38,16 @@ export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
       setTranslatedTitle(prophet.title);
       return;
     }
+    if (curatedName && curatedTitle) {
+      setTranslatedName(curatedName);
+      setTranslatedTitle(curatedTitle);
+      return;
+    }
+
     let isMounted = true;
     Promise.all([
-      translateIslamicText(prophet.name, contentLang),
-      translateIslamicText(prophet.title, contentLang),
+      curatedName ? Promise.resolve(curatedName) : translateIslamicText(prophet.name, contentLang),
+      curatedTitle ? Promise.resolve(curatedTitle) : translateIslamicText(prophet.title, contentLang),
     ]).then(([tName, tTitle]) => {
       if (isMounted) {
         setTranslatedName(tName);
@@ -41,7 +55,7 @@ export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
       }
     });
     return () => { isMounted = false; };
-  }, [prophet.name, prophet.title, contentLang]);
+  }, [prophet.id, prophet.name, prophet.title, contentLang, curatedName, curatedTitle]);
 
   const eraLabels: Record<ProphetSummary["era"], string> = {
     "beginning-of-creation": t("qisasEraBeginning"),

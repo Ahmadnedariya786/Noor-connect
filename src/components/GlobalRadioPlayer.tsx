@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalRadio, getGlobalAudioRef, setGlobalAudioRef } from "@/lib/global-radio";
+import { useGlobalNasheed, getGlobalNasheedAudioRef } from "@/lib/global-nasheed";
 import { getStationImage } from "@/data/radio-stations-extra";
 import { recordListeningTime } from "@/lib/radio-stats";
 import Hls from 'hls.js';
@@ -61,12 +62,26 @@ export function GlobalRadioPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const globalRadio = useGlobalRadio();
+  const { isPlaying: isNasheedPlaying, pause: pauseNasheed } = useGlobalNasheed();
   const location = useLocation();
   const isLiveRoute = location.pathname.startsWith('/live');
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 2;
+
+  // Mutual exclusion: pause nasheed if radio starts playing
+  useEffect(() => {
+    if (globalRadio.isPlaying) {
+      if (isNasheedPlaying) {
+        pauseNasheed();
+      }
+      const nasheedAudio = getGlobalNasheedAudioRef();
+      if (nasheedAudio && !nasheedAudio.paused) {
+        nasheedAudio.pause();
+      }
+    }
+  }, [globalRadio.isPlaying, isNasheedPlaying, pauseNasheed]);
 
   // Auto-pause radio when navigating to Live Mecca
   useEffect(() => {
@@ -558,7 +573,10 @@ export function GlobalRadioPlayer() {
 
       {/* Mini Player UI - only shown when visible and station selected, hidden on Live route */}
       {globalRadio?.currentStation && isVisible && !isLiveRoute && (
-        <div className="fixed bottom-24 left-0 right-0 z-[100] px-4">
+        <div
+          className="fixed left-0 right-0 z-[100] px-4"
+          style={{ bottom: 'calc(82px + env(safe-area-inset-bottom, 0px))' }}
+        >
           <Card className="max-w-lg mx-auto shadow-2xl bg-card border-border border shadow-primary/10 overflow-hidden animate-in slide-in-from-bottom duration-300">
             <div className="p-3">
               {/* Compact Header with Station Info and Timer */}

@@ -383,6 +383,23 @@ export function EnhancedDailyHadith() {
   const isEnglishLong = (hadith.englishTranslation?.length || 0) > 170 || wordCount > 40;
   const needsTruncation = isArabicLong || isEnglishLong;
 
+  const readMoreText = contentLang === 'ur' ? 'مزید پڑھیں' : contentLang === 'gu' ? 'વધુ વાંચો' : contentLang === 'hi' ? 'और पढ़ें' : (ui.readMore || 'Read More');
+  const showLessText = contentLang === 'ur' ? 'کم دکھائیں' : contentLang === 'gu' ? 'ઓછું બતાવો' : contentLang === 'hi' ? 'कम दिखाएं' : (ui.showLess || 'Show Less');
+  const wordCountLabel = contentLang === 'ur'
+    ? `${wordCount} الفاظ`
+    : contentLang === 'gu'
+    ? `${wordCount} શબ્દો`
+    : contentLang === 'hi'
+    ? `${wordCount} शब्द`
+    : `${wordCount} words`;
+  const updatedDailyLabel = contentLang === 'ur'
+    ? 'روزانہ اپ ڈیٹ'
+    : contentLang === 'gu'
+    ? 'રોજ અપડેટ થાય છે'
+    : contentLang === 'hi'
+    ? 'प्रतिदिन अपडेट'
+    : 'Updated daily';
+
   const isGradeValid = Boolean(
     hadith.grade &&
     hadith.grade.toLowerCase() !== "unspecified" &&
@@ -599,7 +616,7 @@ export function EnhancedDailyHadith() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-text)] hover:text-[var(--accent)] transition-colors py-1 px-2.5 rounded-lg bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 border border-[var(--border)] active:scale-95 cursor-pointer"
                 aria-expanded={isExpanded}
               >
-                <span>{isExpanded ? ui.showLess : ui.readMore}</span>
+                <span className={contentLang === 'ur' ? 'font-urdu' : ''}>{isExpanded ? showLessText : readMoreText}</span>
                 {isExpanded ? (
                   <ChevronUp className="w-3.5 h-3.5" />
                 ) : (
@@ -607,8 +624,8 @@ export function EnhancedDailyHadith() {
                 )}
               </button>
               {!isExpanded && (
-                <span className="text-[11px] text-[var(--text-secondary)]/80 italic font-mono ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
-                  {wordCount} words
+                <span className={`text-[11px] text-[var(--text-secondary)]/80 italic font-mono ltr-num ${contentLang === 'ur' ? 'font-urdu' : ''}`} dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+                  {wordCountLabel}
                 </span>
               )}
             </div>
@@ -657,7 +674,7 @@ export function EnhancedDailyHadith() {
             </span>
             <span className="flex items-center gap-1.5 shrink-0 ml-2 text-[11px]">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-              Updated daily
+              <span className={contentLang === 'ur' ? 'font-urdu' : ''}>{updatedDailyLabel}</span>
             </span>
           </div>
         )}

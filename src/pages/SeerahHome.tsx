@@ -34,6 +34,23 @@ export default function SeerahHome() {
   const [loading, setLoading] = useState(true);
   const [translatedMetaTitle, setTranslatedMetaTitle] = useState("");
   const [translatedMetaDesc, setTranslatedMetaDesc] = useState("");
+  const [translatedLastReadTitle, setTranslatedLastReadTitle] = useState("");
+
+  const lastReadId = useMemo(() => getLastRead("seerah"), []);
+  const lastReadChapter = useMemo(() => lastReadId ? chapters.find(c => c.id === lastReadId) : null, [lastReadId, chapters]);
+
+  useEffect(() => {
+    if (!lastReadChapter) return;
+    if (contentLang === 'en') {
+      setTranslatedLastReadTitle(lastReadChapter.title);
+      return;
+    }
+    let isMounted = true;
+    translateIslamicText(lastReadChapter.title, contentLang).then(t => {
+      if (isMounted) setTranslatedLastReadTitle(t);
+    });
+    return () => { isMounted = false; };
+  }, [lastReadChapter?.id, lastReadChapter?.title, contentLang]);
 
   useEffect(() => {
     if (!metadata) return;
@@ -270,7 +287,7 @@ export default function SeerahHome() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-muted-foreground mb-0.5">{continueLabel}</p>
-                        <p className={`text-sm font-semibold truncate ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{lastReadChapter.title}</p>
+                        <p className={`text-sm font-semibold truncate ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{translatedLastReadTitle || lastReadChapter.title}</p>
                         {progress > 0 && (
                           <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />

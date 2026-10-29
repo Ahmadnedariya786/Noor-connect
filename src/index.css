@@ -2230,17 +2230,22 @@
 [lang="ur"],
 [data-content-lang="ur"] {
   font-family: var(--font-urdu) !important;
-  line-height: 2.35 !important;
+  line-height: 2.45 !important;
   letter-spacing: 0px !important;
   word-spacing: 2px !important;
+  padding-right: 14px !important;
+  padding-left: 10px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  overflow-x: visible !important;
 }
 
 .font-urdu p,
 [lang="ur"] p,
 [data-content-lang="ur"] p {
-  padding-top: 3px;
-  padding-bottom: 3px;
-  line-height: 2.35 !important;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  line-height: 2.45 !important;
 }
 
 /* Global Urdu mode — use Nastaliq for UI text while safeguarding Quranic Arabic */
