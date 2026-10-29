@@ -860,12 +860,12 @@ export default function SurahList() {
 
         {/* 5-WAQT SUNNAH SURAH SPIRITUAL SPOTLIGHT STRIP */}
         <div className="max-w-2xl mx-auto px-4 mb-2">
-          <div className="flex items-center justify-between mb-1.5 px-0.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-              {uiStrings.oftenRead}
+          <div className="flex items-center justify-between mb-1.5 px-0.5 whitespace-nowrap gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] whitespace-nowrap shrink-0">
+              {uiStrings.oftenRead || 'SUNNAH SURAHS'}
             </span>
-            <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--accent-text)]">
-              {spotlightVirtue.prayerLabel} • 5-WAQT SUNNAH
+            <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--accent-text)] whitespace-nowrap shrink-0">
+              ✦ {spotlightVirtue.prayerLabel} SUNNAH
             </span>
           </div>
 

@@ -46,15 +46,17 @@ function getHijriDateString(): string {
     const formatted = fmt.format(new Date());
     const normalized = formatted
       .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
-      .replace(/al-ola/gi, 'al-ūlā')
-      .replace(/al-ōlā/gi, 'al-ūlā')
-      .replace(/ō/g, 'ū')
-      .replace(/\bBC\b/g, 'AH')
-      .replace(/\bBCE\b/g, 'AH')
+      .replace(/Jum[aā]d[aā]\s*(al-)?(ula|ūlā|ōlā|ola|1|i)\b/gi, 'Jumādā I')
+      .replace(/Jum[aā]d[aā]\s*(al-)?(akhirah|ākhirah|akhira|thani|thānī|2|ii)\b/gi, 'Jumādā II')
+      .replace(/Rab[iī]ʿ?\s*(al-)?(awwal|1|i)\b/gi, 'Rabīʿ I')
+      .replace(/Rab[iī]ʿ?\s*(al-)?(thani|thānī|akhir|ākhir|2|ii)\b/gi, 'Rabīʿ II')
+      .replace(/\s+(AH|هـ)\.?$/i, '')
+      .replace(/\bBC\b/g, '')
+      .replace(/\bBCE\b/g, '')
       .trim();
-    return normalized.endsWith('AH') || normalized.endsWith('هـ') ? normalized : `${normalized} AH`;
+    return normalized || '17 Jumādā I 1448';
   } catch {
-    return '17 Jumādā al-ūlā 1448 AH';
+    return '17 Jumādā I 1448';
   }
 }
 

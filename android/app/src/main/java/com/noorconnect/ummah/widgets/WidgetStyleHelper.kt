@@ -155,15 +155,15 @@ object WidgetStyleHelper {
     }
 
     /**
-     * Canonical Islamic Month Names (Transliterated correctly)
+     * Canonical & Concise Islamic Month Names
      */
     val CANONICAL_ISLAMIC_MONTHS = arrayOf(
         "Muharram",
         "Safar",
-        "Rabīʿ al-Awwal",
-        "Rabīʿ al-Thānī",
-        "Jumādā al-ūlā",
-        "Jumādā al-Ākhirah",
+        "Rabīʿ I",
+        "Rabīʿ II",
+        "Jumādā I",
+        "Jumādā II",
         "Rajab",
         "Shaʿbān",
         "Ramadān",
@@ -173,22 +173,26 @@ object WidgetStyleHelper {
     )
 
     /**
-     * Canonical Hijri date formatter that NEVER emits "BC" or Gregorian year.
+     * Concise Hijri date formatter ("17 Jumādā I 1448") that NEVER emits "BC",
+     * removes trailing " AH" to prevent top-bar countdown clipping, and standardizes
+     * long month suffixes.
      */
     fun formatHijriDate(rawHijri: String?): String {
         if (!rawHijri.isNullOrBlank()) {
             val trimmed = rawHijri.trim()
-            // Clean up any double spaces or odd characters
             val normalized = trimmed
                 .replace("[\u014d\u014c\u00f4\u00d4]".toRegex(), "ū")
-                .replace("al-ola".toRegex(RegexOption.IGNORE_CASE), "al-ūlā")
-                .replace("al-ōlā".toRegex(RegexOption.IGNORE_CASE), "al-ūlā")
-                .replace("ō", "ū")
+                .replace("(?i)Jum[aā]d[aā]\\s*(al-)?(ula|ūlā|ōlā|ola|1|i)\\b".toRegex(), "Jumādā I")
+                .replace("(?i)Jum[aā]d[aā]\\s*(al-)?(akhirah|ākhirah|akhira|thani|thānī|2|ii)\\b".toRegex(), "Jumādā II")
+                .replace("(?i)Rab[iī]ʿ?\\s*(al-)?(awwal|1|i)\\b".toRegex(), "Rabīʿ I")
+                .replace("(?i)Rab[iī]ʿ?\\s*(al-)?(thani|thānī|akhir|ākhir|2|ii)\\b".toRegex(), "Rabīʿ II")
+                .replace("(?i)\\s+(AH|هـ)\\.?$".toRegex(), "")
+                .replace("(?i)\\bBC\\b".toRegex(), "")
+                .replace("(?i)\\bBCE\\b".toRegex(), "")
+                .trim()
 
-            return if (!normalized.contains("AH", ignoreCase = true) && !normalized.contains("هـ")) {
-                "$normalized AH"
-            } else {
-                normalized
+            if (normalized.isNotBlank()) {
+                return normalized
             }
         }
         return computeFallbackHijri()
@@ -201,8 +205,8 @@ object WidgetStyleHelper {
                 val day = hijrah.get(java.time.temporal.ChronoField.DAY_OF_MONTH)
                 val month = hijrah.get(java.time.temporal.ChronoField.MONTH_OF_YEAR)
                 val year = hijrah.get(java.time.temporal.ChronoField.YEAR)
-                val mName = if (month in 1..12) CANONICAL_ISLAMIC_MONTHS[month - 1] else "Jumādā al-ūlā"
-                return "$day $mName $year AH"
+                val mName = if (month in 1..12) CANONICAL_ISLAMIC_MONTHS[month - 1] else "Jumādā I"
+                return "$day $mName $year"
             } catch (t: Throwable) {
                 Log.w(TAG, "HijrahDate error", t)
             }
@@ -238,8 +242,8 @@ object WidgetStyleHelper {
         val dHijri = (zMod2 - Math.floor((709 * mHijri) / 24.0)).toInt()
         val yHijri = (30 * n + j - 30).toInt()
 
-        val mName = if (mHijri in 1..12) CANONICAL_ISLAMIC_MONTHS[mHijri - 1] else "Jumādā al-ūlā"
-        return "$dHijri $mName $yHijri AH"
+        val mName = if (mHijri in 1..12) CANONICAL_ISLAMIC_MONTHS[mHijri - 1] else "Jumādā I"
+        return "$dHijri $mName $yHijri"
     }
 }
 

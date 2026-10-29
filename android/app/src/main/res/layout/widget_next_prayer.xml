@@ -46,6 +46,7 @@
                 android:id="@+id/widget_header_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
                 android:text="نور • NEXT PRAYER"
                 android:textColor="@color/widget_accent_gold"
                 android:textSize="10sp"
@@ -58,7 +59,7 @@
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
-            <!-- Hijri Date pill -->
+            <!-- Hijri Date pill (Concise, single-line, ellipsized so it never encroaches countdown) -->
             <TextView
                 android:id="@+id/widget_hijri_date"
                 android:layout_width="wrap_content"
@@ -70,23 +71,26 @@
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:ellipsize="end"
+                android:maxWidth="115dp"
                 android:text="17 Jumādā I 1448"
                 android:textColor="@color/widget_accent_gold"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:layout_marginEnd="6dp" />
 
-            <!-- Countdown pill -->
+            <!-- Countdown pill (Unclipped, wrap_content, weight=0, ellipsize=none) -->
             <TextView
                 android:id="@+id/widget_countdown_pill"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
                 android:background="@drawable/widget_chip_emerald"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:singleLine="true"
+                android:ellipsize="none"
                 android:text="In 46m"
                 android:textColor="@color/widget_accent_emerald"
                 android:textSize="10.5sp"
