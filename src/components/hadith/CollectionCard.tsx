@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookIcon, Users, Calendar } from "lucide-react";
 import { HadithCollection } from "@/data/hadith-collections";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
 
 interface CollectionCardProps {
   collection: HadithCollection;
@@ -9,6 +11,21 @@ interface CollectionCardProps {
 }
 
 export function CollectionCard({ collection, onClick }: CollectionCardProps) {
+  const { contentLang, isRtl } = useContentLanguage();
+  const [desc, setDesc] = useState(collection.description);
+
+  useEffect(() => {
+    if (contentLang === 'en') {
+      setDesc(collection.description);
+      return;
+    }
+    let active = true;
+    translateIslamicText(collection.description, contentLang).then(t => {
+      if (active) setDesc(t);
+    });
+    return () => { active = false; };
+  }, [collection.description, contentLang]);
+
   return (
     <Card 
       className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-border/50 hover:border-primary/30"
@@ -36,8 +53,11 @@ export function CollectionCard({ collection, onClick }: CollectionCardProps) {
         </div>
 
         {/* Description */}
-        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">
-          {collection.description}
+        <p
+          className={`text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 ${isRtl ? 'font-arabic text-right' : ''}`}
+          dir={isRtl ? 'rtl' : 'ltr'}
+        >
+          {desc}
         </p>
 
         {/* Stats */}

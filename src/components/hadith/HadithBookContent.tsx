@@ -11,6 +11,8 @@ import { getHadithBookData, getHadithCollectionMetadata } from "@/lib/hadith";
 import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 const SHOW_ALL_PAGE_SIZE = 300;
 
@@ -26,6 +28,33 @@ interface HadithCardProps {
 }
 
 const HadithCard = memo(function HadithCard({ hadith, index, collection, book, bookmarked, navigate, toast, toggleBookmark }: HadithCardProps) {
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedText, setTranslatedText] = useState(hadith.englishTranslation || '');
+  const [translatedNarrator, setTranslatedNarrator] = useState(hadith.narrator || '');
+
+  useEffect(() => {
+    if (contentLang === 'en') {
+      setTranslatedText(hadith.englishTranslation || '');
+      setTranslatedNarrator(hadith.narrator || '');
+      return;
+    }
+
+    let isMounted = true;
+    Promise.all([
+      hadith.englishTranslation ? translateIslamicText(hadith.englishTranslation, contentLang) : Promise.resolve(''),
+      hadith.narrator ? translateIslamicText(hadith.narrator, contentLang) : Promise.resolve(''),
+    ]).then(([tText, tNarr]) => {
+      if (isMounted) {
+        setTranslatedText(tText);
+        setTranslatedNarrator(tNarr);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hadith.englishTranslation, hadith.narrator, contentLang]);
+
   return (
     <Card
       className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-border/50 hover:border-primary/30"
@@ -73,16 +102,26 @@ const HadithCard = memo(function HadithCard({ hadith, index, collection, book, b
             <ManuscriptDivider />
 
             {/* Translation */}
-            {hadith.englishTranslation && (
-              <p className="text-sm text-muted-foreground italic leading-relaxed whitespace-pre-wrap">
-                {hadith.englishTranslation}
+            {(translatedText || hadith.englishTranslation) && (
+              <p
+                dir={isRtl ? "rtl" : "ltr"}
+                className={`text-sm text-muted-foreground italic leading-relaxed whitespace-pre-wrap ${
+                  isRtl ? "font-arabic text-right leading-[2.1]" : ""
+                }`}
+              >
+                {translatedText || hadith.englishTranslation}
               </p>
             )}
 
             {/* Narrator */}
-            {hadith.narrator && (
-              <p className="text-sm font-semibold text-primary mt-3">
-                Narrated by: {hadith.narrator}
+            {(translatedNarrator || hadith.narrator) && (
+              <p
+                dir={isRtl ? "rtl" : "ltr"}
+                className={`text-sm font-semibold text-primary mt-3 ${
+                  isRtl ? "font-arabic text-right" : ""
+                }`}
+              >
+                {contentLang === 'ur' ? 'راوی:' : contentLang === 'gu' ? 'વર્ણનકર્તા:' : contentLang === 'hi' ? 'वर्णنकर्ता:' : 'Narrated by:'} {translatedNarrator || hadith.narrator}
               </p>
             )}
 
@@ -332,26 +371,31 @@ export function HadithBookContent() {
     <div className="min-h-screen bg-background safe-top">
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/hadith/collections/${collection}`)}
-            className="rounded-xl"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">{bookInfo?.name ?? `Book ${book}`}</h1>
-            {bookInfo?.arabicName && (
-              <p className="text-muted-foreground font-arabic" dir="rtl">
-                {bookInfo.arabicName}
-              </p>
-            )}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4 flex-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(`/hadith/collections/${collection}`)}
+              className="rounded-xl"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-foreground truncate">{bookInfo?.name ?? `Book ${book}`}</h1>
+              {bookInfo?.arabicName && (
+                <p className="text-muted-foreground font-arabic" dir="rtl">
+                  {bookInfo.arabicName}
+                </p>
+              )}
+            </div>
           </div>
-          <Badge variant="secondary" className="text-xs">
-            {loading ? "Loading..." : `${filteredHadith.length} Hadith`}
-          </Badge>
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <ContentLanguageBar compact />
+            <Badge variant="secondary" className="text-xs">
+              {loading && hadithData.length === 0 ? "Loading..." : `${hadithData.length > 0 ? hadithData.length : (bookInfo?.hadithCount || 0)} Hadith`}
+            </Badge>
+          </div>
         </div>
 
         {/* Book Info */}
@@ -368,7 +412,7 @@ export function HadithBookContent() {
                     <span className="font-medium">Book Number:</span> {bookInfo?.number ?? book}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">Total Hadith:</span> {hadithData.length}
+                    <span className="font-medium">Total Hadith:</span> {hadithData.length > 0 ? hadithData.length : (bookInfo?.hadithCount || 0)}
                   </p>
                 </div>
               </div>

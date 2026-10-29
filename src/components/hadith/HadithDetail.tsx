@@ -11,6 +11,8 @@ import { getCollectionByName } from "@/data/hadith-collections";
 import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 export function HadithDetail() {
   const { collection, book, hadithNumber } = useParams<{ collection: string; book: string; hadithNumber: string }>();
@@ -22,6 +24,34 @@ export function HadithDetail() {
   const [loading, setLoading] = useState(!hadith);
   const [copied, setCopied] = useState(false);
   const { isBookmarked, toggleBookmark } = useHadithBookmarks();
+
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedText, setTranslatedText] = useState(hadith?.englishTranslation || '');
+  const [translatedNarrator, setTranslatedNarrator] = useState(hadith?.narrator || '');
+
+  useEffect(() => {
+    if (!hadith) return;
+    if (contentLang === 'en') {
+      setTranslatedText(hadith.englishTranslation || '');
+      setTranslatedNarrator(hadith.narrator || '');
+      return;
+    }
+
+    let isMounted = true;
+    Promise.all([
+      hadith.englishTranslation ? translateIslamicText(hadith.englishTranslation, contentLang) : Promise.resolve(''),
+      hadith.narrator ? translateIslamicText(hadith.narrator, contentLang) : Promise.resolve(''),
+    ]).then(([tText, tNarr]) => {
+      if (isMounted) {
+        setTranslatedText(tText);
+        setTranslatedNarrator(tNarr);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hadith, contentLang]);
 
   useEffect(() => {
     async function loadHadith() {
@@ -61,7 +91,8 @@ export function HadithDetail() {
 
   const handleCopy = async () => {
     if (!hadith) return;
-    const text = `${hadith.arabic}\n\n${hadith.englishTranslation || ""}\n\n— ${hadith.collection ?? collection} (${hadith.hadithNumber})`;
+    const body = translatedText || hadith.englishTranslation || "";
+    const text = `${hadith.arabic}\n\n${body}\n\n— ${hadith.collection ?? collection} (${hadith.hadithNumber})`;
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -74,7 +105,8 @@ export function HadithDetail() {
 
   const handleShare = async () => {
     if (!hadith) return;
-    const text = `${hadith.arabic}\n\n${hadith.englishTranslation || ""}\n\n— ${hadith.collection ?? collection} (${hadith.hadithNumber})`;
+    const body = translatedText || hadith.englishTranslation || "";
+    const text = `${hadith.arabic}\n\n${body}\n\n— ${hadith.collection ?? collection} (${hadith.hadithNumber})`;
     try {
       await navigator.share({ title: "Hadith", text });
     } catch {
@@ -199,15 +231,34 @@ export function HadithDetail() {
 
             {hadith.englishTranslation && (
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Translation</h3>
-                <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
-                  {hadith.englishTranslation}
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    {contentLang === 'en' ? 'Translation' : (contentLang === 'ur' ? 'ترجمہ' : (contentLang === 'gu' ? 'અનુવાદ' : 'अनुवाद'))}
+                  </h3>
+                  <ContentLanguageBar compact />
+                </div>
+                <p
+                  className={`text-base text-foreground leading-relaxed whitespace-pre-wrap ${isRtl ? 'font-arabic text-right text-lg' : ''}`}
+                  dir={isRtl ? 'rtl' : 'ltr'}
+                >
+                  {translatedText || hadith.englishTranslation}
                 </p>
               </div>
             )}
 
             {hadith.narrator && (
-              <p className="text-sm font-semibold text-primary">Narrated by: {hadith.narrator}</p>
+              <p
+                className={`text-sm font-semibold text-primary ${isRtl ? 'font-arabic text-right' : ''}`}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {contentLang === 'en'
+                  ? `Narrated by: ${hadith.narrator}`
+                  : (contentLang === 'ur'
+                    ? `راوی: ${translatedNarrator || hadith.narrator}`
+                    : (contentLang === 'gu'
+                      ? `રાવી: ${translatedNarrator || hadith.narrator}`
+                      : `रावी: ${translatedNarrator || hadith.narrator}`))}
+              </p>
             )}
 
             {tags.length > 0 && (

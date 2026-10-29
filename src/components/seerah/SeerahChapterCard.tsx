@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
 import type { SeerahChapterSummary } from "@/lib/seerah";
 
 interface SeerahChapterCardProps {
@@ -17,6 +19,20 @@ const periodColors: Record<SeerahChapterSummary["period"], string> = {
 
 export function SeerahChapterCard({ chapter, onClick, index }: SeerahChapterCardProps) {
   const { t } = useLanguage();
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedTitle, setTranslatedTitle] = useState(chapter.title);
+
+  useEffect(() => {
+    if (contentLang === 'en') {
+      setTranslatedTitle(chapter.title);
+      return;
+    }
+    let isMounted = true;
+    translateIslamicText(chapter.title, contentLang).then(t => {
+      if (isMounted) setTranslatedTitle(t);
+    });
+    return () => { isMounted = false; };
+  }, [chapter.title, contentLang]);
 
   const periodLabels: Record<SeerahChapterSummary["period"], string> = {
     "pre-prophethood": t("seerahPeriodPreProphethood"),
@@ -41,8 +57,11 @@ export function SeerahChapterCard({ chapter, onClick, index }: SeerahChapterCard
         <span className="text-white font-bold text-lg">{chapter.number}</span>
       </div>
 
-      <h3 className="text-foreground font-semibold text-lg mb-1">
-        {chapter.title}
+      <h3
+        className={`text-foreground font-semibold text-lg mb-1 ${isRtl ? 'font-arabic text-right' : ''}`}
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
+        {translatedTitle}
       </h3>
 
       <p className="font-arabic text-xl text-muted-foreground mb-3" dir="rtl">

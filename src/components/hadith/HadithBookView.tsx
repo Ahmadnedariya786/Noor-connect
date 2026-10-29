@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getCollectionByName, HadithCollection, HadithBook } from "@/data/hadith-collections";
 import { getHadithCollectionMetadata } from "@/lib/hadith";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 export function HadithBookView() {
   const { collection } = useParams<{ collection: string }>();
@@ -75,12 +77,35 @@ export function HadithBookView() {
 }
 
 const BookCard = memo(function BookCard({ book, collection, navigate }: BookCardProps) {
-  const displayName = !book.name || !book.name.trim() || book.name.trim().toLowerCase() === "chapter"
+  const { contentLang, isRtl } = useContentLanguage();
+  const rawDisplayName = !book.name || !book.name.trim() || book.name.trim().toLowerCase() === "chapter"
     ? `Chapter ${book.number} • General Traditions`
     : book.name;
   const displayArabicName = !book.arabicName || !book.arabicName.trim() || book.arabicName.trim() === "باب"
     ? `الباب ${book.number}`
     : book.arabicName;
+
+  const [translatedName, setTranslatedName] = useState(rawDisplayName);
+  const [translatedDesc, setTranslatedDesc] = useState(book.description || "");
+
+  useEffect(() => {
+    if (contentLang === 'en') {
+      setTranslatedName(rawDisplayName);
+      setTranslatedDesc(book.description || "");
+      return;
+    }
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(rawDisplayName, contentLang),
+      book.description ? translateIslamicText(book.description, contentLang) : Promise.resolve(""),
+    ]).then(([tName, tDesc]) => {
+      if (isMounted) {
+        setTranslatedName(tName);
+        setTranslatedDesc(tDesc);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [rawDisplayName, book.description, contentLang]);
 
   return (
     <Card
@@ -94,8 +119,11 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
               <BookOpen className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                {displayName}
+              <h3
+                className={`font-semibold text-foreground group-hover:text-primary transition-colors ${isRtl ? 'font-arabic text-right' : ''}`}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {translatedName}
               </h3>
               <p className="text-sm text-muted-foreground font-arabic" dir="rtl">
                 {displayArabicName}
@@ -115,8 +143,11 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
         )}
 
         {book.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {book.description}
+          <p
+            className={`text-xs text-muted-foreground line-clamp-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            {translatedDesc || book.description}
           </p>
         )}
       </CardContent>
@@ -170,13 +201,14 @@ const BookCard = memo(function BookCard({ book, collection, navigate }: BookCard
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">{collectionData.title}</h1>
-            <p className="text-muted-foreground font-arabic" dir="rtl">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold text-foreground truncate">{collectionData.title}</h1>
+            <p className="text-muted-foreground font-arabic truncate" dir="rtl">
               {collectionData.arabicTitle}
             </p>
           </div>
-          <Badge variant="secondary" className="text-xs">
+          <ContentLanguageBar compact />
+          <Badge variant="secondary" className="text-xs shrink-0">
             {collectionData.authenticity}
           </Badge>
         </div>

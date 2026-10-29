@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
 import type { ProphetSummary } from "@/lib/qisas";
 
 interface ProphetCardProps {
@@ -18,6 +20,28 @@ const eraColors: Record<ProphetSummary["era"], string> = {
 
 export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
   const { t } = useLanguage();
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedName, setTranslatedName] = useState(prophet.name);
+  const [translatedTitle, setTranslatedTitle] = useState(prophet.title);
+
+  useEffect(() => {
+    if (contentLang === 'en') {
+      setTranslatedName(prophet.name);
+      setTranslatedTitle(prophet.title);
+      return;
+    }
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(prophet.name, contentLang),
+      translateIslamicText(prophet.title, contentLang),
+    ]).then(([tName, tTitle]) => {
+      if (isMounted) {
+        setTranslatedName(tName);
+        setTranslatedTitle(tTitle);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [prophet.name, prophet.title, contentLang]);
 
   const eraLabels: Record<ProphetSummary["era"], string> = {
     "beginning-of-creation": t("qisasEraBeginning"),
@@ -46,11 +70,19 @@ export function ProphetCard({ prophet, onClick, index }: ProphetCardProps) {
         </span>
       </div>
 
-      <h3 className="text-foreground font-semibold text-lg mb-1">
-        {prophet.name}
+      <h3
+        className={`text-foreground font-semibold text-lg mb-1 ${isRtl ? 'font-arabic text-right' : ''}`}
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
+        {translatedName}
       </h3>
 
-      <p className="text-muted-foreground text-sm mb-2">{prophet.title}</p>
+      <p
+        className={`text-muted-foreground text-sm mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
+        {translatedTitle}
+      </p>
 
       <p className="font-arabic text-base text-muted-foreground mb-3" dir="rtl">
         {prophet.arabicTitle}

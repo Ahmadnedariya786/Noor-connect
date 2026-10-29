@@ -155,6 +155,21 @@ export function getActiveThemeHex(): string {
   }
 }
 
+export function cleanConciseHijri(raw?: string): string {
+  if (!raw || !raw.trim()) return '18 Jumādā I 1448';
+  return raw
+    .trim()
+    .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
+    .replace(/Jum[aā]d[aā]\s*(al-)?(ula|ūlā|ōlā|ola|1|i)\b/gi, 'Jumādā I')
+    .replace(/Jum[aā]d[aā]\s*(al-)?(akhirah|ākhirah|akhira|thani|thānī|2|ii)\b/gi, 'Jumādā II')
+    .replace(/Rab[iī]ʿ?\s*(al-)?(awwal|1|i)\b/gi, 'Rabīʿ I')
+    .replace(/Rab[iī]ʿ?\s*(al-)?(thani|thānī|akhir|ākhir|2|ii)\b/gi, 'Rabīʿ II')
+    .replace(/\s+(AH|هـ)\.?$/i, '')
+    .replace(/\bBC\b/g, '')
+    .replace(/\bBCE\b/g, '')
+    .trim();
+}
+
 /**
  * Dispatch widget style configuration to Native Android Bridge.
  */
@@ -166,10 +181,12 @@ export function syncWidgetStyleToNative(config: WidgetStyleConfig, extra?: Parti
         ...config,
         themeHex: extra?.themeHex || getActiveThemeHex(),
         city: extra?.city || 'Chhapi, India',
-        hijriDateFormatted: extra?.hijriDateFormatted || '',
+        hijriDateFormatted: cleanConciseHijri(extra?.hijriDateFormatted || ''),
         prayers: extra?.prayers,
         ...extra,
       };
+      // Ensure sanitized concise hijri is passed even if extra overrode it
+      fullPayload.hijriDateFormatted = cleanConciseHijri(fullPayload.hijriDateFormatted);
       bridge.syncWidgetCustomization(JSON.stringify(fullPayload));
       return true;
     }

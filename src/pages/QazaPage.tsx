@@ -76,7 +76,8 @@ export default function QazaPage() {
   };
 
   const handleComplete = (prayer: PrayerName) => {
-    if (qazaCounts[prayer] <= 0) return;
+    const latestPrayers = getQazaPrayers();
+    if ((Number(latestPrayers[prayer]) || 0) <= 0) return;
     
     completeQazaPrayer(prayer, 1);
     addQazaHistoryEntry(prayer);

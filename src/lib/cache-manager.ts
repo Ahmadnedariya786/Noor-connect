@@ -23,6 +23,7 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
   /^hapticEnabled$/,
   /^haptic[_-]intensity$/,
   /^(?:app[_-])?language$/,
+  /^noor[_-]content[_-]lang(?:[_-]v1)?$/,
   /^i18nextLng$/,
   /^preferred[_-]currency$/,
 
@@ -121,6 +122,7 @@ export function isTemporaryCacheKey(key: string): boolean {
 
   // Explicit temporary cache patterns ONLY
   return (
+    key.startsWith('noor_ctr_v1_') ||
     key.startsWith('noor_word_timings_') ||
     key.includes('word_timing') ||
     key.startsWith('noor_mushaf_page_') ||

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { pickNonRepeatingIndex } from "@/lib/non-repeating-picker";
 import { remedyGamification } from "@/lib/remedy-gamification";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 const storageKeyForMood = (moodId: string) => `dashboard-mood-remedy-${moodId}`;
 
@@ -382,6 +384,22 @@ export default function IslamicRemedies() {
   const remedyId = selectedMood ? `${selectedMood.id}-${currentIndex}` : "";
   const isFav = currentItem && selectedMood ? remedyGamification.isFavorite(remedyId) : false;
 
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedRemedyText, setTranslatedRemedyText] = useState("");
+
+  useEffect(() => {
+    if (!currentItem?.text) return;
+    if (contentLang === 'en') {
+      setTranslatedRemedyText(currentItem.text);
+      return;
+    }
+    let isMounted = true;
+    translateIslamicText(currentItem.text, contentLang).then(t => {
+      if (isMounted) setTranslatedRemedyText(t);
+    });
+    return () => { isMounted = false; };
+  }, [currentItem?.text, contentLang]);
+
   const getTypeStyle = (type: string) => TYPE_STYLES[type] || TYPE_STYLES.ayah;
 
   const filteredMoods = useMemo(() => {
@@ -465,7 +483,7 @@ export default function IslamicRemedies() {
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-b from-background via-primary/[0.03] to-primary/[0.08] flex flex-col">
           <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-5 py-6 space-y-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button onClick={handleCloseViewer} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/70 transition-colors shrink-0">
                 <X className="w-5 h-5" />
               </button>
@@ -476,6 +494,7 @@ export default function IslamicRemedies() {
                 <p className="text-sm font-bold text-foreground truncate">{strings.moods[selectedMood.id] || selectedMood.label}</p>
                 <p className="text-xs text-muted-foreground truncate">{currentItem.reference}</p>
               </div>
+              <ContentLanguageBar compact />
               <button onClick={handleToggleFavorite} className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0", isFav ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground hover:text-rose-500")}>
                 <Heart className={cn("w-5 h-5", isFav && "fill-current")} />
               </button>
@@ -497,8 +516,11 @@ export default function IslamicRemedies() {
               )}
 
               <m.div variants={viewerTextVariants} className="bg-card border border-border/60 rounded-3xl p-5 space-y-4 shadow-sm">
-                <p className="text-base leading-relaxed text-foreground/90">
-                  {currentItem.text}
+                <p
+                  className={`text-base leading-relaxed text-foreground/90 ${isRtl ? 'font-arabic text-right text-lg leading-loose' : ''}`}
+                  dir={isRtl ? 'rtl' : 'ltr'}
+                >
+                  {translatedRemedyText || currentItem.text}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className={cn("rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1", getTypeStyle(currentItem.type).bg)}>
@@ -546,14 +568,17 @@ export default function IslamicRemedies() {
           title={strings.title}
           showBack={true}
           actions={
-            <button onClick={() => navigate("/remedy-favorites")} className="relative">
-              <Heart className="w-5 h-5 text-foreground/80" />
-              {favorites.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center">
-                  {favorites.length > 9 ? "9+" : favorites.length}
-                </span>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <ContentLanguageBar compact />
+              <button onClick={() => navigate("/remedy-favorites")} className="relative">
+                <Heart className="w-5 h-5 text-foreground/80" />
+                {favorites.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center">
+                    {favorites.length > 9 ? "9+" : favorites.length}
+                  </span>
+                )}
+              </button>
+            </div>
           }
         />
 

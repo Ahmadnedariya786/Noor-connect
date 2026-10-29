@@ -57,14 +57,17 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
   };
 
   const handleComplete = (prayer: PrayerName) => {
-    if (prayers[prayer] > 0) {
-      completeQazaPrayer(prayer, 1);
-      refresh();
-      toast({
-        title: "Prayer completed",
-        description: `MashaAllah! ${prayerLabels.find(p => p.id === prayer)?.label} Qaza marked as prayed.`
-      });
+    const currentPrayers = getQazaPrayers();
+    const currentCount = Math.max(0, Number(currentPrayers[prayer]) || 0);
+    if (currentCount <= 0) {
+      return;
     }
+    completeQazaPrayer(prayer, 1);
+    refresh();
+    toast({
+      title: "Prayer completed",
+      description: `MashaAllah! ${prayerLabels.find(p => p.id === prayer)?.label} Qaza marked as prayed.`
+    });
   };
 
   const handleEditStart = (prayer: PrayerName) => {
@@ -170,10 +173,9 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     }}
                   >
                     {hasPending ? (
-                      <>
-                        <span dir="ltr" className="group-hover/btn:hidden text-xs font-bold leading-none inline-block tabular-nums font-mono">{count}</span>
-                        <span dir="ltr" className="hidden group-hover/btn:inline text-[10px] font-black tracking-tighter leading-none font-mono">-1</span>
-                      </>
+                      <span dir="ltr" className="text-xs font-bold leading-none inline-block tabular-nums font-mono">
+                        {Math.max(0, count)}
+                      </span>
                     ) : (
                       <Check className="w-4 h-4 stroke-[2.5] text-[var(--success,#10b981)]" />
                     )}

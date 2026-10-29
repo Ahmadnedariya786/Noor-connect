@@ -18,6 +18,8 @@ import { Slider } from "@/components/ui/slider";
 import { PageTransition } from "@/components/PageTransition";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import {
   loadSeerahChapter,
   loadSeerahChapterList,
@@ -49,6 +51,30 @@ export default function SeerahReader() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedTitle, setTranslatedTitle] = useState("");
+  const [translatedContent, setTranslatedContent] = useState("");
+
+  useEffect(() => {
+    if (!chapter) return;
+    if (contentLang === 'en') {
+      setTranslatedTitle(chapter.title);
+      setTranslatedContent(chapter.content);
+      return;
+    }
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(chapter.title, contentLang),
+      translateIslamicText(chapter.content, contentLang),
+    ]).then(([tTitle, tContent]) => {
+      if (isMounted) {
+        setTranslatedTitle(tTitle);
+        setTranslatedContent(tContent);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [chapter, contentLang]);
 
   const periodLabels: Record<PeriodKey, string> = useMemo(
     () => ({
@@ -217,12 +243,16 @@ export default function SeerahReader() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-foreground truncate">
-                  {chapter.title}
+                <h2
+                  className={`text-lg font-semibold text-foreground truncate ${isRtl ? 'font-arabic text-right' : ''}`}
+                  dir={isRtl ? 'rtl' : 'ltr'}
+                >
+                  {translatedTitle || chapter.title}
                 </h2>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <ContentLanguageBar compact />
               <Button
                 variant="ghost"
                 size="icon"
@@ -310,8 +340,12 @@ export default function SeerahReader() {
           className="max-w-3xl mx-auto px-4 py-6 overflow-y-auto"
           style={{ maxHeight: "calc(100vh - 200px)" }}
         >
-          <div className="text-foreground" style={{ fontSize: `${fontSize}px` }}>
-            {parseContent(chapter.content)}
+          <div
+            className={`text-foreground ${isRtl ? 'font-arabic text-right leading-loose text-lg' : ''}`}
+            dir={isRtl ? 'rtl' : 'ltr'}
+            style={{ fontSize: `${fontSize}px` }}
+          >
+            {parseContent(translatedContent || chapter.content)}
           </div>
         </div>
 

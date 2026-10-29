@@ -11,6 +11,8 @@ import { ProphetCard } from "@/components/qisas/ProphetCard";
 import { goBackOrFallback } from "@/lib/navigation";
 import { getLastRead, getReadingProgress } from "@/lib/reading-storage";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import {
   loadProphetList,
   loadQisasMetadata,
@@ -29,12 +31,35 @@ type EraFilter =
 export default function QisasHome() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { contentLang, isRtl } = useContentLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [eraFilter, setEraFilter] = useState<EraFilter>("all");
   const [metadata, setMetadata] = useState<QisasMetadata | null>(null);
   const [prophets, setProphets] = useState<ProphetSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [translatedMetaTitle, setTranslatedMetaTitle] = useState("");
+  const [translatedMetaDesc, setTranslatedMetaDesc] = useState("");
+
+  useEffect(() => {
+    if (!metadata) return;
+    if (contentLang === 'en') {
+      setTranslatedMetaTitle(metadata.title);
+      setTranslatedMetaDesc(metadata.description);
+      return;
+    }
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(metadata.title, contentLang),
+      translateIslamicText(metadata.description, contentLang),
+    ]).then(([tTitle, tDesc]) => {
+      if (isMounted) {
+        setTranslatedMetaTitle(tTitle);
+        setTranslatedMetaDesc(tDesc);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [metadata, contentLang]);
 
   useEffect(() => {
     async function loadData() {
@@ -129,10 +154,11 @@ export default function QisasHome() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground">{t("qisas")}</h1>
-              <p className="text-muted-foreground">{t("qisasDescription")}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-foreground truncate">{t("qisas")}</h1>
+              <p className="text-muted-foreground text-sm truncate">{t("qisasDescription")}</p>
             </div>
+            <ContentLanguageBar compact />
           </div>
           {/* Continue Reading */}
           {(() => {
@@ -190,8 +216,11 @@ export default function QisasHome() {
                 </span>
               </div>
 
-              <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-                {metadata?.title || "Stories of the Prophets"}
+              <h2
+                className={`text-3xl font-bold text-[var(--text-primary)] mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {translatedMetaTitle || metadata?.title || "Stories of the Prophets"}
               </h2>
               <p className="font-arabic text-2xl text-[var(--text-secondary)] mb-4" dir="rtl">
                 {metadata?.arabicTitle || "قصص الأنبياء"}
@@ -205,16 +234,19 @@ export default function QisasHome() {
                 </div>
               )}
 
-              <p className="text-[var(--text-secondary)] text-sm mb-6">
-                {metadata?.description || "Stories of the Prophets from Adam to Isa (peace be upon them all)."}
+              <p
+                className={`text-[var(--text-secondary)] text-sm mb-6 ${isRtl ? 'font-arabic text-right text-base' : ''}`}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {translatedMetaDesc || metadata?.description || "Stories of the Prophets from Adam to Isa (peace be upon them all)."}
               </p>
 
               <div className="flex items-center gap-4">
                 <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
                   {metadata?.totalProphets || prophets.length || 24} {t("qisasProphets")}
                 </Badge>
-                <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
-                  {metadata?.language || "en"}
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] font-semibold">
+                  EN • اردو • ગુજ • हिं
                 </Badge>
               </div>
             </div>

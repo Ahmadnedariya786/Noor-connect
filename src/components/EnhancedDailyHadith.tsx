@@ -17,6 +17,8 @@ import { getGradeBadgeClass } from "@/lib/hadith-utils";
 import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 interface Hadith {
   id: string;
@@ -170,6 +172,40 @@ export function EnhancedDailyHadith() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
   const { isBookmarked, toggleBookmark } = useHadithBookmarks();
+
+  const activeNarrator = hadith ? extractNarrator(hadith.narrator, hadith.englishTranslation) : '';
+
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedText, setTranslatedText] = useState('');
+  const [translatedNarrator, setTranslatedNarrator] = useState('');
+  const [translatedReflection, setTranslatedReflection] = useState('');
+
+  useEffect(() => {
+    if (!hadith) return;
+    if (contentLang === 'en') {
+      setTranslatedText(hadith.englishTranslation);
+      setTranslatedNarrator(activeNarrator || '');
+      setTranslatedReflection(hadith.reflection || '');
+      return;
+    }
+
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(hadith.englishTranslation, contentLang),
+      activeNarrator ? translateIslamicText(activeNarrator, contentLang) : Promise.resolve(''),
+      hadith.reflection ? translateIslamicText(hadith.reflection, contentLang) : Promise.resolve(''),
+    ]).then(([tText, tNarr, tRefl]) => {
+      if (isMounted) {
+        setTranslatedText(tText);
+        setTranslatedNarrator(tNarr);
+        setTranslatedReflection(tRefl);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hadith, activeNarrator, contentLang]);
 
   const loadHadith = useCallback(async () => {
     try {
@@ -343,7 +379,6 @@ export function EnhancedDailyHadith() {
   const isEnglishLong = (hadith.englishTranslation?.length || 0) > 170 || wordCount > 40;
   const needsTruncation = isArabicLong || isEnglishLong;
 
-  const activeNarrator = extractNarrator(hadith.narrator, hadith.englishTranslation);
   const isGradeValid = Boolean(
     hadith.grade &&
     hadith.grade.toLowerCase() !== "unspecified" &&
@@ -531,15 +566,24 @@ export function EnhancedDailyHadith() {
         {/* Ornamental Manuscript Divider */}
         <ManuscriptDivider />
 
-        {/* English Translation Section */}
+        {/* 4-Language Content Switcher Bar */}
+        <div className="flex items-center justify-between pb-1 pt-0.5">
+          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+            {contentLang === 'ur' ? 'ترجمہ' : contentLang === 'gu' ? 'અનુવાદ' : contentLang === 'hi' ? 'अनुवाद' : 'Translation'}
+          </span>
+          <ContentLanguageBar compact />
+        </div>
+
+        {/* Translation Section */}
         <div className={`space-y-2 transition-all duration-300 ${isAnimating ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}`}>
           <p
+            dir={isRtl ? "rtl" : "ltr"}
             className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 bidi-plaintext ${
-              !isExpanded && isEnglishLong ? "line-clamp-3" : ""
-            }`}
+              isRtl ? "font-arabic text-right leading-[2.1]" : ""
+            } ${!isExpanded && isEnglishLong ? "line-clamp-3" : ""}`}
             style={{ unicodeBidi: 'plaintext' }}
           >
-            "{hadith.englishTranslation}"
+            "{translatedText || hadith.englishTranslation}"
           </p>
 
           {/* Read More / Show Less Toggle Button */}
@@ -568,27 +612,34 @@ export function EnhancedDailyHadith() {
         </div>
 
         {/* Reflection (if available) with 3px solid accent left border */}
-        {hadith.reflection && (
+        {(translatedReflection || hadith.reflection) && (
           <div
-            className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed bidi-plaintext"
+            dir={isRtl ? "rtl" : "ltr"}
+            className={`p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed bidi-plaintext ${
+              isRtl ? "font-arabic text-right leading-[2.05]" : ""
+            }`}
             style={{
               background: 'var(--surface-2)',
               boxShadow: 'inset 0 1px 0 var(--card-sheen)',
               unicodeBidi: 'plaintext',
-              textAlign: 'start',
+              textAlign: isRtl ? 'right' : 'start',
             }}
           >
-            <span className="text-[var(--accent)] font-semibold not-italic mr-1.5 inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>Reflection:</span>
-            <span>{hadith.reflection}</span>
+            <span className="text-[var(--accent)] font-semibold not-italic mr-1.5 inline-block" dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
+              {contentLang === 'ur' ? 'تدبر و غور:' : contentLang === 'gu' ? 'ચિંતન:' : contentLang === 'hi' ? 'चिंतन:' : 'Reflection:'}
+            </span>
+            <span>{translatedReflection || hadith.reflection}</span>
           </div>
         )}
 
         {/* Narrator & Source Strip (Sanitized: hides Unknown narrator completely) */}
         {activeNarrator ? (
           <div className="flex items-center justify-between text-xs px-1 text-[var(--text-secondary)] font-medium">
-            <div className="flex items-center gap-1.5 min-w-0 truncate bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
-              <span className="text-[var(--accent)] font-semibold shrink-0 inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>Narrator:</span>
-              <span className="text-[var(--text-primary)] font-medium truncate">{activeNarrator}</span>
+            <div className={`flex items-center gap-1.5 min-w-0 truncate bidi-plaintext ${isRtl ? "flex-row-reverse" : ""}`} style={{ unicodeBidi: 'plaintext' }}>
+              <span className="text-[var(--accent)] font-semibold shrink-0 inline-block" dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
+                {contentLang === 'ur' ? 'راوی:' : contentLang === 'gu' ? 'વર્ણનકર્તા:' : contentLang === 'hi' ? 'वर्णनकर्ता:' : 'Narrator:'}
+              </span>
+              <span className="text-[var(--text-primary)] font-medium truncate">{translatedNarrator || activeNarrator}</span>
             </div>
             <div className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--accent-text)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-md border border-[var(--border)] shrink-0 ml-2">
               <span>{hadith.source}</span>

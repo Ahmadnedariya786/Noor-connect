@@ -49,21 +49,25 @@ const saveQazaPrayers = (prayers: Record<PrayerName, number>): void => {
 // Add Qaza prayer
 export const addQazaPrayer = (prayer: PrayerName, count: number = 1): void => {
   const prayers = getQazaPrayers();
-  prayers[prayer] = Math.max(0, (prayers[prayer] || 0) + count);
+  const validCount = Math.max(0, Number(count) || 0);
+  prayers[prayer] = Math.max(0, (Number(prayers[prayer]) || 0) + validCount);
   saveQazaPrayers(prayers);
 };
 
-// Remove/complete Qaza prayer
+// Remove/complete Qaza prayer (Guaranteed never to go below 0)
 export const completeQazaPrayer = (prayer: PrayerName, count: number = 1): void => {
   const prayers = getQazaPrayers();
-  prayers[prayer] = Math.max(0, (prayers[prayer] || 0) - count);
+  const current = Math.max(0, Number(prayers[prayer]) || 0);
+  if (current <= 0) return;
+  const validCount = Math.max(1, Number(count) || 1);
+  prayers[prayer] = Math.max(0, current - validCount);
   saveQazaPrayers(prayers);
 };
 
 // Set specific Qaza count
 export const setQazaCount = (prayer: PrayerName, count: number): void => {
   const prayers = getQazaPrayers();
-  prayers[prayer] = Math.max(0, count);
+  prayers[prayer] = Math.max(0, Number(count) || 0);
   saveQazaPrayers(prayers);
 };
 

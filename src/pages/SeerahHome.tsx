@@ -11,6 +11,8 @@ import { SeerahChapterCard } from "@/components/seerah/SeerahChapterCard";
 import { goBackOrFallback } from "@/lib/navigation";
 import { getLastRead, getReadingProgress, type ReadingFeature } from "@/lib/reading-storage";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import {
   loadSeerahChapterList,
   loadSeerahMetadata,
@@ -23,12 +25,35 @@ type PeriodFilter = "all" | "pre-prophethood" | "makkan" | "madinan" | "final-da
 export default function SeerahHome() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { contentLang, isRtl } = useContentLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("all");
   const [metadata, setMetadata] = useState<SeerahMetadata | null>(null);
   const [chapters, setChapters] = useState<SeerahChapterSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [translatedMetaTitle, setTranslatedMetaTitle] = useState("");
+  const [translatedMetaDesc, setTranslatedMetaDesc] = useState("");
+
+  useEffect(() => {
+    if (!metadata) return;
+    if (contentLang === 'en') {
+      setTranslatedMetaTitle(metadata.title);
+      setTranslatedMetaDesc(metadata.description);
+      return;
+    }
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(metadata.title, contentLang),
+      translateIslamicText(metadata.description, contentLang),
+    ]).then(([tTitle, tDesc]) => {
+      if (isMounted) {
+        setTranslatedMetaTitle(tTitle);
+        setTranslatedMetaDesc(tDesc);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [metadata, contentLang]);
 
   useEffect(() => {
     async function loadData() {
@@ -121,10 +146,11 @@ export default function SeerahHome() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground">{t("seerah")}</h1>
-              <p className="text-muted-foreground">{t("seerahDescription")}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-foreground truncate">{t("seerah")}</h1>
+              <p className="text-muted-foreground text-sm truncate">{t("seerahDescription")}</p>
             </div>
+            <ContentLanguageBar compact />
           </div>
 
           <motion.div
@@ -146,8 +172,11 @@ export default function SeerahHome() {
                 </span>
               </div>
 
-              <h2 className="text-3xl font-bold text-white mb-2">
-                {metadata?.title || "Ar-Raheeq Al-Makhtum (The Sealed Nectar)"}
+              <h2
+                className={`text-3xl font-bold text-white mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {translatedMetaTitle || metadata?.title || "Ar-Raheeq Al-Makhtum (The Sealed Nectar)"}
               </h2>
               <p className="font-arabic text-2xl text-white/90 mb-4" dir="rtl">
                 {metadata?.arabicTitle || "الرحيق المختوم"}
@@ -161,16 +190,19 @@ export default function SeerahHome() {
                 </div>
               )}
 
-              <p className="text-white/70 text-sm mb-6">
-                {metadata?.description || "A comprehensive biography of Prophet Muhammad (peace be upon him)."}
+              <p
+                className={`text-white/70 text-sm mb-6 ${isRtl ? 'font-arabic text-right text-base' : ''}`}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {translatedMetaDesc || metadata?.description || "A comprehensive biography of Prophet Muhammad (peace be upon him)."}
               </p>
 
               <div className="flex items-center gap-4">
                 <Badge className="bg-blue-950/40 text-blue-200 border border-blue-500/30">
                   {metadata?.totalChapters || chapters.length || 17} {t("seerahChapters")}
                 </Badge>
-                <Badge className="bg-blue-950/40 text-blue-200 border border-blue-500/30">
-                  {metadata?.language || "en"}
+                <Badge className="bg-blue-950/40 text-blue-200 border border-blue-500/30 font-semibold">
+                  EN • اردو • ગુજ • हिं
                 </Badge>
               </div>
             </div>

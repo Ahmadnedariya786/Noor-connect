@@ -18,6 +18,8 @@ import { Slider } from "@/components/ui/slider";
 import { PageTransition } from "@/components/PageTransition";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import {
   loadProphetList,
   loadProphetStory,
@@ -49,6 +51,34 @@ export default function QisasReader() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedName, setTranslatedName] = useState("");
+  const [translatedTitle, setTranslatedTitle] = useState("");
+  const [translatedStory, setTranslatedStory] = useState("");
+
+  useEffect(() => {
+    if (!prophet) return;
+    if (contentLang === 'en') {
+      setTranslatedName(prophet.name);
+      setTranslatedTitle(prophet.title);
+      setTranslatedStory(prophet.story);
+      return;
+    }
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(prophet.name, contentLang),
+      translateIslamicText(prophet.title, contentLang),
+      translateIslamicText(prophet.story, contentLang),
+    ]).then(([tName, tTitle, tStory]) => {
+      if (isMounted) {
+        setTranslatedName(tName);
+        setTranslatedTitle(tTitle);
+        setTranslatedStory(tStory);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [prophet, contentLang]);
 
   const eraLabels: Record<EraKey, string> = useMemo(
     () => ({
@@ -229,12 +259,16 @@ export default function QisasReader() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-foreground truncate">
-                  {prophet.name}
+                <h2
+                  className={`text-lg font-semibold text-foreground truncate ${isRtl ? 'font-arabic text-right' : ''}`}
+                  dir={isRtl ? 'rtl' : 'ltr'}
+                >
+                  {translatedName || prophet.name}
                 </h2>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <ContentLanguageBar compact />
               <Button
                 variant="ghost"
                 size="icon"
@@ -306,10 +340,18 @@ export default function QisasReader() {
             </span>
           </div>
 
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            {prophet.name}
+          <h2
+            className={`text-3xl font-bold text-foreground mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            {translatedName || prophet.name}
           </h2>
-          <p className="text-xl text-muted-foreground mb-2">{prophet.title}</p>
+          <p
+            className={`text-xl text-muted-foreground mb-2 ${isRtl ? 'font-arabic text-right' : ''}`}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            {translatedTitle || prophet.title}
+          </p>
           <p className="font-arabic text-2xl text-foreground mb-4" dir="rtl">
             {prophet.arabicTitle}
           </p>
@@ -365,8 +407,12 @@ export default function QisasReader() {
           className="max-w-3xl mx-auto px-4 py-6 overflow-y-auto"
           style={{ maxHeight: "calc(100vh - 300px)" }}
         >
-          <div className="text-foreground" style={{ fontSize: `${fontSize}px` }}>
-            {parseContent(prophet.story)}
+          <div
+            className={`text-foreground ${isRtl ? 'font-arabic text-right leading-loose text-lg' : ''}`}
+            dir={isRtl ? 'rtl' : 'ltr'}
+            style={{ fontSize: `${fontSize}px` }}
+          >
+            {parseContent(translatedStory || prophet.story)}
           </div>
         </div>
 

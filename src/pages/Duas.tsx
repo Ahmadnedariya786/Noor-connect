@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getFavorites, toggleFavorite } from "@/lib/storage";
 import { duasData, duaCategories, type Dua } from "@/data/duas";
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 const FONT_LEVELS = [
   { arabic: "1.35rem", translation: "0.82rem" },
@@ -52,6 +54,21 @@ const DuaCard = memo(function DuaCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPronunciation, setShowPronunciation] = useState(true);
   const [showTranslation, setShowTranslation] = useState(true);
+
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedTranslation, setTranslatedTranslation] = useState(dua.translation);
+
+  useEffect(() => {
+    if (contentLang === 'en') {
+      setTranslatedTranslation(dua.translation);
+      return;
+    }
+    let isMounted = true;
+    translateIslamicText(dua.translation, contentLang).then(t => {
+      if (isMounted) setTranslatedTranslation(t);
+    });
+    return () => { isMounted = false; };
+  }, [dua.translation, contentLang]);
 
   const targetCount = useMemo(() => getTargetCount(dua), [dua]);
   const isComplete = counter >= targetCount;
@@ -225,17 +242,18 @@ const DuaCard = memo(function DuaCard({
             </p>
           )}
 
-          {/* English Translation */}
+          {/* Translation */}
           {showTranslation && (
             <p
-              className="leading-relaxed font-medium"
+              className={`leading-relaxed font-medium ${isRtl ? 'font-arabic text-right text-base leading-loose' : ''}`}
+              dir={isRtl ? 'rtl' : 'ltr'}
               style={{
                 fontSize: currentFont.translation,
                 color: "var(--text-primary)",
-                opacity: 0.9,
+                opacity: 0.95,
               }}
             >
-              {dua.translation}
+              {translatedTranslation || dua.translation}
             </p>
           )}
 
@@ -376,36 +394,38 @@ const Duas = memo(function Duas() {
   return (
     <div className="min-h-screen bg-background safe-top">
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
-        {/* Header with - A + Font Sizer */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        {/* Header with - A + Font Sizer & Content Language Bar */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/")}
-              className="rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+              className="rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-[var(--text-primary)] font-serif italic tracking-tight">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-[var(--text-primary)] font-serif italic tracking-tight truncate">
                 Duas
               </h1>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mt-0.5 truncate">
                 {duasData.length} Supplications
               </p>
             </div>
           </div>
 
-          {/* Compact [ - ] A [ + ] Font Sizer */}
-          <div
-            className="flex items-center gap-1 px-2 py-1 rounded-full border shadow-sm"
-            style={{
-              background: "var(--surface)",
-              borderColor: "var(--border)",
-            }}
-            title="Adjust Arabic & translation font size"
-          >
+          <div className="flex items-center gap-2">
+            <ContentLanguageBar compact />
+            {/* Compact [ - ] A [ + ] Font Sizer */}
+            <div
+              className="flex items-center gap-1 px-2 py-1 rounded-full border shadow-sm"
+              style={{
+                background: "var(--surface)",
+                borderColor: "var(--border)",
+              }}
+              title="Adjust Arabic & translation font size"
+            >
             <button
               type="button"
               disabled={fontLevel <= 0}
@@ -427,6 +447,7 @@ const Duas = memo(function Duas() {
             </button>
           </div>
         </div>
+      </div>
 
         {/* Search */}
         <div className="relative">

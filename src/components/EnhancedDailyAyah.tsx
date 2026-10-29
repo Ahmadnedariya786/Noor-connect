@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, RefreshCw, Share2, Copy, Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 interface Ayah {
   arabic: string;
@@ -134,6 +136,34 @@ export function EnhancedDailyAyah() {
   const [isTranslationExpanded, setIsTranslationExpanded] = useState(false);
   const [isReflectionExpanded, setIsReflectionExpanded] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const { contentLang, isRtl } = useContentLanguage();
+  const [translatedText, setTranslatedText] = useState(ayah?.translation || '');
+  const [translatedReflection, setTranslatedReflection] = useState(ayah?.reflection || '');
+
+  useEffect(() => {
+    if (!ayah) return;
+    if (contentLang === 'en') {
+      setTranslatedText(ayah.translation);
+      setTranslatedReflection(ayah.reflection || '');
+      return;
+    }
+
+    let isMounted = true;
+    Promise.all([
+      translateIslamicText(ayah.translation, contentLang),
+      ayah.reflection ? translateIslamicText(ayah.reflection, contentLang) : Promise.resolve(''),
+    ]).then(([tText, tRefl]) => {
+      if (isMounted) {
+        setTranslatedText(tText);
+        setTranslatedReflection(tRefl);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [ayah, contentLang]);
   const { toast } = useToast();
 
   const getBookmarkId = useCallback((item: Ayah): string => {
@@ -478,15 +508,24 @@ export function EnhancedDailyAyah() {
           <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[var(--accent)]/30 to-[var(--accent)]/10" />
         </div>
 
-        {/* English Translation Section */}
+        {/* 4-Language Content Switcher Bar */}
+        <div className="flex items-center justify-between pb-1 pt-0.5">
+          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+            {contentLang === 'ur' ? 'ترجمہ' : contentLang === 'gu' ? 'અનુવાદ' : contentLang === 'hi' ? 'अनुवाद' : 'Translation'}
+          </span>
+          <ContentLanguageBar compact />
+        </div>
+
+        {/* Translation Section */}
         <div className={`space-y-2 transition-all duration-300 ${isAnimating ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"}`}>
           <p
+            dir={isRtl ? "rtl" : "ltr"}
             className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 bidi-plaintext ${
-              !isTranslationExpanded && isTranslationLong ? "line-clamp-2" : ""
-            }`}
+              isRtl ? "font-arabic text-right leading-[2.1]" : ""
+            } ${!isTranslationExpanded && isTranslationLong ? "line-clamp-2" : ""}`}
             style={{ unicodeBidi: 'plaintext' }}
           >
-            "{ayah.translation}"
+            "{translatedText || ayah.translation}"
           </p>
 
           {/* Read More / Show Less Toggle Button */}
@@ -510,25 +549,30 @@ export function EnhancedDailyAyah() {
         </div>
 
         {/* Reflection (with 3px solid accent border and soft glass background) */}
-        {ayah.reflection && (
+        {(translatedReflection || ayah.reflection) && (
           <div
-            className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5 bidi-plaintext"
+            dir={isRtl ? "rtl" : "ltr"}
+            className={`p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5 bidi-plaintext ${
+              isRtl ? "font-arabic text-right leading-[2.05]" : ""
+            }`}
             style={{
               background: 'var(--surface-2)',
               boxShadow: 'inset 0 1px 0 var(--card-sheen)',
               unicodeBidi: 'plaintext',
-              textAlign: 'start',
+              textAlign: isRtl ? 'right' : 'start',
             }}
           >
-            <div className="flex items-start gap-1.5">
-              <span className="text-[var(--accent)] font-semibold not-italic shrink-0 inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>Reflection:</span>
+            <div className={`flex items-start gap-1.5 ${isRtl ? "flex-row-reverse justify-end" : ""}`}>
+              <span className="text-[var(--accent)] font-semibold not-italic shrink-0 inline-block" dir={isRtl ? "rtl" : "ltr"} style={{ unicodeBidi: 'isolate' }}>
+                {contentLang === 'ur' ? 'تدبر و غور:' : contentLang === 'gu' ? 'ચિંતન:' : contentLang === 'hi' ? 'चिंतन:' : 'Reflection:'}
+              </span>
               <p
                 className={`break-words select-text transition-all duration-300 bidi-plaintext ${
                   !isReflectionExpanded && isReflectionLong ? "line-clamp-2" : ""
                 }`}
                 style={{ unicodeBidi: 'plaintext' }}
               >
-                {ayah.reflection}
+                {translatedReflection || ayah.reflection}
               </p>
             </div>
             {isReflectionLong && (
