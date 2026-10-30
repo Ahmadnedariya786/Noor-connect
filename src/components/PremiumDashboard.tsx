@@ -391,7 +391,7 @@ function PremiumDashboardInner({
       )}
 
       {/* Content */}
-      <div className="flex-1 px-5 pb-36 safe-top space-y-6 max-w-lg mx-auto w-full">
+      <div className="flex-1 px-5 pb-36 safe-top space-y-6 max-w-lg mx-auto w-full" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
 
         {/* ── Top Bar ── */}
         <div className="flex items-center justify-between pt-4 gap-2">

@@ -501,7 +501,7 @@ export default function IslamicRemedies() {
   if (phase === "viewing" && selectedMood && currentItem) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-b from-background via-primary/[0.03] to-primary/[0.08] flex flex-col">
+        <div className="min-h-screen bg-gradient-to-b from-background via-primary/[0.03] to-primary/[0.08] flex flex-col safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
           <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-5 py-6 space-y-6">
             <div className="space-y-3">
               <div className="flex items-center gap-2">

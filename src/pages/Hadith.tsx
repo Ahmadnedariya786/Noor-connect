@@ -146,7 +146,7 @@ const { t } = useLanguage();
 
   return (
     <PageTransition>
-    <div className="min-h-screen bg-background relative overflow-hidden safe-top">
+    <div className="min-h-screen bg-background relative overflow-hidden safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
       {/* Islamic geometric pattern overlay */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
         <div className="absolute inset-0" style={{

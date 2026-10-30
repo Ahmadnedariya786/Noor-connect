@@ -64,7 +64,7 @@ export default function LiveStreams() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background safe-top">
+    <div className="min-h-screen bg-background safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
 
         {/* Page Header */}

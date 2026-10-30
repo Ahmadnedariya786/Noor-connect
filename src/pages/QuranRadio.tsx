@@ -522,6 +522,7 @@ const QuranRadio = () => {
         style={{
           background: "var(--bg-base)",
           borderColor: "var(--border)",
+          paddingTop: "calc(var(--safe-top) + 12px)",
         }}
       >
         <div className="max-w-7xl mx-auto px-4 py-3">

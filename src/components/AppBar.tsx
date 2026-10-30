@@ -25,7 +25,13 @@ export function AppBar({
 
   return (
     <header className={cn("sticky top-0 z-40 transition-all duration-300 safe-top", className)}
-      style={{ background: transparent ? 'transparent' : 'var(--bg-base)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)' }}
+      style={{
+        paddingTop: 'calc(var(--safe-top) + 6px)',
+        background: transparent ? 'transparent' : 'var(--bg-base)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--border)',
+      }}
     >
       <div className="relative flex items-center h-[56px] px-4 max-w-lg mx-auto">
         {showBack && (

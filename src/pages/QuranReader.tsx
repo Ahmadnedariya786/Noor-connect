@@ -24,6 +24,9 @@ import {
   getPageForSurahAndAyah,
   resolveMushafPageForAyah,
   getKnownPageForAyah,
+  getMushafLineFormat,
+  setMushafLineFormat,
+  type MushafLineFormat,
   type InteractivePageData,
 } from '@/lib/interactive-mushaf';
 import { SURAH_START_PAGES, mushafService } from '@/lib/mushaf-service';
@@ -136,6 +139,26 @@ export default function QuranReader() {
       return next;
     });
   };
+
+  // 3-Type Quran Line Format: 7L | 13L | 15L
+  const [lineFormat, setLineFormatState] = useState<MushafLineFormat>(() => getMushafLineFormat());
+  const [subPage7L, setSubPage7L] = useState<1 | 2>(1);
+  const [totalParts7L, setTotalParts7L] = useState<number>(1);
+
+  const handleFormatChange = (fmt: MushafLineFormat) => {
+    setLineFormatState(fmt);
+    setMushafLineFormat(fmt);
+  };
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e?.detail?.format) {
+        setLineFormatState(e.detail.format);
+      }
+    };
+    window.addEventListener('noor-mushaf-format-changed' as any, handler);
+    return () => window.removeEventListener('noor-mushaf-format-changed' as any, handler);
+  }, []);
 
   // Sync with route param and query searchParams (?page=)
   useEffect(() => {
@@ -385,12 +408,20 @@ export default function QuranReader() {
   };
 
   const handlePrevPage = () => {
+    if (lineFormat === 7 && subPage7L === 2) {
+      setSubPage7L(1);
+      return;
+    }
     if (mushafPageNumber > 1) {
       goToMushafPage(mushafPageNumber - 1, { source: 'user' });
     }
   };
 
   const handleNextPage = () => {
+    if (lineFormat === 7 && subPage7L === 1 && totalParts7L > 1) {
+      setSubPage7L(2);
+      return;
+    }
     if (mushafPageNumber < 604) {
       goToMushafPage(mushafPageNumber + 1, { source: 'user' });
     }
@@ -418,7 +449,10 @@ export default function QuranReader() {
         }}
       >
         {/* TOP READER CONTROL BAR */}
-        <div className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)] shadow-sm">
+        <div
+          className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)] shadow-sm"
+          style={{ paddingTop: 'calc(var(--safe-top) + 6px)' }}
+        >
           <div
             className="max-w-2xl mx-auto"
             style={{
@@ -574,20 +608,50 @@ export default function QuranReader() {
             </div>
           </div>
 
-          {/* Sub-header Bar: Tajweed Colors Toggle, Auto-Page / Sync Audio Pill, & Guidance */}
+          {/* Sub-header Bar: Tajweed Colors Toggle, 7L/13L/15L Line Format, Auto-Page / Sync Audio Pill, & Guidance */}
           <div className="border-t border-[var(--border)]/40 bg-[var(--surface)] px-3 py-1 flex items-center justify-between text-xs max-w-md mx-auto gap-2">
-            <button
-              type="button"
-              onClick={toggleTajweed}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border transition-all shrink-0 ${
-                showTajweed
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
-                  : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] opacity-70'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>🎨 {uiStrings.tajweed}</span>
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={toggleTajweed}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border transition-all shrink-0 ${
+                  showTajweed
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
+                    : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] opacity-70'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span>🎨 {uiStrings.tajweed}</span>
+              </button>
+
+              {/* 3-Pill Switcher: [ 7L | 13L | 15L ] */}
+              <div
+                className="flex items-center rounded-full p-0.5 border border-[var(--border)] bg-[var(--surface-2)] shrink-0"
+                style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              >
+                {([7, 13, 15] as const).map((fmt) => (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => handleFormatChange(fmt)}
+                    title={
+                      fmt === 7
+                        ? '7-Line Large Print'
+                        : fmt === 13
+                        ? '13-Line Indo-Pak Classic'
+                        : '15-Line Madinah Standard'
+                    }
+                    className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold transition-all ${
+                      lineFormat === fmt
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs scale-105'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    {fmt}L
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* LIVE TILAWAH AUTO-FOLLOW / SYNC AUDIO CHIP */}
             {isPlaying && (
@@ -663,6 +727,11 @@ export default function QuranReader() {
             targetSurahNumber={routeSurahId}
             surfaceMode={surfaceMode}
             showTajweed={showTajweed}
+            lineFormat={lineFormat}
+            onSubPage7LChange={(sp, tp) => {
+              setSubPage7L(sp);
+              setTotalParts7L(tp);
+            }}
             onOpenStudySheet={handleOpenStudySheet}
             onPageTurnRequest={(p) => goToMushafPage(p, { source: 'user' })}
             onPageLoaded={(data) => {

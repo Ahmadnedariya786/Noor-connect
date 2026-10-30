@@ -5,12 +5,45 @@
 import { quranService } from './quran-service';
 import { SURAH_START_PAGES } from './mushaf-service';
 
+export type MushafLineFormat = 7 | 13 | 15;
+export const MUSHAF_LINE_FORMAT_KEY = 'noor_mushaf_line_format_v1';
+
+export function getMushafLineFormat(): MushafLineFormat {
+  if (typeof localStorage === 'undefined') return 15;
+  try {
+    const raw = localStorage.getItem(MUSHAF_LINE_FORMAT_KEY);
+    if (raw === '7') return 7;
+    if (raw === '13') return 13;
+    if (raw === '15') return 15;
+  } catch {
+    // Safe storage read fallback
+  }
+  return 15;
+}
+
+export function setMushafLineFormat(format: MushafLineFormat): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(MUSHAF_LINE_FORMAT_KEY, format.toString());
+  } catch {
+    // Safe storage write fallback
+  }
+  try {
+    window.dispatchEvent(
+      new CustomEvent('noor-mushaf-format-changed', { detail: { format } })
+    );
+  } catch {
+    // Safe event dispatch fallback
+  }
+}
+
 export interface InteractiveWord {
   id: number;
   position: number;
   audio_url: string | null;
   char_type_name: 'word' | 'end';
   text_uthmani: string;
+  text_indopak?: string;
   text_uthmani_tajweed?: string;
   line_number?: number;
   translation?: {
@@ -33,6 +66,7 @@ export interface InteractiveVerse {
   hizb_number?: number;
   words: InteractiveWord[];
   text_uthmani: string;
+  text_indopak?: string;
   text_tajweed?: string;
 }
 
@@ -163,7 +197,7 @@ export function sanitizeTajweedHtml(rawHtml: string): string {
   return cleaned;
 }
 
-const PAGE_CACHE_PREFIX = 'noor_mushaf_page_v1_';
+const PAGE_CACHE_PREFIX = 'noor_mushaf_page_v3_';
 const TAJWEED_CACHE_PREFIX = 'noor_mushaf_tajweed_v1_';
 export const AYAH_PAGE_CACHE_KEY = 'noor_ayah_page_map_v1';
 
@@ -254,6 +288,58 @@ export function registerVersesForPage(
   }
 }
 
+async function fetchFromCdnFallback(pageNumber: number): Promise<InteractiveVerse[] | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const surahEntries = Object.entries(SURAH_START_PAGES);
+    let sNum = 1;
+    for (const [s, p] of surahEntries) {
+      if (pageNumber >= p) sNum = parseInt(s, 10);
+    }
+    const cdnUrl = `https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/ara-quranuthmani/chapters/${sNum}.json`;
+    const res = await fetch(cdnUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && Array.isArray(data.chapter)) {
+      const verses: InteractiveVerse[] = [];
+      data.chapter.forEach((verseItem: any) => {
+        const aNum = verseItem.verse || 1;
+        const knownPage = getKnownPageForAyah(sNum, aNum) || pageNumber;
+        if (knownPage === pageNumber) {
+          const rawText: string = verseItem.text || '';
+          const wordTokens = rawText.split(/\s+/).filter(Boolean);
+          const words: InteractiveWord[] = wordTokens.map((w, idx) => ({
+            id: sNum * 100000 + aNum * 100 + idx,
+            position: idx + 1,
+            audio_url: null,
+            char_type_name: 'word',
+            text_uthmani: w,
+            text_indopak: w,
+            line_number: Math.min(15, Math.max(1, Math.floor(idx / 5) + 1)),
+          }));
+          verses.push({
+            id: sNum * 1000 + aNum,
+            verse_number: aNum,
+            verse_key: `${sNum}:${aNum}`,
+            surah_number: sNum,
+            page_number: pageNumber,
+            juz_number: Math.ceil(pageNumber / 20),
+            words,
+            text_uthmani: rawText,
+            text_indopak: rawText,
+          });
+        }
+      });
+      return verses.length > 0 ? verses : null;
+    }
+  } catch {
+    // Safe CDN catch
+  }
+  return null;
+}
+
 export async function fetchMushafPage(
   pageNumber: number,
   includeTajweed: boolean = true
@@ -298,7 +384,7 @@ export async function fetchMushafPage(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?words=true&word_fields=text_uthmani,text_uthmani_tajweed,audio_url,line_number&per_page=50`;
+    const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?language=en&words=true&per_page=50&fields=text_uthmani,text_indopak,chapter_id,verse_number,verse_key,page_number,juz_number&word_fields=text_uthmani,text_indopak,line_number,page_number,audio_url,char_type_name`;
     const tajweedUrl = `https://api.quran.com/api/v4/quran/verses/uthmani_tajweed?page_number=${pageNumber}`;
 
     const [versesRes, tajweedRes] = await Promise.allSettled([
@@ -324,8 +410,9 @@ export async function fetchMushafPage(
                 audio_url: w.audio_url || null,
                 char_type_name: w.char_type_name === 'end' ? 'end' : 'word',
                 text_uthmani: w.text_uthmani || w.text || '',
+                text_indopak: w.text_indopak || undefined,
                 text_uthmani_tajweed: w.text_uthmani_tajweed || undefined,
-                line_number: w.line_number,
+                line_number: typeof w.line_number === 'number' ? w.line_number : undefined,
                 translation: w.translation ? { text: w.translation.text, language_name: 'english' } : undefined,
                 transliteration: w.transliteration ? { text: w.transliteration.text, language_name: 'english' } : undefined,
               }))
@@ -340,9 +427,13 @@ export async function fetchMushafPage(
             juz_number: v.juz_number || 1,
             hizb_number: v.hizb_number,
             words,
-            text_uthmani: words
+            text_uthmani: v.text_uthmani || words
               .filter((w) => w.char_type_name === 'word')
               .map((w) => w.text_uthmani)
+              .join(' '),
+            text_indopak: v.text_indopak || words
+              .filter((w) => w.char_type_name === 'word')
+              .map((w) => w.text_indopak || w.text_uthmani)
               .join(' '),
           };
         });
@@ -381,9 +472,25 @@ export async function fetchMushafPage(
       registerVersesForPage(pageNumber, fetchedVerses);
       return buildPageData(pageNumber, fetchedVerses, tajweedMap, false);
     }
+
+    // Try CDN fallback if API returned no verses
+    const cdnVerses = await fetchFromCdnFallback(pageNumber);
+    if (cdnVerses && cdnVerses.length > 0) {
+      registerVersesForPage(pageNumber, cdnVerses);
+      return buildPageData(pageNumber, cdnVerses, tajweedMap, false);
+    }
   } catch (err) {
     // Network offline or timeout - proceed to cached/fallback
-    console.warn(`[Mushaf] Online fetch failed for page ${pageNumber}, falling back:`, err);
+    console.warn(`[Mushaf] Online fetch failed for page ${pageNumber}, trying CDN fallback:`, err);
+    try {
+      const cdnVerses = await fetchFromCdnFallback(pageNumber);
+      if (cdnVerses && cdnVerses.length > 0) {
+        registerVersesForPage(pageNumber, cdnVerses);
+        return buildPageData(pageNumber, cdnVerses, null, false);
+      }
+    } catch {
+      // Safe fallback
+    }
   }
 
   // If online failed but we have any cached data, use that

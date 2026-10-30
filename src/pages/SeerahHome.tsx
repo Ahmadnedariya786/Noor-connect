@@ -188,7 +188,7 @@ export default function SeerahHome() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-24 safe-top">
+      <div className="min-h-screen bg-background pb-24 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
           {/* Header with Row 1 (Back + Title) and Row 2 (Full-Width Language Bar) */}
           <div className="space-y-3 mb-6">

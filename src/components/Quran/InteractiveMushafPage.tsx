@@ -8,10 +8,13 @@ import {
   toArabicDigits,
   sanitizeTajweedHtml,
   getPageForSurahAndAyah,
+  getMushafLineFormat,
   TAJWEED_RULES,
   type InteractivePageData,
   type InteractiveVerse,
   type InteractiveWord,
+  type SurahHeaderInfo,
+  type MushafLineFormat,
 } from '@/lib/interactive-mushaf';
 import { quranService } from '@/lib/quran-service';
 import { useTilawah } from '@/contexts/TilawahContext';
@@ -31,9 +34,75 @@ interface InteractiveMushafPageProps {
   targetSurahNumber?: number;
   surfaceMode: InteractiveMushafSurface;
   showTajweed: boolean;
+  lineFormat?: MushafLineFormat;
+  onSubPage7LChange?: (subPage: 1 | 2, totalParts: number) => void;
   onOpenStudySheet: (surah: number, ayah: number) => void;
   onPageTurnRequest?: (newPage: number) => void;
   onPageLoaded?: (data: InteractivePageData) => void;
+}
+
+interface MushafLineToken {
+  type: 'header' | 'word' | 'medallion';
+  header?: SurahHeaderInfo;
+  word?: InteractiveWord;
+  surahNumber: number;
+  verseNumber: number;
+  key: string;
+  lineNum?: number;
+}
+
+function distributeTokensIntoLines(tokens: MushafLineToken[], targetLineCount: number): MushafLineToken[][] {
+  if (tokens.length === 0) return [];
+  if (targetLineCount <= 1) return [tokens];
+
+  const lines: MushafLineToken[][] = [];
+  let currentLine: MushafLineToken[] = [];
+
+  const nonHeaderTokens = tokens.filter((t) => t.type !== 'header');
+  const headerTokens = tokens.filter((t) => t.type === 'header');
+  const availableVerseLines = Math.max(1, targetLineCount - headerTokens.length);
+
+  const getWeight = (t: MushafLineToken): number => {
+    if (t.type === 'header') return 40;
+    if (t.type === 'medallion') return 5;
+    return (t.word?.text_indopak || t.word?.text_uthmani || '').length + 1;
+  };
+
+  const totalWeight = nonHeaderTokens.reduce((sum, t) => sum + getWeight(t), 0);
+  const targetWeightPerLine = totalWeight / availableVerseLines;
+
+  let currentWeight = 0;
+  for (const token of tokens) {
+    if (token.type === 'header') {
+      if (currentLine.length > 0) {
+        lines.push(currentLine);
+        currentLine = [];
+        currentWeight = 0;
+      }
+      lines.push([token]);
+      continue;
+    }
+
+    const w = getWeight(token);
+    if (
+      currentLine.length > 0 &&
+      currentWeight + w > targetWeightPerLine &&
+      lines.length < targetLineCount - 1
+    ) {
+      lines.push(currentLine);
+      currentLine = [token];
+      currentWeight = w;
+    } else {
+      currentLine.push(token);
+      currentWeight += w;
+    }
+  }
+
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  return lines;
 }
 
 export function InteractiveMushafPage({
@@ -42,12 +111,36 @@ export function InteractiveMushafPage({
   targetSurahNumber,
   surfaceMode,
   showTajweed,
+  lineFormat,
+  onSubPage7LChange,
   onOpenStudySheet,
   onPageTurnRequest,
   onPageLoaded,
 }: InteractiveMushafPageProps) {
   const [pageData, setPageData] = useState<InteractivePageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeFormat, setActiveFormat] = useState<MushafLineFormat>(() => lineFormat || getMushafLineFormat());
+  const [subPage7L, setSubPage7L] = useState<1 | 2>(1);
+
+  useEffect(() => {
+    if (lineFormat) {
+      setActiveFormat(lineFormat);
+    }
+  }, [lineFormat]);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e?.detail?.format) {
+        setActiveFormat(e.detail.format);
+      }
+    };
+    window.addEventListener('noor-mushaf-format-changed' as any, handler);
+    return () => window.removeEventListener('noor-mushaf-format-changed' as any, handler);
+  }, []);
+
+  useEffect(() => {
+    setSubPage7L(1);
+  }, [pageNumber]);
   const [selectedWord, setSelectedWord] = useState<{
     word: InteractiveWord;
     surahNumber: number;
@@ -284,6 +377,124 @@ export function InteractiveMushafPage({
     audio.play().catch(() => onAudioDone());
   };
 
+  // Tilawah auto-flip for 7-Line mode (switches between Part 1 and Part 2)
+  useEffect(() => {
+    if (isPlaying && currentSurah > 0 && currentAyah > 0 && activeFormat === 7 && pageData) {
+      const allTokens: MushafLineToken[] = [];
+      pageData.verses.forEach((verse) => {
+        verse.words.forEach((w) => {
+          if (w.char_type_name !== 'end') {
+            allTokens.push({
+              type: 'word',
+              word: w,
+              surahNumber: verse.surah_number,
+              verseNumber: verse.verse_number,
+              key: `w-${w.id}`,
+            });
+          }
+        });
+      });
+      const all14 = distributeTokensIntoLines(allTokens, 14);
+      if (all14.length > 7) {
+        const part2Lines = all14.slice(7, 14);
+        const inPart2 = part2Lines.some((line) =>
+          line.some((t) => t.surahNumber === currentSurah && t.verseNumber === currentAyah)
+        );
+        if (inPart2 && subPage7L !== 2) {
+          setSubPage7L(2);
+        }
+        const part1Lines = all14.slice(0, 7);
+        const inPart1 = part1Lines.some((line) =>
+          line.some((t) => t.surahNumber === currentSurah && t.verseNumber === currentAyah)
+        );
+        if (inPart1 && subPage7L !== 1) {
+          setSubPage7L(1);
+        }
+      }
+    }
+  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData]);
+
+  // Compute 7L, 13L, and 15L formatted lines
+  const { lines, totalParts7L } = useMemo(() => {
+    if (!pageData || pageData.verses.length === 0) {
+      return { lines: [] as MushafLineToken[][], totalParts7L: 1 };
+    }
+
+    const allTokens: MushafLineToken[] = [];
+    pageData.verses.forEach((verse) => {
+      if (verse.verse_number === 1) {
+        const sHeader = pageData.surah_headers.find(
+          (h) => h.surah_number === verse.surah_number && h.at_verse_number === 1
+        );
+        if (sHeader) {
+          allTokens.push({
+            type: 'header',
+            header: sHeader,
+            surahNumber: verse.surah_number,
+            verseNumber: 1,
+            key: `header-${sHeader.surah_number}`,
+            lineNum: 1,
+          });
+        }
+      }
+
+      verse.words.forEach((w) => {
+        if (w.char_type_name !== 'end') {
+          allTokens.push({
+            type: 'word',
+            word: w,
+            surahNumber: verse.surah_number,
+            verseNumber: verse.verse_number,
+            key: `word-${verse.surah_number}-${verse.verse_number}-${w.position}-${w.id}`,
+            lineNum: w.line_number,
+          });
+        }
+      });
+
+      allTokens.push({
+        type: 'medallion',
+        surahNumber: verse.surah_number,
+        verseNumber: verse.verse_number,
+        key: `medallion-${verse.surah_number}-${verse.verse_number}`,
+        lineNum: verse.words[verse.words.length - 1]?.line_number,
+      });
+    });
+
+    if (activeFormat === 15) {
+      const hasLineNumbers = allTokens.some((t) => typeof t.lineNum === 'number' && t.lineNum > 0);
+      if (hasLineNumbers) {
+        const lineMap: Record<number, MushafLineToken[]> = {};
+        for (let i = 1; i <= 15; i++) lineMap[i] = [];
+
+        allTokens.forEach((token) => {
+          const lNum = Math.min(15, Math.max(1, token.lineNum || 1));
+          lineMap[lNum].push(token);
+        });
+
+        const rawLines = Object.keys(lineMap)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .map((k) => lineMap[k])
+          .filter((l) => l.length > 0);
+
+        return { lines: rawLines, totalParts7L: 1 };
+      }
+      return { lines: distributeTokensIntoLines(allTokens, 15), totalParts7L: 1 };
+    } else if (activeFormat === 13) {
+      return { lines: distributeTokensIntoLines(allTokens, 13), totalParts7L: 1 };
+    } else {
+      // 7-line mode
+      const all14Lines = distributeTokensIntoLines(allTokens, 14);
+      const parts = all14Lines.length > 7 ? 2 : 1;
+      const visible = subPage7L === 1 ? all14Lines.slice(0, 7) : all14Lines.slice(7, 14);
+      return { lines: visible, totalParts7L: parts };
+    }
+  }, [pageData, activeFormat, subPage7L]);
+
+  useEffect(() => {
+    onSubPage7LChange?.(subPage7L, totalParts7L);
+  }, [subPage7L, totalParts7L, onSubPage7LChange]);
+
   // If Classic Scan mode is selected, or if fallback failed to load verses, render classic scan
   if (surfaceMode === 'classic' || (pageData?.is_fallback && pageData.verses.length === 0)) {
     const classicMode: MushafReadingMode =
@@ -380,14 +591,20 @@ export function InteractiveMushafPage({
         {/* Render Interactive Mushaf Page Content */}
         {!loading && pageData && (
           <div
-            className="uthmani-mushaf-flow leading-loose"
+            className="uthmani-mushaf-lines-container w-full"
             dir="rtl"
             style={{
-              fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
-              fontSize: 'clamp(1.35rem, 5.2vw, 1.68rem)',
-              lineHeight: 2.35,
-              textAlign: 'justify',
-              textAlignLast: 'center',
+              fontFamily:
+                activeFormat === 13
+                  ? "'Amiri', 'Noto Nastaliq Urdu', serif"
+                  : "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+              fontSize:
+                activeFormat === 7
+                  ? 'clamp(1.58rem, 5.8vw, 1.88rem)'
+                  : activeFormat === 13
+                  ? 'clamp(1.28rem, 4.6vw, 1.48rem)'
+                  : 'clamp(1.22rem, 4.2vw, 1.38rem)',
+              lineHeight: activeFormat === 7 ? 2.5 : activeFormat === 13 ? 2.25 : 2.15,
             }}
           >
             {/* Understated Muted Indicator for Preceding Continuation Verses if page starts mid-Surah */}
@@ -401,7 +618,7 @@ export function InteractiveMushafPage({
               const sInfo = quranService.getSurahInfo(contSurah);
               return (
                 <div
-                  className="text-xs font-arabic text-[var(--accent-text)] opacity-70 text-right mb-3 px-1 not-sr-only select-none"
+                  className="text-xs font-arabic text-[var(--accent-text)] opacity-70 text-right mb-2 px-1 not-sr-only select-none"
                   dir="rtl"
                 >
                   سُورَةُ {sInfo?.name || ''} ({toArabicDigits(minAyah)}–{toArabicDigits(maxAyah)})
@@ -409,87 +626,114 @@ export function InteractiveMushafPage({
               );
             })()}
 
-            {pageData.verses.map((verse) => {
-              const isVersePlaying =
-                isPlaying &&
-                currentSurah === verse.surah_number &&
-                currentAyah === verse.verse_number;
-
-              // Authentic Madinah Mushaf Rule: Surah Banner appears ONLY at Ayah 1
-              const surahHeader =
-                verse.verse_number === 1
-                  ? pageData.surah_headers.find(
-                      (h) => h.surah_number === verse.surah_number && h.at_verse_number === 1
-                    )
-                  : undefined;
-
+            {lines.map((lineTokens, lineIdx) => {
+              const isOnlyHeader = lineTokens.length === 1 && lineTokens[0].type === 'header';
               return (
-                <React.Fragment key={verse.verse_key}>
-                  {/* Ornate Surah Header Banner (ayah === 1 ONLY!) */}
-                  {surahHeader && (
-                    <div
-                      data-surah-opening={surahHeader.surah_number}
-                      className="my-5 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
-                      dir="rtl"
-                      style={{
-                        scrollMarginTop: '116px',
-                        background: surfaceStyles.headerBg,
-                        borderColor: surfaceStyles.headerBorder,
-                        boxShadow: 'inset 0 1px 0 var(--card-sheen)',
-                      }}
-                    >
-                      <div className="flex items-center justify-between px-3 text-[11px] font-bold opacity-75">
-                        <span>{surahHeader.revelation_type}</span>
-                        <span>{surahHeader.ayah_count} Verses</span>
-                      </div>
-                      <h2
-                        className="text-xl sm:text-2xl font-bold my-1 text-[var(--accent-text)] font-arabic tracking-wide"
-                        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
-                      >
-                        سُورَةُ {surahHeader.name_arabic}
-                      </h2>
-                      <p className="text-xs font-semibold opacity-75">{surahHeader.name_english}</p>
-
-                      {/* Bismillah Line */}
-                      {surahHeader.show_bismillah && (
+                <div
+                  key={`mushaf-line-${lineIdx}`}
+                  data-mushaf-line={lineIdx + 1}
+                  className={`mushaf-line w-full flex items-center ${
+                    isOnlyHeader
+                      ? 'justify-center'
+                      : lineTokens.length < 4
+                      ? 'justify-center gap-3 sm:gap-4'
+                      : 'justify-between'
+                  } my-1 px-1 transition-colors`}
+                  dir="rtl"
+                  style={{
+                    borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
+                    minHeight: activeFormat === 7 ? '3.5rem' : activeFormat === 13 ? '2.6rem' : '2.3rem',
+                  }}
+                >
+                  {lineTokens.map((token) => {
+                    if (token.type === 'header' && token.header) {
+                      const surahHeader = token.header;
+                      return (
                         <div
-                          className="mt-3 text-lg sm:text-xl font-bold"
-                          style={{ color: surfaceStyles.bismillahColor }}
+                          key={token.key}
+                          data-surah-opening={surahHeader.surah_number}
+                          className="w-full my-2.5 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
+                          dir="rtl"
+                          style={{
+                            scrollMarginTop: '116px',
+                            background: surfaceStyles.headerBg,
+                            borderColor: surfaceStyles.headerBorder,
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                          }}
                         >
-                          بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                        </div>
-                      )}
-                    </div>
-                  )}
+                          <div className="flex items-center justify-between px-3 text-[11px] font-bold opacity-75">
+                            <span>{surahHeader.revelation_type}</span>
+                            <span>{surahHeader.ayah_count} Verses</span>
+                          </div>
+                          <h2
+                            className="text-xl sm:text-2xl font-bold my-1 text-[var(--accent-text)] font-arabic tracking-wide"
+                            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+                          >
+                            سُورَةُ {surahHeader.name_arabic}
+                          </h2>
+                          <p className="text-xs font-semibold opacity-75">{surahHeader.name_english}</p>
 
-                  {/* Verse Span Container with Tilawah Active Recitation Highlight */}
-                  <span
-                    ref={isVersePlaying ? activeVerseRef : null}
-                    data-ayah-key={`${verse.surah_number}:${verse.verse_number}`}
-                    className={`interactive-verse-span rounded-lg px-1 transition-all duration-300 inline ${
-                      isVersePlaying
-                        ? 'bg-[var(--accent-soft)] ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent shadow-sm'
-                        : 'hover:bg-black/5 dark:hover:bg-white/5'
-                    }`}
-                    style={{
-                      backgroundColor: isVersePlaying ? 'var(--accent-soft)' : undefined,
-                    }}
-                  >
-                    {/* Render Words: Every individual word opens Word-by-Word Popover */}
-                    {verse.words.map((w) => {
-                      if (w.char_type_name === 'end') {
-                        return null;
-                      }
-                      const wordHtml = showTajweed && w.text_uthmani_tajweed
-                        ? sanitizeTajweedHtml(w.text_uthmani_tajweed)
-                        : w.text_uthmani;
+                          {surahHeader.show_bismillah && (
+                            <div
+                              className="mt-2 text-lg sm:text-xl font-bold"
+                              style={{ color: surfaceStyles.bismillahColor }}
+                            >
+                              بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    if (token.type === 'medallion') {
+                      const isVersePlaying =
+                        isPlaying &&
+                        currentSurah === token.surahNumber &&
+                        currentAyah === token.verseNumber;
+
+                      return (
+                        <button
+                          key={token.key}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenStudySheet(token.surahNumber, token.verseNumber);
+                          }}
+                          title={`Study Verse ${token.surahNumber}:${token.verseNumber}`}
+                          className="inline-flex items-center justify-center mx-1 my-0.5 px-2 py-0.5 rounded-full border text-xs sm:text-sm font-bold align-middle transition-all hover:scale-115 active:scale-90 shadow-sm shrink-0"
+                          style={{
+                            background: isVersePlaying ? 'var(--accent)' : surfaceStyles.medallionBg,
+                            color: isVersePlaying ? 'var(--on-accent)' : surfaceStyles.medallionColor,
+                            borderColor: surfaceStyles.medallionBorder,
+                          }}
+                        >
+                          <span>﴿{toArabicDigits(token.verseNumber)}﴾</span>
+                        </button>
+                      );
+                    }
+
+                    if (token.type === 'word' && token.word) {
+                      const w = token.word;
+                      const isVersePlaying =
+                        isPlaying &&
+                        currentSurah === token.surahNumber &&
+                        currentAyah === token.verseNumber;
                       const isWordRecited = isVersePlaying && activeWordPos === w.position;
+
+                      const displayText =
+                        (activeFormat === 13 ? (w.text_indopak || w.text_uthmani) : w.text_uthmani) || '';
+                      const wordHtml =
+                        showTajweed && w.text_uthmani_tajweed
+                          ? sanitizeTajweedHtml(w.text_uthmani_tajweed)
+                          : displayText;
 
                       return (
                         <span
-                          key={w.id}
+                          key={token.key}
+                          ref={isVersePlaying ? activeVerseRef : null}
+                          data-ayah-key={`${token.surahNumber}:${token.verseNumber}`}
                           onClick={(e) =>
-                            handleWordClick(e, w, verse.surah_number, verse.verse_number)
+                            handleWordClick(e, w, token.surahNumber, token.verseNumber)
                           }
                           className={`interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-all duration-100 ${
                             isWordRecited
@@ -504,35 +748,24 @@ export function InteractiveMushafPage({
                                   borderRadius: '6px',
                                   boxShadow: '0 0 10px var(--accent-glow)',
                                   transition: 'background-color 120ms ease',
-                                  padding: '0 2px',
+                                  padding: '0 3px',
                                   margin: '0 -2px',
+                                }
+                              : isVersePlaying
+                              ? {
+                                  backgroundColor: 'var(--accent-soft)',
+                                  borderRadius: '4px',
                                 }
                               : undefined
                           }
-                          dangerouslySetInnerHTML={{ __html: wordHtml + ' ' }}
+                          dangerouslySetInnerHTML={{ __html: wordHtml }}
                         />
                       );
-                    })}
+                    }
 
-                    {/* Clickable Golden Ayah Medallion */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenStudySheet(verse.surah_number, verse.verse_number);
-                      }}
-                      title={`Study Verse ${verse.verse_key}`}
-                      className="inline-flex items-center justify-center mx-1.5 my-0.5 px-2 py-0.5 rounded-full border text-xs sm:text-sm font-bold align-middle transition-all hover:scale-115 active:scale-90 shadow-sm"
-                      style={{
-                        background: isVersePlaying ? 'var(--accent)' : surfaceStyles.medallionBg,
-                        color: isVersePlaying ? 'var(--on-accent)' : surfaceStyles.medallionColor,
-                        borderColor: surfaceStyles.medallionBorder,
-                      }}
-                    >
-                      <span>﴿{toArabicDigits(verse.verse_number)}﴾</span>
-                    </button>
-                  </span>
-                </React.Fragment>
+                    return null;
+                  })}
+                </div>
               );
             })}
           </div>
@@ -543,9 +776,50 @@ export function InteractiveMushafPage({
           className="mt-6 pt-3 border-t flex items-center justify-between text-[11px] font-bold opacity-70"
           style={{ borderColor: 'var(--border)' }}
         >
-          <span>Madinah Mushaf</span>
-          <span className="font-mono">Page {pageNumber} / 604</span>
+          <span>
+            {activeFormat === 7
+              ? '7-Line Large Print Mushaf'
+              : activeFormat === 13
+              ? '13-Line Indo-Pak Mushaf'
+              : '15-Line Madinah Mushaf'}
+          </span>
+          <span className="font-mono">
+            {activeFormat === 7 && totalParts7L > 1 ? `Page ${pageNumber} (Part ${subPage7L}/${totalParts7L}) • ` : ''}Page {pageNumber} / 604
+          </span>
         </div>
+
+        {/* 7-Line Subpage Switcher */}
+        {activeFormat === 7 && totalParts7L > 1 && (
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border)] text-xs">
+            <button
+              type="button"
+              disabled={subPage7L === 1}
+              onClick={() => setSubPage7L(1)}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                subPage7L === 1
+                  ? 'opacity-40 cursor-not-allowed border-transparent'
+                  : 'bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] hover:border-[var(--accent)] active:scale-95'
+              }`}
+            >
+              ← Prev 7 Lines
+            </button>
+            <span className="font-bold text-[var(--accent-text)] text-xs px-2.5 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)]">
+              Part {subPage7L} of {totalParts7L} • 7-Line Large Print
+            </span>
+            <button
+              type="button"
+              disabled={subPage7L === totalParts7L}
+              onClick={() => setSubPage7L(2)}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                subPage7L === totalParts7L
+                  ? 'opacity-40 cursor-not-allowed border-transparent'
+                  : 'bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] hover:border-[var(--accent)] active:scale-95'
+              }`}
+            >
+              Next 7 Lines →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* FLOATING WORD-BY-WORD JEWEL POPOVER */}

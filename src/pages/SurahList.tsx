@@ -38,6 +38,12 @@ import { getDailyAyah } from "@/lib/daily-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+  getMushafLineFormat,
+  setMushafLineFormat,
+  type MushafLineFormat,
+} from "@/lib/interactive-mushaf";
 import { Preferences } from "@capacitor/preferences";
 import { CSSOnlyTransition } from "@/components/AdaptiveMotion";
 import {
@@ -167,6 +173,32 @@ export default function SurahList() {
   const [isKhatmahExpanded, setIsKhatmahExpanded] = useState(false);
   const [customDays, setCustomDays] = useState("30");
   const [showCustomModal, setShowCustomModal] = useState(false);
+
+  // 3-Type Quran Line Format: 7L | 13L | 15L
+  const [lineFormat, setLineFormatState] = useState<MushafLineFormat>(() => getMushafLineFormat());
+
+  const handleSelectLineFormat = (fmt: MushafLineFormat) => {
+    setLineFormatState(fmt);
+    setMushafLineFormat(fmt);
+    toast.success(`Quran Format: ${fmt}-Line Mushaf`, {
+      description:
+        fmt === 7
+          ? 'Large Print (7 Lines per view)'
+          : fmt === 13
+          ? 'Classic Indo-Pak (13 Lines per page)'
+          : 'Standard Madinah (15 Lines per page)',
+    });
+  };
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e?.detail?.format) {
+        setLineFormatState(e.detail.format);
+      }
+    };
+    window.addEventListener('noor-mushaf-format-changed' as any, handler);
+    return () => window.removeEventListener('noor-mushaf-format-changed' as any, handler);
+  }, []);
 
   // Quran Feature Guide & Welcome Banner State
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -484,37 +516,47 @@ export default function SurahList() {
         {/* Subtle geometric pattern backdrop */}
         <div className="absolute top-0 left-0 right-0 h-48 opacity-[0.03] bg-[radial-gradient(circle_at_2px_2px,_var(--accent)_1px,_transparent_0)] bg-[length:32px_32px] pointer-events-none" />
 
-        {/* Compact Illuminated Header (Mihrab-Inspired) */}
-        <div className="max-w-2xl mx-auto px-4 pt-2 pb-1 safe-top">
+        {/* Compact Illuminated Header (Mihrab-Inspired with Safe-Area Clearance) */}
+        <div className="max-w-2xl mx-auto px-4 pb-1 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
+          {/* Dedicated Top Bismillah Medallion Banner (Zero Overlap with Android Status Bar) */}
           <div
-            className="relative overflow-hidden mb-2 rounded-2xl flex items-center justify-between"
+            className="flex items-center justify-center mx-auto mb-2.5 px-4 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--accent-text)] shadow-sm max-w-fit"
             style={{
-              padding: "12px 14px",
+              boxShadow: "inset 0 1px 0 var(--card-sheen)",
+            }}
+          >
+            <p className="font-arabic text-[1.22rem] leading-[1.8] font-bold text-center select-none text-[var(--accent-text)]">
+              بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+            </p>
+          </div>
+
+          {/* Title & Action Row (Zero Overlap, Clean Single-Line Title & Subtitle) */}
+          <div
+            className="relative overflow-hidden mb-2 rounded-2xl flex items-center justify-between gap-2"
+            style={{
+              padding: "11px 14px",
               background: "linear-gradient(145deg, rgba(16, 85, 60, 0.22), var(--surface))",
               border: "1px solid var(--border)",
               boxShadow: "inset 0 1px 0 var(--card-sheen)",
             }}
           >
-            <div>
-              <p className="font-arabic text-xs text-[var(--accent-text)] font-semibold mb-0.5 select-none">
-                بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-              </p>
-              <h1 className="text-lg sm:text-xl font-arabic font-bold text-[var(--text-primary)] tracking-wide leading-tight">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-[1.18rem] font-bold text-[var(--text-primary)] tracking-wide leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
                 Al-Quran Al-Kareem
               </h1>
-              <p className="text-[var(--text-secondary)] text-[11px] font-medium leading-tight mt-0.5">
+              <p className="text-[var(--text-secondary)] text-[0.72rem] font-medium leading-tight mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                 {uiStrings.subtitleStats}
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setShowGuideModal(true)}
                 title="Quran Features Guide"
-                className="px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)] font-bold text-xs flex items-center gap-1 hover:border-[var(--accent)] transition-all shadow-sm active:scale-95"
+                className="px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)] font-bold text-xs flex items-center gap-1.5 hover:border-[var(--accent)] transition-all shadow-sm active:scale-95 shrink-0"
               >
-                <HelpCircle className="w-3.5 h-3.5" />
-                <span>{uiStrings.guideBtn}</span>
+                <HelpCircle className="w-4 h-4 shrink-0" />
+                <span className="whitespace-nowrap">{uiStrings.guideBtn}</span>
               </button>
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
@@ -692,6 +734,111 @@ export default function SurahList() {
                   ? `Playing ${currentSurah}:${currentAyah}`
                   : uiStrings.tilawahSub}
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 3-TYPE QURAN MUSHAF FORMAT SELECTOR CARD (7-LINE, 13-LINE & 15-LINE) */}
+        <div className="max-w-2xl mx-auto px-4 mb-3">
+          <div
+            className="p-3 sm:p-3.5 rounded-2xl border transition-all shadow-sm"
+            style={{
+              background: "var(--surface)",
+              borderColor: "var(--border)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span
+                className={`text-xs font-bold text-[var(--accent-text)] flex items-center gap-1.5 ${
+                  language === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)]" : ""
+                }`}
+              >
+                <span>{uiStrings.mushafFormatHeader}</span>
+              </span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
+                {lineFormat}L Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {/* 7-Line Card */}
+              <button
+                type="button"
+                onClick={() => handleSelectLineFormat(7)}
+                className={`p-2 sm:p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                  lineFormat === 7
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs scale-[1.02]'
+                    : 'border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)]/50'
+                }`}
+              >
+                <span
+                  className={`text-xs sm:text-sm font-bold ${
+                    lineFormat === 7 ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'
+                  } ${language === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)]" : ""}`}
+                >
+                  {uiStrings.format7Lines}
+                </span>
+                <span
+                  className={`text-[9.5px] sm:text-[10.5px] font-medium leading-tight ${
+                    lineFormat === 7 ? 'text-[var(--accent-text)] opacity-90' : 'text-[var(--text-secondary)]'
+                  } ${language === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)]" : ""}`}
+                >
+                  {uiStrings.format7LinesSub}
+                </span>
+              </button>
+
+              {/* 13-Line Card */}
+              <button
+                type="button"
+                onClick={() => handleSelectLineFormat(13)}
+                className={`p-2 sm:p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                  lineFormat === 13
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs scale-[1.02]'
+                    : 'border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)]/50'
+                }`}
+              >
+                <span
+                  className={`text-xs sm:text-sm font-bold ${
+                    lineFormat === 13 ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'
+                  } ${language === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)]" : ""}`}
+                >
+                  {uiStrings.format13Lines}
+                </span>
+                <span
+                  className={`text-[9.5px] sm:text-[10.5px] font-medium leading-tight ${
+                    lineFormat === 13 ? 'text-[var(--accent-text)] opacity-90' : 'text-[var(--text-secondary)]'
+                  } ${language === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)]" : ""}`}
+                >
+                  {uiStrings.format13LinesSub}
+                </span>
+              </button>
+
+              {/* 15-Line Card */}
+              <button
+                type="button"
+                onClick={() => handleSelectLineFormat(15)}
+                className={`p-2 sm:p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                  lineFormat === 15
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs scale-[1.02]'
+                    : 'border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)]/50'
+                }`}
+              >
+                <span
+                  className={`text-xs sm:text-sm font-bold ${
+                    lineFormat === 15 ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'
+                  } ${language === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)]" : ""}`}
+                >
+                  {uiStrings.format15Lines}
+                </span>
+                <span
+                  className={`text-[9.5px] sm:text-[10.5px] font-medium leading-tight ${
+                    lineFormat === 15 ? 'text-[var(--accent-text)] opacity-90' : 'text-[var(--text-secondary)]'
+                  } ${language === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)]" : ""}`}
+                >
+                  {uiStrings.format15LinesSub}
+                </span>
+              </button>
             </div>
           </div>
         </div>

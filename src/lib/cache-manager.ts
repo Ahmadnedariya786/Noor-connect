@@ -14,6 +14,7 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
   /^(?:noor[_-])?clock[_-]style$/,
   /^(?:noor[_-])?show[_-]tajweed$/,
   /^(?:noor[_-])?mushaf[_-]surface$/,
+  /^(?:noor[_-])?mushaf[_-]line[_-]format(?:[_-]v\d+)?$/,
   /^(?:noor[_-])?time[_-]format$/,
   /^timeFormat$/,
   /^(?:noor[_-])?widget[_-]style(?:[_-]v1)?$/,
