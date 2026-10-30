@@ -50,9 +50,6 @@ public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
     private static final int EXACT_ALARM_PERMISSION_REQUEST = 9001;
     private static final int BATTERY_OPTIMIZATION_REQUEST = 9002;
-    private static final int GEOLOCATION_PERMISSION_REQUEST = 9003;
-    private android.webkit.GeolocationPermissions.Callback pendingGeoCallback = null;
-    private String pendingGeoOrigin = null;
     private static final String PREFS_ONBOARDING = "noor_permission_flow_prefs";
     private static final String KEY_EXACT_ALARM_REDIRECTED = "exact_alarm_redirected";
     private static final String KEY_BATTERY_PROMPTED = "battery_whitelist_prompted";
@@ -507,73 +504,6 @@ public class MainActivity extends BridgeActivity {
                 Log.w(TAG, "Failed to enable WebView geolocation settings", t);
             }
 
-            try {
-                final android.webkit.WebChromeClient existingChromeClient = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                        ? webView.getWebChromeClient()
-                        : null;
-                webView.setWebChromeClient(new android.webkit.WebChromeClient() {
-                    @Override
-                    public void onGeolocationPermissionsShowPrompt(String origin, android.webkit.GeolocationPermissions.Callback callback) {
-                        try {
-                            boolean hasFine = ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-                            boolean hasCoarse = ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-                            if (hasFine || hasCoarse) {
-                                callback.invoke(origin, true, false);
-                            } else {
-                                pendingGeoCallback = callback;
-                                pendingGeoOrigin = origin;
-                                runOnUiThread(() -> {
-                                    try {
-                                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                                                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                                android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                        }, GEOLOCATION_PERMISSION_REQUEST);
-                                    } catch (Throwable t) {
-                                        Log.w(TAG, "Failed to request geolocation permissions", t);
-                                        if (pendingGeoCallback != null) {
-                                            pendingGeoCallback.invoke(pendingGeoOrigin, false, false);
-                                            pendingGeoCallback = null;
-                                            pendingGeoOrigin = null;
-                                        }
-                                    }
-                                });
-                            }
-                        } catch (Throwable t) {
-                            Log.w(TAG, "Error handling geolocation permission prompt safely", t);
-                            try {
-                                callback.invoke(origin, false, false);
-                            } catch (Throwable ignored) {}
-                        }
-                    }
-
-                    @Override
-                    public boolean onShowFileChooser(WebView webView, android.webkit.ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-                        if (existingChromeClient != null) {
-                            return existingChromeClient.onShowFileChooser(webView, filePathCallback, fileChooserParams);
-                        }
-                        return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
-                    }
-
-                    @Override
-                    public boolean onConsoleMessage(android.webkit.ConsoleMessage consoleMessage) {
-                        if (existingChromeClient != null) {
-                            return existingChromeClient.onConsoleMessage(consoleMessage);
-                        }
-                        return super.onConsoleMessage(consoleMessage);
-                    }
-
-                    @Override
-                    public void onProgressChanged(WebView view, int newProgress) {
-                        if (existingChromeClient != null) {
-                            existingChromeClient.onProgressChanged(view, newProgress);
-                        } else {
-                            super.onProgressChanged(view, newProgress);
-                        }
-                    }
-                });
-            } catch (Throwable t) {
-                Log.w(TAG, "Failed to set custom WebChromeClient for geolocation", t);
-            }
         }
 
         // Install renderer process crash handler via Capacitor's bridge listener
@@ -740,31 +670,6 @@ public class MainActivity extends BridgeActivity {
                     // Permission granted - start widget foreground service
                     WidgetForegroundService.start(this);
                 }
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == GEOLOCATION_PERMISSION_REQUEST) {
-            try {
-                boolean granted = false;
-                if (grantResults != null && grantResults.length > 0) {
-                    for (int res : grantResults) {
-                        if (res == PackageManager.PERMISSION_GRANTED) {
-                            granted = true;
-                            break;
-                        }
-                    }
-                }
-                if (pendingGeoCallback != null && pendingGeoOrigin != null) {
-                    pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
-                    pendingGeoCallback = null;
-                    pendingGeoOrigin = null;
-                }
-            } catch (Throwable t) {
-                Log.w(TAG, "Error processing geolocation permission result", t);
             }
         }
     }

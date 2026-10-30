@@ -5,8 +5,7 @@
   font-family: 'Jameel Noori Nastaleeq';
   src: local('Jameel Noori Nastaleeq'),
        local('JameelNooriNastaleeq'),
-       url('https://cdn.jsdelivr.net/gh/nicholasgasior/gfonts-nastaliq@master/JameelNooriNastaleeq.woff2') format('woff2'),
-       url('https://cdn.jsdelivr.net/npm/jameel-noori-nastaleeq@1.0.0/JameelNooriNastaleeq.ttf') format('truetype');
+       local('Noto Nastaliq Urdu');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -16,8 +15,7 @@
   font-family: 'Jameel Noori Nastaliq';
   src: local('Jameel Noori Nastaleeq'),
        local('JameelNooriNastaleeq'),
-       url('https://cdn.jsdelivr.net/gh/nicholasgasior/gfonts-nastaliq@master/JameelNooriNastaleeq.woff2') format('woff2'),
-       url('https://cdn.jsdelivr.net/npm/jameel-noori-nastaleeq@1.0.0/JameelNooriNastaleeq.ttf') format('truetype');
+       local('Noto Nastaliq Urdu');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

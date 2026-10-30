@@ -70,8 +70,8 @@ export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineTok
     const tokenText = token.word?.text_uthmani || token.word?.text_indopak || '';
     const tokenWeight = token.type === 'medallion' ? 4 : getStrippedArabicCharLength(tokenText) || 4;
 
-    // Strict 22–26 stripped char budget (~4 to 5 words per line) for 360px mobile fit
-    if (currentLine.length >= 3 && currentWeight + tokenWeight > 24) {
+    // Strict 20–24 stripped char budget (~4 to 5 words per line) for 360px mobile fit without ugly wrapping/gaps
+    if (currentLine.length >= 2 && currentWeight + tokenWeight > 22) {
       lines.push(currentLine);
       currentLine = [token];
       currentWeight = tokenWeight;
@@ -318,8 +318,31 @@ export function InteractiveMushafPage({
   const [activeFormat, setActiveFormat] = useState<MushafLineFormat>(() => lineFormat || getMushafLineFormat());
   const [subPage7L, setSubPage7L] = useState<number>(() => subPage7LProp || 1);
 
+  // Stable callback refs to eliminate infinite render loop cascades
+  const onSubPage7LChangeRef = useRef(onSubPage7LChange);
   useEffect(() => {
-    if (typeof subPage7LProp === 'number' && subPage7LProp !== subPage7L) {
+    onSubPage7LChangeRef.current = onSubPage7LChange;
+  }, [onSubPage7LChange]);
+
+  const onOpenStudySheetRef = useRef(onOpenStudySheet);
+  useEffect(() => {
+    onOpenStudySheetRef.current = onOpenStudySheet;
+  }, [onOpenStudySheet]);
+
+  const onPageTurnRequestRef = useRef(onPageTurnRequest);
+  useEffect(() => {
+    onPageTurnRequestRef.current = onPageTurnRequest;
+  }, [onPageTurnRequest]);
+
+  const onPageLoadedRef = useRef(onPageLoaded);
+  useEffect(() => {
+    onPageLoadedRef.current = onPageLoaded;
+  }, [onPageLoaded]);
+
+  const lastReported7LRef = useRef<{ subPage: number; totalParts: number }>({ subPage: 0, totalParts: 0 });
+
+  useEffect(() => {
+    if (typeof subPage7LProp === 'number' && subPage7LProp > 0 && subPage7LProp !== subPage7L) {
       setSubPage7L(subPage7LProp);
     }
   }, [subPage7LProp]);
@@ -340,9 +363,11 @@ export function InteractiveMushafPage({
     return () => window.removeEventListener('noor-mushaf-format-changed' as any, handler);
   }, []);
 
+  // Reset 7L subpage ONLY on page change or line-format change
   useEffect(() => {
     setSubPage7L(1);
-  }, [pageNumber]);
+    lastReported7LRef.current = { subPage: 1, totalParts: 0 };
+  }, [pageNumber, activeFormat]);
   const [selectedWord, setSelectedWord] = useState<{
     word: InteractiveWord;
     surahNumber: number;
@@ -428,11 +453,11 @@ export function InteractiveMushafPage({
       if (!isAyahOnPage) {
         const targetPage = getPageForSurahAndAyah(currentSurah, currentAyah);
         if (targetPage !== pageNumber) {
-          onPageTurnRequest?.(targetPage);
+          onPageTurnRequestRef.current?.(targetPage);
         }
       }
     }
-  }, [isPlaying, currentSurah, currentAyah, pageData, loading, pageNumber, onPageTurnRequest]);
+  }, [isPlaying, currentSurah, currentAyah, pageData, loading, pageNumber]);
 
   useEffect(() => {
     return () => {
@@ -455,7 +480,7 @@ export function InteractiveMushafPage({
         if (isMounted) {
           setPageData(data);
           setLoading(false);
-          onPageLoaded?.(data);
+          onPageLoadedRef.current?.(data);
           // Zero-delay preload: silently prefetch next page in background
           prefetchNextMushafPage(pageNumber, showTajweed);
         }
@@ -605,12 +630,12 @@ export function InteractiveMushafPage({
         );
         if (inThisPart && subPage7L !== p) {
           setSubPage7L(p);
-          onSubPage7LChange?.(p, parts);
+          onSubPage7LChangeRef.current?.(p, parts);
           break;
         }
       }
     }
-  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData, subPage7L, onSubPage7LChange]);
+  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData, subPage7L]);
 
   // Compute 7L, 13L, and 15L formatted blocks (Surah Opening Banners + Ayah Lines)
   const { blocks, totalParts7L } = useMemo(() => {
@@ -841,8 +866,14 @@ export function InteractiveMushafPage({
   }, [pageData, activeFormat, subPage7L]);
 
   useEffect(() => {
-    onSubPage7LChange?.(subPage7L, totalParts7L);
-  }, [subPage7L, totalParts7L, onSubPage7LChange]);
+    if (
+      lastReported7LRef.current.subPage !== subPage7L ||
+      lastReported7LRef.current.totalParts !== totalParts7L
+    ) {
+      lastReported7LRef.current = { subPage: subPage7L, totalParts: totalParts7L };
+      onSubPage7LChangeRef.current?.(subPage7L, totalParts7L);
+    }
+  }, [subPage7L, totalParts7L]);
 
   // If Classic Scan mode is selected, or if fallback failed to load verses, render classic scan
   if (surfaceMode === 'classic' || (pageData?.is_fallback && pageData.verses.length === 0)) {
@@ -1078,7 +1109,9 @@ export function InteractiveMushafPage({
 
                 // Dynamic font adjustment on dense lines to guarantee zero border overflow
                 let lineDenseFontSize: string | undefined;
-                if (activeFormat === 13 && lineCharCount > 38) {
+                if (activeFormat === 7) {
+                  lineDenseFontSize = 'clamp(1.18rem, 4.6vw, 1.34rem)';
+                } else if (activeFormat === 13 && lineCharCount > 38) {
                   lineDenseFontSize = '0.86rem';
                 } else if (activeFormat === 15 && lineCharCount > 42) {
                   lineDenseFontSize = '0.80rem';
@@ -1095,16 +1128,16 @@ export function InteractiveMushafPage({
                       flexDirection: 'row',
                       flexWrap: 'nowrap',
                       alignItems: 'center',
-                      justifyContent: isShortMushafPage || lineTokens.length < 4
+                      justifyContent: activeFormat === 7 || isShortMushafPage || lineTokens.length < 4
                         ? 'center'
                         : 'space-between',
-                      gap: isShortMushafPage || lineTokens.length < 4 ? '10px' : '4px',
+                      gap: activeFormat === 7 ? '10px' : (isShortMushafPage || lineTokens.length < 4 ? '10px' : '4px'),
                       width: '100%',
                       maxWidth: '100%',
                       overflow: 'hidden',
                       boxSizing: 'border-box',
                       borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
-                      padding: '4px 2px',
+                      padding: activeFormat === 7 ? '6px 4px' : '4px 2px',
                       minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
                     }}
                   >
@@ -1121,7 +1154,7 @@ export function InteractiveMushafPage({
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onOpenStudySheet(token.surahNumber, token.verseNumber);
+                              onOpenStudySheetRef.current?.(token.surahNumber, token.verseNumber);
                             }}
                             title={`Study Verse ${token.surahNumber}:${token.verseNumber}`}
                             className="inline-flex items-center justify-center mx-1 my-0.5 px-1.5 py-0.5 rounded-full border text-xs sm:text-sm font-bold align-middle transition-all hover:scale-110 active:scale-90 shadow-sm shrink-0 whitespace-nowrap select-none"
@@ -1169,7 +1202,7 @@ export function InteractiveMushafPage({
                             style={{
                               whiteSpace: 'nowrap',
                               display: 'inline-block',
-                              lineHeight: 1.85,
+                              lineHeight: activeFormat === 7 ? 2.0 : 1.85,
                               flexShrink: 0,
                               minWidth: 0,
                               letterSpacing: 'normal',
@@ -1233,7 +1266,7 @@ export function InteractiveMushafPage({
               onClick={() => {
                 const next = Math.max(1, subPage7L - 1);
                 setSubPage7L(next);
-                onSubPage7LChange?.(next, totalParts7L);
+                onSubPage7LChangeRef.current?.(next, totalParts7L);
               }}
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
                 subPage7L <= 1
@@ -1252,7 +1285,7 @@ export function InteractiveMushafPage({
               onClick={() => {
                 const next = Math.min(totalParts7L, subPage7L + 1);
                 setSubPage7L(next);
-                onSubPage7LChange?.(next, totalParts7L);
+                onSubPage7LChangeRef.current?.(next, totalParts7L);
               }}
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
                 subPage7L >= totalParts7L

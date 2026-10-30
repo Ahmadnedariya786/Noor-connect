@@ -329,27 +329,40 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, []);
 
-  // High-precision (16–33ms) audio playback time polling for word-by-word highlight
+  // Throttled (~33ms / 30fps) audio playback time polling for word-by-word highlight
   useEffect(() => {
     if (!isPlaying) {
       setPlaybackTimeMs(0);
       return;
     }
-    let animId: number;
+    let animId: number | null = null;
     let lastMs = -1;
+    let isCancelled = false;
+
     const tick = () => {
+      if (isCancelled) return;
       const audio = audioRef.current;
       if (audio && !audio.paused) {
         const ms = Math.round(audio.currentTime * 1000);
-        if (ms !== lastMs) {
+        // Throttle updates to >= 35ms (~28fps) to eliminate React render thrashing while keeping smooth highlight
+        if (lastMs === -1 || Math.abs(ms - lastMs) >= 35) {
           lastMs = ms;
           setPlaybackTimeMs(ms);
         }
+        animId = requestAnimationFrame(tick);
+      } else {
+        // Audio paused or waiting; keep checking
+        animId = requestAnimationFrame(tick);
       }
-      animId = requestAnimationFrame(tick);
     };
+
     animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
+    return () => {
+      isCancelled = true;
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+      }
+    };
   }, [isPlaying]);
 
   // Update MediaSession lock-screen & notification metadata

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -238,7 +238,7 @@ export default function QuranReader() {
     return () => clearTimeout(syncId);
   }, [surahNum, surahOnPage, currentSurahInfo, mushafPageNumber]);
 
-  const goToMushafPage = (
+  const goToMushafPage = useCallback((
     targetPage: number,
     options?: { source?: 'user' | 'audio' }
   ) => {
@@ -256,8 +256,11 @@ export default function QuranReader() {
     const targetSurah = mushafService.getSurahForPage(targetPage) || 1;
     setSurahNum(targetSurah);
 
-    // Synchronize URL in lockstep with replace: true
-    navigate(`/quran/${targetSurah}?page=${targetPage}`, { replace: true });
+    // Synchronize URL in lockstep with replace: true only if changed
+    const currentParam = searchParams.get('page');
+    if (currentParam !== String(targetPage) || routeSurahId !== targetSurah) {
+      navigate(`/quran/${targetSurah}?page=${targetPage}`, { replace: true });
+    }
 
     // Auto-moving bookmarks update
     updateAutoMovingBookmarks(
@@ -267,7 +270,21 @@ export default function QuranReader() {
       targetPage,
       quranService.getSurahInfo(targetSurah)?.name
     );
-  };
+  }, [isPlaying, navigate, routeSurahId, searchParams]);
+
+  const handleSubPage7LChange = useCallback((sp: number, tp: number) => {
+    setSubPage7L((prevSp) => (prevSp === sp ? prevSp : sp));
+    setTotalParts7L((prevTp) => (prevTp === tp ? prevTp : tp));
+  }, []);
+
+  const handlePageLoaded = useCallback((data: InteractivePageData) => {
+    pageDataRef.current = data;
+    setCurrentPageData((prev) => (prev?.page_number === data.page_number ? prev : data));
+  }, []);
+
+  const handlePageTurnRequest = useCallback((p: number) => {
+    goToMushafPage(p, { source: 'user' });
+  }, [goToMushafPage]);
 
   // LIVE AUDIO AUTO-PAGE ADVANCE ENGINE
   useEffect(() => {
@@ -736,16 +753,10 @@ export default function QuranReader() {
             showTajweed={showTajweed}
             lineFormat={lineFormat}
             subPage7L={subPage7L}
-            onSubPage7LChange={(sp, tp) => {
-              setSubPage7L(sp);
-              setTotalParts7L(tp);
-            }}
+            onSubPage7LChange={handleSubPage7LChange}
             onOpenStudySheet={handleOpenStudySheet}
-            onPageTurnRequest={(p) => goToMushafPage(p, { source: 'user' })}
-            onPageLoaded={(data) => {
-              pageDataRef.current = data;
-              setCurrentPageData(data);
-            }}
+            onPageTurnRequest={handlePageTurnRequest}
+            onPageLoaded={handlePageLoaded}
           />
         </div>
 

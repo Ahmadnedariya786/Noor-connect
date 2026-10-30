@@ -132,6 +132,21 @@ export default function IslamicStreamPlayer() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLandscapeFullscreen, setIsLandscapeFullscreen] = useState(false);
   const isEffectiveFullscreen = isFullscreen || isLandscapeFullscreen;
+  const [isDeviceLandscape, setIsDeviceLandscape] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= window.innerHeight : false
+  );
+
+  useEffect(() => {
+    const handleOrientation = () => {
+      setIsDeviceLandscape(window.innerWidth >= window.innerHeight);
+    };
+    window.addEventListener('resize', handleOrientation);
+    window.addEventListener('orientationchange', handleOrientation);
+    return () => {
+      window.removeEventListener('resize', handleOrientation);
+      window.removeEventListener('orientationchange', handleOrientation);
+    };
+  }, []);
   const [showControls, setShowControls] = useState(true);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
@@ -571,87 +586,141 @@ export default function IslamicStreamPlayer() {
   return (
     <div
       ref={containerRef}
-      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-[var(--border)] ${isEffectiveFullscreen ? 'fixed top-0 left-0 rounded-none flex flex-col z-[99999]' : 'relative'}`}
-      style={isEffectiveFullscreen ? {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 99999,
-        background: '#000',
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      } : undefined}
+      className={`select-none w-full text-white ${
+        isEffectiveFullscreen
+          ? 'fixed inset-0 z-[999999] bg-black overflow-hidden flex items-center justify-center'
+          : 'rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-[var(--border)] relative'
+      }`}
+      style={
+        isEffectiveFullscreen
+          ? {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              zIndex: 999999,
+              background: '#000',
+            }
+          : undefined
+      }
       onMouseMove={showAndScheduleHide}
       onTouchStart={showAndScheduleHide}
     >
-      {/* ── Location Switcher ── */}
-      <div className={`flex items-center gap-1 p-3 bg-gradient-to-b from-black/80 to-transparent ${isRtl ? 'flex-row-reverse' : ''}`}>
-        <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/6 backdrop-blur-md border border-[var(--border)] flex-1">
-          {(['makkah', 'madinah'] as StreamLocation[]).map(loc => {
-            const m = LOCATION_META[loc];
-            const active = activeTab === loc;
-            const label = loc === 'makkah' ? strings.makkah : strings.madinah;
-            return (
-              <button
-                key={loc}
-                onClick={() => setActiveTab(loc)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
-                  active
-                    ? 'text-white shadow-lg'
-                    : 'text-white/50 hover:text-white/80'
-                }`}
-                style={active ? { background: `linear-gradient(135deg, ${m.color}cc, ${m.color}88)` } : {}}
-              >
-                <span className={`text-xs font-black tracking-wide uppercase ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{label}</span>
-                <span className="text-xs font-normal opacity-80 font-arabic">{m.arabic}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Live badge */}
-        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ml-2 transition-all ${
-          current.isPlaying
-            ? 'bg-red-500/20 border-red-500/40 text-red-400'
-            : 'bg-white/6 border-[var(--border)] text-white/40'
-        }`}>
-          <span className={`w-2 h-2 rounded-full ${current.isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/20'}`} />
-          <span className={contentLang === 'ur' ? 'font-urdu text-[11px]' : ''}>{strings.live}</span>
-        </div>
-        {!isOnline && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ml-1 bg-amber-500/20 border-amber-500/40 text-amber-400 shrink-0">
-            <WifiOff className="w-3.5 h-3.5" />
-            <span className={contentLang === 'ur' ? 'font-urdu text-[11px]' : ''}>{strings.offline}</span>
+      {/* ── Location Switcher: Shown ONLY when NOT fullscreen ── */}
+      {!isEffectiveFullscreen && (
+        <div className={`flex items-center gap-1 p-3 bg-gradient-to-b from-black/80 to-transparent ${isRtl ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/6 backdrop-blur-md border border-[var(--border)] flex-1">
+            {(['makkah', 'madinah'] as StreamLocation[]).map(loc => {
+              const m = LOCATION_META[loc];
+              const active = activeTab === loc;
+              const label = loc === 'makkah' ? strings.makkah : strings.madinah;
+              return (
+                <button
+                  key={loc}
+                  onClick={() => setActiveTab(loc)}
+                  className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                    active
+                      ? 'text-white shadow-lg'
+                      : 'text-white/50 hover:text-white/80'
+                  }`}
+                  style={active ? { background: `linear-gradient(135deg, ${m.color}cc, ${m.color}88)` } : {}}
+                >
+                  <span className={`text-xs font-black tracking-wide uppercase ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{label}</span>
+                  <span className="text-xs font-normal opacity-80 font-arabic">{m.arabic}</span>
+                </button>
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {/* Live badge */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ml-2 transition-all ${
+            current.isPlaying
+              ? 'bg-red-500/20 border-red-500/40 text-red-400'
+              : 'bg-white/6 border-[var(--border)] text-white/40'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${current.isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/20'}`} />
+            <span className={contentLang === 'ur' ? 'font-urdu text-[11px]' : ''}>{strings.live}</span>
+          </div>
+          {!isOnline && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ml-1 bg-amber-500/20 border-amber-500/40 text-amber-400 shrink-0">
+              <WifiOff className="w-3.5 h-3.5" />
+              <span className={contentLang === 'ur' ? 'font-urdu text-[11px]' : ''}>{strings.offline}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Video Area ── */}
       <div
-        className={`relative w-full bg-black ${isEffectiveFullscreen ? 'h-full flex-1' : ''}`}
-        style={isEffectiveFullscreen ? { aspectRatio: 'auto', flex: 1, width: '100%', height: '100%' } : { aspectRatio: '16/9' }}
+        className={`relative bg-black ${
+          isEffectiveFullscreen
+            ? isDeviceLandscape
+              ? 'w-full h-full'
+              : 'w-full h-full'
+            : 'w-full'
+        }`}
+        style={
+          isEffectiveFullscreen
+            ? isDeviceLandscape
+              ? { width: '100vw', height: '100vh', position: 'relative' }
+              : {
+                  width: '100vh',
+                  height: '100vw',
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%) rotate(90deg)',
+                  transformOrigin: 'center center',
+                }
+            : { aspectRatio: '16/9' }
+        }
         onClick={() => { if (!current.isLoading && !current.error) { togglePlay(); showAndScheduleHide(); } }}
       >
         {isEffectiveFullscreen && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFullscreen();
-            }}
-            className="absolute top-4 left-4 z-50 px-3 py-1.5 rounded-full bg-black/75 hover:bg-black/95 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-white/20 shadow-2xl active:scale-95"
+          <div
+            className={`absolute top-4 left-4 right-4 z-50 flex items-center justify-between transition-opacity duration-300 pointer-events-auto ${
+              showControls || !current.isPlaying ? 'opacity-100' : 'opacity-0'
+            }`}
           >
-            <Minimize className="w-3.5 h-3.5" />
-            <span>✕ Exit Fullscreen</span>
-          </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }}
+              className="px-3.5 py-2 rounded-full bg-black/80 hover:bg-black/95 text-white text-xs font-bold flex items-center gap-2 backdrop-blur-md border border-white/25 shadow-2xl active:scale-95"
+            >
+              <Minimize className="w-4 h-4" />
+              <span>✕ Exit Fullscreen</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab((prev) => (prev === 'makkah' ? 'madinah' : 'makkah'));
+                }}
+                className="px-3 py-1.5 rounded-full bg-black/80 hover:bg-black/95 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-white/25 shadow-2xl active:scale-95"
+              >
+                <span>{activeTab === 'makkah' ? '🕋 Makkah' : '🕌 Madinah'}</span>
+                <span className="text-[10px] text-white/60">⇄ Switch</span>
+              </button>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border bg-red-500/25 border-red-500/50 text-red-400 backdrop-blur-md">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span>LIVE</span>
+              </div>
+            </div>
+          </div>
         )}
         <video
           ref={videoRef}
-          className={`${isEffectiveFullscreen ? 'absolute inset-0' : 'relative'} w-full h-full object-contain`}
+          className="w-full h-full object-contain"
           style={{
-            ...(isEffectiveFullscreen ? { width: '100%', height: '100%', objectFit: 'contain' as const } : {}),
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain' as const,
             filter: (qualityPreset === '720p' || qualityPreset === '1080p') ? 'contrast(1.04) saturate(1.05)' : 'none',
           }}
           playsInline

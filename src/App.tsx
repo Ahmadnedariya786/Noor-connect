@@ -142,7 +142,6 @@ import { FitranaCalculatorNotification } from "@/components/FitranaCalculatorNot
 const GlobalPrayerAlarm = lazy(() => import("@/components/GlobalPrayerAlarm").then(module => ({ default: module.GlobalPrayerAlarm })));
 const SalamGreeting = lazy(() => import("@/components/SalamGreeting").then(module => ({ default: module.SalamGreeting })));
 const FestivePopup = lazy(() => import("@/components/FestivePopup").then(module => ({ default: module.FestivePopup })));
-const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt").then(module => ({ default: module.PWAInstallPrompt })));
 
 import Dashboard from "./pages/Dashboard";
 
@@ -428,7 +427,6 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
                   <GlobalPrayerAlarm />
                   {greetingEnabled && <SalamGreeting splashActive={splashActive} />}
                   <FestivePopup />
-                  <PWAInstallPrompt />
                   <EidChecklistNotification />
                   <FitranaCalculatorNotification />
                   <AutoBackupRestoreDialog />
