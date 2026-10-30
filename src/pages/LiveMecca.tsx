@@ -4,3 +4,4 @@ import LiveStreams from './LiveStreams';
 export default function LiveMecca() {
   return <LiveStreams />;
 }
+

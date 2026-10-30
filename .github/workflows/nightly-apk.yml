@@ -125,6 +125,17 @@ jobs:
           }
           EOF
 
+          # Create version.json manifest asset for unlimited rate-limit fallback
+          cat <<EOF > version.json
+          {
+            "version": "2.2.1",
+            "commit": "${{ github.sha }}",
+            "shortCommit": "$(echo ${{ github.sha }} | cut -c1-7)",
+            "builtAt": "$BUILD_TIME",
+            "apkUrl": "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk"
+          }
+          EOF
+
           # Locate generated release APK (finds either app-release.apk or app-foss-release.apk)
           APK_FILE=$(find android/app/build/outputs/apk -type f -name "*release.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
@@ -150,6 +161,7 @@ jobs:
           assets: |
             *.apk
             build-info.json
+            version.json
 
       - name: Publish Nightly GitHub Release
         uses: softprops/action-gh-release@v2
@@ -162,6 +174,7 @@ jobs:
           files: |
             noor-connect-nightly.apk
             build-info.json
+            version.json
           body: |
             ### 🌙 Noor Connect — Nightly Build
             

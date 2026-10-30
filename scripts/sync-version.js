@@ -1,16 +1,28 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
+
+const getGitCommit = () => {
+    if (process.env.VITE_BUILD_COMMIT) return process.env.VITE_BUILD_COMMIT.trim();
+    if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.trim();
+    try {
+        return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    } catch {
+        return 'unknown';
+    }
+};
 
 // Sync versions between package.json and android/app/build.gradle
 function syncVersion() {
     try {
         const pkgPath = path.join(rootDir, 'package.json');
         const gradlePath = path.join(rootDir, 'android', 'app', 'build.gradle');
+        const versionJsonPath = path.join(rootDir, 'public', 'version.json');
 
         if (!fs.existsSync(pkgPath) || !fs.existsSync(gradlePath)) {
             console.log('Skipping version sync: package.json or build.gradle not found');
@@ -53,6 +65,19 @@ function syncVersion() {
         } else {
             console.log('Versions are already in sync.');
         }
+
+        // Always sync public/version.json for rate-limit-proof updater fallback
+        const commit = getGitCommit();
+        const versionData = {
+            version,
+            commit,
+            shortCommit: commit.length >= 7 ? commit.slice(0, 7) : commit,
+            builtAt: new Date().toISOString(),
+            apkUrl: 'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk',
+        };
+        fs.mkdirSync(path.join(rootDir, 'public'), { recursive: true });
+        fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2));
+        console.log(`Updated public/version.json (commit: ${versionData.shortCommit})`);
 
     } catch (error) {
         console.error('Error syncing versions:', error);

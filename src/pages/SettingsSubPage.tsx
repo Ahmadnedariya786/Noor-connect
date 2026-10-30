@@ -544,6 +544,7 @@ const SettingsSubPage: React.FC = () => {
     setIsCheckingUpdate(true);
     try {
       try {
+        localStorage.removeItem('noor_update_check_cache_v1');
         localStorage.removeItem('noor_nightly_update_cache');
         localStorage.removeItem('noor_update_last_checked');
         localStorage.removeItem('noor_last_update_check');

@@ -157,6 +157,8 @@ export function isTemporaryCacheKey(key: string): boolean {
     key.startsWith('daily_ayah_') ||
     key.startsWith('daily_hadith_') ||
     key === 'app-version-cache' ||
+    key === 'noor_update_check_cache_v1' ||
+    key.startsWith('noor_update_check_cache_') ||
     key.includes('release_cache') ||
     key.startsWith('temp_') ||
     key.includes('_cache_')

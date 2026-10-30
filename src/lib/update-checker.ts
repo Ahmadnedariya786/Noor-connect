@@ -29,6 +29,9 @@ const DISMISSED_SESSION_KEY = 'noor_update_banner_dismissed_session';
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const FETCH_TIMEOUT_MS = 8000; // 8 seconds
 
+export const UPDATE_CHECK_CACHE_KEY = 'noor_update_check_cache_v1';
+export const PASSIVE_CHECK_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes (passive check quota saver)
+
 export const DIRECT_APK_FALLBACK_URL = `https://github.com/${GITHUB_REPO}/releases/download/nightly/noor-connect-nightly.apk`;
 
 /**
@@ -178,13 +181,10 @@ export function formatUpdateError(err: any): string {
     return 'Timed out';
   }
   const msg = typeof err?.message === 'string' ? err.message : String(err);
-  if (msg.includes('rate limit') || msg.includes('403') || msg.includes('429')) {
-    return 'GitHub rate limit - try later';
-  }
   if (msg.includes('Release not found') || msg.includes('404')) {
     return 'Release not found';
   }
-  if (err instanceof TypeError || /failed to fetch|network|load failed/i.test(msg)) {
+  if (err instanceof TypeError || /failed to fetch|network|load failed|rate limit|403|429/i.test(msg)) {
     return 'Network error - check internet';
   }
   return msg;
@@ -303,7 +303,7 @@ export function isUpdateAvailable(
  */
 function readCache(): StoredCache | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(UPDATE_CHECK_CACHE_KEY) || localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as StoredCache;
   } catch {
@@ -322,7 +322,9 @@ function writeCache(release: NightlyReleaseInfo | null): void {
       lastChecked: now,
       release,
     };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    const serialized = JSON.stringify(data);
+    localStorage.setItem(UPDATE_CHECK_CACHE_KEY, serialized);
+    localStorage.setItem(CACHE_KEY, serialized);
     localStorage.setItem('noor_update_last_checked', now.toString());
   } catch {
     // Handled localStorage write fallback
@@ -447,24 +449,208 @@ export function openExternalBrowserFallback(url?: string): void {
 }
 
 /**
- * Check for updates against GitHub Releases API with 8s timeout and 6h caching.
- * Plain fetch with Accept header only (CORS-safe inside Android WebView).
- * Manual check (force = true) clears stored cache first and always refetches.
+ * Fetch latest release from GitHub Releases API.
+ * Returns null immediately on rate limit (HTTP 403 / 429) or non-200 to allow seamless fallback.
+ */
+async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyReleaseInfo | null> {
+  try {
+    const requestUrl = `${NIGHTLY_API_URL}?t=${Date.now()}`;
+    const res = await fetch(requestUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/vnd.github+json',
+      },
+      signal,
+    });
+
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 429) {
+        console.warn(`[UpdateChecker] GitHub API rate limit hit (HTTP ${res.status}). Switching to rate-limit-proof fallbacks.`);
+        return null;
+      }
+      console.warn(`[UpdateChecker] GitHub API returned HTTP ${res.status}. Falling back.`);
+      return null;
+    }
+
+    const data = await res.json();
+    const publishedAt = data.published_at || data.created_at;
+    const remoteCommit = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
+
+    let apkUrl = DIRECT_APK_FALLBACK_URL;
+    let sizeBytes: number | undefined;
+    let latestApkUploadedAt: string | null = null;
+    let maxUploadedMs = -1;
+    let selectedApkAsset: any = null;
+
+    if (Array.isArray(data.assets)) {
+      const apkAssets = data.assets.filter((a: any) =>
+        typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk')
+      );
+
+      for (const asset of apkAssets) {
+        const rawTime = asset.uploaded_at || asset.updated_at || asset.created_at;
+        if (rawTime) {
+          const timeMs = new Date(rawTime).getTime();
+          if (!isNaN(timeMs) && timeMs > maxUploadedMs) {
+            maxUploadedMs = timeMs;
+            latestApkUploadedAt = rawTime;
+            selectedApkAsset = asset;
+          }
+        }
+      }
+
+      if (selectedApkAsset) {
+        if (selectedApkAsset.browser_download_url) {
+          apkUrl = selectedApkAsset.browser_download_url;
+        }
+        sizeBytes = typeof selectedApkAsset.size === 'number' ? selectedApkAsset.size : undefined;
+      }
+    }
+
+    return {
+      tagName: data.tag_name || 'nightly',
+      releaseName: data.name || 'Nightly Build',
+      publishedAt: latestApkUploadedAt || publishedAt || new Date().toISOString(),
+      latestAssetUploadedAt: latestApkUploadedAt || undefined,
+      commitSha: remoteCommit,
+      apkUrl: resolveDirectApkUrl(apkUrl),
+      htmlUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/nightly`,
+      body: data.body,
+      sizeBytes,
+    };
+  } catch (err: any) {
+    if (err?.name === 'AbortError') throw err;
+    console.warn('[UpdateChecker] GitHub Releases API fetch failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Fallback A: Fetch latest commit SHA & timestamp from GitHub Atom Feed.
+ * Zero authentication required and zero rate limit restrictions.
+ */
+async function fetchCommitFromAtomFeed(signal: AbortSignal): Promise<NightlyReleaseInfo | null> {
+  const atomUrls = [
+    `https://github.com/${GITHUB_REPO}/commits/main.atom?t=${Date.now()}`,
+    `https://github.com/${GITHUB_REPO}/releases.atom?t=${Date.now()}`,
+  ];
+
+  for (const url of atomUrls) {
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/atom+xml, application/xml, text/xml, */*',
+        },
+        signal,
+      });
+
+      if (!res.ok) continue;
+
+      const xml = await res.text();
+      const shaMatch = xml.match(/Grit::Commit\/([0-9a-f]{7,40})/i) ||
+                       xml.match(/\/commit\/([0-9a-f]{7,40})/i) ||
+                       xml.match(/commit:\s*([0-9a-f]{7,40})/i);
+      const updatedMatch = xml.match(/<updated>([^<]+)<\/updated>/i);
+
+      if (shaMatch && shaMatch[1]) {
+        const commitSha = shaMatch[1].toLowerCase();
+        const updatedIso = updatedMatch?.[1]?.trim() || new Date().toISOString();
+        console.log('[UpdateChecker] Fallback A (Atom feed) resolved latest commit:', commitSha, 'updated:', updatedIso);
+
+        return {
+          tagName: 'nightly',
+          releaseName: 'Nightly Build (Live Feed)',
+          publishedAt: updatedIso,
+          latestAssetUploadedAt: updatedIso,
+          commitSha,
+          apkUrl: DIRECT_APK_FALLBACK_URL,
+          htmlUrl: `https://github.com/${GITHUB_REPO}/commits/main`,
+          body: `Auto-synchronized via GitHub Atom feed (Commit: ${commitSha.slice(0, 7)})`,
+        };
+      }
+    } catch (err: any) {
+      if (err?.name === 'AbortError') throw err;
+      console.warn(`[UpdateChecker] Atom feed fetch failed for ${url}:`, err);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Fallback B: Fetch latest commit & metadata from published version manifest.
+ * Zero rate limit via raw.githubusercontent.com, jsDelivr CDN, or release assets.
+ */
+async function fetchCommitFromVersionManifest(signal: AbortSignal): Promise<NightlyReleaseInfo | null> {
+  const manifestUrls = [
+    `https://raw.githubusercontent.com/${GITHUB_REPO}/main/public/version.json?t=${Date.now()}`,
+    `https://cdn.jsdelivr.net/gh/${GITHUB_REPO}@main/public/version.json?t=${Date.now()}`,
+    `https://github.com/${GITHUB_REPO}/releases/download/nightly/version.json?t=${Date.now()}`,
+  ];
+
+  for (const url of manifestUrls) {
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+        },
+        signal,
+      });
+
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      const rawCommit = data?.commit || data?.shortCommit;
+      if (rawCommit && typeof rawCommit === 'string' && rawCommit.trim().length >= 7) {
+        const commitSha = rawCommit.trim().toLowerCase();
+        const builtAt = data.builtAt || new Date().toISOString();
+        const apkUrl = resolveDirectApkUrl(data.apkUrl || DIRECT_APK_FALLBACK_URL);
+        console.log('[UpdateChecker] Fallback B (Version manifest) resolved latest commit:', commitSha, 'builtAt:', builtAt);
+
+        return {
+          tagName: 'nightly',
+          releaseName: `Nightly Build v${data.version || '2.2.1'}`,
+          publishedAt: builtAt,
+          latestAssetUploadedAt: builtAt,
+          commitSha,
+          apkUrl,
+          htmlUrl: `https://github.com/${GITHUB_REPO}/releases/tag/nightly`,
+          body: `Auto-synchronized via version manifest (Commit: ${(data.shortCommit || data.commit || '').slice(0, 7)})`,
+        };
+      }
+    } catch (err: any) {
+      if (err?.name === 'AbortError') throw err;
+      console.warn(`[UpdateChecker] Version manifest fetch failed for ${url}:`, err);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check for updates with rate-limit-proof multi-source fallback chain:
+ * 1. Passive checks respect 10-minute cache (PASSIVE_CHECK_CACHE_TTL_MS).
+ * 2. Primary: GitHub Releases API.
+ * 3. Fallback A: GitHub Atom feed (unlimited, zero rate-limit).
+ * 4. Fallback B: Version manifest via raw/CDN (unlimited, zero rate-limit).
+ * Manual check (force = true) clears all cache keys and performs fresh network verification.
  */
 export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResult> {
   const currentBuildTime = BUILD_TIME;
   const currentBuildCommit = BUILD_COMMIT;
 
-  // Log local app's build time/commit before checking
   console.log('[UpdateChecker] Local app build info:', {
     currentBuildTime,
     currentBuildCommit,
     forceCheck: force,
   });
 
-  // 1. Manual check must clear stored last-check timestamp first and always refetch
+  // 1. Manual check must clear stored last-check timestamps first and always refetch
   if (force) {
     try {
+      localStorage.removeItem(UPDATE_CHECK_CACHE_KEY);
       localStorage.removeItem(CACHE_KEY);
       localStorage.removeItem('noor_update_last_checked');
       localStorage.removeItem('noor_last_update_check');
@@ -472,11 +658,11 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       // Handled storage clear fallback
     }
   } else {
-    // Check cache first (unless force check requested)
+    // 2. Check smart cache first for passive checks (10-minute TTL)
     const cached = readCache();
     if (cached && typeof cached.lastChecked === 'number') {
       const age = Date.now() - cached.lastChecked;
-      if (age < CHECK_INTERVAL_MS) {
+      if (age < PASSIVE_CHECK_CACHE_TTL_MS && cached.release) {
         const hasUpdate = isUpdateAvailable(cached.release, {
           commitSha: currentBuildCommit,
           buildTime: currentBuildTime,
@@ -499,118 +685,46 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     }
   }
 
-  // 2. Fetch fresh release metadata with 8-second timeout via AbortController
+  // 3. Fetch fresh release metadata with 8-second timeout via AbortController
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const requestUrl = `${NIGHTLY_API_URL}?t=${Date.now()}`;
-    const res = await fetch(requestUrl, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.github+json',
-      },
-      signal: controller.signal,
-    });
+    let releaseInfo: NightlyReleaseInfo | null = null;
 
-    if (!res.ok) {
-      if (res.status === 403 || res.status === 429) {
-        throw new Error('GitHub rate limit - try later');
-      }
-      if (res.status === 404) {
-        return {
-          hasUpdate: false,
-          status: 'Check failed',
-          statusReason: 'Release not found',
-          error: 'Release not found',
-          installedCommit: currentBuildCommit,
-          installedBuildTime: currentBuildTime,
-          currentBuildTime,
-          currentBuildCommit,
-          remoteCommit: undefined,
-          latestApkUploadedAt: undefined,
-          release: null,
-          lastChecked: Date.now(),
-          fromCache: false,
-        };
-      }
-      throw new Error(`GitHub API HTTP ${res.status}`);
+    // Primary: GitHub Releases API
+    try {
+      releaseInfo = await fetchFromGitHubReleasesApi(controller.signal);
+    } catch (e: any) {
+      if (e?.name === 'AbortError') throw e;
     }
 
-    const data = await res.json();
-    const publishedAt = data.published_at || data.created_at;
-
-    // Parse remoteCommit: first match of regex /commit:\s*([0-9a-f]{7,40})/i in the release body
-    const remoteCommit = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
-
-    // Log fetched Release data (specifically the assets array)
-    console.log('[UpdateChecker] Fetched Release data:', {
-      tagName: data.tag_name,
-      releaseName: data.name,
-      targetCommitish: data.target_commitish,
-      assetsCount: Array.isArray(data.assets) ? data.assets.length : 0,
-      assets: data.assets,
-    });
-
-    // Parse latestApkUploadedAt: the MAX uploaded_at / updated_at / created_at among assets whose name ends with .apk
-    let apkUrl = DIRECT_APK_FALLBACK_URL;
-    let sizeBytes: number | undefined;
-    let latestApkUploadedAt: string | null = null;
-    let maxUploadedMs = -1;
-    let selectedApkAsset: any = null;
-
-    if (Array.isArray(data.assets)) {
-      const apkAssets = data.assets.filter((a: any) =>
-        typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk')
-      );
-
-      for (const asset of apkAssets) {
-        // Max uploaded_at (or updated_at / created_at fallback if uploaded_at key absent)
-        const rawTime = asset.uploaded_at || asset.updated_at || asset.created_at;
-        if (rawTime) {
-          const timeMs = new Date(rawTime).getTime();
-          if (!isNaN(timeMs) && timeMs > maxUploadedMs) {
-            maxUploadedMs = timeMs;
-            latestApkUploadedAt = rawTime;
-            selectedApkAsset = asset;
-          }
-        }
+    // Fallback A: GitHub Atom Feed (bypasses GitHub API rate limits completely)
+    if (!releaseInfo) {
+      try {
+        console.log('[UpdateChecker] Primary API unavailable; attempting Fallback A (GitHub Atom feed)...');
+        releaseInfo = await fetchCommitFromAtomFeed(controller.signal);
+      } catch (e: any) {
+        if (e?.name === 'AbortError') throw e;
       }
-
-      if (selectedApkAsset) {
-        if (selectedApkAsset.browser_download_url) {
-          apkUrl = selectedApkAsset.browser_download_url;
-        }
-        sizeBytes = typeof selectedApkAsset.size === 'number' ? selectedApkAsset.size : undefined;
-      }
-
-      // Log the uploaded_at timestamp of the .apk asset
-      console.log('[UpdateChecker] APK asset selected:', {
-        name: selectedApkAsset?.name,
-        uploaded_at: latestApkUploadedAt,
-        sizeBytes,
-        apkUrl,
-      });
     }
 
-    const releaseInfo: NightlyReleaseInfo = {
-      tagName: data.tag_name || 'nightly',
-      releaseName: data.name || 'Nightly Build',
-      publishedAt: latestApkUploadedAt || publishedAt || new Date().toISOString(),
-      latestAssetUploadedAt: latestApkUploadedAt || undefined,
-      commitSha: remoteCommit,
-      apkUrl: resolveDirectApkUrl(apkUrl),
-      htmlUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/nightly`,
-      body: data.body,
-      sizeBytes,
-    };
+    // Fallback B: Published Version Manifest (bypasses GitHub API rate limits completely)
+    if (!releaseInfo) {
+      try {
+        console.log('[UpdateChecker] Fallback A unavailable; attempting Fallback B (Published version manifest)...');
+        releaseInfo = await fetchCommitFromVersionManifest(controller.signal);
+      } catch (e: any) {
+        if (e?.name === 'AbortError') throw e;
+      }
+    }
+
+    if (!releaseInfo) {
+      throw new Error('Network error - check internet');
+    }
 
     writeCache(releaseInfo);
 
-    // 3. Verdict rules (SHA-first comparison order):
-    // (1) If SHA in release body matches local build SHA -> "Up to date"
-    //     If SHA differs -> "Update available"
-    // (2) If SHA is missing -> fall back to asset uploaded_at vs buildTime with 10-minute grace window
     const hasUpdate = isUpdateAvailable(releaseInfo, {
       commitSha: currentBuildCommit,
       buildTime: currentBuildTime,
@@ -625,8 +739,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       installedBuildTime: currentBuildTime,
       currentBuildTime,
       currentBuildCommit,
-      remoteCommit,
-      latestApkUploadedAt: latestApkUploadedAt || undefined,
+      remoteCommit: releaseInfo.commitSha,
+      latestApkUploadedAt: releaseInfo.latestAssetUploadedAt || releaseInfo.publishedAt,
       release: releaseInfo,
       lastChecked: Date.now(),
       fromCache: false,
@@ -640,10 +754,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
 
     return checkResult;
   } catch (err: any) {
-    // If fetch or parse throws: verdict CHECK FAILED with distinct error message
     const message = formatUpdateError(err);
-
-    // Routine network error - status reported cleanly in return object without console noise
 
     return {
       hasUpdate: false,

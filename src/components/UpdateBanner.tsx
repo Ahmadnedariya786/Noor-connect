@@ -32,8 +32,8 @@ export const UpdateBanner: React.FC = () => {
   const runSilentUpdateCheck = useCallback(async () => {
     try {
       localStorage.setItem(LAST_AUTO_CHECK_KEY, Date.now().toString());
-      // Silent cache-busted update check
-      const res = await checkNightlyUpdate(true);
+      // Silent cache-friendly update check for passive boot check (uses 10m smart cache)
+      const res = await checkNightlyUpdate(false);
       if (res.hasUpdate && res.status === 'Update available') {
         const localCommit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || '';
         const remoteCommit = res.release?.commitSha || '';
