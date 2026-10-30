@@ -408,8 +408,8 @@ export default function QuranReader() {
   };
 
   const handlePrevPage = () => {
-    if (lineFormat === 7 && subPage7L === 2) {
-      setSubPage7L(1);
+    if (lineFormat === 7 && subPage7L > 1) {
+      setSubPage7L((prev) => (prev > 1 ? ((prev - 1) as 1 | 2) : 1));
       return;
     }
     if (mushafPageNumber > 1) {
@@ -418,8 +418,8 @@ export default function QuranReader() {
   };
 
   const handleNextPage = () => {
-    if (lineFormat === 7 && subPage7L === 1 && totalParts7L > 1) {
-      setSubPage7L(2);
+    if (lineFormat === 7 && subPage7L < totalParts7L) {
+      setSubPage7L((prev) => (prev < totalParts7L ? ((prev + 1) as 1 | 2) : prev));
       return;
     }
     if (mushafPageNumber < 604) {
@@ -692,11 +692,11 @@ export default function QuranReader() {
               </div>
             )}
 
-            {/* Static hint is hidden during active playback to prevent 'Tap word: M...' clipping */}
+            {/* Static hint: concise 👆 Word • ﴿١﴾ Tafsir to never clip on 360px screens */}
             {!isPlaying && (
               <div
                 style={{
-                  fontSize: '0.68rem',
+                  fontSize: '0.66rem',
                   whiteSpace: 'nowrap',
                   color: 'var(--text-secondary)',
                   fontWeight: 600,
@@ -708,11 +708,11 @@ export default function QuranReader() {
                 }}
               >
                 <span>
-                  {uiStrings.subToolbarHint.tapWord}: {uiStrings.subToolbarHint.meaning} • {uiStrings.subToolbarHint.tapMedallion}{' '}
+                  👆 Word •{' '}
                   <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
                     ﴿١﴾
-                  </span>
-                  : {uiStrings.subToolbarHint.tafsir}
+                  </span>{' '}
+                  Tafsir
                 </span>
               </div>
             )}

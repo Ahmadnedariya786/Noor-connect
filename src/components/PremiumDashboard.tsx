@@ -347,7 +347,15 @@ function PremiumDashboardInner({
                 </div>
 
                 <LocationSearch
-                  onLocationSelect={async (city: string, country: string, lat?: number, lon?: number, displayName?: string) => {
+                  onLocationSelect={async (
+                    city: string,
+                    country: string,
+                    lat?: number,
+                    lon?: number,
+                    displayName?: string,
+                    tz?: string,
+                    countryCode?: string
+                  ) => {
                     try {
                       setLoadingAPI(true);
                       AladhanAPI.clearCachedData();
@@ -362,11 +370,19 @@ function PremiumDashboardInner({
                         if (coords.displayName) finalName = coords.displayName;
                       }
 
-                      const result = await AladhanAPI.getTodaysPrayerTimes(latitude, longitude, 1);
-                      location.setLocation(latitude, longitude, finalName, result.timezone);
+                      // Auto-recommend regional calculation method (e.g. Karachi for IN/PK, Umm al-Qura for SA, ISNA for US/CA)
+                      const { getRecommendedPrayerMethod } = await import('@/lib/prayer-method-recommendation');
+                      const recMethod = getRecommendedPrayerMethod(countryCode);
+
+                      const result = await AladhanAPI.getTodaysPrayerTimes(latitude, longitude, recMethod.id);
+                      const finalTimezone = tz || result?.timezone;
+                      location.setLocation(latitude, longitude, finalName, finalTimezone);
                       await prayerTimesHook.setManualLocation(city, country);
                       handleCloseModal();
-                      toast({ title: "Location Updated", description: `Time adjusted to ${result.timezone}` });
+                      toast({
+                        title: "Location Updated",
+                        description: `${finalName} • ${recMethod.name.split(',')[0]} (${finalTimezone || 'Auto'})`
+                      });
                     } catch (err) {
                       toast({ title: "Selection Failed", description: "Could not set location. Please try again.", variant: "destructive" });
                     } finally {

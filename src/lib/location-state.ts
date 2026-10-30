@@ -189,29 +189,18 @@ export const useLocationState = () => {
         return null;
       }
 
-      // 5. Live reverse geocode with Nominatim (zoom=12) to extract real town/city/taluka + country
+      // 5. Live reverse geocode (BigDataCloud primary + Nominatim fallback) to extract real town/city/taluka + country
       let localPlace = nearestCity.city;
       let countryName = nearestCity.country;
       let locationName = `${nearestCity.city}, ${nearestCity.country}`;
 
       try {
-        const nominatimRes = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`,
-          {
-            headers: { 'User-Agent': 'Noor-Connect-Islamic-App/1.0' },
-            signal: AbortSignal.timeout(3500)
-          }
-        );
-        if (nominatimRes.ok) {
-          const data = await nominatimRes.json();
-          if (data?.address) {
-            const addr = data.address;
-            localPlace = addr.city || addr.town || addr.county || addr.suburb || addr.village || addr.municipality || addr.state_district || nearestCity.city;
-            countryName = addr.country || nearestCity.country;
-            if (localPlace && countryName) {
-              locationName = `${localPlace}, ${countryName}`;
-            }
-          }
+        const { LocationService } = await import('@/lib/location-service');
+        const rev = await LocationService.reverseGeocode(lat, lon);
+        if (rev && rev.city) {
+          localPlace = rev.city;
+          countryName = rev.country || nearestCity.country;
+          locationName = rev.displayName || `${localPlace}, ${countryName}`;
         }
       } catch {
         // Fallback safely to offline nearest city display name

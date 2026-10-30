@@ -31,6 +31,7 @@ export interface SpotlightVirtue {
 
 export interface PrayerTimesInput {
   fajr?: Date | string | null;
+  sunrise?: Date | string | null;
   dhuhr?: Date | string | null;
   asr?: Date | string | null;
   maghrib?: Date | string | null;
@@ -39,6 +40,7 @@ export interface PrayerTimesInput {
 
 /**
  * Determine the active prayer window based on live prayer times or hour fallback.
+ * Automatically transitions from Fajr to Duha/Dhuhr post-sunrise so FAJR SUNNAH is never shown at 11:45 AM.
  */
 export function getActivePrayerWindow(
   now: Date,
@@ -52,6 +54,7 @@ export function getActivePrayerWindow(
   };
 
   const fMs = toMs(times?.fajr);
+  const sMs = toMs(times?.sunrise);
   const dMs = toMs(times?.dhuhr);
   const aMs = toMs(times?.asr);
   const mMs = toMs(times?.maghrib);
@@ -60,17 +63,23 @@ export function getActivePrayerWindow(
   const nowMs = now.getTime();
 
   if (fMs && dMs && aMs && mMs && iMs) {
-    if (nowMs >= fMs && nowMs < dMs) return 'fajr';
+    // If sunrise time has passed, transition to Duha / Dhuhr window
+    if (sMs && nowMs >= sMs && nowMs < dMs) return 'dhuhr';
+    if (nowMs >= fMs && nowMs < dMs) {
+      // If sunrise was not parsed but hour is 8 AM or later, transition to Dhuhr
+      if (now.getHours() >= 8) return 'dhuhr';
+      return 'fajr';
+    }
     if (nowMs >= dMs && nowMs < aMs) return 'dhuhr';
     if (nowMs >= aMs && nowMs < mMs) return 'asr';
     if (nowMs >= mMs && nowMs < iMs) return 'maghrib';
     return 'isha';
   }
 
-  // Fallback to local hour
+  // Fallback to local hour: morning after 8 AM is Duha / Dhuhr
   const h = now.getHours();
-  if (h >= 5 && h < 12) return 'fajr';
-  if (h >= 12 && h < 16) return 'dhuhr';
+  if (h >= 5 && h < 8) return 'fajr';
+  if (h >= 8 && h < 16) return 'dhuhr';
   if (h >= 16 && h < 18) return 'asr';
   if (h >= 18 && h < 20) return 'maghrib';
   return 'isha';
@@ -194,7 +203,7 @@ const VIRTUE_DATA: Record<LanguageCode, {
     },
     dhuhrKahfFriday: {
       prayer: 'JUMU\'AH',
-      hook: 'A sacred light illuminating your entire week from one Friday to the next.',
+      hook: 'Reciting Surah Al-Kahf on Friday illuminates the believer with Noor between the two Jumu\'ahs.',
     },
     asrKahf: {
       prayer: 'ASR',
@@ -430,21 +439,19 @@ export function getOrderedSunnahSurahs(
   const b = BADGES[lang] || BADGES.en;
   const v = VIRTUE_DATA[lang] || VIRTUE_DATA.en;
 
-  // Determine the primary featured surah for the active window
-  const featuredKey: PrayerWindow = activeWindow;
+  // Friday Rule: From Fajr all the way until Maghrib, Al-Kahf is ALWAYS #1 Spotlight
+  const isFridayDaytime = isFriday && (activeWindow === 'fajr' || activeWindow === 'dhuhr' || activeWindow === 'asr');
+
+  let featuredKey: PrayerWindow = activeWindow;
   let featuredBase = BASE_SURAHS[activeWindow];
   let featuredBadge = b[activeWindow];
   let virtueData = v[activeWindow === 'dhuhr' ? 'dhuhrRahman' : activeWindow === 'asr' ? 'asrKahf' : activeWindow];
 
-  if (isFriday) {
-    if (activeWindow === 'dhuhr') {
-      featuredBase = KAHF_FRIDAY_DHUHR;
-      featuredBadge = b.jumuahDhuhr;
-      virtueData = v.dhuhrKahfFriday;
-    } else if (activeWindow === 'asr') {
-      featuredBadge = b.jumuah;
-      virtueData = v.asrKahf;
-    }
+  if (isFridayDaytime) {
+    featuredBase = KAHF_FRIDAY_DHUHR;
+    featuredBadge = b.jumuah;
+    virtueData = v.dhuhrKahfFriday;
+    featuredKey = 'dhuhr';
   }
 
   const featuredItem: SunnahSurahItem = {
@@ -455,15 +462,15 @@ export function getOrderedSunnahSurahs(
   };
 
   // Build remaining 4 surahs
-  const remainingWindows: PrayerWindow[] = (['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as PrayerWindow[]).filter(
-    (w) => {
-      if (isFriday && activeWindow === 'dhuhr') {
-        // featured is Kahf (#18), so exclude 'asr' (Kahf) from remaining
-        return w !== 'asr';
-      }
-      return w !== activeWindow;
-    }
-  );
+  let remainingWindows: PrayerWindow[];
+  if (isFridayDaytime) {
+    // Al-Kahf (#18) is #1, remaining are Ya-Sin (#36), Ar-Rahman (#55), Al-Waqi'ah (#56), Al-Mulk (#67)
+    remainingWindows = ['fajr', 'dhuhr', 'maghrib', 'isha'];
+  } else {
+    remainingWindows = (['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as PrayerWindow[]).filter(
+      (w) => w !== activeWindow
+    );
+  }
 
   const remainingItems: SunnahSurahItem[] = remainingWindows.map((w) => {
     const base = BASE_SURAHS[w];
@@ -491,6 +498,12 @@ export function getOrderedSunnahSurahs(
     recommendedHeader: `${v.recommendedPrefix} ${virtueData.prayer} • ${featuredItem.name.toUpperCase()} (${featuredItem.readTime})`,
     fazilatText: virtueData.hook,
     readAction: v.read,
+  };
+
+  return {
+    orderedList,
+    featuredSurah: featuredItem,
+    virtue,
   };
 
   return {

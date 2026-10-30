@@ -92,10 +92,10 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             aria-hidden="true"
           />
 
-          {/* ── Top Bar: Hijri Date on Left + Glowing AM/PM LED Badge on Right ── */}
+          {/* ── Top Bar: Hijri Date Centered ── */}
           <div
             className={cn(
-              "relative z-10 w-full flex items-center justify-between font-mono font-bold uppercase px-0.5",
+              "relative z-10 w-full flex items-center justify-center text-center font-mono font-bold uppercase px-0.5",
               isStaticPreview
                 ? "text-[0.66rem] tracking-tight mb-1"
                 : "text-[10px] sm:text-xs tracking-widest mb-1 sm:mb-2"
@@ -104,8 +104,8 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
           >
             <span
               className={cn(
-                "whitespace-nowrap",
-                isStaticPreview ? "overflow-visible text-clip" : "truncate max-w-[68%]"
+                "whitespace-nowrap text-center",
+                isStaticPreview ? "overflow-visible text-clip" : "truncate max-w-full"
               )}
               title={hijriDate}
             >
@@ -115,80 +115,87 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
                 .replace(/al-ōlā/gi, 'al-ūlā')
                 .replace(/ō/g, 'ū')}
             </span>
+          </div>
 
-            {/* AM/PM Badge: Strictly hidden in 24h mode per 12/24h Guard */}
+          {/* ── Center LED Matrix Display: LED Digits + Glowing AM/PM Badge Directly to Right ── */}
+          <div
+            className="relative z-10 w-full flex items-center justify-center gap-2 sm:gap-3 my-1 sm:my-2 overflow-hidden"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            <div
+              className="relative grid place-items-center"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {/* Ghost Unlit Segments (88 : 88 : 88) */}
+              <div
+                className="pointer-events-none select-none font-mono font-bold"
+                style={{
+                  gridArea: '1 / 1',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  fontSize: isStaticPreview ? '0.98rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
+                  letterSpacing: isStaticPreview ? '0.02em' : '0.06em',
+                  fontVariantNumeric: 'tabular-nums',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  color: 'var(--text-secondary)',
+                  opacity: 0.08,
+                  lineHeight: 1.1,
+                }}
+                aria-hidden="true"
+              >
+                <span>88</span>
+                <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1")}>:</span>
+                <span>88</span>
+                <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1")}>:</span>
+                <span>88</span>
+              </div>
+
+              {/* Active Illuminated LED Digits */}
+              <div
+                className="select-none font-mono font-bold"
+                style={{
+                  gridArea: '1 / 1',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  fontSize: isStaticPreview ? '0.98rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
+                  letterSpacing: isStaticPreview ? '0.02em' : '0.06em',
+                  fontVariantNumeric: 'tabular-nums',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  color: 'var(--accent-text)',
+                  textShadow: isStaticPreview ? undefined : '0 0 12px var(--accent-glow)',
+                  lineHeight: 1.1,
+                }}
+              >
+                <span>{displayHours}</span>
+                <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
+                <span>{displayMinutes}</span>
+                <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
+                <span style={{ opacity: 0.95 }}>{displaySeconds}</span>
+              </div>
+            </div>
+
+            {/* AM/PM Badge: Strictly to the right of LED digits (hidden in 24h mode) */}
             {is12 && (
               <span
                 className={cn(
-                  "rounded font-black shrink-0",
-                  isStaticPreview ? "px-1 py-[0.5px] text-[0.55rem]" : "px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px]"
+                  "rounded font-black shrink-0 select-none uppercase",
+                  isStaticPreview ? "px-1 py-[1px] text-[0.55rem]" : "px-2 py-1 text-[9px] sm:text-[10px]"
                 )}
                 style={{
                   color: 'var(--on-accent)',
                   background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
                   boxShadow: '0 0 8px var(--accent-glow)',
+                  letterSpacing: '0.05em',
+                  transform: 'translateY(-2px)',
                 }}
               >
                 {ampm}
               </span>
             )}
-          </div>
-
-          {/* ── Center LED Matrix Display: Ghost Layer + Active Layer (Grid 1/1, Single-Line) ── */}
-          <div
-            className="relative z-10 w-full grid place-items-center my-1 sm:my-2 overflow-hidden"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {/* Ghost Unlit Segments (88 : 88 : 88) */}
-            <div
-              className="pointer-events-none select-none font-mono font-bold"
-              style={{
-                gridArea: '1 / 1',
-                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                fontSize: isStaticPreview ? '0.98rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
-                letterSpacing: isStaticPreview ? '0.02em' : '0.06em',
-                fontVariantNumeric: 'tabular-nums',
-                whiteSpace: 'nowrap',
-                textAlign: 'center',
-                color: 'var(--text-secondary)',
-                opacity: 0.08,
-                lineHeight: 1.1,
-              }}
-              aria-hidden="true"
-            >
-              <span>88</span>
-              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1")}>:</span>
-              <span>88</span>
-              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1")}>:</span>
-              <span>88</span>
-            </div>
-
-            {/* Active Illuminated LED Digits */}
-            <div
-              className="select-none font-mono font-bold"
-              style={{
-                gridArea: '1 / 1',
-                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                fontSize: isStaticPreview ? '0.98rem' : 'clamp(1.75rem, 7.5vw, 3.1rem)',
-                letterSpacing: isStaticPreview ? '0.02em' : '0.06em',
-                fontVariantNumeric: 'tabular-nums',
-                whiteSpace: 'nowrap',
-                textAlign: 'center',
-                color: 'var(--accent-text)',
-                textShadow: isStaticPreview ? undefined : '0 0 12px var(--accent-glow)',
-                lineHeight: 1.1,
-              }}
-            >
-              <span>{displayHours}</span>
-              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
-              <span>{displayMinutes}</span>
-              <span className={cn("inline-block", isStaticPreview ? "mx-[2px]" : "mx-0.5 sm:mx-1", !isStaticPreview && "animate-pulse")}>:</span>
-              <span style={{ opacity: 0.95 }}>{displaySeconds}</span>
-            </div>
           </div>
 
           {/* ── Bottom Bar: Divider + Active Dot & Next Prayer + Live Countdown ── */}

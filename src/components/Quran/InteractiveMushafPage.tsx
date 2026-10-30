@@ -51,6 +51,48 @@ interface MushafLineToken {
   lineNum?: number;
 }
 
+export function getStrippedArabicCharLength(text: string): number {
+  if (!text) return 0;
+  return text.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').length;
+}
+
+export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineToken[][] {
+  const lines: MushafLineToken[][] = [];
+  let currentLine: MushafLineToken[] = [];
+  let currentWeight = 0;
+
+  for (const token of tokens) {
+    if (token.type === 'header') {
+      if (currentLine.length > 0) {
+        lines.push(currentLine);
+        currentLine = [];
+        currentWeight = 0;
+      }
+      lines.push([token]);
+      continue;
+    }
+
+    const tokenText = token.word?.text_uthmani || token.word?.text_indopak || '';
+    const tokenWeight = token.type === 'medallion' ? 4 : getStrippedArabicCharLength(tokenText) || 4;
+
+    // Strict 22–26 stripped char budget (~4 to 5 words per line) for 360px mobile fit
+    if (currentLine.length >= 3 && currentWeight + tokenWeight > 24) {
+      lines.push(currentLine);
+      currentLine = [token];
+      currentWeight = tokenWeight;
+    } else {
+      currentLine.push(token);
+      currentWeight += tokenWeight;
+    }
+  }
+
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
 function distributeTokensIntoLines(tokens: MushafLineToken[], targetLineCount: number): MushafLineToken[][] {
   if (tokens.length === 0) return [];
   if (targetLineCount <= 1) return [tokens];
@@ -65,7 +107,8 @@ function distributeTokensIntoLines(tokens: MushafLineToken[], targetLineCount: n
   const getWeight = (t: MushafLineToken): number => {
     if (t.type === 'header') return 40;
     if (t.type === 'medallion') return 5;
-    return (t.word?.text_indopak || t.word?.text_uthmani || '').length + 1;
+    const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
+    return getStrippedArabicCharLength(txt) + 1;
   };
 
   const totalWeight = nonHeaderTokens.reduce((sum, t) => sum + getWeight(t), 0);
@@ -377,7 +420,7 @@ export function InteractiveMushafPage({
     audio.play().catch(() => onAudioDone());
   };
 
-  // Tilawah auto-flip for 7-Line mode (switches between Part 1 and Part 2)
+  // Tilawah auto-flip for 7-Line mode (switches between Part 1, Part 2, etc.)
   useEffect(() => {
     if (isPlaying && currentSurah > 0 && currentAyah > 0 && activeFormat === 7 && pageData) {
       const allTokens: MushafLineToken[] = [];
@@ -394,25 +437,20 @@ export function InteractiveMushafPage({
           }
         });
       });
-      const all14 = distributeTokensIntoLines(allTokens, 14);
-      if (all14.length > 7) {
-        const part2Lines = all14.slice(7, 14);
-        const inPart2 = part2Lines.some((line) =>
+      const all7Lines = build7LineFormatTokens(allTokens);
+      const parts = Math.max(1, Math.ceil(all7Lines.length / 7));
+      for (let p = 1; p <= parts; p++) {
+        const pLines = all7Lines.slice((p - 1) * 7, p * 7);
+        const inThisPart = pLines.some((line) =>
           line.some((t) => t.surahNumber === currentSurah && t.verseNumber === currentAyah)
         );
-        if (inPart2 && subPage7L !== 2) {
-          setSubPage7L(2);
-        }
-        const part1Lines = all14.slice(0, 7);
-        const inPart1 = part1Lines.some((line) =>
-          line.some((t) => t.surahNumber === currentSurah && t.verseNumber === currentAyah)
-        );
-        if (inPart1 && subPage7L !== 1) {
-          setSubPage7L(1);
+        if (inThisPart && subPage7L !== p) {
+          setSubPage7L(p as 1 | 2);
+          break;
         }
       }
     }
-  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData]);
+  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData, subPage7L]);
 
   // Compute 7L, 13L, and 15L formatted lines
   const { lines, totalParts7L } = useMemo(() => {
@@ -483,10 +521,12 @@ export function InteractiveMushafPage({
     } else if (activeFormat === 13) {
       return { lines: distributeTokensIntoLines(allTokens, 13), totalParts7L: 1 };
     } else {
-      // 7-line mode
-      const all14Lines = distributeTokensIntoLines(allTokens, 14);
-      const parts = all14Lines.length > 7 ? 2 : 1;
-      const visible = subPage7L === 1 ? all14Lines.slice(0, 7) : all14Lines.slice(7, 14);
+      // 7-line mode: Strict 22-26 stripped char budget per line, paginated into 7 lines per view
+      const all7Lines = build7LineFormatTokens(allTokens);
+      const parts = Math.max(1, Math.ceil(all7Lines.length / 7));
+      const activePart = Math.min(parts, Math.max(1, subPage7L));
+      const startIdx = (activePart - 1) * 7;
+      const visible = all7Lines.slice(startIdx, startIdx + 7);
       return { lines: visible, totalParts7L: parts };
     }
   }, [pageData, activeFormat, subPage7L]);
@@ -563,12 +603,17 @@ export function InteractiveMushafPage({
     <div className="relative w-full max-w-2xl mx-auto mb-6 select-none" onClick={() => setSelectedWord(null)}>
       {/* Page Container Canvas */}
       <div
-        className="relative rounded-3xl p-4 sm:p-6 transition-colors duration-200"
+        className="relative rounded-3xl transition-colors duration-200"
         style={{
           background: surfaceStyles.background,
           color: surfaceStyles.color,
           border: surfaceStyles.border,
           boxShadow: surfaceStyles.boxShadow,
+          width: '100%',
+          maxWidth: '100%',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+          padding: '12px 10px',
         }}
       >
         {/* Top Page Header Ribbon: Juz and Page Number */}
@@ -591,7 +636,7 @@ export function InteractiveMushafPage({
         {/* Render Interactive Mushaf Page Content */}
         {!loading && pageData && (
           <div
-            className="uthmani-mushaf-lines-container w-full"
+            className="uthmani-mushaf-lines-container w-full max-w-full overflow-hidden box-border"
             dir="rtl"
             style={{
               fontFamily:
@@ -600,11 +645,15 @@ export function InteractiveMushafPage({
                   : "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
               fontSize:
                 activeFormat === 7
-                  ? 'clamp(1.58rem, 5.8vw, 1.88rem)'
+                  ? 'clamp(1.28rem, 5.2vw, 1.46rem)'
                   : activeFormat === 13
-                  ? 'clamp(1.28rem, 4.6vw, 1.48rem)'
-                  : 'clamp(1.22rem, 4.2vw, 1.38rem)',
-              lineHeight: activeFormat === 7 ? 2.5 : activeFormat === 13 ? 2.25 : 2.15,
+                  ? 'clamp(0.92rem, 3.9vw, 1.08rem)'
+                  : 'clamp(0.85rem, 3.6vw, 1.00rem)',
+              lineHeight: activeFormat === 7 ? 2.15 : activeFormat === 13 ? 2.25 : 2.15,
+              width: '100%',
+              maxWidth: '100%',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             {/* Understated Muted Indicator for Preceding Continuation Verses if page starts mid-Surah */}
@@ -628,21 +677,45 @@ export function InteractiveMushafPage({
 
             {lines.map((lineTokens, lineIdx) => {
               const isOnlyHeader = lineTokens.length === 1 && lineTokens[0].type === 'header';
+
+              // Calculate stripped char budget for this line
+              const lineCharCount = lineTokens.reduce((sum, t) => {
+                if (t.type === 'header') return sum;
+                if (t.type === 'medallion') return sum + 4;
+                const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
+                return sum + getStrippedArabicCharLength(txt);
+              }, 0);
+
+              // Dynamic font adjustment on dense lines to guarantee zero border overflow
+              let lineDenseFontSize: string | undefined;
+              if (activeFormat === 13 && lineCharCount > 38) {
+                lineDenseFontSize = '0.86rem';
+              } else if (activeFormat === 15 && lineCharCount > 42) {
+                lineDenseFontSize = '0.80rem';
+              }
+
               return (
                 <div
                   key={`mushaf-line-${lineIdx}`}
                   data-mushaf-line={lineIdx + 1}
-                  className={`mushaf-line w-full flex items-center ${
-                    isOnlyHeader
-                      ? 'justify-center'
-                      : lineTokens.length < 4
-                      ? 'justify-center gap-3 sm:gap-4'
-                      : 'justify-between'
-                  } my-1 px-1 transition-colors`}
+                  className="mushaf-line w-full max-w-full overflow-hidden my-0.5 px-0.5 transition-colors"
                   dir="rtl"
                   style={{
+                    display: 'flex',
+                    flexWrap: 'nowrap',
+                    alignItems: 'center',
+                    justifyContent: isOnlyHeader
+                      ? 'center'
+                      : lineTokens.length < 4
+                      ? 'center'
+                      : 'space-between',
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    boxSizing: 'border-box',
                     borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
-                    minHeight: activeFormat === 7 ? '3.5rem' : activeFormat === 13 ? '2.6rem' : '2.3rem',
+                    padding: '4px 2px',
+                    minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
                   }}
                 >
                   {lineTokens.map((token) => {
@@ -652,7 +725,7 @@ export function InteractiveMushafPage({
                         <div
                           key={token.key}
                           data-surah-opening={surahHeader.surah_number}
-                          className="w-full my-2.5 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
+                          className="w-full my-2 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
                           dir="rtl"
                           style={{
                             scrollMarginTop: '116px',
@@ -700,7 +773,7 @@ export function InteractiveMushafPage({
                             onOpenStudySheet(token.surahNumber, token.verseNumber);
                           }}
                           title={`Study Verse ${token.surahNumber}:${token.verseNumber}`}
-                          className="inline-flex items-center justify-center mx-1 my-0.5 px-2 py-0.5 rounded-full border text-xs sm:text-sm font-bold align-middle transition-all hover:scale-115 active:scale-90 shadow-sm shrink-0"
+                          className="inline-flex items-center justify-center mx-1 my-0.5 px-2 py-0.5 rounded-full border text-xs sm:text-sm font-bold align-middle transition-all hover:scale-110 active:scale-90 shadow-sm shrink-0 whitespace-nowrap select-none"
                           style={{
                             background: isVersePlaying ? 'var(--accent)' : surfaceStyles.medallionBg,
                             color: isVersePlaying ? 'var(--on-accent)' : surfaceStyles.medallionColor,
@@ -738,10 +811,17 @@ export function InteractiveMushafPage({
                           className={`interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-all duration-100 ${
                             isWordRecited
                               ? 'scale-105 z-10 [&_*]:!text-[var(--on-accent)]'
-                              : 'hover:scale-110 active:scale-95 hover:text-[var(--accent-text)]'
+                              : 'hover:scale-105 active:scale-95 hover:text-[var(--accent-text)]'
                           }`}
-                          style={
-                            isWordRecited
+                          style={{
+                            whiteSpace: 'nowrap',
+                            display: 'inline-block',
+                            lineHeight: 1.85,
+                            flexShrink: 1,
+                            minWidth: 0,
+                            verticalAlign: 'baseline',
+                            ...(lineDenseFontSize ? { fontSize: lineDenseFontSize } : {}),
+                            ...(isWordRecited
                               ? {
                                   background: 'var(--accent)',
                                   color: 'var(--on-accent)',
@@ -749,15 +829,15 @@ export function InteractiveMushafPage({
                                   boxShadow: '0 0 10px var(--accent-glow)',
                                   transition: 'background-color 120ms ease',
                                   padding: '0 3px',
-                                  margin: '0 -2px',
+                                  margin: '0 -1px',
                                 }
                               : isVersePlaying
                               ? {
                                   backgroundColor: 'var(--accent-soft)',
                                   borderRadius: '4px',
                                 }
-                              : undefined
-                          }
+                              : undefined),
+                          }}
                           dangerouslySetInnerHTML={{ __html: wordHtml }}
                         />
                       );

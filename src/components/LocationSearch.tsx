@@ -22,7 +22,15 @@ import {
 export { POPULAR_CITIES, POPULAR_INDIAN_CITIES, POPULAR_GLOBAL_CITIES };
 
 interface LocationSearchProps {
-  onLocationSelect: (city: string, country: string, lat?: number, lon?: number, displayName?: string) => Promise<void>;
+  onLocationSelect: (
+    city: string,
+    country: string,
+    lat?: number,
+    lon?: number,
+    displayName?: string,
+    timezone?: string,
+    countryCode?: string
+  ) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -124,7 +132,15 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
       setSearchQuery(place.display_name);
       setShowSuggestions(false);
 
-      await onLocationSelect(city, country, isNaN(lat) ? undefined : lat, isNaN(lon) ? undefined : lon, place.display_name);
+      await onLocationSelect(
+        city,
+        country,
+        isNaN(lat) ? undefined : lat,
+        isNaN(lon) ? undefined : lon,
+        place.display_name,
+        place.timezone,
+        place.countryCode
+      );
     } catch (error) {
       console.error("Selection error:", error);
       toast({
@@ -312,7 +328,21 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
                       className="flex-1 text-left mr-2 min-w-0"
                       onClick={() => handleSuggestionSelect(place)}
                     >
-                      <p className="font-semibold text-xs text-[var(--text-primary)] truncate">{place.display_name}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-semibold text-xs text-[var(--text-primary)] truncate">{place.display_name}</p>
+                        {place.timezone && (
+                          <span
+                            className="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded-md border shrink-0"
+                            style={{
+                              background: 'var(--accent-soft)',
+                              color: 'var(--accent-text)',
+                              borderColor: 'var(--accent)',
+                            }}
+                          >
+                            🌐 {place.timezone}
+                          </span>
+                        )}
+                      </div>
                     </button>
                     <button
                       type="button"
