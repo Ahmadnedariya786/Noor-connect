@@ -7,11 +7,11 @@ import {
   prefetchNextMushafPage,
   toArabicDigits,
   sanitizeTajweedHtml,
+  cleanQuranicGlyphs,
   getPageForSurahAndAyah,
   getMushafLineFormat,
   TAJWEED_RULES,
   type InteractivePageData,
-  type InteractiveVerse,
   type InteractiveWord,
   type SurahHeaderInfo,
   type MushafLineFormat,
@@ -23,7 +23,7 @@ import {
   getActiveWordPosition,
   type WordSegment,
 } from '@/lib/word-timings';
-import { Volume2, BookOpen, Info, X, Sparkles, Loader2 } from 'lucide-react';
+import { Volume2, BookOpen, X, Sparkles, Loader2 } from 'lucide-react';
 import { MushafSurahPages, type MushafReadingMode } from './MushafSurahPages';
 
 export type InteractiveMushafSurface = 'jewel' | 'parchment' | 'night' | 'classic';
@@ -93,59 +93,217 @@ export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineTok
   return lines;
 }
 
-function distributeTokensIntoLines(tokens: MushafLineToken[], targetLineCount: number): MushafLineToken[][] {
-  if (tokens.length === 0) return [];
-  if (targetLineCount <= 1) return [tokens];
+export function getTokenWeight(t: MushafLineToken): number {
+  if (t.type === 'header') return 40;
+  if (t.type === 'medallion') return 3;
+  const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
+  return Math.max(2, getStrippedArabicCharLength(txt) + 1);
+}
 
-  const lines: MushafLineToken[][] = [];
-  let currentLine: MushafLineToken[] = [];
-
-  const nonHeaderTokens = tokens.filter((t) => t.type !== 'header');
-  const headerTokens = tokens.filter((t) => t.type === 'header');
-  const availableVerseLines = Math.max(1, targetLineCount - headerTokens.length);
-
-  const getWeight = (t: MushafLineToken): number => {
-    if (t.type === 'header') return 40;
-    if (t.type === 'medallion') return 5;
-    const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
-    return getStrippedArabicCharLength(txt) + 1;
-  };
-
-  const totalWeight = nonHeaderTokens.reduce((sum, t) => sum + getWeight(t), 0);
-  const targetWeightPerLine = totalWeight / availableVerseLines;
-
-  let currentWeight = 0;
-  for (const token of tokens) {
-    if (token.type === 'header') {
-      if (currentLine.length > 0) {
-        lines.push(currentLine);
-        currentLine = [];
-        currentWeight = 0;
-      }
-      lines.push([token]);
-      continue;
+/**
+ * Mathematically balanced K-partition algorithm via dynamic programming.
+ * Minimizes variance of line weights, guaranteeing that line K has the exact same
+ * proportional weight and word count as earlier lines, eliminating last-line crushing.
+ */
+export function partitionTokensBalancedK(tokens: MushafLineToken[], K: number): MushafLineToken[][] {
+  const N = tokens.length;
+  if (N === 0) return [];
+  if (K <= 1 || N <= K) {
+    if (N <= K) {
+      return tokens.map((t) => [t]);
     }
+    return [tokens];
+  }
 
-    const w = getWeight(token);
-    if (
-      currentLine.length > 0 &&
-      currentWeight + w > targetWeightPerLine &&
-      lines.length < targetLineCount - 1
-    ) {
-      lines.push(currentLine);
-      currentLine = [token];
-      currentWeight = w;
-    } else {
-      currentLine.push(token);
-      currentWeight += w;
+  const weights: number[] = new Array(N);
+  const prefix: number[] = new Array(N + 1);
+  prefix[0] = 0;
+  for (let i = 0; i < N; i++) {
+    weights[i] = getTokenWeight(tokens[i]);
+    prefix[i + 1] = prefix[i] + weights[i];
+  }
+
+  const totalWeight = prefix[N];
+  const targetPerLine = totalWeight / K;
+
+  // dp[k][i] = min cost to partition first i tokens into k lines
+  // split[k][i] = split point j where line k is tokens[j...i-1]
+  const dp: number[][] = Array.from({ length: K + 1 }, () => new Array(N + 1).fill(Infinity));
+  const split: number[][] = Array.from({ length: K + 1 }, () => new Array(N + 1).fill(0));
+
+  // Base case: 1 line for first i tokens
+  for (let i = 1; i <= N; i++) {
+    const w = prefix[i];
+    const diff = w - targetPerLine;
+    dp[1][i] = diff * diff;
+    split[1][i] = 0;
+  }
+
+  // Fill DP for k = 2 ... K
+  for (let k = 2; k <= K; k++) {
+    for (let i = k; i <= N; i++) {
+      for (let j = k - 1; j < i; j++) {
+        const lineWeight = prefix[i] - prefix[j];
+        const diff = lineWeight - targetPerLine;
+        const cost = dp[k - 1][j] + diff * diff;
+        if (cost < dp[k][i]) {
+          dp[k][i] = cost;
+          split[k][i] = j;
+        }
+      }
     }
   }
 
-  if (currentLine.length > 0) {
-    lines.push(currentLine);
+  // Reconstruct lines from split table
+  const lines: MushafLineToken[][] = new Array(K);
+  let curEnd = N;
+  for (let k = K; k >= 1; k--) {
+    const curStart = split[k][curEnd];
+    lines[k - 1] = tokens.slice(curStart, curEnd);
+    curEnd = curStart;
   }
 
   return lines;
+}
+
+export function distributeTokensWithHeaders(
+  tokens: MushafLineToken[],
+  targetLineCount: number
+): MushafLineToken[][] {
+  if (tokens.length === 0) return [];
+
+  // Bug B: Short Pages (< 85 words, e.g. Page 1 Al-Fatiha, Page 2 Al-Baqarah 1-5)
+  // Do NOT force into 13 sparse lines! Render natural 7-8 centered lines based on canonical line_number.
+  const nonHeaderTokens = tokens.filter((t) => t.type !== 'header');
+  const isShortPage = nonHeaderTokens.length > 0 && nonHeaderTokens.length < 85;
+
+  if (isShortPage) {
+    const hasCanonicalLines = nonHeaderTokens.some(
+      (t) => typeof t.lineNum === 'number' && t.lineNum > 0
+    );
+
+    if (hasCanonicalLines) {
+      const lineMap: Record<number, MushafLineToken[]> = {};
+      const headerTokens: MushafLineToken[] = [];
+
+      tokens.forEach((t) => {
+        if (t.type === 'header') {
+          headerTokens.push(t);
+        } else {
+          const lNum = Math.min(15, Math.max(1, t.lineNum || 1));
+          if (!lineMap[lNum]) lineMap[lNum] = [];
+          lineMap[lNum].push(t);
+        }
+      });
+
+      const groupedLines = Object.keys(lineMap)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((k) => lineMap[k])
+        .filter((l) => l.length > 0);
+
+      const result: MushafLineToken[][] = [];
+      if (headerTokens.length > 0) {
+        headerTokens.forEach((h) => result.push([h]));
+      }
+      return result.concat(groupedLines);
+    }
+  }
+
+  // Normal pages (>= 85 tokens): Split by headers into chunks
+  type TokenChunk =
+    | { type: 'header'; token: MushafLineToken }
+    | { type: 'verses'; tokens: MushafLineToken[] };
+
+  const chunks: TokenChunk[] = [];
+  let currentVerseChunk: MushafLineToken[] = [];
+
+  for (const token of tokens) {
+    if (token.type === 'header') {
+      if (currentVerseChunk.length > 0) {
+        chunks.push({ type: 'verses', tokens: currentVerseChunk });
+        currentVerseChunk = [];
+      }
+      chunks.push({ type: 'header', token });
+    } else {
+      currentVerseChunk.push(token);
+    }
+  }
+  if (currentVerseChunk.length > 0) {
+    chunks.push({ type: 'verses', tokens: currentVerseChunk });
+  }
+
+  const headerCount = chunks.filter((c) => c.type === 'header').length;
+  // A Surah opening header occupies ~2 lines of vertical space in standard Mushaf layout
+  const availableVerseLines = Math.max(1, targetLineCount - headerCount * 2);
+
+  const verseChunks = chunks.filter(
+    (c): c is { type: 'verses'; tokens: MushafLineToken[] } => c.type === 'verses'
+  );
+  if (verseChunks.length === 0) {
+    return chunks.map((c) => ('token' in c ? [c.token] : c.tokens));
+  }
+
+  // Calculate weights of verse chunks
+  const chunkWeights = verseChunks.map((vc) =>
+    vc.tokens.reduce((sum, t) => sum + getTokenWeight(t), 0)
+  );
+  const totalVerseWeight = chunkWeights.reduce((a, b) => a + b, 0);
+
+  // Proportional line allocation per chunk
+  const allocatedLines: number[] = [];
+  let allocatedSum = 0;
+  for (let i = 0; i < verseChunks.length; i++) {
+    if (totalVerseWeight === 0) {
+      allocatedLines.push(1);
+    } else {
+      const share = Math.max(1, Math.round(availableVerseLines * (chunkWeights[i] / totalVerseWeight)));
+      allocatedLines.push(share);
+    }
+    allocatedSum += allocatedLines[i];
+  }
+
+  // Adjust allocation to strictly equal availableVerseLines
+  let diff = availableVerseLines - allocatedSum;
+  while (diff !== 0) {
+    if (diff > 0) {
+      let maxIdx = 0;
+      for (let i = 1; i < chunkWeights.length; i++) {
+        if (chunkWeights[i] > chunkWeights[maxIdx]) maxIdx = i;
+      }
+      allocatedLines[maxIdx]++;
+      diff--;
+    } else {
+      let maxIdx = -1;
+      for (let i = 0; i < allocatedLines.length; i++) {
+        if (allocatedLines[i] > 1 && (maxIdx === -1 || allocatedLines[i] > allocatedLines[maxIdx])) {
+          maxIdx = i;
+        }
+      }
+      if (maxIdx >= 0) {
+        allocatedLines[maxIdx]--;
+        diff++;
+      } else {
+        break;
+      }
+    }
+  }
+
+  // Partition each verse chunk using optimal DP and assemble final lines
+  const finalLines: MushafLineToken[][] = [];
+  let verseChunkIdx = 0;
+  for (const chunk of chunks) {
+    if (chunk.type === 'header') {
+      finalLines.push([chunk.token]);
+    } else {
+      const kForChunk = allocatedLines[verseChunkIdx] || 1;
+      const partitioned = partitionTokensBalancedK(chunk.tokens, kForChunk);
+      finalLines.push(...partitioned);
+      verseChunkIdx++;
+    }
+  }
+
+  return finalLines;
 }
 
 export function InteractiveMushafPage({
@@ -517,9 +675,9 @@ export function InteractiveMushafPage({
 
         return { lines: rawLines, totalParts7L: 1 };
       }
-      return { lines: distributeTokensIntoLines(allTokens, 15), totalParts7L: 1 };
+      return { lines: distributeTokensWithHeaders(allTokens, 15), totalParts7L: 1 };
     } else if (activeFormat === 13) {
-      return { lines: distributeTokensIntoLines(allTokens, 13), totalParts7L: 1 };
+      return { lines: distributeTokensWithHeaders(allTokens, 13), totalParts7L: 1 };
     } else {
       // 7-line mode: Strict 22-26 stripped char budget per line, paginated into 7 lines per view
       const all7Lines = build7LineFormatTokens(allTokens);
@@ -639,10 +797,7 @@ export function InteractiveMushafPage({
             className="uthmani-mushaf-lines-container w-full max-w-full overflow-hidden box-border"
             dir="rtl"
             style={{
-              fontFamily:
-                activeFormat === 13
-                  ? "'Amiri', 'Noto Nastaliq Urdu', serif"
-                  : "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+              fontFamily: "'Amiri Quran', 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif",
               fontSize:
                 activeFormat === 7
                   ? 'clamp(1.28rem, 5.2vw, 1.46rem)'
@@ -675,179 +830,192 @@ export function InteractiveMushafPage({
               );
             })()}
 
-            {lines.map((lineTokens, lineIdx) => {
-              const isOnlyHeader = lineTokens.length === 1 && lineTokens[0].type === 'header';
-
-              // Calculate stripped char budget for this line
-              const lineCharCount = lineTokens.reduce((sum, t) => {
-                if (t.type === 'header') return sum;
-                if (t.type === 'medallion') return sum + 4;
-                const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
-                return sum + getStrippedArabicCharLength(txt);
-              }, 0);
-
-              // Dynamic font adjustment on dense lines to guarantee zero border overflow
-              let lineDenseFontSize: string | undefined;
-              if (activeFormat === 13 && lineCharCount > 38) {
-                lineDenseFontSize = '0.86rem';
-              } else if (activeFormat === 15 && lineCharCount > 42) {
-                lineDenseFontSize = '0.80rem';
-              }
-
-              return (
-                <div
-                  key={`mushaf-line-${lineIdx}`}
-                  data-mushaf-line={lineIdx + 1}
-                  className="mushaf-line w-full max-w-full overflow-hidden my-0.5 px-0.5 transition-colors"
-                  dir="rtl"
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'nowrap',
-                    alignItems: 'center',
-                    justifyContent: isOnlyHeader
-                      ? 'center'
-                      : lineTokens.length < 4
-                      ? 'center'
-                      : 'space-between',
-                    width: '100%',
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    boxSizing: 'border-box',
-                    borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
-                    padding: '4px 2px',
-                    minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
-                  }}
-                >
-                  {lineTokens.map((token) => {
-                    if (token.type === 'header' && token.header) {
-                      const surahHeader = token.header;
-                      return (
-                        <div
-                          key={token.key}
-                          data-surah-opening={surahHeader.surah_number}
-                          className="w-full my-2 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
-                          dir="rtl"
-                          style={{
-                            scrollMarginTop: '116px',
-                            background: surfaceStyles.headerBg,
-                            borderColor: surfaceStyles.headerBorder,
-                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
-                          }}
-                        >
-                          <div className="flex items-center justify-between px-3 text-[11px] font-bold opacity-75">
-                            <span>{surahHeader.revelation_type}</span>
-                            <span>{surahHeader.ayah_count} Verses</span>
-                          </div>
-                          <h2
-                            className="text-xl sm:text-2xl font-bold my-1 text-[var(--accent-text)] font-arabic tracking-wide"
-                            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
-                          >
-                            سُورَةُ {surahHeader.name_arabic}
-                          </h2>
-                          <p className="text-xs font-semibold opacity-75">{surahHeader.name_english}</p>
-
-                          {surahHeader.show_bismillah && (
-                            <div
-                              className="mt-2 text-lg sm:text-xl font-bold"
-                              style={{ color: surfaceStyles.bismillahColor }}
-                            >
-                              بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    if (token.type === 'medallion') {
-                      const isVersePlaying =
-                        isPlaying &&
-                        currentSurah === token.surahNumber &&
-                        currentAyah === token.verseNumber;
-
-                      return (
-                        <button
-                          key={token.key}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenStudySheet(token.surahNumber, token.verseNumber);
-                          }}
-                          title={`Study Verse ${token.surahNumber}:${token.verseNumber}`}
-                          className="inline-flex items-center justify-center mx-1 my-0.5 px-2 py-0.5 rounded-full border text-xs sm:text-sm font-bold align-middle transition-all hover:scale-110 active:scale-90 shadow-sm shrink-0 whitespace-nowrap select-none"
-                          style={{
-                            background: isVersePlaying ? 'var(--accent)' : surfaceStyles.medallionBg,
-                            color: isVersePlaying ? 'var(--on-accent)' : surfaceStyles.medallionColor,
-                            borderColor: surfaceStyles.medallionBorder,
-                          }}
-                        >
-                          <span>﴿{toArabicDigits(token.verseNumber)}﴾</span>
-                        </button>
-                      );
-                    }
-
-                    if (token.type === 'word' && token.word) {
-                      const w = token.word;
-                      const isVersePlaying =
-                        isPlaying &&
-                        currentSurah === token.surahNumber &&
-                        currentAyah === token.verseNumber;
-                      const isWordRecited = isVersePlaying && activeWordPos === w.position;
-
-                      const displayText =
-                        (activeFormat === 13 ? (w.text_indopak || w.text_uthmani) : w.text_uthmani) || '';
-                      const wordHtml =
-                        showTajweed && w.text_uthmani_tajweed
-                          ? sanitizeTajweedHtml(w.text_uthmani_tajweed)
-                          : displayText;
-
-                      return (
-                        <span
-                          key={token.key}
-                          ref={isVersePlaying ? activeVerseRef : null}
-                          data-ayah-key={`${token.surahNumber}:${token.verseNumber}`}
-                          onClick={(e) =>
-                            handleWordClick(e, w, token.surahNumber, token.verseNumber)
-                          }
-                          className={`interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-all duration-100 ${
-                            isWordRecited
-                              ? 'scale-105 z-10 [&_*]:!text-[var(--on-accent)]'
-                              : 'hover:scale-105 active:scale-95 hover:text-[var(--accent-text)]'
-                          }`}
-                          style={{
-                            whiteSpace: 'nowrap',
-                            display: 'inline-block',
-                            lineHeight: 1.85,
-                            flexShrink: 1,
-                            minWidth: 0,
-                            verticalAlign: 'baseline',
-                            ...(lineDenseFontSize ? { fontSize: lineDenseFontSize } : {}),
-                            ...(isWordRecited
-                              ? {
-                                  background: 'var(--accent)',
-                                  color: 'var(--on-accent)',
-                                  borderRadius: '6px',
-                                  boxShadow: '0 0 10px var(--accent-glow)',
-                                  transition: 'background-color 120ms ease',
-                                  padding: '0 3px',
-                                  margin: '0 -1px',
-                                }
-                              : isVersePlaying
-                              ? {
-                                  backgroundColor: 'var(--accent-soft)',
-                                  borderRadius: '4px',
-                                }
-                              : undefined),
-                          }}
-                          dangerouslySetInnerHTML={{ __html: wordHtml }}
-                        />
-                      );
-                    }
-
-                    return null;
-                  })}
-                </div>
+            {(() => {
+              const nonHeaderTokenCount = lines.reduce(
+                (acc, l) => acc + l.filter((t) => t.type !== 'header').length,
+                0
               );
-            })}
+              const isShortMushafPage = nonHeaderTokenCount > 0 && nonHeaderTokenCount < 85;
+
+              return lines.map((lineTokens, lineIdx) => {
+                const isOnlyHeader = lineTokens.length === 1 && lineTokens[0].type === 'header';
+
+                // Calculate stripped char budget for this line
+                const lineCharCount = lineTokens.reduce((sum, t) => {
+                  if (t.type === 'header') return sum;
+                  if (t.type === 'medallion') return sum + 4;
+                  const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
+                  return sum + getStrippedArabicCharLength(txt);
+                }, 0);
+
+                // Dynamic font adjustment on dense lines to guarantee zero border overflow
+                let lineDenseFontSize: string | undefined;
+                if (activeFormat === 13 && lineCharCount > 38) {
+                  lineDenseFontSize = '0.86rem';
+                } else if (activeFormat === 15 && lineCharCount > 42) {
+                  lineDenseFontSize = '0.80rem';
+                }
+
+                return (
+                  <div
+                    key={`mushaf-line-${lineIdx}`}
+                    data-mushaf-line={lineIdx + 1}
+                    className="mushaf-line w-full max-w-full overflow-hidden my-0.5 px-0.5 transition-colors"
+                    dir="rtl"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      flexWrap: 'nowrap',
+                      alignItems: 'center',
+                      justifyContent: isOnlyHeader
+                        ? 'center'
+                        : isShortMushafPage || lineTokens.length < 4
+                        ? 'center'
+                        : 'space-between',
+                      gap: isShortMushafPage || lineTokens.length < 4 ? '10px' : '4px',
+                      width: '100%',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      boxSizing: 'border-box',
+                      borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
+                      padding: '4px 2px',
+                      minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
+                    }}
+                  >
+                    {lineTokens.map((token) => {
+                      if (token.type === 'header' && token.header) {
+                        const surahHeader = token.header;
+                        return (
+                          <div
+                            key={token.key}
+                            data-surah-opening={surahHeader.surah_number}
+                            className="w-full my-2 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
+                            dir="rtl"
+                            style={{
+                              scrollMarginTop: '116px',
+                              background: surfaceStyles.headerBg,
+                              borderColor: surfaceStyles.headerBorder,
+                              boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                            }}
+                          >
+                            <div className="flex items-center justify-between px-3 text-[11px] font-bold opacity-75">
+                              <span>{surahHeader.revelation_type}</span>
+                              <span>{surahHeader.ayah_count} Verses</span>
+                            </div>
+                            <h2
+                              className="text-xl sm:text-2xl font-bold my-1 text-[var(--accent-text)] font-arabic tracking-wide"
+                              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+                            >
+                              سُورَةُ {surahHeader.name_arabic}
+                            </h2>
+                            <p className="text-xs font-semibold opacity-75">{surahHeader.name_english}</p>
+
+                            {surahHeader.show_bismillah && (
+                              <div
+                                className="mt-2 text-lg sm:text-xl font-bold"
+                                style={{ color: surfaceStyles.bismillahColor }}
+                              >
+                                بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      if (token.type === 'medallion') {
+                        const isVersePlaying =
+                          isPlaying &&
+                          currentSurah === token.surahNumber &&
+                          currentAyah === token.verseNumber;
+
+                        return (
+                          <button
+                            key={token.key}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenStudySheet(token.surahNumber, token.verseNumber);
+                            }}
+                            title={`Study Verse ${token.surahNumber}:${token.verseNumber}`}
+                            className="inline-flex items-center justify-center mx-1 my-0.5 px-1.5 py-0.5 rounded-full border text-xs sm:text-sm font-bold align-middle transition-all hover:scale-110 active:scale-90 shadow-sm shrink-0 whitespace-nowrap select-none"
+                            style={{
+                              background: isVersePlaying ? 'var(--accent)' : surfaceStyles.medallionBg,
+                              color: isVersePlaying ? 'var(--on-accent)' : surfaceStyles.medallionColor,
+                              borderColor: surfaceStyles.medallionBorder,
+                            }}
+                          >
+                            <span>﴿{toArabicDigits(token.verseNumber)}﴾</span>
+                          </button>
+                        );
+                      }
+
+                      if (token.type === 'word' && token.word) {
+                        const w = token.word;
+                        const isVersePlaying =
+                          isPlaying &&
+                          currentSurah === token.surahNumber &&
+                          currentAyah === token.verseNumber;
+                        const isWordRecited = isVersePlaying && activeWordPos === w.position;
+
+                        const rawText =
+                          (activeFormat === 13 ? (w.text_indopak || w.text_uthmani) : w.text_uthmani) || '';
+                        const displayText = cleanQuranicGlyphs(rawText);
+                        const wordHtml =
+                          showTajweed && w.text_uthmani_tajweed
+                            ? cleanQuranicGlyphs(sanitizeTajweedHtml(w.text_uthmani_tajweed))
+                            : displayText;
+
+                        return (
+                          <span
+                            key={token.key}
+                            ref={isVersePlaying ? activeVerseRef : null}
+                            data-ayah-key={`${token.surahNumber}:${token.verseNumber}`}
+                            onClick={(e) =>
+                              handleWordClick(e, w, token.surahNumber, token.verseNumber)
+                            }
+                            className={`interactive-quran-word inline-block px-0.5 rounded cursor-pointer transition-all duration-100 ${
+                              isWordRecited
+                                ? 'scale-105 z-10 [&_*]:!text-[var(--on-accent)]'
+                                : 'hover:scale-105 active:scale-95 hover:text-[var(--accent-text)]'
+                            }`}
+                            style={{
+                              whiteSpace: 'nowrap',
+                              display: 'inline-block',
+                              lineHeight: 1.85,
+                              flexShrink: 0,
+                              minWidth: 0,
+                              letterSpacing: 'normal',
+                              wordSpacing: 'normal',
+                              margin: '0',
+                              verticalAlign: 'baseline',
+                              ...(lineDenseFontSize ? { fontSize: lineDenseFontSize } : {}),
+                              ...(isWordRecited
+                                ? {
+                                    background: 'var(--accent)',
+                                    color: 'var(--on-accent)',
+                                    borderRadius: '6px',
+                                    boxShadow: '0 0 10px var(--accent-glow)',
+                                    transition: 'background-color 120ms ease',
+                                    padding: '0 3px',
+                                  }
+                                : isVersePlaying
+                                ? {
+                                    backgroundColor: 'var(--accent-soft)',
+                                    borderRadius: '4px',
+                                  }
+                                : undefined),
+                            }}
+                            dangerouslySetInnerHTML={{ __html: wordHtml }}
+                          />
+                        );
+                      }
+
+                      return null;
+                    })}
+                  </div>
+                );
+              });
+            })()}
           </div>
         )}
 

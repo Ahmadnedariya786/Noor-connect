@@ -125,58 +125,38 @@ export const useLocationState = () => {
       let isIpBased = false;
 
       // 1. PRIMARY: Try real device GPS (Capacitor Geolocation on native, navigator.geolocation on web)
+      // Step A: High-accuracy GPS with 10s timeout
       if (GeolocationService.isSupported()) {
         try {
           const position = await GeolocationService.getCurrentPosition({
-            enableHighAccuracy: false,
-            timeout: 4000,
-            maximumAge: 60000
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
           });
           lat = position.latitude;
           lon = position.longitude;
           isIpBased = false;
-        } catch (gpsError) {
-          // GPS detection failed, disabled, or timed out — proceed cleanly to IP fallback
-        }
-      }
-
-      // 2. FALLBACK: If GPS failed or was denied, try IP geolocation fallback with 3000ms timeout
-      if (lat === null || lon === null) {
-        try {
-          const ipResponse = await fetch('https://ipapi.co/json/', {
-            signal: AbortSignal.timeout(3000)
-          });
-          if (ipResponse.ok) {
-            const ipData = await ipResponse.json();
-            if (typeof ipData.latitude === 'number' && typeof ipData.longitude === 'number') {
-              lat = ipData.latitude;
-              lon = ipData.longitude;
-              isIpBased = true;
-            }
-          }
-        } catch (ipError) {
-          // Try secondary IP geolocation provider: get.geojs.io
+        } catch {
+          // Step B: Coarse GPS fallback with 8s timeout
           try {
-            const geojsRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
-              signal: AbortSignal.timeout(3000)
+            const position = await GeolocationService.getCurrentPosition({
+              enableHighAccuracy: false,
+              timeout: 8000,
+              maximumAge: 10000,
             });
-            if (geojsRes.ok) {
-              const geojsData = await geojsRes.json();
-              const gLat = parseFloat(geojsData.latitude);
-              const gLon = parseFloat(geojsData.longitude);
-              if (!isNaN(gLat) && !isNaN(gLon)) {
-                lat = gLat;
-                lon = gLon;
-                isIpBased = true;
-              }
-            }
+            lat = position.latitude;
+            lon = position.longitude;
+            isIpBased = false;
           } catch {
-            // Both IP fallbacks failed or device is completely offline
+            // Both hardware GPS attempts failed, timed out, or permission was denied
           }
         }
       }
 
-      // 3. If neither GPS nor IP returned coordinates, do NOT silently fall back to Karachi.
+      // CRITICAL GUARDRAIL:
+      // If hardware GPS returned null (denied, disabled, or timed out),
+      // NEVER silently overwrite the user's saved town (e.g. Vadgam / Chhapi) with coarse ISP IP city (e.g. Surat).
+      // Return null so the UI alerts the user to enable GPS or enter their town name manually.
       if (lat === null || lon === null) {
         setLocationState(prev => ({ ...prev, isDetecting: false }));
         return null;

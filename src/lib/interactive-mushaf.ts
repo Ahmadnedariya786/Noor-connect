@@ -197,7 +197,18 @@ export function sanitizeTajweedHtml(rawHtml: string): string {
   return cleaned;
 }
 
-const PAGE_CACHE_PREFIX = 'noor_mushaf_page_v3_';
+/**
+ * Remove unsupported waqf signs, PUA symbols, and end-of-ayah glyphs
+ * that cause tofu missing character boxes (▯) in Indo-Pak and mobile Arabic fonts.
+ */
+export function cleanQuranicGlyphs(text: string): string {
+  if (!text) return '';
+  // eslint-disable-next-line no-misleading-character-class
+  const stripped = text.replace(/[\u06DE\u06E9\u08F0-\u08FF\uFDD0-\uFDEF\uFEFF\uFFFD\uE000-\uF8FF]/g, '');
+  return stripped.replace(/\u06DD[\u0660-\u0669\u06F0-\u06F9]*/g, '').trim();
+}
+
+const PAGE_CACHE_PREFIX = 'noor_mushaf_page_v4_';
 const TAJWEED_CACHE_PREFIX = 'noor_mushaf_tajweed_v1_';
 export const AYAH_PAGE_CACHE_KEY = 'noor_ayah_page_map_v1';
 
@@ -308,15 +319,15 @@ async function fetchFromCdnFallback(pageNumber: number): Promise<InteractiveVers
         const aNum = verseItem.verse || 1;
         const knownPage = getKnownPageForAyah(sNum, aNum) || pageNumber;
         if (knownPage === pageNumber) {
-          const rawText: string = verseItem.text || '';
+          const rawText: string = cleanQuranicGlyphs(verseItem.text || '');
           const wordTokens = rawText.split(/\s+/).filter(Boolean);
           const words: InteractiveWord[] = wordTokens.map((w, idx) => ({
             id: sNum * 100000 + aNum * 100 + idx,
             position: idx + 1,
             audio_url: null,
             char_type_name: 'word',
-            text_uthmani: w,
-            text_indopak: w,
+            text_uthmani: cleanQuranicGlyphs(w),
+            text_indopak: cleanQuranicGlyphs(w),
             line_number: Math.min(15, Math.max(1, Math.floor(idx / 5) + 1)),
           }));
           verses.push({
@@ -409,9 +420,9 @@ export async function fetchMushafPage(
                 position: w.position,
                 audio_url: w.audio_url || null,
                 char_type_name: w.char_type_name === 'end' ? 'end' : 'word',
-                text_uthmani: w.text_uthmani || w.text || '',
-                text_indopak: w.text_indopak || undefined,
-                text_uthmani_tajweed: w.text_uthmani_tajweed || undefined,
+                text_uthmani: cleanQuranicGlyphs(w.text_uthmani || w.text || ''),
+                text_indopak: cleanQuranicGlyphs(w.text_indopak || w.text_uthmani || w.text || ''),
+                text_uthmani_tajweed: w.text_uthmani_tajweed ? cleanQuranicGlyphs(w.text_uthmani_tajweed) : undefined,
                 line_number: typeof w.line_number === 'number' ? w.line_number : undefined,
                 translation: w.translation ? { text: w.translation.text, language_name: 'english' } : undefined,
                 transliteration: w.transliteration ? { text: w.transliteration.text, language_name: 'english' } : undefined,
@@ -427,14 +438,20 @@ export async function fetchMushafPage(
             juz_number: v.juz_number || 1,
             hizb_number: v.hizb_number,
             words,
-            text_uthmani: v.text_uthmani || words
-              .filter((w) => w.char_type_name === 'word')
-              .map((w) => w.text_uthmani)
-              .join(' '),
-            text_indopak: v.text_indopak || words
-              .filter((w) => w.char_type_name === 'word')
-              .map((w) => w.text_indopak || w.text_uthmani)
-              .join(' '),
+            text_uthmani: cleanQuranicGlyphs(
+              v.text_uthmani ||
+                words
+                  .filter((w) => w.char_type_name === 'word')
+                  .map((w) => w.text_uthmani)
+                  .join(' ')
+            ),
+            text_indopak: cleanQuranicGlyphs(
+              v.text_indopak ||
+                words
+                  .filter((w) => w.char_type_name === 'word')
+                  .map((w) => w.text_indopak || w.text_uthmani)
+                  .join(' ')
+            ),
           };
         });
 
@@ -541,6 +558,13 @@ function buildPageData(
   const surahHeaderMap = new Map<number, SurahHeaderInfo>();
 
   verses.forEach((v) => {
+    v.text_uthmani = cleanQuranicGlyphs(v.text_uthmani);
+    if (v.text_indopak) v.text_indopak = cleanQuranicGlyphs(v.text_indopak);
+    v.words.forEach((w) => {
+      w.text_uthmani = cleanQuranicGlyphs(w.text_uthmani);
+      if (w.text_indopak) w.text_indopak = cleanQuranicGlyphs(w.text_indopak);
+    });
+
     if (tajweedMap && tajweedMap[v.verse_key]) {
       v.text_tajweed = tajweedMap[v.verse_key];
     }

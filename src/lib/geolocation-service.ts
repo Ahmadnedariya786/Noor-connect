@@ -136,7 +136,7 @@ export class GeolocationService {
     timeout?: number;
     maximumAge?: number;
   }): Promise<LocationCoordinates> {
-    const timeoutMs = Math.min(options?.timeout ?? 4000, 4000);
+    const timeoutMs = options?.timeout ? Math.min(options.timeout, 15000) : 10000;
     const enableHighAccuracy = options?.enableHighAccuracy ?? false;
     const maximumAge = options?.maximumAge ?? 60000;
 

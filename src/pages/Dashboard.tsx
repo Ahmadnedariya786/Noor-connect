@@ -422,7 +422,11 @@ export default function Dashboard() {
       // Reload prayer times with new location
       await loadPrayerTimes();
     } else {
-      toast({ title: ti18n('locationDetectionFailed'), description: ti18n('pleaseEnableLocationPermissions'), variant: "destructive" });
+      toast({
+        title: "GPS Location Needed",
+        description: "Please enable GPS / Location permission for exact town detection, or type your town name below.",
+        variant: "destructive",
+      });
     }
   };
 

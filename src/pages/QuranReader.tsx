@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Star,
   BookOpen,
-  Sparkles,
   Play,
   Pause,
   Sliders,
@@ -614,13 +613,13 @@ export default function QuranReader() {
               <button
                 type="button"
                 onClick={toggleTajweed}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border transition-all shrink-0 ${
+                className={`flex items-center gap-1 rounded-full font-bold border transition-all shrink-0 ${
                   showTajweed
                     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
                     : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] opacity-70'
                 }`}
+                style={{ fontSize: '0.72rem', padding: '3px 7px' }}
               >
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                 <span>🎨 {uiStrings.tajweed}</span>
               </button>
 
@@ -641,11 +640,12 @@ export default function QuranReader() {
                         ? '13-Line Indo-Pak Classic'
                         : '15-Line Madinah Standard'
                     }
-                    className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold transition-all ${
+                    className={`rounded-full font-bold transition-all ${
                       lineFormat === fmt
                         ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs scale-105'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
+                    style={{ fontSize: '0.70rem', padding: '2px 6px' }}
                   >
                     {fmt}L
                   </button>
@@ -692,19 +692,16 @@ export default function QuranReader() {
               </div>
             )}
 
-            {/* Static hint: concise 👆 Word • ﴿١﴾ Tafsir to never clip on 360px screens */}
+            {/* Static hint: concise 👆 Word • ﴿١﴾ Study to never clip on 360px screens */}
             {!isPlaying && (
               <div
                 style={{
-                  fontSize: '0.66rem',
+                  fontSize: '0.68rem',
                   whiteSpace: 'nowrap',
                   color: 'var(--text-secondary)',
                   fontWeight: 600,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  paddingLeft: '4px',
+                  flexShrink: 0,
                   textAlign: 'right',
-                  flex: 1,
                 }}
               >
                 <span>
@@ -712,7 +709,7 @@ export default function QuranReader() {
                   <span dir="rtl" className="inline-block font-arabic text-[var(--accent-text)] mx-0.5">
                     ﴿١﴾
                   </span>{' '}
-                  Tafsir
+                  Study
                 </span>
               </div>
             )}

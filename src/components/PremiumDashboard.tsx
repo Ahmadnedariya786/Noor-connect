@@ -317,16 +317,16 @@ function PremiumDashboardInner({
                         toast({ title: "Location Updated", description: finalName });
                       } else {
                         toast({
-                          title: "Unable to detect GPS",
-                          description: "Please check location permissions or pick your city below.",
+                          title: "GPS Location Needed",
+                          description: "Please enable GPS / Location permission for exact town detection, or type your town name below.",
                           variant: "destructive"
                         });
                       }
                     } catch (_err) {
                       // CRITICAL: NEVER CRASH! Show friendly notification if hardware GPS or permission throws
                       toast({
-                        title: "Unable to detect GPS",
-                        description: "Please check location permissions or pick your city below.",
+                        title: "GPS Location Needed",
+                        description: "Please enable GPS / Location permission for exact town detection, or type your town name below.",
                         variant: "destructive"
                       });
                     } finally {
@@ -337,7 +337,7 @@ function PremiumDashboardInner({
                   className="w-full h-12 rounded-2xl font-bold text-[var(--on-accent)] gap-2 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] border-none hover:opacity-90 transition-opacity"
                 >
                   {location.isDetecting ? <Activity className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
-                  {location.isDetecting ? "Detecting..." : "Auto-Detect (GPS/IP)"}
+                  {location.isDetecting ? "Detecting GPS..." : "Auto-Detect GPS"}
                 </Button>
 
                 <div className="flex items-center gap-3 py-2">
