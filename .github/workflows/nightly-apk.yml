@@ -26,7 +26,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -152,16 +151,17 @@ jobs:
           echo "size=$FILE_SIZE" >> $GITHUB_OUTPUT
           echo "Prepared noor-connect-nightly.apk ($FILE_SIZE)"
 
-      - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
-        with:
-          token: ${{ github.token }}
-          tag: nightly
-          fail-if-no-assets: false
-          assets: |
-            *.apk
-            build-info.json
-            version.json
+      - name: Clean up old release assets
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view nightly --json assets -q '.assets[].name' 2>/dev/null | while read -r asset; do
+            if [ -n "$asset" ]; then
+              echo "Pruning existing asset: $asset"
+              gh release delete-asset nightly "$asset" -y 2>/dev/null || true
+            fi
+          done || true
 
       - name: Publish Nightly GitHub Release
         uses: softprops/action-gh-release@v2
@@ -171,6 +171,7 @@ jobs:
           name: "Nightly Build"
           prerelease: true
           make_latest: false
+          fail_on_unmatched_files: false
           files: |
             noor-connect-nightly.apk
             build-info.json
