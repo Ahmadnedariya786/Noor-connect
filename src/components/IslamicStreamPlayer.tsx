@@ -130,6 +130,8 @@ export default function IslamicStreamPlayer() {
 
   const [activeTab, setActiveTab] = useState<StreamLocation>('makkah');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLandscapeFullscreen, setIsLandscapeFullscreen] = useState(false);
+  const isEffectiveFullscreen = isFullscreen || isLandscapeFullscreen;
   const [showControls, setShowControls] = useState(true);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
@@ -426,6 +428,20 @@ export default function IslamicStreamPlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  /* ─── Orientation cleanup on unmount ─── */
+  useEffect(() => {
+    return () => {
+      try {
+        if (typeof window !== 'undefined' && (window as any).AndroidBridge?.setScreenOrientation) {
+          (window as any).AndroidBridge.setScreenOrientation('portrait');
+        }
+        (screen.orientation as any)?.unlock?.();
+      } catch {
+        // Safe orientation restore
+      }
+    };
+  }, []);
+
   /* ─── Fullscreen listener ─── */
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
@@ -439,7 +455,7 @@ export default function IslamicStreamPlayer() {
 
   /* ─── Recalc video size when fullscreen state / orientation changes ─── */
   useEffect(() => {
-    if (!isFullscreen) return;
+    if (!isEffectiveFullscreen) return;
     const recalc = () => {
       const video = videoRef.current;
       if (!video) return;
@@ -456,7 +472,7 @@ export default function IslamicStreamPlayer() {
       window.removeEventListener('resize', recalc);
       window.removeEventListener('orientationchange', recalc);
     };
-  }, [isFullscreen]);
+  }, [isEffectiveFullscreen]);
 
   /* ─── Controls ─── */
   const handleRetry = useCallback(() => {
@@ -498,26 +514,46 @@ export default function IslamicStreamPlayer() {
   }, [isMuted]);
 
    const toggleFullscreen = useCallback(async () => {
-     const el = containerRef.current;
-     if (!el) return;
+     const nextState = !isEffectiveFullscreen;
+     setIsLandscapeFullscreen(nextState);
+
+     // Call native AndroidBridge if available
      try {
-       if (!isFullscreen) {
-         await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
-         if (Capacitor.isNativePlatform()) {
-           document.documentElement.requestFullscreen?.();
-           (screen.orientation as any)?.lock?.('landscape').catch(() => {});
-         }
-       } else {
-         await (document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.());
-         if (Capacitor.isNativePlatform()) {
-           document.exitFullscreen?.();
-           (screen.orientation as any)?.unlock?.();
-         }
+       if (typeof window !== 'undefined' && (window as any).AndroidBridge?.setScreenOrientation) {
+         (window as any).AndroidBridge.setScreenOrientation(nextState ? 'landscape' : 'portrait');
        }
-     } catch (error) {
-       // Handle error if needed
+     } catch {
+       // Safe native bridge catch
      }
-   }, [isFullscreen]);
+
+     // Try web screen.orientation
+     try {
+       if (nextState) {
+         (screen.orientation as any)?.lock?.('landscape').catch(() => {});
+       } else {
+         (screen.orientation as any)?.unlock?.();
+       }
+     } catch {
+       // Safe orientation fallback
+     }
+
+     const el = containerRef.current;
+     if (el) {
+       try {
+         if (nextState) {
+           if (!document.fullscreenElement) {
+             await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
+           }
+         } else {
+           if (document.fullscreenElement) {
+             await (document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.());
+           }
+         }
+       } catch {
+         // Safe fullscreen fallback
+       }
+     }
+   }, [isEffectiveFullscreen]);
 
    const handlePresetSelect = useCallback((preset: QualityPreset) => {
      setQualityPreset(preset);
@@ -535,14 +571,14 @@ export default function IslamicStreamPlayer() {
   return (
     <div
       ref={containerRef}
-      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-[var(--border)] ${isFullscreen ? 'fixed top-0 left-0 rounded-none flex flex-col' : 'relative'}`}
-      style={isFullscreen ? {
+      className={`select-none w-full text-white rounded-[28px] overflow-hidden bg-[#080c14] shadow-2xl border border-[var(--border)] ${isEffectiveFullscreen ? 'fixed top-0 left-0 rounded-none flex flex-col z-[99999]' : 'relative'}`}
+      style={isEffectiveFullscreen ? {
         position: 'fixed',
         top: 0,
         left: 0,
         width: '100vw',
         height: '100vh',
-        zIndex: 9999,
+        zIndex: 99999,
         background: '#000',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
@@ -594,15 +630,28 @@ export default function IslamicStreamPlayer() {
 
       {/* ── Video Area ── */}
       <div
-        className={`relative w-full bg-black ${isFullscreen ? 'h-full' : ''}`}
-        style={isFullscreen ? { aspectRatio: 'auto', flex: 1 } : { aspectRatio: '16/9' }}
+        className={`relative w-full bg-black ${isEffectiveFullscreen ? 'h-full flex-1' : ''}`}
+        style={isEffectiveFullscreen ? { aspectRatio: 'auto', flex: 1, width: '100%', height: '100%' } : { aspectRatio: '16/9' }}
         onClick={() => { if (!current.isLoading && !current.error) { togglePlay(); showAndScheduleHide(); } }}
       >
+        {isEffectiveFullscreen && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFullscreen();
+            }}
+            className="absolute top-4 left-4 z-50 px-3 py-1.5 rounded-full bg-black/75 hover:bg-black/95 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-white/20 shadow-2xl active:scale-95"
+          >
+            <Minimize className="w-3.5 h-3.5" />
+            <span>✕ Exit Fullscreen</span>
+          </button>
+        )}
         <video
           ref={videoRef}
-          className={`${isFullscreen ? 'absolute inset-0' : 'relative'} w-full h-full object-contain`}
+          className={`${isEffectiveFullscreen ? 'absolute inset-0' : 'relative'} w-full h-full object-contain`}
           style={{
-            ...(isFullscreen ? { width: '100%', height: '100%', objectFit: 'contain' as const } : {}),
+            ...(isEffectiveFullscreen ? { width: '100%', height: '100%', objectFit: 'contain' as const } : {}),
             filter: (qualityPreset === '720p' || qualityPreset === '1080p') ? 'contrast(1.04) saturate(1.05)' : 'none',
           }}
           playsInline
@@ -769,7 +818,7 @@ export default function IslamicStreamPlayer() {
                   onClick={e => { e.stopPropagation(); toggleFullscreen(); }}
                   className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
                 >
-                  {isFullscreen ? <Minimize className="w-4 h-4 text-white/70" /> : <Maximize className="w-4 h-4 text-white/70" />}
+                  {isEffectiveFullscreen ? <Minimize className="w-4 h-4 text-white/70" /> : <Maximize className="w-4 h-4 text-white/70" />}
                 </button>
               </div>
             </div>

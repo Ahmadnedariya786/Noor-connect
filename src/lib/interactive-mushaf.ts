@@ -158,6 +158,14 @@ export const TAJWEED_RULES: TajweedRuleDefinition[] = [
     description: 'Prolongation of the vowel sound for 2, 4, 5, or 6 harakat counts',
     example: 'الضَّآلِّينَ / جَآءَ / قَالُواْ',
   },
+  {
+    name: 'Waqf',
+    arabicName: 'وَقْف',
+    color: '#FACC15', // Gold
+    classes: ['waqf'],
+    description: 'Quranic stop, pause, and continuation marks (مـ / ط / ج / لا / صلے / قلے / ۘ / ۚ / ۖ / ۗ)',
+    example: 'ج / صلے / قلے',
+  },
 ];
 
 const TAJWEED_CLASS_COLOR_MAP: Record<string, string> = {};
@@ -206,6 +214,37 @@ export function cleanQuranicGlyphs(text: string): string {
   // eslint-disable-next-line no-misleading-character-class
   const stripped = text.replace(/[\u06DE\u06E9\u08F0-\u08FF\uFDD0-\uFDEF\uFEFF\uFFFD\uE000-\uF8FF]/g, '');
   return stripped.replace(/\u06DD[\u0660-\u0669\u06F0-\u06F9]*/g, '').trim();
+}
+
+/**
+ * Deterministically applies Tajweed color spans to individual words
+ * based on authentic Quranic orthography and phonetic rules.
+ * Highlights Madd (#F43F5E), Ghunnah (#10B981), Iqlab (#06B6D4), Qalqalah (#38BDF8), and Waqf (#FACC15).
+ */
+export function applyTajweedToWord(wordText: string): string {
+  if (!wordText || !wordText.trim()) return wordText;
+
+  let styled = wordText;
+
+  // 1. Madd (Madda sign \u0653 or prolonged letters with madd) -> #F43F5E
+  // eslint-disable-next-line no-misleading-character-class
+  styled = styled.replace(/([\u0621-\u064A\u0671-\u06D3][\u0653])/g, '<span style="color: #F43F5E; font-weight: 600;">$1</span>');
+
+  // 2. Ghunnah (Nun/Meem with Shaddah: نّ or مّ) -> #10B981
+  // eslint-disable-next-line no-misleading-character-class
+  styled = styled.replace(/([نم][\u0651][\u064B-\u0650\u0652]?)/g, '<span style="color: #10B981; font-weight: 600;">$1</span>');
+
+  // 3. Iqlab (Small high Meem \u06E2 or isolated mark) -> #06B6D4
+  styled = styled.replace(/([\u06E2]|ن\u06E2)/g, '<span style="color: #06B6D4; font-weight: 600;">$1</span>');
+
+  // 4. Qalqalah (Sakin letters of Qutb Jadd: ق، ط، ب، ج، د with sukun \u0652) -> #38BDF8
+  // eslint-disable-next-line no-misleading-character-class
+  styled = styled.replace(/([قطبجد][\u0652])/g, '<span style="color: #38BDF8; font-weight: 600;">$1</span>');
+
+  // 5. Waqf marks (Quranic stop symbols) -> #FACC15
+  styled = styled.replace(/([\u06D6-\u06DC])/g, '<span style="color: #FACC15; font-weight: 600;">$1</span>');
+
+  return styled;
 }
 
 const PAGE_CACHE_PREFIX = 'noor_mushaf_page_v4_';
@@ -567,6 +606,19 @@ function buildPageData(
 
     if (tajweedMap && tajweedMap[v.verse_key]) {
       v.text_tajweed = tajweedMap[v.verse_key];
+      try {
+        const tajweedChunks = v.text_tajweed.trim().split(/\s+/);
+        const actualWords = v.words.filter((w) => w.char_type_name === 'word');
+        if (tajweedChunks.length === actualWords.length) {
+          actualWords.forEach((w, idx) => {
+            if (tajweedChunks[idx]) {
+              w.text_uthmani_tajweed = tajweedChunks[idx];
+            }
+          });
+        }
+      } catch {
+        // Safe mapping fallback
+      }
     }
 
     // Authentic Madinah Mushaf Rule: A Surah Opening Header is ONLY registered at Ayah 1 (v.verse_number === 1)

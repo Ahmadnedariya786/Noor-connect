@@ -141,13 +141,17 @@ export default function QuranReader() {
 
   // 3-Type Quran Line Format: 7L | 13L | 15L
   const [lineFormat, setLineFormatState] = useState<MushafLineFormat>(() => getMushafLineFormat());
-  const [subPage7L, setSubPage7L] = useState<1 | 2>(1);
+  const [subPage7L, setSubPage7L] = useState<number>(1);
   const [totalParts7L, setTotalParts7L] = useState<number>(1);
 
   const handleFormatChange = (fmt: MushafLineFormat) => {
     setLineFormatState(fmt);
     setMushafLineFormat(fmt);
   };
+
+  useEffect(() => {
+    setSubPage7L(1);
+  }, [mushafPageNumber]);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -408,21 +412,27 @@ export default function QuranReader() {
 
   const handlePrevPage = () => {
     if (lineFormat === 7 && subPage7L > 1) {
-      setSubPage7L((prev) => (prev > 1 ? ((prev - 1) as 1 | 2) : 1));
+      setSubPage7L((prev) => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     if (mushafPageNumber > 1) {
+      setSubPage7L(1);
       goToMushafPage(mushafPageNumber - 1, { source: 'user' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleNextPage = () => {
     if (lineFormat === 7 && subPage7L < totalParts7L) {
-      setSubPage7L((prev) => (prev < totalParts7L ? ((prev + 1) as 1 | 2) : prev));
+      setSubPage7L((prev) => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     if (mushafPageNumber < 604) {
+      setSubPage7L(1);
       goToMushafPage(mushafPageNumber + 1, { source: 'user' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -725,6 +735,7 @@ export default function QuranReader() {
             surfaceMode={surfaceMode}
             showTajweed={showTajweed}
             lineFormat={lineFormat}
+            subPage7L={subPage7L}
             onSubPage7LChange={(sp, tp) => {
               setSubPage7L(sp);
               setTotalParts7L(tp);
@@ -753,7 +764,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handlePrevPage}
-              disabled={mushafPageNumber <= 1}
+              disabled={lineFormat === 7 ? (mushafPageNumber <= 1 && subPage7L <= 1) : mushafPageNumber <= 1}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',
@@ -795,7 +806,9 @@ export default function QuranReader() {
                   lineHeight: 1.2,
                 }}
               >
-                {uiStrings.page} {mushafPageNumber} / 604
+                {lineFormat === 7 && totalParts7L > 1
+                  ? `P.${mushafPageNumber} (Part ${subPage7L}/${totalParts7L})`
+                  : `${uiStrings.page} ${mushafPageNumber} / 604`}
               </div>
               <div
                 style={{
@@ -831,7 +844,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handleNextPage}
-              disabled={mushafPageNumber >= 604}
+              disabled={lineFormat === 7 ? (mushafPageNumber >= 604 && subPage7L >= totalParts7L) : mushafPageNumber >= 604}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',

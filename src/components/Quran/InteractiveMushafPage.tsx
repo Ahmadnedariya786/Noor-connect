@@ -8,6 +8,7 @@ import {
   toArabicDigits,
   sanitizeTajweedHtml,
   cleanQuranicGlyphs,
+  applyTajweedToWord,
   getPageForSurahAndAyah,
   getMushafLineFormat,
   TAJWEED_RULES,
@@ -35,15 +36,19 @@ interface InteractiveMushafPageProps {
   surfaceMode: InteractiveMushafSurface;
   showTajweed: boolean;
   lineFormat?: MushafLineFormat;
-  onSubPage7LChange?: (subPage: 1 | 2, totalParts: number) => void;
+  subPage7L?: number;
+  onSubPage7LChange?: (subPage: number, totalParts: number) => void;
   onOpenStudySheet: (surah: number, ayah: number) => void;
   onPageTurnRequest?: (newPage: number) => void;
   onPageLoaded?: (data: InteractivePageData) => void;
 }
 
-interface MushafLineToken {
-  type: 'header' | 'word' | 'medallion';
-  header?: SurahHeaderInfo;
+export type MushafPageBlock =
+  | { type: 'surah-banner'; header: SurahHeaderInfo; key: string }
+  | { type: 'ayah-line'; tokens: MushafLineToken[]; key: string; lineIndex: number };
+
+export interface MushafLineToken {
+  type: 'word' | 'medallion';
   word?: InteractiveWord;
   surahNumber: number;
   verseNumber: number;
@@ -62,16 +67,6 @@ export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineTok
   let currentWeight = 0;
 
   for (const token of tokens) {
-    if (token.type === 'header') {
-      if (currentLine.length > 0) {
-        lines.push(currentLine);
-        currentLine = [];
-        currentWeight = 0;
-      }
-      lines.push([token]);
-      continue;
-    }
-
     const tokenText = token.word?.text_uthmani || token.word?.text_indopak || '';
     const tokenWeight = token.type === 'medallion' ? 4 : getStrippedArabicCharLength(tokenText) || 4;
 
@@ -94,7 +89,6 @@ export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineTok
 }
 
 export function getTokenWeight(t: MushafLineToken): number {
-  if (t.type === 'header') return 40;
   if (t.type === 'medallion') return 3;
   const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
   return Math.max(2, getStrippedArabicCharLength(txt) + 1);
@@ -313,6 +307,7 @@ export function InteractiveMushafPage({
   surfaceMode,
   showTajweed,
   lineFormat,
+  subPage7L: subPage7LProp,
   onSubPage7LChange,
   onOpenStudySheet,
   onPageTurnRequest,
@@ -321,7 +316,13 @@ export function InteractiveMushafPage({
   const [pageData, setPageData] = useState<InteractivePageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeFormat, setActiveFormat] = useState<MushafLineFormat>(() => lineFormat || getMushafLineFormat());
-  const [subPage7L, setSubPage7L] = useState<1 | 2>(1);
+  const [subPage7L, setSubPage7L] = useState<number>(() => subPage7LProp || 1);
+
+  useEffect(() => {
+    if (typeof subPage7LProp === 'number' && subPage7LProp !== subPage7L) {
+      setSubPage7L(subPage7LProp);
+    }
+  }, [subPage7LProp]);
 
   useEffect(() => {
     if (lineFormat) {
@@ -603,37 +604,23 @@ export function InteractiveMushafPage({
           line.some((t) => t.surahNumber === currentSurah && t.verseNumber === currentAyah)
         );
         if (inThisPart && subPage7L !== p) {
-          setSubPage7L(p as 1 | 2);
+          setSubPage7L(p);
+          onSubPage7LChange?.(p, parts);
           break;
         }
       }
     }
-  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData, subPage7L]);
+  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData, subPage7L, onSubPage7LChange]);
 
-  // Compute 7L, 13L, and 15L formatted lines
-  const { lines, totalParts7L } = useMemo(() => {
+  // Compute 7L, 13L, and 15L formatted blocks (Surah Opening Banners + Ayah Lines)
+  const { blocks, totalParts7L } = useMemo(() => {
     if (!pageData || pageData.verses.length === 0) {
-      return { lines: [] as MushafLineToken[][], totalParts7L: 1 };
+      return { blocks: [] as MushafPageBlock[], totalParts7L: 1 };
     }
 
+    // Step 1: Collect all pure ayah tokens (NO headers inside lines)
     const allTokens: MushafLineToken[] = [];
     pageData.verses.forEach((verse) => {
-      if (verse.verse_number === 1) {
-        const sHeader = pageData.surah_headers.find(
-          (h) => h.surah_number === verse.surah_number && h.at_verse_number === 1
-        );
-        if (sHeader) {
-          allTokens.push({
-            type: 'header',
-            header: sHeader,
-            surahNumber: verse.surah_number,
-            verseNumber: 1,
-            key: `header-${sHeader.surah_number}`,
-            lineNum: 1,
-          });
-        }
-      }
-
       verse.words.forEach((w) => {
         if (w.char_type_name !== 'end') {
           allTokens.push({
@@ -656,14 +643,58 @@ export function InteractiveMushafPage({
       });
     });
 
+    // Helper: inserts Surah banner block immediately before the line where Ayah 1 begins
+    const assembleBlocksWithHeaders = (lines: MushafLineToken[][]): MushafPageBlock[] => {
+      const resultBlocks: MushafPageBlock[] = [];
+      const handledHeaders = new Set<number>();
+
+      lines.forEach((lineTokens, lineIdx) => {
+        pageData.surah_headers.forEach((sHeader) => {
+          if (!handledHeaders.has(sHeader.surah_number)) {
+            const hasAyah1 = lineTokens.some(
+              (t) => t.surahNumber === sHeader.surah_number && t.verseNumber === 1
+            );
+            if (hasAyah1) {
+              resultBlocks.push({
+                type: 'surah-banner',
+                header: sHeader,
+                key: `banner-${sHeader.surah_number}`,
+              });
+              handledHeaders.add(sHeader.surah_number);
+            }
+          }
+        });
+
+        resultBlocks.push({
+          type: 'ayah-line',
+          tokens: lineTokens,
+          lineIndex: lineIdx,
+          key: `line-${lineIdx}`,
+        });
+      });
+
+      // Edge case: if header was not placed because Ayah 1 wasn't found in tokens, prepend it
+      pageData.surah_headers.forEach((sHeader) => {
+        if (!handledHeaders.has(sHeader.surah_number)) {
+          resultBlocks.unshift({
+            type: 'surah-banner',
+            header: sHeader,
+            key: `banner-${sHeader.surah_number}`,
+          });
+          handledHeaders.add(sHeader.surah_number);
+        }
+      });
+
+      return resultBlocks;
+    };
+
     if (activeFormat === 15) {
       const hasLineNumbers = allTokens.some((t) => typeof t.lineNum === 'number' && t.lineNum > 0);
       if (hasLineNumbers) {
         const lineMap: Record<number, MushafLineToken[]> = {};
-        for (let i = 1; i <= 15; i++) lineMap[i] = [];
-
         allTokens.forEach((token) => {
           const lNum = Math.min(15, Math.max(1, token.lineNum || 1));
+          if (!lineMap[lNum]) lineMap[lNum] = [];
           lineMap[lNum].push(token);
         });
 
@@ -673,19 +704,139 @@ export function InteractiveMushafPage({
           .map((k) => lineMap[k])
           .filter((l) => l.length > 0);
 
-        return { lines: rawLines, totalParts7L: 1 };
+        return { blocks: assembleBlocksWithHeaders(rawLines), totalParts7L: 1 };
       }
-      return { lines: distributeTokensWithHeaders(allTokens, 15), totalParts7L: 1 };
+
+      // If no canonical line numbers, distribute evenly into 15 (minus headers space) lines
+      const headerCount = pageData.surah_headers.length;
+      const targetLines = Math.max(1, 15 - headerCount * 2);
+      const lines = partitionTokensBalancedK(allTokens, targetLines);
+      return { blocks: assembleBlocksWithHeaders(lines), totalParts7L: 1 };
     } else if (activeFormat === 13) {
-      return { lines: distributeTokensWithHeaders(allTokens, 13), totalParts7L: 1 };
+      // 13-line mode:
+      const nonHeaderTokenCount = allTokens.length;
+      const isShortMushafPage = nonHeaderTokenCount > 0 && nonHeaderTokenCount < 85;
+
+      if (isShortMushafPage) {
+        const hasLineNumbers = allTokens.some((t) => typeof t.lineNum === 'number' && t.lineNum > 0);
+        if (hasLineNumbers) {
+          const lineMap: Record<number, MushafLineToken[]> = {};
+          allTokens.forEach((token) => {
+            const lNum = Math.min(15, Math.max(1, token.lineNum || 1));
+            if (!lineMap[lNum]) lineMap[lNum] = [];
+            lineMap[lNum].push(token);
+          });
+          const rawLines = Object.keys(lineMap)
+            .map(Number)
+            .sort((a, b) => a - b)
+            .map((k) => lineMap[k])
+            .filter((l) => l.length > 0);
+          return { blocks: assembleBlocksWithHeaders(rawLines), totalParts7L: 1 };
+        }
+      }
+
+      // Available lines accounting for headers
+      const headerCount = pageData.surah_headers.length;
+      const availableVerseLines = Math.max(1, 13 - headerCount * 2);
+
+      // If page spans multiple surahs, partition each surah segment proportionally
+      const surahIds = Array.from(new Set(allTokens.map((t) => t.surahNumber)));
+      if (surahIds.length > 1) {
+        const segments = surahIds.map((sid) => allTokens.filter((t) => t.surahNumber === sid));
+        const segWeights = segments.map((seg) =>
+          seg.reduce((sum, t) => sum + getTokenWeight(t), 0)
+        );
+        const totalWeight = segWeights.reduce((a, b) => a + b, 0);
+        let allocatedSum = 0;
+        const allocatedK = segWeights.map((w) => {
+          const k = Math.max(1, Math.round(availableVerseLines * (w / totalWeight)));
+          allocatedSum += k;
+          return k;
+        });
+        let diff = availableVerseLines - allocatedSum;
+        while (diff !== 0) {
+          if (diff > 0) {
+            let maxIdx = 0;
+            for (let i = 1; i < segWeights.length; i++) {
+              if (segWeights[i] > segWeights[maxIdx]) maxIdx = i;
+            }
+            allocatedK[maxIdx]++;
+            diff--;
+          } else {
+            let maxIdx = -1;
+            for (let i = 0; i < allocatedK.length; i++) {
+              if (allocatedK[i] > 1 && (maxIdx === -1 || allocatedK[i] > allocatedK[maxIdx])) {
+                maxIdx = i;
+              }
+            }
+            if (maxIdx >= 0) {
+              allocatedK[maxIdx]--;
+              diff++;
+            } else {
+              break;
+            }
+          }
+        }
+        const finalLines: MushafLineToken[][] = [];
+        segments.forEach((seg, idx) => {
+          const partLines = partitionTokensBalancedK(seg, allocatedK[idx] || 1);
+          finalLines.push(...partLines);
+        });
+        return { blocks: assembleBlocksWithHeaders(finalLines), totalParts7L: 1 };
+      }
+
+      const lines = partitionTokensBalancedK(allTokens, availableVerseLines);
+      return { blocks: assembleBlocksWithHeaders(lines), totalParts7L: 1 };
     } else {
       // 7-line mode: Strict 22-26 stripped char budget per line, paginated into 7 lines per view
       const all7Lines = build7LineFormatTokens(allTokens);
       const parts = Math.max(1, Math.ceil(all7Lines.length / 7));
       const activePart = Math.min(parts, Math.max(1, subPage7L));
       const startIdx = (activePart - 1) * 7;
-      const visible = all7Lines.slice(startIdx, startIdx + 7);
-      return { lines: visible, totalParts7L: parts };
+      const visibleLines = all7Lines.slice(startIdx, startIdx + 7);
+
+      const blocksFor7L: MushafPageBlock[] = [];
+      const handledHeaders = new Set<number>();
+
+      visibleLines.forEach((lineTokens, lineIdx) => {
+        pageData.surah_headers.forEach((sHeader) => {
+          if (!handledHeaders.has(sHeader.surah_number)) {
+            const hasAyah1 = lineTokens.some(
+              (t) => t.surahNumber === sHeader.surah_number && t.verseNumber === 1
+            );
+            if (hasAyah1) {
+              blocksFor7L.push({
+                type: 'surah-banner',
+                header: sHeader,
+                key: `banner-${sHeader.surah_number}`,
+              });
+              handledHeaders.add(sHeader.surah_number);
+            }
+          }
+        });
+
+        blocksFor7L.push({
+          type: 'ayah-line',
+          tokens: lineTokens,
+          lineIndex: lineIdx,
+          key: `line-7l-${lineIdx}`,
+        });
+      });
+
+      if (activePart === 1) {
+        pageData.surah_headers.forEach((sHeader) => {
+          if (!handledHeaders.has(sHeader.surah_number)) {
+            blocksFor7L.unshift({
+              type: 'surah-banner',
+              header: sHeader,
+              key: `banner-${sHeader.surah_number}`,
+            });
+            handledHeaders.add(sHeader.surah_number);
+          }
+        });
+      }
+
+      return { blocks: blocksFor7L, totalParts7L: parts };
     }
   }, [pageData, activeFormat, subPage7L]);
 
@@ -776,12 +927,47 @@ export function InteractiveMushafPage({
       >
         {/* Top Page Header Ribbon: Juz and Page Number */}
         <div
-          className="flex items-center justify-between pb-3 mb-4 border-b text-[11px] font-bold tracking-wider"
+          className="flex items-center justify-between pb-3 mb-3 border-b text-[11px] font-bold tracking-wider"
           style={{ borderColor: 'var(--border)' }}
         >
           <span className="opacity-75">JUZ {pageData?.juz_number || Math.ceil(pageNumber / 20)}</span>
           <span className="opacity-75 font-mono">PAGE {pageNumber}</span>
         </div>
+
+        {/* Sleek Tajweed Color Legend Bar */}
+        {showTajweed && (
+          <div
+            className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 mb-3 rounded-xl border text-[10px] sm:text-[11px] font-medium overflow-x-auto no-scrollbar"
+            style={{
+              background: 'var(--surface-2)',
+              borderColor: 'var(--border)',
+            }}
+          >
+            <div className="flex items-center gap-2 shrink-0">
+              {TAJWEED_RULES.map((rule) => (
+                <div key={rule.name} className="flex items-center gap-1 shrink-0">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: rule.color }}
+                  />
+                  <span className="opacity-80 text-[10px]">{rule.name}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowLegend(true);
+              }}
+              title="Tajweed Rules Guide"
+              className="text-[var(--accent-text)] hover:underline shrink-0 font-bold ml-1 text-[10px] flex items-center gap-0.5"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>Guide</span>
+            </button>
+          </div>
+        )}
 
         {/* Loading Spinner */}
         {loading && (
@@ -831,18 +1017,60 @@ export function InteractiveMushafPage({
             })()}
 
             {(() => {
-              const nonHeaderTokenCount = lines.reduce(
-                (acc, l) => acc + l.filter((t) => t.type !== 'header').length,
+              const nonHeaderTokenCount = pageData.verses.reduce(
+                (acc, v) => acc + v.words.filter((w) => w.char_type_name === 'word').length,
                 0
               );
               const isShortMushafPage = nonHeaderTokenCount > 0 && nonHeaderTokenCount < 85;
 
-              return lines.map((lineTokens, lineIdx) => {
-                const isOnlyHeader = lineTokens.length === 1 && lineTokens[0].type === 'header';
+              return blocks.map((block) => {
+                if (block.type === 'surah-banner') {
+                  const surahHeader = block.header;
+                  return (
+                    <div
+                      key={block.key}
+                      data-surah-opening={surahHeader.surah_number}
+                      className="w-full my-2.5 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
+                      dir="rtl"
+                      style={{
+                        width: '100%',
+                        display: 'block',
+                        scrollMarginTop: '116px',
+                        background: surfaceStyles.headerBg,
+                        borderColor: surfaceStyles.headerBorder,
+                        boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between px-3 text-[11px] font-bold opacity-75">
+                        <span>{surahHeader.revelation_type}</span>
+                        <span>{surahHeader.ayah_count} Verses</span>
+                      </div>
+                      <h2
+                        className="text-xl sm:text-2xl font-bold my-1 text-[var(--accent-text)] font-arabic tracking-wide"
+                        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+                      >
+                        سُورَةُ {surahHeader.name_arabic}
+                      </h2>
+                      <p className="text-xs font-semibold opacity-75">{surahHeader.name_english}</p>
+
+                      {surahHeader.show_bismillah && (
+                        <div
+                          className="mt-2 text-lg sm:text-xl font-bold"
+                          style={{ color: surfaceStyles.bismillahColor }}
+                        >
+                          بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Ayah Line
+                const lineTokens = block.tokens;
+                const lineIdx = block.lineIndex;
 
                 // Calculate stripped char budget for this line
                 const lineCharCount = lineTokens.reduce((sum, t) => {
-                  if (t.type === 'header') return sum;
                   if (t.type === 'medallion') return sum + 4;
                   const txt = t.word?.text_indopak || t.word?.text_uthmani || '';
                   return sum + getStrippedArabicCharLength(txt);
@@ -858,7 +1086,7 @@ export function InteractiveMushafPage({
 
                 return (
                   <div
-                    key={`mushaf-line-${lineIdx}`}
+                    key={block.key}
                     data-mushaf-line={lineIdx + 1}
                     className="mushaf-line w-full max-w-full overflow-hidden my-0.5 px-0.5 transition-colors"
                     dir="rtl"
@@ -867,9 +1095,7 @@ export function InteractiveMushafPage({
                       flexDirection: 'row',
                       flexWrap: 'nowrap',
                       alignItems: 'center',
-                      justifyContent: isOnlyHeader
-                        ? 'center'
-                        : isShortMushafPage || lineTokens.length < 4
+                      justifyContent: isShortMushafPage || lineTokens.length < 4
                         ? 'center'
                         : 'space-between',
                       gap: isShortMushafPage || lineTokens.length < 4 ? '10px' : '4px',
@@ -883,45 +1109,6 @@ export function InteractiveMushafPage({
                     }}
                   >
                     {lineTokens.map((token) => {
-                      if (token.type === 'header' && token.header) {
-                        const surahHeader = token.header;
-                        return (
-                          <div
-                            key={token.key}
-                            data-surah-opening={surahHeader.surah_number}
-                            className="w-full my-2 p-3 rounded-2xl text-center border relative overflow-hidden not-sr-only"
-                            dir="rtl"
-                            style={{
-                              scrollMarginTop: '116px',
-                              background: surfaceStyles.headerBg,
-                              borderColor: surfaceStyles.headerBorder,
-                              boxShadow: 'inset 0 1px 0 var(--card-sheen)',
-                            }}
-                          >
-                            <div className="flex items-center justify-between px-3 text-[11px] font-bold opacity-75">
-                              <span>{surahHeader.revelation_type}</span>
-                              <span>{surahHeader.ayah_count} Verses</span>
-                            </div>
-                            <h2
-                              className="text-xl sm:text-2xl font-bold my-1 text-[var(--accent-text)] font-arabic tracking-wide"
-                              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
-                            >
-                              سُورَةُ {surahHeader.name_arabic}
-                            </h2>
-                            <p className="text-xs font-semibold opacity-75">{surahHeader.name_english}</p>
-
-                            {surahHeader.show_bismillah && (
-                              <div
-                                className="mt-2 text-lg sm:text-xl font-bold"
-                                style={{ color: surfaceStyles.bismillahColor }}
-                              >
-                                بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                              </div>
-                            )}
-                          </div>
-                        );
-                      }
-
                       if (token.type === 'medallion') {
                         const isVersePlaying =
                           isPlaying &&
@@ -960,10 +1147,11 @@ export function InteractiveMushafPage({
                         const rawText =
                           (activeFormat === 13 ? (w.text_indopak || w.text_uthmani) : w.text_uthmani) || '';
                         const displayText = cleanQuranicGlyphs(rawText);
-                        const wordHtml =
-                          showTajweed && w.text_uthmani_tajweed
-                            ? cleanQuranicGlyphs(sanitizeTajweedHtml(w.text_uthmani_tajweed))
-                            : displayText;
+                        const wordHtml = showTajweed
+                          ? (w.text_uthmani_tajweed
+                              ? cleanQuranicGlyphs(sanitizeTajweedHtml(w.text_uthmani_tajweed))
+                              : applyTajweedToWord(displayText))
+                          : displayText;
 
                         return (
                           <span
@@ -1041,10 +1229,14 @@ export function InteractiveMushafPage({
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border)] text-xs">
             <button
               type="button"
-              disabled={subPage7L === 1}
-              onClick={() => setSubPage7L(1)}
+              disabled={subPage7L <= 1}
+              onClick={() => {
+                const next = Math.max(1, subPage7L - 1);
+                setSubPage7L(next);
+                onSubPage7LChange?.(next, totalParts7L);
+              }}
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                subPage7L === 1
+                subPage7L <= 1
                   ? 'opacity-40 cursor-not-allowed border-transparent'
                   : 'bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] hover:border-[var(--accent)] active:scale-95'
               }`}
@@ -1056,10 +1248,14 @@ export function InteractiveMushafPage({
             </span>
             <button
               type="button"
-              disabled={subPage7L === totalParts7L}
-              onClick={() => setSubPage7L(2)}
+              disabled={subPage7L >= totalParts7L}
+              onClick={() => {
+                const next = Math.min(totalParts7L, subPage7L + 1);
+                setSubPage7L(next);
+                onSubPage7LChange?.(next, totalParts7L);
+              }}
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                subPage7L === totalParts7L
+                subPage7L >= totalParts7L
                   ? 'opacity-40 cursor-not-allowed border-transparent'
                   : 'bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] hover:border-[var(--accent)] active:scale-95'
               }`}

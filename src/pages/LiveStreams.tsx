@@ -65,7 +65,7 @@ export default function LiveStreams() {
 
   return (
     <div className="min-h-screen bg-background safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5" style={{ paddingBottom: '148px' }}>
 
         {/* Page Header */}
         <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
@@ -89,7 +89,7 @@ export default function LiveStreams() {
         <IslamicStreamPlayer />
 
         {/* Info cards */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3.5">
           <div className={`rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-4 space-y-2 ${isRtl ? 'text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
             <div className={`w-8 h-8 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center ${isRtl ? 'ml-auto' : ''}`}>
               <Wifi className="w-4 h-4 text-[var(--accent)]" />

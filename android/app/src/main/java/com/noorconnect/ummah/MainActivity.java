@@ -50,6 +50,9 @@ public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
     private static final int EXACT_ALARM_PERMISSION_REQUEST = 9001;
     private static final int BATTERY_OPTIMIZATION_REQUEST = 9002;
+    private static final int GEOLOCATION_PERMISSION_REQUEST = 9003;
+    private android.webkit.GeolocationPermissions.Callback pendingGeoCallback = null;
+    private String pendingGeoOrigin = null;
     private static final String PREFS_ONBOARDING = "noor_permission_flow_prefs";
     private static final String KEY_EXACT_ALARM_REDIRECTED = "exact_alarm_redirected";
     private static final String KEY_BATTERY_PROMPTED = "battery_whitelist_prompted";
@@ -477,6 +480,21 @@ public class MainActivity extends BridgeActivity {
                             }
                         });
                     }
+
+                    @android.webkit.JavascriptInterface
+                    public void setScreenOrientation(final String mode) {
+                        runOnUiThread(() -> {
+                            try {
+                                if ("landscape".equalsIgnoreCase(mode)) {
+                                    setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                                } else {
+                                    setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                                }
+                            } catch (Throwable t) {
+                                Log.w(TAG, "Failed to set screen orientation: " + mode, t);
+                            }
+                        });
+                    }
                 }, "AndroidBridge");
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to register AndroidBridge JavascriptInterface", t);
@@ -502,15 +520,29 @@ public class MainActivity extends BridgeActivity {
                             if (hasFine || hasCoarse) {
                                 callback.invoke(origin, true, false);
                             } else {
-                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                }, 9003);
-                                callback.invoke(origin, true, false);
+                                pendingGeoCallback = callback;
+                                pendingGeoOrigin = origin;
+                                runOnUiThread(() -> {
+                                    try {
+                                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                        }, GEOLOCATION_PERMISSION_REQUEST);
+                                    } catch (Throwable t) {
+                                        Log.w(TAG, "Failed to request geolocation permissions", t);
+                                        if (pendingGeoCallback != null) {
+                                            pendingGeoCallback.invoke(pendingGeoOrigin, false, false);
+                                            pendingGeoCallback = null;
+                                            pendingGeoOrigin = null;
+                                        }
+                                    }
+                                });
                             }
                         } catch (Throwable t) {
                             Log.w(TAG, "Error handling geolocation permission prompt safely", t);
-                            callback.invoke(origin, false, false);
+                            try {
+                                callback.invoke(origin, false, false);
+                            } catch (Throwable ignored) {}
                         }
                     }
 
@@ -708,6 +740,31 @@ public class MainActivity extends BridgeActivity {
                     // Permission granted - start widget foreground service
                     WidgetForegroundService.start(this);
                 }
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == GEOLOCATION_PERMISSION_REQUEST) {
+            try {
+                boolean granted = false;
+                if (grantResults != null && grantResults.length > 0) {
+                    for (int res : grantResults) {
+                        if (res == PackageManager.PERMISSION_GRANTED) {
+                            granted = true;
+                            break;
+                        }
+                    }
+                }
+                if (pendingGeoCallback != null && pendingGeoOrigin != null) {
+                    pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
+                    pendingGeoCallback = null;
+                    pendingGeoOrigin = null;
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "Error processing geolocation permission result", t);
             }
         }
     }
