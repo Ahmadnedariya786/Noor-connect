@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Share2, Loader2, RefreshCw, Library, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,15 @@ import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import type { HadithItem } from '@/data/hadith.json';
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
+import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 
 interface HadithData {
   hadith: string;
   translation?: string;
   book: string;
   number: string;
+  narrator?: string;
 }
 
 const REFRESH_SEED_KEY = "hadith-refresh-seed";
@@ -28,12 +31,15 @@ function getDailySeed(refreshSeed?: number | null): number {
 }
 
 const Hadith = () => {
-const { t } = useLanguage();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { contentLang, isRtl } = useContentLanguage();
   const [hadith, setHadith] = useState<HadithData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hadithDataList, setHadithDataList] = useState<HadithItem[] | null>(null);
+  const [translatedText, setTranslatedText] = useState<string>('');
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     import('@/data/hadith.json').then(module => {
@@ -80,27 +86,30 @@ const { t } = useLanguage();
           translation: importedHadith.englishTranslation || "",
           book: importedHadith.collection.replace(/[-_]/g, " "),
           number: String(importedHadith.hadithNumber || importedHadith.id),
+          narrator: importedHadith.narrator || "",
         };
-} else {
-         if (!hadithDataList) {
-             // Fallback if data hasn't loaded yet
-             finalData = {
-                 hadith: "No hadith text available",
-                 translation: "",
-                 book: "Unknown",
-                 number: "1",
-             };
-         } else {
-             const randomIdx = Math.floor(Math.random() * hadithDataList.length);
-             const item = hadithDataList[randomIdx];
-             finalData = {
-                 hadith: item.text || 'No hadith text available',
-                 translation: item.translation || '',
-                 book: item.source || 'Unknown',
-                 number: String(item.number || randomIdx + 1),
-             };
-         }
-       }
+      } else {
+        if (!hadithDataList) {
+          // Fallback if data hasn't loaded yet
+          finalData = {
+            hadith: "No hadith text available",
+            translation: "",
+            book: "Unknown",
+            number: "1",
+            narrator: "",
+          };
+        } else {
+          const randomIdx = Math.floor(Math.random() * hadithDataList.length);
+          const item = hadithDataList[randomIdx];
+          finalData = {
+            hadith: item.text || 'No hadith text available',
+            translation: item.translation || '',
+            book: item.source || 'Unknown',
+            number: String(item.number || randomIdx + 1),
+            narrator: '',
+          };
+        }
+      }
       
       setHadith(finalData);
       localStorage.setItem("lastHadithDate", today);
@@ -121,9 +130,47 @@ const { t } = useLanguage();
     fetchHadith();
   }, [fetchHadith]);
 
+  useEffect(() => {
+    if (!hadith?.translation) {
+      setTranslatedText('');
+      return;
+    }
+    if (contentLang === 'en') {
+      setTranslatedText(hadith.translation);
+      return;
+    }
+    let cancelled = false;
+    setIsTranslating(true);
+    translateIslamicText(hadith.translation, contentLang)
+      .then((res) => {
+        if (!cancelled) {
+          setTranslatedText(res);
+          setIsTranslating(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTranslatedText(hadith.translation || '');
+          setIsTranslating(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hadith?.translation, contentLang]);
+
+  const narratorLabel = useMemo(() => {
+    if (!hadith?.narrator) return null;
+    if (contentLang === 'ur') return `راوی: ${hadith.narrator}`;
+    if (contentLang === 'gu') return `રાવી: ${hadith.narrator}`;
+    if (contentLang === 'hi') return `रावी: ${hadith.narrator}`;
+    return `Narrated by: ${hadith.narrator}`;
+  }, [hadith?.narrator, contentLang]);
+
   const handleShare = async () => {
     if (hadith) {
-      const shareText = `"${hadith.hadith}"\n\nSource: ${hadith.book} #${hadith.number}`;
+      const trans = translatedText || hadith.translation;
+      const shareText = `"${hadith.hadith}"\n\n${trans ? `"${trans}"\n\n` : ''}Source: ${hadith.book} #${hadith.number}${hadith.narrator ? `\nNarrator: ${hadith.narrator}` : ''}`;
       
       if (navigator.share) {
         try {
@@ -175,6 +222,9 @@ const { t } = useLanguage();
           </div>
         </div>
 
+        {/* 4-Language Selector Bar */}
+        <ContentLanguageBar fullWidth />
+
         {loading ? (
           <Card className="p-12 backdrop-blur-sm bg-card border-border/40 shadow-sm">
             <div className="flex flex-col items-center justify-center space-y-4">
@@ -219,13 +269,36 @@ const { t } = useLanguage();
                   >
                     {hadith.hadith}
                   </blockquote>
- 
-                  {/* Translation */}
-                  {hadith.translation && (
+
+                  {/* Narrator (راوی) */}
+                  {narratorLabel && (
+                    <div className="text-center pt-2">
+                      <span
+                        className={`inline-block px-3.5 py-1 rounded-full text-xs font-semibold border border-[#C9860A]/35 bg-[#C9860A]/10 text-[#E8A020] ${
+                          contentLang === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)] text-sm" : ""
+                        }`}
+                        dir={isRtl ? 'rtl' : 'ltr'}
+                      >
+                        {narratorLabel}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Translation in Selected Language */}
+                  {(translatedText || hadith.translation) && (
                     <>
                       <ManuscriptDivider />
-                      <p className="text-base leading-relaxed text-center opacity-80 font-serif italic px-2">
-                        {hadith.translation}
+                      <p
+                        className={`text-base leading-relaxed text-center px-2 transition-opacity ${
+                          isTranslating ? 'opacity-50' : 'opacity-90'
+                        } ${
+                          contentLang === 'ur'
+                            ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)] text-lg leading-[2.4]"
+                            : "font-serif italic"
+                        }`}
+                        dir={isRtl ? 'rtl' : 'ltr'}
+                      >
+                        {translatedText || hadith.translation}
                       </p>
                     </>
                   )}

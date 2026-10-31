@@ -38,6 +38,7 @@ import { useTilawah } from '@/contexts/TilawahContext';
 import { quranFeaturesService } from '@/lib/quran-features';
 import { AyahStudySheet } from '@/components/Quran/AyahStudySheet';
 import { updateAutoMovingBookmarks } from '@/lib/quran-bookmarks';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 const LS_LAST_SURAH = 'quran-reader-last-surah';
 const LS_LAST_PAGE = 'quran-reader-last-page';
@@ -104,6 +105,7 @@ export default function QuranReader() {
   // Page slider dialog
   const [showPageSlider, setShowPageSlider] = useState(false);
   const [tempPageInput, setTempPageInput] = useState(mushafPageNumber);
+  useBodyScrollLock(showPageSlider);
 
   // 4 Reading Surface Modes: jewel (default on dark), parchment, night, classic
   const [surfaceMode, setSurfaceMode] = useState<InteractiveMushafSurface>(() => {
@@ -879,13 +881,17 @@ export default function QuranReader() {
             className="fixed inset-0 z-[9996] flex items-end sm:items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
             onClick={() => setShowPageSlider(false)}
+            onTouchMove={(e) => {
+              if (e.target === e.currentTarget) e.preventDefault();
+            }}
           >
             <div
-              className="w-full max-w-sm p-5 rounded-3xl border shadow-2xl space-y-4 animate-in slide-in-from-bottom duration-200"
+              className="w-full max-w-sm p-5 rounded-3xl border shadow-2xl space-y-4 animate-in slide-in-from-bottom duration-200 sheet-scroll-contain"
               style={{
                 background: 'var(--surface)',
                 borderColor: 'var(--border)',
                 boxShadow: '0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 var(--card-sheen)',
+                overscrollBehavior: 'contain',
               }}
               onClick={(e) => e.stopPropagation()}
             >

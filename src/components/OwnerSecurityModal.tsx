@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Shield, Eye, EyeOff, Lock, Clock, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import {
   verifyOwnerKey,
   getRemainingCooldownSeconds,
@@ -32,6 +33,7 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
   const [cooldownSec, setCooldownSec] = useState(() => getRemainingCooldownSeconds());
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) {
@@ -128,14 +130,18 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
       aria-modal="true"
       aria-labelledby="owner-security-title"
       onClick={onClose}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) e.preventDefault();
+      }}
     >
       <div
-        className="w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4 relative animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4 relative animate-in zoom-in-95 duration-200 sheet-scroll-contain"
         style={{
           background: 'var(--surface)',
           border: '1.5px solid var(--accent)',
           boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85)',
           color: 'var(--text-primary)',
+          overscrollBehavior: 'contain',
         }}
         onClick={(e) => e.stopPropagation()}
       >

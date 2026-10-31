@@ -97,6 +97,7 @@ export class GeolocationService {
       } catch {
         // Handled native permission request error cleanly without console warning
       }
+      return false;
     }
 
     return new Promise((resolve) => {

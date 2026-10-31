@@ -278,41 +278,41 @@
   }
 
   [data-theme="madinah-emerald"] {
-    --bg-base: #03150E;
-    --bg-elev: #06231A;
-    --surface: #0A2E22;
-    --surface-2: #124332;
-    --border: rgba(52,211,153,0.25);
-    --accent: #34D399;
-    --accent-2: #D4AF37;
+    --bg-base: #03130E;
+    --bg-elev: #072219;
+    --surface: #0A2B20;
+    --surface-2: #103B2C;
+    --border: rgba(52, 211, 153, 0.26);
+    --accent: #10B981;
+    --accent-2: #EAB308;
     --accent-text: #6EE7B7;
-    --on-accent: #03150E;
-    --accent-soft: rgba(52,211,153,0.16);
-    --accent-glow: rgba(52,211,153,0.35);
-    --card-sheen: rgba(236,253,245,0.05);
-    --text-primary: #ECFDF5;
-    --text-secondary: #A7C9B8;
-    --success: #6EE7B7;
-    --warning: #E8C07A;
-    --danger: #E08A8A;
+    --on-accent: #021A11;
+    --accent-soft: rgba(16, 185, 129, 0.16);
+    --accent-glow: rgba(16, 185, 129, 0.35);
+    --card-sheen: linear-gradient(135deg, rgba(52, 211, 153, 0.22) 0%, rgba(234, 179, 8, 0.12) 50%, transparent 100%);
+    --text-primary: #F0FDF9;
+    --text-secondary: #A7F3D0;
+    --success: #34D399;
+    --warning: #EAB308;
+    --danger: #EF4444;
 
-    --background: 157 75% 5%;
-    --foreground: 152 81% 96%;
-    --card: 160 64% 11%;
-    --card-foreground: 152 81% 96%;
-    --popover: 160 64% 11%;
-    --popover-foreground: 152 81% 96%;
-    --primary: 158 64% 52%;
-    --primary-foreground: 157 75% 5%;
+    --background: 162 73% 4%;
+    --foreground: 160 84% 97%;
+    --card: 162 62% 11%;
+    --card-foreground: 160 84% 97%;
+    --popover: 162 62% 11%;
+    --popover-foreground: 160 84% 97%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 162 86% 5%;
     --primary-glow: 156 72% 67%;
-    --secondary: 159 58% 17%;
-    --secondary-foreground: 152 81% 96%;
-    --muted: 159 58% 17%;
-    --muted-foreground: 150 24% 72%;
+    --secondary: 162 57% 15%;
+    --secondary-foreground: 160 84% 97%;
+    --muted: 162 57% 15%;
+    --muted-foreground: 152 76% 80%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 160 40% 20%;
-    --ring: 158 64% 52%;
+    --input: 162 45% 18%;
+    --ring: 160 84% 39%;
   }
 
   [data-theme="imperial-violet"] {
@@ -392,41 +392,41 @@
   }
 
   [data-theme="desert-scroll"] {
-    --bg-base: #140B04;
-    --bg-elev: #241407;
-    --surface: #33200D;
-    --surface-2: #4A2E12;
-    --border: rgba(245,200,107,0.28);
-    --accent: #F5C86B;
-    --accent-2: #C77B3F;
-    --accent-text: #FFD98A;
-    --on-accent: #140B04;
-    --accent-soft: rgba(245,200,107,0.16);
-    --accent-glow: rgba(245,200,107,0.35);
-    --card-sheen: rgba(251,243,228,0.05);
-    --text-primary: #FBF3E4;
-    --text-secondary: #D6BE9A;
-    --success: #A8D69A;
-    --warning: #FFD98A;
-    --danger: #E09A8A;
+    --bg-base: #110A06;
+    --bg-elev: #1C110A;
+    --surface: #25170E;
+    --surface-2: #332014;
+    --border: rgba(245, 158, 11, 0.30);
+    --accent: #F59E0B;
+    --accent-2: #EA580C;
+    --accent-text: #FCD34D;
+    --on-accent: #1A0E04;
+    --accent-soft: rgba(245, 158, 11, 0.18);
+    --accent-glow: rgba(245, 158, 11, 0.38);
+    --card-sheen: linear-gradient(135deg, rgba(245, 158, 11, 0.24) 0%, rgba(234, 88, 12, 0.14) 50%, transparent 100%);
+    --text-primary: #FFFBEB;
+    --text-secondary: #FDE68A;
+    --success: #84CC16;
+    --warning: #F59E0B;
+    --danger: #EF4444;
 
-    --background: 26 67% 5%;
-    --foreground: 39 74% 94%;
-    --card: 30 59% 13%;
-    --card-foreground: 39 74% 94%;
-    --popover: 30 59% 13%;
-    --popover-foreground: 39 74% 94%;
-    --primary: 40 87% 69%;
-    --primary-foreground: 26 67% 5%;
-    --primary-glow: 41 100% 77%;
-    --secondary: 30 61% 18%;
-    --secondary-foreground: 39 74% 94%;
-    --muted: 30 61% 18%;
-    --muted-foreground: 36 42% 72%;
+    --background: 24 47% 5%;
+    --foreground: 48 100% 96%;
+    --card: 23 44% 10%;
+    --card-foreground: 48 100% 96%;
+    --popover: 23 44% 10%;
+    --popover-foreground: 48 100% 96%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 24 64% 6%;
+    --primary-glow: 45 93% 64%;
+    --secondary: 24 43% 14%;
+    --secondary-foreground: 48 100% 96%;
+    --muted: 24 43% 14%;
+    --muted-foreground: 48 95% 77%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 30 40% 22%;
-    --ring: 40 87% 69%;
+    --input: 24 35% 18%;
+    --ring: 38 92% 50%;
   }
 
   .dark {
@@ -2263,3 +2263,18 @@ html[lang="ur"] [data-quran-arabic="true"],
 .font-amiri {
   font-family: var(--font-arabic) !important;
 }
+
+/* ── Global Modal & Sheet Background Scroll Lock Utilities ── */
+.modal-scroll-locked {
+  position: fixed !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+.sheet-scroll-contain {
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+

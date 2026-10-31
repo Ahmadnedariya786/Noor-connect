@@ -167,7 +167,10 @@ export function Changelog({ onClose, showCloseButton = true, maxHeight = '60vh' 
 
       <Separator />
 
-      <CardContent className="flex-1 overflow-y-auto p-0">
+      <CardContent
+        className="flex-1 overflow-y-auto p-0 sheet-scroll-contain"
+        style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+      >
         <div className="px-6 py-4">
           <div className="space-y-6">
             {changelogs.map((changelog, index) => (

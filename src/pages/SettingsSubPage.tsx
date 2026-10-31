@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { getAppearanceUIStrings } from '@/lib/quran-guide-i18n';
 import {
   ArrowLeft,
@@ -174,6 +175,7 @@ const SettingsSubPage: React.FC = () => {
   const [showClearCacheDialog, setShowClearCacheDialog] = useState(false);
   const [showClearQuranDialog, setShowClearQuranDialog] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  useBodyScrollLock(showChangelog || showClearCacheDialog || showClearQuranDialog || securityModalOpen);
 
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     ramadanCountdowns: true,
@@ -2482,9 +2484,13 @@ const SettingsSubPage: React.FC = () => {
                   className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
                   style={{ position: 'fixed', inset: 0, zIndex: 9996 }}
                   onClick={() => setShowChangelog(false)}
+                  onTouchMove={(e) => {
+                    if (e.target === e.currentTarget) e.preventDefault();
+                  }}
                 >
                   <div
-                    className="w-full max-w-2xl max-h-[85vh] flex flex-col"
+                    className="w-full max-w-2xl max-h-[85vh] flex flex-col sheet-scroll-contain"
+                    style={{ overscrollBehavior: 'contain' }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Changelog onClose={() => setShowChangelog(false)} />

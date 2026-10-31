@@ -16,6 +16,7 @@ import {
 } from '@/lib/qibla';
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 // ─── Types ────────────────────────────────────────────────────
 type CompassState =
@@ -203,6 +204,7 @@ const QiblaCompassModern = () => {
   const [showManualSlider, setShowManualSlider] = useState(false);
   const [compassSignal, setCompassSignal] = useState<number | null>(null);
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
+  useBodyScrollLock(showCalibrationModal);
 
   // ── Refs ─────────────────────────────────────────────────────
   const locationRef = useRef<LocationCoordinates | null>(bootLocation.coords);
@@ -1249,13 +1251,17 @@ const QiblaCompassModern = () => {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={() => setShowCalibrationModal(false)}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
         >
           <div
-            className="w-full max-w-sm rounded-3xl p-5 border space-y-4 shadow-2xl"
+            className="w-full max-w-sm rounded-3xl p-5 border space-y-4 shadow-2xl sheet-scroll-contain"
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--border)',
               color: 'var(--text-primary)',
+              overscrollBehavior: 'contain',
             }}
             onClick={(e) => e.stopPropagation()}
           >

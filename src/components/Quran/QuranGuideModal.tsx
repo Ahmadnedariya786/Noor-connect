@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, BookOpen, Volume2, Repeat, Palette, Bookmark, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext-new';
 import { getQuranGuideData, formatStepBadge } from '@/lib/quran-guide-i18n';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface QuranGuideModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface QuranGuideModalProps {
 export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClose }) => {
   const { language, isRTL } = useLanguage();
   const guideData = useMemo(() => getQuranGuideData(language), [language]);
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,9 +79,13 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
       onClick={(e) => {
         if (e.target === e.currentTarget) handleDismiss();
       }}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) e.preventDefault();
+      }}
     >
       <div
         dir={isRTL ? 'rtl' : 'ltr'}
+        className="sheet-scroll-contain"
         style={{
           width: '100%',
           maxWidth: '460px',
@@ -91,6 +97,7 @@ export const QuranGuideModal: React.FC<QuranGuideModalProps> = ({ isOpen, onClos
           borderRadius: '18px',
           boxShadow: '0 20px 40px rgba(0,0,0,0.45)',
           overflow: 'hidden',
+          overscrollBehavior: 'contain',
           animation: 'fadeScaleIn 0.22s ease-out',
           textAlign: isRTL ? 'right' : 'left',
         }}

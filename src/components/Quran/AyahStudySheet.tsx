@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTilawah } from '@/contexts/TilawahContext';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import {
   BOOKMARK_COLORS,
   getColorBookmarks,
@@ -142,6 +143,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
 }) => {
   const { toast } = useToast();
   const { playAyah, startHifzLoop, stopHifzLoop, hifzConfig } = useTilawah();
+  useBodyScrollLock(isOpen);
 
   const [activeAyah, setActiveAyah] = useState<number>(initialAyah);
   const [activeTab, setActiveTab] = useState<StudyTab>('translation');
@@ -518,16 +520,22 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
-      onTouchMove={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) e.preventDefault();
+      }}
     >
       <div
-        className="w-full max-w-lg mx-auto rounded-t-[32px] flex flex-col max-h-[92vh] overflow-hidden"
+        className="w-full max-w-lg mx-auto rounded-t-[32px] flex flex-col max-h-[92vh] overflow-hidden sheet-scroll-contain"
         style={{
           backgroundColor: 'var(--bg-elev)',
           borderTop: '1px solid var(--border)',
           borderLeft: '1px solid var(--border)',
           borderRight: '1px solid var(--border)',
           boxShadow: '0 -16px 48px rgba(0, 0, 0, 0.65)',
+          overscrollBehavior: 'contain',
         }}
       >
         {/* Top Header & Ayah Navigation Bar */}

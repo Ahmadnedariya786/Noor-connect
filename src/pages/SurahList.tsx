@@ -46,6 +46,7 @@ import {
 } from "@/lib/interactive-mushaf";
 import { Preferences } from "@capacitor/preferences";
 import { CSSOnlyTransition } from "@/components/AdaptiveMotion";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import {
   getKhatmahPlan,
   startKhatmah,
@@ -202,6 +203,8 @@ export default function SurahList() {
 
   // Quran Feature Guide & Welcome Banner State
   const [showGuideModal, setShowGuideModal] = useState(false);
+  useBodyScrollLock(showGuideModal);
+  useBodyScrollLock(showCustomModal);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
     try {
       return localStorage.getItem('noor_quran_guide_dismissed_v1') !== 'true';
@@ -757,7 +760,7 @@ export default function SurahList() {
                 <span>{uiStrings.mushafFormatHeader}</span>
               </span>
               <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]">
-                {lineFormat}L Active
+                {lineFormat}L ACTIVE
               </span>
             </div>
 
@@ -857,7 +860,7 @@ export default function SurahList() {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                      Smart Khatmah Planner
+                      SMART KHATMAH
                     </h3>
                     <span className="text-[10px] text-[var(--text-secondary)]">604 Mushaf Pages</span>
                   </div>
@@ -872,7 +875,7 @@ export default function SurahList() {
                       borderColor: "var(--border)",
                     }}
                   >
-                    Page {khatmahPlan?.currentPage} / 604 ({portionInfo.percent}%)
+                    {khatmahPlan?.currentPage || 0} / 604 ({portionInfo.percent}%)
                   </Badge>
                 ) : (
                   <span className="text-[10px] font-semibold text-[var(--text-secondary)]">No active plan</span>
@@ -906,8 +909,8 @@ export default function SurahList() {
                   {/* Today's Calculated Portion Box */}
                   <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] block">
-                        Today's Portion ({portionInfo.portionPages} Pages)
+                      <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
+                        TODAY'S PORTION • {portionInfo.portionPages} PAGES
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate block">
                         Pages {portionInfo.startPage}–{portionInfo.endPage}
@@ -940,8 +943,8 @@ export default function SurahList() {
                       style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
                       className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)]"
                     >
-                      <Plus className="w-3 h-3 mr-1 shrink-0" />
-                      <span>+1 Page</span>
+                      <Plus className="w-3.5 h-3.5 mr-1 shrink-0" />
+                      <span>1 Page</span>
                     </Button>
 
                     <Button
@@ -951,8 +954,8 @@ export default function SurahList() {
                       style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
                       className="h-8 rounded-xl font-bold bg-[var(--surface-2)] border-[var(--border)] text-emerald-400"
                     >
-                      <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400 shrink-0" />
-                      <span>✓ Done Today</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-400 shrink-0" />
+                      <span>Done Today</span>
                     </Button>
 
                     <Button
@@ -962,8 +965,8 @@ export default function SurahList() {
                       style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', padding: '0 4px' }}
                       className="h-8 rounded-xl font-bold text-[var(--text-secondary)] hover:text-rose-400"
                     >
-                      <RotateCcw className="w-3 h-3 mr-1 shrink-0" />
-                      <span>↺ Reset</span>
+                      <RotateCcw className="w-3.5 h-3.5 mr-1 shrink-0" />
+                      <span>Reset</span>
                     </Button>
                   </div>
                 </div>
@@ -1587,10 +1590,15 @@ export default function SurahList() {
 
         {/* CUSTOM KHATMAH DAYS MODAL */}
         {showCustomModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onTouchMove={(e) => {
+              if (e.target === e.currentTarget) e.preventDefault();
+            }}
+          >
             <div
-              className="w-full max-w-sm rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-5 space-y-4 shadow-2xl"
-              style={{ boxShadow: "0 12px 36px rgba(0,0,0,0.4)" }}
+              className="w-full max-w-sm rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-5 space-y-4 shadow-2xl sheet-scroll-contain"
+              style={{ boxShadow: "0 12px 36px rgba(0,0,0,0.4)", overscrollBehavior: 'contain' }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

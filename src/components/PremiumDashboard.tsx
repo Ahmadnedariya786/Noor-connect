@@ -23,6 +23,7 @@ import { ClockHero } from "@/components/clocks/ClockHero";
 import { hasHomeEntranceCompleted } from "@/lib/home-entrance";
 import { PrayerTimesSection } from "@/components/PrayerTimesSection";
 import { getDayWorshipLog, formatDateKey } from "@/lib/worship-log";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -181,22 +182,8 @@ function PremiumDashboardInner({
     setShowManualLocationDialog(false);
   }, [location, setLoadingAPI, setShowManualLocationDialog]);
 
-  // Lock background scroll strictly while modal is open, with guaranteed cleanup
-  useEffect(() => {
-    if (!showManualLocationDialog) return;
-
-    const prevOverflow = document.body.style.overflow;
-    const prevOverscroll = document.body.style.overscrollBehavior;
-
-    document.body.style.overflow = 'hidden';
-    document.body.style.overscrollBehavior = 'none';
-
-    return () => {
-      // Guaranteed restoration on modal close or unmount
-      document.body.style.overflow = prevOverflow;
-      document.body.style.overscrollBehavior = prevOverscroll;
-    };
-  }, [showManualLocationDialog]);
+  // Lock background scroll strictly while modal is open with full viewport isolation
+  useBodyScrollLock(showManualLocationDialog);
 
   // Intercept Android hardware back button and Escape key to close modal
   useEffect(() => {
@@ -264,6 +251,11 @@ function PremiumDashboardInner({
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               handleCloseModal();
+            }
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) {
+              e.preventDefault();
             }
           }}
         >

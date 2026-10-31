@@ -619,15 +619,23 @@ export default function IslamicStreamPlayer() {
                 <button
                   key={loc}
                   onClick={() => setActiveTab(loc)}
-                  className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                    contentLang === 'ur' ? 'py-2 px-3.5 whitespace-nowrap' : 'py-2.5 px-3'
+                  } ${
                     active
                       ? 'text-white shadow-lg'
                       : 'text-white/50 hover:text-white/80'
                   }`}
-                  style={active ? { background: `linear-gradient(135deg, ${m.color}cc, ${m.color}88)` } : {}}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    padding: contentLang === 'ur' ? '8px 14px' : undefined,
+                    ...(active ? { background: `linear-gradient(135deg, ${m.color}cc, ${m.color}88)` } : {})
+                  }}
                 >
-                  <span className={`text-xs font-black tracking-wide uppercase ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{label}</span>
-                  <span className="text-xs font-normal opacity-80 font-arabic">{m.arabic}</span>
+                  <span className={`text-xs font-black tracking-wide uppercase whitespace-nowrap ${contentLang === 'ur' ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)] text-[13px] leading-tight" : ''}`}>{label}</span>
+                  {contentLang !== 'ur' && (
+                    <span className="text-xs font-normal opacity-80 font-arabic whitespace-nowrap">{m.arabic}</span>
+                  )}
                 </button>
               );
             })}

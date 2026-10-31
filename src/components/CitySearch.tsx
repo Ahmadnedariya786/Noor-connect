@@ -8,6 +8,7 @@ import { useDebouncedSearch } from '@/hooks/use-debounced-search';
 import { CityResult } from '@/lib/photon-api';
 import { useLocationState } from '@/lib/location-state';
 import { useToast } from '@/hooks/use-toast';
+import { GeolocationService } from '@/lib/geolocation-service';
 
 interface CitySearchProps {
   onCitySelect?: (city: CityResult) => void;
@@ -89,44 +90,34 @@ export const CitySearch = ({ onCitySelect, showManualCoordinates = true }: CityS
     setShowManualInput(false);
   };
 
-  const handleGetCurrentLocation = () => {
+  const handleGetCurrentLocation = async () => {
     try {
-      if (!navigator.geolocation) {
+      if (!GeolocationService.isSupported()) {
         toast({
           title: "Geolocation Not Supported",
-          description: "Your browser doesn't support location services",
+          description: "Your device or browser does not support location services",
           variant: "destructive",
         });
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          location.setLocation(latitude, longitude, 'Current Location');
-          
-          toast({
-            title: "Location Updated",
-            description: `Prayer times updated for your current location`,
-          });
-        },
-        (_error) => {
-          toast({
-            title: "Location Access Denied",
-            description: "Please enable location permissions to use this feature",
-            variant: "destructive",
-          });
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 4000,
-          maximumAge: 60000
-        }
-      );
-    } catch (_e) {
+      const coords = await GeolocationService.getCurrentPosition({
+        enableHighAccuracy: false,
+        timeout: 6000,
+        maximumAge: 60000,
+      });
+
+      if (coords?.latitude && coords?.longitude) {
+        location.setLocation(coords.latitude, coords.longitude, 'Current Location');
+        toast({
+          title: "Location Updated",
+          description: "Prayer times updated for your current location",
+        });
+      }
+    } catch {
       toast({
-        title: "Location Error",
-        description: "Could not retrieve current location.",
+        title: "Location Access Needed",
+        description: "Please enable location permission or search your city above.",
         variant: "destructive",
       });
     }

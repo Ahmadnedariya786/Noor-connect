@@ -4,6 +4,7 @@ import { AlertTriangle, Zap, Shield, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import BatteryOptimization from '@/lib/battery-optimization';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface BatteryOptimizationDialogProps {
   onClose: () => void;
@@ -12,6 +13,7 @@ interface BatteryOptimizationDialogProps {
 export function BatteryOptimizationDialog({ onClose }: BatteryOptimizationDialogProps) {
   const [isIgnoring, setIsIgnoring] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  useBodyScrollLock(!isIgnoring && isIgnoring !== null);
 
   useEffect(() => {
     checkBatteryOptimization();
@@ -68,8 +70,18 @@ export function BatteryOptimizationDialog({ onClose }: BatteryOptimizationDialog
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Card className="max-w-md w-full p-6 space-y-4">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-xs"
+      onClick={onClose}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) e.preventDefault();
+      }}
+    >
+      <Card
+        className="max-w-md w-full p-6 space-y-4 sheet-scroll-contain"
+        style={{ overscrollBehavior: 'contain' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-start gap-3">
           <div className="p-2 bg-amber-100 rounded-lg">
             <AlertTriangle className="w-6 h-6 text-amber-600" />
