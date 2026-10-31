@@ -407,26 +407,34 @@ export default function Dashboard() {
 
   // Handle location detection
   const handleDetectLocation = async () => {
-    const matchedCity = await location.detectLocation();
-    if (matchedCity) {
-      // Show appropriate message based on detection method
-      if (location.isIpBased) {
-        toast({
-          title: ti18n('locationDetected'),
-          description: `Location approximated from IP (${matchedCity.city}). Enable GPS for accurate results.`,
-        });
-      } else {
-        toast({ title: ti18n('locationDetected'), description: `Updated to ${matchedCity.city}, ${matchedCity.country}` });
-      }
+    try {
+      const matchedCity = await location.detectLocation();
+      if (matchedCity) {
+        if ((matchedCity as any).isPreservedSavedTown) {
+          toast({
+            title: "✓ Location verified",
+            description: matchedCity.locationName || `${matchedCity.city}, ${matchedCity.country}`,
+          });
+        } else if (location.isIpBased) {
+          toast({
+            title: ti18n('locationDetected'),
+            description: `Location detected: ${matchedCity.city}, ${matchedCity.country}`,
+          });
+        } else {
+          toast({ title: ti18n('locationDetected'), description: `Updated to ${matchedCity.city}, ${matchedCity.country}` });
+        }
 
-      // Reload prayer times with new location
-      await loadPrayerTimes();
-    } else {
-      toast({
-        title: "GPS Location Needed",
-        description: "Please enable GPS / Location permission for exact town detection, or type your town name below.",
-        variant: "destructive",
-      });
+        // Reload prayer times with new location
+        await loadPrayerTimes();
+      } else {
+        toast({
+          title: "GPS Location Needed",
+          description: "Please select your town name below or try again.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      // Never crash
     }
   };
 

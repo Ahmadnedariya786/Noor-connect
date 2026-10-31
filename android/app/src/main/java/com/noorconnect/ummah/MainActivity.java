@@ -498,10 +498,11 @@ public class MainActivity extends BridgeActivity {
             }
 
             try {
-                webView.getSettings().setGeolocationEnabled(true);
-                webView.getSettings().setGeolocationDatabasePath(getFilesDir().getPath());
+                // Explicitly disable WebView geolocation prompts to prevent native Chromium dialog crashes on Android 15.
+                // Noor Connect utilizes privacy-first, secure HTTPS IP and city-level geocoding in JS.
+                webView.getSettings().setGeolocationEnabled(false);
             } catch (Throwable t) {
-                Log.w(TAG, "Failed to enable WebView geolocation settings", t);
+                Log.w(TAG, "Failed to configure WebView geolocation settings", t);
             }
 
         }

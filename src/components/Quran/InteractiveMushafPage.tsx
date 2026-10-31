@@ -67,8 +67,22 @@ export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineTok
   let currentWeight = 0;
 
   for (const token of tokens) {
+    if (token.type === 'medallion') {
+      // Verse medallions must always stay attached to the preceding verse word on the same line
+      if (currentLine.length > 0) {
+        currentLine.push(token);
+        currentWeight += 3;
+      } else if (lines.length > 0) {
+        lines[lines.length - 1].push(token);
+      } else {
+        currentLine.push(token);
+        currentWeight += 3;
+      }
+      continue;
+    }
+
     const tokenText = token.word?.text_uthmani || token.word?.text_indopak || '';
-    const tokenWeight = token.type === 'medallion' ? 4 : getStrippedArabicCharLength(tokenText) || 4;
+    const tokenWeight = getStrippedArabicCharLength(tokenText) || 4;
 
     // Strict 20–24 stripped char budget (~4 to 5 words per line) for 360px mobile fit without ugly wrapping/gaps
     if (currentLine.length >= 2 && currentWeight + tokenWeight > 22) {
@@ -813,12 +827,32 @@ export function InteractiveMushafPage({
       const lines = partitionTokensBalancedK(allTokens, availableVerseLines);
       return { blocks: assembleBlocksWithHeaders(lines), totalParts7L: 1 };
     } else {
-      // 7-line mode: Strict 22-26 stripped char budget per line, paginated into 7 lines per view
+      // 7-line mode: Strict 20-24 stripped char budget per line, paginated into ~7 lines per view
       const all7Lines = build7LineFormatTokens(allTokens);
-      const parts = Math.max(1, Math.ceil(all7Lines.length / 7));
+
+      // Chunk all7Lines into sub-pages of ~7 lines each
+      const subPages: MushafLineToken[][][] = [];
+      for (let i = 0; i < all7Lines.length; i += 7) {
+        subPages.push(all7Lines.slice(i, i + 7));
+      }
+
+      // If the final sub-page has only 1 line with <= 2 words (or just a medallion),
+      // merge that trailing line into the previous sub-page so the reader never flips to an orphan sub-page (e.g. Page 106 Part 5/5)
+      if (subPages.length > 1) {
+        const lastPartLines = subPages[subPages.length - 1];
+        if (lastPartLines.length === 1) {
+          const singleLine = lastPartLines[0];
+          const wordCount = singleLine.filter(t => t.type !== 'medallion' && t.type !== 'header').length;
+          if (wordCount <= 2) {
+            subPages[subPages.length - 2].push(singleLine);
+            subPages.pop();
+          }
+        }
+      }
+
+      const parts = Math.max(1, subPages.length);
       const activePart = Math.min(parts, Math.max(1, subPage7L));
-      const startIdx = (activePart - 1) * 7;
-      const visibleLines = all7Lines.slice(startIdx, startIdx + 7);
+      const visibleLines = subPages[activePart - 1] || [];
 
       const blocksFor7L: MushafPageBlock[] = [];
       const handledHeaders = new Set<number>();
@@ -872,6 +906,12 @@ export function InteractiveMushafPage({
     ) {
       lastReported7LRef.current = { subPage: subPage7L, totalParts: totalParts7L };
       onSubPage7LChangeRef.current?.(subPage7L, totalParts7L);
+    }
+  }, [subPage7L, totalParts7L]);
+
+  useEffect(() => {
+    if (totalParts7L > 0 && subPage7L > totalParts7L) {
+      setSubPage7L(totalParts7L);
     }
   }, [subPage7L, totalParts7L]);
 

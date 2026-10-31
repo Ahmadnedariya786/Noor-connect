@@ -7,6 +7,14 @@
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 
+export const isAndroidWebView = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const hasAndroidBridge = Boolean((window as unknown as Record<string, unknown>).AndroidBridge);
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isWvOrAndroidVer = /wv|Android.*Version\/[0-9]/i.test(ua);
+  return hasAndroidBridge || isWvOrAndroidVer;
+};
+
 export interface LocationCoordinates {
   latitude: number;
   longitude: number;
@@ -86,6 +94,10 @@ export class GeolocationService {
    * Request location permissions
    */
   static async requestPermissions(): Promise<boolean> {
+    if (isAndroidWebView()) {
+      return true;
+    }
+
     if (Capacitor.isNativePlatform()) {
       try {
         const result = await Geolocation.requestPermissions({
@@ -147,6 +159,29 @@ export class GeolocationService {
         reject(new Error('Location request timed out. Please select your city manually.'));
       }, timeoutMs);
     });
+
+    if (isAndroidWebView()) {
+      const androidPromise = (async (): Promise<LocationCoordinates> => {
+        try {
+          const { LocationService } = await import('@/lib/location-service');
+          const ipLoc = await LocationService.detectLocationViaIP();
+          if (ipLoc) {
+            return {
+              latitude: ipLoc.latitude,
+              longitude: ipLoc.longitude,
+              accuracy: 2500,
+              city: ipLoc.city,
+              country: ipLoc.country,
+            };
+          }
+        } catch {
+          // Handled silently
+        }
+        throw new Error('Location detection unavailable on Android WebView. Please select your city manually.');
+      })();
+
+      return Promise.race([androidPromise, timeoutPromise]);
+    }
 
     if (Capacitor.isNativePlatform()) {
       const nativePromise = (async (): Promise<LocationCoordinates> => {
@@ -243,6 +278,10 @@ export class GeolocationService {
       maximumAge?: number;
     }
   ): Promise<string> {
+    if (isAndroidWebView()) {
+      return "";
+    }
+
     const timeout = options?.timeout ?? 15000;
     const enableHighAccuracy = options?.enableHighAccuracy ?? true;
     const maximumAge = options?.maximumAge ?? 300000;

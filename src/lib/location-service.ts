@@ -19,7 +19,125 @@ export interface ReverseGeocodeResult {
   timezone?: string;
 }
 
+export interface DetectedIPLocation {
+  city: string;
+  state?: string;
+  country: string;
+  countryCode?: string;
+  latitude: number;
+  longitude: number;
+  displayName: string;
+  timezone?: string;
+}
+
 export class LocationService {
+  /**
+   * Fast, rate-limit-free, multi-source HTTPS IP geolocation
+   * Queries BigDataCloud, ipwho.is, and GeoJS concurrently with AbortController timeouts.
+   * Completely safe on Android WebView and web browsers (0 native prompts, 0 permission popups, 0 crashes).
+   */
+  static async detectLocationViaIP(): Promise<DetectedIPLocation | null> {
+    const fetchBigDataCloud = async (): Promise<DetectedIPLocation> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      try {
+        const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en', {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('BDC error');
+        const d = await res.json();
+        const lat = typeof d.latitude === 'number' ? d.latitude : parseFloat(d.latitude);
+        const lon = typeof d.longitude === 'number' ? d.longitude : parseFloat(d.longitude);
+        if (Number.isNaN(lat) || Number.isNaN(lon)) throw new Error('Invalid coords');
+        const city = d.locality || d.city || d.principalSubdivision || 'Detected Location';
+        const state = d.principalSubdivision;
+        const country = d.countryName || 'India';
+        const countryCode = d.countryCode ? String(d.countryCode).toUpperCase() : undefined;
+        const parts = [city, state, country].filter(Boolean);
+        return {
+          city,
+          state,
+          country,
+          countryCode,
+          latitude: lat,
+          longitude: lon,
+          displayName: parts.join(', '),
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    };
+
+    const fetchIpWhoIs = async (): Promise<DetectedIPLocation> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      try {
+        const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('ipwhois error');
+        const d = await res.json();
+        if (d.success === false) throw new Error('ipwhois failed');
+        const lat = typeof d.latitude === 'number' ? d.latitude : parseFloat(d.latitude);
+        const lon = typeof d.longitude === 'number' ? d.longitude : parseFloat(d.longitude);
+        if (Number.isNaN(lat) || Number.isNaN(lon)) throw new Error('Invalid coords');
+        const city = d.city || d.region || 'Detected Location';
+        const state = d.region;
+        const country = d.country || '';
+        const countryCode = d.country_code ? String(d.country_code).toUpperCase() : undefined;
+        const parts = [city, state, country].filter(Boolean);
+        return {
+          city,
+          state,
+          country,
+          countryCode,
+          latitude: lat,
+          longitude: lon,
+          displayName: parts.join(', '),
+          timezone: d.timezone?.id,
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    };
+
+    const fetchGeoJs = async (): Promise<DetectedIPLocation> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      try {
+        const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('geojs error');
+        const d = await res.json();
+        const lat = parseFloat(d.latitude);
+        const lon = parseFloat(d.longitude);
+        if (Number.isNaN(lat) || Number.isNaN(lon)) throw new Error('Invalid coords');
+        const city = d.city || d.region || 'Detected Location';
+        const state = d.region;
+        const country = d.country || '';
+        const countryCode = d.country_code ? String(d.country_code).toUpperCase() : undefined;
+        const parts = [city, state, country].filter(Boolean);
+        return {
+          city,
+          state,
+          country,
+          countryCode,
+          latitude: lat,
+          longitude: lon,
+          displayName: parts.join(', '),
+          timezone: d.timezone,
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    };
+
+    try {
+      return await Promise.any([fetchBigDataCloud(), fetchIpWhoIs(), fetchGeoJs()]);
+    } catch {
+      return null;
+    }
+  }
   /**
    * Search worldwide locations by query string (supports cities, towns, villages worldwide)
    */

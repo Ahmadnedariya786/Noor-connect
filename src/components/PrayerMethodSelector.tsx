@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, RefreshCw, Info, CheckCircle, Sliders, RotateCcw, Plus, Minus } from "lucide-react";
+import { Settings as SettingsIcon, RefreshCw, CheckCircle } from "lucide-react";
 import { prayerMethods, type PrayerMethod } from "@/lib/prayer-methods";
 import { useLocationState } from "@/lib/location-state";
 import { useToast } from "@/hooks/use-toast";
@@ -182,15 +181,15 @@ export const PrayerMethodSelector = () => {
         {isRecommended && (
           <div className="flex items-center">
             <span
-              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shrink-0 shadow-sm"
+              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 shrink-0 shadow-sm"
               style={{
                 background: 'var(--accent-soft)',
                 border: '1px solid var(--accent)',
                 color: 'var(--accent-text)',
               }}
             >
-              <CheckCircle className="w-3 h-3" />
-              ✓ Recommended
+              <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>Recommended</span>
             </span>
           </div>
         )}
@@ -298,8 +297,8 @@ export const PrayerMethodSelector = () => {
               <SelectItem
                 key={method.id}
                 value={method.id.toString()}
-                className="py-2.5 px-3 h-auto cursor-pointer"
-                style={{ padding: '10px 12px', height: 'auto' }}
+                className="pl-9 pr-4 py-2.5 cursor-pointer"
+                style={{ height: 'auto' }}
               >
                 <div className="flex flex-col items-start gap-0.5 w-full">
                   <span className="font-semibold text-sm text-[var(--text-primary)] break-words text-left leading-snug">

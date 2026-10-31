@@ -306,11 +306,15 @@ function PremiumDashboardInner({
                         location.setLocation(matchedCity.lat, matchedCity.lon, finalName, timezone);
                         await prayerTimesHook.setManualLocation(matchedCity.city, matchedCity.country);
                         handleCloseModal();
-                        toast({ title: "Location Updated", description: finalName });
+                        if ((matchedCity as any).isPreservedSavedTown) {
+                          toast({ title: "✓ Location verified", description: finalName });
+                        } else {
+                          toast({ title: "Location Updated", description: finalName });
+                        }
                       } else {
                         toast({
                           title: "GPS Location Needed",
-                          description: "Please enable GPS / Location permission for exact town detection, or type your town name below.",
+                          description: "Please select your town name below or try again.",
                           variant: "destructive"
                         });
                       }
@@ -318,7 +322,7 @@ function PremiumDashboardInner({
                       // CRITICAL: NEVER CRASH! Show friendly notification if hardware GPS or permission throws
                       toast({
                         title: "GPS Location Needed",
-                        description: "Please enable GPS / Location permission for exact town detection, or type your town name below.",
+                        description: "Please select your town name below or try again.",
                         variant: "destructive"
                       });
                     } finally {
@@ -329,7 +333,7 @@ function PremiumDashboardInner({
                   className="w-full h-12 rounded-2xl font-bold text-[var(--on-accent)] gap-2 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] border-none hover:opacity-90 transition-opacity"
                 >
                   {location.isDetecting ? <Activity className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
-                  {location.isDetecting ? "Detecting GPS..." : "Auto-Detect GPS"}
+                  {location.isDetecting ? "Detecting..." : "Auto-Detect GPS"}
                 </Button>
 
                 <div className="flex items-center gap-3 py-2">

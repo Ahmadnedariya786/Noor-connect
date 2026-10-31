@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { GeolocationService } from '@/lib/geolocation-service';
+import { GeolocationService, isAndroidWebView } from '@/lib/geolocation-service';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
 import { findNearestOfflineCity, type CityData } from '@/data/cities';
 import { recordBreadcrumb } from '@/lib/diagnostics-engine';
@@ -120,44 +120,156 @@ export const useLocationState = () => {
     setLocationState(prev => ({ ...prev, isDetecting: true }));
 
     try {
+      // 1. Smooth 400ms detection UX state
+      await new Promise(r => setTimeout(r, 400));
+
       let lat: number | null = null;
       let lon: number | null = null;
+      let detectedCityName = '';
+      let detectedState = '';
+      let detectedCountry = '';
+      let detectedDisplayName = '';
       let isIpBased = false;
 
-      // 1. PRIMARY: Try real device GPS (Capacitor Geolocation on native, navigator.geolocation on web)
-      // Step A: High-accuracy GPS with 10s timeout
-      if (GeolocationService.isSupported()) {
+      // 2. Geolocation strategy:
+      // On Android WebView, NEVER call navigator.geolocation or native prompt to eliminate crashes.
+      // Query multi-source HTTPS IP geolocation directly.
+      if (isAndroidWebView()) {
         try {
-          const position = await GeolocationService.getCurrentPosition({
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
-          });
-          lat = position.latitude;
-          lon = position.longitude;
-          isIpBased = false;
+          const { LocationService } = await import('@/lib/location-service');
+          const ipLoc = await LocationService.detectLocationViaIP();
+          if (ipLoc) {
+            lat = ipLoc.latitude;
+            lon = ipLoc.longitude;
+            detectedCityName = ipLoc.city;
+            detectedState = ipLoc.state || '';
+            detectedCountry = ipLoc.country;
+            detectedDisplayName = ipLoc.displayName;
+            isIpBased = true;
+          }
         } catch {
-          // Step B: Coarse GPS fallback with 8s timeout
+          // Handled silently
+        }
+      } else {
+        // Web browser environment: attempt GPS first, then IP fallback
+        if (GeolocationService.isSupported()) {
           try {
             const position = await GeolocationService.getCurrentPosition({
-              enableHighAccuracy: false,
-              timeout: 8000,
-              maximumAge: 10000,
+              enableHighAccuracy: true,
+              timeout: 6000,
+              maximumAge: 0,
             });
             lat = position.latitude;
             lon = position.longitude;
             isIpBased = false;
           } catch {
-            // Both hardware GPS attempts failed, timed out, or permission was denied
+            // Fallback to IP geolocation
+            try {
+              const { LocationService } = await import('@/lib/location-service');
+              const ipLoc = await LocationService.detectLocationViaIP();
+              if (ipLoc) {
+                lat = ipLoc.latitude;
+                lon = ipLoc.longitude;
+                detectedCityName = ipLoc.city;
+                detectedState = ipLoc.state || '';
+                detectedCountry = ipLoc.country;
+                detectedDisplayName = ipLoc.displayName;
+                isIpBased = true;
+              }
+            } catch {
+              // Handled silently
+            }
           }
         }
       }
 
-      // CRITICAL GUARDRAIL:
-      // If hardware GPS returned null (denied, disabled, or timed out),
-      // NEVER silently overwrite the user's saved town (e.g. Vadgam / Chhapi) with coarse ISP IP city (e.g. Surat).
-      // Return null so the UI alerts the user to enable GPS or enter their town name manually.
+      // 3. Smart Local Town Preservation & Selection:
+      // Check if user already has an active local town or custom saved towns (e.g. Vadgam, Chhapi, Deesa)
+      // in the same state/country. If IP resolves to a regional ISP gateway hub (such as Surat in Gujarat),
+      // preserve their accurate local town!
+      try {
+        const { getSavedLocations } = await import('@/lib/saved-locations');
+        const saved = getSavedLocations();
+        const activeName = location.locationName || '';
+
+        const isSameStateOrCountry = (name?: string) => {
+          if (!name) return false;
+          const lower = name.toLowerCase();
+          const matchesState = detectedState && lower.includes(detectedState.toLowerCase());
+          const matchesCountry = detectedCountry && lower.includes(detectedCountry.toLowerCase());
+          return Boolean(matchesState || matchesCountry);
+        };
+
+        let preservedTown: { name: string; city: string; country: string; latitude: number; longitude: number; timezone?: string } | null = null;
+
+        if (location.latitude && location.longitude && isSameStateOrCountry(activeName)) {
+          const parts = activeName.split(',');
+          preservedTown = {
+            name: activeName,
+            city: parts[0]?.trim() || activeName,
+            country: parts[parts.length - 1]?.trim() || detectedCountry,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            timezone: location.timeZone,
+          };
+        } else {
+          const matchingCustom = saved.find(s => s.isCustom && isSameStateOrCountry(s.name));
+          if (matchingCustom) {
+            preservedTown = {
+              name: matchingCustom.name,
+              city: matchingCustom.city,
+              country: matchingCustom.country,
+              latitude: matchingCustom.latitude,
+              longitude: matchingCustom.longitude,
+              timezone: matchingCustom.timezone,
+            };
+          }
+        }
+
+        if (preservedTown) {
+          const nearest = findNearestOfflineCity(preservedTown.latitude, preservedTown.longitude) || {
+            city: preservedTown.city,
+            country: preservedTown.country,
+            timezone: preservedTown.timezone || 'Asia/Kolkata',
+            lat: preservedTown.latitude,
+            lon: preservedTown.longitude,
+          };
+
+          const newLoc: LocationState = {
+            latitude: preservedTown.latitude,
+            longitude: preservedTown.longitude,
+            locationName: preservedTown.name,
+            timeZone: preservedTown.timezone || nearest.timezone,
+            isDetecting: false,
+            isIpBased: false,
+            lastUpdated: new Date().toISOString(),
+          };
+
+          setLocationState(newLoc);
+          saveLocation(newLoc);
+
+          return {
+            ...nearest,
+            city: preservedTown.city,
+            country: preservedTown.country,
+            lat: preservedTown.latitude,
+            lon: preservedTown.longitude,
+            locationName: preservedTown.name,
+            isPreservedSavedTown: true,
+          } as CityData & { isPreservedSavedTown?: boolean };
+        }
+      } catch {
+        // Fall through safely to detected coordinates
+      }
+
+      // If no coordinates could be determined at all:
       if (lat === null || lon === null) {
+        // If user already has a valid location, preserve it cleanly
+        if (location.latitude && location.longitude) {
+          setLocationState(prev => ({ ...prev, isDetecting: false }));
+          const nearest = findNearestOfflineCity(location.latitude, location.longitude);
+          return nearest ? ({ ...nearest, isPreservedSavedTown: true } as CityData & { isPreservedSavedTown?: boolean }) : null;
+        }
         setLocationState(prev => ({ ...prev, isDetecting: false }));
         return null;
       }
@@ -169,21 +281,22 @@ export const useLocationState = () => {
         return null;
       }
 
-      // 5. Live reverse geocode (BigDataCloud primary + Nominatim fallback) to extract real town/city/taluka + country
-      let localPlace = nearestCity.city;
-      let countryName = nearestCity.country;
-      let locationName = `${nearestCity.city}, ${nearestCity.country}`;
+      let localPlace = detectedCityName || nearestCity.city;
+      let countryName = detectedCountry || nearestCity.country;
+      let locationName = detectedDisplayName || `${localPlace}, ${countryName}`;
 
-      try {
-        const { LocationService } = await import('@/lib/location-service');
-        const rev = await LocationService.reverseGeocode(lat, lon);
-        if (rev && rev.city) {
-          localPlace = rev.city;
-          countryName = rev.country || nearestCity.country;
-          locationName = rev.displayName || `${localPlace}, ${countryName}`;
+      if (!detectedDisplayName) {
+        try {
+          const { LocationService } = await import('@/lib/location-service');
+          const rev = await LocationService.reverseGeocode(lat, lon);
+          if (rev && rev.city) {
+            localPlace = rev.city;
+            countryName = rev.country || countryName;
+            locationName = rev.displayName || `${localPlace}, ${countryName}`;
+          }
+        } catch {
+          // Fallback safely to offline nearest city display name
         }
-      } catch {
-        // Fallback safely to offline nearest city display name
       }
 
       const newLocation: LocationState = {
@@ -233,11 +346,11 @@ export const useLocationState = () => {
         locationName,
       };
     } catch {
-      // Handled location detection fallback silently
+      // Handled location detection fallback silently - NEVER crash
       setLocationState(prev => ({ ...prev, isDetecting: false }));
       return null;
     }
-  }, [location.isDetecting]);
+  }, [location.isDetecting, location.latitude, location.longitude, location.locationName, location.timeZone]);
 
   const cancelDetecting = useCallback(() => {
     setLocationState(prev => ({ ...prev, isDetecting: false }));
