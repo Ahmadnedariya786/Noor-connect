@@ -8,10 +8,17 @@ import { getDailyHadith as getDailyHadithFromCollections } from "@/lib/hadith";
 import { getAllCollections } from "@/data/hadith-collections";
 import { PageTransition } from "@/components/PageTransition";
 import { useLanguage } from "@/contexts/LanguageContext-new";
-import type { HadithItem } from '@/data/hadith.json';
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
 import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
 import { ContentLanguageBar } from "@/components/ContentLanguageBar";
+
+interface HadithItem {
+  id?: number | string;
+  text?: string;
+  translation?: string;
+  source?: string;
+  number?: number | string;
+}
 
 interface HadithData {
   hadith: string;
@@ -362,7 +369,7 @@ const Hadith = () => {
         ) : (
           <Card className="p-8 text-center space-y-4 bg-card border-border/40 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Unable to load hadith. Please try again later.</p>
-            <Button onClick={fetchHadith} variant="outline" className="bg-[#1A1A1A] text-white hover:bg-[#333333] border-border/40 font-bold rounded-xl px-6 h-12">
+            <Button onClick={() => { fetchHadith(true); }} variant="outline" className="bg-[#1A1A1A] text-white hover:bg-[#333333] border-border/40 font-bold rounded-xl px-6 h-12">
               Try Again
             </Button>
           </Card>

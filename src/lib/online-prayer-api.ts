@@ -145,7 +145,7 @@ export class OnlinePrayerAPI {
       if (selected && typeof selected.id === 'number') {
         return selected.id;
       }
-    } catch (e) {
+    } catch {
       // Default to MWL (3)
     }
     return 3;
@@ -217,7 +217,7 @@ export class OnlinePrayerAPI {
           parsed.timings = applyOffsetsToTimings(parsed.timings, offsets);
           return parsed;
         }
-      } catch (cacheErr) {
+      } catch {
         // Fall through to live network fetch
       }
     }
@@ -279,7 +279,7 @@ export class OnlinePrayerAPI {
             return schedule;
           }
         }
-      } catch (netErr) {
+      } catch {
         // Network drop or timeout, proceed to monthly cache or local mathematical calculation
       }
     }
@@ -343,7 +343,7 @@ export class OnlinePrayerAPI {
         if (res.ok) {
           const body = await res.json();
           if (Array.isArray(body?.data) && body.data.length > 0) {
-            const days: LiveDaySchedule[] = body.data.map((item: any) => {
+            const days: LiveDaySchedule[] = body.data.map((item: { timings?: Record<string, string>; date: LiveDaySchedule['date']; meta?: LiveDaySchedule['meta'] }) => {
               const raw = item.timings || {};
               const cleanTimings: LivePrayerTiming = {
                 Fajr: (raw.Fajr || '05:00').split(' ')[0],
@@ -398,7 +398,7 @@ export class OnlinePrayerAPI {
             return calendar;
           }
         }
-      } catch (netErr) {
+      } catch {
         // Fall through to cached or local math
       }
     }

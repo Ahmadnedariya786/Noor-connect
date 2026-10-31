@@ -99,8 +99,8 @@ try {
       ];
 
       for (const diag of fileDiags) {
-        // Flag undefined variables (TS2304: Cannot find name), suggestions (TS2552), missing modules (TS2307)
-        if (diag.code === 2304 || diag.code === 2552 || diag.code === 2307) {
+        // Flag undefined variables (TS2304), suggestions (TS2552), missing modules (TS2307), and temporal dead zone (TS2448, TS2454)
+        if (diag.code === 2304 || diag.code === 2552 || diag.code === 2307 || diag.code === 2448 || diag.code === 2454) {
           const pos = sourceFile.getLineAndCharacterOfPosition(diag.start);
           const msg = ts.flattenDiagnosticMessageText(diag.messageText, '\n');
           logError(fileName, pos.line + 1, `[TS${diag.code}] ${msg}`);

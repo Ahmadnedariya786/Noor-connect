@@ -175,6 +175,15 @@ const SettingsSubPage: React.FC = () => {
   const [showClearCacheDialog, setShowClearCacheDialog] = useState(false);
   const [showClearQuranDialog, setShowClearQuranDialog] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+
+  // Owner Security Authorization Lock state
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
+  const [securityActionTitle, setSecurityActionTitle] = useState('Owner Security Key Required');
+  const [securityActionDesc, setSecurityActionDesc] = useState(
+    'Protected customization & upgradation action. Enter your private Owner Master Key to proceed.'
+  );
+  const pendingSecurityActionRef = useRef<(() => void) | null>(null);
+
   useBodyScrollLock(showChangelog || showClearCacheDialog || showClearQuranDialog || securityModalOpen);
 
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
@@ -407,14 +416,6 @@ const SettingsSubPage: React.FC = () => {
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [apkDownloadProgress, setApkDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
-
-  // Owner Security Authorization Lock state
-  const [securityModalOpen, setSecurityModalOpen] = useState(false);
-  const [securityActionTitle, setSecurityActionTitle] = useState('Owner Security Key Required');
-  const [securityActionDesc, setSecurityActionDesc] = useState(
-    'Protected customization & upgradation action. Enter your private Owner Master Key to proceed.'
-  );
-  const pendingSecurityActionRef = useRef<(() => void) | null>(null);
 
   // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1 when unlocked)
   const [isOwnerUnlocked, setIsOwnerUnlocked] = useState(() => isOwnerSessionUnlocked());
