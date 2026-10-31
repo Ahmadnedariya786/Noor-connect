@@ -63,6 +63,9 @@ import {
   clearDiagnostics,
   runDeepSystemHealthScan,
   generateAiDiagnosticReport,
+  generateAllErrorsReport,
+  formatSingleErrorMarkdown,
+  cleanStackTrace,
   subscribeDiagnostics,
   recordBreadcrumb,
   type DiagnosticEvent,
@@ -121,6 +124,25 @@ import PermissionManager from '@/components/PermissionManager';
 import { Changelog } from '@/components/Changelog';
 import { AutoBackupCard } from '@/components/AutoBackupCard';
 
+const normalizeSection = (raw?: string): string => {
+  if (!raw) return 'appearance';
+  const s = raw.toLowerCase().trim();
+  if (s === 'prayer-notifications' || s === 'prayer_notifications' || s === 'notifications') return 'notifications';
+  if (s === 'prayer-calculation' || s === 'prayer_calculation' || s === 'prayer-calc' || s === 'prayer') return 'prayer';
+  if (s === 'theme' || s === 'theme-appearance' || s === 'theme_appearance' || s === 'appearance') return 'appearance';
+  if (s === 'home-widgets' || s === 'home_widgets' || s === 'widget' || s === 'widgets') return 'widgets';
+  if (s === 'clock' || s === 'clocks' || s === 'clock_style' || s === 'clock-style') return 'clock-style';
+  if (s === 'haptic' || s === 'haptics') return 'haptics';
+  if (s === 'profile' || s === 'user' || s === 'personal') return 'personal';
+  if (s === 'adhan-sounds' || s === 'sounds' || s === 'adhan') return 'adhan';
+  if (s === 'backup-restore' || s === 'backup_restore' || s === 'backup') return 'backup';
+  if (s === 'storage-cache' || s === 'storage_cache' || s === 'cache' || s === 'storage') return 'storage';
+  if (s === 'privacy-security' || s === 'privacy_security' || s === 'privacy') return 'privacy';
+  if (s === 'about-noor' || s === 'about_noor' || s === 'about') return 'about';
+  if (s === 'contact-feedback' || s === 'feedback' || s === 'contact') return 'contact';
+  return s;
+};
+
 const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: any; titleKey?: string }> = {
   appearance: { title: 'Theme & Appearance', subtitle: 'Display, animations & splash settings', icon: Palette, titleKey: 'themeAndAppearance' },
   widgets: { title: 'Home Screen Widgets', subtitle: 'Customize opacity, colors & layout', icon: LayoutGrid, titleKey: 'homeWidgets' },
@@ -129,7 +151,11 @@ const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: an
   haptics: { title: 'Haptic Feedback', subtitle: 'Vibration & tactile feedback settings', icon: Vibrate, titleKey: 'hapticFeedback' },
   personal: { title: 'Personal Information', subtitle: 'Gender, language & preferred currency', icon: User, titleKey: 'personalInformation' },
   prayer: { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock, titleKey: 'prayerCalculation' },
+  'prayer-calculation': { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock, titleKey: 'prayerCalculation' },
+  'prayer_calculation': { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock, titleKey: 'prayerCalculation' },
   notifications: { title: 'Prayer Notifications', subtitle: 'Reminders, daily notifications & alerts', icon: Bell, titleKey: 'prayerNotifications' },
+  'prayer-notifications': { title: 'Prayer Notifications', subtitle: 'Reminders, daily notifications & alerts', icon: Bell, titleKey: 'prayerNotifications' },
+  'prayer_notifications': { title: 'Prayer Notifications', subtitle: 'Reminders, daily notifications & alerts', icon: Bell, titleKey: 'prayerNotifications' },
   adhan: { title: 'Adhan & Sounds', subtitle: 'Adhan audio selection & custom uploads', icon: Volume2, titleKey: 'adhanAndSounds' },
   backup: { title: 'Backup & Restore', subtitle: 'Cloud backup, sync & export settings', icon: Database, titleKey: 'backupAndRestore' },
   storage: { title: 'Storage & Cache', subtitle: 'Manage temporary cache & protected local data', icon: HardDrive, titleKey: 'storageAndCache' },
@@ -142,7 +168,8 @@ const SUPPORT_EMAIL = 'overstay-cobbler41@bravealias.com';
 const MAILTO_FEEDBACK_URL = `mailto:${SUPPORT_EMAIL}?subject=Noor%20Connect%20Feedback`;
 
 const SettingsSubPage: React.FC = () => {
-  const { sectionId = 'appearance' } = useParams<{ sectionId: string }>();
+  const { sectionId: rawSectionId = 'appearance' } = useParams<{ sectionId: string }>();
+  const sectionId = normalizeSection(rawSectionId);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { language, setLanguage, t, ui, isRTL } = useLanguage();
@@ -405,6 +432,7 @@ const SettingsSubPage: React.FC = () => {
   const [healthScanReport, setHealthScanReport] = useState<DeepHealthScanReport | null>(null);
   const [isScanningHealth, setIsScanningHealth] = useState(false);
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
+  const [copiedAllErrors, setCopiedAllErrors] = useState(false);
   const [copiedEventId, setCopiedEventId] = useState<string | null>(null);
 
   const [isChecklistExpanded, setIsChecklistExpanded] = useState(false);
@@ -712,18 +740,37 @@ const SettingsSubPage: React.FC = () => {
 
   const handleCopySingleEvent = (ev: DiagnosticEvent) => {
     try {
-      const text = JSON.stringify(ev, null, 2);
+      const text = formatSingleErrorMarkdown(ev);
       navigator.clipboard?.writeText(text);
       setCopiedEventId(ev.id);
       toast({
         title: 'Error Copied',
-        description: 'Individual error details copied to clipboard.',
+        description: 'Individual error details copied to clipboard in clean Markdown.',
       });
       setTimeout(() => setCopiedEventId(null), 2000);
     } catch {
       toast({
         title: 'Copy Failed',
         description: 'Could not copy error to clipboard.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCopyAllErrors = () => {
+    try {
+      const text = generateAllErrorsReport();
+      navigator.clipboard?.writeText(text);
+      setCopiedAllErrors(true);
+      toast({
+        title: 'All Errors Copied!',
+        description: `Forensics for ${diagnosticEvents.length} error(s) copied to clipboard.`,
+      });
+      setTimeout(() => setCopiedAllErrors(false), 2500);
+    } catch {
+      toast({
+        title: 'Copy Failed',
+        description: 'Could not access clipboard to copy error forensics.',
         variant: 'destructive',
       });
     }
@@ -2036,6 +2083,28 @@ const SettingsSubPage: React.FC = () => {
                   )}
                 </Button>
 
+                {/* Button 3: Copy All Errors (Dedicated Error Report) */}
+                {diagnosticEvents.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full h-8 rounded-xl border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-medium flex items-center justify-center gap-1.5 text-red-400"
+                    onClick={handleCopyAllErrors}
+                  >
+                    {copiedAllErrors ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-[var(--success)]" />
+                        <span className="text-[var(--success)] font-semibold">All Errors Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy All Errors ({diagnosticEvents.length})</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+
                 {/* 2×2 Diagnostics Action Grid (No horizontal overflow) */}
                 <div
                   className="grid grid-cols-2 gap-2 w-full max-w-full box-border mt-2"
@@ -2286,9 +2355,17 @@ const SettingsSubPage: React.FC = () => {
                     <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Recorded Events ({diagnosticEvents.length})
                     </Label>
-                    <span className="text-[10px] text-muted-foreground">Tap message for details</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground font-medium"
+                      onClick={handleCopyAllErrors}
+                    >
+                      {copiedAllErrors ? <Check className="w-2.5 h-2.5 mr-1 text-[var(--success)]" /> : <Copy className="w-2.5 h-2.5 mr-1" />}
+                      {copiedAllErrors ? 'Copied All' : 'Copy All'}
+                    </Button>
                   </div>
-                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                     {diagnosticEvents.map((entry) => {
                       const isExpanded = expandedEventId === entry.id;
                       const isCopied = copiedEventId === entry.id;
@@ -2303,39 +2380,70 @@ const SettingsSubPage: React.FC = () => {
                           ? 'bg-red-500/15 text-red-400 border-red-500/30'
                           : 'bg-amber-500/15 text-amber-400 border-amber-500/30';
 
+                      const cleanStack = cleanStackTrace(entry.stack);
+                      const errTitle = entry.errorName || 'Error';
+                      const cleanMsg = entry.cleanMessage || entry.message;
+
                       return (
                         <div
                           key={entry.id}
-                          className="p-2.5 rounded-xl bg-muted/60 border border-border text-left space-y-1.5 w-full max-w-full box-border overflow-hidden"
+                          className="p-3 rounded-xl bg-card border border-border text-left space-y-2 w-full max-w-full box-border overflow-hidden shadow-xs"
                           style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
                         >
+                          {/* Header Row: Category Badge + Count Pill + Time + Route */}
                           <div className="flex items-center justify-between text-[10px] text-muted-foreground gap-2">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className={`px-1.5 py-0.5 rounded font-mono font-bold text-[9px] border ${badgeColor}`}>
                                 {entry.category.replace('_', ' ')}
                               </span>
+                              {entry.count && entry.count > 1 ? (
+                                <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 font-mono font-bold text-[9px] border border-red-500/30">
+                                  ×{entry.count}
+                                </span>
+                              ) : null}
                               <span className="font-mono">
                                 {new Date(entry.time).toLocaleTimeString()}
                               </span>
                             </div>
-                            <span className="font-semibold text-foreground/80 truncate max-w-[120px]">
+                            <span className="font-semibold text-foreground/80 font-mono truncate max-w-[130px] px-1.5 py-0.5 rounded bg-muted/40 border border-border/40 text-[9px]">
                               {entry.route}
                             </span>
                           </div>
 
-                          <p
-                            className="text-xs font-semibold text-foreground/90 break-words cursor-pointer hover:text-amber-400 transition-colors"
+                          {/* Highlighted Root Cause Box */}
+                          <div
+                            className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 cursor-pointer hover:bg-red-500/15 transition-colors"
                             onClick={() => setExpandedEventId(isExpanded ? null : entry.id)}
                           >
-                            {entry.message}
-                          </p>
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-xs font-semibold text-foreground break-words leading-snug">
+                                <span className="text-red-400 font-bold">{errTitle}:</span> {cleanMsg}
+                              </p>
+                              {isExpanded ? (
+                                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                              ) : (
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                              )}
+                            </div>
+                          </div>
 
-                          {entry.filename && (
-                            <p className="text-[10px] font-mono text-muted-foreground truncate">
-                              {entry.filename}{entry.lineno !== undefined ? `:${entry.lineno}:${entry.colno}` : ''}
-                            </p>
-                          )}
+                          {/* Quick Facts Grid */}
+                          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono pt-0.5">
+                            <div className="p-1.5 rounded-md bg-muted/40 border border-border/40 truncate">
+                              <span className="text-muted-foreground block text-[9px] uppercase font-sans font-semibold">Source Module</span>
+                              <span className="text-foreground truncate block font-medium" title={entry.sourceModule}>
+                                {entry.sourceModule || entry.filename || 'App Module'}{entry.sourceLocation || ''}
+                              </span>
+                            </div>
+                            <div className="p-1.5 rounded-md bg-muted/40 border border-border/40 truncate">
+                              <span className="text-muted-foreground block text-[9px] uppercase font-sans font-semibold">Last Action</span>
+                              <span className="text-foreground truncate block font-medium" title={entry.recentBreadcrumbs?.[0]}>
+                                {entry.recentBreadcrumbs?.[0] || 'App Navigation'}
+                              </span>
+                            </div>
+                          </div>
 
+                          {/* Collapsible Clean Stack Trace */}
                           {isExpanded && (
                             <div className="space-y-1.5 pt-1">
                               {entry.componentStack && (
@@ -2349,32 +2457,33 @@ const SettingsSubPage: React.FC = () => {
                                   </pre>
                                 </div>
                               )}
-                              {entry.stack && (
+                              {cleanStack && (
                                 <div>
-                                  <span className="text-[9px] font-mono text-muted-foreground">Stack Trace:</span>
+                                  <span className="text-[9px] font-mono text-muted-foreground">Clean Stack Trace:</span>
                                   <pre
-                                    className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-28 bg-background/80 p-1.5 rounded border border-border/40 max-w-full"
+                                    className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap overflow-x-auto max-h-32 bg-background/80 p-1.5 rounded border border-border/40 max-w-full"
                                     style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
                                   >
-                                    {entry.stack}
+                                    {cleanStack}
                                   </pre>
                                 </div>
                               )}
                             </div>
                           )}
 
-                          <div className="flex items-center justify-between pt-1 border-t border-border/30 text-[10px]">
+                          {/* Bottom Action Footer */}
+                          <div className="flex items-center justify-between pt-1 border-t border-border/40 text-[10px]">
                             <span className="text-muted-foreground/80 font-mono text-[9px]">
                               {entry.commit ? `Commit: ${entry.commit.slice(0, 7)}` : ''}
                             </span>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                              className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground font-medium"
                               onClick={() => handleCopySingleEvent(entry)}
                             >
                               {isCopied ? <Check className="w-2.5 h-2.5 mr-1 text-[var(--success)]" /> : <Copy className="w-2.5 h-2.5 mr-1" />}
-                              {isCopied ? 'Copied' : 'Copy'}
+                              {isCopied ? 'Copied Details' : 'Copy Full Error Details'}
                             </Button>
                           </div>
                         </div>

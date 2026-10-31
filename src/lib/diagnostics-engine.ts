@@ -46,6 +46,21 @@ export interface DiagnosticEvent {
   type?: string; // backwards compatibility (e.g., 'react-boundary', 'startup-crash')
   step?: string; // backwards compatibility
   extra?: Record<string, unknown>;
+  errorName?: string;
+  cleanMessage?: string;
+  sourceModule?: string;
+  sourceLocation?: string;
+  recentBreadcrumbs?: string[];
+  appContext?: {
+    route: string;
+    theme?: string;
+    language?: string;
+    online: boolean;
+    viewport?: string;
+  };
+  count?: number;
+  firstSeen?: string;
+  lastSeen?: string;
 }
 
 export interface FlightBreadcrumb {
@@ -260,6 +275,156 @@ let lastLoggedMessage = '';
 let lastLoggedTimestamp = 0;
 
 /**
+ * Strips localhost, assets, hash prefixes, and query parameters from stack line.
+ */
+export function cleanStackLine(line: string): string {
+  if (!line || typeof line !== 'string') return '';
+  return line
+    .replace(/https?:\/\/[^/]+/g, '')
+    .replace(/capacitor:\/\/localhost/g, '')
+    .replace(/file:\/\/\/android_asset\//g, '')
+    .replace(/\/assets\//g, '')
+    .replace(/\?v=[a-zA-Z0-9_-]+/g, '')
+    .replace(/\.js\?.*?:/g, '.js:')
+    .trim();
+}
+
+/**
+ * Returns a human-readable clean stack trace.
+ */
+export function cleanStackTrace(rawStack?: string): string {
+  if (!rawStack || typeof rawStack !== 'string') return '';
+  return rawStack
+    .split('\n')
+    .map(cleanStackLine)
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * Parses error name and human-readable clean message.
+ */
+export function extractErrorNameAndCleanMessage(rawMessage: string): { errorName: string; cleanMessage: string } {
+  if (!rawMessage || typeof rawMessage !== 'string') {
+    return { errorName: 'Error', cleanMessage: 'Unknown error' };
+  }
+  const trimmed = rawMessage.trim();
+  const match = trimmed.match(/^(?:Uncaught\s+)?([A-Z][a-zA-Z0-9_]*(?:Error|Exception)):\s*(.*)$/);
+  if (match) {
+    return {
+      errorName: match[1],
+      cleanMessage: match[2]?.trim() || match[1],
+    };
+  }
+  return {
+    errorName: 'Error',
+    cleanMessage: trimmed,
+  };
+}
+
+/**
+ * Extracts source module/component and location from stack or filename.
+ */
+export function extractSourceModule(stack?: string, filename?: string): { sourceModule: string; sourceLocation: string } {
+  const target = (stack || filename || '').replace(/https?:\/\/[^/]+/g, '').replace(/\/assets\//g, '');
+  if (!target) {
+    return { sourceModule: 'Unknown', sourceLocation: '' };
+  }
+
+  const lines = target.split('\n').map((l) => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    if (line.startsWith('Error:') || line.startsWith('TypeError:') || line.startsWith('ReferenceError:')) {
+      continue;
+    }
+    const clean = cleanStackLine(line);
+    const m = clean.match(/(?:at\s+([A-Za-z0-9_$.<>-]+)\s+\()?([A-Za-z0-9_.-]+(?:\.tsx|\.ts|\.jsx|\.js))(?::(\d+)(?::(\d+))?)?\)?/);
+    if (m) {
+      const fnName = m[1] || '';
+      const file = m[2] || '';
+      const lineNo = m[3] ? `:${m[3]}` : '';
+      const colNo = m[4] ? `:${m[4]}` : '';
+      const loc = `${lineNo}${colNo}`;
+
+      const baseName = file.replace(/-[A-Za-z0-9_-]{6,}\.(js|ts|jsx|tsx)$/, '.$1');
+      const moduleName = fnName && !fnName.includes('/') ? `${baseName} (${fnName})` : baseName;
+
+      return {
+        sourceModule: moduleName,
+        sourceLocation: loc,
+      };
+    }
+  }
+
+  if (filename) {
+    const cleanFn = cleanStackLine(filename);
+    return { sourceModule: cleanFn, sourceLocation: '' };
+  }
+
+  return { sourceModule: 'App Module', sourceLocation: '' };
+}
+
+/**
+ * Format a single diagnostic error event into clean structured markdown.
+ */
+export function formatSingleErrorMarkdown(ev: DiagnosticEvent, index?: number): string {
+  const num = typeof index === 'number' ? `[${index + 1}] ` : '';
+  const errName = ev.errorName || 'Error';
+  const cleanMsg = ev.cleanMessage || ev.message;
+  let md = `### ${num}[${ev.category}] ${errName}: ${cleanMsg}\n`;
+  md += `- **Timestamp:** ${ev.time}${ev.lastSeen && ev.lastSeen !== ev.time ? ` (Last seen: ${ev.lastSeen})` : ''}\n`;
+  md += `- **Occurrences:** ${ev.count || 1}x\n`;
+  md += `- **Route:** ${ev.route}\n`;
+  if (ev.sourceModule) {
+    md += `- **Source Module:** \`${ev.sourceModule}${ev.sourceLocation || ''}\`\n`;
+  }
+  if (ev.filename) {
+    md += `- **File / Resource:** \`${ev.filename}${ev.lineno !== undefined ? `:${ev.lineno}:${ev.colno}` : ''}\`\n`;
+  }
+  if (ev.commit) {
+    md += `- **Commit:** ${ev.commit}\n`;
+  }
+  if (ev.appContext) {
+    md += `- **Context:** Theme: ${ev.appContext.theme || 'default'} • Lang: ${ev.appContext.language || 'en'} • Online: ${ev.appContext.online ? 'yes' : 'no'}${ev.appContext.viewport ? ` • Viewport: ${ev.appContext.viewport}` : ''}\n`;
+  }
+  if (ev.recentBreadcrumbs && ev.recentBreadcrumbs.length > 0) {
+    md += `- **Recent User Actions:**\n`;
+    ev.recentBreadcrumbs.forEach((b) => {
+      md += `  - ${b}\n`;
+    });
+  }
+  if (ev.componentStack) {
+    md += `\n**React Component Stack:**\n\`\`\`text\n${ev.componentStack.trim()}\n\`\`\`\n`;
+  }
+  if (ev.stack) {
+    md += `\n**Clean Stack Trace:**\n\`\`\`text\n${cleanStackTrace(ev.stack)}\n\`\`\`\n`;
+  }
+  return md;
+}
+
+/**
+ * Generate a complete markdown report of all recorded errors.
+ */
+export function generateAllErrorsReport(): string {
+  const events = getDiagnosticEntries();
+  const now = new Date().toISOString();
+  let md = `# NOOR CONNECT — RECORDED ERROR FORENSICS (${events.length} TOTAL)\n`;
+  md += `**Generated:** ${now}\n`;
+  md += `**Active Route:** ${getSafeRoute()}\n`;
+  md += `**App Version:** ${APP_VERSION} (Commit: ${BUILD_COMMIT})\n\n---\n\n`;
+
+  if (events.length === 0) {
+    md += `✓ *Zero crashes or errors recorded in buffer.*\n`;
+    return md;
+  }
+
+  events.forEach((ev, idx) => {
+    md += formatSingleErrorMarkdown(ev, idx) + '\n---\n\n';
+  });
+
+  return md;
+}
+
+/**
  * Record a structured diagnostic event (Crash, Error, Rejection, Warning).
  */
 export function recordDiagnosticEvent(event: {
@@ -307,6 +472,65 @@ export function recordDiagnosticEvent(event: {
   lastLoggedMessage = msg;
   lastLoggedTimestamp = now;
 
+  const { errorName, cleanMessage } = extractErrorNameAndCleanMessage(msg);
+  const route = event.route || getSafeRoute();
+  const stack = event.stack?.trim();
+  const componentStack = event.componentStack?.trim();
+  const { sourceModule, sourceLocation } = extractSourceModule(stack, event.filename);
+
+  // Smart Deduplication: Check recent events within 2000ms
+  const recentIndex = eventsBuffer.findIndex((existing) => {
+    const existingTime = new Date(existing.time).getTime();
+    if (now - existingTime > 2000) return false;
+
+    const existingClean = existing.cleanMessage || existing.message;
+    const sameMessage =
+      existingClean === cleanMessage ||
+      existingClean.includes(cleanMessage) ||
+      cleanMessage.includes(existingClean);
+
+    const sameRouteAndModule =
+      existing.route === route &&
+      existing.sourceModule === sourceModule &&
+      sourceModule !== 'Unknown' &&
+      sourceModule !== 'App Module';
+
+    return sameMessage || sameRouteAndModule;
+  });
+
+  if (recentIndex !== -1) {
+    const existing = eventsBuffer[recentIndex];
+    existing.count = (existing.count || 1) + 1;
+    existing.lastSeen = new Date().toISOString();
+    if (!existing.stack && stack) existing.stack = stack;
+    if (!existing.componentStack && componentStack) existing.componentStack = componentStack;
+    if ((!existing.sourceModule || existing.sourceModule === 'Unknown') && sourceModule !== 'Unknown') {
+      existing.sourceModule = sourceModule;
+      existing.sourceLocation = sourceLocation;
+    }
+    if (event.category === 'REACT_CRASH' && existing.category !== 'REACT_CRASH') {
+      existing.category = 'REACT_CRASH';
+    }
+    safePersist(DIAGNOSTICS_STORAGE_KEY, eventsBuffer);
+    syncLegacyCrashStore(eventsBuffer);
+    notifySubscribers();
+    return existing;
+  }
+
+  // Context snapshot
+  const activeTheme =
+    typeof localStorage !== 'undefined'
+      ? localStorage.getItem('noor-theme') || localStorage.getItem('noor_theme') || 'oxford-gold'
+      : 'oxford-gold';
+  const activeLang =
+    typeof localStorage !== 'undefined' ? localStorage.getItem('noor-language') || 'en' : 'en';
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const viewport =
+    typeof window !== 'undefined' ? `${window.innerWidth}×${window.innerHeight}` : undefined;
+
+  // Last 5 breadcrumbs for fast context
+  const recentCrumbs = breadcrumbsBuffer.slice(0, 5).map((b) => `[${b.type}] ${b.message}`);
+
   const currentCommit =
     event.commit ||
     BUILD_COMMIT ||
@@ -317,12 +541,27 @@ export function recordDiagnosticEvent(event: {
     id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
     category: event.category,
     message: msg,
-    stack: event.stack?.trim(),
-    componentStack: event.componentStack?.trim(),
+    errorName,
+    cleanMessage,
+    sourceModule,
+    sourceLocation,
+    recentBreadcrumbs: recentCrumbs,
+    appContext: {
+      route,
+      theme: activeTheme,
+      language: activeLang,
+      online: isOnline,
+      viewport,
+    },
+    count: 1,
+    firstSeen: event.time || new Date().toISOString(),
+    lastSeen: event.time || new Date().toISOString(),
+    stack,
+    componentStack,
     filename: event.filename,
     lineno: event.lineno,
     colno: event.colno,
-    route: event.route || getSafeRoute(),
+    route,
     time: event.time || new Date().toISOString(),
     commit: currentCommit,
     ...(event.type ? { type: event.type } : {}),
@@ -1155,7 +1394,18 @@ export async function generateAiDiagnosticReport(existingScan?: DeepHealthScanRe
   md += `**User-Agent:** ${typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'}\n\n`;
 
   md += `---\n\n`;
-  md += `## 1. 8-POINT SUBSYSTEM HEALTH SCAN (${scan.passedCount}/${scan.totalChecks} PASSED)\n\n`;
+  md += `## 1. DETAILED ERROR & CRASH FORENSICS (${events.length} TOTAL)\n\n`;
+
+  if (events.length === 0) {
+    md += `✓ *No crashes, runtime errors, or console errors recorded in buffer.*\n\n`;
+  } else {
+    events.forEach((ev, idx) => {
+      md += formatSingleErrorMarkdown(ev, idx) + '\n';
+    });
+  }
+
+  md += `---\n\n`;
+  md += `## 2. 8-POINT SUBSYSTEM HEALTH SCAN (${scan.passedCount}/${scan.totalChecks} PASSED)\n\n`;
 
   scan.checks.forEach((chk, idx) => {
     const symbol = chk.status === 'PASS' ? '✓ [PASS]' : chk.status === 'WARN' ? '⚠ [WARN]' : '✕ [FAIL]';
@@ -1166,31 +1416,6 @@ export async function generateAiDiagnosticReport(existingScan?: DeepHealthScanRe
     }
     md += `\n`;
   });
-
-  md += `---\n\n`;
-  md += `## 2. RECORDED ERRORS & WARNINGS (${events.length} TOTAL)\n\n`;
-
-  if (events.length === 0) {
-    md += `✓ *No crashes, runtime errors, or console errors recorded in buffer.*\n\n`;
-  } else {
-    events.forEach((ev, idx) => {
-      md += `### [${idx + 1}] [${ev.category}] ${ev.time} — Route: ${ev.route}\n`;
-      md += `**Message:** ${ev.message}\n`;
-      if (ev.filename) {
-        md += `**Location:** ${ev.filename}${ev.lineno !== undefined ? `:${ev.lineno}:${ev.colno}` : ''}\n`;
-      }
-      if (ev.commit) {
-        md += `**Commit Hash:** ${ev.commit}\n`;
-      }
-      if (ev.componentStack) {
-        md += `**React Component Stack:**\n\`\`\`text\n${ev.componentStack}\n\`\`\`\n`;
-      }
-      if (ev.stack) {
-        md += `**Stack Trace:**\n\`\`\`text\n${ev.stack}\n\`\`\`\n`;
-      }
-      md += `\n`;
-    });
-  }
 
   md += `---\n\n`;
   md += `## 3. FLIGHT RECORDER BREADCRUMBS (LAST ${crumbs.length} EVENTS)\n\n`;
@@ -1205,6 +1430,10 @@ export async function generateAiDiagnosticReport(existingScan?: DeepHealthScanRe
   }
 
   md += `---\n*Generated by Noor Connect Deep X-Ray Diagnostics Engine*\n`;
+
+  if (md.length > 12000) {
+    md = md.slice(0, 11800) + '\n\n... [Truncated by Flight Recorder to fit clipboard limits]';
+  }
 
   return md;
 }

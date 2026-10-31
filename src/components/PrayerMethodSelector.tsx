@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings as SettingsIcon, RefreshCw, CheckCircle } from "lucide-react";
+import { Settings as SettingsIcon, RefreshCw, CheckCircle, Sliders, RotateCcw, Minus, Plus } from "lucide-react";
 import { prayerMethods, type PrayerMethod } from "@/lib/prayer-methods";
 import { useLocationState } from "@/lib/location-state";
 import { useToast } from "@/hooks/use-toast";
