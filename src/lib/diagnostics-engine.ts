@@ -169,12 +169,15 @@ function hydrateStore(): void {
 
         eventsBuffer = parsed
           .filter((e: DiagnosticEvent) => {
-            // Auto-purge all legacy [DIAGNOSTIC_TEST] and controlled verification entries immediately
+            // Auto-purge all legacy [DIAGNOSTIC_TEST], controlled verification entries,
+            // and historical App.openSettings() android unhandled rejections immediately
             const msg = String(e.message || '').toLowerCase();
             if (
               msg.includes('[diagnostic_test]') ||
               msg.includes('controlled verification error') ||
-              msg.includes('diagnostic test')
+              msg.includes('diagnostic test') ||
+              msg.includes('app.opensettings') ||
+              msg.includes('opensettings() is not implemented')
             ) {
               return false;
             }
@@ -478,28 +481,33 @@ export function recordDiagnosticEvent(event: {
   const componentStack = event.componentStack?.trim();
   const { sourceModule, sourceLocation } = extractSourceModule(stack, event.filename);
 
-  // Smart Deduplication: Check recent events within 2000ms
-  const recentIndex = eventsBuffer.findIndex((existing) => {
-    const existingTime = new Date(existing.time).getTime();
-    if (now - existingTime > 2000) return false;
+  // Session-Wide Deduplication: Check if this error already occurred on this route
+  const existingIndex = eventsBuffer.findIndex((existing) => {
+    const existingClean = (existing.cleanMessage || existing.message || '').trim().toLowerCase();
+    const incomingClean = cleanMessage.trim().toLowerCase();
 
-    const existingClean = existing.cleanMessage || existing.message;
     const sameMessage =
-      existingClean === cleanMessage ||
-      existingClean.includes(cleanMessage) ||
-      cleanMessage.includes(existingClean);
+      existingClean === incomingClean ||
+      existingClean.includes(incomingClean) ||
+      incomingClean.includes(existingClean);
 
-    const sameRouteAndModule =
-      existing.route === route &&
+    const sameRoute = (existing.route || '').split('?')[0] === route.split('?')[0];
+
+    const sameCategory =
+      existing.category === event.category ||
+      (existing.category === 'REACT_CRASH' && event.category === 'CONSOLE_ERROR') ||
+      (existing.category === 'CONSOLE_ERROR' && event.category === 'REACT_CRASH');
+
+    const sameModule =
       existing.sourceModule === sourceModule &&
       sourceModule !== 'Unknown' &&
       sourceModule !== 'App Module';
 
-    return sameMessage || sameRouteAndModule;
+    return (sameRoute && sameMessage) || (sameRoute && sameCategory && sameModule);
   });
 
-  if (recentIndex !== -1) {
-    const existing = eventsBuffer[recentIndex];
+  if (existingIndex !== -1) {
+    const existing = eventsBuffer[existingIndex];
     existing.count = (existing.count || 1) + 1;
     existing.lastSeen = new Date().toISOString();
     if (!existing.stack && stack) existing.stack = stack;
@@ -604,12 +612,16 @@ export function recordBreadcrumb(type: string, message: string): void {
  */
 export function getDiagnosticEntries(): DiagnosticEvent[] {
   hydrateStore();
-  return eventsBuffer.filter(
-    (e) =>
-      !String(e.message || '').toLowerCase().includes('[diagnostic_test]') &&
-      !String(e.message || '').toLowerCase().includes('controlled verification error') &&
-      !String(e.message || '').toLowerCase().includes('diagnostic test')
-  );
+  return eventsBuffer.filter((e) => {
+    const msg = String(e.message || '').toLowerCase();
+    return (
+      !msg.includes('[diagnostic_test]') &&
+      !msg.includes('controlled verification error') &&
+      !msg.includes('diagnostic test') &&
+      !msg.includes('app.opensettings') &&
+      !msg.includes('opensettings() is not implemented')
+    );
+  });
 }
 
 /**

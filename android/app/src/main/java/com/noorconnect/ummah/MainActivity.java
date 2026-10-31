@@ -492,6 +492,44 @@ public class MainActivity extends BridgeActivity {
                             }
                         });
                     }
+
+                    @android.webkit.JavascriptInterface
+                    public void openAppSettings() {
+                        runOnUiThread(() -> {
+                            try {
+                                android.content.Intent intent = new android.content.Intent(
+                                    android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    android.net.Uri.fromParts("package", getPackageName(), null)
+                                );
+                                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            } catch (Throwable t) {
+                                try {
+                                    android.content.Intent fallback = new android.content.Intent(android.provider.Settings.ACTION_SETTINGS);
+                                    fallback.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(fallback);
+                                } catch (Throwable ignored) {}
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public boolean checkLocationPermission() {
+                        try {
+                            int fine = androidx.core.content.ContextCompat.checkSelfPermission(
+                                MainActivity.this,
+                                android.Manifest.permission.ACCESS_FINE_LOCATION
+                            );
+                            int coarse = androidx.core.content.ContextCompat.checkSelfPermission(
+                                MainActivity.this,
+                                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                            );
+                            return fine == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+                                   coarse == android.content.pm.PackageManager.PERMISSION_GRANTED;
+                        } catch (Throwable t) {
+                            return false;
+                        }
+                    }
                 }, "AndroidBridge");
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to register AndroidBridge JavascriptInterface", t);

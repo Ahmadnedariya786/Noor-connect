@@ -1010,8 +1010,8 @@ export function InteractiveMushafPage({
           <div
             className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 mb-3 rounded-xl border text-[10px] sm:text-[11px] font-medium overflow-x-auto no-scrollbar"
             style={{
-              background: 'var(--surface-2)',
-              borderColor: 'var(--border)',
+              background: surfaceMode === 'parchment' ? 'rgba(44, 30, 17, 0.07)' : 'var(--surface-2)',
+              borderColor: surfaceMode === 'parchment' ? 'rgba(44, 30, 17, 0.18)' : 'var(--border)',
             }}
           >
             <div className="flex items-center gap-2 shrink-0">
@@ -1021,7 +1021,15 @@ export function InteractiveMushafPage({
                     className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: rule.color }}
                   />
-                  <span className="opacity-80 text-[10px]">{rule.name}</span>
+                  <span
+                    className="text-[10px] font-medium"
+                    style={{
+                      color: surfaceMode === 'parchment' ? '#2C1E11' : undefined,
+                      opacity: surfaceMode === 'parchment' ? 1 : 0.85,
+                    }}
+                  >
+                    {rule.name}
+                  </span>
                 </div>
               ))}
             </div>
@@ -1032,7 +1040,15 @@ export function InteractiveMushafPage({
                 setShowLegend(true);
               }}
               title="Tajweed Rules Guide"
-              className="text-[var(--accent-text)] hover:underline shrink-0 font-bold ml-1 text-[10px] flex items-center gap-0.5"
+              className={`shrink-0 font-bold ml-1 text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-lg transition-colors ${
+                surfaceMode === 'parchment'
+                  ? 'hover:opacity-80'
+                  : 'text-[var(--accent-text)] hover:underline'
+              }`}
+              style={{
+                background: surfaceMode === 'parchment' ? 'rgba(44, 30, 17, 0.12)' : undefined,
+                color: surfaceMode === 'parchment' ? '#2C1E11' : undefined,
+              }}
             >
               <Sparkles className="w-3 h-3" />
               <span>Guide</span>

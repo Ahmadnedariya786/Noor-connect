@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { permissionManager, type PermissionType, type PermissionInfo } from '@/lib/permission-manager';
 import { useToast } from '@/hooks/use-toast';
-import { GeolocationService } from '@/lib/geolocation-service';
 import { nativeAdhan } from '@/lib/native-adhan';
 import { executeStepB } from '@/lib/onboarding-permissions';
+import { openDeviceAppSettings } from '@/lib/device-settings';
 
 interface PermissionManagerProps {
   className?: string;
@@ -174,7 +174,9 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
   };
 
   const handleOpenSettings = (type: PermissionType) => {
-    permissionManager.openSettings(type);
+    openDeviceAppSettings(type).catch((err) => {
+      console.warn('Failed to open device settings:', err);
+    });
   };
 
   const handleEnableAlarms = async () => {

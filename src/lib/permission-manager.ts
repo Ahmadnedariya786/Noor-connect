@@ -5,7 +5,7 @@
 
 import { unifiedNotifications } from './unified-notifications';
 import { GeolocationService } from './geolocation-service';
-import { App } from '@capacitor/app';
+import { openDeviceAppSettings } from './device-settings';
 
 export type PermissionType = 'location' | 'notifications';
 
@@ -155,7 +155,7 @@ class PermissionManager {
 
         this.updateCache(type, status);
         return status;
-      } catch (error) {
+      } catch {
         this.updateCache(type, 'denied');
         return 'denied';
       } finally {
@@ -181,7 +181,7 @@ class PermissionManager {
 
       this.updateCache(type, granted ? 'granted' : 'denied');
       return granted;
-    } catch (error) {
+    } catch {
       this.updateCache(type, 'denied');
       return false;
     }
@@ -189,8 +189,6 @@ class PermissionManager {
 
   // Check location permission
   private async checkLocationPermission(): Promise<PermissionStatus> {
-    if (!navigator.geolocation) return 'not-supported';
-
     try {
       const status = await GeolocationService.checkPermissions();
       return status.location as PermissionStatus;
@@ -244,19 +242,9 @@ class PermissionManager {
 
   // Open settings
   openSettings(type: PermissionType): void {
-    if (this.platform === 'mobile') {
-      try {
-        App.openSettings();
-      } catch (e) {
-        console.warn('Failed to open app settings:', e);
-      }
-    } else {
-      if (type === 'location') {
-        window.open('chrome://settings/content/location');
-      } else {
-        window.open('chrome://settings/content/notifications');
-      }
-    }
+    openDeviceAppSettings(type).catch((err) => {
+      console.warn('Failed to open app settings:', err);
+    });
   }
 }
 

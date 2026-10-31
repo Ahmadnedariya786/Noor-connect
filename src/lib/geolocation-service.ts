@@ -43,50 +43,95 @@ export class GeolocationService {
    * Check current permission status
    */
   static async checkPermissions(): Promise<PermissionStatus> {
-    if (Capacitor.isNativePlatform()) {
+    const isNative = Capacitor.isNativePlatform() || (typeof window !== 'undefined' && Boolean(window.AndroidBridge));
+
+    // Helper: check if location or city is already configured in localStorage
+    const hasStoredLocation = (): boolean => {
+      try {
+        if (typeof localStorage === 'undefined') return false;
+        const keys = [
+          'location-storage',
+          'user_selected_location',
+          'user_location',
+          'noor_user_city',
+          'noor_selected_city',
+          'noor_prayer_settings',
+          'cached_prayer_times',
+        ];
+        for (const k of keys) {
+          const val = localStorage.getItem(k);
+          if (val && val.trim() && val !== '{}' && val !== 'null') {
+            return true;
+          }
+        }
+      } catch {
+        // Safe storage fallback
+      }
+      return false;
+    };
+
+    // 1. If valid location/city coordinates exist in storage, hybrid engine is active and granted!
+    if (hasStoredLocation()) {
+      return {
+        location: 'granted',
+        coarseLocation: 'granted',
+      };
+    }
+
+    // 2. Native Android checks
+    if (isNative) {
+      if (typeof window !== 'undefined' && window.AndroidBridge?.checkLocationPermission) {
+        try {
+          const granted = window.AndroidBridge.checkLocationPermission();
+          if (granted) {
+            return {
+              location: 'granted',
+              coarseLocation: 'granted',
+            };
+          }
+        } catch {
+          // Handled native bridge exception cleanly
+        }
+      }
+
       try {
         const result = await Geolocation.checkPermissions();
         if (result && result.location) {
           return {
             location: result.location,
-            coarseLocation: result.coarseLocation
+            coarseLocation: result.coarseLocation,
           };
         }
       } catch {
         // Handled native bridge exception cleanly without console warning
       }
+
+      // Do NOT query navigator.permissions.query on Android WebView, as geolocation is
+      // explicitly disabled in WebView settings to prevent native Chromium dialog crashes.
+      return {
+        location: 'prompt',
+        coarseLocation: 'prompt',
+      };
     }
 
+    // 3. Web Platform: Standard browser permissions API
     if (typeof navigator !== 'undefined' && 'permissions' in navigator) {
       try {
         const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
         const state = result.state as 'granted' | 'denied' | 'prompt';
         return {
           location: state,
-          coarseLocation: state
+          coarseLocation: state,
         };
       } catch {
         // Fallback for environments where query is restricted
       }
     }
 
-    // Check if user has already configured location / city in localStorage
-    try {
-      const stored = localStorage.getItem('user_location') || localStorage.getItem('noor_user_city');
-      if (stored) {
-        return {
-          location: 'granted',
-          coarseLocation: 'granted'
-        };
-      }
-    } catch {
-      // Safe fallback
-    }
-
     // Fallback for browsers that don't support permissions.query
     return {
       location: 'prompt',
-      coarseLocation: 'prompt'
+      coarseLocation: 'prompt',
     };
   }
 
