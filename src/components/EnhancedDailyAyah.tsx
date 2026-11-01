@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useContentLanguage, translateIslamicText } from "@/lib/content-translator";
 import { ContentLanguageBar } from "@/components/ContentLanguageBar";
+import { getLocalizedSurahName } from "@/lib/surah-names-localized";
 
 interface Ayah {
   arabic: string;
@@ -129,7 +130,7 @@ const AYAH_BOOKMARKS_KEY = "daily-ayah-bookmarks";
 
 export function EnhancedDailyAyah() {
   const navigate = useNavigate();
-  const { t, ui } = useLanguage();
+  const { ui } = useLanguage();
   const [ayah, setAyah] = useState<Ayah | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -352,26 +353,7 @@ export function EnhancedDailyAyah() {
   const readMoreText = contentLang === 'ur' ? 'مزید پڑھیں' : contentLang === 'gu' ? 'વધુ વાંચો' : contentLang === 'hi' ? 'और पढ़ें' : (ui.readMore || 'Read More');
   const showLessText = contentLang === 'ur' ? 'کم دکھائیں' : contentLang === 'gu' ? 'ઓછું બતાવો' : contentLang === 'hi' ? 'कम दिखाएं' : (ui.showLess || 'Show Less');
 
-  const SURAH_URDU_NAMES: Record<string, string> = {
-    "Al-Fatihah": "الفاتحہ",
-    "Al-Baqarah": "البقرۃ",
-    "Ali 'Imran": "آل عمران",
-    "At-Talaq": "الطلاق",
-    "Ash-Sharh": "الشرح",
-    "Ar-Ra'd": "الرعد",
-    "Al-Mulk": "الملک",
-    "Al-Kahf": "الکہف",
-    "Yasin": "یٰس",
-    "Ar-Rahman": "الرحمن",
-    "Al-Waqi'ah": "الواقعہ",
-    "Al-Ikhlas": "الاخلاص",
-    "Al-Falaq": "الفلق",
-    "An-Nas": "الناس",
-  };
-
-  const localizedSurahName = contentLang === 'ur'
-    ? (SURAH_URDU_NAMES[ayah.surah] || ayah.surah)
-    : ayah.surah;
+  const localizedSurahName = getLocalizedSurahName(ayah.surahNumber || ayah.surah, contentLang);
 
   return (
     <Card
@@ -414,7 +396,7 @@ export function EnhancedDailyAyah() {
                   {ui.nobleQuran}
                 </span>
                 <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-semibold border border-[var(--border)] text-[var(--accent-text)] bg-[var(--accent-soft)]">
-                  {ayah.surah} • {ayah.ayahNumber}
+                  {localizedSurahName} • {ayah.ayahNumber}
                 </Badge>
               </div>
               <h3
@@ -438,7 +420,13 @@ export function EnhancedDailyAyah() {
                   lineHeight: 1.2,
                 }}
               >
-                Surah {ayah.surah} • Ayah {ayah.ayahNumber}
+                {contentLang === 'ur'
+                  ? `سورۃ ${localizedSurahName} • آیت ${ayah.ayahNumber}`
+                  : contentLang === 'gu'
+                  ? `સૂરહ ${localizedSurahName} • આયત ${ayah.ayahNumber}`
+                  : contentLang === 'hi'
+                  ? `सूरह ${localizedSurahName} • आयत ${ayah.ayahNumber}`
+                  : `Surah ${ayah.surah} • Ayah ${ayah.ayahNumber}`}
               </span>
             </div>
           </div>
@@ -619,7 +607,13 @@ export function EnhancedDailyAyah() {
         {/* Single Sleek Metadata Chip Row */}
         <div className={`flex items-center justify-between text-[11px] text-[var(--text-secondary)] px-1 font-medium ${isRtl ? 'flex-row-reverse' : ''}`}>
           <span className={`truncate ${contentLang === 'ur' ? 'font-urdu text-[13px]' : ''}`}>
-            {contentLang === 'ur' ? `سورۃ ${localizedSurahName} • آیت ${ayah.ayahNumber}` : contentLang === 'gu' ? `સૂરહ ${ayah.surah} • આયત ${ayah.ayahNumber}` : contentLang === 'hi' ? `सूरह ${ayah.surah} • आयत ${ayah.ayahNumber}` : `Surah ${ayah.surah} • Verse ${ayah.ayahNumber}`}
+            {contentLang === 'ur'
+              ? `سورۃ ${localizedSurahName} • آیت ${ayah.ayahNumber}`
+              : contentLang === 'gu'
+              ? `સૂરહ ${localizedSurahName} • આયત ${ayah.ayahNumber}`
+              : contentLang === 'hi'
+              ? `सूरह ${localizedSurahName} • आयत ${ayah.ayahNumber}`
+              : `Surah ${ayah.surah} • Verse ${ayah.ayahNumber}`}
           </span>
           <span className="flex items-center gap-1.5 shrink-0 ml-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />

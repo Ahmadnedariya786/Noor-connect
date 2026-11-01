@@ -27,7 +27,7 @@ import {
 import { Volume2, BookOpen, X, Sparkles, Loader2 } from 'lucide-react';
 import { MushafSurahPages, type MushafReadingMode } from './MushafSurahPages';
 
-export type InteractiveMushafSurface = 'jewel' | 'parchment' | 'night' | 'classic';
+export type InteractiveMushafSurface = 'jewel' | 'parchment' | 'paper' | 'night' | 'classic';
 
 interface InteractiveMushafPageProps {
   pageNumber: number;
@@ -356,8 +356,8 @@ export function InteractiveMushafPage({
   const lastReported7LRef = useRef<{ subPage: number; totalParts: number }>({ subPage: 0, totalParts: 0 });
 
   useEffect(() => {
-    if (typeof subPage7LProp === 'number' && subPage7LProp > 0 && subPage7LProp !== subPage7L) {
-      setSubPage7L(subPage7LProp);
+    if (typeof subPage7LProp === 'number' && subPage7LProp > 0) {
+      setSubPage7L((prev) => (prev !== subPage7LProp ? subPage7LProp : prev));
     }
   }, [subPage7LProp]);
 
@@ -368,13 +368,14 @@ export function InteractiveMushafPage({
   }, [lineFormat]);
 
   useEffect(() => {
-    const handler = (e: any) => {
-      if (e?.detail?.format) {
-        setActiveFormat(e.detail.format);
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ format?: MushafLineFormat }>;
+      if (customEvent.detail?.format) {
+        setActiveFormat(customEvent.detail.format);
       }
     };
-    window.addEventListener('noor-mushaf-format-changed' as any, handler);
-    return () => window.removeEventListener('noor-mushaf-format-changed' as any, handler);
+    window.addEventListener('noor-mushaf-format-changed', handler);
+    return () => window.removeEventListener('noor-mushaf-format-changed', handler);
   }, []);
 
   // Reset 7L subpage ONLY on page change or line-format change
@@ -928,6 +929,9 @@ export function InteractiveMushafPage({
     );
   }
 
+  const readingMode: 'paper' | 'jewel' | 'night' | 'classic' =
+    surfaceMode === 'paper' || surfaceMode === 'parchment' ? 'paper' : surfaceMode;
+
   // Surface styles
   const surfaceStyles = {
     jewel: {
@@ -942,14 +946,26 @@ export function InteractiveMushafPage({
       medallionColor: 'var(--accent-text)',
       medallionBorder: 'var(--accent)',
     },
+    paper: {
+      background: '#FBF6E9',
+      color: '#1A1612',
+      border: '1.5px solid rgba(190, 160, 95, 0.45)',
+      boxShadow: '0 8px 26px rgba(0, 0, 0, 0.18)',
+      bismillahColor: '#2C1808',
+      headerBg: '#EFE0C2',
+      headerBorder: '#B89352',
+      medallionBg: 'rgba(190, 160, 95, 0.18)',
+      medallionColor: '#7C4A03',
+      medallionBorder: '#C9A84C',
+    },
     parchment: {
       background: '#FBF6E9',
       color: '#1A1612',
       border: '1.5px solid rgba(190, 160, 95, 0.45)',
       boxShadow: '0 8px 26px rgba(0, 0, 0, 0.18)',
-      bismillahColor: '#7C4A03',
-      headerBg: '#F3EAD3',
-      headerBorder: '#D8C7A3',
+      bismillahColor: '#2C1808',
+      headerBg: '#EFE0C2',
+      headerBorder: '#B89352',
       medallionBg: 'rgba(190, 160, 95, 0.18)',
       medallionColor: '#7C4A03',
       medallionBorder: '#C9A84C',
@@ -998,11 +1014,29 @@ export function InteractiveMushafPage({
       >
         {/* Top Page Header Ribbon: Juz and Page Number */}
         <div
-          className="flex items-center justify-between pb-3 mb-3 border-b text-[11px] font-bold tracking-wider"
-          style={{ borderColor: 'var(--border)' }}
+          className="flex items-center justify-between text-[11px] font-bold tracking-wider mb-3 transition-colors"
+          style={
+            readingMode === 'paper'
+              ? {
+                  background: '#EAD9B8',
+                  color: '#3D260E',
+                  borderBottom: '1px solid #C9AD79',
+                  padding: '6px 12px',
+                  borderRadius: '12px',
+                }
+              : {
+                  borderColor: 'var(--border)',
+                  borderBottom: '1px solid var(--border)',
+                  paddingBottom: '12px',
+                }
+          }
         >
-          <span className="opacity-75">JUZ {pageData?.juz_number || Math.ceil(pageNumber / 20)}</span>
-          <span className="opacity-75 font-mono">PAGE {pageNumber}</span>
+          <span className={readingMode === 'paper' ? 'opacity-90' : 'opacity-75'}>
+            JUZ {pageData?.juz_number || Math.ceil(pageNumber / 20)}
+          </span>
+          <span className={`font-mono ${readingMode === 'paper' ? 'opacity-90' : 'opacity-75'}`}>
+            PAGE {pageNumber}
+          </span>
         </div>
 
         {/* Sleek Tajweed Color Legend Bar */}
@@ -1010,8 +1044,8 @@ export function InteractiveMushafPage({
           <div
             className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 mb-3 rounded-xl border text-[10px] sm:text-[11px] font-medium overflow-x-auto no-scrollbar"
             style={{
-              background: surfaceMode === 'parchment' ? 'rgba(44, 30, 17, 0.07)' : 'var(--surface-2)',
-              borderColor: surfaceMode === 'parchment' ? 'rgba(44, 30, 17, 0.18)' : 'var(--border)',
+              background: readingMode === 'paper' ? 'rgba(44, 30, 17, 0.07)' : 'var(--surface-2)',
+              borderColor: readingMode === 'paper' ? 'rgba(44, 30, 17, 0.18)' : 'var(--border)',
             }}
           >
             <div className="flex items-center gap-2 shrink-0">
@@ -1024,8 +1058,8 @@ export function InteractiveMushafPage({
                   <span
                     className="text-[10px] font-medium"
                     style={{
-                      color: surfaceMode === 'parchment' ? '#2C1E11' : undefined,
-                      opacity: surfaceMode === 'parchment' ? 1 : 0.85,
+                      color: readingMode === 'paper' ? '#2C1E11' : undefined,
+                      opacity: readingMode === 'paper' ? 1 : 0.85,
                     }}
                   >
                     {rule.name}
@@ -1041,13 +1075,13 @@ export function InteractiveMushafPage({
               }}
               title="Tajweed Rules Guide"
               className={`shrink-0 font-bold ml-1 text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-lg transition-colors ${
-                surfaceMode === 'parchment'
+                readingMode === 'paper'
                   ? 'hover:opacity-80'
                   : 'text-[var(--accent-text)] hover:underline'
               }`}
               style={{
-                background: surfaceMode === 'parchment' ? 'rgba(44, 30, 17, 0.12)' : undefined,
-                color: surfaceMode === 'parchment' ? '#2C1E11' : undefined,
+                background: readingMode === 'paper' ? 'rgba(44, 30, 17, 0.12)' : undefined,
+                color: readingMode === 'paper' ? '#2C1E11' : undefined,
               }}
             >
               <Sparkles className="w-3 h-3" />
@@ -1095,7 +1129,11 @@ export function InteractiveMushafPage({
               const sInfo = quranService.getSurahInfo(contSurah);
               return (
                 <div
-                  className="text-xs font-arabic text-[var(--accent-text)] opacity-70 text-right mb-2 px-1 not-sr-only select-none"
+                  className="text-xs font-arabic text-right mb-2 px-1 not-sr-only select-none"
+                  style={{
+                    color: readingMode === 'paper' ? '#4A3219' : 'var(--accent-text)',
+                    opacity: readingMode === 'paper' ? 0.95 : 0.7,
+                  }}
                   dir="rtl"
                 >
                   سُورَةُ {sInfo?.name || ''} ({toArabicDigits(minAyah)}–{toArabicDigits(maxAyah)})
@@ -1123,27 +1161,49 @@ export function InteractiveMushafPage({
                         width: '100%',
                         display: 'block',
                         scrollMarginTop: '116px',
-                        background: surfaceStyles.headerBg,
-                        borderColor: surfaceStyles.headerBorder,
-                        boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                        background: readingMode === 'paper' ? '#EFE0C2' : surfaceStyles.headerBg,
+                        borderColor: readingMode === 'paper' ? '#B89352' : surfaceStyles.headerBorder,
+                        borderWidth: readingMode === 'paper' ? '1.5px' : undefined,
+                        borderStyle: 'solid',
+                        boxShadow: readingMode === 'paper' ? 'none' : 'inset 0 1px 0 var(--card-sheen)',
                       }}
                     >
-                      <div className="flex items-center justify-between px-3 text-[11px] font-bold opacity-75">
+                      <div
+                        className="flex items-center justify-between px-3 text-[11px] font-bold"
+                        style={{
+                          color: readingMode === 'paper' ? '#4A3219' : undefined,
+                          opacity: readingMode === 'paper' ? 0.95 : 0.75,
+                        }}
+                      >
                         <span>{surahHeader.revelation_type}</span>
                         <span>{surahHeader.ayah_count} Verses</span>
                       </div>
                       <h2
-                        className="text-xl sm:text-2xl font-bold my-1 text-[var(--accent-text)] font-arabic tracking-wide"
-                        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+                        className="text-xl sm:text-2xl font-bold my-1 font-arabic tracking-wide"
+                        style={{
+                          color: readingMode === 'paper' ? '#2C1808' : readingMode === 'night' ? '#F5D061' : 'var(--accent-text)',
+                          textShadow: readingMode === 'paper' ? 'none' : undefined,
+                        }}
                       >
                         سُورَةُ {surahHeader.name_arabic}
                       </h2>
-                      <p className="text-xs font-semibold opacity-75">{surahHeader.name_english}</p>
+                      <p
+                        className="text-xs font-semibold"
+                        style={{
+                          color: readingMode === 'paper' ? '#4A3219' : undefined,
+                          opacity: readingMode === 'paper' ? 0.95 : 0.75,
+                        }}
+                      >
+                        {surahHeader.name_english}
+                      </p>
 
                       {surahHeader.show_bismillah && (
                         <div
-                          className="mt-2 text-lg sm:text-xl font-bold"
-                          style={{ color: surfaceStyles.bismillahColor }}
+                          className="mt-2 text-lg sm:text-xl font-bold font-arabic"
+                          style={{
+                            color: readingMode === 'paper' ? '#2C1808' : readingMode === 'night' ? '#F5D061' : surfaceStyles.bismillahColor,
+                            textShadow: readingMode === 'paper' ? 'none' : undefined,
+                          }}
                         >
                           بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                         </div>
@@ -1298,8 +1358,22 @@ export function InteractiveMushafPage({
 
         {/* Page Footer */}
         <div
-          className="mt-6 pt-3 border-t flex items-center justify-between text-[11px] font-bold opacity-70"
-          style={{ borderColor: 'var(--border)' }}
+          className="mt-6 pt-3 flex items-center justify-between text-[11px] font-bold transition-colors"
+          style={
+            readingMode === 'paper'
+              ? {
+                  borderTop: '1px solid #C9AD79',
+                  background: '#EAD9B8',
+                  color: '#2C1808',
+                  padding: '8px 12px',
+                  borderRadius: '12px',
+                }
+              : {
+                  borderTop: '1px solid var(--border)',
+                  color: 'inherit',
+                  opacity: 0.7,
+                }
+          }
         >
           <span>
             {activeFormat === 7
@@ -1315,7 +1389,12 @@ export function InteractiveMushafPage({
 
         {/* 7-Line Subpage Switcher */}
         {activeFormat === 7 && totalParts7L > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border)] text-xs">
+          <div
+            className="flex items-center justify-between mt-4 pt-3 text-xs transition-colors"
+            style={{
+              borderTop: readingMode === 'paper' ? '1px solid #C9AD79' : '1px solid var(--border)',
+            }}
+          >
             <button
               type="button"
               disabled={subPage7L <= 1}
@@ -1327,12 +1406,40 @@ export function InteractiveMushafPage({
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
                 subPage7L <= 1
                   ? 'opacity-40 cursor-not-allowed border-transparent'
-                  : 'bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] hover:border-[var(--accent)] active:scale-95'
+                  : 'active:scale-95'
               }`}
+              style={
+                readingMode === 'paper'
+                  ? {
+                      background: '#EAD9B8',
+                      color: '#2C1808',
+                      borderColor: '#B89352',
+                    }
+                  : {
+                      background: 'var(--surface-2)',
+                      color: 'var(--accent-text)',
+                      borderColor: 'var(--border)',
+                    }
+              }
             >
               ← Prev 7 Lines
             </button>
-            <span className="font-bold text-[var(--accent-text)] text-xs px-2.5 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)]">
+            <span
+              className="font-bold text-xs px-2.5 py-1 rounded-full border shadow-sm"
+              style={
+                readingMode === 'paper'
+                  ? {
+                      background: '#854D0E',
+                      color: '#FFFBEB',
+                      borderColor: '#854D0E',
+                    }
+                  : {
+                      background: 'var(--surface-2)',
+                      color: 'var(--accent-text)',
+                      borderColor: 'var(--border)',
+                    }
+              }
+            >
               Part {subPage7L} of {totalParts7L} • 7-Line Large Print
             </span>
             <button
@@ -1346,8 +1453,21 @@ export function InteractiveMushafPage({
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
                 subPage7L >= totalParts7L
                   ? 'opacity-40 cursor-not-allowed border-transparent'
-                  : 'bg-[var(--surface-2)] text-[var(--accent-text)] border-[var(--border)] hover:border-[var(--accent)] active:scale-95'
+                  : 'active:scale-95'
               }`}
+              style={
+                readingMode === 'paper'
+                  ? {
+                      background: '#EAD9B8',
+                      color: '#2C1808',
+                      borderColor: '#B89352',
+                    }
+                  : {
+                      background: 'var(--surface-2)',
+                      color: 'var(--accent-text)',
+                      borderColor: 'var(--border)',
+                    }
+              }
             >
               Next 7 Lines →
             </button>
