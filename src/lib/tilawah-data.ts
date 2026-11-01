@@ -7,75 +7,25 @@
  */
 
 import { quranService } from '@/lib/quran-service';
+import { QURAN_RECITERS, DEFAULT_QURAN_RECITER, type AuthenticReciter, type ReciterStyle } from '@/lib/quran-reciters';
+
+export type { AuthenticReciter, ReciterStyle };
 
 export interface TilawahReciter {
-  id: string; // Islamic Network ID (e.g. 'ar.alafasy')
+  id: string; // Reciter ID (e.g. 'ar.alafasy')
   name: string;
   arabicName: string;
   shortName: string;
   everyAyahDir: string;
   bitrate: string;
   style: string;
+  country?: string;
+  note?: string;
 }
 
-export const TILAWAH_RECITERS: TilawahReciter[] = [
-  {
-    id: 'ar.husary',
-    name: 'Mahmoud Khalil Al-Husary',
-    arabicName: 'محمود خليل الحصري',
-    shortName: 'Al-Husary',
-    everyAyahDir: 'Husary_128kbps',
-    bitrate: '128 kbps',
-    style: 'Murattal (Classical Tajweed Standard)',
-  },
-  {
-    id: 'ar.alafasy',
-    name: 'Mishary Rashid Alafasy',
-    arabicName: 'مشاري بن راشد العفاسي',
-    shortName: 'Alafasy',
-    everyAyahDir: 'Alafasy_128kbps',
-    bitrate: '128 kbps',
-    style: 'Murattal (Melodious & Clear)',
-  },
-  {
-    id: 'ar.abdulbasitmurattal',
-    name: 'Abdul Basit (Murattal)',
-    arabicName: 'عبد الباسط عبد الصمد',
-    shortName: 'Abdul Basit',
-    everyAyahDir: 'Abdul_Basit_Murattal_192kbps',
-    bitrate: '192 kbps',
-    style: 'Murattal (Reverent & Powerful)',
-  },
-  {
-    id: 'ar.abdurrahmaansudais',
-    name: 'Abdurrahman As-Sudais',
-    arabicName: 'عبد الرحمن السديس',
-    shortName: 'As-Sudais',
-    everyAyahDir: 'Abdurrahmaan_As-Sudais_192kbps',
-    bitrate: '192 kbps',
-    style: 'Murattal (Imam of Masjid al-Haram)',
-  },
-  {
-    id: 'ar.mahermuaiqly',
-    name: 'Maher Al-Muaiqly',
-    arabicName: 'ماهر المعيقلي',
-    shortName: 'Al-Muaiqly',
-    everyAyahDir: 'MaherAlMuaiqly128kbps',
-    bitrate: '128 kbps',
-    style: 'Murattal (Imam of Masjid al-Haram)',
-  },
-  {
-    id: 'ar.saadalghamdi',
-    name: 'Saad Al-Ghamdi',
-    arabicName: 'سعد الغامدي',
-    shortName: 'Al-Ghamdi',
-    everyAyahDir: 'Ghamadi_40kbps',
-    bitrate: '128 kbps',
-    style: 'Murattal (Calm & Reflective)',
-  },
-];
+export const TILAWAH_RECITERS: TilawahReciter[] = QURAN_RECITERS;
 
-export const DEFAULT_TILAWAH_RECITER = TILAWAH_RECITERS[1]; // Mishary Alafasy
+export const DEFAULT_TILAWAH_RECITER: TilawahReciter = DEFAULT_QURAN_RECITER;
 
 /**
  * 1-indexed cumulative ayah offset cache:
@@ -117,9 +67,43 @@ export function getSurahAndAyahFromGlobal(globalAyah: number): { surah: number; 
 }
 
 /**
- * Return primary audio URL (Islamic Network 128kbps CDN)
+ * Set of reciters natively hosted on Islamic Network 128kbps CDN
+ */
+const ISLAMIC_NETWORK_HOSTED_IDS = new Set([
+  'ar.alafasy',
+  'ar.husary',
+  'ar.abdulbasitmurattal',
+  'ar.abdurrahmaansudais',
+  'ar.mahermuaiqly',
+  'ar.saadalghamdi',
+  'ar.hudhaify',
+  'ar.ahmedajamy',
+  'ar.shaatree',
+  'ar.aymansowaid',
+  'ar.minshawimurattal',
+  'ar.abdullahbasfar',
+]);
+
+/**
+ * Return primary audio URL:
+ * If reciter is natively hosted on Islamic Network, use fast CDN;
+ * otherwise use EveryAyah directly as primary to prevent any 404 delays!
  */
 export function getPrimaryAyahAudioUrl(reciterId: string, surah: number, ayah: number): string {
+  const reciter = TILAWAH_RECITERS.find((r) => r.id === reciterId);
+  const everyAyahDir = reciter?.everyAyahDir;
+
+  if (ISLAMIC_NETWORK_HOSTED_IDS.has(reciterId)) {
+    const globalAyah = getGlobalAyahNumber(surah, ayah);
+    return `https://cdn.islamic.network/quran/audio/128/${reciterId}/${globalAyah}.mp3`;
+  }
+
+  if (everyAyahDir) {
+    const sStr = String(surah).padStart(3, '0');
+    const aStr = String(ayah).padStart(3, '0');
+    return `https://everyayah.com/data/${everyAyahDir}/${sStr}${aStr}.mp3`;
+  }
+
   const globalAyah = getGlobalAyahNumber(surah, ayah);
   return `https://cdn.islamic.network/quran/audio/128/${reciterId}/${globalAyah}.mp3`;
 }

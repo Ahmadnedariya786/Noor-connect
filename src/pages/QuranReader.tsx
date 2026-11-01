@@ -9,10 +9,13 @@ import {
   Play,
   Pause,
   Sliders,
-  Info,
   X,
   HelpCircle,
+  Copy,
+  Share2,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { PlaybackOptionsDrawer } from '@/components/Quran/PlaybackOptionsDrawer';
 import { QuranGuideModal } from '@/components/Quran/QuranGuideModal';
 import { quranService } from '@/lib/quran-service';
 import {
@@ -104,6 +107,67 @@ export default function QuranReader() {
 
   // Page slider dialog
   const [showPageSlider, setShowPageSlider] = useState(false);
+  const [showAudioDrawer, setShowAudioDrawer] = useState(false);
+  const [readerViewMode, setReaderViewMode] = useState<'mushaf' | 'card'>('mushaf');
+  const [cardArabicFontSize, setCardArabicFontSize] = useState<number>(28);
+  const [cardTranslations, setCardTranslations] = useState<Record<number, string>>({});
+  const [isCardTranslationLoading, setIsCardTranslationLoading] = useState(false);
+
+  useEffect(() => {
+    if (readerViewMode !== 'card') return;
+    let cancelled = false;
+
+    const loadCardTranslations = async () => {
+      setIsCardTranslationLoading(true);
+      const targetLang = language === 'ur' ? 'ur.jalandhry' : language === 'hi' ? 'hi.hindi' : 'en.sahih';
+      const cacheKey = `noor_card_page_${mushafPageNumber}_${targetLang}`;
+
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          if (!cancelled) {
+            setCardTranslations(JSON.parse(cached));
+            setIsCardTranslationLoading(false);
+          }
+          return;
+        }
+      } catch {
+        // Safe catch
+      }
+
+      try {
+        const res = await fetch(`https://api.alquran.cloud/v1/page/${mushafPageNumber}/${targetLang}`, {
+          signal: AbortSignal.timeout(4500),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data?.ayahs && Array.isArray(json.data.ayahs)) {
+            const map: Record<number, string> = {};
+            json.data.ayahs.forEach((a: { numberInSurah: number; text: string }) => {
+              map[a.numberInSurah] = a.text;
+            });
+            if (!cancelled) {
+              setCardTranslations(map);
+              try {
+                localStorage.setItem(cacheKey, JSON.stringify(map));
+              } catch {
+                // Safe catch
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Card translations load failed', e);
+      } finally {
+        if (!cancelled) setIsCardTranslationLoading(false);
+      }
+    };
+
+    loadCardTranslations();
+    return () => {
+      cancelled = true;
+    };
+  }, [readerViewMode, mushafPageNumber, language]);
   const [tempPageInput, setTempPageInput] = useState(mushafPageNumber);
   useBodyScrollLock(showPageSlider);
 
@@ -156,14 +220,30 @@ export default function QuranReader() {
   }, [mushafPageNumber]);
 
   useEffect(() => {
-    const handler = (e: any) => {
-      if (e?.detail?.format) {
-        setLineFormatState(e.detail.format);
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<{ format?: MushafLineFormat }>;
+      if (custom?.detail?.format) {
+        setLineFormatState(custom.detail.format);
       }
     };
-    window.addEventListener('noor-mushaf-format-changed' as any, handler);
-    return () => window.removeEventListener('noor-mushaf-format-changed' as any, handler);
+    window.addEventListener('noor-mushaf-format-changed', handler);
+    return () => window.removeEventListener('noor-mushaf-format-changed', handler);
   }, []);
+
+  const loadBookmark = useCallback(async () => {
+    try {
+      const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
+      const bookmarks = value ? JSON.parse(value) : [];
+      setIsBookmarked(Array.isArray(bookmarks) && bookmarks.includes(surahNum));
+    } catch {
+      try {
+        const bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
+        setIsBookmarked(Array.isArray(bookmarks) && bookmarks.includes(surahNum));
+      } catch {
+        setIsBookmarked(false);
+      }
+    }
+  }, [surahNum]);
 
   // Sync with route param and query searchParams (?page=)
   useEffect(() => {
@@ -188,6 +268,7 @@ export default function QuranReader() {
     if (isPlaying && currentSurah > 0 && currentSurah !== routeSurahId) {
       setAutoFollow(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeSurahId, searchParams]);
 
   const surahInfo = quranService.getSurahInfo(surahNum);
@@ -238,7 +319,7 @@ export default function QuranReader() {
     }, 1000);
 
     return () => clearTimeout(syncId);
-  }, [surahNum, surahOnPage, currentSurahInfo, mushafPageNumber]);
+  }, [surahNum, surahOnPage, currentSurahInfo, mushafPageNumber, loadBookmark]);
 
   const goToMushafPage = useCallback((
     targetPage: number,
@@ -355,22 +436,7 @@ export default function QuranReader() {
     return () => {
       isCancelled = true;
     };
-  }, [isPlaying, currentSurah, currentAyah, autoFollow, mushafPageNumber, currentPageData]);
-
-  const loadBookmark = async () => {
-    try {
-      const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
-      const bookmarks = value ? JSON.parse(value) : [];
-      setIsBookmarked(Array.isArray(bookmarks) && bookmarks.includes(surahNum));
-    } catch {
-      try {
-        const bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
-        setIsBookmarked(Array.isArray(bookmarks) && bookmarks.includes(surahNum));
-      } catch {
-        setIsBookmarked(false);
-      }
-    }
-  };
+  }, [isPlaying, currentSurah, currentAyah, autoFollow, mushafPageNumber, currentPageData, goToMushafPage]);
 
   const toggleBookmark = async () => {
     try {
@@ -572,6 +638,28 @@ export default function QuranReader() {
                 <span>{uiStrings.studyBtn}</span>
               </button>
 
+              {/* Audio Drawer & Tilawah Options Button */}
+              <button
+                type="button"
+                onClick={() => setShowAudioDrawer(true)}
+                title="Tilawah Audio Player & Repeat Controls"
+                aria-label="Audio Controls"
+                className="hover:border-[var(--accent)] transition-all shadow-sm active:scale-95 select-none"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--accent-text)',
+                }}
+              >
+                <Sliders style={{ width: '16px', height: '16px' }} />
+              </button>
+
               {/* Star Bookmark Button: 36x36 circle matching Guide button */}
               <button
                 type="button"
@@ -603,36 +691,88 @@ export default function QuranReader() {
             </div>
           </div>
 
-          {/* 4-Mode Surface Bar - Equal 4-Column Segmented Row */}
+          {/* View Mode Bar & Surface Controls */}
           <div className="border-t border-[var(--border)]/60 bg-[var(--surface)] px-3 py-1.5">
-            <div
-              className="grid max-w-md mx-auto"
-              style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}
-            >
-              {[
-                { mode: 'jewel' as const, icon: '✦', label: uiStrings.jewel },
-                { mode: 'parchment' as const, icon: '📜', label: uiStrings.paper },
-                { mode: 'night' as const, icon: '🌙', label: uiStrings.night },
-                { mode: 'classic' as const, icon: '🖼', label: uiStrings.scan },
-              ].map((item) => {
-                const isActive = surfaceMode === item.mode;
-                return (
+            <div className="flex items-center justify-between max-w-md mx-auto gap-2">
+              {/* View Switcher: Mushaf vs Cards */}
+              <div className="flex items-center rounded-xl p-0.5 border border-[var(--border)] bg-[var(--surface-2)] shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setReaderViewMode('mushaf')}
+                  className={`flex items-center gap-1 py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
+                    readerViewMode === 'mushaf'
+                      ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  <span>📖 Mushaf</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReaderViewMode('card')}
+                  className={`flex items-center gap-1 py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
+                    readerViewMode === 'card'
+                      ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  <span>🗂️ Cards</span>
+                </button>
+              </div>
+
+              {readerViewMode === 'mushaf' ? (
+                /* 4 Surface modes */
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                  {[
+                    { mode: 'jewel' as const, icon: '✦', label: uiStrings.jewel },
+                    { mode: 'parchment' as const, icon: '📜', label: uiStrings.paper },
+                    { mode: 'night' as const, icon: '🌙', label: uiStrings.night },
+                    { mode: 'classic' as const, icon: '🖼', label: uiStrings.scan },
+                  ].map((item) => {
+                    const isActive = surfaceMode === item.mode;
+                    return (
+                      <button
+                        key={item.mode}
+                        type="button"
+                        onClick={() => handleSurfaceChange(item.mode)}
+                        className={`flex items-center justify-center gap-1 py-1 px-2 rounded-xl text-xs font-bold transition-all select-none ${
+                          isActive
+                            ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                            : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]'
+                        }`}
+                        title={item.label}
+                      >
+                        <span className="text-[11px] leading-none">{item.icon}</span>
+                        <span className="hidden sm:inline">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Card Font Size Stepper */
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">Font:</span>
                   <button
-                    key={item.mode}
                     type="button"
-                    onClick={() => handleSurfaceChange(item.mode)}
-                    className={`flex items-center justify-center gap-1 py-1.5 px-1 rounded-xl text-xs font-bold transition-all select-none ${
-                      isActive
-                        ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
-                        : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]'
-                    }`}
-                    style={{ whiteSpace: 'nowrap' }}
+                    onClick={() => setCardArabicFontSize((s) => Math.max(20, s - 2))}
+                    className="w-7 h-7 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] font-bold text-xs hover:border-[var(--accent)] text-[var(--text-primary)] active:scale-95"
+                    title="Smaller Arabic font"
                   >
-                    <span className="text-[11px] leading-none">{item.icon}</span>
-                    <span>{item.label}</span>
+                    A-
                   </button>
-                );
-              })}
+                  <span className="font-mono text-xs font-bold text-[var(--accent-text)] px-0.5">
+                    {cardArabicFontSize}px
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCardArabicFontSize((s) => Math.min(44, s + 2))}
+                    className="w-7 h-7 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] font-bold text-xs hover:border-[var(--accent)] text-[var(--text-primary)] active:scale-95"
+                    title="Larger Arabic font"
+                  >
+                    A+
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -745,21 +885,164 @@ export default function QuranReader() {
           </div>
         </div>
 
-        {/* INTERACTIVE MUSHAF PAGE CANVAS */}
+        {/* INTERACTIVE MUSHAF PAGE CANVAS OR AYAH CARDS VIEW */}
         <div className="max-w-2xl mx-auto px-3 sm:px-4 py-4">
-          <InteractiveMushafPage
-            pageNumber={mushafPageNumber}
-            surahNumber={surahNum}
-            targetSurahNumber={routeSurahId}
-            surfaceMode={surfaceMode}
-            showTajweed={showTajweed}
-            lineFormat={lineFormat}
-            subPage7L={subPage7L}
-            onSubPage7LChange={handleSubPage7LChange}
-            onOpenStudySheet={handleOpenStudySheet}
-            onPageTurnRequest={handlePageTurnRequest}
-            onPageLoaded={handlePageLoaded}
-          />
+          {readerViewMode === 'mushaf' ? (
+            <InteractiveMushafPage
+              pageNumber={mushafPageNumber}
+              surahNumber={surahNum}
+              targetSurahNumber={routeSurahId}
+              surfaceMode={surfaceMode}
+              showTajweed={showTajweed}
+              lineFormat={lineFormat}
+              subPage7L={subPage7L}
+              onSubPage7LChange={handleSubPage7LChange}
+              onOpenStudySheet={handleOpenStudySheet}
+              onPageTurnRequest={handlePageTurnRequest}
+              onPageLoaded={handlePageLoaded}
+            />
+          ) : (
+            <div className="space-y-3 pb-24">
+              {currentPageData && currentPageData.verses.length > 0 ? (
+                currentPageData.verses.map((v) => {
+                  const isThisPlaying = isPlaying && currentSurah === v.surah_number && currentAyah === v.verse_number;
+                  const transText = cardTranslations[v.verse_number];
+                  const isUrdu = language === 'ur';
+
+                  return (
+                    <div
+                      key={v.verse_key}
+                      id={`card-ayah-${v.verse_key}`}
+                      className="p-4 rounded-2xl border transition-all duration-200 space-y-3"
+                      style={{
+                        background: 'var(--surface)',
+                        borderColor: isThisPlaying ? 'var(--accent)' : 'var(--border)',
+                        boxShadow: isThisPlaying
+                          ? '0 0 18px var(--accent-glow), inset 0 1px 0 var(--card-sheen)'
+                          : 'inset 0 1px 0 var(--card-sheen)',
+                      }}
+                    >
+                      {/* Top Header Row */}
+                      <div className="flex items-center justify-between gap-2 border-b border-[var(--border)]/40 pb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className="w-7 h-7 rounded-full border border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-center font-bold text-xs text-[var(--accent-text)] font-mono shrink-0"
+                            style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+                          >
+                            {v.verse_number}
+                          </span>
+                          <span className="font-bold text-xs text-[var(--text-primary)] truncate">
+                            {currentSurahInfo?.englishName || `Surah ${v.surah_number}`} • {v.verse_key}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {/* Play / Pause Ayah */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isThisPlaying) {
+                                togglePlay();
+                              } else {
+                                playAyah(v.surah_number, v.verse_number);
+                              }
+                            }}
+                            className="p-1.5 rounded-xl border border-[var(--border)] hover:border-[var(--accent)] bg-[var(--surface-2)] text-[var(--accent-text)] transition-all active:scale-95"
+                            title={isThisPlaying ? 'Pause Audio' : 'Play this Ayah'}
+                          >
+                            {isThisPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                          </button>
+
+                          {/* Study & Tafsir */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStudySheet(v.surah_number, v.verse_number)}
+                            className="p-1.5 rounded-xl border border-[var(--border)] hover:border-[var(--accent)] bg-[var(--surface-2)] text-[var(--accent-text)] transition-all active:scale-95"
+                            title="Study & Tafsir for this Ayah"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Copy Ayah */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const textToCopy = `${v.text_uthmani}\n\n${transText || ''}\n(Quran ${v.verse_key})`;
+                              navigator.clipboard.writeText(textToCopy);
+                              toast.success(`Ayah ${v.verse_key} copied`);
+                            }}
+                            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                            title="Copy Arabic & Translation"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Share Ayah */}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const shareText = `"${v.text_uthmani}"\n\n${transText || ''}\n— Surah ${currentSurahInfo?.englishName || v.surah_number} (${v.verse_key})\nShared via Noor Connect`;
+                              if (navigator.share) {
+                                try {
+                                  await navigator.share({ title: `Ayah ${v.verse_key}`, text: shareText });
+                                } catch {
+                                  // Handled dismiss
+                                }
+                              } else {
+                                navigator.clipboard.writeText(shareText);
+                                toast.success('Ayah copied for sharing');
+                              }
+                            }}
+                            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                            title="Share Ayah"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Arabic Text with Ornate Medallion */}
+                      <div
+                        dir="rtl"
+                        className="font-arabic text-right leading-[2.2] select-text text-[var(--accent-text)]"
+                        style={{ fontSize: `${cardArabicFontSize}px` }}
+                      >
+                        {v.text_uthmani}{' '}
+                        <span className="inline-block text-[var(--accent)] mx-1 select-none font-bold">
+                          ﴿{v.verse_number}﴾
+                        </span>
+                      </div>
+
+                      {/* Translation */}
+                      <div
+                        dir={isUrdu ? 'rtl' : 'ltr'}
+                        className={`text-xs text-[var(--text-primary)] leading-relaxed select-text pt-1.5 border-t border-[var(--border)]/30 ${
+                          isUrdu ? "font-['Jameel_Noori_Nastaleeq',_var(--font-urdu)] text-sm leading-[2.1]" : ''
+                        }`}
+                      >
+                        {transText ? (
+                          transText
+                        ) : isCardTranslationLoading ? (
+                          <span className="text-[var(--text-secondary)] italic">Loading translation...</span>
+                        ) : (
+                          <span className="text-[var(--text-secondary)] italic">
+                            {v.words.map((w) => w.translation?.text).filter(Boolean).join(' ') || 'Translation unavailable offline'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-12 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4">
+                  <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  <p className="text-xs font-semibold text-[var(--text-secondary)]">
+                    Loading Page {mushafPageNumber} Cards...
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* IMMERSIVE DISTRACTION-FREE MUSHAF FOOTER BAR (Hides main BottomNav) */}
@@ -955,6 +1238,12 @@ export default function QuranReader() {
             </div>
           </div>
         )}
+
+        {/* Tilawah Audio Player & Paced Repeat Options Drawer */}
+        <PlaybackOptionsDrawer
+          isOpen={showAudioDrawer}
+          onClose={() => setShowAudioDrawer(false)}
+        />
 
         {/* Interactive Ayah Study, Multi-Tafsir & Hifz Sheet (Portaled to document.body) */}
         <AyahStudySheet

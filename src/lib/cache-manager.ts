@@ -86,6 +86,11 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
   /^(?:favorites|islamic[_-]names[_-]favorites|duas[_-]favorites)$/,
   /^mood[_-]history$/,
   /^zakat[_-]calc[_-]history$/,
+  /^noor_zakat_history_v1$/,
+  /^noor_quran_notes_v1$/,
+  /^noor_quran_folders_v1$/,
+  /^noor_offline_tafsirs/,
+  /^noor_offline_trans_/,
 
   // Auto Backup Snapshots
   /^noor[_-]auto[_-]backup[_-]/,
@@ -249,8 +254,9 @@ export async function getStorageBreakdown(): Promise<StorageBreakdown> {
     try {
       if ('storage' in navigator && 'estimate' in navigator.storage) {
         const est = await navigator.storage.estimate();
-        if (est.usageDetails && (est.usageDetails as any).caches) {
-          cacheStorageBytes = (est.usageDetails as any).caches;
+        const details = est.usageDetails as Record<string, number> | undefined;
+        if (details?.caches) {
+          cacheStorageBytes = details.caches;
         }
       }
     } catch {

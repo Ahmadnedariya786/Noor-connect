@@ -9,7 +9,7 @@
  * 5. Tab 3: Hifz Memorization Engine (Ayah repeats, range loops, learner pause factor, blur memory test)
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTilawah } from '@/contexts/TilawahContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -29,18 +29,19 @@ import {
   Play,
   Repeat,
   Share2,
-  Bookmark,
   Eye,
   EyeOff,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   Loader2,
   Sparkles,
   Check,
   RotateCcw,
+  Download,
+  CheckCircle2,
+  FileText,
+  Trash2,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface AyahStudySheetProps {
@@ -51,20 +52,44 @@ interface AyahStudySheetProps {
   currentPage?: number;
 }
 
-type StudyTab = 'translation' | 'tafsir' | 'hifz';
+export type StudyTab = 'translation' | 'tafsir' | 'hifz' | 'notes';
 
-interface TranslationEdition {
+export interface QuranPersonalNote {
+  id: string;
+  surah: number;
+  ayah: number;
+  text: string;
+  tag: string;
+  createdAt: number;
+}
+
+export interface TranslationEdition {
   id: string;
   name: string;
   lang: string;
+  isRtl?: boolean;
 }
 
-const TRANSLATION_EDITIONS: TranslationEdition[] = [
+export const TRANSLATION_EDITIONS: TranslationEdition[] = [
+  // English
   { id: 'en.sahih', name: "Sahih Int'l", lang: 'English' },
+  { id: 'en.khattab', name: 'Clear Quran (Khattab)', lang: 'English' },
   { id: 'en.pickthall', name: 'Pickthall', lang: 'English' },
-  { id: 'ur.jalandhry', name: 'Urdu', lang: 'Urdu' },
-  { id: 'hi.hindi', name: 'Hindi', lang: 'Hindi' },
-  { id: 'gu.omari', name: 'Gujarati (ઓમારી)', lang: 'Gujarati' },
+  { id: 'en.yusufali', name: 'Yusuf Ali', lang: 'English' },
+  // Urdu (Jameel Noori Nastaliq)
+  { id: 'ur.jalandhry', name: 'جالندھری (Urdu)', lang: 'Urdu', isRtl: true },
+  { id: 'ur.maududi', name: 'مودودی (Urdu)', lang: 'Urdu', isRtl: true },
+  { id: 'ur.junagarhi', name: 'جوناگڑھی (Urdu)', lang: 'Urdu', isRtl: true },
+  // Gujarati
+  { id: 'gu.omari', name: 'ઓમારી (Gujarati)', lang: 'Gujarati' },
+  // Hindi
+  { id: 'hi.hindi', name: 'फ़ारूक़ ख़ान (Hindi)', lang: 'Hindi' },
+  // International
+  { id: 'bn.bengali', name: 'মুহিউদ্দীন (Bengali)', lang: 'Bengali' },
+  { id: 'tr.diyanet', name: 'Diyanet (Türkçe)', lang: 'Turkish' },
+  { id: 'id.indonesian', name: 'Kemenag (Indonesia)', lang: 'Indonesian' },
+  { id: 'ru.kuliev', name: 'Кулиев (Русский)', lang: 'Russian' },
+  { id: 'fr.hamidullah', name: 'Hamidullah (Français)', lang: 'French' },
 ];
 
 export interface TafsirEdition {
@@ -78,11 +103,50 @@ export interface TafsirEdition {
 }
 
 export const TAFSIR_EDITIONS: TafsirEdition[] = [
+  // 4 Urdu Tafsirs (Rendered in Jameel Noori Nastaliq, dir="rtl", lineHeight 2.2)
+  {
+    id: 160,
+    slug: 'ur-tafsir-ibn-kathir',
+    name: 'تفسیر ابنِ کثیر (Urdu)',
+    author: 'حافظ ابنِ کثیر (اردو)',
+    lang: 'Urdu',
+    isRtl: true,
+    lineHeight: 2.2,
+  },
+  {
+    id: 159,
+    slug: 'ur-tafsir-bayan-ul-quran',
+    name: 'بیان القرآن (Dr. Israr)',
+    author: 'ڈاکٹر اسرار احمد (اردو)',
+    lang: 'Urdu',
+    isRtl: true,
+    lineHeight: 2.2,
+  },
+  {
+    id: 157,
+    slug: 'ur-tafsir-fe-zalal-al-quran',
+    name: 'فی ظلال القرآن (Urdu)',
+    author: 'سید قطب (اردو)',
+    lang: 'Urdu',
+    isRtl: true,
+    lineHeight: 2.2,
+  },
+  {
+    id: 818,
+    slug: 'ur-al-mukhtasar',
+    name: 'المختصر فی التفسیر (Urdu)',
+    author: 'مرکز تفسیر للدراسات (اردو)',
+    lang: 'Urdu',
+    isRtl: true,
+    lineHeight: 2.2,
+  },
+
+  // 4 English Tafsirs
   {
     id: 169,
     slug: 'en-tafisr-ibn-kathir',
-    name: 'Ibn Kathir (EN)',
-    author: 'Ibn Kathir (English)',
+    name: 'Ibn Kathir (English)',
+    author: 'Ibn Kathir (Abridged English)',
     lang: 'English',
     isRtl: false,
     lineHeight: 1.7,
@@ -90,29 +154,96 @@ export const TAFSIR_EDITIONS: TafsirEdition[] = [
   {
     id: 168,
     slug: 'en-tafsir-maarif-ul-quran',
-    name: "Ma'arif al-Qur'an",
+    name: "Ma'arif al-Qur'an (EN)",
     author: 'Mufti Muhammad Shafi (English)',
     lang: 'English',
     isRtl: false,
     lineHeight: 1.7,
   },
   {
-    id: 16,
-    slug: 'ar-tafsir-muyassar',
-    name: 'Al-Muyassar (AR)',
-    author: 'King Fahd Complex (Arabic)',
-    lang: 'Arabic',
-    isRtl: true,
-    lineHeight: 2.25,
+    id: 164,
+    slug: 'en-al-jalalayn',
+    name: 'Al-Jalalayn (English)',
+    author: 'Jalal al-Din al-Mahalli & Suyuti',
+    lang: 'English',
+    isRtl: false,
+    lineHeight: 1.7,
   },
   {
-    id: 160,
-    slug: 'ur-tafsir-ibn-kathir',
-    name: 'Ibn Kathir (اردو)',
-    author: 'Ibn Kathir (Urdu)',
-    lang: 'Urdu',
+    id: 171,
+    slug: 'en-al-mukhtasar',
+    name: 'Al-Mukhtasar (English)',
+    author: 'Tafsir Center (English Concise)',
+    lang: 'English',
+    isRtl: false,
+    lineHeight: 1.7,
+  },
+
+  // 4 Arabic Tafsirs
+  {
+    id: 16,
+    slug: 'ar-tafsir-muyassar',
+    name: 'التفسير الميسر (Arabic)',
+    author: 'مجمع الملك فهد (عربي)',
+    lang: 'Arabic',
     isRtl: true,
-    lineHeight: 2.35,
+    lineHeight: 2.1,
+  },
+  {
+    id: 14,
+    slug: 'ar-tafsir-al-jalalayn',
+    name: 'تفسير الجلالين (Arabic)',
+    author: 'الجلالين (عربي)',
+    lang: 'Arabic',
+    isRtl: true,
+    lineHeight: 2.1,
+  },
+  {
+    id: 91,
+    slug: 'ar-tafseer-al-saddi',
+    name: 'تفسير السعدي (Arabic)',
+    author: 'الشيخ عبد الرحمن السعدي (عربي)',
+    lang: 'Arabic',
+    isRtl: true,
+    lineHeight: 2.1,
+  },
+  {
+    id: 170,
+    slug: 'ar-tafsir-al-mukhtasar',
+    name: 'المختصر في التفسير (Arabic)',
+    author: 'مركز تفسير للدراسات (عربي)',
+    lang: 'Arabic',
+    isRtl: true,
+    lineHeight: 2.1,
+  },
+
+  // Hindi & Gujarati Commentary
+  {
+    id: 991,
+    slug: 'hin-suhelfarooqkhan',
+    name: 'तफ़सीर सुहेल फ़ारूक़ (Hindi)',
+    author: 'Suhel Farooq Khan (हिन्दी)',
+    lang: 'Hindi',
+    isRtl: false,
+    lineHeight: 1.8,
+  },
+  {
+    id: 992,
+    slug: 'guj-rabila',
+    name: 'તફસીર રબીલા (Gujarati)',
+    author: 'Rabila Al-Umari (ગુજરાતી)',
+    lang: 'Gujarati',
+    isRtl: false,
+    lineHeight: 1.8,
+  },
+  {
+    id: 993,
+    slug: 'bn-tafsir-abu-bakr-zakaria',
+    name: 'তাফসির আবু বকর (Bengali)',
+    author: 'Dr. Abu Bakr Zakaria (বাংলা)',
+    lang: 'Bengali',
+    isRtl: false,
+    lineHeight: 1.8,
   },
 ];
 
@@ -156,9 +287,76 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
   const [isTranslationLoading, setIsTranslationLoading] = useState<boolean>(false);
 
   // Tafsir state
-  const [selectedTafsirSlug, setSelectedTafsirSlug] = useState<string>('en-tafisr-ibn-kathir');
+  const [selectedTafsirSlug, setSelectedTafsirSlug] = useState<string>('ur-tafsir-ibn-kathir');
   const [tafsirText, setTafsirText] = useState<string>('');
   const [isTafsirLoading, setIsTafsirLoading] = useState<boolean>(false);
+  const [tafsirLangFilter, setTafsirLangFilter] = useState<string>('All');
+
+  // Offline Pack & Personal Notes state
+  const [isDownloadingOffline, setIsDownloadingOffline] = useState<boolean>(false);
+  const [isOfflineTransReady, setIsOfflineTransReady] = useState<boolean>(false);
+  const [isOfflineTafsirReady, setIsOfflineTafsirReady] = useState<boolean>(false);
+
+  const [personalNotes, setPersonalNotes] = useState<QuranPersonalNote[]>(() => {
+    try {
+      const saved = localStorage.getItem('noor_quran_notes_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // Safe fallback
+    }
+    return [];
+  });
+  const [newNoteText, setNewNoteText] = useState<string>('');
+  const [newNoteTag, setNewNoteTag] = useState<string>('Reflection');
+
+  // Check offline readiness
+  useEffect(() => {
+    try {
+      const tKey = `noor_offline_trans_${selectedEdition}_${surahNumber}`;
+      setIsOfflineTransReady(!!localStorage.getItem(tKey));
+      const tafKey = `noor_offline_tafsirs_${selectedTafsirSlug}_${surahNumber}`;
+      setIsOfflineTafsirReady(!!localStorage.getItem(tafKey));
+    } catch {
+      setIsOfflineTransReady(false);
+      setIsOfflineTafsirReady(false);
+    }
+  }, [selectedEdition, selectedTafsirSlug, surahNumber]);
+
+  // Save personal note
+  const handleSavePersonalNote = () => {
+    if (!newNoteText.trim()) return;
+    const note: QuranPersonalNote = {
+      id: 'note_' + Date.now(),
+      surah: surahNumber,
+      ayah: activeAyah,
+      text: newNoteText.trim(),
+      tag: newNoteTag,
+      createdAt: Date.now(),
+    };
+    const updated = [note, ...personalNotes];
+    setPersonalNotes(updated);
+    try {
+      localStorage.setItem('noor_quran_notes_v1', JSON.stringify(updated));
+    } catch {
+      // Safe catch
+    }
+    setNewNoteText('');
+    toast({
+      title: 'Reflection Saved! 📝',
+      description: `Saved note for Ayah ${surahNumber}:${activeAyah} into your Personal Library.`,
+    });
+  };
+
+  const handleDeletePersonalNote = (id: string) => {
+    const updated = personalNotes.filter((n) => n.id !== id);
+    setPersonalNotes(updated);
+    try {
+      localStorage.setItem('noor_quran_notes_v1', JSON.stringify(updated));
+    } catch {
+      // Safe catch
+    }
+    toast({ title: 'Note Removed' });
+  };
 
   // 5-Colour Bookmarks state
   const [colorBookmarks, setColorBookmarks] = useState<Record<BookmarkColorId, ColorBookmark | null>>(
@@ -201,6 +399,28 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
     let cancelled = false;
     const fetchAyahTranslations = async () => {
       setIsTranslationLoading(true);
+
+      // 1. Check Offline Pack first
+      const offlineTransKey = `noor_offline_trans_${selectedEdition}_${surahNumber}`;
+      try {
+        const offlineData = localStorage.getItem(offlineTransKey);
+        if (offlineData) {
+          const parsed = JSON.parse(offlineData);
+          if (parsed && parsed[activeAyah]) {
+            if (!cancelled) {
+              setTranslationsMap((prev) => ({ ...prev, [selectedEdition]: parsed[activeAyah] }));
+              if (parsed['arabic_' + activeAyah]) {
+                setArabicText(parsed['arabic_' + activeAyah]);
+              }
+              setIsTranslationLoading(false);
+            }
+            return;
+          }
+        }
+      } catch {
+        // Safe offline check
+      }
+
       const cacheKey = `noor_translation_v2_${surahNumber}_${activeAyah}`;
 
       // Purge any stale legacy translation cache entries
@@ -245,11 +465,11 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
         if (alQuranRes.status === 'fulfilled' && alQuranRes.value.ok) {
           const json = await alQuranRes.value.json();
           if (json.data && Array.isArray(json.data)) {
-            json.data.forEach((item: any) => {
+            json.data.forEach((item: { edition?: { identifier?: string }; text?: string }) => {
               const id = item?.edition?.identifier;
               if (id === 'quran-uthmani') {
-                ar = item.text;
-              } else if (id) {
+                ar = item.text || '';
+              } else if (id && item.text) {
                 trans[id] = item.text;
               }
             });
@@ -266,6 +486,24 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
             }
           } catch {
             // Handled Gujarati parsing
+          }
+        }
+
+        // If selected edition is not in the default pack, fetch it dynamically
+        if (!trans[selectedEdition] && selectedEdition !== 'gu.omari') {
+          try {
+            const singleRes = await fetch(
+              `https://api.alquran.cloud/v1/ayah/${surahNumber}:${activeAyah}/${selectedEdition}`,
+              { signal: AbortSignal.timeout(4000) }
+            );
+            if (singleRes.ok) {
+              const singleJson = await singleRes.json();
+              if (singleJson?.data?.text) {
+                trans[selectedEdition] = singleJson.data.text;
+              }
+            }
+          } catch {
+            // Handled dynamic edition fetch
           }
         }
 
@@ -290,9 +528,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
 
       if (!cancelled) {
         setIsTranslationLoading(false);
-        if (!arabicText) {
-          setArabicText(`${surahInfo?.name || 'القرآن'} — آية ${activeAyah}`);
-        }
+        setArabicText((prev) => prev || `${surahInfo?.name || 'القرآن'} — آية ${activeAyah}`);
       }
     };
 
@@ -300,7 +536,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [surahNumber, activeAyah, surahInfo]);
+  }, [surahNumber, activeAyah, surahInfo, selectedEdition]);
 
   // Fetch Tafsir on Demand with LRU Cache (Quran.com v4 API primary + spa5k fallback)
   useEffect(() => {
@@ -311,9 +547,28 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
       setIsTafsirLoading(true);
       const targetEdition =
         TAFSIR_EDITIONS.find((t) => t.slug === selectedTafsirSlug) || TAFSIR_EDITIONS[0];
+
+      // 1. Check Offline Tafsir pack first
+      const offlineTafKey = `noor_offline_tafsirs_${targetEdition.slug}_${surahNumber}`;
+      try {
+        const offlineData = localStorage.getItem(offlineTafKey);
+        if (offlineData) {
+          const parsed = JSON.parse(offlineData);
+          if (parsed && parsed[activeAyah]) {
+            if (!cancelled) {
+              setTafsirText(parsed[activeAyah]);
+              setIsTafsirLoading(false);
+            }
+            return;
+          }
+        }
+      } catch {
+        // Safe offline check
+      }
+
       const cacheSubKey = `qdc_v4_${targetEdition.id}_${surahNumber}_${activeAyah}`;
 
-      // 1. Check LRU cache in localStorage
+      // 2. Check LRU cache in localStorage
       try {
         const rawCache = localStorage.getItem(TAFSIR_CACHE_KEY);
         if (rawCache) {
@@ -330,7 +585,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
         // Safe cache check
       }
 
-      // 2. Primary: Official CORS-enabled Quran.com v4 API
+      // 3. Primary: Official CORS-enabled Quran.com v4 API
       try {
         const qdcUrl = `https://api.quran.com/api/v4/tafsirs/${targetEdition.id}/by_ayah/${surahNumber}:${activeAyah}`;
         const res = await fetch(qdcUrl, { signal: AbortSignal.timeout(6000) });
@@ -362,7 +617,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
         // Fallback to secondary CDN
       }
 
-      // 3. Secondary Fallback: jsDelivr spa5k repository
+      // 4. Secondary Fallback: jsDelivr spa5k repository
       try {
         const cdnUrl = `https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${targetEdition.slug}/${surahNumber}/${activeAyah}.json`;
         const res = await fetch(cdnUrl, { signal: AbortSignal.timeout(4500) });
@@ -396,7 +651,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
       if (!cancelled) {
         setIsTafsirLoading(false);
         setTafsirText(
-          'Tafsir requires internet connection to fetch authentic commentary. Please reconnect to read offline.'
+          'Tafsir requires internet connection to fetch authentic commentary. Please reconnect or download offline pack.'
         );
       }
     };
@@ -406,6 +661,138 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
       cancelled = true;
     };
   }, [activeTab, selectedTafsirSlug, surahNumber, activeAyah]);
+
+  // Offline Pack Downloaders
+  const handleDownloadTranslationOffline = async () => {
+    if (isDownloadingOffline) return;
+    setIsDownloadingOffline(true);
+    toast({
+      title: 'Downloading Translation Pack',
+      description: `Caching Surah ${surahNumber} (${selectedEdition}) for offline access...`,
+    });
+
+    try {
+      if (selectedEdition === 'gu.omari') {
+        const url = `https://quranenc.com/api/v1/translation/sura/gujarati_omari/${surahNumber}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        if (res.ok) {
+          const json = await res.json();
+          const items = json?.result || [];
+          const map: Record<string, string> = {};
+          items.forEach((item: { translation?: string; aya?: number }, idx: number) => {
+            const clean = (item.translation || '').replace(/^[૦-૯0-9]+\.\s*/, '').trim();
+            map[item.aya || idx + 1] = clean;
+          });
+          localStorage.setItem(`noor_offline_trans_${selectedEdition}_${surahNumber}`, JSON.stringify(map));
+          setIsOfflineTransReady(true);
+          setIsDownloadingOffline(false);
+          toast({
+            title: 'Translation Saved Offline ✓',
+            description: `Surah ${surahNumber} is now available offline in Gujarati.`,
+          });
+          return;
+        }
+      } else {
+        const url = `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,${selectedEdition}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && Array.isArray(json.data) && json.data.length >= 2) {
+            const arAyahs = json.data[0].ayahs || [];
+            const transAyahs = json.data[1].ayahs || [];
+            const map: Record<string, string> = {};
+            transAyahs.forEach((item: { numberInSurah?: number; text?: string }, idx: number) => {
+              map[item.numberInSurah || idx + 1] = item.text || '';
+              if (arAyahs[idx]) {
+                map['arabic_' + (item.numberInSurah || idx + 1)] = arAyahs[idx].text;
+              }
+            });
+            localStorage.setItem(`noor_offline_trans_${selectedEdition}_${surahNumber}`, JSON.stringify(map));
+            setIsOfflineTransReady(true);
+            setIsDownloadingOffline(false);
+            toast({
+              title: 'Translation Saved Offline ✓',
+              description: `Surah ${surahNumber} is now available offline in this edition.`,
+            });
+            return;
+          }
+        }
+      }
+    } catch {
+      // Catch download failure
+    }
+
+    setIsDownloadingOffline(false);
+    toast({
+      title: 'Offline Download Notice',
+      description: 'Could not complete offline pack download. Please check connection.',
+      variant: 'destructive',
+    });
+  };
+
+  const handleDownloadTafsirOffline = async () => {
+    if (isDownloadingOffline) return;
+    setIsDownloadingOffline(true);
+    const targetEdition =
+      TAFSIR_EDITIONS.find((t) => t.slug === selectedTafsirSlug) || TAFSIR_EDITIONS[0];
+    toast({
+      title: 'Downloading Tafsir Pack',
+      description: `Caching complete Surah ${surahNumber} commentary (${targetEdition.name})...`,
+    });
+
+    try {
+      const cdnUrl = `https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${targetEdition.slug}/${surahNumber}.json`;
+      const res = await fetch(cdnUrl, { signal: AbortSignal.timeout(12000) });
+      if (res.ok) {
+        const data = await res.json();
+        const map: Record<string, string> = {};
+        if (Array.isArray(data)) {
+          data.forEach((item: { text?: string; tafsir?: string; ayah?: number }, idx: number) => {
+            const text = cleanTafsirHtml(
+              item.text || item.tafsir || (typeof item === 'string' ? item : '')
+            );
+            const ayah = item.ayah || idx + 1;
+            if (text) map[ayah] = text;
+          });
+        } else if (typeof data === 'object' && data !== null) {
+          Object.entries(data).forEach(([k, v]: [string, unknown]) => {
+            const textCandidate =
+              typeof v === 'string'
+                ? v
+                : typeof v === 'object' && v !== null
+                ? (v as { text?: string; tafsir?: string }).text ||
+                  (v as { text?: string; tafsir?: string }).tafsir ||
+                  ''
+                : '';
+            const text = cleanTafsirHtml(textCandidate);
+            if (text) map[k] = text;
+          });
+        }
+
+        if (Object.keys(map).length > 0) {
+          localStorage.setItem(
+            `noor_offline_tafsirs_${targetEdition.slug}_${surahNumber}`,
+            JSON.stringify(map)
+          );
+          setIsOfflineTafsirReady(true);
+          setIsDownloadingOffline(false);
+          toast({
+            title: 'Tafsir Saved Offline ✓',
+            description: `Surah ${surahNumber} Tafsir (${targetEdition.name}) ready for offline study!`,
+          });
+          return;
+        }
+      }
+    } catch {
+      // Catch download failure
+    }
+
+    setIsDownloadingOffline(false);
+    toast({
+      title: 'Offline Download Notice',
+      description: 'Full surah Tafsir pack not available on CDN. Current ayah is cached.',
+    });
+  };
 
   // Handle Play From Here
   const handlePlayFromHere = () => {
@@ -837,7 +1224,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
             </div>
           </div>
 
-          {/* 3 Tab Switcher: Translation | Tafsir | Hifz */}
+          {/* 4 Tab Switcher: Translation | Tafsir | Hifz | Notes */}
           <div
             className="flex items-center p-1 rounded-xl gap-1"
             style={{
@@ -849,7 +1236,8 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
               [
                 { id: 'translation', label: '📖 Translation' },
                 { id: 'tafsir', label: '📜 Tafsir' },
-                { id: 'hifz', label: '🎯 Hifz Engine' },
+                { id: 'hifz', label: '🎯 Hifz' },
+                { id: 'notes', label: '📝 Notes' },
               ] as const
             ).map((tab) => {
               const isActive = activeTab === tab.id;
@@ -858,7 +1246,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center"
+                  className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center truncate"
                   style={{
                     backgroundColor: isActive ? 'var(--accent)' : 'transparent',
                     color: isActive ? 'var(--on-accent)' : 'var(--text-secondary)',
@@ -874,28 +1262,50 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
           {/* TAB 1: TRANSLATION */}
           {activeTab === 'translation' && (
             <div className="space-y-3">
-              {/* Edition Selector Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar" style={{ paddingRight: '8px' }}>
-                {TRANSLATION_EDITIONS.map((ed) => {
-                  const isSelected = selectedEdition === ed.id;
-                  return (
+              {/* Header with Edition Selector & Offline Download Action */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar flex-1">
+                  {TRANSLATION_EDITIONS.map((ed) => {
+                    const isSelected = selectedEdition === ed.id;
+                    return (
+                      <button
+                        key={ed.id}
+                        type="button"
+                        onClick={() => setSelectedEdition(ed.id)}
+                        className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0"
+                        style={{
+                          backgroundColor: isSelected ? 'var(--accent)' : 'var(--surface)',
+                          color: isSelected ? 'var(--on-accent)' : 'var(--text-secondary)',
+                          border: isSelected
+                            ? '1px solid var(--accent)'
+                            : '1px solid var(--border)',
+                        }}
+                      >
+                        {ed.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Offline Pack Button */}
+                <div className="shrink-0">
+                  {isOfflineTransReady ? (
+                    <span className="text-[11px] font-bold text-[var(--success)] flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--success)]/10 border border-[var(--success)]/25">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Offline
+                    </span>
+                  ) : (
                     <button
-                      key={ed.id}
                       type="button"
-                      onClick={() => setSelectedEdition(ed.id)}
-                      className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0"
-                      style={{
-                        backgroundColor: isSelected ? 'var(--accent)' : 'var(--surface)',
-                        color: isSelected ? 'var(--on-accent)' : 'var(--text-secondary)',
-                        border: isSelected
-                          ? '1px solid var(--accent)'
-                          : '1px solid var(--border)',
-                      }}
+                      disabled={isDownloadingOffline}
+                      onClick={handleDownloadTranslationOffline}
+                      className="text-[11px] font-bold text-[var(--accent-text)] hover:underline flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--surface-2)] border border-[var(--border)] active:scale-95 transition-transform"
                     >
-                      {ed.name}
+                      <Download className="w-3.5 h-3.5" />
+                      {isDownloadingOffline ? 'Saving...' : 'Save Offline'}
                     </button>
-                  );
-                })}
+                  )}
+                </div>
               </div>
 
               {/* Translation Text Card */}
@@ -913,12 +1323,12 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                   </div>
                 ) : (
                   <p
-                    dir={selectedEdition === 'ur.jalandhry' ? 'rtl' : 'ltr'}
-                    className={`text-sm leading-relaxed ${selectedEdition === 'ur.jalandhry' ? 'font-urdu text-right text-base' : ''}`}
+                    dir={selectedEdition.startsWith('ur.') ? 'rtl' : 'ltr'}
+                    className={`text-sm leading-relaxed ${selectedEdition.startsWith('ur.') ? 'font-urdu text-right text-base' : ''}`}
                     style={{
                       color: 'var(--text-primary)',
-                      lineHeight: selectedEdition === 'ur.jalandhry' ? '2.35' : '1.65',
-                      fontFamily: selectedEdition === 'ur.jalandhry' ? 'var(--font-urdu, "Noto Nastaliq Urdu", serif)' : undefined,
+                      lineHeight: selectedEdition.startsWith('ur.') ? '2.3' : '1.65',
+                      fontFamily: selectedEdition.startsWith('ur.') ? 'var(--font-urdu, "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", serif)' : undefined,
                       filter:
                         hideMode === 'translation' && !isRevealed ? 'blur(7px)' : 'none',
                       transition: 'filter 0.25s ease',
@@ -935,33 +1345,79 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
           {/* TAB 2: TAFSIR */}
           {activeTab === 'tafsir' && (
             <div className="space-y-3">
-              {/* Tafsir Edition Selector */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                {TAFSIR_EDITIONS.map((taf) => {
-                  const isSelected = selectedTafsirSlug === taf.slug;
+              {/* Language Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                {['All', 'Urdu', 'English', 'Arabic', 'Hindi', 'Gujarati'].map((lang) => {
+                  const isActive = tafsirLangFilter === lang;
                   return (
                     <button
-                      key={taf.slug}
+                      key={lang}
                       type="button"
-                      onClick={() => setSelectedTafsirSlug(taf.slug)}
-                      className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0"
-                      style={{
-                        backgroundColor: isSelected ? 'var(--accent)' : 'var(--surface)',
-                        color: isSelected ? 'var(--on-accent)' : 'var(--text-secondary)',
-                        border: isSelected
-                          ? '1px solid var(--accent)'
-                          : '1px solid var(--border)',
-                      }}
+                      onClick={() => setTafsirLangFilter(lang)}
+                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-all border shrink-0 ${
+                        isActive
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]'
+                          : 'bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)]/40'
+                      }`}
                     >
-                      {taf.name}
+                      {lang === 'Urdu' ? 'اردو (Urdu)' : lang === 'Arabic' ? 'عربي (Arabic)' : lang}
                     </button>
                   );
                 })}
               </div>
 
+              {/* Tafsir Edition Selector & Offline Download Action */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar flex-1">
+                  {TAFSIR_EDITIONS.filter((t) => {
+                    if (tafsirLangFilter === 'All') return true;
+                    return t.lang.toLowerCase() === tafsirLangFilter.toLowerCase();
+                  }).map((taf) => {
+                    const isSelected = selectedTafsirSlug === taf.slug;
+                    return (
+                      <button
+                        key={taf.slug}
+                        type="button"
+                        onClick={() => setSelectedTafsirSlug(taf.slug)}
+                        className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0"
+                        style={{
+                          backgroundColor: isSelected ? 'var(--accent)' : 'var(--surface)',
+                          color: isSelected ? 'var(--on-accent)' : 'var(--text-secondary)',
+                          border: isSelected
+                            ? '1px solid var(--accent)'
+                            : '1px solid var(--border)',
+                        }}
+                      >
+                        {taf.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Offline Pack Button */}
+                <div className="shrink-0">
+                  {isOfflineTafsirReady ? (
+                    <span className="text-[11px] font-bold text-[var(--success)] flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--success)]/10 border border-[var(--success)]/25">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Offline
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isDownloadingOffline}
+                      onClick={handleDownloadTafsirOffline}
+                      className="text-[11px] font-bold text-[var(--accent-text)] hover:underline flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--surface-2)] border border-[var(--border)] active:scale-95 transition-transform"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      {isDownloadingOffline ? 'Saving...' : 'Save Offline'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Tafsir Commentary Content */}
               <div
-                className="p-4 rounded-2xl max-h-[280px] overflow-y-auto leading-relaxed text-xs sm:text-sm space-y-2"
+                className="p-4 rounded-2xl max-h-[300px] overflow-y-auto leading-relaxed text-xs sm:text-sm space-y-2 no-scrollbar"
                 style={{
                   backgroundColor: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -975,15 +1431,117 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                   </div>
                 ) : (
                   <div
-                    className={`whitespace-pre-wrap leading-relaxed ${selectedTafsirSlug.startsWith('ur') ? 'font-urdu text-right text-base leading-[2.35]' : ''}`}
+                    className={`whitespace-pre-wrap leading-relaxed ${selectedTafsirSlug.startsWith('ur') ? 'font-urdu text-right text-base leading-[2.2]' : ''}`}
                     style={{
-                      direction: selectedTafsirSlug.startsWith('ar') || selectedTafsirSlug.startsWith('ur') ? 'rtl' : 'ltr',
-                      fontFamily: selectedTafsirSlug.startsWith('ar') ? "'Amiri', serif" : selectedTafsirSlug.startsWith('ur') ? 'var(--font-urdu, "Noto Nastaliq Urdu", serif)' : 'inherit',
-                      lineHeight: selectedTafsirSlug.startsWith('ur') ? 2.35 : undefined,
+                      direction:
+                        selectedTafsirSlug.startsWith('ar') || selectedTafsirSlug.startsWith('ur')
+                          ? 'rtl'
+                          : 'ltr',
+                      fontFamily: selectedTafsirSlug.startsWith('ar')
+                        ? "'Amiri', serif"
+                        : selectedTafsirSlug.startsWith('ur')
+                        ? 'var(--font-urdu, "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", serif)'
+                        : 'inherit',
+                      lineHeight: selectedTafsirSlug.startsWith('ur') ? 2.2 : undefined,
                     }}
                   >
                     {tafsirText}
                   </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: PERSONAL REFLECTION NOTES */}
+          {activeTab === 'notes' && (
+            <div className="space-y-3">
+              {/* Note Creation Form */}
+              <div
+                className="p-4 rounded-2xl border border-[var(--border)] space-y-3"
+                style={{ backgroundColor: 'var(--surface)' }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-[var(--accent-text)]" />
+                    Reflection on Ayah {surahNumber}:{activeAyah}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {['Reflection', 'Tafsir', 'Dua', 'Memorization'].map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setNewNoteTag(tag)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                          newNoteTag === tag
+                            ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]'
+                            : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <textarea
+                  value={newNoteText}
+                  onChange={(e) => setNewNoteText(e.target.value)}
+                  placeholder={`Write your personal thoughts, key lesson, or reflection for Ayah ${surahNumber}:${activeAyah}...`}
+                  rows={3}
+                  className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/60 focus:outline-none focus:border-[var(--accent)] resize-none"
+                />
+
+                <Button
+                  onClick={handleSavePersonalNote}
+                  disabled={!newNoteText.trim()}
+                  className="w-full h-9 rounded-xl text-xs font-bold gap-1.5 bg-[var(--accent)] text-[var(--on-accent)] hover:opacity-95"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Save Note to Personal Library
+                </Button>
+              </div>
+
+              {/* List of Saved Notes for this Ayah */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block">
+                  Saved Notes on this Ayah ({personalNotes.filter((n) => n.surah === surahNumber && n.ayah === activeAyah).length})
+                </span>
+
+                {personalNotes.filter((n) => n.surah === surahNumber && n.ayah === activeAyah).length === 0 ? (
+                  <div className="py-6 text-center text-xs text-[var(--text-secondary)] border border-dashed border-[var(--border)] rounded-2xl">
+                    No reflections saved for this verse yet. Write your thoughts above!
+                  </div>
+                ) : (
+                  personalNotes
+                    .filter((n) => n.surah === surahNumber && n.ayah === activeAyah)
+                    .map((note) => (
+                      <div
+                        key={note.id}
+                        className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] flex items-start justify-between gap-3"
+                      >
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-[var(--accent)]/15 text-[var(--accent-text)] border border-[var(--accent)]/30">
+                              {note.tag}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-secondary)]">
+                              {new Date(note.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">
+                            {note.text}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePersonalNote(note.id)}
+                          className="text-[var(--text-secondary)] hover:text-[var(--danger)] p-1 shrink-0"
+                          title="Delete note"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
                 )}
               </div>
             </div>
