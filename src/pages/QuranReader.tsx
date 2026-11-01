@@ -497,7 +497,7 @@ export default function QuranReader() {
   };
 
   const handlePrevPage = () => {
-    if (lineFormat === 7 && subPage7L > 1) {
+    if (readerViewMode !== 'cards' && lineFormat === 7 && subPage7L > 1) {
       setSubPage7L((prev) => prev - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -510,7 +510,7 @@ export default function QuranReader() {
   };
 
   const handleNextPage = () => {
-    if (lineFormat === 7 && subPage7L < totalParts7L) {
+    if (readerViewMode !== 'cards' && lineFormat === 7 && subPage7L < totalParts7L) {
       setSubPage7L((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -1061,7 +1061,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handlePrevPage}
-              disabled={lineFormat === 7 ? (mushafPageNumber <= 1 && subPage7L <= 1) : mushafPageNumber <= 1}
+              disabled={readerViewMode !== 'cards' && lineFormat === 7 ? (mushafPageNumber <= 1 && subPage7L <= 1) : mushafPageNumber <= 1}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',
@@ -1103,7 +1103,7 @@ export default function QuranReader() {
                   lineHeight: 1.2,
                 }}
               >
-                {lineFormat === 7 && totalParts7L > 1
+                {readerViewMode !== 'cards' && lineFormat === 7 && totalParts7L > 1
                   ? `P.${mushafPageNumber} (Part ${subPage7L}/${totalParts7L})`
                   : `${uiStrings.page} ${mushafPageNumber} / 604`}
               </div>
@@ -1141,7 +1141,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handleNextPage}
-              disabled={lineFormat === 7 ? (mushafPageNumber >= 604 && subPage7L >= totalParts7L) : mushafPageNumber >= 604}
+              disabled={readerViewMode !== 'cards' && lineFormat === 7 ? (mushafPageNumber >= 604 && subPage7L >= totalParts7L) : mushafPageNumber >= 604}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',

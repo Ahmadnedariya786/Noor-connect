@@ -24,11 +24,14 @@ import {
   Minus,
   Plus,
   Play,
+  Loader2,
+  Check,
 } from 'lucide-react';
 import { useTilawah, type PlaybackSpeed, type SleepTimerOption, type AyahDelayOption } from '@/contexts/TilawahContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { ReciterPickerModal } from '@/components/Quran/ReciterPickerModal';
 import { quranService } from '@/lib/quran-service';
+import { cacheSurahAudio } from '@/lib/offline-audio';
 
 interface PlaybackOptionsDrawerProps {
   isOpen: boolean;
@@ -79,6 +82,46 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ is
 
   const [isReciterModalOpen, setIsReciterModalOpen] = useState(false);
   const [showIntervalForm, setShowIntervalForm] = useState(intervalRange.isActive);
+
+  // Download state
+  const [isSavingAyah, setIsSavingAyah] = useState(false);
+  const [isAyahSaved, setIsAyahSaved] = useState(false);
+  const [surahProgress, setSurahProgress] = useState<number | null>(null);
+  const [isSurahSaved, setIsSurahSaved] = useState(false);
+
+  const handleDownloadAyahClick = async () => {
+    if (isSavingAyah) return;
+    setIsSavingAyah(true);
+    try {
+      await downloadCurrentAyahAudio();
+      setIsAyahSaved(true);
+      setTimeout(() => setIsAyahSaved(false), 3500);
+    } finally {
+      setIsSavingAyah(false);
+    }
+  };
+
+  const handleDownloadSurahClick = async () => {
+    if (surahProgress !== null) return;
+    setSurahProgress(0);
+    try {
+      const sInfo = quranService.getSurahInfo(currentSurah);
+      const ayahs = sInfo?.numberOfAyahs || 7;
+      await cacheSurahAudio(
+        reciter.everyAyahDir,
+        currentSurah,
+        ayahs,
+        reciter.id,
+        (_done, _total, pct) => setSurahProgress(pct)
+      );
+      setIsSurahSaved(true);
+      setTimeout(() => setIsSurahSaved(false), 4000);
+    } catch (e) {
+      console.warn('Surah audio cache error:', e);
+    } finally {
+      setSurahProgress(null);
+    }
+  };
 
   // Interval local form state
   const [intStartSurah, setIntStartSurah] = useState(intervalRange.startSurah || currentSurah);
@@ -496,18 +539,50 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ is
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={downloadCurrentAyahAudio}
-                className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/60 hover:border-[var(--accent)] text-[11px] font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
+                type="button"
+                disabled={isSavingAyah}
+                onClick={handleDownloadAyahClick}
+                className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/60 hover:border-[var(--accent)] text-[11px] font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all disabled:opacity-75"
               >
-                <Download className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                Current Ayah MP3
+                {isSavingAyah ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent-text)]" />
+                    <span>Saving Ayah...</span>
+                  </>
+                ) : isAyahSaved ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[var(--success)]" />
+                    <span className="text-[var(--success)]">✓ Ayah Saved</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                    <span>Current Ayah MP3</span>
+                  </>
+                )}
               </button>
               <button
-                onClick={() => downloadSurahAudio(currentSurah)}
-                className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/60 hover:border-[var(--accent)] text-[11px] font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
+                type="button"
+                disabled={surahProgress !== null}
+                onClick={handleDownloadSurahClick}
+                className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/60 hover:border-[var(--accent)] text-[11px] font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all disabled:opacity-75"
               >
-                <Download className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                Surah {currentSurah} Audio
+                {surahProgress !== null ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent-text)]" />
+                    <span>{surahProgress}% Saved</span>
+                  </>
+                ) : isSurahSaved ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[var(--success)]" />
+                    <span className="text-[var(--success)]">✓ Surah Saved</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                    <span>Surah {currentSurah} Audio</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

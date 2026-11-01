@@ -25,6 +25,11 @@ import {
 } from '@/lib/tilawah-data';
 import { quranService, SurahInfo } from '@/lib/quran-service';
 import { useToast } from '@/hooks/use-toast';
+import {
+  cacheAyahAudio,
+  cacheSurahAudio,
+  resolveAudioPlaybackUrl,
+} from '@/lib/offline-audio';
 
 export type PlaybackSpeed = 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2;
 export type SleepTimerOption = null | 15 | 30 | 45 | 60 | 'end-of-surah';
@@ -490,8 +495,15 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const primaryUrl = getPrimaryAyahAudioUrl(reciterObj.id, surah, ayah);
       const secondaryUrl = getSecondaryAyahAudioUrl(reciterObj.everyAyahDir, surah, ayah);
 
+      let targetAudioSrc = primaryUrl;
+      try {
+        targetAudioSrc = await resolveAudioPlaybackUrl(primaryUrl);
+      } catch {
+        targetAudioSrc = primaryUrl;
+      }
+
       audio.playbackRate = playbackSpeed;
-      audio.src = primaryUrl;
+      audio.src = targetAudioSrc;
 
       // Setup secondary CDN fallback on primary error
       const handleError = () => {
@@ -960,50 +972,60 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
     toast({ title: 'Interval Looping Stopped' });
   }, [toast]);
 
-  const downloadCurrentAyahAudio = useCallback(() => {
+  const downloadCurrentAyahAudio = useCallback(async () => {
     try {
-      const url = getSecondaryAyahAudioUrl(reciter.everyAyahDir, currentSurah, currentAyah);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${reciter.shortName}_${currentSurah}_${currentAyah}.mp3`;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
       toast({
-        title: 'Download Started',
-        description: `Downloading Ayah ${currentSurah}:${currentAyah} (${reciter.shortName}).`,
+        title: 'Saving Ayah MP3...',
+        description: `Downloading Ayah ${currentSurah}:${currentAyah} (${reciter.shortName}) for offline playback.`,
       });
-    } catch {
+      await cacheAyahAudio(reciter.everyAyahDir, currentSurah, currentAyah, reciter.id);
+      toast({
+        title: '✓ Ayah Saved Offline',
+        description: `Ayah ${currentSurah}:${currentAyah} is saved and available without internet.`,
+      });
+    } catch (err) {
+      console.warn('Failed to cache ayah audio:', err);
       toast({
         title: 'Download Failed',
-        description: 'Could not trigger audio download on this device.',
+        description: 'Could not complete in-app audio download. Check internet connection.',
         variant: 'destructive',
       });
     }
   }, [reciter, currentSurah, currentAyah, toast]);
 
   const downloadSurahAudio = useCallback(
-    (surahNumber?: number) => {
+    async (surahNumber?: number) => {
+      const targetSurah = surahNumber || currentSurah;
+      const sInfo = quranService.getSurahInfo(targetSurah);
+      const ayahs = sInfo?.numberOfAyahs || 7;
       try {
-        const targetSurah = surahNumber || currentSurah;
-        const sStr = String(targetSurah).padStart(3, '0');
-        const surahUrl = `https://server8.mp3quran.net/afs/${sStr}.mp3`;
-        const a = document.createElement('a');
-        a.href = surahUrl;
-        a.download = `Surah_${targetSurah}_${reciter.shortName}.mp3`;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
         toast({
-          title: 'Surah Audio Stream',
-          description: `Opening full Surah ${targetSurah} recitation.`,
+          title: `Downloading Surah ${targetSurah} Audio...`,
+          description: `Caching ${ayahs} ayahs (${reciter.shortName}) for offline recitation.`,
         });
-      } catch {
+        await cacheSurahAudio(
+          reciter.everyAyahDir,
+          targetSurah,
+          ayahs,
+          reciter.id,
+          (done, total, pct) => {
+            if (pct % 25 === 0 || done === total) {
+              toast({
+                title: `Downloading Surah ${targetSurah}`,
+                description: `${done} of ${total} Ayahs cached (${pct}%)...`,
+              });
+            }
+          }
+        );
+        toast({
+          title: '✓ Surah Saved Offline',
+          description: `Surah ${targetSurah} is fully cached for offline recitation.`,
+        });
+      } catch (err) {
+        console.warn('Failed to cache surah audio:', err);
         toast({
           title: 'Download Failed',
-          description: 'Could not trigger Surah download.',
+          description: 'Could not complete Surah audio download.',
           variant: 'destructive',
         });
       }

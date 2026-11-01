@@ -1237,9 +1237,9 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
           >
             {(
               [
-                { id: 'translation', label: '📖 Translation' },
-                { id: 'tafsir', label: '📜 Tafsir' },
-                { id: 'hifz', label: '🎯 Hifz' },
+                { id: 'translation', label: '📖 Meaning' },
+                { id: 'tafsir', label: '📚 Tafsir' },
+                { id: 'hifz', label: '🧠 Hifz' },
                 { id: 'notes', label: '📝 Notes' },
               ] as const
             ).map((tab) => {
@@ -1249,8 +1249,11 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center truncate"
+                  className="flex-1 py-1.5 px-1 rounded-lg font-bold transition-all text-center whitespace-nowrap"
                   style={{
+                    fontSize: '0.72rem',
+                    padding: '7px 4px',
+                    whiteSpace: 'nowrap',
                     backgroundColor: isActive ? 'var(--accent)' : 'transparent',
                     color: isActive ? 'var(--on-accent)' : 'var(--text-secondary)',
                     boxShadow: isActive ? '0 2px 8px var(--accent-glow)' : 'none',
@@ -1356,7 +1359,15 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                     <button
                       key={lang}
                       type="button"
-                      onClick={() => setTafsirLangFilter(lang)}
+                      onClick={() => {
+                        setTafsirLangFilter(lang);
+                        const firstBook = TAFSIR_EDITIONS.find((t) =>
+                          lang === 'All' ? true : t.lang.toLowerCase() === lang.toLowerCase()
+                        );
+                        if (firstBook) {
+                          setSelectedTafsirSlug(firstBook.slug);
+                        }
+                      }}
                       className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-all border shrink-0 ${
                         isActive
                           ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]'
@@ -1370,8 +1381,8 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
               </div>
 
               {/* Tafsir Edition Selector & Offline Download Action */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 flex-1">
                   {TAFSIR_EDITIONS.filter((t) => {
                     if (tafsirLangFilter === 'All') return true;
                     return t.lang.toLowerCase() === tafsirLangFilter.toLowerCase();
@@ -1382,7 +1393,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                         key={taf.slug}
                         type="button"
                         onClick={() => setSelectedTafsirSlug(taf.slug)}
-                        className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0"
+                        className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all"
                         style={{
                           backgroundColor: isSelected ? 'var(--accent)' : 'var(--surface)',
                           color: isSelected ? 'var(--on-accent)' : 'var(--text-secondary)',
@@ -1463,18 +1474,18 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                 className="p-4 rounded-2xl border border-[var(--border)] space-y-3"
                 style={{ backgroundColor: 'var(--surface)' }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                <div className="flex flex-col gap-2">
+                  <span className="w-full text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-[var(--accent-text)]" />
                     Reflection on Ayah {surahNumber}:{activeAyah}
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1.5 w-full">
                     {['Reflection', 'Tafsir', 'Dua', 'Memorization'].map((tag) => (
                       <button
                         key={tag}
                         type="button"
                         onClick={() => setNewNoteTag(tag)}
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-md border transition-all ${
                           newNoteTag === tag
                             ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]'
                             : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]'

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -22,7 +23,8 @@ import {
   Download,
   Wifi,
   WifiOff,
-  Check
+  Check,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,6 +66,7 @@ import { fetchSurahTafsir, TAFSIR_EDITIONS, type TafsirEdition } from "@/lib/taf
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ManuscriptDivider } from "@/components/ui/ManuscriptDivider";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 interface Surah {
   number: number;
@@ -129,6 +132,8 @@ const Tafsir = () => {
   const [currentAyahForNote, setCurrentAyahForNote] = useState<{ surah: number, ayah: number } | null>(null);
   const [activeTab, setActiveTab] = useState<"surahs" | "bookmarks" | "history">("surahs");
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg" | "xl">("base");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  useBodyScrollLock(isSettingsOpen);
   const [loadingFromOffline, setLoadingFromOffline] = useState(false);
   const { animationEnabled } = useSettings();
 
@@ -409,79 +414,15 @@ const Tafsir = () => {
           onBack={goBack}
           actions={
             <div className="flex items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" style={{ color: 'var(--accent)' }}>
-                    <SettingsIcon className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72" style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
-                  <div className="p-2">
-                    <p className="text-xs font-semibold mb-2 px-2 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{t('appearance')}</p>
-                    <div className="flex items-center justify-between px-2 py-1">
-                      <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{t('fontSize')}</span>
-                      <div className="flex gap-1">
-                        {(['sm', 'base', 'lg', 'xl'] as const).map((size) => (
-                          <button
-                            key={size}
-                            onClick={() => setFontSize(size)}
-                            className={cn(
-                              "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border transition-all"
-                            )}
-                            style={fontSize === size ? {
-                              background: 'var(--accent)',
-                              color: 'var(--on-accent)',
-                              borderColor: 'var(--accent)',
-                            } : {
-                              background: 'var(--surface-2)',
-                              color: 'var(--text-secondary)',
-                              borderColor: 'var(--border)',
-                            }}
-                          >
-                            {size.toUpperCase()}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator style={{ background: 'var(--border)' }} />
-                  <div className="p-2">
-                    <p className="text-xs font-semibold mb-2 px-2 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{t('tafsirEdition')}</p>
-                    {TAFSIR_EDITIONS.map((edition) => (
-                      <DropdownMenuItem
-                        key={edition.id}
-                        onClick={() => {
-                          setSelectedEdition(edition.id);
-                          if (selectedSurah) handleSurahSelect(selectedSurah);
-                        }}
-                        className="flex items-center justify-between rounded-xl py-2 px-2.5 cursor-pointer"
-                        style={selectedEdition === edition.id ? {
-                          background: 'var(--accent-soft)',
-                          color: 'var(--accent-text)',
-                        } : {
-                          color: 'var(--text-primary)',
-                        }}
-                      >
-                        <div className="flex flex-col text-left">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-sm">{edition.name}</span>
-                            {OFFLINE_EDITIONS.includes(edition.id) && (
-                              <Badge className="text-[10px] px-1.5 py-0.5 flex items-center gap-1" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}>
-                                <Download className="w-2.5 h-2.5" />
-                                Offline
-                              </Badge>
-                            )}
-                          </div>
-                          {edition.author && (
-                            <span className="text-xs opacity-70">by {edition.author}</span>
-                          )}
-                        </div>
-                        <span className="text-xs opacity-60 ml-2">{edition.language}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsSettingsOpen(true)}
+                style={{ color: 'var(--accent)' }}
+                aria-label="Tafsir Settings"
+              >
+                <SettingsIcon className="w-5 h-5" />
+              </Button>
             </div>
           }
         />
@@ -1242,6 +1183,140 @@ const Tafsir = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          {/* Tafsir Settings Modal (Replaces transparent dropdown to prevent bleed-through) */}
+          {isSettingsOpen && typeof document !== 'undefined' && createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tafsir-settings-modal-title"
+              className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md transition-opacity"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setIsSettingsOpen(false);
+              }}
+            >
+              <div
+                className="w-full max-w-md max-h-[85vh] flex flex-col rounded-t-[28px] sm:rounded-[28px] border overflow-hidden shadow-2xl transition-all"
+                style={{
+                  background: 'var(--bg-elev)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
+                  boxShadow: '0 24px 48px rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                {/* Header */}
+                <div className="p-4 border-b shrink-0 flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center border"
+                      style={{ background: 'var(--accent-soft)', borderColor: 'var(--border)', color: 'var(--accent-text)' }}
+                    >
+                      <SettingsIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 id="tafsir-settings-modal-title" className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
+                        {t('tafsir') || 'Tafsir'} {t('settings') || 'Settings'}
+                      </h3>
+                      <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                        Adjust reading typography and tafsir edition
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--text-secondary)', background: 'var(--surface-2)' }}
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-4 overflow-y-auto space-y-5">
+                  <div>
+                    <p className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                      {t('appearance')}
+                    </p>
+                    <div className="flex items-center justify-between p-3 rounded-2xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                      <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{t('fontSize')}</span>
+                      <div className="flex gap-1.5">
+                        {(['sm', 'base', 'lg', 'xl'] as const).map((size) => (
+                          <button
+                            key={size}
+                            onClick={() => setFontSize(size)}
+                            className={cn(
+                              "w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold border transition-all"
+                            )}
+                            style={fontSize === size ? {
+                              background: 'var(--accent)',
+                              color: 'var(--on-accent)',
+                              borderColor: 'var(--accent)',
+                            } : {
+                              background: 'var(--surface-2)',
+                              color: 'var(--text-secondary)',
+                              borderColor: 'var(--border)',
+                            }}
+                          >
+                            {size.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                      {t('tafsirEdition')}
+                    </p>
+                    <div className="space-y-2">
+                      {TAFSIR_EDITIONS.map((edition) => (
+                        <button
+                          key={edition.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedEdition(edition.id);
+                            if (selectedSurah) handleSurahSelect(selectedSurah);
+                            setIsSettingsOpen(false);
+                          }}
+                          className="w-full flex items-center justify-between rounded-2xl p-3 border text-left transition-all"
+                          style={selectedEdition === edition.id ? {
+                            background: 'var(--accent-soft)',
+                            borderColor: 'var(--accent)',
+                            color: 'var(--accent-text)',
+                          } : {
+                            background: 'var(--surface)',
+                            borderColor: 'var(--border)',
+                            color: 'var(--text-primary)',
+                          }}
+                        >
+                          <div className="flex flex-col text-left">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm">{edition.name}</span>
+                              {OFFLINE_EDITIONS.includes(edition.id) && (
+                                <Badge className="text-[10px] px-1.5 py-0.5 flex items-center gap-1" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}>
+                                  <Download className="w-2.5 h-2.5" />
+                                  Offline
+                                </Badge>
+                              )}
+                            </div>
+                            {edition.author && (
+                              <span className="text-xs opacity-70">by {edition.author}</span>
+                            )}
+                          </div>
+                          <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: 'var(--surface-2)', color: 'var(--text-secondary)' }}>
+                            {edition.language}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
 
 
 

@@ -187,6 +187,7 @@ export default function SurahList() {
   const [savedSubTab, setSavedSubTab] = useState<SavedSubTab>("all");
   const [pageRangeFilter, setPageRangeFilter] = useState<string>("all");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [expandedJuzMap, setExpandedJuzMap] = useState<Record<number, boolean>>({});
 
   // User Reflection Notes from localStorage
   const [userNotes, setUserNotes] = useState<QuranReflectionNote[]>(() => {
@@ -1335,10 +1336,10 @@ export default function SurahList() {
           <div className="w-full flex items-center gap-1.5" style={{ minWidth: 0 }}>
             <div className="grid grid-cols-4 gap-1 flex-1" style={{ minWidth: 0 }}>
               {[
-                { key: "surahs" as MainTab, label: uiStrings.surahsTab },
-                { key: "juz" as MainTab, label: uiStrings.juzTab },
+                { key: "surahs" as MainTab, label: uiStrings.surahsTab || "Surahs" },
+                { key: "juz" as MainTab, label: uiStrings.juzTab || "Juz" },
                 { key: "pages" as MainTab, label: uiStrings.pagesTab || "Pages" },
-                { key: "saved" as MainTab, label: uiStrings.savedTab },
+                { key: "saved" as MainTab, label: uiStrings.savedTab || "★ Saved" },
               ].map((tab) => {
                 const isActive = activeMainTab === tab.key;
                 return (
@@ -1349,11 +1350,16 @@ export default function SurahList() {
                       setActiveMainTab(tab.key);
                       setSearchQuery("");
                     }}
-                    className={`w-full py-2 px-0.5 text-center rounded-[12px] text-[10.5px] font-bold uppercase tracking-wider transition-all truncate select-none ${
+                    className={`w-full py-2 px-1 text-center rounded-[12px] transition-all select-none ${
                       isActive
                         ? "bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-[0_4px_18px_var(--accent-glow)]"
                         : "bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--surface-2)]"
                     }`}
+                    style={{
+                      whiteSpace: 'nowrap',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                    }}
                   >
                     {tab.label}
                   </button>
@@ -1548,7 +1554,7 @@ export default function SurahList() {
                   {/* Expandable Surah Jump Chips */}
                   <div className="pt-1.5 border-t border-[var(--border)]/50 flex items-center gap-1.5 flex-wrap">
                     <span className="text-[9px] uppercase font-bold text-[var(--text-secondary)]">Surahs:</span>
-                    {displaySurahs.slice(0, 6).map((s) => (
+                    {(expandedJuzMap[juz.number] ? displaySurahs : displaySurahs.slice(0, 6)).map((s) => (
                       <button
                         key={s.number}
                         type="button"
@@ -1556,10 +1562,19 @@ export default function SurahList() {
                         className="px-2 py-0.5 rounded-lg text-[9.5px] font-semibold bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] text-[var(--text-primary)] transition-all active:scale-95"
                       >
                         #{s.number} {s.englishName}
+                        {expandedJuzMap[juz.number] && s.numberOfAyahs ? ` (1:${s.numberOfAyahs})` : ''}
                       </button>
                     ))}
                     {displaySurahs.length > 6 && (
-                      <span className="text-[9px] text-[var(--text-secondary)] font-medium">+{displaySurahs.length - 6} more</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedJuzMap((prev) => ({ ...prev, [juz.number]: !prev[juz.number] }))
+                        }
+                        className="text-[9.5px] font-bold text-[var(--accent-text)] hover:underline px-1 py-0.5"
+                      >
+                        {expandedJuzMap[juz.number] ? 'Show less ▴' : `+${displaySurahs.length - 6} more ▾`}
+                      </button>
                     )}
                   </div>
                 </div>

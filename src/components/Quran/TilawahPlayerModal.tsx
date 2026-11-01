@@ -224,7 +224,7 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
                 <Search className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                 <input
                   type="text"
-                  placeholder="Search 6 curated reciters..."
+                  placeholder="Search 47 authentic reciters..."
                   value={reciterSearch}
                   onChange={(e) => setReciterSearch(e.target.value)}
                   className="bg-transparent text-xs w-full outline-none text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"

@@ -114,7 +114,7 @@ export const ReciterPickerModal: React.FC<ReciterPickerModalProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search reciter, country, or style..."
+              placeholder="Search 47 authentic reciters..."
               className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/70 focus:outline-none focus:border-[var(--accent)] transition-colors"
             />
             {searchQuery && (

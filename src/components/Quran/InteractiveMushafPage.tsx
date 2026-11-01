@@ -939,60 +939,60 @@ export function InteractiveMushafPage({
       color: 'var(--text-primary)',
       border: '1px solid var(--border)',
       boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen)',
-      bismillahColor: 'var(--accent-text)',
-      headerBg: 'linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%)',
+      bismillahColor: 'var(--accent-text, #FDE68A)',
+      headerBg: 'var(--surface-2)',
       headerBorder: 'var(--border)',
       medallionBg: 'var(--accent-soft)',
       medallionColor: 'var(--accent-text)',
-      medallionBorder: 'var(--accent)',
+      medallionBorder: 'var(--border)',
     },
     paper: {
       background: '#FBF6E9',
-      color: '#1A1612',
+      color: '#1E1208',
       border: '1.5px solid rgba(190, 160, 95, 0.45)',
       boxShadow: '0 8px 26px rgba(0, 0, 0, 0.18)',
       bismillahColor: '#2C1808',
       headerBg: '#EFE0C2',
       headerBorder: '#B89352',
-      medallionBg: 'rgba(190, 160, 95, 0.18)',
-      medallionColor: '#7C4A03',
-      medallionBorder: '#C9A84C',
+      medallionBg: 'rgba(184, 151, 88, 0.18)',
+      medallionColor: '#3D260E',
+      medallionBorder: 'rgba(146, 108, 45, 0.45)',
     },
     parchment: {
       background: '#FBF6E9',
-      color: '#1A1612',
+      color: '#1E1208',
       border: '1.5px solid rgba(190, 160, 95, 0.45)',
       boxShadow: '0 8px 26px rgba(0, 0, 0, 0.18)',
       bismillahColor: '#2C1808',
       headerBg: '#EFE0C2',
       headerBorder: '#B89352',
-      medallionBg: 'rgba(190, 160, 95, 0.18)',
-      medallionColor: '#7C4A03',
-      medallionBorder: '#C9A84C',
+      medallionBg: 'rgba(184, 151, 88, 0.18)',
+      medallionColor: '#3D260E',
+      medallionBorder: 'rgba(146, 108, 45, 0.45)',
     },
     night: {
-      background: '#050507',
-      color: '#E5E7EB',
+      background: '#05080F',
+      color: '#F8FAFC',
       border: '1px solid #1F2937',
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.85)',
-      bismillahColor: '#E5E7EB',
-      headerBg: '#0F1219',
-      headerBorder: '#1F2937',
-      medallionBg: 'rgba(255, 255, 255, 0.08)',
-      medallionColor: '#F3F4F6',
-      medallionBorder: '#374151',
+      bismillahColor: '#F5D061',
+      headerBg: '#0D131F',
+      headerBorder: 'rgba(245, 208, 97, 0.35)',
+      medallionBg: 'rgba(245, 208, 97, 0.12)',
+      medallionColor: '#F5D061',
+      medallionBorder: 'rgba(245, 208, 97, 0.38)',
     },
   }[surfaceMode] || {
     background: 'var(--surface)',
     color: 'var(--text-primary)',
     border: '1px solid var(--border)',
     boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
-    bismillahColor: 'var(--accent-text)',
+    bismillahColor: 'var(--accent-text, #FDE68A)',
     headerBg: 'var(--surface-2)',
     headerBorder: 'var(--border)',
     medallionBg: 'var(--accent-soft)',
     medallionColor: 'var(--accent-text)',
-    medallionBorder: 'var(--accent)',
+    medallionBorder: 'var(--border)',
   };
 
   return (
@@ -1161,9 +1161,9 @@ export function InteractiveMushafPage({
                         width: '100%',
                         display: 'block',
                         scrollMarginTop: '116px',
-                        background: readingMode === 'paper' ? '#EFE0C2' : surfaceStyles.headerBg,
-                        borderColor: readingMode === 'paper' ? '#B89352' : surfaceStyles.headerBorder,
-                        borderWidth: readingMode === 'paper' ? '1.5px' : undefined,
+                        background: readingMode === 'paper' ? '#EFE0C2' : readingMode === 'night' ? '#0D131F' : 'var(--surface-2)',
+                        borderColor: readingMode === 'paper' ? '#B89352' : readingMode === 'night' ? 'rgba(245, 208, 97, 0.35)' : 'var(--border)',
+                        borderWidth: readingMode === 'paper' ? '1.5px' : '1px',
                         borderStyle: 'solid',
                         boxShadow: readingMode === 'paper' ? 'none' : 'inset 0 1px 0 var(--card-sheen)',
                       }}
@@ -1171,8 +1171,8 @@ export function InteractiveMushafPage({
                       <div
                         className="flex items-center justify-between px-3 text-[11px] font-bold"
                         style={{
-                          color: readingMode === 'paper' ? '#4A3219' : undefined,
-                          opacity: readingMode === 'paper' ? 0.95 : 0.75,
+                          color: readingMode === 'paper' ? '#4A3219' : readingMode === 'night' ? '#CBD5E1' : 'var(--text-secondary)',
+                          opacity: readingMode === 'paper' ? 0.95 : 0.85,
                         }}
                       >
                         <span>{surahHeader.revelation_type}</span>
@@ -1181,8 +1181,8 @@ export function InteractiveMushafPage({
                       <h2
                         className="text-xl sm:text-2xl font-bold my-1 font-arabic tracking-wide"
                         style={{
-                          color: readingMode === 'paper' ? '#2C1808' : readingMode === 'night' ? '#F5D061' : 'var(--accent-text)',
-                          textShadow: readingMode === 'paper' ? 'none' : undefined,
+                          color: readingMode === 'paper' ? '#2C1808' : readingMode === 'night' ? '#F5D061' : 'var(--accent-text, #FDE68A)',
+                          textShadow: readingMode === 'paper' ? 'none' : '0 0 12px var(--accent-glow, rgba(245, 208, 97, 0.3))',
                         }}
                       >
                         سُورَةُ {surahHeader.name_arabic}
@@ -1190,8 +1190,8 @@ export function InteractiveMushafPage({
                       <p
                         className="text-xs font-semibold"
                         style={{
-                          color: readingMode === 'paper' ? '#4A3219' : undefined,
-                          opacity: readingMode === 'paper' ? 0.95 : 0.75,
+                          color: readingMode === 'paper' ? '#4A3219' : readingMode === 'night' ? '#CBD5E1' : 'var(--text-secondary)',
+                          opacity: readingMode === 'paper' ? 0.95 : 0.85,
                         }}
                       >
                         {surahHeader.name_english}
@@ -1201,8 +1201,8 @@ export function InteractiveMushafPage({
                         <div
                           className="mt-2 text-lg sm:text-xl font-bold font-arabic"
                           style={{
-                            color: readingMode === 'paper' ? '#2C1808' : readingMode === 'night' ? '#F5D061' : surfaceStyles.bismillahColor,
-                            textShadow: readingMode === 'paper' ? 'none' : undefined,
+                            color: readingMode === 'paper' ? '#2C1808' : readingMode === 'night' ? '#F5D061' : 'var(--accent-text, #FDE68A)',
+                            textShadow: readingMode === 'paper' ? 'none' : '0 0 12px var(--accent-glow, rgba(245, 208, 97, 0.3))',
                           }}
                         >
                           بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
@@ -1255,6 +1255,7 @@ export function InteractiveMushafPage({
                       borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
                       padding: activeFormat === 7 ? '6px 4px' : '4px 2px',
                       minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
+                      color: readingMode === 'paper' ? '#1E1208' : readingMode === 'night' ? '#F8FAFC' : 'var(--text-primary)',
                     }}
                   >
                     {lineTokens.map((token) => {
@@ -1325,6 +1326,11 @@ export function InteractiveMushafPage({
                               wordSpacing: 'normal',
                               margin: '0',
                               verticalAlign: 'baseline',
+                              color: isWordRecited
+                                ? 'var(--on-accent)'
+                                : isVersePlaying
+                                ? (readingMode === 'night' ? '#F5D061' : 'var(--accent-text)')
+                                : (readingMode === 'paper' ? '#1E1208' : readingMode === 'night' ? '#F8FAFC' : 'var(--text-primary)'),
                               ...(lineDenseFontSize ? { fontSize: lineDenseFontSize } : {}),
                               ...(isWordRecited
                                 ? {
