@@ -14,7 +14,7 @@ import {
 if (typeof window !== 'undefined' && window.history && typeof window.history.replaceState === 'function') {
   try {
     const originalReplaceState = window.history.replaceState.bind(window.history);
-    window.history.pushState = function (data: any, unused: string, url?: string | URL | null) {
+    window.history.pushState = function (data: unknown, unused: string, url?: string | URL | null) {
       return originalReplaceState(data, unused, url);
     };
   } catch (e) {
@@ -26,7 +26,7 @@ if (typeof window !== 'undefined' && window.history && typeof window.history.rep
 // 0. Initialize theme engine and apply tokens before React mounts
 try {
   initThemeEngine();
-} catch (e) {
+} catch {
   // Silent fallback for theme engine bootstrap
 }
 
@@ -60,6 +60,7 @@ whenIdle(() => {
 });
 
 import { LanguageProvider } from "@/contexts/LanguageContext-new";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Capacitor } from "@capacitor/core";
 
 // 2. Mount React application root with breadcrumb tracing
@@ -69,9 +70,11 @@ try {
   if (rootElement) {
     createRoot(rootElement).render(
       <StrictMode>
-        <LanguageProvider>
-          <App />
-        </LanguageProvider>
+        <ErrorBoundary>
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
+        </ErrorBoundary>
       </StrictMode>
     );
   } else {
@@ -79,6 +82,18 @@ try {
   }
 } catch (e) {
   console.error("boot-main rendering threw:", e);
+  try {
+    document.documentElement.classList.remove('splash-active');
+    document.body.classList.remove('splash-active');
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    document.documentElement.style.touchAction = '';
+    document.body.style.touchAction = '';
+    document.getElementById('initial-splash')?.remove();
+    document.getElementById('static-splash')?.remove();
+  } catch (cleanErr) {
+    console.warn("Failed to remove splash after boot error:", cleanErr);
+  }
 } finally {
   completeStartupStep('boot-main');
 }

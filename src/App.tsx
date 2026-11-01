@@ -182,7 +182,6 @@ const RemedyFavorites = lazy(() => import("./pages/RemedyFavorites"));
 const Tafsir = lazy(() => import("./pages/Tafsir-New"));
 const EidChecklist = lazy(() => import("./pages/EidChecklist"));
 const FitranaCalculator = lazy(() => import("./pages/FitranaCalculator"));
-const Settings = lazy(() => import("./pages/Settings"));
 const SettingsSubPage = lazy(() => import("./pages/SettingsSubPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const SeerahHome = lazy(() => import("./pages/SeerahHome"));
@@ -192,27 +191,6 @@ const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
 const MonthlyTimetable = lazy(() => import("./pages/MonthlyTimetable"));
 const WidgetSettings = lazy(() => import("./pages/WidgetSettings"));
-
-function AnimationInitializer() {
-  useEffect(() => {
-    const storedAnimationPreference = localStorage.getItem("animations_enabled");
-    const isLowEndDeviceCheck = isLowEndDevice();
-    let isAnimationDisabled: boolean;
-
-    if (storedAnimationPreference === null) {
-      isAnimationDisabled = isLowEndDeviceCheck;
-      localStorage.setItem("animations_enabled", isAnimationDisabled.toString());
-    } else {
-      isAnimationDisabled = storedAnimationPreference === "false";
-    }
-
-    if (isAnimationDisabled) {
-      document.documentElement.classList.add("no-animations");
-    }
-    document.documentElement.dataset.animations = isAnimationDisabled ? "off" : "on";
-  }, []);
-  return null;
-}
 
 function AppRoutes() {
   const location = useLocation();
@@ -471,7 +449,7 @@ function AppShell() {
     try {
       const savedTheme = (localStorage.getItem('noor-theme') || localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
       const bgHex = THEME_BG_HEX_MAP[savedTheme] || '#000000';
-      (window as any).AndroidBridge?.setNativeThemeBg?.(bgHex);
+      (window as Window & { AndroidBridge?: { setNativeThemeBg?: (bgHex: string) => void } }).AndroidBridge?.setNativeThemeBg?.(bgHex);
     } catch {
       // Safe fallback when AndroidBridge is unavailable
     }
@@ -525,7 +503,7 @@ function AppShell() {
     }
   }, []);
 
-  // Safety fallback: ensure splash screen handoff always completes cleanly within 2.5s
+  // Safety fallback: ensure splash screen handoff always completes cleanly within 1.2s
   useEffect(() => {
     if (!splashEnabled) {
       handleSplashComplete();
@@ -533,13 +511,12 @@ function AppShell() {
       return;
     }
     const timer = setTimeout(() => {
-      if (!splashHandoffDoneRef.current) {
-        handleSplashComplete();
-        forceReleaseSplashScrollLock();
-      }
-    }, 2500);
+      handleSplashComplete();
+      forceReleaseSplashScrollLock();
+    }, 1200);
     return () => clearTimeout(timer);
-  }, [splashEnabled, handleSplashComplete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Strictly empty dependency array []
 
   // Initialize performance optimizations
   useEffect(() => {
@@ -652,19 +629,24 @@ function AppShell() {
     try {
       const savedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
       if (savedLocation) {
-        const { latitude, longitude, locationName } = JSON.parse(savedLocation);
-        import('@/lib/widget-service').then(({ WidgetService }) => {
-          try {
-            WidgetService.startAutoUpdate(latitude, longitude, locationName);
-          } catch (e) {
-            console.warn('Failed to start widget auto-update', e);
-          } finally {
+        const parsed = JSON.parse(savedLocation);
+        if (parsed && typeof parsed === 'object' && typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+          const { latitude, longitude, locationName } = parsed;
+          import('@/lib/widget-service').then(({ WidgetService }) => {
+            try {
+              WidgetService.startAutoUpdate(latitude, longitude, locationName);
+            } catch (e) {
+              console.warn('Failed to start widget auto-update', e);
+            } finally {
+              completeStartupStep('widget-auto-update-init');
+            }
+          }).catch(err => {
+            console.warn('Failed to import widget-service', err);
             completeStartupStep('widget-auto-update-init');
-          }
-        }).catch(err => {
-          console.warn('Failed to import widget-service', err);
+          });
+        } else {
           completeStartupStep('widget-auto-update-init');
-        });
+        }
       } else {
         completeStartupStep('widget-auto-update-init');
       }
@@ -741,12 +723,15 @@ function AppShell() {
       try {
         const loc = localStorage.getItem(LOCATION_STORAGE_KEY);
         if (loc) {
-          const { latitude, longitude, locationName } = JSON.parse(loc);
-          import('@/lib/widget-service').then(({ WidgetService }) => {
-            WidgetService.startAutoUpdate?.(latitude, longitude, locationName);
-          }).catch(() => {
-            // Handled background widget resume update error
-          });
+          const parsed = JSON.parse(loc);
+          if (parsed && typeof parsed === 'object' && typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+            const { latitude, longitude, locationName } = parsed;
+            import('@/lib/widget-service').then(({ WidgetService }) => {
+              WidgetService.startAutoUpdate?.(latitude, longitude, locationName);
+            }).catch(() => {
+              // Handled background widget resume update error
+            });
+          }
         }
       } catch (e) {
         console.warn('Resume: widget sync error', e);
@@ -800,15 +785,13 @@ function AppShell() {
       <Sonner />
       {/* Exact-alarm rationale modal — singleton, shown before system settings */}
       <ExactAlarmPermissionDialog />
-      <AnimatePresence>
-        {showSplash && splashEnabled && (
-          <SplashScreen
-            animationsEnabled={animationEnabled}
-            showGreeting={splashGreetingEnabled}
-            onComplete={handleSplashComplete}
-          />
-        )}
-      </AnimatePresence>
+      {showSplash && splashEnabled && (
+        <SplashScreen
+          animationsEnabled={animationEnabled}
+          showGreeting={splashGreetingEnabled}
+          onComplete={handleSplashComplete}
+        />
+      )}
       <AppContent splashActive={showSplash && splashEnabled} />
     </TooltipProvider>
   );

@@ -30,6 +30,36 @@
           greetStyle.textContent = '#splash-subtitle { display: none !important; }';
           document.head.appendChild(greetStyle);
         }
+
+        // Allow tap-to-dismiss on initial splash immediately
+        function dismissInitialSplash() {
+          try {
+            document.documentElement.classList.remove('splash-active');
+            document.body.classList.remove('splash-active');
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+            document.documentElement.style.touchAction = '';
+            document.body.style.touchAction = '';
+            var el = document.getElementById('initial-splash');
+            if (el) el.remove();
+            var s = document.getElementById('static-splash');
+            if (s) s.remove();
+          } catch (e) {}
+        }
+
+        // Native unconditional failsafe timer: forces removal of splash screen and releases scroll lock
+        // after 1800ms under all conditions, even if React or any external script throws or hangs.
+        setTimeout(dismissInitialSplash, 1800);
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function () {
+            var el = document.getElementById('initial-splash');
+            if (el) el.addEventListener('click', dismissInitialSplash);
+          });
+        } else {
+          var el = document.getElementById('initial-splash');
+          if (el) el.addEventListener('click', dismissInitialSplash);
+        }
       } catch (e) {
         // Safe fallback
       }
@@ -319,7 +349,7 @@
 
 <body class="splash-active">
   <!-- Static pre-React splash element: physically removed by React once SplashScreen mounts with 0 layout jump -->
-  <div id="initial-splash" class="static-splash" aria-hidden="true">
+  <div id="initial-splash" class="static-splash" aria-hidden="true" style="cursor:pointer;">
     <!-- Fixed Celestial Stars Layer (matches React FloatingStars 100%) -->
     <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
       <div style="position:absolute;left:18%;top:22%;width:2px;height:2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;"></div>

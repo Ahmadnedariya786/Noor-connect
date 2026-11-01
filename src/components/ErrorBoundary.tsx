@@ -64,6 +64,24 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
+    // Unconditionally remove initial splash and unlock scroll so error recovery UI is always visible
+    try {
+      document.documentElement.classList.remove('splash-active');
+      document.body.classList.remove('splash-active');
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.documentElement.style.touchAction = '';
+      document.body.style.touchAction = '';
+      document.documentElement.style.overscrollBehavior = '';
+      document.body.style.overscrollBehavior = '';
+      const elInitial = document.getElementById('initial-splash');
+      if (elInitial) elInitial.remove();
+      const elStatic = document.getElementById('static-splash');
+      if (elStatic) elStatic.remove();
+    } catch {
+      // Safe fallback
+    }
+
     try {
       const commit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || 'unknown';
       const componentStack = errorInfo?.componentStack || '';

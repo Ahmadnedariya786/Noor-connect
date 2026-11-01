@@ -148,10 +148,14 @@ export default function ZakatCalculator() {
   const [historyList, setHistoryList] = useState<ZakatHistoryRecord[]>(() => {
     try {
       const raw = localStorage.getItem(ZAKAT_HISTORY_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      }
     } catch {
       return [];
     }
+    return [];
   });
 
   const [assets, setAssets] = useState<ZakatAssets>({
@@ -280,12 +284,14 @@ export default function ZakatCalculator() {
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        if (data.assets) setAssets(data.assets);
-        if (data.liabilities) setLiabilities(data.liabilities);
-        if (data.currency) setCurrency(data.currency);
-        if (data.nisabChoice) setNisabChoice(data.nisabChoice);
-        if (data.goldCalculator) setGoldCalculator(data.goldCalculator);
-        if (data.silverCalculator) setSilverCalculator(data.silverCalculator);
+        if (data && typeof data === 'object') {
+          if (data.assets && typeof data.assets === 'object') setAssets(data.assets);
+          if (data.liabilities && typeof data.liabilities === 'object') setLiabilities(data.liabilities);
+          if (data.currency && typeof data.currency === 'string') setCurrency(data.currency);
+          if (data.nisabChoice === 'silver' || data.nisabChoice === 'gold') setNisabChoice(data.nisabChoice);
+          if (data.goldCalculator && typeof data.goldCalculator === 'object') setGoldCalculator(data.goldCalculator);
+          if (data.silverCalculator && typeof data.silverCalculator === 'object') setSilverCalculator(data.silverCalculator);
+        }
       } catch (e) {
         console.error('Failed to parse saved zakat data', e);
       }

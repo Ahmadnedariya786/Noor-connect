@@ -300,7 +300,10 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
   const [personalNotes, setPersonalNotes] = useState<QuranPersonalNote[]>(() => {
     try {
       const saved = localStorage.getItem('noor_quran_notes_v1');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {
       // Safe fallback
     }

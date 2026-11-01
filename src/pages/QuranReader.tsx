@@ -125,8 +125,9 @@ export default function QuranReader() {
       try {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
-          if (!cancelled) {
-            setCardTranslations(JSON.parse(cached));
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === 'object' && !cancelled) {
+            setCardTranslations(parsed);
             setIsCardTranslationLoading(false);
           }
           return;

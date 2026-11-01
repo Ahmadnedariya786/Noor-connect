@@ -192,17 +192,24 @@ export default function SurahList() {
   const [userNotes, setUserNotes] = useState<QuranReflectionNote[]>(() => {
     try {
       const raw = localStorage.getItem('noor_quran_notes_v1');
-      return raw ? JSON.parse(raw) : [];
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      }
     } catch {
       return [];
     }
+    return [];
   });
 
   useEffect(() => {
     const syncNotes = () => {
       try {
         const raw = localStorage.getItem('noor_quran_notes_v1');
-        if (raw) setUserNotes(JSON.parse(raw));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setUserNotes(parsed);
+        }
       } catch {
         // Safe catch
       }
@@ -303,11 +310,15 @@ export default function SurahList() {
   const [bookmarkedSurahs, setBookmarkedSurahs] = useState<number[]>(() => {
     try {
       const raw = localStorage.getItem(BOOKMARKS_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      }
     } catch {
       // Return empty list on parse error
       return [];
     }
+    return [];
   });
 
   const { isPlaying, currentSurah, currentAyah, openPlayer, playAyah } = useTilawah();
@@ -396,7 +407,8 @@ export default function SurahList() {
       try {
         const { value } = await Preferences.get({ key: BOOKMARKS_KEY });
         if (value) {
-          setBookmarkedSurahs(JSON.parse(value));
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) setBookmarkedSurahs(parsed);
           return;
         }
       } catch {
@@ -404,7 +416,10 @@ export default function SurahList() {
       }
       try {
         const raw = localStorage.getItem(BOOKMARKS_KEY);
-        if (raw) setBookmarkedSurahs(JSON.parse(raw));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setBookmarkedSurahs(parsed);
+        }
       } catch {
         // Keep current state
       }

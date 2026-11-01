@@ -19,6 +19,7 @@ import {
   TilawahReciter,
   TILAWAH_RECITERS,
   DEFAULT_TILAWAH_RECITER,
+  getReciterById,
   getPrimaryAyahAudioUrl,
   getSecondaryAyahAudioUrl,
 } from '@/lib/tilawah-data';
@@ -123,7 +124,17 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const initialSaved = useMemo(() => {
     try {
       const raw = localStorage.getItem(STORAGE_STATE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            surah: typeof parsed.surah === 'number' && parsed.surah >= 1 && parsed.surah <= 114 ? parsed.surah : 1,
+            ayah: typeof parsed.ayah === 'number' && parsed.ayah >= 1 ? parsed.ayah : 1,
+            reciterId: parsed.reciterId || parsed.reciter?.id || DEFAULT_TILAWAH_RECITER.id,
+            speed: typeof parsed.speed === 'number' ? (parsed.speed as PlaybackSpeed) : (1 as PlaybackSpeed),
+          };
+        }
+      }
     } catch {
       // Fallback
     }
@@ -131,17 +142,14 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
       surah: 1,
       ayah: 1,
       reciterId: DEFAULT_TILAWAH_RECITER.id,
-      speed: 1,
+      speed: 1 as PlaybackSpeed,
     };
   }, []);
 
   const [currentSurah, setCurrentSurah] = useState<number>(initialSaved.surah || 1);
   const [currentAyah, setCurrentAyah] = useState<number>(initialSaved.ayah || 1);
   const [reciter, setReciterState] = useState<TilawahReciter>(() => {
-    return (
-      TILAWAH_RECITERS.find((r) => r.id === initialSaved.reciterId) ||
-      DEFAULT_TILAWAH_RECITER
-    );
+    return getReciterById(initialSaved.reciterId);
   });
   const [playbackSpeed, setPlaybackSpeedState] = useState<PlaybackSpeed>(
     initialSaved.speed || 1
@@ -200,34 +208,6 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Safe catch
     }
   }, []);
-
-  const startIntervalRange = useCallback(
-    (config: Partial<IntervalRangeConfig>) => {
-      const merged: IntervalRangeConfig = {
-        isActive: true,
-        startSurah: config.startSurah ?? currentSurah,
-        startAyah: config.startAyah ?? currentAyah,
-        endSurah: config.endSurah ?? currentSurah,
-        endAyah: config.endAyah ?? Math.min(totalAyahs, currentAyah + 5),
-        repeatInterval: config.repeatInterval ?? 1,
-        currentInterval: 1,
-        repeatEachAyah: config.repeatEachAyah ?? 1,
-        currentAyahRepeat: 1,
-      };
-      setIntervalRange(merged);
-      playAyahInternal(merged.startSurah, merged.startAyah);
-      toast({
-        title: 'Interval Looping Started 🔁',
-        description: `Repeating ${merged.startSurah}:${merged.startAyah} to ${merged.endSurah}:${merged.endAyah} (${merged.repeatEachAyah}× each).`,
-      });
-    },
-    [currentSurah, currentAyah, totalAyahs, playAyahInternal, toast]
-  );
-
-  const stopIntervalRange = useCallback(() => {
-    setIntervalRange((prev) => ({ ...prev, isActive: false }));
-    toast({ title: 'Interval Looping Stopped' });
-  }, [toast]);
 
   // Hifz Engine state
   const [hifzConfig, setHifzConfig] = useState<HifzConfig>({
@@ -436,13 +416,12 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setPlaybackTimeMs(ms);
         }
         animId = requestAnimationFrame(tick);
-      } else {
-        // Audio paused or waiting; keep checking
-        animId = requestAnimationFrame(tick);
       }
     };
 
-    animId = requestAnimationFrame(tick);
+    if (isPlaying) {
+      animId = requestAnimationFrame(tick);
+    }
     return () => {
       isCancelled = true;
       if (animId !== null) {
@@ -848,8 +827,7 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const setReciter = useCallback(
     (reciterId: string) => {
-      const target = TILAWAH_RECITERS.find((r) => r.id === reciterId);
-      if (!target) return;
+      const target = getReciterById(reciterId);
       setReciterState(target);
       if (isPlaying) {
         playAyahInternal(currentSurah, currentAyah, target);
@@ -953,6 +931,34 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const setHifzHideMode = useCallback((mode: HifzHideMode) => {
     setHifzConfig((prev) => ({ ...prev, hideMode: mode }));
   }, []);
+
+  const startIntervalRange = useCallback(
+    (config: Partial<IntervalRangeConfig>) => {
+      const merged: IntervalRangeConfig = {
+        isActive: true,
+        startSurah: config.startSurah ?? currentSurah,
+        startAyah: config.startAyah ?? currentAyah,
+        endSurah: config.endSurah ?? currentSurah,
+        endAyah: config.endAyah ?? Math.min(totalAyahs, currentAyah + 5),
+        repeatInterval: config.repeatInterval ?? 1,
+        currentInterval: 1,
+        repeatEachAyah: config.repeatEachAyah ?? 1,
+        currentAyahRepeat: 1,
+      };
+      setIntervalRange(merged);
+      playAyahInternal(merged.startSurah, merged.startAyah);
+      toast({
+        title: 'Interval Looping Started 🔁',
+        description: `Repeating ${merged.startSurah}:${merged.startAyah} to ${merged.endSurah}:${merged.endAyah} (${merged.repeatEachAyah}× each).`,
+      });
+    },
+    [currentSurah, currentAyah, totalAyahs, playAyahInternal, toast]
+  );
+
+  const stopIntervalRange = useCallback(() => {
+    setIntervalRange((prev) => ({ ...prev, isActive: false }));
+    toast({ title: 'Interval Looping Stopped' });
+  }, [toast]);
 
   const downloadCurrentAyahAudio = useCallback(() => {
     try {

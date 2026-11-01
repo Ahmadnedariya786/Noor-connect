@@ -588,3 +588,35 @@ export const QURAN_RECITERS: AuthenticReciter[] = [
 ];
 
 export const DEFAULT_QURAN_RECITER = QURAN_RECITERS[0]; // Mishary Alafasy
+
+/**
+ * Safely find a reciter by ID with guaranteed fallback to DEFAULT_QURAN_RECITER.
+ * Handles null, undefined, numeric IDs, legacy strings ('alafasy', 'sudais', etc.)
+ * and directory names without ever throwing or returning undefined.
+ */
+export function getReciterById(id?: string | number | null): AuthenticReciter {
+  if (!id && id !== 0) return DEFAULT_QURAN_RECITER;
+  const strId = String(id).toLowerCase().trim();
+  if (!strId) return DEFAULT_QURAN_RECITER;
+
+  // 1. Direct match by id
+  const direct = QURAN_RECITERS.find((r) => r.id.toLowerCase() === strId);
+  if (direct) return direct;
+
+  // 2. Direct match by EveryAyah directory name
+  const dirMatch = QURAN_RECITERS.find((r) => r.everyAyahDir.toLowerCase() === strId);
+  if (dirMatch) return dirMatch;
+
+  // 3. Substring / fuzzy match on id or shortName (e.g. 'alafasy' -> 'ar.alafasy', 'sudais' -> 'ar.abdurrahmaansudais')
+  const fuzzy = QURAN_RECITERS.find(
+    (r) =>
+      r.id.toLowerCase().includes(strId) ||
+      strId.includes(r.id.toLowerCase()) ||
+      r.shortName.toLowerCase().includes(strId) ||
+      strId.includes(r.shortName.toLowerCase())
+  );
+  if (fuzzy) return fuzzy;
+
+  return DEFAULT_QURAN_RECITER;
+}
+

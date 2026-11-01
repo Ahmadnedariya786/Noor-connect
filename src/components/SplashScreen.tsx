@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { NoorLogoCrest } from "@/components/NoorLogoCrest";
 import { getAnimationTier } from "@/lib/device-performance";
@@ -72,6 +72,8 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const [isFading, setIsFading] = useState(false);
     const [isMounted, setIsMounted] = useState(true);
     const hasTriggeredCompletionRef = useRef(false);
+    const onCompleteRef = useRef(onComplete);
+    onCompleteRef.current = onComplete;
 
     const prefersReducedMotion = useMemo(() => {
         if (typeof window === 'undefined') return false;
@@ -92,17 +94,31 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
 
     const shouldAnimate = animationsEnabled && !prefersReducedMotion && !tier.shouldReduceAnimations;
 
-    const triggerComplete = useRef(() => {
+    const triggerComplete = useCallback(() => {
         if (hasTriggeredCompletionRef.current) return;
         hasTriggeredCompletionRef.current = true;
         setIsMounted(false);
         forceReleaseSplashScrollLock();
         try {
-            onComplete();
+            onCompleteRef.current();
         } catch (e) {
             console.warn('Splash onComplete callback error', e);
         }
-    }).current;
+    }, []);
+
+    // Strict failsafe timer: forces splash dismissal at 1200ms regardless of parent re-renders
+    useEffect(() => {
+        forceReleaseSplashScrollLock();
+
+        const failsafeTimer = setTimeout(() => {
+            triggerComplete();
+        }, 1200);
+
+        return () => {
+            clearTimeout(failsafeTimer);
+            forceReleaseSplashScrollLock();
+        };
+    }, [triggerComplete]);
 
     useEffect(() => {
         // Lock scroll while splash is active
@@ -190,7 +206,11 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
     const splashContent = (
         <div
             id="react-splash-screen"
-            className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
+            onClick={triggerComplete}
+            role="button"
+            tabIndex={0}
+            aria-label="Skip splash screen"
+            className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden cursor-pointer"
             style={{
                 position: 'fixed',
                 inset: 0,
@@ -207,6 +227,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 transition: 'opacity 150ms ease-out, transform 150ms ease-out',
                 pointerEvents: isFading ? 'none' : 'all',
                 willChange: 'opacity, transform',
+                cursor: 'pointer',
             }}
         >
             {/* Stars Background */}

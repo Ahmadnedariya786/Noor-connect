@@ -465,9 +465,11 @@ export default function Dashboard() {
         const data = localStorage.getItem(key);
         if (data) {
           const parsed = JSON.parse(data);
-          if (parsed.city === 'Istres' || parsed.locationName?.includes('Istres') ||
-            parsed.city === 'ISTRES' || parsed.locationName?.includes('ISTRES')) {
-            cleanupIstres('localStorage contains ISTRES');
+          if (parsed && typeof parsed === 'object') {
+            if (parsed.city === 'Istres' || parsed.locationName?.includes('Istres') ||
+              parsed.city === 'ISTRES' || parsed.locationName?.includes('ISTRES')) {
+              cleanupIstres('localStorage contains ISTRES');
+            }
           }
         }
       } catch (error) {

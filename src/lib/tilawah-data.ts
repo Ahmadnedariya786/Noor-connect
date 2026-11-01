@@ -7,9 +7,16 @@
  */
 
 import { quranService } from '@/lib/quran-service';
-import { QURAN_RECITERS, DEFAULT_QURAN_RECITER, type AuthenticReciter, type ReciterStyle } from '@/lib/quran-reciters';
+import {
+  QURAN_RECITERS,
+  DEFAULT_QURAN_RECITER,
+  getReciterById,
+  type AuthenticReciter,
+  type ReciterStyle,
+} from '@/lib/quran-reciters';
 
 export type { AuthenticReciter, ReciterStyle };
+export { getReciterById };
 
 export interface TilawahReciter {
   id: string; // Reciter ID (e.g. 'ar.alafasy')
@@ -90,12 +97,13 @@ const ISLAMIC_NETWORK_HOSTED_IDS = new Set([
  * otherwise use EveryAyah directly as primary to prevent any 404 delays!
  */
 export function getPrimaryAyahAudioUrl(reciterId: string, surah: number, ayah: number): string {
-  const reciter = TILAWAH_RECITERS.find((r) => r.id === reciterId);
-  const everyAyahDir = reciter?.everyAyahDir;
+  const reciter = getReciterById(reciterId);
+  const effectiveId = reciter.id;
+  const everyAyahDir = reciter.everyAyahDir;
 
-  if (ISLAMIC_NETWORK_HOSTED_IDS.has(reciterId)) {
+  if (ISLAMIC_NETWORK_HOSTED_IDS.has(effectiveId)) {
     const globalAyah = getGlobalAyahNumber(surah, ayah);
-    return `https://cdn.islamic.network/quran/audio/128/${reciterId}/${globalAyah}.mp3`;
+    return `https://cdn.islamic.network/quran/audio/128/${effectiveId}/${globalAyah}.mp3`;
   }
 
   if (everyAyahDir) {
@@ -105,7 +113,7 @@ export function getPrimaryAyahAudioUrl(reciterId: string, surah: number, ayah: n
   }
 
   const globalAyah = getGlobalAyahNumber(surah, ayah);
-  return `https://cdn.islamic.network/quran/audio/128/${reciterId}/${globalAyah}.mp3`;
+  return `https://cdn.islamic.network/quran/audio/128/${effectiveId}/${globalAyah}.mp3`;
 }
 
 /**
