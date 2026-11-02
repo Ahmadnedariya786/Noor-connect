@@ -1188,8 +1188,15 @@ export default function SurahList() {
                   onClick={() => handleSurahClick(surah.number)}
                   className="rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] snap-start text-left"
                   style={{
-                    minWidth: "176px",
-                    padding: "10px 12px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    gap: "6px",
+                    minWidth: "184px",
+                    maxWidth: "196px",
+                    padding: "12px",
+                    boxSizing: "border-box",
+                    flexShrink: 0,
                     scrollSnapAlign: "start",
                     background: isFeatured ? "var(--surface-2)" : "var(--surface)",
                     backgroundImage: isFeatured
@@ -1202,15 +1209,18 @@ export default function SurahList() {
                     borderWidth: isFeatured ? "1.5px" : "1px",
                   }}
                 >
-                  {/* Row 1: Top Badge Row */}
-                  <div className="w-full flex items-center justify-start mb-1.5">
+                  {/* Row 1: Badge Row */}
+                  <div className="w-full flex items-center justify-start">
                     <span
-                      className="font-bold rounded-full truncate"
                       style={{
                         display: "inline-flex",
                         width: "fit-content",
                         fontSize: "0.64rem",
-                        padding: "2px 8px",
+                        lineHeight: 1.2,
+                        padding: "3px 8px",
+                        borderRadius: "9999px",
+                        whiteSpace: "nowrap",
+                        fontWeight: 700,
                         background: isFeatured ? "var(--accent)" : "var(--surface-2)",
                         color: isFeatured ? "var(--on-accent)" : "var(--accent-text)",
                         border: isFeatured ? "none" : "1px solid var(--border)",
@@ -1220,25 +1230,60 @@ export default function SurahList() {
                     </span>
                   </div>
 
-                  {/* Row 2: Surah Title Row (English on left, Arabic on right) */}
-                  <div className="flex items-center justify-between gap-1.5 w-full mb-1">
+                  {/* Row 2: Title + Arabic Row */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "8px",
+                      width: "100%",
+                    }}
+                  >
                     <span
-                      className="font-extrabold text-[var(--text-primary)] whitespace-nowrap"
-                      style={{ fontSize: "0.92rem", fontWeight: 800 }}
+                      className="text-[var(--text-primary)]"
+                      style={{
+                        fontSize: "0.92rem",
+                        fontWeight: 800,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        minWidth: 0,
+                        flex: 1,
+                      }}
                     >
                       {surah.name}
                     </span>
                     <span
                       dir="rtl"
-                      className="font-arabic text-[var(--accent-text)] leading-none shrink-0"
-                      style={{ fontSize: "1.05rem" }}
+                      style={{
+                        fontSize: "0.98rem",
+                        lineHeight: 1.2,
+                        fontFamily: "var(--font-arabic)",
+                        color: "var(--accent-text)",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0,
+                        position: "static",
+                      }}
                     >
                       {surah.arabicName}
                     </span>
                   </div>
 
-                  {/* Row 3: Meta Row */}
-                  <div dir="ltr" className="w-full flex items-center justify-start text-[0.70rem] text-[var(--text-secondary)] tabular-nums">
+                  {/* Row 3: Dedicated Bottom Metadata Row */}
+                  <div
+                    dir="ltr"
+                    className="tabular-nums"
+                    style={{
+                      fontSize: "0.70rem",
+                      lineHeight: 1.2,
+                      color: "var(--text-secondary)",
+                      whiteSpace: "nowrap",
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
                     <span>#{surah.number} • {surah.readTime}</span>
                   </div>
                 </button>

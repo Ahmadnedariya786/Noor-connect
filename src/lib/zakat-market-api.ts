@@ -285,9 +285,9 @@ export function formatCurrencyAmount(amount: number, currencyCode: string): stri
   const cfg = getCurrencyConfig(currencyCode);
   const rounded = Math.round(Math.max(0, amount));
   try {
-    return `${cfg.symbol} ${rounded.toLocaleString('en-IN')}`;
+    return `${cfg.symbol}${rounded.toLocaleString('en-IN')}`;
   } catch {
-    return `${cfg.symbol} ${rounded.toFixed(0)}`;
+    return `${cfg.symbol}${rounded.toFixed(0)}`;
   }
 }
 

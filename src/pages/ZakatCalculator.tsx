@@ -24,10 +24,13 @@ import {
   TrendingUp,
   Receipt,
   HelpCircle,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useContentLanguage } from "@/lib/content-translator";
+import { getZakatUIStrings } from "@/lib/zakat-i18n";
 import {
   SUPPORTED_CURRENCIES,
   LiveMetalRates,
@@ -84,6 +87,11 @@ interface ZakatCalculatorProps {
 
 export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorProps) {
   const navigate = useNavigate();
+
+  // Multi-Language Content Engine
+  const { contentLang } = useContentLanguage();
+  const ui = useMemo(() => getZakatUIStrings(contentLang), [contentLang]);
+  const isUrdu = contentLang === 'ur';
 
   // Top Tabs: Calculator vs History
   const [activeTab, setActiveTab] = useState<'calculator' | 'history'>('calculator');
@@ -504,7 +512,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
       `💰 Currency: ${activeCurrency}`,
       `---------------------------------`,
       `• Gross Zakatable Assets: ${formatCurrencyAmount(totalGrossWealth, activeCurrency)}`,
-      `• Deductible Liabilities: - ${formatCurrencyAmount(totalLiabilities, activeCurrency)}`,
+      `• Deductible Liabilities: -${formatCurrencyAmount(totalLiabilities, activeCurrency)}`,
       `• Net Zakatable Wealth: ${formatCurrencyAmount(netZakatableWealth, activeCurrency)}`,
       `• Nisab Threshold (${nisabChoice.toUpperCase()}): ${formatCurrencyAmount(activeNisabThreshold, activeCurrency)}`,
       `• Status: ${isNisabReached ? 'OBLIGATORY (Nisab Reached)' : 'BELOW NISAB (Optional Sadaqah)'}`,
@@ -538,9 +546,19 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] flex flex-col pb-28">
-      {/* ── TOP APP BAR ── */}
-      <header className="sticky top-0 z-40 bg-[var(--surface)]/95 backdrop-blur-md border-b border-[var(--border)] px-4 py-3">
+    <div
+      className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] flex flex-col pb-28"
+      style={{
+        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+      }}
+    >
+      {/* ── TOP APP BAR (WITH STATUS-BAR & CAMERA SAFE-AREA CLEARANCE) ── */}
+      <header
+        className="sticky top-0 z-40 bg-[var(--surface)]/95 backdrop-blur-md border-b border-[var(--border)] px-4 pb-3"
+        style={{
+          paddingTop: isEmbedded ? '12px' : 'max(calc(env(safe-area-inset-top, 0px) + 16px), 46px)',
+        }}
+      >
         <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             {!isEmbedded && (
@@ -548,16 +566,16 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 type="button"
                 onClick={() => navigate(-1)}
                 aria-label="Back"
-                className="w-9 h-9 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-primary)] hover:border-[var(--accent)] active:scale-95 transition-all"
+                className="w-9 h-9 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-primary)] hover:border-[var(--accent)] active:scale-95 transition-all shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold font-serif text-[var(--text-primary)] truncate flex items-center gap-1.5">
-                <span>Zakat Calculator</span>
-                <span className="text-[10px] uppercase font-sans font-bold px-1.5 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
-                  Shariah 2.5%
+              <h1 className="text-base sm:text-lg font-bold font-serif text-[var(--text-primary)] truncate flex items-center gap-1.5 whitespace-nowrap">
+                <span>{ui.title}</span>
+                <span className="text-[10px] uppercase font-sans font-bold px-1.5 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] shrink-0">
+                  {ui.shariahRate}
                 </span>
               </h1>
             </div>
@@ -568,7 +586,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
             <select
               value={activeCurrency}
               onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[var(--accent-text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[var(--accent-text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer shrink-0 whitespace-nowrap"
             >
               {SUPPORTED_CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -587,32 +605,32 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
 
       {/* ── MAIN CONTENT CONTAINER ── */}
       <main className="max-w-xl mx-auto w-full px-4 pt-3.5 space-y-4">
-        {/* ── SEGMENTED TOP TABS: Calculator vs History ── */}
+        {/* ── SEGMENTED TOP TABS: Calculator vs History (NO DUPLICATE EMOJIS) ── */}
         <div className="grid grid-cols-2 p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xs">
           <button
             type="button"
             onClick={() => setActiveTab('calculator')}
-            className={`py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+            className={`py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
               activeTab === 'calculator'
                 ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <Calculator className="w-4 h-4" />
-            <span>🧮 Calculator</span>
+            <Calculator className="w-4 h-4 shrink-0" />
+            <span>{ui.tabCalculator}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className={`py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+            className={`py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
               activeTab === 'history'
                 ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <History className="w-4 h-4" />
-            <span>🕒 History ({historyList.length})</span>
+            <History className="w-4 h-4 shrink-0" />
+            <span>{ui.tabHistory} ({historyList.length})</span>
           </button>
         </div>
 
@@ -632,22 +650,22 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] bg-[var(--surface-2)] border border-[var(--border)] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] bg-[var(--surface-2)] border border-[var(--border)] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shrink-0">
                   <Sparkles className="w-3 h-3 text-[var(--accent)]" />
-                  ♡ ZAKAT AL-MĀL
+                  {ui.heroBadge}
                 </span>
-                <span className="text-[10.5px] font-mono font-bold bg-[var(--accent)] text-[var(--on-accent)] px-2.5 py-0.5 rounded-full">
-                  2.5% (1/40th)
+                <span className="text-[10.5px] font-mono font-bold bg-[var(--accent)] text-[var(--on-accent)] px-2.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                  {ui.heroPill}
                 </span>
               </div>
 
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text-primary)] leading-tight">
-                    Purify Your Wealth
+                    {ui.heroTitle}
                   </h2>
                   <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
-                    Calculated strictly according to authentic Islamic Shariah (Hawl & Nisab).
+                    {ui.heroSub}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
@@ -665,27 +683,27 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   className="text-xs font-bold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1.5"
                 >
                   <HelpCircle className="w-3.5 h-3.5" />
-                  <span>📖 Simple Shariah Rules (Who Must Pay?)</span>
+                  <span>{ui.rulesBtn}</span>
                 </button>
               </div>
             </div>
 
-            {/* ── LIVE GOLD & SILVER MARKET RATES CARD (ZERO 0.00/g BUG) ── */}
+            {/* ── LIVE GOLD & SILVER MARKET RATES CARD (NO TEXT COLLISION) ── */}
             <div
               className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5">
-                  <Coins className="w-4 h-4 text-[var(--accent-text)]" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                    Live Bullion Rates ({activeCurrency})
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Coins className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] whitespace-nowrap truncate">
+                    {ui.liveRatesTitle} ({activeCurrency})
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${
+                    className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${
                       rates?.isOverridden
                         ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
                         : rates?.source === 'live'
@@ -693,7 +711,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                         : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]'
                     }`}
                   >
-                    ● {rates?.isOverridden ? 'Custom Override' : rates?.source === 'live' ? 'Live Market' : 'Offline Baseline'}
+                    ● {rates?.isOverridden ? 'Override' : rates?.source === 'live' ? 'Live' : 'Baseline'}
                   </span>
 
                   <button
@@ -709,63 +727,75 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <button
                     type="button"
                     onClick={handleOpenOverride}
-                    className="px-2 py-1 rounded-lg text-[10.5px] font-bold bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--accent-text)] inline-flex items-center gap-1"
+                    className="px-2 py-1 rounded-lg text-[10.5px] font-bold bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--accent-text)] inline-flex items-center gap-1 whitespace-nowrap"
                   >
                     <Edit3 className="w-3 h-3" />
-                    <span>Override</span>
+                    <span>{ui.overrideBtn}</span>
                   </button>
                 </div>
               </div>
 
-              {/* Two side-by-side Bullion Rate Boxes */}
+              {/* Two side-by-side Bullion Rate Boxes (Clean Single-Line Headers) */}
               <div className="grid grid-cols-2 gap-2.5">
                 {/* 24K Gold Rate */}
                 <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400">
-                      24K Fine Gold
-                    </span>
-                    <span className="text-[10px] font-bold text-[var(--text-secondary)]">
-                      {rates?.rawDateStr ? rates.rawDateStr.slice(5) : '2026'}
+                  <div className="w-full">
+                    <span
+                      className="text-amber-600 dark:text-amber-400 block whitespace-nowrap"
+                      style={{ fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.04em" }}
+                    >
+                      {ui.fineGold24k}
                     </span>
                   </div>
-                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                  <div
+                    className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
                     {formatCurrencyAmount(effectiveGoldPerGram, activeCurrency)}/g
                   </div>
-                  <div className="text-[10px] text-[var(--text-secondary)] font-mono">
+                  <div
+                    className="text-[10px] text-[var(--text-secondary)] font-mono whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
                     {formatCurrencyAmount(rates?.goldPerTola || effectiveGoldPerGram * TOLA_IN_GRAMS, activeCurrency)}/tola
                   </div>
                 </div>
 
                 {/* 999 Silver Rate */}
                 <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">
-                      999 Fine Silver
-                    </span>
-                    <span className="text-[10px] font-bold text-[var(--text-secondary)]">
-                      {rates?.rawDateStr ? rates.rawDateStr.slice(5) : '2026'}
+                  <div className="w-full">
+                    <span
+                      className="text-slate-500 dark:text-slate-300 block whitespace-nowrap"
+                      style={{ fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.04em" }}
+                    >
+                      {ui.fineSilver999}
                     </span>
                   </div>
-                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                  <div
+                    className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
                     {formatCurrencyAmount(effectiveSilverPerGram, activeCurrency)}/g
                   </div>
-                  <div className="text-[10px] text-[var(--text-secondary)] font-mono">
+                  <div
+                    className="text-[10px] text-[var(--text-secondary)] font-mono whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
                     {formatCurrencyAmount(rates?.silverPerTola || effectiveSilverPerGram * TOLA_IN_GRAMS, activeCurrency)}/tola
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ── NISAB THRESHOLD SELECTOR CARD ── */}
+            {/* ── NISAB THRESHOLD SELECTOR CARD (NON-WRAPPING LAYOUT) ── */}
             <div
               className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
-                  <Scale className="w-3.5 h-3.5 text-[var(--accent)]" />
-                  Select Nisab Threshold Standard
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5 whitespace-nowrap">
+                  <Scale className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                  {ui.nisabSectionTitle}
                 </span>
               </div>
 
@@ -774,24 +804,34 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <button
                   type="button"
                   onClick={() => setNisabChoice('silver')}
-                  className={`p-3 rounded-xl border text-left transition-all ${
+                  className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
                     nisabChoice === 'silver'
                       ? 'bg-[var(--accent-soft)] border-[var(--accent)] shadow-sm'
                       : 'bg-[var(--surface-2)] border-[var(--border)] hover:border-[var(--accent)]/50'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-bold uppercase text-[var(--accent-text)]">
-                      Silver Nisab
-                    </span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent)]">
-                      Recommended
+                  <div className="w-full mb-1">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent)] inline-block whitespace-nowrap">
+                      {ui.recommended}
                     </span>
                   </div>
-                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                  <div
+                    className="text-[var(--accent-text)] uppercase whitespace-nowrap block mb-0.5"
+                    style={{ fontSize: "0.76rem", fontWeight: 800 }}
+                  >
+                    {ui.silverNisab}
+                  </div>
+                  <div
+                    className="text-[var(--text-primary)] font-mono leading-tight whitespace-nowrap"
+                    style={{
+                      fontSize: "clamp(0.95rem, 4.2vw, 1.12rem)",
+                      fontWeight: 800,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
                     {formatCurrencyAmount(silverNisabValue, activeCurrency)}
                   </div>
-                  <div className="text-[10px] text-[var(--text-secondary)] mt-0.5">
+                  <div className="text-[10px] text-[var(--text-secondary)] mt-0.5 whitespace-nowrap">
                     612.36g (52.5 Tola)
                   </div>
                 </button>
@@ -800,33 +840,46 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <button
                   type="button"
                   onClick={() => setNisabChoice('gold')}
-                  className={`p-3 rounded-xl border text-left transition-all ${
+                  className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
                     nisabChoice === 'gold'
                       ? 'bg-[var(--accent-soft)] border-[var(--accent)] shadow-sm'
                       : 'bg-[var(--surface-2)] border-[var(--border)] hover:border-[var(--accent)]/50'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-bold uppercase text-[var(--text-primary)]">
-                      Gold Nisab
+                  <div className="w-full mb-1">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] inline-block whitespace-nowrap">
+                      {ui.std75tola}
                     </span>
                   </div>
-                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                  <div
+                    className="text-[var(--text-primary)] uppercase whitespace-nowrap block mb-0.5"
+                    style={{ fontSize: "0.76rem", fontWeight: 800 }}
+                  >
+                    {ui.goldNisab}
+                  </div>
+                  <div
+                    className="text-[var(--text-primary)] font-mono leading-tight whitespace-nowrap"
+                    style={{
+                      fontSize: "clamp(0.95rem, 4.2vw, 1.12rem)",
+                      fontWeight: 800,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
                     {formatCurrencyAmount(goldNisabValue, activeCurrency)}
                   </div>
-                  <div className="text-[10px] text-[var(--text-secondary)] mt-0.5">
+                  <div className="text-[10px] text-[var(--text-secondary)] mt-0.5 whitespace-nowrap">
                     87.48g (7.5 Tola)
                   </div>
                 </button>
               </div>
 
               <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed italic">
-                * Note: Classical Hanafi scholars and contemporary fiqh councils recommend the <b>Silver Nisab</b> for cash and mixed wealth so more aid reaches the poor and needy.
+                {ui.nisabNote}
               </p>
             </div>
 
             {/* ══════════════════════════════════════════════════════════════ */}
-            {/* 9 WEALTH & LIABILITY SECTIONS                                  */}
+            {/* 9 WEALTH & LIABILITY SECTIONS (SINGLE-LINE SUBTOTALS)          */}
             {/* ══════════════════════════════════════════════════════════════ */}
 
             {/* 1) Cash & Bank Balances */}
@@ -834,30 +887,43 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <Wallet className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">1. Cash & Bank Balances</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Cash at home, bank savings, and loans given out</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.cashTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.cashSub}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span
+                  className="font-mono text-[var(--accent-text)] shrink-0"
+                  style={{
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    background: "var(--surface-2)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {formatCurrencyAmount(cashTotal, activeCurrency)}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                 <div>
-                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1">
-                    Cash at Home / Hand
+                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1 truncate">
+                    {ui.cashHome}
                   </label>
                   <input
                     type="number"
                     inputMode="decimal"
-                    placeholder="0"
+                    placeholder={ui.amountPlaceholder}
                     value={cashHome}
                     onChange={(e) => setCashHome(e.target.value)}
                     className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -865,13 +931,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 </div>
 
                 <div>
-                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1">
-                    Bank Balances (Savings / FD)
+                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1 truncate">
+                    {ui.bankAccounts}
                   </label>
                   <input
                     type="number"
                     inputMode="decimal"
-                    placeholder="0"
+                    placeholder={ui.amountPlaceholder}
                     value={bankAccounts}
                     onChange={(e) => setBankAccounts(e.target.value)}
                     className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -879,13 +945,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 </div>
 
                 <div>
-                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1">
-                    Money Lent (Receivables)
+                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1 truncate">
+                    {ui.receivables}
                   </label>
                   <input
                     type="number"
                     inputMode="decimal"
-                    placeholder="0"
+                    placeholder={ui.amountPlaceholder}
                     value={receivables}
                     onChange={(e) => setReceivables(e.target.value)}
                     className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -899,17 +965,30 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-amber-500">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-amber-500 shrink-0">
                     <Coins className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">2. Gold (Jewelry, Coins & Bars)</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Supports Grams, Tolas & 24K/22K/21K/18K</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.goldTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.goldSub}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span
+                  className="font-mono text-[var(--accent-text)] shrink-0"
+                  style={{
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    background: "var(--surface-2)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {formatCurrencyAmount(calculatedGoldValue, activeCurrency)}
                 </span>
               </div>
@@ -924,13 +1003,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                         key={mode}
                         type="button"
                         onClick={() => setGoldInputMode(mode)}
-                        className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold capitalize transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold capitalize transition-all whitespace-nowrap ${
                           goldInputMode === mode
                             ? 'bg-[var(--accent)] text-[var(--on-accent)]'
                             : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                         }`}
                       >
-                        {mode === 'value' ? 'Direct Value' : mode}
+                        {mode === 'grams' ? ui.unitGrams : mode === 'tolas' ? ui.unitTolas : ui.unitValue}
                       </button>
                     ))}
                   </div>
@@ -938,11 +1017,11 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   {/* Purity Karat */}
                   {goldInputMode !== 'value' && (
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-bold uppercase text-[var(--text-secondary)]">Purity:</span>
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-secondary)] whitespace-nowrap">{ui.purityLabel}</span>
                       <select
                         value={goldKarat}
                         onChange={(e) => setGoldKarat(Number(e.target.value))}
-                        className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2 py-1 text-xs font-bold text-[var(--accent-text)]"
+                        className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2 py-1 text-xs font-bold text-[var(--accent-text)] cursor-pointer"
                       >
                         {Object.entries(GOLD_KARAT_MULTIPLIERS).map(([karat, info]) => (
                           <option key={karat} value={karat}>
@@ -954,17 +1033,17 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   )}
                 </div>
 
-                {/* Input Field */}
+                {/* Input Field with Concise Placeholder */}
                 <div>
                   <input
                     type="number"
                     inputMode="decimal"
                     placeholder={
                       goldInputMode === 'grams'
-                        ? 'Weight in grams (e.g. 50)'
+                        ? ui.weightGramsPlaceholder
                         : goldInputMode === 'tolas'
-                        ? 'Weight in tolas (e.g. 4.5)'
-                        : 'Total market value in currency'
+                        ? ui.weightTolasPlaceholder
+                        : ui.amountPlaceholder
                     }
                     value={goldWeightOrValue}
                     onChange={(e) => setGoldWeightOrValue(e.target.value)}
@@ -975,28 +1054,41 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 {/* Live Value Calculation Preview */}
                 {parseNum(goldWeightOrValue) > 0 && (
                   <div className="text-[11px] font-medium text-[var(--accent-text)] bg-[var(--surface-2)] px-3 py-1.5 rounded-xl border border-[var(--border)]">
-                    💡 {goldWeightOrValue} {goldInputMode === 'tolas' ? 'Tola' : goldInputMode === 'grams' ? 'grams' : ''} of {goldKarat}K Gold = <b>{formatCurrencyAmount(calculatedGoldValue, activeCurrency)}</b>
+                    💡 {goldWeightOrValue} {goldInputMode === 'tolas' ? 'Tola' : goldInputMode === 'grams' ? 'g' : ''} ({goldKarat}K) = <b>{formatCurrencyAmount(calculatedGoldValue, activeCurrency)}</b>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* 3) Silver (Utensils, Coins, Bars & Jewelry) */}
+            {/* 3) Silver (Utensils, Coins & Bars) */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-slate-400">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-slate-400 shrink-0">
                     <Coins className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">3. Silver (Utensils, Coins & Bars)</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Supports Grams, Tolas & Direct Value</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.silverTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.silverSub}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span
+                  className="font-mono text-[var(--accent-text)] shrink-0"
+                  style={{
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    background: "var(--surface-2)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {formatCurrencyAmount(calculatedSilverValue, activeCurrency)}
                 </span>
               </div>
@@ -1009,28 +1101,28 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                       key={mode}
                       type="button"
                       onClick={() => setSilverInputMode(mode)}
-                      className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold capitalize transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold capitalize transition-all whitespace-nowrap ${
                         silverInputMode === mode
                           ? 'bg-[var(--accent)] text-[var(--on-accent)]'
                           : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      {mode === 'value' ? 'Direct Value' : mode}
+                      {mode === 'grams' ? ui.unitGrams : mode === 'tolas' ? ui.unitTolas : ui.unitValue}
                     </button>
                   ))}
                 </div>
 
-                {/* Input Field */}
+                {/* Input Field with Concise Placeholder */}
                 <div>
                   <input
                     type="number"
                     inputMode="decimal"
                     placeholder={
                       silverInputMode === 'grams'
-                        ? 'Weight in grams (e.g. 500)'
+                        ? ui.weightGramsPlaceholder
                         : silverInputMode === 'tolas'
-                        ? 'Weight in tolas (e.g. 42)'
-                        : 'Total silver value in currency'
+                        ? ui.weightTolasPlaceholder
+                        : ui.amountPlaceholder
                     }
                     value={silverWeightOrValue}
                     onChange={(e) => setSilverWeightOrValue(e.target.value)}
@@ -1041,7 +1133,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 {/* Live Silver Value Preview */}
                 {parseNum(silverWeightOrValue) > 0 && (
                   <div className="text-[11px] font-medium text-[var(--accent-text)] bg-[var(--surface-2)] px-3 py-1.5 rounded-xl border border-[var(--border)]">
-                    💡 {silverWeightOrValue} {silverInputMode === 'tolas' ? 'Tola' : silverInputMode === 'grams' ? 'grams' : ''} of Silver = <b>{formatCurrencyAmount(calculatedSilverValue, activeCurrency)}</b>
+                    💡 {silverWeightOrValue} {silverInputMode === 'tolas' ? 'Tola' : silverInputMode === 'grams' ? 'g' : ''} = <b>{formatCurrencyAmount(calculatedSilverValue, activeCurrency)}</b>
                   </div>
                 )}
               </div>
@@ -1052,17 +1144,30 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">4. Investments, Shares & Crypto</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Stocks, mutual funds, ETFs, Sukuk & crypto portfolio</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.investmentsTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.investmentsSub}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span
+                  className="font-mono text-[var(--accent-text)] shrink-0"
+                  style={{
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    background: "var(--surface-2)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {formatCurrencyAmount(investmentTotal, activeCurrency)}
                 </span>
               </div>
@@ -1071,7 +1176,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <input
                   type="number"
                   inputMode="decimal"
-                  placeholder="Market value of shares, mutual funds & crypto"
+                  placeholder={ui.amountPlaceholder}
                   value={investments}
                   onChange={(e) => setInvestments(e.target.value)}
                   className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -1084,17 +1189,30 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <Building2 className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">5. Business Inventory & Goods</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Wholesale stock, finished merchandise & goods for resale</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.businessTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.businessSub}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span
+                  className="font-mono text-[var(--accent-text)] shrink-0"
+                  style={{
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    background: "var(--surface-2)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {formatCurrencyAmount(businessTotal, activeCurrency)}
                 </span>
               </div>
@@ -1103,7 +1221,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <input
                   type="number"
                   inputMode="decimal"
-                  placeholder="Current sale value of trade inventory"
+                  placeholder={ui.amountPlaceholder}
                   value={businessStock}
                   onChange={(e) => setBusinessStock(e.target.value)}
                   className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -1116,17 +1234,30 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <Receipt className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">6. Other Zakatable Assets</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Rental savings, property for resale & withdrawable PF</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.otherTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.otherSub}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                <span
+                  className="font-mono text-[var(--accent-text)] shrink-0"
+                  style={{
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    background: "var(--surface-2)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {formatCurrencyAmount(otherTotal, activeCurrency)}
                 </span>
               </div>
@@ -1135,7 +1266,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <input
                   type="number"
                   inputMode="decimal"
-                  placeholder="Total value of other zakatable assets"
+                  placeholder={ui.amountPlaceholder}
                   value={otherAssets}
                   onChange={(e) => setOtherAssets(e.target.value)}
                   className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -1151,24 +1282,34 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               <button
                 type="button"
                 onClick={() => setShowUshrSection(!showUshrSection)}
-                className="w-full p-4 flex items-center justify-between text-left hover:bg-[var(--surface-2)] transition-colors"
+                className="w-full p-4 flex items-center justify-between gap-2 text-left hover:bg-[var(--surface-2)] transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center shrink-0">
                     <Wheat className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">7. Agricultural Produce (Ushr)</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Due at harvest if ≥ 653kg (5 Wasq), no 1-yr Hawl wait</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.ushrTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.ushrSub}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {ushrResult.due > 0 && (
-                    <span className="text-xs font-mono font-bold text-emerald-500">
+                    <span
+                      className="font-mono text-emerald-500"
+                      style={{
+                        whiteSpace: "nowrap",
+                        padding: "3px 8px",
+                        borderRadius: "8px",
+                        background: "var(--surface-2)",
+                        fontSize: "0.78rem",
+                        fontWeight: 800,
+                      }}
+                    >
                       {formatCurrencyAmount(ushrResult.due, activeCurrency)}
                     </span>
                   )}
-                  {showUshrSection ? <ChevronUp className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
+                  {showUshrSection ? <ChevronUp className="w-4 h-4 text-[var(--text-secondary)] shrink-0" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />}
                 </div>
               </button>
 
@@ -1176,19 +1317,19 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <div className="p-4 pt-0 space-y-3 border-t border-[var(--border)]/60">
                   <div className="space-y-1.5 pt-3">
                     <label className="text-[10.5px] font-bold uppercase text-[var(--text-secondary)] block">
-                      Irrigation Method:
+                      {ui.ushrTitle}:
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       {[
-                        { id: 'rain', label: 'Rain / River (10%)' },
-                        { id: 'artificial', label: 'Paid / Well (5%)' },
-                        { id: 'mixed', label: 'Mixed (7.5%)' },
+                        { id: 'rain', label: ui.rainIrrigation },
+                        { id: 'artificial', label: ui.paidIrrigation },
+                        { id: 'mixed', label: ui.mixedIrrigation },
                       ].map((type) => (
                         <button
                           key={type.id}
                           type="button"
                           onClick={() => setIrrigationType(type.id as 'rain' | 'artificial' | 'mixed')}
-                          className={`p-2 rounded-xl border text-xs font-bold transition-all ${
+                          className={`p-2 rounded-xl border text-xs font-bold transition-all whitespace-nowrap ${
                             irrigationType === type.id
                               ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]'
                               : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]'
@@ -1202,12 +1343,12 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
 
                   <div>
                     <label className="text-[10.5px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
-                      Harvest Market Value:
+                      {ui.harvestPlaceholder}:
                     </label>
                     <input
                       type="number"
                       inputMode="decimal"
-                      placeholder="Total harvest value in currency"
+                      placeholder={ui.amountPlaceholder}
                       value={harvestValue}
                       onChange={(e) => setHarvestValue(e.target.value)}
                       className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -1216,14 +1357,14 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
 
                   {ushrResult.due > 0 && (
                     <div className="text-xs font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl">
-                      🌾 Ushr Due: <b>{formatCurrencyAmount(ushrResult.due, activeCurrency)}</b> ({ushrResult.percentage} of harvest)
+                      🌾 Ushr Due: <b>{formatCurrencyAmount(ushrResult.due, activeCurrency)}</b> ({ushrResult.percentage})
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* 8) Livestock (Optional Expandable An'am Card) */}
+            {/* 8) Livestock (Optional Expandable An'am Card - Horizontally Aligned) */}
             <div
               className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-xs"
               style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
@@ -1231,61 +1372,71 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               <button
                 type="button"
                 onClick={() => setShowLivestockSection(!showLivestockSection)}
-                className="w-full p-4 flex items-center justify-between text-left hover:bg-[var(--surface-2)] transition-colors"
+                className="w-full p-4 flex items-center justify-between gap-2 text-left hover:bg-[var(--surface-2)] transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center shrink-0">
                     <Scale className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">8. Livestock (An'am Shariah Helper)</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Grazing goats/sheep, cattle/buffaloes, and camels held 1 year</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.livestockTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.livestockSub}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {livestockResult?.isZakatable && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-500">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-500 whitespace-nowrap">
                       Zakat Due
                     </span>
                   )}
-                  {showLivestockSection ? <ChevronUp className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
+                  {showLivestockSection ? <ChevronUp className="w-4 h-4 text-[var(--text-secondary)] shrink-0" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />}
                 </div>
               </button>
 
               {showLivestockSection && (
                 <div className="p-4 pt-0 space-y-3 border-t border-[var(--border)]/60">
+                  {/* Clean 3-Column Grid on Same Horizontal Baseline */}
                   <div className="grid grid-cols-3 gap-2.5 pt-3">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
-                        Goats / Sheep
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <label
+                        className="text-[var(--text-secondary)] uppercase block mb-1 truncate"
+                        style={{ fontSize: "0.62rem", fontWeight: 800, whiteSpace: "nowrap" }}
+                      >
+                        {ui.goatsLabel}
                       </label>
                       <input
                         type="number"
-                        placeholder="Nisab 40+"
+                        placeholder="40+"
                         value={sheepCount}
                         onChange={(e) => setSheepCount(e.target.value)}
                         className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold font-mono text-[var(--text-primary)]"
                       />
                     </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
-                        Cattle / Buffaloes
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <label
+                        className="text-[var(--text-secondary)] uppercase block mb-1 truncate"
+                        style={{ fontSize: "0.62rem", fontWeight: 800, whiteSpace: "nowrap" }}
+                      >
+                        {ui.cattleLabel}
                       </label>
                       <input
                         type="number"
-                        placeholder="Nisab 30+"
+                        placeholder="30+"
                         value={cattleCount}
                         onChange={(e) => setCattleCount(e.target.value)}
                         className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold font-mono text-[var(--text-primary)]"
                       />
                     </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
-                        Camels
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <label
+                        className="text-[var(--text-secondary)] uppercase block mb-1 truncate"
+                        style={{ fontSize: "0.62rem", fontWeight: 800, whiteSpace: "nowrap" }}
+                      >
+                        {ui.camelsLabel}
                       </label>
                       <input
                         type="number"
-                        placeholder="Nisab 5+"
+                        placeholder="5+"
                         value={camelCount}
                         onChange={(e) => setCamelCount(e.target.value)}
                         className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold font-mono text-[var(--text-primary)]"
@@ -1313,18 +1464,31 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 backgroundImage: 'linear-gradient(135deg, color-mix(in srgb, var(--danger) 5%, var(--surface)), var(--surface))',
               }}
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center shrink-0">
                     <AlertCircle className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-rose-500">9. Liabilities & Immediate Debts</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)]">Loans due immediately, unpaid utility bills, rent & unpaid wages</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-rose-500 truncate">{ui.debtsTitle}</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.debtsSub}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-rose-500">
-                  - {formatCurrencyAmount(totalLiabilities, activeCurrency)}
+                <span
+                  className="font-mono text-rose-500 shrink-0"
+                  style={{
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    background: "var(--surface-2)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  -{formatCurrencyAmount(totalLiabilities, activeCurrency)}
                 </span>
               </div>
 
@@ -1332,7 +1496,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <input
                   type="number"
                   inputMode="decimal"
-                  placeholder="Total deductible liabilities due immediately"
+                  placeholder={ui.debtsPlaceholder}
                   value={debts}
                   onChange={(e) => setDebts(e.target.value)}
                   className="w-full bg-[var(--surface-2)] border border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-rose-500"
@@ -1348,37 +1512,74 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 borderWidth: '1.5px',
               }}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
-                  <Receipt className="w-4 h-4 text-[var(--accent)]" />
-                  Zakat Al-Māl Calculation Summary
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5 min-w-0 truncate">
+                  <Receipt className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                  <span className="truncate">{ui.summaryTitle}</span>
                 </span>
+                {/* Reset button: Single icon, single line */}
                 <button
                   type="button"
                   onClick={handleResetForm}
-                  className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-rose-500 hover:underline"
+                  style={{
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "4px 10px",
+                    borderRadius: "8px",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    background: "var(--surface-2)",
+                    color: "var(--text-secondary)",
+                    border: "1px solid var(--border)",
+                    textDecoration: "none",
+                  }}
+                  className="hover:text-[var(--text-primary)] active:scale-95 transition-all"
                 >
-                  ↻ Reset All
+                  <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                  <span>{ui.resetBtn}</span>
                 </button>
               </div>
 
               {/* Itemized Table */}
               <div className="space-y-1.5 text-xs bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border)]">
-                <div className="flex items-center justify-between text-[var(--text-secondary)]">
-                  <span>Gross Zakatable Wealth:</span>
-                  <span className="font-mono font-bold text-[var(--text-primary)]">{formatCurrencyAmount(totalGrossWealth, activeCurrency)}</span>
+                <div className="flex items-center justify-between gap-2 text-[var(--text-secondary)]">
+                  <span className="truncate">{ui.grossWealth}</span>
+                  <span
+                    className="font-mono font-bold text-[var(--text-primary)] shrink-0 whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatCurrencyAmount(totalGrossWealth, activeCurrency)}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between text-rose-500">
-                  <span>Less Deductible Liabilities:</span>
-                  <span className="font-mono font-bold">- {formatCurrencyAmount(totalLiabilities, activeCurrency)}</span>
+                <div className="flex items-center justify-between gap-2 text-rose-500">
+                  <span className="truncate">{ui.lessLiabilities}</span>
+                  <span
+                    className="font-mono font-bold shrink-0 whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    -{formatCurrencyAmount(totalLiabilities, activeCurrency)}
+                  </span>
                 </div>
-                <div className="border-t border-[var(--border)] pt-1.5 flex items-center justify-between font-bold text-sm">
-                  <span>Net Zakatable Wealth:</span>
-                  <span className="font-mono text-[var(--accent-text)]">{formatCurrencyAmount(netZakatableWealth, activeCurrency)}</span>
+                <div className="border-t border-[var(--border)] pt-1.5 flex items-center justify-between gap-2 font-bold text-sm">
+                  <span className="truncate">{ui.netWealth}</span>
+                  <span
+                    className="font-mono text-[var(--accent-text)] shrink-0 whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatCurrencyAmount(netZakatableWealth, activeCurrency)}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] pt-0.5">
-                  <span>Active Nisab Threshold ({nisabChoice.toUpperCase()}):</span>
-                  <span className="font-mono">{formatCurrencyAmount(activeNisabThreshold, activeCurrency)}</span>
+                <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-secondary)] pt-0.5">
+                  <span className="truncate">{ui.activeNisabLabel} ({nisabChoice.toUpperCase()}):</span>
+                  <span
+                    className="font-mono shrink-0 whitespace-nowrap"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatCurrencyAmount(activeNisabThreshold, activeCurrency)}
+                  </span>
                 </div>
               </div>
 
@@ -1389,7 +1590,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                     <CheckCircle2 className="w-5 h-5 shrink-0" />
                     <div className="min-w-0">
                       <div className="font-bold text-xs sm:text-sm">
-                        ✓ NISAB REACHED — ZAKAT IS OBLIGATORY (2.5%)
+                        {ui.nisabReached}
                       </div>
                       <div className="text-[10.5px] text-[var(--text-secondary)] mt-0.5">
                         Your net wealth meets or exceeds the Nisab threshold.
@@ -1400,7 +1601,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 text-amber-600 dark:text-amber-400">
                     <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
                       <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>BELOW NISAB — NO ZAKAT OBLIGATORY</span>
+                      <span>{ui.belowNisab}</span>
                     </div>
                     <div className="text-[10.5px] text-[var(--text-secondary)]">
                       Your net wealth is below the {nisabChoice} threshold. Sadaqah (voluntary charity) remains highly rewarded.
@@ -1412,13 +1613,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                         style={{ width: `${percentOfNisab}%` }}
                       />
                     </div>
-                    <div className="text-right text-[10px] font-mono text-[var(--text-secondary)]">
+                    <div className="text-right text-[10px] font-mono text-[var(--text-secondary)] whitespace-nowrap">
                       {percentOfNisab}% of Nisab threshold
                     </div>
                   </div>
                 ) : (
                   <div className="p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-center text-xs text-[var(--text-secondary)]">
-                    Enter your assets above to check your Nisab status.
+                    {ui.enterAssetsHint}
                   </div>
                 )}
               </div>
@@ -1433,49 +1634,52 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   borderColor: isNisabReached ? 'var(--accent)' : 'var(--border)',
                 }}
               >
-                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                  Zakat Al-Māl Due (2.5%)
+                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] whitespace-nowrap">
+                  {ui.zakatDueTitle}
                 </div>
-                <div className="text-2xl sm:text-3xl font-black font-mono text-[var(--accent-text)]">
+                <div
+                  className="text-2xl sm:text-3xl font-black font-mono text-[var(--accent-text)] whitespace-nowrap"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
                   {formatCurrencyAmount(zakatDue, activeCurrency)}
                 </div>
                 {zakatDue > 0 && (
-                  <div className="text-[11px] text-[var(--text-secondary)] font-medium pt-0.5">
-                    💡 Or pay in installments: <b>{formatCurrencyAmount(Math.round(zakatDue / 12), activeCurrency)}/month</b> over 12 lunar months
+                  <div className="text-[11px] text-[var(--text-secondary)] font-medium pt-0.5 whitespace-nowrap">
+                    💡 {ui.monthlyOpt} <b className="font-mono">{formatCurrencyAmount(Math.round(zakatDue / 12), activeCurrency)}/month</b>
                   </div>
                 )}
 
                 {/* Additional Ushr & Livestock Due Lines if Present */}
                 {ushrResult.due > 0 && (
-                  <div className="text-xs font-bold text-emerald-500 pt-1 border-t border-[var(--border)]/60 mt-2">
+                  <div className="text-xs font-bold text-emerald-500 pt-1 border-t border-[var(--border)]/60 mt-2 whitespace-nowrap">
                     🌾 Agricultural Produce Ushr: {formatCurrencyAmount(ushrResult.due, activeCurrency)}
                   </div>
                 )}
                 {livestockResult?.isZakatable && (
-                  <div className="text-xs font-bold text-amber-500 pt-1">
+                  <div className="text-xs font-bold text-amber-500 pt-1 whitespace-nowrap">
                     🐑 Livestock Zakat: {livestockResult.dueText}
                   </div>
                 )}
               </div>
 
-              {/* Action Buttons: Save, Copy/Share, Reset */}
+              {/* Action Buttons: Save, Copy/Share */}
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
                   onClick={handleSaveToHistory}
-                  className="py-2.5 px-3 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                  className="py-2.5 px-3 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all whitespace-nowrap"
                 >
-                  <Bookmark className="w-4 h-4" />
-                  <span>Save to History</span>
+                  <Bookmark className="w-4 h-4 shrink-0" />
+                  <span>{ui.saveHistoryBtn}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleShareReceipt}
-                  className="py-2.5 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                  className="py-2.5 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap"
                 >
-                  <Share2 className="w-4 h-4 text-[var(--accent-text)]" />
-                  <span>Share / Copy</span>
+                  <Share2 className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
+                  <span>{ui.shareBtn}</span>
                 </button>
               </div>
             </div>
@@ -1492,23 +1696,23 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <div className="w-14 h-14 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl flex items-center justify-center mx-auto text-[var(--accent-text)]">
                   <History className="w-7 h-7" />
                 </div>
-                <h3 className="font-bold text-base text-[var(--text-primary)]">No Saved Calculations Yet</h3>
+                <h3 className="font-bold text-base text-[var(--text-primary)]">{ui.noHistoryTitle}</h3>
                 <p className="text-xs text-[var(--text-secondary)] max-w-xs mx-auto">
-                  When you calculate your Zakat in the Calculator tab, tap <b>Save to History</b> to keep track of your calculations across lunar years.
+                  {ui.noHistorySub}
                 </p>
                 <button
                   type="button"
                   onClick={() => setActiveTab('calculator')}
                   className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold"
                 >
-                  Go to Calculator
+                  {ui.goToCalc}
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between px-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                    Saved Calculations ({historyList.length})
+                    {ui.savedCalculations} ({historyList.length})
                   </span>
                   <button
                     type="button"
@@ -1521,7 +1725,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                     }}
                     className="text-[11px] font-bold text-rose-500 hover:underline"
                   >
-                    Clear All
+                    {ui.clearAll}
                   </button>
                 </div>
 
@@ -1552,20 +1756,20 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                         }`}
                       >
                         {record.isPaid ? <Check className="w-3 h-3" /> : null}
-                        <span>{record.isPaid ? 'Paid' : 'Mark as Paid'}</span>
+                        <span>{record.isPaid ? ui.paidBadge : ui.markPaidBtn}</span>
                       </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs bg-[var(--surface-2)] p-2.5 rounded-xl border border-[var(--border)]">
                       <div>
                         <span className="text-[10px] text-[var(--text-secondary)] uppercase block">Net Zakatable Wealth:</span>
-                        <span className="font-mono font-bold text-[var(--text-primary)]">
+                        <span className="font-mono font-bold text-[var(--text-primary)] whitespace-nowrap">
                           {formatCurrencyAmount(record.netWorth, record.currency)}
                         </span>
                       </div>
                       <div>
                         <span className="text-[10px] text-[var(--text-secondary)] uppercase block">Zakat Due (2.5%):</span>
-                        <span className="font-mono font-bold text-[var(--accent-text)]">
+                        <span className="font-mono font-bold text-[var(--accent-text)] whitespace-nowrap">
                           {formatCurrencyAmount(record.zakatDue, record.currency)}
                         </span>
                       </div>
@@ -1589,7 +1793,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                         className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--accent-text)] flex items-center gap-1"
                       >
                         <Calculator className="w-3 h-3" />
-                        <span>Load</span>
+                        <span>{ui.loadBtn}</span>
                       </button>
 
                       <button
@@ -1616,22 +1820,25 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div
             className="w-full max-w-lg bg-[var(--surface)] border border-[var(--border)] rounded-[24px] max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
-            style={{ boxShadow: '0 20px 60px -15px rgba(0,0,0,0.5)' }}
+            style={{
+              boxShadow: '0 20px 60px -15px rgba(0,0,0,0.5)',
+              fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+            }}
           >
             {/* Header */}
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
                   <HelpCircle className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">
-                  Simple Shariah Zakat Rules
+                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)] truncate">
+                  {ui.rulesModalTitle}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowShariahRulesModal(false)}
-                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1640,37 +1847,28 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
             {/* Scrollable Body */}
             <div className="p-4 overflow-y-auto space-y-4 text-xs text-[var(--text-secondary)] leading-relaxed">
               <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)]">
-                <span className="font-bold text-[var(--accent-text)] block mb-1">What is Zakat al-Māl?</span>
-                Zakat is the third pillar of Islam. It is a mandatory 2.5% (1/40th) purification due annually on qualifying wealth held for one lunar year (Hawl) above the minimum threshold (Nisab).
+                <span className="font-bold text-[var(--accent-text)] block mb-1">{ui.rulesWhatIsZakat}</span>
+                {ui.rulesWhatIsZakatDesc}
               </div>
 
               <div className="space-y-1">
-                <h4 className="font-bold text-[var(--text-primary)] text-sm">1. Who Must Pay Zakat?</h4>
-                <p>Every adult Muslim who is sane, free, and possesses surplus wealth equal to or greater than the <b>Nisab threshold</b> for a full lunar year (approx. 354 days).</p>
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">{ui.rulesWhoMustPay}</h4>
+                <p>{ui.rulesWhoMustPayDesc}</p>
               </div>
 
               <div className="space-y-1">
-                <h4 className="font-bold text-[var(--text-primary)] text-sm">2. What is Nisab?</h4>
-                <p>Nisab is the minimum qualifying wealth threshold:</p>
-                <ul className="list-disc pl-4 space-y-1 pt-1">
-                  <li><b>Silver Nisab:</b> 612.36 grams (52.5 Tolas). <i>Recommended by Hanafi scholars and contemporary fiqh councils for cash, savings, and mixed wealth.</i></li>
-                  <li><b>Gold Nisab:</b> 87.48 grams (7.5 Tolas).</li>
-                </ul>
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">{ui.rulesNisab}</h4>
+                <p>{ui.rulesNisabDesc}</p>
               </div>
 
               <div className="space-y-1">
-                <h4 className="font-bold text-[var(--text-primary)] text-sm">3. What Assets are EXEMPT? (No Zakat Due)</h4>
-                <ul className="list-disc pl-4 space-y-1 pt-1">
-                  <li>Your personal primary residence (home).</li>
-                  <li>Your personal car or transport vehicle.</li>
-                  <li>Personal daily clothes, household furniture, and appliances.</li>
-                  <li>Tools of trade or machinery used for business operations (not held for sale).</li>
-                </ul>
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">{ui.rulesExempt}</h4>
+                <p>{ui.rulesExemptDesc}</p>
               </div>
 
               <div className="space-y-1">
-                <h4 className="font-bold text-[var(--text-primary)] text-sm">4. Who Receives Zakat? (Surah At-Tawbah 9:60)</h4>
-                <p>Zakat is distributed strictly to the eight eligible categories specified in the Holy Quran: the poor (Fuqara), the needy (Masakin), zakat administrators, those whose hearts are to be reconciled, freeing captives/slaves, those overburdened with debt (Gharimin), in the path of Allah (Fi Sabilillah), and stranded travelers (Ibn al-Sabil).</p>
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">{ui.rulesRecipients}</h4>
+                <p>{ui.rulesRecipientsDesc}</p>
               </div>
             </div>
 
@@ -1681,7 +1879,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 onClick={() => setShowShariahRulesModal(false)}
                 className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs"
               >
-                Close & Return
+                {ui.closeBtn}
               </button>
             </div>
           </div>
@@ -1699,18 +1897,18 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
           >
             {/* Header */}
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
                   <Edit3 className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">
+                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)] truncate">
                   Override Gold & Silver Rates
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowOverrideModal(false)}
-                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
