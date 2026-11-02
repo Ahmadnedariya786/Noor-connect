@@ -48,4 +48,6 @@ android/keystore/
 
 # Build artifacts
 dist/
+.chrome-temp-profile/
+.temp-probe/
 android/app/src/main/assets/public/

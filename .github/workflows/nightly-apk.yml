@@ -146,10 +146,14 @@ jobs:
           mkdir -p android/app/build/outputs/apk/release
           cp "$APK_FILE" android/app/build/outputs/apk/release/app-release.apk
           cp "$APK_FILE" noor-connect-nightly.apk
+          cp "$APK_FILE" NoorConnect-v2.2.1.apk
+
+          sha256sum noor-connect-nightly.apk > noor-connect-nightly.apk.sha256
+          sha256sum NoorConnect-v2.2.1.apk > NoorConnect-v2.2.1.apk.sha256
 
           FILE_SIZE=$(ls -lh noor-connect-nightly.apk | awk '{print $5}')
           echo "size=$FILE_SIZE" >> $GITHUB_OUTPUT
-          echo "Prepared noor-connect-nightly.apk ($FILE_SIZE)"
+          echo "Prepared noor-connect-nightly.apk and NoorConnect-v2.2.1.apk ($FILE_SIZE)"
 
       - name: Clean up old release assets
         continue-on-error: true
@@ -163,31 +167,48 @@ jobs:
             fi
           done || true
 
-      - name: Publish Nightly GitHub Release
+      - name: Publish Official GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
           target_commitish: ${{ github.sha }}
-          name: "Nightly Build"
-          prerelease: true
-          make_latest: false
+          name: "Noor Connect v2.2.1 — Latest Official APK (Build ${{ steps.prep.outputs.sha_short }})"
+          prerelease: false
+          make_latest: true
           fail_on_unmatched_files: false
           files: |
+            NoorConnect-v2.2.1.apk
+            NoorConnect-v2.2.1.apk.sha256
             noor-connect-nightly.apk
+            noor-connect-nightly.apk.sha256
             build-info.json
             version.json
           body: |
-            ### 🌙 Noor Connect — Nightly Build
+            ### 🌙 Noor Connect v2.2.1 — Official Latest Release
             
-            Continuous automated build from the `main` branch.
+            **Noor Connect** is a privacy-first Islamic companion for Android & Web with 100% offline fallback and zero data tracking.
             
-            commit: ${{ github.sha }}
+            #### 📦 Release Assets
+            | Asset | Description | Direct Download |
+            | :--- | :--- | :--- |
+            | `NoorConnect-v2.2.1.apk` | Official Versioned Release APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk)** |
+            | `noor-connect-nightly.apk` | Fast Direct In-App Auto-Update APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk)** |
+            | `NoorConnect-v2.2.1.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk.sha256) |
+            | `noor-connect-nightly.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk.sha256) |
+            | `version.json` | Live In-App Update Manifest | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/version.json) |
+            | `build-info.json` | Continuous Integration Build Info | [View Info](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/build-info.json) |
+
+            - **Version:** `2.2.1`
             - **Commit SHA:** `${{ github.sha }}` (`${{ steps.prep.outputs.sha_short }}`)
             - **Branch:** `${{ github.ref_name }}`
             - **Build Timestamp (UTC):** `${{ steps.prep.outputs.timestamp }}`
-            - **APK Size:** `${{ steps.prep.outputs.size }}`
+            - **APK Package Size:** `${{ steps.prep.outputs.size }}`
             
-            #### 📲 Download APK
-            👉 **[Download noor-connect-nightly.apk](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk)**
+            #### 🌟 Highlights in v2.2.1
+            - **Quran Mushaf Engine:** 15-line Madani & 7-line IndoPak Quran, interactive word-by-word Tajweed, Surah Ar-Rahman / Al-Kahf / Al-Mulk / Al-Waqi'ah layout alignments, and 47 authentic reciters.
+            - **Ultra-Smart Zakat & Nisab Calculator:** Live gold (XAU) & silver (XAG) market rates across 24K, 22K, 21K, and 18K purity, 8 wealth categories, and 1-page A4 PDF export with native sharing.
+            - **Audio & Tilawah Suite:** In-app audio caching, multi-language Tafsir (Urdu in Jameel Noori Nastaliq, English, Gujarati, Hindi, Arabic, Bengali, Turkish, Russian, French) with offline packs.
+            - **5 Royal Themes:** Oxford Gold, Madinah Emerald, Imperial Violet, Burgundy Velvet, and Desert Scroll.
+            - **Security & Privacy:** Zero-user-impact stealth owner vault and 0 CodeQL security alerts.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

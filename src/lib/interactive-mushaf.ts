@@ -182,14 +182,35 @@ export function toArabicDigits(num: number): string {
 }
 
 /**
+ * Safely and iteratively strips all HTML tags in a do/while loop until completely stable,
+ * eliminating CodeQL js/incomplete-multi-character-sanitization alerts.
+ */
+export function stripHtmlTagsSafely(input: string): string {
+  if (!input) return '';
+  let out = input;
+  let prev = '';
+  do {
+    prev = out;
+    out = out.replace(/<[^>]*>?/g, '');
+  } while (out !== prev);
+  return out.replace(/[<>]/g, '');
+}
+
+/**
  * Safely transforms raw `<tajweed class=...>` tags from Quran.com into sanitized inline styled spans.
  * Never allows arbitrary HTML or script injection.
+ * CodeQL-compliant: Uses iterative do/while loop sanitization to prevent multi-character bypasses.
  */
 export function sanitizeTajweedHtml(rawHtml: string): string {
   if (!rawHtml) return '';
 
-  // Clean out any end marks or outer scripts
-  let cleaned = rawHtml.replace(/<span class=["']?end["']?>.*?<\/span>/gi, '');
+  // Clean out any end marks or outer scripts safely in a loop until stable
+  let cleaned = rawHtml;
+  let prev = '';
+  do {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<span class=["']?end["']?>.*?<\/span>/gi, '');
+  } while (cleaned !== prev);
 
   // Replace <tajweed class=XYZ> or <rule class=XYZ> with <span style="color: ...">
   cleaned = cleaned.replace(/<(?:tajweed|rule) class=["']?([a-z0-9_-]+)["']?>([\s\S]*?)<\/(?:tajweed|rule)>/gi, (_, cls, inner) => {
@@ -200,8 +221,12 @@ export function sanitizeTajweedHtml(rawHtml: string): string {
     return inner;
   });
 
-  // Strip any remaining unwanted HTML tags, keeping only safe span
-  cleaned = cleaned.replace(/<(?!span|\/span)[^>]+>/gi, '');
+  // Iteratively strip any remaining unwanted HTML tags, keeping only safe span tags
+  do {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<(?!span|\/span)[^>]*>?/gi, '');
+  } while (cleaned !== prev);
+
   return cleaned;
 }
 

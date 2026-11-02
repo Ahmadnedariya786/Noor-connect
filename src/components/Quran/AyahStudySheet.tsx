@@ -249,15 +249,23 @@ export const TAFSIR_EDITIONS: TafsirEdition[] = [
 
 export function cleanTafsirHtml(html: string): string {
   if (!html) return '';
-  return html
+  let text = html
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<\/p>/gi, '\n\n');
+
+  // Strip all HTML tags in a do/while loop until completely stable (resolves CodeQL js/incomplete-multi-character-sanitization)
+  let prev: string;
+  do {
+    prev = text;
+    text = text.replace(/<[^>]*>?/g, '');
+  } while (text !== prev);
+
+  // Remove any lingering angle brackets and decode ONLY safe entities (never reintroduce < or >)
+  return text
+    .replace(/[<>]/g, '')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
     .replace(/&nbsp;/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
