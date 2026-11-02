@@ -305,6 +305,8 @@ function AppRoutes() {
               <Route path="/support" element={<Navigate to="/settings/about" replace />} />
               <Route path="/donate" element={<Navigate to="/settings/about" replace />} />
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
+              <Route path="/settings/personal" element={<ZakatCalculator />} />
+              <Route path="/settings/zakat" element={<ZakatCalculator />} />
               <Route path="/settings/widgets" element={<WidgetSettings />} />
               <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
               <Route path="*" element={<NotFound />} />
@@ -372,6 +374,8 @@ function AppRoutes() {
               <Route path="/support" element={<Navigate to="/settings/about" replace />} />
               <Route path="/donate" element={<Navigate to="/settings/about" replace />} />
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
+              <Route path="/settings/personal" element={<ZakatCalculator />} />
+              <Route path="/settings/zakat" element={<ZakatCalculator />} />
               <Route path="/settings/widgets" element={<WidgetSettings />} />
               <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
               <Route path="*" element={<NotFound />} />

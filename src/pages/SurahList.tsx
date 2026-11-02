@@ -1186,10 +1186,10 @@ export default function SurahList() {
                   key={surah.number}
                   type="button"
                   onClick={() => handleSurahClick(surah.number)}
-                  className="px-3 py-2 rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] snap-start"
+                  className="rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] snap-start text-left"
                   style={{
-                    minWidth: "158px",
-                    maxWidth: "172px",
+                    minWidth: "176px",
+                    padding: "10px 12px",
                     scrollSnapAlign: "start",
                     background: isFeatured ? "var(--surface-2)" : "var(--surface)",
                     backgroundImage: isFeatured
@@ -1202,33 +1202,44 @@ export default function SurahList() {
                     borderWidth: isFeatured ? "1.5px" : "1px",
                   }}
                 >
-                  <div className="flex items-center justify-between gap-1 w-full mb-1">
-                    <span className="text-xs font-bold text-[var(--text-primary)] truncate">{surah.name}</span>
+                  {/* Row 1: Top Badge Row */}
+                  <div className="w-full flex items-center justify-start mb-1.5">
                     <span
-                      className="font-bold text-[0.65rem] rounded-full px-2 py-0.5 truncate shrink-0"
-                      style={
-                        isFeatured
-                          ? {
-                              background: "var(--accent)",
-                              color: "var(--on-accent)",
-                            }
-                          : {
-                              background: "var(--surface-2)",
-                              color: "var(--accent-text)",
-                              border: "1px solid var(--border)",
-                            }
-                      }
+                      className="font-bold rounded-full truncate"
+                      style={{
+                        display: "inline-flex",
+                        width: "fit-content",
+                        fontSize: "0.64rem",
+                        padding: "2px 8px",
+                        background: isFeatured ? "var(--accent)" : "var(--surface-2)",
+                        color: isFeatured ? "var(--on-accent)" : "var(--accent-text)",
+                        border: isFeatured ? "none" : "1px solid var(--border)",
+                      }}
                     >
                       {surah.badgeLabel}
                     </span>
                   </div>
-                  <div dir="ltr" className="flex items-center justify-between gap-1 w-full text-[11px]">
-                    <span dir="ltr" className="tabular-nums text-[0.70rem] text-[var(--text-secondary)]">
-                      #{surah.number} • {surah.readTime}
+
+                  {/* Row 2: Surah Title Row (English on left, Arabic on right) */}
+                  <div className="flex items-center justify-between gap-1.5 w-full mb-1">
+                    <span
+                      className="font-extrabold text-[var(--text-primary)] whitespace-nowrap"
+                      style={{ fontSize: "0.92rem", fontWeight: 800 }}
+                    >
+                      {surah.name}
                     </span>
-                    <span dir="rtl" className="font-arabic text-[0.92rem] text-[var(--accent-text)]">
+                    <span
+                      dir="rtl"
+                      className="font-arabic text-[var(--accent-text)] leading-none shrink-0"
+                      style={{ fontSize: "1.05rem" }}
+                    >
                       {surah.arabicName}
                     </span>
+                  </div>
+
+                  {/* Row 3: Meta Row */}
+                  <div dir="ltr" className="w-full flex items-center justify-start text-[0.70rem] text-[var(--text-secondary)] tabular-nums">
+                    <span>#{surah.number} • {surah.readTime}</span>
                   </div>
                 </button>
               );

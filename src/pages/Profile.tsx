@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Palette,
   Vibrate,
-  User,
   Clock,
   Bell,
   Volume2,
@@ -19,9 +18,9 @@ import {
   CheckCircle2,
   Lock,
   LayoutGrid,
+  Calculator,
 } from 'lucide-react';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { Filesystem, Directory } from '@capacitor/filesystem';
 import { CURRENT_APP_VERSION } from '@/lib/constants';
 import { CLOCK_STYLES } from '@/types/clock';
 import { THEMES } from '@/lib/theme-engine';
@@ -96,13 +95,14 @@ function getSettingsGroups(ui: any): SettingsGroup[] {
           asyncKey: 'haptic',
         },
         {
-          id: 'personal',
-          title: ui.personalInformation,
-          subtitle: ui.personalInformationSub,
-          icon: User,
-          gradient: 'from-blue-500/10 via-blue-500/5 to-transparent border-blue-500/20',
-          iconColor: 'text-blue-600 dark:text-blue-400',
-          route: '/settings/personal',
+          id: 'zakat',
+          title: ui.zakatCalculator || ui.personalInformation,
+          subtitle: ui.zakatCalculatorSub || ui.personalInformationSub,
+          icon: Calculator,
+          gradient: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20',
+          iconColor: 'text-amber-600 dark:text-amber-400',
+          route: '/zakat',
+          asyncKey: 'zakat',
         },
       ],
     },
@@ -355,12 +355,32 @@ const Profile: React.FC = () => {
         updates['storage'] = '0 B';
       }
 
+      try {
+        const rawCurrency = (localStorage.getItem('noor_zakat_currency') || localStorage.getItem('preferred-currency') || 'INR').toUpperCase();
+        updates['zakat'] = rawCurrency === 'INR' ? 'INR ₹' : rawCurrency === 'USD' ? 'USD $' : rawCurrency === 'SAR' ? 'SAR ﷼' : rawCurrency === 'AED' ? 'AED د.إ' : rawCurrency === 'GBP' ? 'GBP £' : rawCurrency === 'EUR' ? 'EUR €' : rawCurrency;
+      } catch {
+        updates['zakat'] = 'INR ₹';
+      }
+
       if (isMounted) {
         setAsyncValues((prev) => ({ ...prev, ...updates }));
       }
     };
 
     fetchLiveSystemData();
+
+    const handleCurrencyUpdated = (e: any) => {
+      try {
+        const curr = (e?.detail?.currency || 'INR').toUpperCase();
+        const display = curr === 'INR' ? 'INR ₹' : curr === 'USD' ? 'USD $' : curr === 'SAR' ? 'SAR ﷼' : curr === 'AED' ? 'AED د.إ' : curr === 'GBP' ? 'GBP £' : curr === 'EUR' ? 'EUR €' : curr;
+        if (isMounted) {
+          setAsyncValues((prev) => ({ ...prev, zakat: display }));
+        }
+      } catch {
+        // Event handling fallback
+      }
+    };
+    window.addEventListener('noor-currency-updated', handleCurrencyUpdated);
 
     const handleCacheUpdated = async () => {
       try {
@@ -377,6 +397,7 @@ const Profile: React.FC = () => {
     return () => {
       isMounted = false;
       window.removeEventListener('noor-cache-updated', handleCacheUpdated);
+      window.removeEventListener('noor-currency-updated', handleCurrencyUpdated);
     };
   }, []);
 

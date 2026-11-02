@@ -1,150 +1,153 @@
-import { useMemo, useState, useEffect } from "react";
-import { AppBar } from "@/components/AppBar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
+  ArrowLeft,
   Calculator,
-  DollarSign,
-  Info,
-  Banknote,
-  Building,
+  Coins,
+  Scale,
   RefreshCw,
-  AlertCircle,
-  Bookmark,
+  Edit3,
   Share2,
+  Bookmark,
   Trash2,
   History,
   Sparkles,
-  Edit3,
+  CheckCircle2,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  X,
+  Wheat,
+  Wallet,
+  Building2,
+  TrendingUp,
+  Receipt,
+  HelpCircle,
 } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LayoutManager } from "@/components/LayoutManager";
-import { MetalPricesService, MetalPrices } from "@/lib/metalPrices";
-import { ZakatNisabService } from "@/lib/zakatNisab";
-import { METAL_PRICE_CONSTANTS } from "@/lib/constants";
-import { ExchangeRateFallbackService } from "@/lib/exchange-rate-fallback";
-import { useLanguage } from "@/contexts/LanguageContext-new";
 import { toast } from "sonner";
-
-interface ZakatAssets {
-  cash: number;
-  bankBalance: number;
-  gold: number;
-  silver: number;
-  stocks: number;
-  businessAssets: number;
-  receivables: number;
-  otherAssets: number;
-}
-
-interface GoldCalculator {
-  amount: number;
-  karat: number;
-  unit: 'grams' | 'tolas' | 'ounces';
-}
-
-interface SilverCalculator {
-  amount: number;
-  purity: number;
-  unit: 'grams' | 'tolas' | 'ounces';
-}
-
-interface ZakatLiabilities {
-  debts: number;
-  loans: number;
-  bills: number;
-}
+import { ContentLanguageBar } from "@/components/ContentLanguageBar";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import {
+  SUPPORTED_CURRENCIES,
+  LiveMetalRates,
+  fetchLiveMetalRates,
+  getSavedCurrency,
+  saveCurrency,
+  setPriceOverride,
+  clearPriceOverride,
+  getPriceOverride,
+  formatCurrencyAmount,
+  SILVER_NISAB_GRAMS,
+  GOLD_NISAB_GRAMS,
+  ZAKAT_RATE,
+  TOLA_IN_GRAMS,
+  GOLD_KARAT_MULTIPLIERS,
+  calculateLivestockZakat,
+  calculateUshr,
+} from "@/lib/zakat-market-api";
 
 export interface ZakatHistoryRecord {
   id: string;
   timestamp: number;
   dateStr: string;
   currency: string;
-  totalAssets: number;
+  totalGross: number;
   totalLiabilities: number;
   netWorth: number;
   nisabType: 'silver' | 'gold';
   nisabThreshold: number;
   isZakatDue: boolean;
   zakatDue: number;
+  ushrDue?: number;
+  livestockSummary?: string;
+  isPaid?: boolean;
+  assetsBreakdown?: {
+    cashHome: number;
+    bankAccounts: number;
+    receivables: number;
+    goldValue: number;
+    silverValue: number;
+    investments: number;
+    businessStock: number;
+    otherAssets: number;
+    debts: number;
+  };
 }
 
-const ZAKAT_STORAGE_KEY = 'zakat-calculator-data';
 const ZAKAT_HISTORY_KEY = 'noor_zakat_history_v1';
-const ZAKAT_RATE = 0.025; // 2.5%
+const ZAKAT_SAVED_DRAFT_KEY = 'noor_zakat_draft_v1';
 
-const PROMINENT_CURRENCIES = ['INR', 'USD', 'GBP', 'EUR', 'SAR', 'AED', 'PKR', 'BDT', 'CAD', 'AUD'];
+interface ZakatCalculatorProps {
+  isEmbedded?: boolean;
+}
 
-// Gold karat options with purity percentages
-const GOLD_KARAT_OPTIONS = [
-  { value: 24, label: '24K (Pure Gold)', purity: 1.0 },
-  { value: 22, label: '22K', purity: 0.916 },
-  { value: 21, label: '21K', purity: 0.875 },
-  { value: 20, label: '20K', purity: 0.833 },
-  { value: 18, label: '18K', purity: 0.75 },
-  { value: 16, label: '16K', purity: 0.667 },
-  { value: 14, label: '14K', purity: 0.583 },
-  { value: 12, label: '12K', purity: 0.5 },
-  { value: 10, label: '10K', purity: 0.417 },
-  { value: 9, label: '9K', purity: 0.375 },
-  { value: 8, label: '8K', purity: 0.333 },
-];
-
-// Silver purity options
-const SILVER_PURITY_OPTIONS = [
-  { value: 999, label: '999 (Fine Silver)', purity: 0.999 },
-  { value: 958, label: '958 (Britannia)', purity: 0.958 },
-  { value: 925, label: '925 (Sterling)', purity: 0.925 },
-  { value: 900, label: '900 (Coin Silver)', purity: 0.900 },
-  { value: 835, label: '835 (Continental)', purity: 0.835 },
-  { value: 800, label: '800 (Standard)', purity: 0.800 },
-];
-
-// Unit conversion factors to grams
-const UNIT_CONVERSIONS = {
-  grams: 1,
-  tolas: 11.6638, // 1 tola = 11.6638 grams
-  ounces: 31.1035, // 1 troy ounce = 31.1035 grams
-};
-
-const FALLBACK_CURRENCIES = [
-  "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN",
-  "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD",
-  "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC", "CUP", "CVE", "CZK",
-  "DJF", "DKK", "DOP", "DZD",
-  "EGP", "ERN", "ETB", "EUR",
-  "FJD", "FKP",
-  "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD",
-  "HKD", "HNL", "HRK", "HTG", "HUF",
-  "IDR", "ILS", "INR", "IQD", "IRR", "ISK", "JMD", "JOD", "JPY",
-  "KES", "KGS", "KHR", "KMF", "KRW", "KWD", "KYD", "KZT",
-  "LAK", "LBP", "LKR", "LRD", "LSL", "LYD",
-  "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN",
-  "NAD", "NGN", "NIO", "NOK", "NPR", "NZD",
-  "OMR",
-  "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG",
-  "QAR",
-  "RON", "RSD", "RUB", "RWF",
-  "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "SSP", "STN", "SYP", "SZL",
-  "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS",
-  "UAH", "UGX", "USD", "UYU", "UZS",
-  "VES", "VND", "VUV",
-  "WST",
-  "XAF", "XCD", "XOF", "XPF",
-  "YER",
-  "ZAR", "ZMW", "ZWL"
-];
-
-export default function ZakatCalculator() {
-  const { t } = useLanguage();
+export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorProps) {
+  const navigate = useNavigate();
 
   // Top Tabs: Calculator vs History
   const [activeTab, setActiveTab] = useState<'calculator' | 'history'>('calculator');
 
-  // History List
+  // Currency
+  const [activeCurrency, setActiveCurrency] = useState<string>(() => getSavedCurrency());
+
+  // Live Metal Rates State
+  const [rates, setRates] = useState<LiveMetalRates | null>(null);
+  const [isLoadingRates, setIsLoadingRates] = useState<boolean>(true);
+
+  // Nisab Choice: Silver (Recommended) vs Gold
+  const [nisabChoice, setNisabChoice] = useState<'silver' | 'gold'>('silver');
+
+  // Modals
+  const [showShariahRulesModal, setShowShariahRulesModal] = useState<boolean>(false);
+  const [showOverrideModal, setShowOverrideModal] = useState<boolean>(false);
+
+  // Override Form State
+  const [overrideGoldGram, setOverrideGoldGram] = useState<string>('');
+  const [overrideSilverGram, setOverrideSilverGram] = useState<string>('');
+
+  // Lock body scroll when either modal is open
+  useBodyScrollLock(showShariahRulesModal || showOverrideModal);
+
+  // Wealth Inputs
+  // 1. Cash & Bank
+  const [cashHome, setCashHome] = useState<string>('');
+  const [bankAccounts, setBankAccounts] = useState<string>('');
+  const [receivables, setReceivables] = useState<string>('');
+
+  // 2. Gold
+  const [goldInputMode, setGoldInputMode] = useState<'grams' | 'tolas' | 'value'>('grams');
+  const [goldKarat, setGoldKarat] = useState<number>(22);
+  const [goldWeightOrValue, setGoldWeightOrValue] = useState<string>('');
+
+  // 3. Silver
+  const [silverInputMode, setSilverInputMode] = useState<'grams' | 'tolas' | 'value'>('grams');
+  const [silverWeightOrValue, setSilverWeightOrValue] = useState<string>('');
+
+  // 4. Investments & Shares
+  const [investments, setInvestments] = useState<string>('');
+
+  // 5. Business Inventory & Goods
+  const [businessStock, setBusinessStock] = useState<string>('');
+
+  // 6. Other Zakatable Assets
+  const [otherAssets, setOtherAssets] = useState<string>('');
+
+  // 7. Agricultural Produce (Ushr - Expandable)
+  const [showUshrSection, setShowUshrSection] = useState<boolean>(false);
+  const [harvestValue, setHarvestValue] = useState<string>('');
+  const [irrigationType, setIrrigationType] = useState<'rain' | 'artificial' | 'mixed'>('rain');
+
+  // 8. Livestock (An'am - Expandable)
+  const [showLivestockSection, setShowLivestockSection] = useState<boolean>(false);
+  const [sheepCount, setSheepCount] = useState<string>('');
+  const [cattleCount, setCattleCount] = useState<string>('');
+  const [camelCount, setCamelCount] = useState<string>('');
+
+  // 9. Liabilities & Immediate Debts
+  const [debts, setDebts] = useState<string>('');
+
+  // History Records
   const [historyList, setHistoryList] = useState<ZakatHistoryRecord[]>(() => {
     try {
       const raw = localStorage.getItem(ZAKAT_HISTORY_KEY);
@@ -153,1027 +156,1631 @@ export default function ZakatCalculator() {
         return Array.isArray(parsed) ? parsed : [];
       }
     } catch {
-      return [];
+      // Local storage read fallback
     }
     return [];
   });
 
-  const [assets, setAssets] = useState<ZakatAssets>({
-    cash: 0,
-    bankBalance: 0,
-    gold: 0,
-    silver: 0,
-    stocks: 0,
-    businessAssets: 0,
-    receivables: 0,
-    otherAssets: 0,
-  });
-
-  const [liabilities, setLiabilities] = useState<ZakatLiabilities>({
-    debts: 0,
-    loans: 0,
-    bills: 0,
-  });
-
-  const [metalPrices, setMetalPrices] = useState<MetalPrices | null>(null);
-  const [isLoadingPrices, setIsLoadingPrices] = useState(true);
-  const [priceError, setPriceError] = useState<string | null>(null);
-  const [currency, setCurrency] = useState(() => {
+  // Load Saved Draft on Mount
+  useEffect(() => {
     try {
-      return localStorage.getItem('preferred-currency') || 'INR';
+      const rawDraft = localStorage.getItem(ZAKAT_SAVED_DRAFT_KEY);
+      if (rawDraft) {
+        const d = JSON.parse(rawDraft);
+        if (d.cashHome) setCashHome(String(d.cashHome));
+        if (d.bankAccounts) setBankAccounts(String(d.bankAccounts));
+        if (d.receivables) setReceivables(String(d.receivables));
+        if (d.goldWeightOrValue) setGoldWeightOrValue(String(d.goldWeightOrValue));
+        if (d.goldInputMode) setGoldInputMode(d.goldInputMode);
+        if (d.goldKarat) setGoldKarat(Number(d.goldKarat));
+        if (d.silverWeightOrValue) setSilverWeightOrValue(String(d.silverWeightOrValue));
+        if (d.silverInputMode) setSilverInputMode(d.silverInputMode);
+        if (d.investments) setInvestments(String(d.investments));
+        if (d.businessStock) setBusinessStock(String(d.businessStock));
+        if (d.otherAssets) setOtherAssets(String(d.otherAssets));
+        if (d.debts) setDebts(String(d.debts));
+        if (d.nisabChoice) setNisabChoice(d.nisabChoice);
+      }
     } catch {
-      return 'INR';
+      // Storage draft read fallback
     }
-  });
+  }, []);
 
-  // Nisab Standard Choice: Silver (612.36g) vs Gold (87.48g)
-  const [nisabChoice, setNisabChoice] = useState<'silver' | 'gold'>('silver');
+  // Fetch Metal Rates
+  const loadRates = useCallback(async (curr: string, force = false) => {
+    setIsLoadingRates(true);
+    try {
+      const result = await fetchLiveMetalRates(curr, force);
+      setRates(result);
+    } catch {
+      // Rates engine handles offline fallback internally
+    } finally {
+      setIsLoadingRates(false);
+    }
+  }, []);
 
-  // Price Override Toggle & Custom Inputs
-  const [isPriceOverrideEnabled, setIsPriceOverrideEnabled] = useState(false);
-  const [customGoldPrice, setCustomGoldPrice] = useState<string>('');
-  const [customSilverPrice, setCustomSilverPrice] = useState<string>('');
+  useEffect(() => {
+    loadRates(activeCurrency, false);
+  }, [activeCurrency, loadRates]);
 
-  const [goldCalculator, setGoldCalculator] = useState<GoldCalculator>({
-    amount: 0,
-    karat: 24,
-    unit: 'grams',
-  });
-
-  const [silverCalculator, setSilverCalculator] = useState<SilverCalculator>({
-    amount: 0,
-    purity: 925,
-    unit: 'grams',
-  });
-
+  // Handle Currency Change
   const handleCurrencyChange = (newCurr: string) => {
-    setCurrency(newCurr);
-    try {
-      localStorage.setItem('preferred-currency', newCurr);
-    } catch {
-      // Safe catch
-    }
+    setActiveCurrency(newCurr);
+    saveCurrency(newCurr);
+    loadRates(newCurr, false);
+    toast.success(`Currency switched to ${newCurr}`);
   };
 
-  const loadMetalPrices = async () => {
-    try {
-      setIsLoadingPrices(true);
-      setPriceError(null);
-      const prices = await MetalPricesService.getPrices(currency, 'classical');
-      setMetalPrices(prices);
-    } catch (error) {
-      console.error('Failed to load metal prices:', error);
-      setPriceError('Failed to load current metal prices');
-    } finally {
-      setIsLoadingPrices(false);
-    }
+  // Safe parse helper
+  const parseNum = (val: string): number => {
+    const clean = val.replace(/[^0-9.]/g, '');
+    const num = parseFloat(clean);
+    return isNaN(num) || num < 0 ? 0 : num;
   };
 
-  const refreshPrices = async () => {
-    try {
-      setIsLoadingPrices(true);
-      setPriceError(null);
-      const prices = await MetalPricesService.refreshPrices(currency, 'classical');
-      setMetalPrices(prices);
-      toast.success('Live metal prices updated');
-    } catch (error) {
-      console.error('Failed to refresh metal prices:', error);
-      setPriceError('Failed to refresh metal prices');
-    } finally {
-      setIsLoadingPrices(false);
-    }
-  };
+  // Rates computations
+  const effectiveGoldPerGram = rates?.goldPerGram || 7850;
+  const effectiveSilverPerGram = rates?.silverPerGram || 96;
 
-  // Load prices on mount & currency change
-  useEffect(() => {
-    MetalPricesService.clearCache(currency);
-    ZakatNisabService.clearCache(currency);
-    loadMetalPrices();
-    ExchangeRateFallbackService.setupOnlineListeners();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currency]);
+  // Gold Valuation
+  const calculatedGoldValue = useMemo(() => {
+    const raw = parseNum(goldWeightOrValue);
+    if (raw <= 0) return 0;
+    if (goldInputMode === 'value') return raw;
 
-  const currencyOptions = useMemo(() => {
-    try {
-      const anyIntl = Intl as unknown as { supportedValuesOf?: (key: string) => string[] };
-      const list = typeof anyIntl.supportedValuesOf === "function" ? anyIntl.supportedValuesOf("currency") : FALLBACK_CURRENCIES;
-      return Array.from(new Set(list)).sort((a, b) => a.localeCompare(b));
-    } catch {
-      return FALLBACK_CURRENCIES;
-    }
-  }, []);
+    const karatInfo = GOLD_KARAT_MULTIPLIERS[goldKarat] || GOLD_KARAT_MULTIPLIERS[24];
+    const grams = goldInputMode === 'tolas' ? raw * TOLA_IN_GRAMS : raw;
+    return Math.round(grams * effectiveGoldPerGram * karatInfo.multiplier);
+  }, [goldWeightOrValue, goldInputMode, goldKarat, effectiveGoldPerGram]);
 
-  const formatMoney = useMemo(() => {
-    return (amount: number) => {
-      const safe = Number.isFinite(amount) ? amount : 0;
-      try {
-        return new Intl.NumberFormat(undefined, {
-          style: "currency",
-          currency,
-          currencyDisplay: "symbol",
-        }).format(safe);
-      } catch {
-        return `${currency} ${safe.toFixed(2)}`;
-      }
-    };
-  }, [currency]);
+  // Silver Valuation
+  const calculatedSilverValue = useMemo(() => {
+    const raw = parseNum(silverWeightOrValue);
+    if (raw <= 0) return 0;
+    if (silverInputMode === 'value') return raw;
 
-  // Load saved inputs
-  useEffect(() => {
-    const saved = localStorage.getItem(ZAKAT_STORAGE_KEY);
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data && typeof data === 'object') {
-          if (data.assets && typeof data.assets === 'object') setAssets(data.assets);
-          if (data.liabilities && typeof data.liabilities === 'object') setLiabilities(data.liabilities);
-          if (data.currency && typeof data.currency === 'string') setCurrency(data.currency);
-          if (data.nisabChoice === 'silver' || data.nisabChoice === 'gold') setNisabChoice(data.nisabChoice);
-          if (data.goldCalculator && typeof data.goldCalculator === 'object') setGoldCalculator(data.goldCalculator);
-          if (data.silverCalculator && typeof data.silverCalculator === 'object') setSilverCalculator(data.silverCalculator);
-        }
-      } catch (e) {
-        console.error('Failed to parse saved zakat data', e);
-      }
-    }
-  }, []);
+    const grams = silverInputMode === 'tolas' ? raw * TOLA_IN_GRAMS : raw;
+    return Math.round(grams * effectiveSilverPerGram);
+  }, [silverWeightOrValue, silverInputMode, effectiveSilverPerGram]);
 
-  // Save current inputs
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        ZAKAT_STORAGE_KEY,
-        JSON.stringify({
-          assets,
-          liabilities,
-          currency,
-          nisabChoice,
-          goldCalculator,
-          silverCalculator,
-        })
-      );
-    } catch {
-      // Safe catch
-    }
-  }, [assets, liabilities, currency, nisabChoice, goldCalculator, silverCalculator]);
+  // Subtotals
+  const cashTotal = parseNum(cashHome) + parseNum(bankAccounts) + parseNum(receivables);
+  const investmentTotal = parseNum(investments);
+  const businessTotal = parseNum(businessStock);
+  const otherTotal = parseNum(otherAssets);
 
-  // Effective per-gram prices (with override support)
-  const effectiveGoldPrice = useMemo(() => {
-    if (isPriceOverrideEnabled && customGoldPrice && !isNaN(parseFloat(customGoldPrice))) {
-      return parseFloat(customGoldPrice);
-    }
-    return (
-      metalPrices?.goldPricePerGram ||
-      METAL_PRICE_CONSTANTS.FALLBACK_GOLD_PRICE_PER_GRAM * (metalPrices?.exchangeRate || 1)
-    );
-  }, [isPriceOverrideEnabled, customGoldPrice, metalPrices]);
+  // Gross Zakatable Wealth
+  const totalGrossWealth = useMemo(() => {
+    return cashTotal + calculatedGoldValue + calculatedSilverValue + investmentTotal + businessTotal + otherTotal;
+  }, [cashTotal, calculatedGoldValue, calculatedSilverValue, investmentTotal, businessTotal, otherTotal]);
 
-  const effectiveSilverPrice = useMemo(() => {
-    if (isPriceOverrideEnabled && customSilverPrice && !isNaN(parseFloat(customSilverPrice))) {
-      return parseFloat(customSilverPrice);
-    }
-    return (
-      metalPrices?.silverPricePerGram ||
-      METAL_PRICE_CONSTANTS.FALLBACK_SILVER_PRICE_PER_GRAM * (metalPrices?.exchangeRate || 1)
-    );
-  }, [isPriceOverrideEnabled, customSilverPrice, metalPrices]);
+  // Liabilities
+  const totalLiabilities = useMemo(() => {
+    return parseNum(debts);
+  }, [debts]);
 
-  // Nisab threshold calculations (612.36g silver vs 87.48g gold)
-  const silverNisabValue = 612.36 * effectiveSilverPrice;
-  const goldNisabValue = 87.48 * effectiveGoldPrice;
+  // Net Zakatable Wealth
+  const netZakatableWealth = useMemo(() => {
+    return Math.max(0, totalGrossWealth - totalLiabilities);
+  }, [totalGrossWealth, totalLiabilities]);
+
+  // Nisab Threshold Value
+  const silverNisabValue = useMemo(() => {
+    return Math.round(SILVER_NISAB_GRAMS * effectiveSilverPerGram);
+  }, [effectiveSilverPerGram]);
+
+  const goldNisabValue = useMemo(() => {
+    return Math.round(GOLD_NISAB_GRAMS * effectiveGoldPerGram);
+  }, [effectiveGoldPerGram]);
+
   const activeNisabThreshold = nisabChoice === 'silver' ? silverNisabValue : goldNisabValue;
 
-  const totalAssets = Object.values(assets).reduce((a, b) => a + b, 0);
-  const totalLiabilities = Object.values(liabilities).reduce((a, b) => a + b, 0);
-  const netWorth = Math.max(0, totalAssets - totalLiabilities);
+  // Zakat Obligation Check
+  const isNisabReached = netZakatableWealth >= activeNisabThreshold && activeNisabThreshold > 0;
+  const zakatDue = isNisabReached ? Math.round(netZakatableWealth * ZAKAT_RATE) : 0;
+  const percentOfNisab = activeNisabThreshold > 0
+    ? Math.min(100, Math.round((netZakatableWealth / activeNisabThreshold) * 100))
+    : 0;
 
-  const isZakatDue = netWorth >= activeNisabThreshold;
-  const zakatAmount = isZakatDue ? netWorth * ZAKAT_RATE : 0;
+  // Agricultural Ushr
+  const ushrResult = useMemo(() => {
+    const val = parseNum(harvestValue);
+    if (val <= 0) return { due: 0, label: '', percentage: '0%' };
+    return calculateUshr(val, irrigationType);
+  }, [harvestValue, irrigationType]);
 
-  const updateAsset = (key: keyof ZakatAssets, value: string) => {
-    const num = parseFloat(value) || 0;
-    setAssets((prev) => ({ ...prev, [key]: num }));
-  };
+  // Livestock Zakat
+  const livestockResult = useMemo(() => {
+    const sheep = parseInt(sheepCount, 10) || 0;
+    const cattle = parseInt(cattleCount, 10) || 0;
+    const camels = parseInt(camelCount, 10) || 0;
+    if (sheep === 0 && cattle === 0 && camels === 0) return null;
+    return calculateLivestockZakat(sheep, cattle, camels);
+  }, [sheepCount, cattleCount, camelCount]);
 
-  const updateLiability = (key: keyof ZakatLiabilities, value: string) => {
-    const num = parseFloat(value) || 0;
-    setLiabilities((prev) => ({ ...prev, [key]: num }));
-  };
-
-  // Calculate gold value
-  const calculateGoldValue = useMemo(() => {
-    if (!goldCalculator.amount || !effectiveGoldPrice) return 0;
-    const karatOption = GOLD_KARAT_OPTIONS.find((k) => k.value === goldCalculator.karat);
-    const purity = karatOption?.purity || 1.0;
-    const amountInGrams = goldCalculator.amount * UNIT_CONVERSIONS[goldCalculator.unit];
-    return amountInGrams * purity * effectiveGoldPrice;
-  }, [goldCalculator, effectiveGoldPrice]);
-
-  // Calculate silver value
-  const calculateSilverValue = useMemo(() => {
-    if (!silverCalculator.amount || !effectiveSilverPrice) return 0;
-    const purityOption = SILVER_PURITY_OPTIONS.find((p) => p.value === silverCalculator.purity);
-    const purity = purityOption?.purity || 0.925;
-    const amountInGrams = silverCalculator.amount * UNIT_CONVERSIONS[silverCalculator.unit];
-    return amountInGrams * purity * effectiveSilverPrice;
-  }, [silverCalculator, effectiveSilverPrice]);
-
-  // Keep assets gold & silver synced when calculator fields change
+  // Auto-save draft in localStorage
   useEffect(() => {
-    setAssets((prev) => ({ ...prev, gold: calculateGoldValue }));
-  }, [calculateGoldValue]);
+    const draft = {
+      cashHome,
+      bankAccounts,
+      receivables,
+      goldWeightOrValue,
+      goldInputMode,
+      goldKarat,
+      silverWeightOrValue,
+      silverInputMode,
+      investments,
+      businessStock,
+      otherAssets,
+      debts,
+      nisabChoice,
+    };
+    try {
+      localStorage.setItem(ZAKAT_SAVED_DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // Local storage draft write fallback
+    }
+  }, [
+    cashHome,
+    bankAccounts,
+    receivables,
+    goldWeightOrValue,
+    goldInputMode,
+    goldKarat,
+    silverWeightOrValue,
+    silverInputMode,
+    investments,
+    businessStock,
+    otherAssets,
+    debts,
+    nisabChoice,
+  ]);
 
-  useEffect(() => {
-    setAssets((prev) => ({ ...prev, silver: calculateSilverValue }));
-  }, [calculateSilverValue]);
-
-  const updateGoldCalculator = (field: keyof GoldCalculator, value: string | number) => {
-    setGoldCalculator((prev) => ({ ...prev, [field]: value }));
+  // Open Override Modal
+  const handleOpenOverride = () => {
+    const existing = getPriceOverride(activeCurrency);
+    if (existing) {
+      setOverrideGoldGram(String(existing.goldPerGram));
+      setOverrideSilverGram(String(existing.silverPerGram));
+    } else {
+      setOverrideGoldGram(String(rates?.goldPerGram || ''));
+      setOverrideSilverGram(String(rates?.silverPerGram || ''));
+    }
+    setShowOverrideModal(true);
   };
 
-  const updateSilverCalculator = (field: keyof SilverCalculator, value: string | number) => {
-    setSilverCalculator((prev) => ({ ...prev, [field]: value }));
+  // Save Override
+  const handleSaveOverride = () => {
+    const g = parseFloat(overrideGoldGram);
+    const s = parseFloat(overrideSilverGram);
+    if (isNaN(g) || g <= 0 || isNaN(s) || s <= 0) {
+      toast.error('Please enter valid positive numbers for Gold and Silver');
+      return;
+    }
+    setPriceOverride(activeCurrency, { goldPerGram: g, silverPerGram: s });
+    setShowOverrideModal(false);
+    loadRates(activeCurrency, false);
+    toast.success('Custom prices applied successfully');
   };
 
-  const resetCalculator = () => {
-    setAssets({
-      cash: 0,
-      bankBalance: 0,
-      gold: 0,
-      silver: 0,
-      stocks: 0,
-      businessAssets: 0,
-      receivables: 0,
-      otherAssets: 0,
-    });
-    setLiabilities({ debts: 0, loans: 0, bills: 0 });
-    setGoldCalculator({ amount: 0, karat: 24, unit: 'grams' });
-    setSilverCalculator({ amount: 0, purity: 925, unit: 'grams' });
-    setIsPriceOverrideEnabled(false);
-    setCustomGoldPrice('');
-    setCustomSilverPrice('');
-    toast.success('Calculator inputs reset');
+  // Reset Override
+  const handleResetOverride = () => {
+    clearPriceOverride(activeCurrency);
+    setShowOverrideModal(false);
+    loadRates(activeCurrency, true);
+    toast.success('Reset to live market rates');
   };
 
+  // Reset Calculator Form
+  const handleResetForm = () => {
+    setCashHome('');
+    setBankAccounts('');
+    setReceivables('');
+    setGoldWeightOrValue('');
+    setSilverWeightOrValue('');
+    setInvestments('');
+    setBusinessStock('');
+    setOtherAssets('');
+    setHarvestValue('');
+    setSheepCount('');
+    setCattleCount('');
+    setCamelCount('');
+    setDebts('');
+    try {
+      localStorage.removeItem(ZAKAT_SAVED_DRAFT_KEY);
+    } catch {
+      // Storage removal fallback
+    }
+    toast.success('Calculator fields reset to zero');
+  };
+
+  // Save to History
   const handleSaveToHistory = () => {
+    if (totalGrossWealth <= 0 && (!livestockResult || !livestockResult.isZakatable) && ushrResult.due <= 0) {
+      toast.error('Please enter your assets before saving to history');
+      return;
+    }
+
     const newRecord: ZakatHistoryRecord = {
-      id: `zakat_${Date.now()}`,
+      id: `zakat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       timestamp: Date.now(),
-      dateStr: new Date().toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      currency,
-      totalAssets,
+      dateStr: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      currency: activeCurrency,
+      totalGross: totalGrossWealth,
       totalLiabilities,
-      netWorth,
+      netWorth: netZakatableWealth,
       nisabType: nisabChoice,
       nisabThreshold: activeNisabThreshold,
-      isZakatDue,
-      zakatDue: zakatAmount,
+      isZakatDue: isNisabReached,
+      zakatDue,
+      ushrDue: ushrResult.due > 0 ? ushrResult.due : undefined,
+      livestockSummary: livestockResult?.isZakatable ? livestockResult.dueText : undefined,
+      isPaid: false,
+      assetsBreakdown: {
+        cashHome: parseNum(cashHome),
+        bankAccounts: parseNum(bankAccounts),
+        receivables: parseNum(receivables),
+        goldValue: calculatedGoldValue,
+        silverValue: calculatedSilverValue,
+        investments: parseNum(investments),
+        businessStock: parseNum(businessStock),
+        otherAssets: parseNum(otherAssets),
+        debts: parseNum(debts),
+      },
     };
+
     const updated = [newRecord, ...historyList];
     setHistoryList(updated);
     try {
       localStorage.setItem(ZAKAT_HISTORY_KEY, JSON.stringify(updated));
     } catch {
-      // Safe catch
+      // Storage write fallback
     }
-    toast.success('Zakat calculation saved to history!');
+    toast.success('Zakat calculation saved to History!');
   };
 
-  const handleDeleteHistory = (id: string) => {
-    const updated = historyList.filter((h) => h.id !== id);
+  // Toggle Paid status in History
+  const handleTogglePaid = (recordId: string) => {
+    const updated = historyList.map((r) => {
+      if (r.id === recordId) {
+        return { ...r, isPaid: !r.isPaid };
+      }
+      return r;
+    });
     setHistoryList(updated);
     try {
       localStorage.setItem(ZAKAT_HISTORY_KEY, JSON.stringify(updated));
     } catch {
-      // Safe catch
+      // Storage write fallback
     }
-    toast.success('Record removed');
   };
 
-  const handleClearAllHistory = () => {
-    setHistoryList([]);
+  // Delete from History
+  const handleDeleteHistory = (recordId: string) => {
+    const updated = historyList.filter((r) => r.id !== recordId);
+    setHistoryList(updated);
     try {
-      localStorage.removeItem(ZAKAT_HISTORY_KEY);
+      localStorage.setItem(ZAKAT_HISTORY_KEY, JSON.stringify(updated));
     } catch {
-      // Safe catch
+      // Storage write fallback
     }
-    toast.success('Zakat history cleared');
+    toast.success('Record removed from History');
   };
 
-  const handleShareSummary = async () => {
-    const summaryText = `NOOR CONNECT — ZAKAT CALCULATION SUMMARY
-Date: ${new Date().toLocaleDateString()}
-Currency: ${currency}
+  // Load Record back into Calculator
+  const handleLoadRecord = (r: ZakatHistoryRecord) => {
+    if (r.currency) {
+      setActiveCurrency(r.currency);
+      saveCurrency(r.currency);
+    }
+    if (r.nisabType) setNisabChoice(r.nisabType);
+    if (r.assetsBreakdown) {
+      setCashHome(r.assetsBreakdown.cashHome ? String(r.assetsBreakdown.cashHome) : '');
+      setBankAccounts(r.assetsBreakdown.bankAccounts ? String(r.assetsBreakdown.bankAccounts) : '');
+      setReceivables(r.assetsBreakdown.receivables ? String(r.assetsBreakdown.receivables) : '');
+      setInvestments(r.assetsBreakdown.investments ? String(r.assetsBreakdown.investments) : '');
+      setBusinessStock(r.assetsBreakdown.businessStock ? String(r.assetsBreakdown.businessStock) : '');
+      setOtherAssets(r.assetsBreakdown.otherAssets ? String(r.assetsBreakdown.otherAssets) : '');
+      setDebts(r.assetsBreakdown.debts ? String(r.assetsBreakdown.debts) : '');
+      if (r.assetsBreakdown.goldValue) {
+        setGoldInputMode('value');
+        setGoldWeightOrValue(String(r.assetsBreakdown.goldValue));
+      }
+      if (r.assetsBreakdown.silverValue) {
+        setSilverInputMode('value');
+        setSilverWeightOrValue(String(r.assetsBreakdown.silverValue));
+      }
+    }
+    setActiveTab('calculator');
+    toast.success('Calculation loaded into Calculator');
+  };
 
-TOTAL ASSETS: ${formatMoney(totalAssets)}
-• Cash & Bank: ${formatMoney(assets.cash + assets.bankBalance)}
-• Gold Value: ${formatMoney(assets.gold)}
-• Silver Value: ${formatMoney(assets.silver)}
-• Stocks & Investments: ${formatMoney(assets.stocks)}
-• Business Inventory: ${formatMoney(assets.businessAssets)}
-• Receivables Owed to You: ${formatMoney(assets.receivables)}
-• Other Assets: ${formatMoney(assets.otherAssets)}
-
-TOTAL DEDUCTIBLE LIABILITIES: ${formatMoney(totalLiabilities)}
-NET ZAKATABLE WEALTH: ${formatMoney(netWorth)}
-
-NISAB THRESHOLD (${nisabChoice.toUpperCase()}): ${formatMoney(activeNisabThreshold)}
-ZAKAT STATUS: ${isZakatDue ? `PAYABLE (2.5%) = ${formatMoney(zakatAmount)}` : 'BELOW NISAB THRESHOLD (No Zakat Due)'}
-
-Calculated using Noor Connect (com.noorconnect.ummah)`;
+  // Share / Copy Clean Receipt
+  const handleShareReceipt = async () => {
+    const dateFormatted = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const receiptText = [
+      `🕋 NOOR CONNECT — ZAKAT AL-MĀL CALCULATION`,
+      `📅 Date: ${dateFormatted}`,
+      `💰 Currency: ${activeCurrency}`,
+      `---------------------------------`,
+      `• Gross Zakatable Assets: ${formatCurrencyAmount(totalGrossWealth, activeCurrency)}`,
+      `• Deductible Liabilities: - ${formatCurrencyAmount(totalLiabilities, activeCurrency)}`,
+      `• Net Zakatable Wealth: ${formatCurrencyAmount(netZakatableWealth, activeCurrency)}`,
+      `• Nisab Threshold (${nisabChoice.toUpperCase()}): ${formatCurrencyAmount(activeNisabThreshold, activeCurrency)}`,
+      `• Status: ${isNisabReached ? 'OBLIGATORY (Nisab Reached)' : 'BELOW NISAB (Optional Sadaqah)'}`,
+      `---------------------------------`,
+      `✨ TOTAL ZAKAT DUE (2.5%): ${formatCurrencyAmount(zakatDue, activeCurrency)}`,
+      ...(zakatDue > 0 ? [`💡 Monthly Option: ${formatCurrencyAmount(Math.round(zakatDue / 12), activeCurrency)}/month`] : []),
+      ...(ushrResult.due > 0 ? [`🌾 Agricultural Ushr: ${formatCurrencyAmount(ushrResult.due, activeCurrency)} (${ushrResult.label})`] : []),
+      ...(livestockResult?.isZakatable ? [`🐑 Livestock Zakat: ${livestockResult.dueText}`] : []),
+      `---------------------------------`,
+      `Calculated with Noor Connect (100% Offline & Private)`,
+    ].join('\n');
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Zakat Calculation Summary', text: summaryText });
+        await navigator.share({
+          title: 'Zakat Calculation — Noor Connect',
+          text: receiptText,
+        });
+        return;
       } catch {
-        // Handled dismiss
+        // Fallback to clipboard
       }
-    } else {
-      navigator.clipboard.writeText(summaryText);
-      toast.success('Calculation summary copied to clipboard');
+    }
+
+    try {
+      await navigator.clipboard.writeText(receiptText);
+      toast.success('Zakat summary copied to clipboard!');
+    } catch {
+      toast.error('Unable to copy summary');
     }
   };
 
   return (
-    <LayoutManager>
-      <div className="min-h-screen bg-background pb-32">
-        <AppBar title={t("zakatCalculator") || "Zakat Calculator"} showBack />
-
-        <div className="max-w-lg mx-auto p-4 space-y-4">
-          {/* Top 2 Tabs: Calculator & History */}
-          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] shadow-xs">
-            <button
-              type="button"
-              onClick={() => setActiveTab('calculator')}
-              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'calculator'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              <Calculator className="w-3.5 h-3.5" />
-              <span>Calculator</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('history')}
-              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'history'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>History ({historyList.length})</span>
-            </button>
+    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] flex flex-col pb-28">
+      {/* ── TOP APP BAR ── */}
+      <header className="sticky top-0 z-40 bg-[var(--surface)]/95 backdrop-blur-md border-b border-[var(--border)] px-4 py-3">
+        <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {!isEmbedded && (
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                aria-label="Back"
+                className="w-9 h-9 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-primary)] hover:border-[var(--accent)] active:scale-95 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold font-serif text-[var(--text-primary)] truncate flex items-center gap-1.5">
+                <span>Zakat Calculator</span>
+                <span className="text-[10px] uppercase font-sans font-bold px-1.5 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
+                  Shariah 2.5%
+                </span>
+              </h1>
+            </div>
           </div>
 
-          {activeTab === 'history' ? (
-            /* HISTORY TAB VIEW */
-            <div className="space-y-3 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between px-1">
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                    Saved Calculations ({historyList.length})
-                  </h3>
-                  <span className="text-[10px] text-[var(--text-secondary)]">Protected in local device storage</span>
-                </div>
-                {historyList.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearAllHistory}
-                    className="h-7 text-xs text-rose-400 hover:text-rose-500 hover:bg-rose-500/10"
-                  >
-                    Clear All
-                  </Button>
-                )}
+          {/* Top Right: Currency selector pill */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <select
+              value={activeCurrency}
+              onChange={(e) => handleCurrencyChange(e.target.value)}
+              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[var(--accent-text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Content Language Bar (English | Urdu | Gujarati | Hindi) */}
+        <div className="max-w-xl mx-auto mt-2">
+          <ContentLanguageBar compact />
+        </div>
+      </header>
+
+      {/* ── MAIN CONTENT CONTAINER ── */}
+      <main className="max-w-xl mx-auto w-full px-4 pt-3.5 space-y-4">
+        {/* ── SEGMENTED TOP TABS: Calculator vs History ── */}
+        <div className="grid grid-cols-2 p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab('calculator')}
+            className={`py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+              activeTab === 'calculator'
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            <Calculator className="w-4 h-4" />
+            <span>🧮 Calculator</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('history')}
+            className={`py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+              activeTab === 'history'
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <span>🕒 History ({historyList.length})</span>
+          </button>
+        </div>
+
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {/* TAB 1: CALCULATOR                                                   */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {activeTab === 'calculator' && (
+          <div className="space-y-4">
+            {/* ── ROYAL HERO BANNER CARD ── */}
+            <div
+              className="rounded-[22px] p-4 border relative overflow-hidden text-[var(--text-primary)] shadow-sm"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--border)',
+                backgroundImage: 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface))',
+                boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] bg-[var(--surface-2)] border border-[var(--border)] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[var(--accent)]" />
+                  ♡ ZAKAT AL-MĀL
+                </span>
+                <span className="text-[10.5px] font-mono font-bold bg-[var(--accent)] text-[var(--on-accent)] px-2.5 py-0.5 rounded-full">
+                  2.5% (1/40th)
+                </span>
               </div>
 
-              {historyList.length === 0 ? (
-                <div className="text-center py-12 px-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)] flex items-center justify-center mx-auto mb-3">
-                    <History className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-sm font-bold text-[var(--text-primary)]">No Saved History Yet</h4>
-                  <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-xs mx-auto">
-                    Calculate your Zakat and tap <span className="text-[var(--accent-text)] font-semibold">"Save to History"</span> to preserve itemized records across years.
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text-primary)] leading-tight">
+                    Purify Your Wealth
+                  </h2>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
+                    Calculated strictly according to authentic Islamic Shariah (Hawl & Nisab).
                   </p>
                 </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {historyList.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="p-3.5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
-                      style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-bold text-[var(--text-primary)]">{rec.dateStr}</span>
-                          <span className="text-[10px] text-[var(--text-secondary)] block">
-                            Currency: {rec.currency} • Nisab: {rec.nisabType.toUpperCase()}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteHistory(rec.id)}
-                          className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          title="Delete record"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 p-2 rounded-xl bg-[var(--surface-2)] text-xs">
-                        <div>
-                          <span className="text-[10px] text-[var(--text-secondary)] block">Net Wealth</span>
-                          <span className="font-bold text-[var(--text-primary)]">{rec.currency} {rec.netWorth.toLocaleString()}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-[var(--text-secondary)] block">Zakat Due (2.5%)</span>
-                          <span className="font-bold text-[var(--accent-text)]">{rec.currency} {rec.zakatDue.toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="shrink-0 text-right">
+                  <span className="font-arabic font-bold text-3xl sm:text-4xl text-[var(--accent-text)] select-none">
+                    الزكاة
+                  </span>
                 </div>
-              )}
-            </div>
-          ) : (
-            /* CALCULATOR TAB VIEW */
-            <>
-              {/* About Zakat Card */}
-              <Card className="relative overflow-hidden border-[var(--accent)]/30 bg-[var(--surface)] shadow-sm">
-                <CardContent className="p-4 relative z-10">
-                  <div className="flex items-start gap-2.5">
-                    <Info className="w-4 h-4 text-[var(--accent)] mt-0.5 shrink-0" />
-                    <div className="space-y-0.5 min-w-0">
-                      <p className="text-xs font-bold text-[var(--text-primary)]">Spiritual Principle of Zakat</p>
-                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-                        Zakat is 2.5% of your total net surplus wealth held for one full lunar year (Hawl) above the Nisab threshold.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
 
-              {/* Currency Selector (10 Prominent Pills + Full Dropdown) */}
-              <Card className="border-[var(--border)] bg-[var(--surface)] shadow-sm overflow-hidden">
-                <CardHeader className="py-2.5 px-4 border-b border-[var(--border)] bg-[var(--surface-2)]">
-                  <CardTitle className="text-xs uppercase tracking-wider font-bold flex items-center gap-1.5 text-[var(--text-secondary)]">
-                    <DollarSign className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                    Currency Selection
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-3.5 space-y-2.5">
-                  {/* 10 Prominent Quick Select Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                    {PROMINENT_CURRENCIES.map((code) => (
+              {/* Quick Button: Simple Shariah Rules */}
+              <div className="pt-3 mt-3 border-t border-[var(--border)]/60 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowShariahRulesModal(true)}
+                  className="text-xs font-bold text-[var(--accent-text)] hover:underline inline-flex items-center gap-1.5"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>📖 Simple Shariah Rules (Who Must Pay?)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* ── LIVE GOLD & SILVER MARKET RATES CARD (ZERO 0.00/g BUG) ── */}
+            <div
+              className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <Coins className="w-4 h-4 text-[var(--accent-text)]" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                    Live Bullion Rates ({activeCurrency})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${
+                      rates?.isOverridden
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                        : rates?.source === 'live'
+                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                        : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]'
+                    }`}
+                  >
+                    ● {rates?.isOverridden ? 'Custom Override' : rates?.source === 'live' ? 'Live Market' : 'Offline Baseline'}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => loadRates(activeCurrency, true)}
+                    disabled={isLoadingRates}
+                    title="Refresh live metal rates"
+                    className="p-1 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingRates ? 'animate-spin text-[var(--accent)]' : ''}`} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenOverride}
+                    className="px-2 py-1 rounded-lg text-[10.5px] font-bold bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--accent-text)] inline-flex items-center gap-1"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>Override</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Two side-by-side Bullion Rate Boxes */}
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* 24K Gold Rate */}
+                <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400">
+                      24K Fine Gold
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--text-secondary)]">
+                      {rates?.rawDateStr ? rates.rawDateStr.slice(5) : '2026'}
+                    </span>
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                    {formatCurrencyAmount(effectiveGoldPerGram, activeCurrency)}/g
+                  </div>
+                  <div className="text-[10px] text-[var(--text-secondary)] font-mono">
+                    {formatCurrencyAmount(rates?.goldPerTola || effectiveGoldPerGram * TOLA_IN_GRAMS, activeCurrency)}/tola
+                  </div>
+                </div>
+
+                {/* 999 Silver Rate */}
+                <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">
+                      999 Fine Silver
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--text-secondary)]">
+                      {rates?.rawDateStr ? rates.rawDateStr.slice(5) : '2026'}
+                    </span>
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                    {formatCurrencyAmount(effectiveSilverPerGram, activeCurrency)}/g
+                  </div>
+                  <div className="text-[10px] text-[var(--text-secondary)] font-mono">
+                    {formatCurrencyAmount(rates?.silverPerTola || effectiveSilverPerGram * TOLA_IN_GRAMS, activeCurrency)}/tola
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── NISAB THRESHOLD SELECTOR CARD ── */}
+            <div
+              className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+                  <Scale className="w-3.5 h-3.5 text-[var(--accent)]" />
+                  Select Nisab Threshold Standard
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* Silver Nisab (Recommended) */}
+                <button
+                  type="button"
+                  onClick={() => setNisabChoice('silver')}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    nisabChoice === 'silver'
+                      ? 'bg-[var(--accent-soft)] border-[var(--accent)] shadow-sm'
+                      : 'bg-[var(--surface-2)] border-[var(--border)] hover:border-[var(--accent)]/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10.5px] font-bold uppercase text-[var(--accent-text)]">
+                      Silver Nisab
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent)]">
+                      Recommended
+                    </span>
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                    {formatCurrencyAmount(silverNisabValue, activeCurrency)}
+                  </div>
+                  <div className="text-[10px] text-[var(--text-secondary)] mt-0.5">
+                    612.36g (52.5 Tola)
+                  </div>
+                </button>
+
+                {/* Gold Nisab */}
+                <button
+                  type="button"
+                  onClick={() => setNisabChoice('gold')}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    nisabChoice === 'gold'
+                      ? 'bg-[var(--accent-soft)] border-[var(--accent)] shadow-sm'
+                      : 'bg-[var(--surface-2)] border-[var(--border)] hover:border-[var(--accent)]/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10.5px] font-bold uppercase text-[var(--text-primary)]">
+                      Gold Nisab
+                    </span>
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[var(--text-primary)] font-mono leading-tight">
+                    {formatCurrencyAmount(goldNisabValue, activeCurrency)}
+                  </div>
+                  <div className="text-[10px] text-[var(--text-secondary)] mt-0.5">
+                    87.48g (7.5 Tola)
+                  </div>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed italic">
+                * Note: Classical Hanafi scholars and contemporary fiqh councils recommend the <b>Silver Nisab</b> for cash and mixed wealth so more aid reaches the poor and needy.
+              </p>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════ */}
+            {/* 9 WEALTH & LIABILITY SECTIONS                                  */}
+            {/* ══════════════════════════════════════════════════════════════ */}
+
+            {/* 1) Cash & Bank Balances */}
+            <div
+              className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+                    <Wallet className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">1. Cash & Bank Balances</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Cash at home, bank savings, and loans given out</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {formatCurrencyAmount(cashTotal, activeCurrency)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <div>
+                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1">
+                    Cash at Home / Hand
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={cashHome}
+                    onChange={(e) => setCashHome(e.target.value)}
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1">
+                    Bank Balances (Savings / FD)
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={bankAccounts}
+                    onChange={(e) => setBankAccounts(e.target.value)}
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10.5px] font-bold text-[var(--text-secondary)] uppercase block mb-1">
+                    Money Lent (Receivables)
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={receivables}
+                    onChange={(e) => setReceivables(e.target.value)}
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 2) Gold (Jewelry, Coins & Bars) */}
+            <div
+              className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-amber-500">
+                    <Coins className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">2. Gold (Jewelry, Coins & Bars)</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Supports Grams, Tolas & 24K/22K/21K/18K</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {formatCurrencyAmount(calculatedGoldValue, activeCurrency)}
+                </span>
+              </div>
+
+              <div className="space-y-2.5 pt-1">
+                {/* Mode & Purity Selector Controls */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  {/* Unit Mode */}
+                  <div className="flex items-center gap-1 bg-[var(--surface-2)] p-0.5 rounded-xl border border-[var(--border)]">
+                    {(['grams', 'tolas', 'value'] as const).map((mode) => (
                       <button
-                        key={code}
+                        key={mode}
                         type="button"
-                        onClick={() => handleCurrencyChange(code)}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all border shrink-0 ${
-                          currency === code
-                            ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-xs"
-                            : "bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:text-[var(--text-primary)]"
+                        onClick={() => setGoldInputMode(mode)}
+                        className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold capitalize transition-all ${
+                          goldInputMode === mode
+                            ? 'bg-[var(--accent)] text-[var(--on-accent)]'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                         }`}
                       >
-                        {code}
+                        {mode === 'value' ? 'Direct Value' : mode}
                       </button>
                     ))}
                   </div>
 
-                  {/* Full Dropdown Selector */}
-                  <div className="pt-1">
-                    <Select value={currency} onValueChange={handleCurrencyChange}>
-                      <SelectTrigger className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]">
-                        <SelectValue placeholder="More currencies..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currencyOptions.map((code) => (
-                          <SelectItem key={code} value={code} className="text-xs">
-                            {code}
-                          </SelectItem>
+                  {/* Purity Karat */}
+                  {goldInputMode !== 'value' && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-secondary)]">Purity:</span>
+                      <select
+                        value={goldKarat}
+                        onChange={(e) => setGoldKarat(Number(e.target.value))}
+                        className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2 py-1 text-xs font-bold text-[var(--accent-text)]"
+                      >
+                        {Object.entries(GOLD_KARAT_MULTIPLIERS).map(([karat, info]) => (
+                          <option key={karat} value={karat}>
+                            {info.label}
+                          </option>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Live Gold & Silver Rates + Override Toggle */}
-              <Card className="border-[var(--border)] bg-[var(--surface)] shadow-sm overflow-hidden">
-                <CardHeader className="py-2.5 px-4 border-b border-[var(--border)] bg-[var(--surface-2)]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xs uppercase tracking-wider font-bold flex items-center gap-1.5 text-[var(--text-secondary)]">
-                      <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                      Live Metal Rates (per gram)
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsPriceOverrideEnabled((prev) => !prev)}
-                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 ${
-                          isPriceOverrideEnabled
-                            ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]"
-                            : "bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]"
-                        }`}
-                      >
-                        <Edit3 className="w-3 h-3" />
-                        <span>Override Rates</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={refreshPrices}
-                        disabled={isLoadingPrices}
-                        className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                        title="Refresh metal rates"
-                      >
-                        <RefreshCw className={`w-3.5 h-3.5 ${isLoadingPrices ? "animate-spin" : ""}`} />
-                      </button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-3.5 space-y-3">
-                  {priceError && (
-                    <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded-xl text-xs text-destructive">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>{priceError}</span>
+                      </select>
                     </div>
                   )}
+                </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Gold Rate */}
-                    <div className="space-y-1">
-                      <Label className="text-[11px] text-[var(--text-secondary)]">Gold / gram ({currency})</Label>
-                      {isPriceOverrideEnabled ? (
-                        <Input
-                          type="number"
-                          placeholder={effectiveGoldPrice.toFixed(2)}
-                          value={customGoldPrice}
-                          onChange={(e) => setCustomGoldPrice(e.target.value)}
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      ) : (
-                        <div className="h-9 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-between text-xs font-bold font-mono">
-                          <span>{effectiveGoldPrice.toFixed(2)}</span>
-                          <span className="text-[9px] text-emerald-400 font-semibold">LIVE</span>
-                        </div>
-                      )}
-                    </div>
+                {/* Input Field */}
+                <div>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder={
+                      goldInputMode === 'grams'
+                        ? 'Weight in grams (e.g. 50)'
+                        : goldInputMode === 'tolas'
+                        ? 'Weight in tolas (e.g. 4.5)'
+                        : 'Total market value in currency'
+                    }
+                    value={goldWeightOrValue}
+                    onChange={(e) => setGoldWeightOrValue(e.target.value)}
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                </div>
 
-                    {/* Silver Rate */}
-                    <div className="space-y-1">
-                      <Label className="text-[11px] text-[var(--text-secondary)]">Silver / gram ({currency})</Label>
-                      {isPriceOverrideEnabled ? (
-                        <Input
-                          type="number"
-                          placeholder={effectiveSilverPrice.toFixed(2)}
-                          value={customSilverPrice}
-                          onChange={(e) => setCustomSilverPrice(e.target.value)}
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      ) : (
-                        <div className="h-9 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-between text-xs font-bold font-mono">
-                          <span>{effectiveSilverPrice.toFixed(2)}</span>
-                          <span className="text-[9px] text-emerald-400 font-semibold">LIVE</span>
-                        </div>
-                      )}
+                {/* Live Value Calculation Preview */}
+                {parseNum(goldWeightOrValue) > 0 && (
+                  <div className="text-[11px] font-medium text-[var(--accent-text)] bg-[var(--surface-2)] px-3 py-1.5 rounded-xl border border-[var(--border)]">
+                    💡 {goldWeightOrValue} {goldInputMode === 'tolas' ? 'Tola' : goldInputMode === 'grams' ? 'grams' : ''} of {goldKarat}K Gold = <b>{formatCurrencyAmount(calculatedGoldValue, activeCurrency)}</b>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 3) Silver (Utensils, Coins, Bars & Jewelry) */}
+            <div
+              className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-slate-400">
+                    <Coins className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">3. Silver (Utensils, Coins & Bars)</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Supports Grams, Tolas & Direct Value</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {formatCurrencyAmount(calculatedSilverValue, activeCurrency)}
+                </span>
+              </div>
+
+              <div className="space-y-2.5 pt-1">
+                {/* Unit Mode */}
+                <div className="flex items-center gap-1 bg-[var(--surface-2)] p-0.5 rounded-xl border border-[var(--border)] w-fit">
+                  {(['grams', 'tolas', 'value'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setSilverInputMode(mode)}
+                      className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold capitalize transition-all ${
+                        silverInputMode === mode
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)]'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                      }`}
+                    >
+                      {mode === 'value' ? 'Direct Value' : mode}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Input Field */}
+                <div>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder={
+                      silverInputMode === 'grams'
+                        ? 'Weight in grams (e.g. 500)'
+                        : silverInputMode === 'tolas'
+                        ? 'Weight in tolas (e.g. 42)'
+                        : 'Total silver value in currency'
+                    }
+                    value={silverWeightOrValue}
+                    onChange={(e) => setSilverWeightOrValue(e.target.value)}
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                </div>
+
+                {/* Live Silver Value Preview */}
+                {parseNum(silverWeightOrValue) > 0 && (
+                  <div className="text-[11px] font-medium text-[var(--accent-text)] bg-[var(--surface-2)] px-3 py-1.5 rounded-xl border border-[var(--border)]">
+                    💡 {silverWeightOrValue} {silverInputMode === 'tolas' ? 'Tola' : silverInputMode === 'grams' ? 'grams' : ''} of Silver = <b>{formatCurrencyAmount(calculatedSilverValue, activeCurrency)}</b>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 4) Investments, Shares & Crypto */}
+            <div
+              className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">4. Investments, Shares & Crypto</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Stocks, mutual funds, ETFs, Sukuk & crypto portfolio</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {formatCurrencyAmount(investmentTotal, activeCurrency)}
+                </span>
+              </div>
+
+              <div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Market value of shares, mutual funds & crypto"
+                  value={investments}
+                  onChange={(e) => setInvestments(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+            </div>
+
+            {/* 5) Business Inventory & Trade Goods */}
+            <div
+              className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">5. Business Inventory & Goods</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Wholesale stock, finished merchandise & goods for resale</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {formatCurrencyAmount(businessTotal, activeCurrency)}
+                </span>
+              </div>
+
+              <div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Current sale value of trade inventory"
+                  value={businessStock}
+                  onChange={(e) => setBusinessStock(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+            </div>
+
+            {/* 6) Other Zakatable Assets */}
+            <div
+              className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)]">
+                    <Receipt className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">6. Other Zakatable Assets</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Rental savings, property for resale & withdrawable PF</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-[var(--accent-text)]">
+                  {formatCurrencyAmount(otherTotal, activeCurrency)}
+                </span>
+              </div>
+
+              <div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Total value of other zakatable assets"
+                  value={otherAssets}
+                  onChange={(e) => setOtherAssets(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+            </div>
+
+            {/* 7) Agricultural Produce (Optional Expandable Ushr Card) */}
+            <div
+              className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowUshrSection(!showUshrSection)}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center">
+                    <Wheat className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">7. Agricultural Produce (Ushr)</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Due at harvest if ≥ 653kg (5 Wasq), no 1-yr Hawl wait</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {ushrResult.due > 0 && (
+                    <span className="text-xs font-mono font-bold text-emerald-500">
+                      {formatCurrencyAmount(ushrResult.due, activeCurrency)}
+                    </span>
+                  )}
+                  {showUshrSection ? <ChevronUp className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
+                </div>
+              </button>
+
+              {showUshrSection && (
+                <div className="p-4 pt-0 space-y-3 border-t border-[var(--border)]/60">
+                  <div className="space-y-1.5 pt-3">
+                    <label className="text-[10.5px] font-bold uppercase text-[var(--text-secondary)] block">
+                      Irrigation Method:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: 'rain', label: 'Rain / River (10%)' },
+                        { id: 'artificial', label: 'Paid / Well (5%)' },
+                        { id: 'mixed', label: 'Mixed (7.5%)' },
+                      ].map((type) => (
+                        <button
+                          key={type.id}
+                          type="button"
+                          onClick={() => setIrrigationType(type.id as 'rain' | 'artificial' | 'mixed')}
+                          className={`p-2 rounded-xl border text-xs font-bold transition-all ${
+                            irrigationType === type.id
+                              ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]'
+                              : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]'
+                          }`}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* 2-Card Interactive Nisab Selector */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] px-1">
-                  Select Nisab Benchmark
-                </Label>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {/* Silver Nisab Card */}
-                  <button
-                    type="button"
-                    onClick={() => setNisabChoice('silver')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden active:scale-[0.98] ${
-                      nisabChoice === 'silver'
-                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-md'
-                        : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)]/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)]">
-                        Silver Nisab
-                      </span>
-                      <span className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-                        Recommended
-                      </span>
-                    </div>
-                    <div className="text-sm sm:text-base font-bold text-[var(--text-primary)] font-mono">
-                      {formatMoney(silverNisabValue)}
-                    </div>
-                    <div className="text-[9.5px] text-[var(--text-secondary)] mt-0.5">
-                      612.36g (52.5 Tolas)
-                    </div>
-                  </button>
+                  <div>
+                    <label className="text-[10.5px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
+                      Harvest Market Value:
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="Total harvest value in currency"
+                      value={harvestValue}
+                      onChange={(e) => setHarvestValue(e.target.value)}
+                      className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    />
+                  </div>
 
-                  {/* Gold Nisab Card */}
-                  <button
-                    type="button"
-                    onClick={() => setNisabChoice('gold')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden active:scale-[0.98] ${
-                      nisabChoice === 'gold'
-                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-md'
-                        : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)]/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)]">
-                        Gold Nisab
-                      </span>
+                  {ushrResult.due > 0 && (
+                    <div className="text-xs font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl">
+                      🌾 Ushr Due: <b>{formatCurrencyAmount(ushrResult.due, activeCurrency)}</b> ({ushrResult.percentage} of harvest)
                     </div>
-                    <div className="text-sm sm:text-base font-bold text-[var(--text-primary)] font-mono">
-                      {formatMoney(goldNisabValue)}
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 8) Livestock (Optional Expandable An'am Card) */}
+            <div
+              className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-xs"
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowLivestockSection(!showLivestockSection)}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center">
+                    <Scale className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">8. Livestock (An'am Shariah Helper)</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Grazing goats/sheep, cattle/buffaloes, and camels held 1 year</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {livestockResult?.isZakatable && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-500">
+                      Zakat Due
+                    </span>
+                  )}
+                  {showLivestockSection ? <ChevronUp className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
+                </div>
+              </button>
+
+              {showLivestockSection && (
+                <div className="p-4 pt-0 space-y-3 border-t border-[var(--border)]/60">
+                  <div className="grid grid-cols-3 gap-2.5 pt-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
+                        Goats / Sheep
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Nisab 40+"
+                        value={sheepCount}
+                        onChange={(e) => setSheepCount(e.target.value)}
+                        className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold font-mono text-[var(--text-primary)]"
+                      />
                     </div>
-                    <div className="text-[9.5px] text-[var(--text-secondary)] mt-0.5">
-                      87.48g (7.5 Tolas)
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
+                        Cattle / Buffaloes
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Nisab 30+"
+                        value={cattleCount}
+                        onChange={(e) => setCattleCount(e.target.value)}
+                        className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold font-mono text-[var(--text-primary)]"
+                      />
                     </div>
-                  </button>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
+                        Camels
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Nisab 5+"
+                        value={camelCount}
+                        onChange={(e) => setCamelCount(e.target.value)}
+                        className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold font-mono text-[var(--text-primary)]"
+                      />
+                    </div>
+                  </div>
+
+                  {livestockResult && (
+                    <div className="text-xs text-[var(--text-primary)] bg-[var(--surface-2)] p-2.5 rounded-xl border border-[var(--border)] space-y-1">
+                      <div className="font-bold text-[var(--accent-text)]">Shariah Verdict:</div>
+                      {livestockResult.notes.map((n, i) => (
+                        <div key={i} className="text-[11px]">• {n}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 9) Liabilities & Immediate Debts (Deduct) */}
+            <div
+              className="rounded-2xl p-4 bg-[var(--surface)] border border-rose-500/30 space-y-3 shadow-xs"
+              style={{
+                boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                backgroundImage: 'linear-gradient(135deg, color-mix(in srgb, var(--danger) 5%, var(--surface)), var(--surface))',
+              }}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border)]/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center">
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-rose-500">9. Liabilities & Immediate Debts</h3>
+                    <p className="text-[10.5px] text-[var(--text-secondary)]">Loans due immediately, unpaid utility bills, rent & unpaid wages</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-rose-500">
+                  - {formatCurrencyAmount(totalLiabilities, activeCurrency)}
+                </span>
+              </div>
+
+              <div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Total deductible liabilities due immediately"
+                  value={debts}
+                  onChange={(e) => setDebts(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-rose-500"
+                />
+              </div>
+            </div>
+
+            {/* ── STICKY / PROMINENT LIVE ZAKAT SUMMARY & ACTION CARD ── */}
+            <div
+              className="rounded-[22px] p-4.5 bg-[var(--surface)] border border-[var(--border)] space-y-4 shadow-md"
+              style={{
+                boxShadow: '0 8px 32px -8px var(--accent-glow), inset 0 1px 0 var(--card-sheen)',
+                borderWidth: '1.5px',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+                  <Receipt className="w-4 h-4 text-[var(--accent)]" />
+                  Zakat Al-Māl Calculation Summary
+                </span>
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-rose-500 hover:underline"
+                >
+                  ↻ Reset All
+                </button>
+              </div>
+
+              {/* Itemized Table */}
+              <div className="space-y-1.5 text-xs bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border)]">
+                <div className="flex items-center justify-between text-[var(--text-secondary)]">
+                  <span>Gross Zakatable Wealth:</span>
+                  <span className="font-mono font-bold text-[var(--text-primary)]">{formatCurrencyAmount(totalGrossWealth, activeCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between text-rose-500">
+                  <span>Less Deductible Liabilities:</span>
+                  <span className="font-mono font-bold">- {formatCurrencyAmount(totalLiabilities, activeCurrency)}</span>
+                </div>
+                <div className="border-t border-[var(--border)] pt-1.5 flex items-center justify-between font-bold text-sm">
+                  <span>Net Zakatable Wealth:</span>
+                  <span className="font-mono text-[var(--accent-text)]">{formatCurrencyAmount(netZakatableWealth, activeCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] pt-0.5">
+                  <span>Active Nisab Threshold ({nisabChoice.toUpperCase()}):</span>
+                  <span className="font-mono">{formatCurrencyAmount(activeNisabThreshold, activeCurrency)}</span>
                 </div>
               </div>
 
-              {/* 8 Itemized Wealth Categories */}
-              <Accordion type="single" collapsible defaultValue="assets" className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-sm px-4">
-                <AccordionItem value="assets" className="border-none">
-                  <AccordionTrigger className="text-xs uppercase tracking-wider font-bold hover:no-underline py-3.5">
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <Banknote className="w-4 h-4 text-[var(--accent-text)]" />
-                      <span>Itemized Wealth Assets</span>
-                      <span className="font-mono font-bold text-xs text-[var(--text-primary)] ml-1">
-                        {formatMoney(totalAssets)}
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3.5 pt-2">
-                      {/* 1. Cash in Hand */}
-                      <div>
-                        <Label className="text-xs">1. Cash in Hand & Digital Wallets</Label>
-                        <Input
-                          type="number"
-                          value={assets.cash || ''}
-                          onChange={(e) => updateAsset('cash', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
+              {/* Dynamic Shariah Verdict Badge */}
+              <div>
+                {isNisabReached ? (
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="w-5 h-5 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-bold text-xs sm:text-sm">
+                        ✓ NISAB REACHED — ZAKAT IS OBLIGATORY (2.5%)
                       </div>
-
-                      {/* 2. Bank Balances */}
-                      <div>
-                        <Label className="text-xs">2. Bank Savings & Current Accounts</Label>
-                        <Input
-                          type="number"
-                          value={assets.bankBalance || ''}
-                          onChange={(e) => updateAsset('bankBalance', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
+                      <div className="text-[10.5px] text-[var(--text-secondary)] mt-0.5">
+                        Your net wealth meets or exceeds the Nisab threshold.
                       </div>
-
-                      {/* 3. Gold Calculator */}
-                      <div className="space-y-2 p-3 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
-                        <Label className="text-xs font-bold text-[var(--accent-text)]">3. Gold & Gold Jewelry</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div>
-                            <Label className="text-[10px] text-[var(--text-secondary)]">Weight</Label>
-                            <Input
-                              type="number"
-                              value={goldCalculator.amount || ''}
-                              onChange={(e) => updateGoldCalculator('amount', parseFloat(e.target.value) || 0)}
-                              placeholder="0"
-                              step="0.01"
-                              className="h-8 rounded-lg text-xs"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-[10px] text-[var(--text-secondary)]">Unit</Label>
-                            <Select value={goldCalculator.unit} onValueChange={(v) => updateGoldCalculator('unit', v as 'grams' | 'tolas' | 'ounces')}>
-                              <SelectTrigger className="h-8 rounded-lg text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="grams">Grams</SelectItem>
-                                <SelectItem value="tolas">Tolas</SelectItem>
-                                <SelectItem value="ounces">Ounces</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label className="text-[10px] text-[var(--text-secondary)]">Karat</Label>
-                            <Select value={goldCalculator.karat.toString()} onValueChange={(v) => updateGoldCalculator('karat', parseInt(v))}>
-                              <SelectTrigger className="h-8 rounded-lg text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {GOLD_KARAT_OPTIONS.map((k) => (
-                                  <SelectItem key={k.value} value={k.value.toString()}>
-                                    {k.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center text-xs pt-1 border-t border-[var(--border)]">
-                          <span className="text-[10px] text-[var(--text-secondary)]">Gold Value:</span>
-                          <span className="font-bold text-[var(--text-primary)] font-mono">{formatMoney(calculateGoldValue)}</span>
-                        </div>
-                      </div>
-
-                      {/* 4. Silver Calculator */}
-                      <div className="space-y-2 p-3 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
-                        <Label className="text-xs font-bold text-[var(--accent-text)]">4. Silver & Silverware</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div>
-                            <Label className="text-[10px] text-[var(--text-secondary)]">Weight</Label>
-                            <Input
-                              type="number"
-                              value={silverCalculator.amount || ''}
-                              onChange={(e) => updateSilverCalculator('amount', parseFloat(e.target.value) || 0)}
-                              placeholder="0"
-                              step="0.01"
-                              className="h-8 rounded-lg text-xs"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-[10px] text-[var(--text-secondary)]">Unit</Label>
-                            <Select value={silverCalculator.unit} onValueChange={(v) => updateSilverCalculator('unit', v as 'grams' | 'tolas' | 'ounces')}>
-                              <SelectTrigger className="h-8 rounded-lg text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="grams">Grams</SelectItem>
-                                <SelectItem value="tolas">Tolas</SelectItem>
-                                <SelectItem value="ounces">Ounces</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label className="text-[10px] text-[var(--text-secondary)]">Purity</Label>
-                            <Select value={silverCalculator.purity.toString()} onValueChange={(v) => updateSilverCalculator('purity', parseInt(v))}>
-                              <SelectTrigger className="h-8 rounded-lg text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {SILVER_PURITY_OPTIONS.map((p) => (
-                                  <SelectItem key={p.value} value={p.value.toString()}>
-                                    {p.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center text-xs pt-1 border-t border-[var(--border)]">
-                          <span className="text-[10px] text-[var(--text-secondary)]">Silver Value:</span>
-                          <span className="font-bold text-[var(--text-primary)] font-mono">{formatMoney(calculateSilverValue)}</span>
-                        </div>
-                      </div>
-
-                      {/* 5. Stocks & Shares */}
-                      <div>
-                        <Label className="text-xs">5. Stocks, Mutual Funds & Liquid Investments</Label>
-                        <Input
-                          type="number"
-                          value={assets.stocks || ''}
-                          onChange={(e) => updateAsset('stocks', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      </div>
-
-                      {/* 6. Business Merchandise */}
-                      <div>
-                        <Label className="text-xs">6. Business Trade Goods & Inventory</Label>
-                        <Input
-                          type="number"
-                          value={assets.businessAssets || ''}
-                          onChange={(e) => updateAsset('businessAssets', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      </div>
-
-                      {/* 7. Receivables */}
-                      <div>
-                        <Label className="text-xs">7. Money Lent Out / Good Receivables</Label>
-                        <Input
-                          type="number"
-                          value={assets.receivables || ''}
-                          onChange={(e) => updateAsset('receivables', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      </div>
-
-                      {/* 8. Other Assets */}
-                      <div>
-                        <Label className="text-xs">8. Real Estate for Resale / Other Surplus Wealth</Label>
-                        <Input
-                          type="number"
-                          value={assets.otherAssets || ''}
-                          onChange={(e) => updateAsset('otherAssets', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-
-              {/* Deductible Liabilities Accordion */}
-              <Accordion type="single" collapsible className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-sm px-4">
-                <AccordionItem value="liabilities" className="border-none">
-                  <AccordionTrigger className="text-xs uppercase tracking-wider font-bold hover:no-underline py-3.5">
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <Building className="w-4 h-4 text-destructive" />
-                      <span>Deductible Liabilities</span>
-                      <span className="font-mono font-bold text-xs text-destructive ml-1">
-                        -{formatMoney(totalLiabilities)}
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3 pt-2">
-                      <div>
-                        <Label className="text-xs">Immediate Personal Debts Due</Label>
-                        <Input
-                          type="number"
-                          value={liabilities.debts || ''}
-                          onChange={(e) => updateLiability('debts', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Current Loan Installments</Label>
-                        <Input
-                          type="number"
-                          value={liabilities.loans || ''}
-                          onChange={(e) => updateLiability('loans', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Due Commercial / Utility Bills</Label>
-                        <Input
-                          type="number"
-                          value={liabilities.bills || ''}
-                          onChange={(e) => updateLiability('bills', e.target.value)}
-                          placeholder="0"
-                          className="h-9 rounded-xl text-xs bg-[var(--surface-2)] border-[var(--border)]"
-                        />
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-
-              {/* Zakat Calculation Results Card */}
-              <Card
-                className={`relative overflow-hidden border-2 shadow-lg ${
-                  isZakatDue
-                    ? "border-emerald-500/50 bg-[var(--surface)] text-[var(--text-primary)]"
-                    : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)]"
-                }`}
-                style={{ boxShadow: isZakatDue ? "0 8px 32px -8px rgba(16, 185, 129, 0.25)" : undefined }}
-              >
-                <CardHeader className="py-3 px-4 border-b border-[var(--border)]/50">
-                  <CardTitle className="text-xs uppercase tracking-wider font-bold flex items-center gap-1.5 text-[var(--accent-text)]">
-                    <Calculator className="w-3.5 h-3.5" />
-                    Zakat Calculation Results
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-3.5">
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-[var(--text-secondary)]">Total Zakatable Assets:</span>
-                      <span className="font-bold">{formatMoney(totalAssets)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[var(--text-secondary)]">Total Deductible Liabilities:</span>
-                      <span className="font-bold text-destructive">-{formatMoney(totalLiabilities)}</span>
-                    </div>
-                    <div className="border-t border-[var(--border)]/50 pt-1.5 flex justify-between">
-                      <span className="font-bold text-[var(--text-primary)]">Net Zakatable Wealth:</span>
-                      <span className="font-bold text-base font-mono">{formatMoney(netWorth)}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-[var(--text-secondary)]">Nisab Threshold ({nisabChoice.toUpperCase()}):</span>
-                      <span className="font-mono text-[var(--accent-text)]">{formatMoney(activeNisabThreshold)}</span>
                     </div>
                   </div>
+                ) : netZakatableWealth > 0 ? (
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 text-amber-600 dark:text-amber-400">
+                    <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>BELOW NISAB — NO ZAKAT OBLIGATORY</span>
+                    </div>
+                    <div className="text-[10.5px] text-[var(--text-secondary)]">
+                      Your net wealth is below the {nisabChoice} threshold. Sadaqah (voluntary charity) remains highly rewarded.
+                    </div>
+                    {/* Progress Bar towards Nisab */}
+                    <div className="w-full bg-[var(--surface-2)] h-2 rounded-full overflow-hidden mt-1 border border-[var(--border)]">
+                      <div
+                        className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${percentOfNisab}%` }}
+                      />
+                    </div>
+                    <div className="text-right text-[10px] font-mono text-[var(--text-secondary)]">
+                      {percentOfNisab}% of Nisab threshold
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-center text-xs text-[var(--text-secondary)]">
+                    Enter your assets above to check your Nisab status.
+                  </div>
+                )}
+              </div>
 
-                  {/* Big Banner */}
-                  <div
-                    className={`p-4 rounded-xl border text-center ${
-                      isZakatDue
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : "bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)]"
-                    }`}
+              {/* Large Highlighted Zakat Due Box */}
+              <div
+                className="p-4 rounded-2xl border text-center space-y-1 relative overflow-hidden"
+                style={{
+                  background: isNisabReached
+                    ? 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, var(--surface-2)), var(--surface-2))'
+                    : 'var(--surface-2)',
+                  borderColor: isNisabReached ? 'var(--accent)' : 'var(--border)',
+                }}
+              >
+                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  Zakat Al-Māl Due (2.5%)
+                </div>
+                <div className="text-2xl sm:text-3xl font-black font-mono text-[var(--accent-text)]">
+                  {formatCurrencyAmount(zakatDue, activeCurrency)}
+                </div>
+                {zakatDue > 0 && (
+                  <div className="text-[11px] text-[var(--text-secondary)] font-medium pt-0.5">
+                    💡 Or pay in installments: <b>{formatCurrencyAmount(Math.round(zakatDue / 12), activeCurrency)}/month</b> over 12 lunar months
+                  </div>
+                )}
+
+                {/* Additional Ushr & Livestock Due Lines if Present */}
+                {ushrResult.due > 0 && (
+                  <div className="text-xs font-bold text-emerald-500 pt-1 border-t border-[var(--border)]/60 mt-2">
+                    🌾 Agricultural Produce Ushr: {formatCurrencyAmount(ushrResult.due, activeCurrency)}
+                  </div>
+                )}
+                {livestockResult?.isZakatable && (
+                  <div className="text-xs font-bold text-amber-500 pt-1">
+                    🐑 Livestock Zakat: {livestockResult.dueText}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons: Save, Copy/Share, Reset */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleSaveToHistory}
+                  className="py-2.5 px-3 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>Save to History</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleShareReceipt}
+                  className="py-2.5 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                >
+                  <Share2 className="w-4 h-4 text-[var(--accent-text)]" />
+                  <span>Share / Copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {/* TAB 2: HISTORY LIST                                                 */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {activeTab === 'history' && (
+          <div className="space-y-3">
+            {historyList.length === 0 ? (
+              <div className="text-center py-16 bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 space-y-3">
+                <div className="w-14 h-14 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl flex items-center justify-center mx-auto text-[var(--accent-text)]">
+                  <History className="w-7 h-7" />
+                </div>
+                <h3 className="font-bold text-base text-[var(--text-primary)]">No Saved Calculations Yet</h3>
+                <p className="text-xs text-[var(--text-secondary)] max-w-xs mx-auto">
+                  When you calculate your Zakat in the Calculator tab, tap <b>Save to History</b> to keep track of your calculations across lunar years.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('calculator')}
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold"
+                >
+                  Go to Calculator
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Saved Calculations ({historyList.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Clear all saved zakat records?')) {
+                        setHistoryList([]);
+                        localStorage.removeItem(ZAKAT_HISTORY_KEY);
+                        toast.success('History cleared');
+                      }
+                    }}
+                    className="text-[11px] font-bold text-rose-500 hover:underline"
                   >
-                    {isZakatDue ? (
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
-                          Zakat is Payable (واجب) • 2.5%
+                    Clear All
+                  </button>
+                </div>
+
+                {historyList.map((record) => (
+                  <div
+                    key={record.id}
+                    className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
+                    style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[var(--text-primary)]">
+                          {record.dateStr}
                         </span>
-                        <span className="text-3xl font-extrabold font-mono text-[var(--text-primary)] block">
-                          {formatMoney(zakatAmount)}
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
+                          {record.currency}
                         </span>
-                        <p className="text-[10px] text-[var(--text-secondary)] mt-1">
-                          "Take from their wealth a charity by which you purify them..." (Quran 9:103)
-                        </p>
                       </div>
-                    ) : (
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-[var(--text-primary)] block">Below Nisab Threshold</span>
-                        <p className="text-[11px] text-[var(--text-secondary)]">
-                          Your net wealth does not exceed the {nisabChoice} Nisab. No Zakat is due at this time.
-                        </p>
+
+                      {/* Paid Toggle Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePaid(record.id)}
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 transition-all ${
+                          record.isPaid
+                            ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
+                            : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]'
+                        }`}
+                      >
+                        {record.isPaid ? <Check className="w-3 h-3" /> : null}
+                        <span>{record.isPaid ? 'Paid' : 'Mark as Paid'}</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs bg-[var(--surface-2)] p-2.5 rounded-xl border border-[var(--border)]">
+                      <div>
+                        <span className="text-[10px] text-[var(--text-secondary)] uppercase block">Net Zakatable Wealth:</span>
+                        <span className="font-mono font-bold text-[var(--text-primary)]">
+                          {formatCurrencyAmount(record.netWorth, record.currency)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-[var(--text-secondary)] uppercase block">Zakat Due (2.5%):</span>
+                        <span className="font-mono font-bold text-[var(--accent-text)]">
+                          {formatCurrencyAmount(record.zakatDue, record.currency)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {record.livestockSummary && (
+                      <div className="text-[11px] text-[var(--text-secondary)]">
+                        🐑 {record.livestockSummary}
                       </div>
                     )}
+                    {record.ushrDue && record.ushrDue > 0 && (
+                      <div className="text-[11px] text-emerald-500 font-semibold">
+                        🌾 Agricultural Ushr: {formatCurrencyAmount(record.ushrDue, record.currency)}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-[var(--border)]/60">
+                      <button
+                        type="button"
+                        onClick={() => handleLoadRecord(record)}
+                        className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--accent-text)] flex items-center gap-1"
+                      >
+                        <Calculator className="w-3 h-3" />
+                        <span>Load</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteHistory(record.id)}
+                        className="p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-rose-500 hover:border-rose-500/50"
+                        title="Delete record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </main>
 
-                  {/* Actions: Save to History, Share Summary, Reset */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <Button
-                      size="sm"
-                      onClick={handleSaveToHistory}
-                      className="flex-1 h-9 rounded-xl text-xs font-bold gap-1 shadow-sm"
-                      style={{
-                        background: "var(--accent)",
-                        color: "var(--on-accent)",
-                      }}
-                    >
-                      <Bookmark className="w-3.5 h-3.5" />
-                      <span>Save to History</span>
-                    </Button>
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* MODAL 1: SIMPLE SHARIAH RULES EXPLAINER                            */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {showShariahRulesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div
+            className="w-full max-w-lg bg-[var(--surface)] border border-[var(--border)] rounded-[24px] max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+            style={{ boxShadow: '0 20px 60px -15px rgba(0,0,0,0.5)' }}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">
+                  Simple Shariah Zakat Rules
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShariahRulesModal(false)}
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleShareSummary}
-                      className="h-9 px-3 rounded-xl text-xs font-bold gap-1 border-[var(--border)]"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>Share</span>
-                    </Button>
+            {/* Scrollable Body */}
+            <div className="p-4 overflow-y-auto space-y-4 text-xs text-[var(--text-secondary)] leading-relaxed">
+              <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)]">
+                <span className="font-bold text-[var(--accent-text)] block mb-1">What is Zakat al-Māl?</span>
+                Zakat is the third pillar of Islam. It is a mandatory 2.5% (1/40th) purification due annually on qualifying wealth held for one lunar year (Hawl) above the minimum threshold (Nisab).
+              </div>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={resetCalculator}
-                      className="h-9 px-2.5 rounded-xl text-xs text-[var(--text-secondary)] hover:text-rose-400"
-                    >
-                      Reset
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="space-y-1">
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">1. Who Must Pay Zakat?</h4>
+                <p>Every adult Muslim who is sane, free, and possesses surplus wealth equal to or greater than the <b>Nisab threshold</b> for a full lunar year (approx. 354 days).</p>
+              </div>
 
-              {/* 8 Categories of Zakat Recipients (Asnaaf) */}
-              <Card className="border-[var(--border)] bg-[var(--surface)] shadow-sm overflow-hidden">
-                <CardHeader className="py-2.5 px-4 border-b border-[var(--border)] bg-[var(--surface-2)]">
-                  <CardTitle className="text-xs uppercase tracking-wider font-bold text-[var(--text-secondary)]">
-                    Who is Eligible to Receive Zakat? (Quran 9:60)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-3.5">
-                  <ul className="text-xs text-[var(--text-secondary)] space-y-1 leading-relaxed">
-                    <li>1. <strong className="text-[var(--text-primary)]">The Poor (Al-Fuqara):</strong> Those with zero or minimal means.</li>
-                    <li>2. <strong className="text-[var(--text-primary)]">The Needy (Al-Masakin):</strong> Those whose income falls short of basic living costs.</li>
-                    <li>3. <strong className="text-[var(--text-primary)]">Zakat Administrators:</strong> Those who collect and distribute Zakat.</li>
-                    <li>4. <strong className="text-[var(--text-primary)]">Reconciling Hearts:</strong> New Muslims and those near to Islam.</li>
-                    <li>5. <strong className="text-[var(--text-primary)]">Freeing Captives:</strong> To liberate those in bondage or wrongful detention.</li>
-                    <li>6. <strong className="text-[var(--text-primary)]">Debtors (Al-Gharimun):</strong> Those unable to repay legitimate debts.</li>
-                    <li>7. <strong className="text-[var(--text-primary)]">In the Path of Allah:</strong> For righteous community and educational causes.</li>
-                    <li>8. <strong className="text-[var(--text-primary)]">The Wayfarer:</strong> Travelers stranded without financial means.</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </>
-          )}
+              <div className="space-y-1">
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">2. What is Nisab?</h4>
+                <p>Nisab is the minimum qualifying wealth threshold:</p>
+                <ul className="list-disc pl-4 space-y-1 pt-1">
+                  <li><b>Silver Nisab:</b> 612.36 grams (52.5 Tolas). <i>Recommended by Hanafi scholars and contemporary fiqh councils for cash, savings, and mixed wealth.</i></li>
+                  <li><b>Gold Nisab:</b> 87.48 grams (7.5 Tolas).</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">3. What Assets are EXEMPT? (No Zakat Due)</h4>
+                <ul className="list-disc pl-4 space-y-1 pt-1">
+                  <li>Your personal primary residence (home).</li>
+                  <li>Your personal car or transport vehicle.</li>
+                  <li>Personal daily clothes, household furniture, and appliances.</li>
+                  <li>Tools of trade or machinery used for business operations (not held for sale).</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">4. Who Receives Zakat? (Surah At-Tawbah 9:60)</h4>
+                <p>Zakat is distributed strictly to the eight eligible categories specified in the Holy Quran: the poor (Fuqara), the needy (Masakin), zakat administrators, those whose hearts are to be reconciled, freeing captives/slaves, those overburdened with debt (Gharimin), in the path of Allah (Fi Sabilillah), and stranded travelers (Ibn al-Sabil).</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-[var(--border)] bg-[var(--surface-2)] text-right">
+              <button
+                type="button"
+                onClick={() => setShowShariahRulesModal(false)}
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs"
+              >
+                Close & Return
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </LayoutManager>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* MODAL 2: MANUAL METAL PRICE OVERRIDE                               */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {showOverrideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div
+            className="w-full max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-[24px] flex flex-col shadow-2xl overflow-hidden"
+            style={{ boxShadow: '0 20px 60px -15px rgba(0,0,0,0.5)' }}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">
+                  Override Gold & Silver Rates
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowOverrideModal(false)}
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 space-y-3.5 text-xs">
+              <p className="text-[var(--text-secondary)]">
+                You can manually enter the exact Gold and Silver prices quoted by your local trusted jeweler in <b>{activeCurrency}</b>:
+              </p>
+
+              <div>
+                <label className="text-[10.5px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
+                  24K Gold Price per 1 Gram ({activeCurrency})
+                </label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 7850"
+                  value={overrideGoldGram}
+                  onChange={(e) => setOverrideGoldGram(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10.5px] font-bold uppercase text-[var(--text-secondary)] block mb-1">
+                  999 Fine Silver Price per 1 Gram ({activeCurrency})
+                </label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 96"
+                  value={overrideSilverGram}
+                  onChange={(e) => setOverrideSilverGram(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleResetOverride}
+                className="px-3 py-2 rounded-xl text-xs font-bold text-rose-500 hover:underline"
+              >
+                Reset to Live Market
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowOverrideModal(false)}
+                  className="px-3 py-2 rounded-xl text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveOverride}
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs"
+                >
+                  Apply Override
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

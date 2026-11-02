@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Palette,
   Vibrate,
-  User,
   Clock,
   Bell,
   Volume2,
@@ -17,7 +16,6 @@ import {
   Info,
   Mail,
   Globe,
-  DollarSign,
   Trash2,
   Copy,
   ExternalLink,
@@ -42,7 +40,9 @@ import {
   Bookmark,
   BookOpen,
   LayoutGrid,
+  Calculator,
 } from 'lucide-react';
+import ZakatCalculator from '@/pages/ZakatCalculator';
 import { WidgetSettings } from './WidgetSettings';
 import {
   loadSmartSalahConfig,
@@ -112,7 +112,6 @@ import { downloadManager } from '@/lib/download-manager';
 import { getStorageBreakdown, clearTemporaryCache, type StorageBreakdown } from '@/lib/cache-manager';
 import { notificationManager, type NotificationPreferences } from '@/lib/notification-manager';
 import { unifiedNotifications } from '@/lib/unified-notifications';
-import { getGenderSettings, setGender, type Gender } from '@/lib/gender-settings';
 import { usePrayerAlarm } from '@/hooks/usePrayerAlarm';
 import { CURRENT_APP_VERSION } from '@/lib/constants';
 
@@ -149,7 +148,8 @@ const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: an
   'app-theme': { title: 'App Theme', subtitle: 'Choose your full-app color theme', icon: Palette, titleKey: 'appTheme' },
   'clock-style': { title: 'Clock Style', subtitle: 'Select home screen clock design', icon: Clock, titleKey: 'clockStyle' },
   haptics: { title: 'Haptic Feedback', subtitle: 'Vibration & tactile feedback settings', icon: Vibrate, titleKey: 'hapticFeedback' },
-  personal: { title: 'Personal Information', subtitle: 'Gender, language & preferred currency', icon: User, titleKey: 'personalInformation' },
+  personal: { title: 'Zakat & Nisab Calculator', subtitle: 'Live Gold/Silver rates, 2.5% Zakat & Shariah Nisab', icon: Calculator, titleKey: 'personalInformation' },
+  zakat: { title: 'Zakat & Nisab Calculator', subtitle: 'Live Gold/Silver rates, 2.5% Zakat & Shariah Nisab', icon: Calculator, titleKey: 'personalInformation' },
   prayer: { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock, titleKey: 'prayerCalculation' },
   'prayer-calculation': { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock, titleKey: 'prayerCalculation' },
   'prayer_calculation': { title: 'Prayer Calculation', subtitle: 'Calculation method, Madhab & Hijri offset', icon: Clock, titleKey: 'prayerCalculation' },
@@ -196,8 +196,6 @@ const SettingsSubPage: React.FC = () => {
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
   const [storageBreakdown, setStorageBreakdown] = useState<StorageBreakdown | null>(null);
   const [quranDownloads, setQuranDownloads] = useState({ count: 0, size: 0, reciters: 0 });
-  const [genderSettings, setGenderSettingsState] = useState(getGenderSettings());
-  const [preferredCurrency, setPreferredCurrency] = useState(() => localStorage.getItem('preferred-currency') || 'USD');
   const [hijriOffset, setHijriOffset] = useState('0');
   const [showClearCacheDialog, setShowClearCacheDialog] = useState(false);
   const [showClearQuranDialog, setShowClearQuranDialog] = useState(false);
@@ -267,7 +265,6 @@ const SettingsSubPage: React.FC = () => {
 
   useEffect(() => {
     setMadhabState(getMadhab());
-    setGenderSettingsState(getGenderSettings());
     setNotificationPrefs(notificationManager.getPreferences());
 
     const savedOffset = localStorage.getItem('hijri-date-offset');
@@ -965,63 +962,10 @@ const SettingsSubPage: React.FC = () => {
         {/* HAPTICS SECTION */}
         {sectionId === 'haptics' && <HapticSettings />}
 
-        {/* PERSONAL SECTION */}
-        {sectionId === 'personal' && (
+        {/* PERSONAL / ZAKAT SECTION */}
+        {(sectionId === 'personal' || sectionId === 'zakat') && (
           <div className="space-y-4">
-            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-              <div>
-                <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-2">
-                  <User className="w-4 h-4 text-[var(--accent)]" />
-                  Gender Preference
-                </Label>
-                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                  Customizes habit tracking, privacy, and optional menstrual pause mode.
-                </p>
-              </div>
-              <Select value={genderSettings.gender} onValueChange={(v: Gender) => setGenderSettingsState(setGender(v))}>
-                <SelectTrigger className="w-full h-11 rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="male">Man</SelectItem>
-                  <SelectItem value="female">Woman (Includes Menstrual Mode)</SelectItem>
-                  <SelectItem value="prefer-not-to-say">Prefer Not to Say</SelectItem>
-                </SelectContent>
-              </Select>
-            </Card>
-
-            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-              <div>
-                <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-[var(--accent)]" />
-                  Preferred Currency
-                </Label>
-                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                  Used for Zakat nisab estimation, gold/silver valuation, and charity logging.
-                </p>
-              </div>
-              <Select
-                value={preferredCurrency}
-                onValueChange={(curr) => {
-                  setPreferredCurrency(curr);
-                  localStorage.setItem('preferred-currency', curr);
-                  toast({ title: 'Preferred currency updated' });
-                }}
-              >
-                <SelectTrigger className="w-full h-11 rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
-                  <SelectItem value="PKR">PKR - Pakistani Rupee (Rs)</SelectItem>
-                  <SelectItem value="SAR">SAR - Saudi Riyal (SR)</SelectItem>
-                  <SelectItem value="AED">AED - UAE Dirham (AED)</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
-                  <SelectItem value="INR">INR - Indian Rupee (₹)</SelectItem>
-                </SelectContent>
-              </Select>
-            </Card>
+            <ZakatCalculator isEmbedded />
           </div>
         )}
 
