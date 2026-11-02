@@ -88,6 +88,7 @@ import {
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
+import { NoorDynamicLogo, cycleLogoEdition, getActiveLogoEdition, NOOR_LOGO_EDITIONS } from '@/components/NoorDynamicLogo';
 import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
 import { OwnerSecurityVaultCard } from '@/components/OwnerSecurityVaultCard';
 import { isOwnerSessionUnlocked, isUpgradationLockEnabled, subscribeOwnerSecurity, lockOwnerSession } from '@/lib/owner-security';
@@ -441,6 +442,7 @@ const SettingsSubPage: React.FC = () => {
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [apkDownloadProgress, setApkDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
+  const [logoEdition, setLogoEdition] = useState(() => getActiveLogoEdition());
 
   // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1 when unlocked)
   const [isOwnerUnlocked, setIsOwnerUnlocked] = useState(() => isOwnerSessionUnlocked());
@@ -1637,10 +1639,15 @@ const SettingsSubPage: React.FC = () => {
         {sectionId === 'about' && (
           <div className="space-y-4">
             <Card className="p-5 text-center space-y-2 rounded-2xl">
-              <NoorLogoCrest size="md" animated={animationEnabled} className="mx-auto my-1" />
+              <NoorDynamicLogo
+                size="lg"
+                animated={animationEnabled}
+                className="mx-auto my-1 cursor-pointer active:scale-95 transition-transform"
+                onClick={handleVersionTap}
+              />
               <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Noor Connect</h2>
               <p
-                className="text-xs select-none cursor-pointer active:opacity-60 transition-opacity inline-block"
+                className="text-xs select-none cursor-pointer active:opacity-60 transition-opacity inline-block font-mono"
                 style={{ color: 'var(--text-secondary)' }}
                 onClick={handleVersionTap}
                 role="button"
@@ -1649,6 +1656,27 @@ const SettingsSubPage: React.FC = () => {
               >
                 Version {CURRENT_APP_VERSION}
               </p>
+
+              {/* Interactive Switch Logo Style Button */}
+              <div className="pt-1 flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = cycleLogoEdition();
+                    setLogoEdition(next);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border active:scale-95 transition-all shadow-sm"
+                  style={{
+                    background: 'var(--accent-soft)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--accent-text)',
+                  }}
+                  title="Switch between the 5 living sacred logo editions"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+                  <span>Switch Logo Style ({logoEdition + 1}/5) • {NOOR_LOGO_EDITIONS[logoEdition]?.shortName}</span>
+                </button>
+              </div>
               <div className="pt-2 space-y-1 max-w-xs mx-auto">
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                   Crafted with love for the Ummah — Noor Connect Team

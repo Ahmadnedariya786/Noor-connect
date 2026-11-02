@@ -11,6 +11,7 @@ import { useClockStyle } from '@/lib/clock-style';
 import { CLOCK_STYLES } from '@/types/clock';
 import { ClockStyleModal } from '@/components/clocks/ClockStyleModal';
 import { useAppTheme } from '@/components/themes';
+import { NoorDynamicLogo } from '@/components/NoorDynamicLogo';
 
 const Settings = () => {
   const { 
@@ -63,14 +64,19 @@ const Settings = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-base)] text-[var(--text-primary)] font-sans pb-4 transition-colors duration-300">
       {/* ── Header ── */}
-      <div className="flex items-center px-6 pb-6 sticky top-0 z-10 bg-[var(--bg-base)]/80 backdrop-blur-xl border-b border-[var(--border)] safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 1.5rem)' }}>
-        <button 
-          onClick={() => goBackOrFallback(navigate, '/dashboard')}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors border border-[var(--border)]"
-        >
-          <ChevronLeft className="w-5 h-5 text-[var(--text-primary)]" />
-        </button>
-        <h1 className="text-2xl font-bold font-serif italic text-[var(--text-primary)] ml-4 tracking-tight">Settings</h1>
+      <div className="flex items-center justify-between px-6 pb-6 sticky top-0 z-10 bg-[var(--bg-base)]/80 backdrop-blur-xl border-b border-[var(--border)] safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 1.5rem)' }}>
+        <div className="flex items-center">
+          <button 
+            onClick={() => goBackOrFallback(navigate, '/dashboard')}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors border border-[var(--border)]"
+          >
+            <ChevronLeft className="w-5 h-5 text-[var(--text-primary)]" />
+          </button>
+          <h1 className="text-2xl font-bold font-serif italic text-[var(--text-primary)] ml-4 tracking-tight">Settings</h1>
+        </div>
+        <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shadow-sm overflow-hidden p-0.5">
+          <NoorDynamicLogo size="sm" />
+        </div>
       </div>
 
       <div className="px-6 py-4 space-y-8 max-w-lg mx-auto w-full">

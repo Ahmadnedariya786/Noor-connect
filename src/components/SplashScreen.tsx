@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { NoorLogoCrest } from "@/components/NoorLogoCrest";
+import { NoorDynamicLogo, getActiveLogoEdition, NOOR_LOGO_EDITIONS } from "@/components/NoorDynamicLogo";
 import { getAnimationTier } from "@/lib/device-performance";
 
 const FIXED_STARS = [
@@ -242,13 +242,13 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                     transition: 'opacity 120ms ease-out',
                 }}
             >
-                {/* 1. Celestial Rub el Hizb Medallion (170x170 center, 88x88 squircle, 56px SVG) */}
-                <NoorLogoCrest size="lg" animated={shouldAnimate} />
+                {/* 1. 5-Edition Living Islamic Emblem */}
+                <NoorDynamicLogo size="xl" animated={shouldAnimate} />
 
                 {/* 2. Brand Title: NOOR CONNECT */}
                 <h1
                     style={{
-                        margin: '20px 0 0 0',
+                        margin: '18px 0 0 0',
                         fontSize: '1.25rem',
                         fontWeight: 800,
                         letterSpacing: '0.22em',
@@ -266,7 +266,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 {showGreeting && (
                     <p
                         style={{
-                            margin: '6px 0 0 0',
+                            margin: '4px 0 0 0',
                             fontSize: '0.72rem',
                             fontWeight: 600,
                             letterSpacing: '0.30em',
@@ -279,6 +279,29 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                         ISLAMIC COMPANION
                     </p>
                 )}
+
+                {/* 4. Active Living Emblem Edition Badge */}
+                <div
+                    style={{
+                        marginTop: '10px',
+                        padding: '3px 14px',
+                        borderRadius: '999px',
+                        fontSize: '0.66rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.08em',
+                        color: 'var(--accent-text)',
+                        backgroundColor: 'var(--accent-soft)',
+                        border: '1px solid var(--border)',
+                        boxShadow: '0 0 12px var(--accent-glow)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                    }}
+                >
+                    <span>✦</span>
+                    <span>{NOOR_LOGO_EDITIONS[getActiveLogoEdition()]?.shortName || 'Living Emblem'}</span>
+                    <span>✦</span>
+                </div>
 
                 {/* 4. Sleek Unified Single-Hue Progress Beam (140px track, no split colors) */}
                 <div

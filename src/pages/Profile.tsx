@@ -27,6 +27,7 @@ import { THEMES } from '@/lib/theme-engine';
 import type { ThemeId } from '@/types/theme';
 import { useLanguage } from '@/contexts/LanguageContext-new';
 import { getStorageBreakdown } from '@/lib/cache-manager';
+import { NoorDynamicLogo } from '@/components/NoorDynamicLogo';
 
 interface SettingsRow {
   id: string;
@@ -425,8 +426,8 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shadow-sm">
-            <SettingsIcon className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shadow-sm overflow-hidden p-0.5">
+            <NoorDynamicLogo size="sm" />
           </div>
         </div>
       </header>

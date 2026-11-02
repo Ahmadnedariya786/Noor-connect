@@ -201,6 +201,82 @@ function roundRect(
 }
 
 /**
+ * Draws the Royal Noor Living Emblem (Rub el Hizb + Blooming Quran + Mihrab Dome + Crescent)
+ */
+function drawRoyalNoorEmblem(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Outer Rub el Hizb octagram (two rotated squares)
+  ctx.strokeStyle = '#F59E0B';
+  ctx.lineWidth = 1.4;
+  const sq = radius * 0.72;
+  ctx.strokeRect(-sq, -sq, sq * 2, sq * 2);
+
+  ctx.save();
+  ctx.rotate(Math.PI / 4);
+  ctx.strokeStyle = '#FDE68A';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(-sq, -sq, sq * 2, sq * 2);
+  ctx.restore();
+
+  // Dotted outer halo circle
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.95, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(253, 230, 138, 0.45)';
+  ctx.setLineDash([2, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Base Blooming Quran Leaves
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.moveTo(0, radius * 0.55);
+  ctx.bezierCurveTo(-radius * 0.45, radius * 0.45, -radius * 0.55, radius * 0.2, -radius * 0.35, radius * 0.05);
+  ctx.bezierCurveTo(-radius * 0.15, radius * 0.2, -radius * 0.05, radius * 0.4, 0, radius * 0.55);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(0, radius * 0.55);
+  ctx.bezierCurveTo(radius * 0.45, radius * 0.45, radius * 0.55, radius * 0.2, radius * 0.35, radius * 0.05);
+  ctx.bezierCurveTo(radius * 0.15, radius * 0.2, radius * 0.05, radius * 0.4, 0, radius * 0.55);
+  ctx.fill();
+
+  // Center Mihrab Arch & Dome
+  ctx.fillStyle = '#064E3B';
+  ctx.strokeStyle = '#FDE68A';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-radius * 0.25, radius * 0.45);
+  ctx.lineTo(-radius * 0.25, -radius * 0.15);
+  ctx.quadraticCurveTo(-radius * 0.25, -radius * 0.55, 0, -radius * 0.65);
+  ctx.quadraticCurveTo(radius * 0.25, -radius * 0.55, radius * 0.25, -radius * 0.15);
+  ctx.lineTo(radius * 0.25, radius * 0.45);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Crescent Moon at Apex
+  ctx.fillStyle = '#FFFDF0';
+  ctx.beginPath();
+  ctx.arc(0, -radius * 0.72, radius * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#064E3B';
+  ctx.beginPath();
+  ctx.arc(radius * 0.04, -radius * 0.74, radius * 0.10, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Arabic Calligraphy 'نُور' in center
+  ctx.fillStyle = '#FFFDF0';
+  ctx.font = `bold ${Math.round(radius * 0.32)}px "Amiri", "Traditional Arabic", serif, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('نُور', 0, radius * 0.05);
+
+  ctx.restore();
+}
+
+/**
  * Generates the 1-Page A4 Zakat Report PDF Blob via High-DPI Offscreen Canvas
  */
 export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> {
@@ -267,6 +343,10 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   ctx.lineWidth = 1.5;
   roundRect(ctx, headerX, headerY, headerW, headerH, 14);
   ctx.stroke();
+
+  // Draw Symmetrical Royal Living Emblems on Header Flanks
+  drawRoyalNoorEmblem(ctx, headerX + 56, headerY + 68, 36);
+  drawRoyalNoorEmblem(ctx, headerX + headerW - 56, headerY + 68, 36);
 
   // Arabic Bismillah (Centered)
   ctx.fillStyle = '#FDE68A';

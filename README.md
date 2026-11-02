@@ -38,6 +38,7 @@
   - [💰 Shariah-Compliant Zakat & Nisab Calculator](#-shariah-compliant-zakat--nisab-calculator)
   - [📚 Multi-Language Tafsir & Translations](#-multi-language-tafsir--translations)
   - [🎨 5 Royal Luxury Themes & 6 Clocks](#-5-royal-luxury-themes--6-clocks)
+  - [✨ Dynamic Living Logo Engine (5 Sacred Editions)](#-dynamic-living-logo-engine-5-sacred-editions)
   - [🧭 High-Precision Qibla Compass](#-high-precision-qibla-compass)
   - [🕋 24/7 Makkah & Madinah Live Streams & Radio](#-247-makkah--madinah-live-streams--radio)
   - [📿 Complete Islamic Tools Hub](#-complete-islamic-tools-hub)
@@ -189,6 +190,17 @@ Captured directly from the live v2.2.1 production build across all **5 Royal The
   5. `Desert Scroll` (Warm Papyrus & Antique Terracotta)
 - **6 Dynamic Digital Clocks**: Minimalist, Ottoman Dial, Hijri Dual-Time, Lunar Phase, Arabic Numerals, and Classic Digital.
 - **Theme Variables**: Engineered with CSS custom properties and automatic fallbacks for maximum 60 FPS fluidity.
+
+### ✨ Dynamic Living Logo Engine (5 Sacred Editions)
+- **Living Emblem System**: Rather than a static flat icon, Noor Connect features a dynamic, 3D-metallic vector emblem engine that morphs across **5 handcrafted sacred editions**:
+  1. **Edition 0: Al-Miftah Royal Mihrab & Blooming Mushaf** (Flagship Royal Arch & Open Scripture)
+  2. **Edition 1: Celestial Rub el Hizb Mandala & Sacred Fanous** (8-Point Islamic Star & Glowing Lantern)
+  3. **Edition 2: Haramain Sanctuary Crest & Minarets** (Twin Grand Minarets & Crescent Dome)
+  4. **Edition 3: Noor Al-Quran 3D Flame Medallion** (Light of Divine Revelation Medallion)
+  5. **Edition 4: Mamluk Royal Starburst & Qibla Sanctuary** (Sacred Geometric Starburst)
+- **Automatic Multi-Factor Rotation**: Rotates dynamically across app launches and adapts to spiritual times of day (Fajr sunrise gold, Tahajjud midnight celestial sapphire, Maghrib sunset amber).
+- **Interactive Manual Switch**: Users can tap the emblem or the switcher pill in `Settings > About Noor Connect` to cycle and preview all 5 editions in real time.
+- **Adaptive Android & Web Icons**: Brand-new ultra-high-definition launcher icons (mdpi through xxxhdpi) and PWA app icons rendered with 24K gold foil and deep emerald velvet.
 
 ### 🧭 High-Precision Qibla Compass
 - **Hardware-Accelerated Gyro**: Direct magnetometer sensor access with low-pass filters to prevent needle jitter.
