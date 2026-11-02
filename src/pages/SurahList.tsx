@@ -45,6 +45,7 @@ import { toast } from "sonner";
 import {
   getMushafLineFormat,
   setMushafLineFormat,
+  prewarmSunnahMushafPages,
   type MushafLineFormat,
 } from "@/lib/interactive-mushaf";
 import { Preferences } from "@capacitor/preferences";
@@ -221,6 +222,10 @@ export default function SurahList() {
       window.removeEventListener('focus', syncNotes);
       window.removeEventListener('noor-quran-notes-updated', syncNotes);
     };
+  }, []);
+
+  useEffect(() => {
+    prewarmSunnahMushafPages();
   }, []);
 
   const handleDeleteNote = (id: string) => {
@@ -1172,7 +1177,7 @@ export default function SurahList() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar snap-x snap-mandatory">
             {sunnahList.map((surah, index) => {
               const isFeatured = index === 0;
 
@@ -1181,8 +1186,11 @@ export default function SurahList() {
                   key={surah.number}
                   type="button"
                   onClick={() => handleSurahClick(surah.number)}
-                  className="px-3 py-2 rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] min-w-[136px]"
+                  className="px-3 py-2 rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] snap-start"
                   style={{
+                    minWidth: "158px",
+                    maxWidth: "172px",
+                    scrollSnapAlign: "start",
                     background: isFeatured ? "var(--surface-2)" : "var(--surface)",
                     backgroundImage: isFeatured
                       ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, var(--surface-2)), var(--surface))"
@@ -1196,28 +1204,23 @@ export default function SurahList() {
                 >
                   <div className="flex items-center justify-between gap-1 w-full mb-1">
                     <span className="text-xs font-bold text-[var(--text-primary)] truncate">{surah.name}</span>
-                    {isFeatured ? (
-                      <span
-                        className="font-bold text-[0.65rem] rounded-full px-2 py-0.5 truncate shrink-0"
-                        style={{
-                          background: "var(--accent)",
-                          color: "var(--on-accent)",
-                        }}
-                      >
-                        {surah.badgeLabel}
-                      </span>
-                    ) : surah.isSpecialFriday ? (
-                      <span
-                        className="font-bold text-[9px] rounded-full px-1.5 py-0.2 border truncate shrink-0"
-                        style={{
-                          background: "var(--accent-soft)",
-                          color: "var(--accent-text)",
-                          borderColor: "var(--accent)",
-                        }}
-                      >
-                        {surah.badgeLabel}
-                      </span>
-                    ) : null}
+                    <span
+                      className="font-bold text-[0.65rem] rounded-full px-2 py-0.5 truncate shrink-0"
+                      style={
+                        isFeatured
+                          ? {
+                              background: "var(--accent)",
+                              color: "var(--on-accent)",
+                            }
+                          : {
+                              background: "var(--surface-2)",
+                              color: "var(--accent-text)",
+                              border: "1px solid var(--border)",
+                            }
+                      }
+                    >
+                      {surah.badgeLabel}
+                    </span>
                   </div>
                   <div dir="ltr" className="flex items-center justify-between gap-1 w-full text-[11px]">
                     <span dir="ltr" className="tabular-nums text-[0.70rem] text-[var(--text-secondary)]">
@@ -1332,9 +1335,9 @@ export default function SurahList() {
             </Button>
           </div>
 
-          {/* MAIN TABS: SURAHS | JUZ (1-30) | PAGES (1-604) | SAVED + SORT ⇅ */}
+          {/* MAIN TABS: SURAHS | JUZ | PAGES | SAVED + SORT ⇅ */}
           <div className="w-full flex items-center gap-1.5" style={{ minWidth: 0 }}>
-            <div className="grid grid-cols-4 gap-1 flex-1" style={{ minWidth: 0 }}>
+            <div className="flex items-center gap-1 flex-1" style={{ minWidth: 0 }}>
               {[
                 { key: "surahs" as MainTab, label: uiStrings.surahsTab || "Surahs" },
                 { key: "juz" as MainTab, label: uiStrings.juzTab || "Juz" },
@@ -1350,15 +1353,18 @@ export default function SurahList() {
                       setActiveMainTab(tab.key);
                       setSearchQuery("");
                     }}
-                    className={`w-full py-2 px-1 text-center rounded-[12px] transition-all select-none ${
+                    className={`rounded-[12px] transition-all select-none ${
                       isActive
                         ? "bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[var(--on-accent)] shadow-[0_4px_18px_var(--accent-glow)]"
                         : "bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--surface-2)]"
                     }`}
                     style={{
-                      whiteSpace: 'nowrap',
+                      padding: '7px 10px',
                       fontSize: '0.74rem',
                       fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      flex: 1,
+                      textAlign: 'center',
                     }}
                   >
                     {tab.label}
@@ -1460,7 +1466,7 @@ export default function SurahList() {
                   </div>
                 </div>
                 {filteredSurahs.map((surah, index) => (
-                  <div key={surah.number} style={{ contentVisibility: "auto", containIntrinsicSize: "88px" }}>
+                  <div key={surah.number} className="cv-auto">
                     <SurahCard
                       surah={surah}
                       index={index}
@@ -1497,7 +1503,7 @@ export default function SurahList() {
               return (
                 <div
                   key={juz.number}
-                  className="w-full rounded-[18px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors p-3.5 space-y-2 shadow-xs"
+                  className="w-full rounded-[18px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors p-3.5 space-y-2 shadow-xs cv-auto"
                   style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
                 >
                   <button
@@ -1622,7 +1628,7 @@ export default function SurahList() {
                     if ("vibrate" in navigator) navigator.vibrate(15);
                     navigate(`/quran/${pg.surahNumber}?page=${pg.page}`, { replace: true });
                   }}
-                  className="w-full text-left p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all flex items-center justify-between gap-2.5 active:scale-[0.98] shadow-xs group"
+                  className="w-full text-left p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all flex items-center justify-between gap-2.5 active:scale-[0.98] shadow-xs group cv-auto"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] group-hover:border-[var(--accent)] flex flex-col items-center justify-center shrink-0">

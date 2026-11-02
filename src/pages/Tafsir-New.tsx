@@ -683,7 +683,7 @@ const Tafsir = () => {
                         <button
                           key={surah.number}
                           onClick={() => handleSurahSelect(surah)}
-                          className="group relative flex items-center p-3.5 sm:p-4 rounded-2xl border transition-all text-left active:scale-[0.99]"
+                          className="cv-auto group relative flex items-center p-3.5 sm:p-4 rounded-2xl border transition-all text-left active:scale-[0.99]"
                           style={{
                             background: 'var(--surface)',
                             borderColor: 'var(--border)',

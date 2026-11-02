@@ -31,11 +31,13 @@ import { useTilawah, type PlaybackSpeed, type SleepTimerOption, type AyahDelayOp
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { ReciterPickerModal } from '@/components/Quran/ReciterPickerModal';
 import { quranService } from '@/lib/quran-service';
-import { cacheSurahAudio } from '@/lib/offline-audio';
+import { cacheAyahAudio, cacheSurahAudio } from '@/lib/offline-audio';
 
 interface PlaybackOptionsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  activeSurahId?: number;
+  activeAyahNumber?: number;
 }
 
 const SPEED_OPTIONS: PlaybackSpeed[] = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
@@ -58,7 +60,12 @@ const SLEEP_OPTIONS: { label: string; value: SleepTimerOption }[] = [
   { label: 'End Surah', value: 'end-of-surah' },
 ];
 
-export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ isOpen, onClose }) => {
+export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({
+  isOpen,
+  onClose,
+  activeSurahId,
+  activeAyahNumber,
+}) => {
   useBodyScrollLock(isOpen);
   const {
     reciter,
@@ -73,12 +80,17 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ is
     intervalRange,
     startIntervalRange,
     stopIntervalRange,
-    downloadCurrentAyahAudio,
-    downloadSurahAudio,
+    isPlaying,
     currentSurah,
     currentAyah,
     totalAyahs,
   } = useTilawah();
+
+  // Sync active download targets with current reader view (avoiding stale background session surah)
+  const effectiveSurah =
+    isPlaying && currentSurah > 0 ? currentSurah : activeSurahId || currentSurah || 1;
+  const effectiveAyah =
+    isPlaying && currentAyah > 0 ? currentAyah : activeAyahNumber || currentAyah || 1;
 
   const [isReciterModalOpen, setIsReciterModalOpen] = useState(false);
   const [showIntervalForm, setShowIntervalForm] = useState(intervalRange.isActive);
@@ -93,9 +105,11 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ is
     if (isSavingAyah) return;
     setIsSavingAyah(true);
     try {
-      await downloadCurrentAyahAudio();
+      await cacheAyahAudio(reciter.everyAyahDir, effectiveSurah, effectiveAyah, reciter.id);
       setIsAyahSaved(true);
       setTimeout(() => setIsAyahSaved(false), 3500);
+    } catch (e) {
+      console.warn('Ayah audio cache error:', e);
     } finally {
       setIsSavingAyah(false);
     }
@@ -105,11 +119,11 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ is
     if (surahProgress !== null) return;
     setSurahProgress(0);
     try {
-      const sInfo = quranService.getSurahInfo(currentSurah);
+      const sInfo = quranService.getSurahInfo(effectiveSurah);
       const ayahs = sInfo?.numberOfAyahs || 7;
       await cacheSurahAudio(
         reciter.everyAyahDir,
-        currentSurah,
+        effectiveSurah,
         ayahs,
         reciter.id,
         (_done, _total, pct) => setSurahProgress(pct)
@@ -124,11 +138,11 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ is
   };
 
   // Interval local form state
-  const [intStartSurah, setIntStartSurah] = useState(intervalRange.startSurah || currentSurah);
-  const [intStartAyah, setIntStartAyah] = useState(intervalRange.startAyah || currentAyah);
-  const [intEndSurah, setIntEndSurah] = useState(intervalRange.endSurah || currentSurah);
+  const [intStartSurah, setIntStartSurah] = useState(intervalRange.startSurah || effectiveSurah);
+  const [intStartAyah, setIntStartAyah] = useState(intervalRange.startAyah || effectiveAyah);
+  const [intEndSurah, setIntEndSurah] = useState(intervalRange.endSurah || effectiveSurah);
   const [intEndAyah, setIntEndAyah] = useState(
-    intervalRange.endAyah || Math.min(totalAyahs, currentAyah + 4)
+    intervalRange.endAyah || Math.min(totalAyahs, effectiveAyah + 4)
   );
   const [intRepeatInterval, setIntRepeatInterval] = useState<number | 'infinite'>(
     intervalRange.repeatInterval || 1
@@ -580,7 +594,7 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({ is
                 ) : (
                   <>
                     <Download className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                    <span>Surah {currentSurah} Audio</span>
+                    <span>Surah {effectiveSurah} Audio</span>
                   </>
                 )}
               </button>

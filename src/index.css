@@ -1389,6 +1389,12 @@
     contain-intrinsic-size: 0 500px;
   }
 
+  /* 60FPS GPU Scroll Optimization: Skip layout/paint for offscreen Surah/Juz/Page list rows */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 78px;
+  }
+
   /* Virtualization helpers */
   .virtual-list {
     contain: layout paint;

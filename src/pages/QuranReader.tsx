@@ -468,9 +468,33 @@ export default function QuranReader() {
   };
 
   const handleFooterPlayToggle = () => {
+    const loadedVerses = currentPageData?.verses || pageDataRef.current?.verses || [];
+
+    const getOptimalStartVerse = (): { surah: number; ayah: number } => {
+      // Priority 1: If routeSurahId has Ayah 1 on this page, start directly at routeSurahId:1
+      const hasRouteAyah1 = loadedVerses.some(
+        (v) => v.surah_number === routeSurahId && v.verse_number === 1
+      );
+      if (hasRouteAyah1) {
+        return { surah: routeSurahId, ayah: 1 };
+      }
+
+      // Priority 2: First verse of routeSurahId on this page
+      const firstMatching = loadedVerses.find((v) => v.surah_number === routeSurahId);
+      if (firstMatching) {
+        return { surah: firstMatching.surah_number, ayah: firstMatching.verse_number };
+      }
+
+      // Priority 3: First verse on the page
+      const firstVerse = loadedVerses[0];
+      return {
+        surah: firstVerse?.surah_number || surahOnPage,
+        ayah: firstVerse?.verse_number || 1,
+      };
+    };
+
     if (isPlaying) {
       // If playing on the current page, toggle pause
-      const loadedVerses = currentPageData?.verses || pageDataRef.current?.verses || [];
       const isPlayingOnThisPage = loadedVerses.some(
         (v) => v.surah_number === currentSurah && v.verse_number === currentAyah
       );
@@ -478,21 +502,16 @@ export default function QuranReader() {
       if (isPlayingOnThisPage) {
         togglePlay();
       } else {
-        // Playing on a different page: switch to first verse of this viewed page and keep autoFollow on
-        const firstVerse = loadedVerses[0];
-        const targetS = firstVerse?.surah_number || surahOnPage;
-        const targetA = firstVerse?.verse_number || 1;
+        // Playing on a different page: switch to optimal start verse of this viewed page and keep autoFollow on
+        const target = getOptimalStartVerse();
         setAutoFollow(true);
-        playAyah(targetS, targetA);
+        playAyah(target.surah, target.ayah);
       }
     } else {
-      // Stopped or paused: play first verse on this viewed page with autoFollow enabled
-      const loadedVerses = currentPageData?.verses || pageDataRef.current?.verses || [];
-      const firstVerse = loadedVerses[0];
-      const targetS = firstVerse?.surah_number || surahOnPage;
-      const targetA = firstVerse?.verse_number || 1;
+      // Stopped or paused: play optimal start verse on this viewed page with autoFollow enabled
+      const target = getOptimalStartVerse();
       setAutoFollow(true);
-      playAyah(targetS, targetA);
+      playAyah(target.surah, target.ayah);
     }
   };
 
@@ -751,23 +770,25 @@ export default function QuranReader() {
                 </div>
               ) : (
                 /* Card Font Size Stepper */
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">Font:</span>
+                <div
+                  className="flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] shrink-0"
+                  style={{ padding: '3px 7px', fontSize: '0.70rem', gap: '4px' }}
+                >
                   <button
                     type="button"
                     onClick={() => setCardArabicFontSize((s) => Math.max(20, s - 2))}
-                    className="w-7 h-7 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] font-bold text-xs hover:border-[var(--accent)] text-[var(--text-primary)] active:scale-95"
+                    className="px-1 font-bold hover:text-[var(--accent-text)] text-[var(--text-primary)] active:scale-95 transition-transform"
                     title="Smaller Arabic font"
                   >
                     A-
                   </button>
-                  <span className="font-mono text-xs font-bold text-[var(--accent-text)] px-0.5">
+                  <span className="font-mono font-bold text-[var(--accent-text)] border-x border-[var(--border)] px-1.5 leading-none">
                     {cardArabicFontSize}px
                   </span>
                   <button
                     type="button"
                     onClick={() => setCardArabicFontSize((s) => Math.min(44, s + 2))}
-                    className="w-7 h-7 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] font-bold text-xs hover:border-[var(--accent)] text-[var(--text-primary)] active:scale-95"
+                    className="px-1 font-bold hover:text-[var(--accent-text)] text-[var(--text-primary)] active:scale-95 transition-transform"
                     title="Larger Arabic font"
                   >
                     A+
@@ -1244,6 +1265,12 @@ export default function QuranReader() {
         <PlaybackOptionsDrawer
           isOpen={showAudioDrawer}
           onClose={() => setShowAudioDrawer(false)}
+          activeSurahId={
+            isPlaying && currentPageData?.verses.some((v) => v.surah_number === currentSurah)
+              ? currentSurah
+              : routeSurahId || surahNum
+          }
+          activeAyahNumber={isPlaying && currentAyah > 0 ? currentAyah : 1}
         />
 
         {/* Interactive Ayah Study, Multi-Tafsir & Hifz Sheet (Portaled to document.body) */}

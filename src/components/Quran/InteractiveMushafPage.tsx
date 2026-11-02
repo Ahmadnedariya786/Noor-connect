@@ -83,9 +83,10 @@ export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineTok
 
     const tokenText = token.word?.text_uthmani || token.word?.text_indopak || '';
     const tokenWeight = getStrippedArabicCharLength(tokenText) || 4;
+    const currentWordCount = currentLine.filter((t) => t.type === 'word').length;
 
-    // Strict 20–24 stripped char budget (~4 to 5 words per line) for 360px mobile fit without ugly wrapping/gaps
-    if (currentLine.length >= 2 && currentWeight + tokenWeight > 22) {
+    // Strict max 18 stripped chars & max 4 words per line for 360px mobile fit with zero edge clipping
+    if (currentWordCount >= 4 || (currentWordCount >= 2 && currentWeight + tokenWeight > 18)) {
       lines.push(currentLine);
       currentLine = [token];
       currentWeight = tokenWeight;
@@ -314,7 +315,7 @@ export function distributeTokensWithHeaders(
   return finalLines;
 }
 
-export function InteractiveMushafPage({
+function InteractiveMushafPageComponent({
   pageNumber,
   surahNumber,
   targetSurahNumber,
@@ -658,9 +659,30 @@ export function InteractiveMushafPage({
       return { blocks: [] as MushafPageBlock[], totalParts7L: 1 };
     }
 
+    let versesToProcess = pageData.verses;
+    let headersToProcess = pageData.surah_headers;
+
+    // Target-Surah Filtering on Starting Page in 7L Mode:
+    // When user navigates to a specific Surah (targetSurahNumber) and this page contains Ayah 1 of that Surah,
+    // 7L mode begins Part 1 directly at chapter_id === targetSurahNumber with its banner,
+    // omitting the trailing end-verses of the previous Surah on that shared page.
+    if (
+      activeFormat === 7 &&
+      targetSurahNumber &&
+      targetSurahNumber > 0 &&
+      pageData.verses.some(
+        (v) => v.surah_number === targetSurahNumber && v.verse_number === 1
+      )
+    ) {
+      versesToProcess = pageData.verses.filter((v) => v.surah_number === targetSurahNumber);
+      headersToProcess = pageData.surah_headers.filter(
+        (h) => h.surah_number === targetSurahNumber
+      );
+    }
+
     // Step 1: Collect all pure ayah tokens (NO headers inside lines)
     const allTokens: MushafLineToken[] = [];
-    pageData.verses.forEach((verse) => {
+    versesToProcess.forEach((verse) => {
       verse.words.forEach((w) => {
         if (w.char_type_name !== 'end') {
           allTokens.push({
@@ -689,7 +711,7 @@ export function InteractiveMushafPage({
       const handledHeaders = new Set<number>();
 
       lines.forEach((lineTokens, lineIdx) => {
-        pageData.surah_headers.forEach((sHeader) => {
+        headersToProcess.forEach((sHeader) => {
           if (!handledHeaders.has(sHeader.surah_number)) {
             const hasAyah1 = lineTokens.some(
               (t) => t.surahNumber === sHeader.surah_number && t.verseNumber === 1
@@ -711,18 +733,6 @@ export function InteractiveMushafPage({
           lineIndex: lineIdx,
           key: `line-${lineIdx}`,
         });
-      });
-
-      // Edge case: if header was not placed because Ayah 1 wasn't found in tokens, prepend it
-      pageData.surah_headers.forEach((sHeader) => {
-        if (!handledHeaders.has(sHeader.surah_number)) {
-          resultBlocks.unshift({
-            type: 'surah-banner',
-            header: sHeader,
-            key: `banner-${sHeader.surah_number}`,
-          });
-          handledHeaders.add(sHeader.surah_number);
-        }
       });
 
       return resultBlocks;
@@ -859,7 +869,7 @@ export function InteractiveMushafPage({
       const handledHeaders = new Set<number>();
 
       visibleLines.forEach((lineTokens, lineIdx) => {
-        pageData.surah_headers.forEach((sHeader) => {
+        headersToProcess.forEach((sHeader) => {
           if (!handledHeaders.has(sHeader.surah_number)) {
             const hasAyah1 = lineTokens.some(
               (t) => t.surahNumber === sHeader.surah_number && t.verseNumber === 1
@@ -883,22 +893,9 @@ export function InteractiveMushafPage({
         });
       });
 
-      if (activePart === 1) {
-        pageData.surah_headers.forEach((sHeader) => {
-          if (!handledHeaders.has(sHeader.surah_number)) {
-            blocksFor7L.unshift({
-              type: 'surah-banner',
-              header: sHeader,
-              key: `banner-${sHeader.surah_number}`,
-            });
-            handledHeaders.add(sHeader.surah_number);
-          }
-        });
-      }
-
       return { blocks: blocksFor7L, totalParts7L: parts };
     }
-  }, [pageData, activeFormat, subPage7L]);
+  }, [pageData, activeFormat, subPage7L, targetSurahNumber]);
 
   useEffect(() => {
     if (
@@ -1226,7 +1223,7 @@ export function InteractiveMushafPage({
                 // Dynamic font adjustment on dense lines to guarantee zero border overflow
                 let lineDenseFontSize: string | undefined;
                 if (activeFormat === 7) {
-                  lineDenseFontSize = 'clamp(1.18rem, 4.6vw, 1.34rem)';
+                  lineDenseFontSize = lineCharCount > 16 ? '1.04rem' : 'clamp(1.10rem, 4.2vw, 1.22rem)';
                 } else if (activeFormat === 13 && lineCharCount > 38) {
                   lineDenseFontSize = '0.86rem';
                 } else if (activeFormat === 15 && lineCharCount > 42) {
@@ -1247,13 +1244,13 @@ export function InteractiveMushafPage({
                       justifyContent: activeFormat === 7 || isShortMushafPage || lineTokens.length < 4
                         ? 'center'
                         : 'space-between',
-                      gap: activeFormat === 7 ? '10px' : (isShortMushafPage || lineTokens.length < 4 ? '10px' : '4px'),
+                      gap: activeFormat === 7 ? '8px' : (isShortMushafPage || lineTokens.length < 4 ? '10px' : '4px'),
                       width: '100%',
                       maxWidth: '100%',
                       overflow: 'hidden',
                       boxSizing: 'border-box',
                       borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
-                      padding: activeFormat === 7 ? '6px 4px' : '4px 2px',
+                      padding: activeFormat === 7 ? '6px 12px' : '4px 2px',
                       minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
                       color: readingMode === 'paper' ? '#1E1208' : readingMode === 'night' ? '#F8FAFC' : 'var(--text-primary)',
                     }}
@@ -1660,3 +1657,5 @@ export function InteractiveMushafPage({
     </div>
   );
 }
+
+export const InteractiveMushafPage = React.memo(InteractiveMushafPageComponent);

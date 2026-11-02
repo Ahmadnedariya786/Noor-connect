@@ -109,7 +109,7 @@ export interface TilawahContextValue {
   startIntervalRange: (config: Partial<IntervalRangeConfig>) => void;
   stopIntervalRange: () => void;
   downloadSurahAudio: (surahNumber?: number) => void;
-  downloadCurrentAyahAudio: () => void;
+  downloadCurrentAyahAudio: (surahNumber?: number, ayahNumber?: number) => void;
   startHifzLoop: (config: Partial<HifzConfig>) => void;
   stopHifzLoop: () => void;
   setHifzHideMode: (mode: HifzHideMode) => void;
@@ -972,16 +972,18 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
     toast({ title: 'Interval Looping Stopped' });
   }, [toast]);
 
-  const downloadCurrentAyahAudio = useCallback(async () => {
+  const downloadCurrentAyahAudio = useCallback(async (surahNumber?: number, ayahNumber?: number) => {
+    const targetSurah = surahNumber || currentSurah || 1;
+    const targetAyah = ayahNumber || currentAyah || 1;
     try {
       toast({
         title: 'Saving Ayah MP3...',
-        description: `Downloading Ayah ${currentSurah}:${currentAyah} (${reciter.shortName}) for offline playback.`,
+        description: `Downloading Ayah ${targetSurah}:${targetAyah} (${reciter.shortName}) for offline playback.`,
       });
-      await cacheAyahAudio(reciter.everyAyahDir, currentSurah, currentAyah, reciter.id);
+      await cacheAyahAudio(reciter.everyAyahDir, targetSurah, targetAyah, reciter.id);
       toast({
         title: '✓ Ayah Saved Offline',
-        description: `Ayah ${currentSurah}:${currentAyah} is saved and available without internet.`,
+        description: `Ayah ${targetSurah}:${targetAyah} is saved and available without internet.`,
       });
     } catch (err) {
       console.warn('Failed to cache ayah audio:', err);

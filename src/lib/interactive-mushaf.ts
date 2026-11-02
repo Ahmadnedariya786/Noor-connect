@@ -390,12 +390,21 @@ async function fetchFromCdnFallback(pageNumber: number): Promise<InteractiveVers
   return null;
 }
 
+export const memoryPageCache = new Map<number, InteractivePageData>();
+
 export async function fetchMushafPage(
   pageNumber: number,
   includeTajweed: boolean = true
 ): Promise<InteractivePageData> {
   if (pageNumber < 1 || pageNumber > 604) {
     pageNumber = 1;
+  }
+
+  // 1. In-memory cache hit (0ms synchronous return!)
+  const memCached = memoryPageCache.get(pageNumber);
+  if (memCached && (!includeTajweed || memCached.has_tajweed)) {
+    prefetchAdjacentMushafPages(pageNumber, includeTajweed);
+    return memCached;
   }
 
   const pageKey = `${PAGE_CACHE_PREFIX}${pageNumber}`;
@@ -426,7 +435,10 @@ export async function fetchMushafPage(
   // If already cached and tajweed matches requirement, return immediately
   if (cachedVerses && (!includeTajweed || cachedTajweed)) {
     registerVersesForPage(pageNumber, cachedVerses);
-    return buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
+    const data = buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
+    memoryPageCache.set(pageNumber, data);
+    prefetchAdjacentMushafPages(pageNumber, includeTajweed);
+    return data;
   }
 
   // Online fetch with timeout
@@ -526,14 +538,20 @@ export async function fetchMushafPage(
 
     if (fetchedVerses.length > 0) {
       registerVersesForPage(pageNumber, fetchedVerses);
-      return buildPageData(pageNumber, fetchedVerses, tajweedMap, false);
+      const data = buildPageData(pageNumber, fetchedVerses, tajweedMap, false);
+      memoryPageCache.set(pageNumber, data);
+      prefetchAdjacentMushafPages(pageNumber, includeTajweed);
+      return data;
     }
 
     // Try CDN fallback if API returned no verses
     const cdnVerses = await fetchFromCdnFallback(pageNumber);
     if (cdnVerses && cdnVerses.length > 0) {
       registerVersesForPage(pageNumber, cdnVerses);
-      return buildPageData(pageNumber, cdnVerses, tajweedMap, false);
+      const data = buildPageData(pageNumber, cdnVerses, tajweedMap, false);
+      memoryPageCache.set(pageNumber, data);
+      prefetchAdjacentMushafPages(pageNumber, includeTajweed);
+      return data;
     }
   } catch (err) {
     // Network offline or timeout - proceed to cached/fallback
@@ -542,7 +560,10 @@ export async function fetchMushafPage(
       const cdnVerses = await fetchFromCdnFallback(pageNumber);
       if (cdnVerses && cdnVerses.length > 0) {
         registerVersesForPage(pageNumber, cdnVerses);
-        return buildPageData(pageNumber, cdnVerses, null, false);
+        const data = buildPageData(pageNumber, cdnVerses, null, false);
+        memoryPageCache.set(pageNumber, data);
+        prefetchAdjacentMushafPages(pageNumber, includeTajweed);
+        return data;
       }
     } catch {
       // Safe fallback
@@ -552,11 +573,16 @@ export async function fetchMushafPage(
   // If online failed but we have any cached data, use that
   if (cachedVerses && cachedVerses.length > 0) {
     registerVersesForPage(pageNumber, cachedVerses);
-    return buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
+    const data = buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
+    memoryPageCache.set(pageNumber, data);
+    prefetchAdjacentMushafPages(pageNumber, includeTajweed);
+    return data;
   }
 
   // Full offline fallback: construct structured page data from metadata
-  return buildOfflineFallbackPage(pageNumber);
+  const fallbackData = buildOfflineFallbackPage(pageNumber);
+  memoryPageCache.set(pageNumber, fallbackData);
+  return fallbackData;
 }
 
 const prefetchingPages = new Set<number>();
@@ -566,25 +592,57 @@ const prefetchingPages = new Set<number>();
  * Ensures zero-delay and zero-spinner page turns during recitation.
  */
 export function prefetchNextMushafPage(currentPage: number, includeTajweed: boolean = true): void {
-  const nextPage = currentPage + 1;
-  if (nextPage > 604 || prefetchingPages.has(nextPage)) return;
+  prefetchAdjacentMushafPages(currentPage, includeTajweed);
+}
 
-  prefetchingPages.add(nextPage);
+/**
+ * Background Preload of adjacent pages (P + 1 and P - 1) with low priority.
+ * Ensures zero-delay and zero-spinner page turns in both directions.
+ */
+export function prefetchAdjacentMushafPages(currentPage: number, includeTajweed: boolean = true): void {
+  const targets = [currentPage + 1, currentPage - 1].filter(
+    (p) => p >= 1 && p <= 604 && !memoryPageCache.has(p) && !prefetchingPages.has(p)
+  );
+  if (targets.length === 0) return;
 
   const executePrefetch = () => {
-    fetchMushafPage(nextPage, includeTajweed)
-      .catch(() => {
-        // Handled silent background prefetch failure
-      })
-      .finally(() => {
-        prefetchingPages.delete(nextPage);
-      });
+    targets.forEach((p) => {
+      prefetchingPages.add(p);
+      fetchMushafPage(p, includeTajweed)
+        .catch(() => {
+          // Handled silent background prefetch failure
+        })
+        .finally(() => {
+          prefetchingPages.delete(p);
+        });
+    });
   };
 
   if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
     (window as any).requestIdleCallback(executePrefetch, { timeout: 2500 });
   } else {
     setTimeout(executePrefetch, 250);
+  }
+}
+
+/**
+ * Pre-warm the 5 Sunnah Surah pages (293, 440, 531, 534, 562) and pages 1–2
+ * so tapping Ar-Rahman, Al-Kahf, Ya-Sin, Al-Waqi'ah, or Al-Mulk opens in 0ms!
+ */
+export function prewarmSunnahMushafPages(): void {
+  const sunnahPages = [1, 2, 293, 440, 531, 534, 562];
+  const executePrewarm = () => {
+    sunnahPages.forEach((p) => {
+      if (!memoryPageCache.has(p)) {
+        fetchMushafPage(p, true).catch(() => {});
+      }
+    });
+  };
+
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(executePrewarm, { timeout: 3000 });
+  } else {
+    setTimeout(executePrewarm, 300);
   }
 }
 
