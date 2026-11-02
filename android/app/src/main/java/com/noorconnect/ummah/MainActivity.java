@@ -256,6 +256,54 @@ public class MainActivity extends BridgeActivity {
                     }
 
                     @android.webkit.JavascriptInterface
+                    public void shareBase64Pdf(final String base64Pdf, final String fileName, final String shareTitle) {
+                        runOnUiThread(() -> {
+                            try {
+                                if (base64Pdf == null || base64Pdf.isEmpty()) {
+                                    Log.w(TAG, "shareBase64Pdf: base64Pdf is empty");
+                                    return;
+                                }
+                                String pureBase64 = base64Pdf;
+                                if (pureBase64.contains(",")) {
+                                    pureBase64 = pureBase64.substring(pureBase64.indexOf(",") + 1);
+                                }
+                                byte[] pdfBytes = android.util.Base64.decode(pureBase64, android.util.Base64.DEFAULT);
+                                String targetName = (fileName != null && !fileName.trim().isEmpty())
+                                        ? fileName.trim()
+                                        : "Noor_Connect_Zakat_Report.pdf";
+                                if (!targetName.toLowerCase().endsWith(".pdf")) {
+                                    targetName += ".pdf";
+                                }
+                                File pdfFile = new File(getCacheDir(), targetName);
+                                try (FileOutputStream fos = new FileOutputStream(pdfFile)) {
+                                    fos.write(pdfBytes);
+                                    fos.flush();
+                                }
+
+                                Uri contentUri = androidx.core.content.FileProvider.getUriForFile(
+                                        MainActivity.this,
+                                        getPackageName() + ".fileprovider",
+                                        pdfFile
+                                );
+
+                                Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                                sendIntent.setType("application/pdf");
+                                sendIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                                sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                                String title = (shareTitle != null && !shareTitle.trim().isEmpty())
+                                        ? shareTitle.trim()
+                                        : "Share Zakat Report (PDF)";
+                                Intent chooser = Intent.createChooser(sendIntent, title);
+                                chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(chooser);
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Failed to share PDF document natively", t);
+                            }
+                        });
+                    }
+
+                    @android.webkit.JavascriptInterface
                     public boolean requestPinWidget(String widgetType) {
                         try {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

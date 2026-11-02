@@ -7,7 +7,6 @@ import {
   Scale,
   RefreshCw,
   Edit3,
-  Share2,
   Bookmark,
   Trash2,
   History,
@@ -25,12 +24,16 @@ import {
   Receipt,
   HelpCircle,
   RotateCcw,
+  FileText,
+  Loader2,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ContentLanguageBar } from "@/components/ContentLanguageBar";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useContentLanguage } from "@/lib/content-translator";
 import { getZakatUIStrings } from "@/lib/zakat-i18n";
+import { shareZakatPdfReport, ZakatPdfData } from "@/lib/zakat-pdf-generator";
 import {
   SUPPORTED_CURRENCIES,
   LiveMetalRates,
@@ -109,6 +112,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
   // Modals
   const [showShariahRulesModal, setShowShariahRulesModal] = useState<boolean>(false);
   const [showOverrideModal, setShowOverrideModal] = useState<boolean>(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   // Override Form State
   const [overrideGoldGram, setOverrideGoldGram] = useState<string>('');
@@ -503,8 +507,74 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
     toast.success('Calculation loaded into Calculator');
   };
 
-  // Share / Copy Clean Receipt
-  const handleShareReceipt = async () => {
+  // Generate & Share 1-Page A4 Zakat Report PDF
+  const handleSharePdfReport = async () => {
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+
+    try {
+      const pdfData: ZakatPdfData = {
+        lang: contentLang,
+        currency: activeCurrency,
+        goldPerGram: effectiveGoldPerGram,
+        silverPerGram: effectiveSilverPerGram,
+        goldPerTola: rates?.goldPerTola || effectiveGoldPerGram * TOLA_IN_GRAMS,
+        silverPerTola: rates?.silverPerTola || effectiveSilverPerGram * TOLA_IN_GRAMS,
+        nisabChoice,
+        activeNisabThreshold,
+        isNisabReached,
+        cashTotal,
+        goldTotal: calculatedGoldValue,
+        silverTotal: calculatedSilverValue,
+        investmentsTotal: investmentTotal,
+        businessTotal,
+        otherTotal,
+        ushrDue: ushrResult.due,
+        ushrPercentage: ushrResult.percentage,
+        livestockZakatable: livestockResult?.isZakatable || false,
+        livestockDueText: livestockResult?.dueText,
+        totalLiabilities,
+        totalGrossWealth,
+        netZakatableWealth,
+        zakatDue,
+      };
+
+      const dateFormatted = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const summaryText = [
+        `🕋 NOOR CONNECT — ZAKAT AL-MĀL ASSESSMENT REPORT`,
+        `📅 Date: ${dateFormatted}`,
+        `💰 Currency: ${activeCurrency}`,
+        `---------------------------------`,
+        `• Gross Zakatable Assets: ${formatCurrencyAmount(totalGrossWealth, activeCurrency)}`,
+        `• Deductible Liabilities: -${formatCurrencyAmount(totalLiabilities, activeCurrency)}`,
+        `• Net Zakatable Wealth: ${formatCurrencyAmount(netZakatableWealth, activeCurrency)}`,
+        `• Nisab Threshold (${nisabChoice.toUpperCase()}): ${formatCurrencyAmount(activeNisabThreshold, activeCurrency)}`,
+        `• Status: ${isNisabReached ? 'OBLIGATORY (Nisab Reached)' : 'BELOW NISAB (Optional Sadaqah)'}`,
+        `---------------------------------`,
+        `✨ TOTAL ZAKAT DUE (2.5%): ${formatCurrencyAmount(zakatDue, activeCurrency)}`,
+        ...(zakatDue > 0 ? [`💡 Monthly Option: ${formatCurrencyAmount(Math.round(zakatDue / 12), activeCurrency)}/month`] : []),
+        ...(ushrResult.due > 0 ? [`🌾 Agricultural Produce Ushr: ${formatCurrencyAmount(ushrResult.due, activeCurrency)} (${ushrResult.label})`] : []),
+        ...(livestockResult?.isZakatable ? [`🐑 Livestock Zakat: ${livestockResult.dueText}`] : []),
+        `---------------------------------`,
+        `Calculated locally with Noor Connect (100% Offline & Private)`,
+      ].join('\n');
+
+      const result = await shareZakatPdfReport(pdfData, summaryText);
+      if (result.method === 'download-fallback') {
+        toast.success('Zakat PDF report downloaded successfully!');
+      } else {
+        toast.success('Zakat PDF report opened in Share Sheet!');
+      }
+    } catch (err) {
+      console.error('[ZakatCalculator] Failed to generate/share PDF:', err);
+      toast.error('Failed to generate PDF report. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // Copy Clean Text Receipt to Clipboard
+  const handleCopyTextReceipt = async () => {
     const dateFormatted = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     const receiptText = [
       `🕋 NOOR CONNECT — ZAKAT AL-MĀL CALCULATION`,
@@ -525,23 +595,28 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
       `Calculated with Noor Connect (100% Offline & Private)`,
     ].join('\n');
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Zakat Calculation — Noor Connect',
-          text: receiptText,
-        });
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(receiptText);
+        toast.success('✓ Zakat summary copied to clipboard!');
         return;
-      } catch {
-        // Fallback to clipboard
       }
+    } catch {
+      // Fallback to legacy execCommand
     }
 
     try {
-      await navigator.clipboard.writeText(receiptText);
-      toast.success('Zakat summary copied to clipboard!');
+      const textarea = document.createElement('textarea');
+      textarea.value = receiptText;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      toast.success('✓ Zakat summary copied to clipboard!');
     } catch {
-      toast.error('Unable to copy summary');
+      toast.error('Unable to copy summary to clipboard.');
     }
   };
 
@@ -559,8 +634,8 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
           paddingTop: isEmbedded ? '12px' : 'max(calc(env(safe-area-inset-top, 0px) + 16px), 46px)',
         }}
       >
-        <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="max-w-xl mx-auto flex items-center justify-between gap-2.5 w-full">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {!isEmbedded && (
               <button
                 type="button"
@@ -571,22 +646,25 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold font-serif text-[var(--text-primary)] truncate flex items-center gap-1.5 whitespace-nowrap">
-                <span>{ui.title}</span>
-                <span className="text-[10px] uppercase font-sans font-bold px-1.5 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] shrink-0">
-                  {ui.shariahRate}
-                </span>
-              </h1>
-            </div>
+            <h1
+              className="font-extrabold font-serif text-[var(--text-primary)] whitespace-nowrap min-w-0"
+              style={{
+                fontSize: 'clamp(0.98rem, 4.3vw, 1.12rem)',
+                fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                overflow: 'visible',
+              }}
+            >
+              {ui.title}
+            </h1>
           </div>
 
-          {/* Top Right: Currency selector pill */}
+          {/* Top Right: Compact Currency selector pill */}
           <div className="flex items-center gap-1.5 shrink-0">
             <select
               value={activeCurrency}
               onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[var(--accent-text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer shrink-0 whitespace-nowrap"
+              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-xs font-bold text-[var(--accent-text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer shrink-0 whitespace-nowrap"
+              style={{ padding: '6px 10px', fontSize: '0.76rem' }}
             >
               {SUPPORTED_CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -603,8 +681,8 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
         </div>
       </header>
 
-      {/* ── MAIN CONTENT CONTAINER ── */}
-      <main className="max-w-xl mx-auto w-full px-4 pt-3.5 space-y-4">
+      {/* ── MAIN CONTENT CONTAINER (RTL IN URDU) ── */}
+      <main className="max-w-xl mx-auto w-full px-4 pt-3.5 space-y-4" dir={isUrdu ? 'rtl' : 'ltr'}>
         {/* ── SEGMENTED TOP TABS: Calculator vs History (NO DUPLICATE EMOJIS) ── */}
         <div className="grid grid-cols-2 p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xs">
           <button
@@ -892,9 +970,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <Wallet className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.cashTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.cashSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.cashTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.cashSub}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -970,9 +1068,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-amber-500 shrink-0">
                     <Coins className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.goldTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.goldSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.goldTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.goldSub}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -1070,9 +1188,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-slate-400 shrink-0">
                     <Coins className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.silverTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.silverSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.silverTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.silverSub}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -1149,9 +1287,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.investmentsTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.investmentsSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.investmentsTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.investmentsSub}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -1194,9 +1352,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <Building2 className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.businessTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.businessSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.businessTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.businessSub}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -1239,9 +1417,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
                     <Receipt className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.otherTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.otherSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.otherTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.otherSub}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -1288,9 +1486,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center shrink-0">
                     <Wheat className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.ushrTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.ushrSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.ushrTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.ushrSub}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -1378,9 +1596,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center shrink-0">
                     <Scale className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{ui.livestockTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.livestockSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-[var(--text-primary)]"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.livestockTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.livestockSub}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -1469,9 +1707,29 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                   <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center shrink-0">
                     <AlertCircle className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-rose-500 truncate">{ui.debtsTitle}</h3>
-                    <p className="text-[10.5px] text-[var(--text-secondary)] truncate">{ui.debtsSub}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="text-sm font-bold text-rose-500"
+                      style={{
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                        lineHeight: isUrdu ? 1.6 : 1.3,
+                        overflow: 'visible',
+                      }}
+                    >
+                      {ui.debtsTitle}
+                    </h3>
+                    <p
+                      className="text-[10.5px] text-[var(--text-secondary)]"
+                      style={{
+                        whiteSpace: 'normal',
+                        overflow: 'visible',
+                        lineHeight: isUrdu ? 1.95 : 1.45,
+                        paddingBlock: '2px',
+                        fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      }}
+                    >
+                      {ui.debtsSub}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -1512,11 +1770,23 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 borderWidth: '1.5px',
               }}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5 min-w-0 truncate">
+              <div className="flex items-center justify-between gap-2.5">
+                <div
+                  className="flex items-center gap-1.5 min-w-0"
+                  style={{ flex: 1, minWidth: 0, lineHeight: isUrdu ? 1.85 : 1.5 }}
+                >
                   <Receipt className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span className="truncate">{ui.summaryTitle}</span>
-                </span>
+                  <span
+                    className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]"
+                    style={{
+                      fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                      overflow: 'visible',
+                      whiteSpace: 'normal',
+                    }}
+                  >
+                    {ui.summaryTitle}
+                  </span>
+                </div>
                 {/* Reset button: Single icon, single line */}
                 <button
                   type="button"
@@ -1544,9 +1814,14 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
               </div>
 
               {/* Itemized Table */}
-              <div className="space-y-1.5 text-xs bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border)]">
-                <div className="flex items-center justify-between gap-2 text-[var(--text-secondary)]">
-                  <span className="truncate">{ui.grossWealth}</span>
+              <div className="space-y-2 text-xs bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border)]">
+                <div
+                  className="flex items-center justify-between gap-2 text-[var(--text-secondary)]"
+                  style={{ lineHeight: isUrdu ? 1.85 : 1.5, overflow: 'visible' }}
+                >
+                  <span style={{ fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined, overflow: 'visible' }}>
+                    {ui.grossWealth}
+                  </span>
                   <span
                     className="font-mono font-bold text-[var(--text-primary)] shrink-0 whitespace-nowrap"
                     style={{ fontVariantNumeric: "tabular-nums" }}
@@ -1554,8 +1829,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                     {formatCurrencyAmount(totalGrossWealth, activeCurrency)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between gap-2 text-rose-500">
-                  <span className="truncate">{ui.lessLiabilities}</span>
+                <div
+                  className="flex items-center justify-between gap-2 text-rose-500"
+                  style={{ lineHeight: isUrdu ? 1.85 : 1.5, overflow: 'visible' }}
+                >
+                  <span style={{ fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined, overflow: 'visible' }}>
+                    {ui.lessLiabilities}
+                  </span>
                   <span
                     className="font-mono font-bold shrink-0 whitespace-nowrap"
                     style={{ fontVariantNumeric: "tabular-nums" }}
@@ -1563,8 +1843,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                     -{formatCurrencyAmount(totalLiabilities, activeCurrency)}
                   </span>
                 </div>
-                <div className="border-t border-[var(--border)] pt-1.5 flex items-center justify-between gap-2 font-bold text-sm">
-                  <span className="truncate">{ui.netWealth}</span>
+                <div
+                  className="border-t border-[var(--border)] pt-1.5 flex items-center justify-between gap-2 font-bold text-sm"
+                  style={{ lineHeight: isUrdu ? 1.85 : 1.5, overflow: 'visible' }}
+                >
+                  <span style={{ fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined, overflow: 'visible' }}>
+                    {ui.netWealth}
+                  </span>
                   <span
                     className="font-mono text-[var(--accent-text)] shrink-0 whitespace-nowrap"
                     style={{ fontVariantNumeric: "tabular-nums" }}
@@ -1572,8 +1857,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                     {formatCurrencyAmount(netZakatableWealth, activeCurrency)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-secondary)] pt-0.5">
-                  <span className="truncate">{ui.activeNisabLabel} ({nisabChoice.toUpperCase()}):</span>
+                <div
+                  className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-secondary)] pt-0.5"
+                  style={{ lineHeight: isUrdu ? 1.85 : 1.5, overflow: 'visible' }}
+                >
+                  <span style={{ fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined, overflow: 'visible' }}>
+                    {ui.activeNisabLabel} ({nisabChoice.toUpperCase()}):
+                  </span>
                   <span
                     className="font-mono shrink-0 whitespace-nowrap"
                     style={{ fontVariantNumeric: "tabular-nums" }}
@@ -1662,25 +1952,54 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
                 )}
               </div>
 
-              {/* Action Buttons: Save, Copy/Share */}
-              <div className="grid grid-cols-2 gap-2 pt-1">
+              {/* Action Buttons: 1-Tap PDF Share/Download, Save to History & Copy Text */}
+              <div className="space-y-2 pt-1">
+                {/* Primary Full-Width Gold/Accent Button: Share / Download PDF Report */}
                 <button
                   type="button"
-                  onClick={handleSaveToHistory}
-                  className="py-2.5 px-3 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all whitespace-nowrap"
+                  onClick={handleSharePdfReport}
+                  disabled={isGeneratingPdf}
+                  className="w-full py-3 px-4 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all disabled:opacity-60 whitespace-nowrap"
+                  style={{
+                    boxShadow: '0 4px 14px -2px var(--accent-glow)',
+                    fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+                  }}
                 >
-                  <Bookmark className="w-4 h-4 shrink-0" />
-                  <span>{ui.saveHistoryBtn}</span>
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      <span>{ui.generatingPdf}</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 shrink-0" />
+                      <span>{ui.sharePdfBtn}</span>
+                    </>
+                  )}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleShareReceipt}
-                  className="py-2.5 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap"
-                >
-                  <Share2 className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
-                  <span>{ui.shareBtn}</span>
-                </button>
+                {/* Secondary 2-Button Row: Save to History & Copy Text */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveToHistory}
+                    className="py-2.5 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap"
+                    style={{ fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined }}
+                  >
+                    <Bookmark className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
+                    <span>{ui.saveHistoryBtn}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyTextReceipt}
+                    className="py-2.5 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap"
+                    style={{ fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined }}
+                  >
+                    <Copy className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
+                    <span>{ui.copyTextBtn}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

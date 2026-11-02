@@ -72,6 +72,10 @@ export interface ZakatUIStrings {
   monthlyOpt: string;
   saveHistoryBtn: string;
   shareBtn: string;
+  sharePdfBtn: string;
+  copyTextBtn: string;
+  generatingPdf: string;
+  reportTitle: string;
   // History
   savedCalculations: string;
   clearAll: string;
@@ -166,6 +170,10 @@ const STRINGS: Record<ContentLang, ZakatUIStrings> = {
     monthlyOpt: 'Or pay in installments:',
     saveHistoryBtn: 'Save to History',
     shareBtn: 'Share / Copy',
+    sharePdfBtn: 'Share / Download PDF Report',
+    copyTextBtn: 'Copy Text',
+    generatingPdf: 'Generating PDF...',
+    reportTitle: 'Zakat Al-Māl Calculation Report',
     savedCalculations: 'Saved Calculations',
     clearAll: 'Clear All',
     noHistoryTitle: 'No Saved Calculations Yet',
@@ -256,6 +264,10 @@ const STRINGS: Record<ContentLang, ZakatUIStrings> = {
     monthlyOpt: 'یا ماہانہ اقساط میں ادا کریں:',
     saveHistoryBtn: 'محفوظ کریں',
     shareBtn: 'شیئر / کاپی',
+    sharePdfBtn: 'پی ڈی ایف رپورٹ شیئر کریں',
+    copyTextBtn: 'تحریر کاپی کریں',
+    generatingPdf: 'پی ڈی ایف تیار ہو رہی ہے...',
+    reportTitle: 'زکوٰۃ المال کا حتمی خلاصہ',
     savedCalculations: 'محفوظ شدہ ریکارڈ',
     clearAll: 'سب حذف کریں',
     noHistoryTitle: 'کوئی محفوظ شدہ ریکارڈ نہیں',
@@ -346,6 +358,10 @@ const STRINGS: Record<ContentLang, ZakatUIStrings> = {
     monthlyOpt: 'અથવા માસિક હપ્તામાં ચૂકવો:',
     saveHistoryBtn: 'સાચવો',
     shareBtn: 'શેર / કોપી',
+    sharePdfBtn: 'પીડીએફ રિપોર્ટ શેર કરો',
+    copyTextBtn: 'ટેક્સ્ટ કોપી કરો',
+    generatingPdf: 'પીડીએફ બની રહી છે...',
+    reportTitle: 'ઝકાત અલ-માલ ગણતરી સારાંશ',
     savedCalculations: 'સાચવેલ ગણતરીઓ',
     clearAll: 'બધું સાફ કરો',
     noHistoryTitle: 'હજુ કોઈ સાચવેલ ગણતરી નથી',
@@ -436,6 +452,10 @@ const STRINGS: Record<ContentLang, ZakatUIStrings> = {
     monthlyOpt: 'या मासिक किस्तों में अदा करें:',
     saveHistoryBtn: 'सहेजें',
     shareBtn: 'शेयर / कॉपी',
+    sharePdfBtn: 'पीडीएफ रिपोर्ट शेयर करें',
+    copyTextBtn: 'टेक्स्ट कॉपी करें',
+    generatingPdf: 'पीडीएफ बन रही है...',
+    reportTitle: 'ज़कात अल-माल गणना सारांश',
     savedCalculations: 'सहेजी गई गणनाएं',
     clearAll: 'सभी हटाएं',
     noHistoryTitle: 'अभी कोई सहेजी गई गणना नहीं',
