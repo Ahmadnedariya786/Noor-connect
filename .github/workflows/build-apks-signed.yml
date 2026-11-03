@@ -23,11 +23,20 @@ jobs:
           packages: 'platforms;android-36 build-tools;36.0.0'
           accept-android-sdk-licenses: true
 
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
       - name: Install npm dependencies
         run: npm ci
 
       - name: Build web app
         run: npm run build
+
+      - name: Clean dist assets for Android
+        run: node scripts/clean-dist-data.js || true
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -62,11 +71,17 @@ jobs:
       - name: Build APK
         run: |
           cd android
+          chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
+          APK_FILE=$(find app/build/outputs/apk -type f -name "*release.apk" | head -n 1)
+          if [ -n "$APK_FILE" ]; then
+            mkdir -p app/build/outputs/apk/release
+            cp "$APK_FILE" app/build/outputs/apk/release/app-release.apk
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: noor-connect-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/**/*.apk
           retention-days: 30
