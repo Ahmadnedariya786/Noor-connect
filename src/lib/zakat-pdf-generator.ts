@@ -12,10 +12,17 @@
 import type { ContentLang } from './content-translator';
 import { formatCurrencyAmount } from './zakat-market-api';
 import { getZakatUIStrings } from './zakat-i18n';
+import { islamicCalendarService } from './islamic-calendar-service';
+import {
+  getSelectedLogoEdition,
+  getLogoEditionStaticSvgString,
+  type NoorLogoEditionId,
+} from '@/components/NoorDynamicLogo';
 
 export interface ZakatPdfData {
   lang: ContentLang;
   currency: string;
+  edition?: NoorLogoEditionId;
   // Rates
   goldPerGram: number;
   silverPerGram: number;
@@ -277,6 +284,266 @@ function drawRoyalNoorEmblem(ctx: CanvasRenderingContext2D, cx: number, cy: numb
 }
 
 /**
+ * Canonical Islamic (Hijri) Month Names across the 4 supported languages.
+ * Eliminates the Android WebView bug where Intl falls back to Gregorian names like "May 23, 1448 BC AH".
+ */
+export const ISLAMIC_MONTH_NAMES: Record<ContentLang, readonly string[]> = {
+  en: [
+    'Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
+    'Jumada al-Ula', 'Jumada al-Akhirah', 'Rajab', "Sha'ban",
+    'Ramadan', 'Shawwal', "Dhu al-Qi'dah", "Dhu al-Hijjah",
+  ],
+  ur: [
+    'محرم', 'صفر', 'ربیع الاول', 'ربیع الثانی',
+    'جمادی الاول', 'جمادی الثانی', 'رجب', 'شعبان',
+    'رمضان', 'شوال', 'ذوالقعدہ', 'ذوالحجہ',
+  ],
+  gu: [
+    'મોહર્રમ', 'સફર', 'રબીઉલ અવ્વલ', 'રબીઉલ આખિર',
+    'જુમાદિલ અવ્વલ', 'જુમાદિલ આખિર', 'રજબ', 'શાબાન',
+    'રમઝાન', 'શવ્વાલ', 'ઝુલ્કદ', 'ઝુલહિજ્જ',
+  ],
+  hi: [
+    'मुहर्रम', 'सफ़र', 'रबी उल-अव्वल', 'रबी उल-आखिर',
+    'जुमादा अल-ऊला', 'जुमादा अल-आखिरा', 'रजब', 'शाबान',
+    'रमज़ान', 'शव्वाल', 'ज़ुल-क़ादा', 'ज़ुल-हिज्जा',
+  ],
+};
+
+/**
+ * Returns an authentic, correctly formatted Hijri date (e.g. "22 Jumada al-Ula 1448 AH").
+ * Safe against all Android WebView Intl quirks.
+ */
+export function getAuthenticHijriDate(date: Date = new Date(), lang: ContentLang = 'en'): string {
+  let day = 1;
+  let month = 1; // 1-based (1..12)
+  let year = 1448;
+  let parsedFromIntl = false;
+
+  try {
+    const intl = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    });
+    const parts = intl.formatToParts(date);
+    for (const part of parts) {
+      if (part.type === 'day') day = parseInt(part.value, 10);
+      else if (part.type === 'month') month = parseInt(part.value, 10);
+      else if (part.type === 'year') {
+        const cleanYear = parseInt(part.value.replace(/[^0-9]/g, ''), 10);
+        if (!isNaN(cleanYear) && cleanYear >= 1300 && cleanYear <= 1600) {
+          year = cleanYear;
+        }
+      }
+    }
+    if (day >= 1 && day <= 30 && month >= 1 && month <= 12 && year >= 1300 && year <= 1600) {
+      parsedFromIntl = true;
+    }
+  } catch {
+    parsedFromIntl = false;
+  }
+
+  // Pure-TS offline astronomical fallback if Intl is broken or returns anomalous values
+  if (!parsedFromIntl) {
+    try {
+      const calc = islamicCalendarService.calculateIslamicDate(date);
+      day = parseInt(calc.hijri.day, 10) || 1;
+      month = calc.hijri.month.number || 1;
+      year = parseInt(calc.hijri.year, 10) || 1448;
+    } catch {
+      day = 22;
+      month = 5;
+      year = 1448;
+    }
+  }
+
+  const monthIdx = Math.max(0, Math.min(11, month - 1));
+  const monthName = ISLAMIC_MONTH_NAMES[lang]?.[monthIdx] || ISLAMIC_MONTH_NAMES.en[monthIdx];
+  const ahSuffix = lang === 'ur' ? 'ھ' : 'AH';
+
+  return `${day} ${monthName} ${year} ${ahSuffix}`;
+}
+
+const logoImageCache = new Map<number, HTMLImageElement>();
+
+/**
+ * Loads a static SVG logo edition into an HTMLImageElement for canvas rendering.
+ */
+export async function getLogoEditionImage(edition: NoorLogoEditionId): Promise<HTMLImageElement | null> {
+  if (typeof window === 'undefined' || typeof Image === 'undefined') return null;
+  const cached = logoImageCache.get(edition);
+  if (cached && cached.complete && cached.naturalWidth > 0) return cached;
+
+  return new Promise((resolve) => {
+    try {
+      const svgStr = getLogoEditionStaticSvgString(edition, 200);
+      const img = new Image();
+      img.onload = () => {
+        logoImageCache.set(edition, img);
+        resolve(img);
+      };
+      img.onerror = (err) => {
+        console.warn('[ZakatPdfGenerator] Failed to load SVG logo as image:', err);
+        resolve(null);
+      };
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgStr)}`;
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/**
+ * Returns a robust font string with proper font stack for Urdu, Gujarati, Hindi, and English.
+ */
+function getPdfFont(lang: ContentLang, sizePx: number, isBold = false, isMono = false): string {
+  const weight = isBold ? 'bold ' : '';
+  if (isMono) {
+    return `${weight}${sizePx}px monospace, system-ui, sans-serif`;
+  }
+  if (lang === 'ur') {
+    return `${weight}${sizePx + 1}px "Jameel Noori Nastaliq", "Noto Nastaliq Urdu", "Amiri", "Traditional Arabic", serif, system-ui, sans-serif`;
+  }
+  if (lang === 'gu') {
+    return `${weight}${sizePx}px "Noto Sans Gujarati", "Shruti", system-ui, -apple-system, sans-serif`;
+  }
+  if (lang === 'hi') {
+    return `${weight}${sizePx}px "Noto Sans Devanagari", "Mangal", system-ui, -apple-system, sans-serif`;
+  }
+  return `${weight}${sizePx}px system-ui, -apple-system, sans-serif`;
+}
+
+interface ZakatPdfStrings {
+  brandingSub: string;
+  itemizedBreakdown: string;
+  amountHeader: string;
+  shariahAssessmentVerdict: string;
+  statusMet: string;
+  statusBelow: string;
+  zakatDueBadge: string;
+  belowNisabBadge: string;
+  currencyLabel: string;
+  shariahStandardLabel: string;
+  monthlyInstallmentSuffix: string;
+  silverChoiceLabel: string;
+  goldChoiceLabel: string;
+  silverStdVal: string;
+  goldStdVal: string;
+  silverStdSub: string;
+  goldStdSub: string;
+  ushrDuePrefix: string;
+  livestockPrefix: string;
+  ayahArabic: string;
+  ayahTranslation: string;
+  securityNote1: string;
+  securityNote2: string;
+}
+
+const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
+  en: {
+    brandingSub: 'NOOR CONNECT — ISLAMIC COMPANION',
+    itemizedBreakdown: 'ITEMIZED WEALTH & LIABILITIES BREAKDOWN',
+    amountHeader: 'AMOUNT',
+    shariahAssessmentVerdict: 'SHARIAH ASSESSMENT & ZAKAT AL-MĀL VERDICT',
+    statusMet: 'Status: Met ✓',
+    statusBelow: 'Status: Below',
+    zakatDueBadge: 'Zakat Due',
+    belowNisabBadge: 'Below Nisab',
+    currencyLabel: 'Currency',
+    shariahStandardLabel: 'Authentic Islamic Shariah (Hawl & Nisab)',
+    monthlyInstallmentSuffix: '(12 equal monthly installments)',
+    silverChoiceLabel: 'SILVER',
+    goldChoiceLabel: 'GOLD',
+    silverStdVal: 'Silver 612.36g',
+    goldStdVal: 'Gold 87.48g',
+    silverStdSub: '52.5 Tola Std',
+    goldStdSub: '7.5 Tola Std',
+    ushrDuePrefix: '🌾 Ushr Due:',
+    livestockPrefix: '🐑 Livestock:',
+    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا »',
+    ayahTranslation: '“Take from their wealth a charity by which you purify them and cause them increase.” (Surah At-Tawbah 9:103)',
+    securityNote1: 'Calculated locally on your device according to authentic Islamic Shariah (Hawl & Nisab) • Noor Connect',
+    securityNote2: 'Personal data never leaves your device • 100% Private, Secure & Offline-First',
+  },
+  ur: {
+    brandingSub: 'نور کنیکٹ — اسلامی رفیق',
+    itemizedBreakdown: 'قابلِ زکوٰۃ مال اور واجبات کی تفصیل',
+    amountHeader: 'رقم',
+    shariahAssessmentVerdict: 'شرعی جائزہ اور زکوٰۃ المال کا حتمی فیصلہ',
+    statusMet: 'صورتحال: نصاب مکمل ✓',
+    statusBelow: 'صورتحال: نصاب سے کم',
+    zakatDueBadge: 'زکوٰۃ واجب',
+    belowNisabBadge: 'نصاب سے کم',
+    currencyLabel: 'کرنسی',
+    shariahStandardLabel: 'مستند اسلامی شریعت (حول و نصاب)',
+    monthlyInstallmentSuffix: '(12 برابر ماہانہ اقساط)',
+    silverChoiceLabel: 'چاندی',
+    goldChoiceLabel: 'سونا',
+    silverStdVal: 'چاندی 612.36 گرام',
+    goldStdVal: 'سونا 87.48 گرام',
+    silverStdSub: '52.5 تولہ معیار',
+    goldStdSub: '7.5 تولہ معیار',
+    ushrDuePrefix: '🌾 واجب الادا عشر:',
+    livestockPrefix: '🐑 مویشی:',
+    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا »',
+    ayahTranslation: '”ان کے اموال میں سے صدقہ لیجیے جس کے ذریعے آپ انہیں پاک اور بابرکت بنائیں گے۔“ (سورہ التوبہ 9:103)',
+    securityNote1: 'آپ کے آلے پر مستند اسلامی شریعت (حول اور نصاب) کے مطابق حساب کیا گیا • نور کنیکٹ',
+    securityNote2: 'ذاتی معلومات کبھی آپ کے آلے سے باہر نہیں جاتی • 100٪ نجی، محفوظ اور آف لائن',
+  },
+  gu: {
+    brandingSub: 'નૂર કનેક્ટ — ઇસ્લામી સાથી',
+    itemizedBreakdown: 'સંપત્તિ અને દેવાની વિગતવાર ગણતરી',
+    amountHeader: 'રકમ',
+    shariahAssessmentVerdict: 'શરઈ મૂલ્યાંકન અને ઝકાત અલ-માલ સારાંશ',
+    statusMet: 'સ્થિતિ: પૂર્ણ ✓',
+    statusBelow: 'સ્થિતિ: ઓછું',
+    zakatDueBadge: 'ઝકાત વાજિબ',
+    belowNisabBadge: 'નિસાબથી ઓછું',
+    currencyLabel: 'ચલણ',
+    shariahStandardLabel: 'પ્રમાણભૂત ઇસ્લામી શરીઅત (હૌલ અને નિસાબ)',
+    monthlyInstallmentSuffix: '(12 સમાન માસિક હપ્તા)',
+    silverChoiceLabel: 'ચાંદી',
+    goldChoiceLabel: 'સોનું',
+    silverStdVal: 'ચાંદી 612.36 ગ્રામ',
+    goldStdVal: 'સોનું 87.48 ગ્રામ',
+    silverStdSub: '52.5 તોલા માનક',
+    goldStdSub: '7.5 તોલા માનક',
+    ushrDuePrefix: '🌾 વાજિબ ઉશ્ર:',
+    livestockPrefix: '🐑 પશુધન:',
+    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَતુઝَકِّيهِم بِهَا »',
+    ayahTranslation: '“તેમના ધનમાંથી સદકો લો જેના દ્વારા તમે તેમને પવિત્ર અને બરકતવાળા બનાવો.” (સૂરહ અત-તૌબા 9:103)',
+    securityNote1: 'પ્રમાણભૂત ઇસ્લામી શરીઅત (હૌલ અને નિસાબ) મુજબ આપના ડિવાઇસ પર ગણતરી કરેલ • નૂર કનેક્ટ',
+    securityNote2: 'વ્યક્તિગત માહિતી ક્યારેય આપના ડિવાઇસ બહાર જતી નથી • 100% ખાનગી, સુરક્ષિત અને ઑફલાઇન',
+  },
+  hi: {
+    brandingSub: 'नूर कनेक्ट — इस्लामी साथी',
+    itemizedBreakdown: 'संपत्ति और देयताओं का विस्तृत विवरण',
+    amountHeader: 'राशि',
+    shariahAssessmentVerdict: 'शरई मूल्यांकन और ज़कात अल-माल सारांश',
+    statusMet: 'स्थिति: पूर्ण ✓',
+    statusBelow: 'स्थिति: कम',
+    zakatDueBadge: 'ज़कात देय',
+    belowNisabBadge: 'निसाब से कम',
+    currencyLabel: 'मुद्रा',
+    shariahStandardLabel: 'प्रमाणिक इस्लामी शरीअत (हौल और निसाब)',
+    monthlyInstallmentSuffix: '(12 समान मासिक किश्तें)',
+    silverChoiceLabel: 'चांदी',
+    goldChoiceLabel: 'सोना',
+    silverStdVal: 'चांदी 612.36 ग्राम',
+    goldStdVal: 'सोना 87.48 ग्राम',
+    silverStdSub: '52.5 तोला मानक',
+    goldStdSub: '7.5 तोला मानक',
+    ushrDuePrefix: '🌾 देय उश्र:',
+    livestockPrefix: '🐑 पशुधन:',
+    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا »',
+    ayahTranslation: '“उनके धनों में से सदक़ा लीजिए जिसके द्वारा आप उन्हें पवित्र और बरकत वाला बनाएं।” (सूरह अत-तौबा 9:103)',
+    securityNote1: 'प्रामाणिक इस्लामी शरीअत (हौल और निसाब) के अनुसार आपके डिवाइस पर गणना की गई • नूर कनेक्ट',
+    securityNote2: 'व्यक्तिगत डेटा कभी भी आपके डिवाइस से बाहर नहीं जाता • 100% निजी, सुरक्षित और ऑफ़लाइन',
+  },
+};
+
+/**
  * Generates the 1-Page A4 Zakat Report PDF Blob via High-DPI Offscreen Canvas
  */
 export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> {
@@ -293,7 +560,11 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   }
 
   const ui = getZakatUIStrings(data.lang);
-  const isUrdu = data.lang === 'ur';
+  const pdfUi = PDF_STRINGS[data.lang] || PDF_STRINGS.en;
+
+  // Retrieve active selected logo edition (0..4) and load as image
+  const activeEdition: NoorLogoEditionId = data.edition !== undefined ? data.edition : getSelectedLogoEdition();
+  const logoImg = await getLogoEditionImage(activeEdition);
 
   // 1. Pure White Background
   ctx.fillStyle = '#FFFFFF';
@@ -326,9 +597,9 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
 
   // 3. Royal Header Banner
   const headerX = 42;
-  const headerY = 42;
-  const headerW = width - 84;
-  const headerH = 175;
+  const headerY = 36;
+  const headerW = width - 84; // 1156
+  const headerH = 205;
 
   // Emerald/Dark Green Gradient Fill
   const headerGrad = ctx.createLinearGradient(headerX, headerY, headerX, headerY + headerH);
@@ -344,56 +615,61 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   roundRect(ctx, headerX, headerY, headerW, headerH, 14);
   ctx.stroke();
 
-  // Draw Symmetrical Royal Living Emblems on Header Flanks
-  drawRoyalNoorEmblem(ctx, headerX + 56, headerY + 68, 36);
-  drawRoyalNoorEmblem(ctx, headerX + headerW - 56, headerY + 68, 36);
+  // Draw Symmetrical User-Selected Logo Editions on Header Flanks
+  const logoSize = 100;
+  const leftLogoX = headerX + 38; // x = 80..180
+  const leftLogoY = headerY + 24; // y = 60..160
+  const rightLogoX = headerX + headerW - 38 - logoSize; // x = 1060..1160
+  const rightLogoY = headerY + 24; // y = 60..160
+
+  if (logoImg) {
+    ctx.drawImage(logoImg, leftLogoX, leftLogoY, logoSize, logoSize);
+    ctx.drawImage(logoImg, rightLogoX, rightLogoY, logoSize, logoSize);
+  } else {
+    // Graceful canvas fallback
+    drawRoyalNoorEmblem(ctx, leftLogoX + logoSize / 2, leftLogoY + logoSize / 2, 40);
+    drawRoyalNoorEmblem(ctx, rightLogoX + logoSize / 2, rightLogoY + logoSize / 2, 40);
+  }
 
   // Arabic Bismillah (Centered)
   ctx.fillStyle = '#FDE68A';
   ctx.font = 'bold 22px "Amiri", "Traditional Arabic", serif, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', width / 2, headerY + 36);
+  ctx.fillText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', width / 2, headerY + 38);
 
-  // App Title / Branding
+  // App Title / Localized Branding
   ctx.fillStyle = '#FBBF24';
-  ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
-  ctx.fillText('NOOR CONNECT — ISLAMIC COMPANION', width / 2, headerY + 60);
+  ctx.font = getPdfFont(data.lang, 12, true);
+  ctx.fillText(pdfUi.brandingSub, width / 2, headerY + 64);
 
-  // Report Main Title: Arabic Calligraphy & Localized Subtitle
+  // Report Main Title: Localized Title & Arabic Calligraphy
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+  ctx.font = getPdfFont(data.lang, 23, true);
   const reportMainTitle = `${ui.reportTitle} • زكاة المال`;
-  ctx.fillText(reportMainTitle, width / 2, headerY + 98);
+  ctx.fillText(reportMainTitle, width / 2, headerY + 104);
 
-  // Gregorian + Hijri Date Helper
+  // Gregorian + Authentic Hijri Date
   const now = new Date();
   const gregDateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  let hijriDateStr = '1448 AH';
-  try {
-    const hijriFmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    hijriDateStr = hijriFmt.format(now) + ' AH';
-  } catch {
-    // Intl fallback
-  }
+  const hijriDateStr = getAuthenticHijriDate(now, data.lang);
 
-  // Metadata Strip inside Header
-  const metaBoxY = headerY + 120;
+  // Metadata Strip inside Header (Pill Bar strictly centered with 30px lateral clearance from logos)
+  const metaBoxW = 820;
+  const metaBoxX = (width - metaBoxW) / 2; // x: 210..1030 (clear from left logo at 180 and right at 1060)
+  const metaBoxY = headerY + 148;          // y: 184..222 (clear from logos bottom at 160)
   const metaBoxH = 38;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-  roundRect(ctx, headerX + 24, metaBoxY, headerW - 48, metaBoxH, 8);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
+  roundRect(ctx, metaBoxX, metaBoxY, metaBoxW, metaBoxH, 8);
   ctx.fill();
 
   ctx.fillStyle = '#E2E8F0';
-  ctx.font = '12px system-ui, -apple-system, sans-serif';
-  const metaText = `📅 ${gregDateStr}  •  🌙 ${hijriDateStr}  •  💰 Currency: ${data.currency}  •  ⚖️ Standard: Authentic Islamic Shariah (Hawl & Nisab)`;
+  ctx.font = getPdfFont(data.lang, 11.5, false);
+  const metaText = `📅 ${gregDateStr}  •  🌙 ${hijriDateStr}  •  🪙 ${pdfUi.currencyLabel}: ${data.currency}  •  ⚖️ ${pdfUi.shariahStandardLabel}`;
   ctx.fillText(metaText, width / 2, metaBoxY + 24);
 
   // 4. Live Bullion & Nisab Reference Bar
-  const refY = 230;
+  const refY = 252;
   const refH = 80;
   ctx.fillStyle = '#F8FAFC';
   roundRect(ctx, headerX, refY, headerW, refH, 10);
@@ -419,14 +695,14 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
     },
     {
       label: ui.nisabSectionTitle,
-      val1: data.nisabChoice === 'silver' ? 'Silver 612.36g' : 'Gold 87.48g',
-      val2: data.nisabChoice === 'silver' ? '52.5 Tola Std' : '7.5 Tola Std',
+      val1: data.nisabChoice === 'silver' ? pdfUi.silverStdVal : pdfUi.goldStdVal,
+      val2: data.nisabChoice === 'silver' ? pdfUi.silverStdSub : pdfUi.goldStdSub,
       color: '#047857',
     },
     {
       label: ui.activeNisabLabel,
       val1: formatCurrencyAmount(data.activeNisabThreshold, data.currency),
-      val2: data.isNisabReached ? 'Status: Met ✓' : 'Status: Below',
+      val2: data.isNisabReached ? pdfUi.statusMet : pdfUi.statusBelow,
       color: data.isNisabReached ? '#047857' : '#B45309',
     },
   ];
@@ -446,7 +722,7 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
 
     // Top Label
     ctx.fillStyle = col.color;
-    ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 10, true);
     ctx.fillText(col.label, colX + colW / 2, refY + 22);
 
     // Primary Value
@@ -456,12 +732,12 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
 
     // Secondary Value
     ctx.fillStyle = '#64748B';
-    ctx.font = '10.5px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 10.5, false);
     ctx.fillText(col.val2, colX + colW / 2, refY + 64);
   });
 
   // 5. Itemized Wealth & Liabilities Table
-  const tableY = 325;
+  const tableY = 344;
   const tableHeaderH = 34;
   const rowH = 43;
 
@@ -471,12 +747,12 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   ctx.fill();
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+  ctx.font = getPdfFont(data.lang, 12, true);
   ctx.textAlign = 'left';
-  ctx.fillText('ITEMIZED WEALTH & LIABILITIES BREAKDOWN', headerX + 16, tableY + 22);
+  ctx.fillText(pdfUi.itemizedBreakdown, headerX + 16, tableY + 22);
 
   ctx.textAlign = 'right';
-  ctx.fillText(`AMOUNT (${data.currency})`, headerX + headerW - 16, tableY + 22);
+  ctx.fillText(`${pdfUi.amountHeader} (${data.currency})`, headerX + headerW - 16, tableY + 22);
 
   const categories = [
     { title: ui.cashTitle, val: data.cashTotal, isNeg: false },
@@ -512,7 +788,7 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
 
     // Category Title
     ctx.fillStyle = cat.isNeg ? '#BE123C' : '#1E293B';
-    ctx.font = isUrdu ? '13px "Jameel Noori Nastaliq", system-ui, sans-serif' : '12px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 12, false);
     ctx.textAlign = 'left';
     ctx.fillText(cat.title, headerX + 16, curY + 26);
 
@@ -520,8 +796,8 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
     ctx.textAlign = 'right';
     if (cat.isLivestock) {
       ctx.fillStyle = data.livestockZakatable ? '#B45309' : '#64748B';
-      ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
-      ctx.fillText(data.livestockZakatable ? (cat.note || 'Zakat Due') : 'Below Nisab', headerX + headerW - 16, curY + 26);
+      ctx.font = getPdfFont(data.lang, 12, true);
+      ctx.fillText(data.livestockZakatable ? (cat.note || pdfUi.zakatDueBadge) : pdfUi.belowNisabBadge, headerX + headerW - 16, curY + 26);
     } else {
       ctx.fillStyle = cat.isNeg ? '#BE123C' : '#0F172A';
       ctx.font = 'bold 13px monospace, system-ui, sans-serif';
@@ -552,22 +828,23 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
 
   // Summary Card Header
   ctx.fillStyle = '#0F172A';
-  ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+  ctx.font = getPdfFont(data.lang, 13.5, true);
   ctx.textAlign = 'left';
-  ctx.fillText('SHARIAH ASSESSMENT & ZAKAT AL-MĀL VERDICT', headerX + 20, summaryY + 30);
+  ctx.fillText(pdfUi.shariahAssessmentVerdict, headerX + 20, summaryY + 30);
 
   // Calculation Breakdown Rows
+  const nisabChoiceText = data.nisabChoice === 'silver' ? pdfUi.silverChoiceLabel : pdfUi.goldChoiceLabel;
   const breakdownRows = [
     { label: ui.grossWealth, val: formatCurrencyAmount(data.totalGrossWealth, data.currency), color: '#0F172A', bold: false },
     { label: ui.lessLiabilities, val: `-${formatCurrencyAmount(data.totalLiabilities, data.currency)}`, color: '#BE123C', bold: false },
     { label: ui.netWealth, val: formatCurrencyAmount(data.netZakatableWealth, data.currency), color: '#047857', bold: true },
-    { label: `${ui.activeNisabLabel} (${data.nisabChoice.toUpperCase()}):`, val: formatCurrencyAmount(data.activeNisabThreshold, data.currency), color: '#64748B', bold: false },
+    { label: `${ui.activeNisabLabel} (${nisabChoiceText}):`, val: formatCurrencyAmount(data.activeNisabThreshold, data.currency), color: '#64748B', bold: false },
   ];
 
   let bY = summaryY + 54;
   breakdownRows.forEach((row) => {
     ctx.fillStyle = '#64748B';
-    ctx.font = isUrdu ? '13px "Jameel Noori Nastaliq", system-ui, sans-serif' : '12px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 12, false);
     ctx.textAlign = 'left';
     ctx.fillText(row.label, headerX + 20, bY + 14);
 
@@ -590,7 +867,7 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
     ctx.stroke();
 
     ctx.fillStyle = '#065F46';
-    ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 12.5, true);
     ctx.textAlign = 'center';
     ctx.fillText(ui.nisabReached, width / 2, verdictY + 26);
   } else {
@@ -601,7 +878,7 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
     ctx.stroke();
 
     ctx.fillStyle = '#92400E';
-    ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 12.5, true);
     ctx.textAlign = 'center';
     ctx.fillText(ui.belowNisab, width / 2, verdictY + 26);
   }
@@ -624,7 +901,7 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
 
   // Top Label in Due Box
   ctx.fillStyle = '#FDE68A';
-  ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+  ctx.font = getPdfFont(data.lang, 13, true);
   ctx.textAlign = 'center';
   ctx.fillText(ui.zakatDueTitle.toUpperCase(), width / 2, dueBoxY + 34);
 
@@ -636,18 +913,18 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   // Monthly Installment Breakdown
   if (data.zakatDue > 0) {
     ctx.fillStyle = '#FEF3C7';
-    ctx.font = '12.5px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 12, false);
     const monthlyAmt = formatCurrencyAmount(Math.round(data.zakatDue / 12), data.currency);
-    ctx.fillText(`💡 ${ui.monthlyOpt} ${monthlyAmt} / month (12 equal monthly installments)`, width / 2, dueBoxY + 115);
+    ctx.fillText(`💡 ${ui.monthlyOpt} ${monthlyAmt} / month ${pdfUi.monthlyInstallmentSuffix}`, width / 2, dueBoxY + 115);
   }
 
   // Ushr or Livestock Notes if applicable
   if (data.ushrDue > 0 || (data.livestockZakatable && data.livestockDueText)) {
     ctx.fillStyle = '#D1FAE5';
-    ctx.font = '11.5px system-ui, -apple-system, sans-serif';
+    ctx.font = getPdfFont(data.lang, 11.5, false);
     const extraNotes = [
-      data.ushrDue > 0 ? `🌾 Ushr Due: ${formatCurrencyAmount(data.ushrDue, data.currency)}` : null,
-      data.livestockZakatable ? `🐑 Livestock: ${data.livestockDueText}` : null,
+      data.ushrDue > 0 ? `${pdfUi.ushrDuePrefix} ${formatCurrencyAmount(data.ushrDue, data.currency)}` : null,
+      data.livestockZakatable ? `${pdfUi.livestockPrefix} ${data.livestockDueText || pdfUi.zakatDueBadge}` : null,
     ].filter(Boolean).join('  •  ');
     ctx.fillText(extraNotes, width / 2, dueBoxY + 144);
   }
@@ -676,27 +953,19 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   ctx.fillStyle = '#065F46';
   ctx.font = 'bold 15px "Amiri", "Traditional Arabic", serif, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا »', width / 2, footerY + 42);
+  ctx.fillText(pdfUi.ayahArabic, width / 2, footerY + 42);
 
   // Translation
   ctx.fillStyle = '#475569';
-  ctx.font = 'italic 11.5px system-ui, -apple-system, sans-serif';
-  ctx.fillText('“Take from their wealth a charity by which you purify them and cause them increase.” (Surah At-Tawbah 9:103)', width / 2, footerY + 68);
+  ctx.font = getPdfFont(data.lang, 11.5, false);
+  ctx.fillText(pdfUi.ayahTranslation, width / 2, footerY + 68);
 
   // Bottom Security & Privacy Guarantee
   ctx.fillStyle = '#94A3B8';
-  ctx.font = '10px system-ui, -apple-system, sans-serif';
+  ctx.font = getPdfFont(data.lang, 10, false);
   ctx.textAlign = 'center';
-  ctx.fillText(
-    'Calculated locally on your device according to authentic Islamic Shariah (Hawl & Nisab) • Noor Connect Islamic Companion',
-    width / 2,
-    footerY + 130
-  );
-  ctx.fillText(
-    'Personal data never leaves your device • 100% Private, Secure & Offline-First',
-    width / 2,
-    footerY + 148
-  );
+  ctx.fillText(pdfUi.securityNote1, width / 2, footerY + 130);
+  ctx.fillText(pdfUi.securityNote2, width / 2, footerY + 148);
 
   // 8. Convert Canvas to High-Quality JPEG Data URL
   const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.93);

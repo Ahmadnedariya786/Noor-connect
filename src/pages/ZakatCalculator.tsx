@@ -34,6 +34,7 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useContentLanguage } from "@/lib/content-translator";
 import { getZakatUIStrings } from "@/lib/zakat-i18n";
 import { shareZakatPdfReport, ZakatPdfData } from "@/lib/zakat-pdf-generator";
+import { getSelectedLogoEdition } from "@/components/NoorDynamicLogo";
 import {
   SUPPORTED_CURRENCIES,
   LiveMetalRates,
@@ -516,6 +517,7 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
       const pdfData: ZakatPdfData = {
         lang: contentLang,
         currency: activeCurrency,
+        edition: getSelectedLogoEdition(),
         goldPerGram: effectiveGoldPerGram,
         silverPerGram: effectiveSilverPerGram,
         goldPerTola: rates?.goldPerTola || effectiveGoldPerGram * TOLA_IN_GRAMS,
