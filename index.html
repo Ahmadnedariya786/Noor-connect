@@ -279,9 +279,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: var(--bg-base);
-      background-image: radial-gradient(circle at 50% 38%, var(--accent-soft) 0%, var(--bg-elev) 45%, var(--bg-base) 100%);
-      color: var(--text-primary);
+      background: #090D16;
       overflow: hidden;
       z-index: 2147483647;
       pointer-events: all;
@@ -348,114 +346,8 @@
 </head>
 
 <body class="splash-active">
-  <!-- Static pre-React splash element: physically removed by React once SplashScreen mounts with 0 layout jump -->
-  <div id="initial-splash" class="static-splash" aria-hidden="true" style="cursor:pointer;">
-    <!-- Fixed Celestial Stars Layer (matches React FloatingStars 100%) -->
-    <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
-      <div style="position:absolute;left:18%;top:22%;width:2px;height:2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;"></div>
-      <div style="position:absolute;left:82%;top:19%;width:2.5px;height:2.5px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:0.5s;"></div>
-      <div style="position:absolute;left:25%;top:75%;width:1.5px;height:1.5px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.0s;"></div>
-      <div style="position:absolute;left:78%;top:72%;width:2px;height:2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.5s;"></div>
-      <div style="position:absolute;left:12%;top:48%;width:2px;height:2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:0.8s;"></div>
-      <div style="position:absolute;left:88%;top:52%;width:1.5px;height:1.5px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.2s;"></div>
-      <div style="position:absolute;left:35%;top:15%;width:2.2px;height:2.2px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:0.3s;"></div>
-      <div style="position:absolute;left:65%;top:84%;width:1.8px;height:1.8px;border-radius:50%;background-color:var(--accent-text);opacity:0.45;animation:pulseStar 3s ease-in-out infinite;animation-delay:1.7s;"></div>
-    </div>
-
-    <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
-      <!-- 5-Edition Living Islamic Emblem (Flagship Edition 0: Al-Miftah Royal Mihrab & Blooming Mushaf) -->
-      <div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin:0 auto;">
-        <!-- Ambient Radial Halo -->
-        <div style="position:absolute;inset:-20px;border-radius:50%;background:radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);animation:pulseHalo 3s ease-in-out infinite;pointer-events:none;"></div>
-        
-        <!-- Flagship Masterpiece Vector SVG -->
-        <svg width="120" height="120" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:10;pointer-events:none;overflow:visible;filter:drop-shadow(0 4px 12px rgba(212,175,55,0.45));">
-          <defs>
-            <linearGradient id="init-gold-prim" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#FFFDF0" />
-              <stop offset="20%" stop-color="#FDE08A" />
-              <stop offset="50%" stop-color="#D4AF37" />
-              <stop offset="80%" stop-color="#B8860B" />
-              <stop offset="100%" stop-color="#6B4E08" />
-            </linearGradient>
-            <linearGradient id="init-gold-rad" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#9A6F1A" />
-              <stop offset="30%" stop-color="#F5D061" />
-              <stop offset="70%" stop-color="#FFF8D6" />
-              <stop offset="100%" stop-color="#D4AF37" />
-            </linearGradient>
-            <linearGradient id="init-jewel-velvet" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#0B2B1E" />
-              <stop offset="45%" stop-color="#064E3B" />
-              <stop offset="100%" stop-color="#021C13" />
-            </linearGradient>
-          </defs>
-
-          <!-- Outer Counter-Rotating Rub el Hizb Frame -->
-          <g style="transform-origin:100px 100px;animation:spin 28s linear infinite reverse;">
-            <circle cx="100" cy="100" r="92" stroke="url(#init-gold-rad)" stroke-width="1.2" stroke-dasharray="2.5 4" fill="none" opacity="0.6" />
-            <rect x="36" y="36" width="128" height="128" rx="10" stroke="url(#init-gold-prim)" stroke-width="1.6" fill="none" opacity="0.85" />
-            <rect x="36" y="36" width="128" height="128" rx="10" transform="rotate(45 100 100)" stroke="url(#init-gold-prim)" stroke-width="1.6" fill="none" opacity="0.85" />
-            <circle cx="100" cy="8" r="2.8" fill="#FFFDF0" />
-            <circle cx="192" cy="100" r="2.8" fill="#FFFDF0" />
-            <circle cx="100" cy="192" r="2.8" fill="#FFFDF0" />
-            <circle cx="8" cy="100" r="2.8" fill="#FFFDF0" />
-            <circle cx="165" cy="35" r="2.8" fill="#FFFDF0" />
-            <circle cx="165" cy="165" r="2.8" fill="#FFFDF0" />
-            <circle cx="35" cy="165" r="2.8" fill="#FFFDF0" />
-            <circle cx="35" cy="35" r="2.8" fill="#FFFDF0" />
-          </g>
-
-          <!-- Blooming Mushaf Leaves & Mihrab Centerpiece -->
-          <g style="transform-origin:100px 100px;">
-            <!-- Left Blooming Leaf -->
-            <path d="M 100 162 C 84 158 54 152 44 136 C 36 122 46 102 64 98 C 76 96 88 108 96 126 Z" fill="url(#init-gold-prim)" stroke="#FFFDF0" stroke-width="1" />
-            <path d="M 96 156 C 80 150 56 142 50 130 C 46 120 54 108 66 106 C 76 104 86 114 94 128 Z" fill="url(#init-jewel-velvet)" opacity="0.85" />
-            <!-- Right Blooming Leaf -->
-            <path d="M 100 162 C 116 158 146 152 156 136 C 164 122 154 102 136 98 C 124 96 112 108 104 126 Z" fill="url(#init-gold-prim)" stroke="#FFFDF0" stroke-width="1" />
-            <path d="M 104 156 C 120 150 144 142 150 130 C 154 120 146 108 134 106 C 124 104 114 114 106 128 Z" fill="url(#init-jewel-velvet)" opacity="0.85" />
-            <!-- Base Plinth -->
-            <polygon points="90,162 110,162 105,176 95,176" fill="url(#init-gold-rad)" stroke="#FFFDF0" stroke-width="0.8" />
-            <!-- Mihrab Arch Backdrop -->
-            <path d="M 76 144 L 76 102 C 76 80 88 64 100 52 C 112 64 124 80 124 102 L 124 144 Z" fill="url(#init-jewel-velvet)" stroke="url(#init-gold-prim)" stroke-width="2.2" />
-            <!-- Sculpted Dome -->
-            <path d="M 72 102 C 72 74 86 52 100 40 C 114 52 128 74 128 102 Z" fill="url(#init-gold-prim)" stroke="#FFFDF0" stroke-width="1.4" />
-            <!-- Crescent Moon & Finial -->
-            <path d="M 98 24 C 95 24 92 26.5 92 30 C 92 33.5 95 36 98.5 36 C 96.5 35 95.5 33 95.5 30 C 95.5 27 97 25 99 24.2 Z" fill="#FFFDF0" stroke="url(#init-gold-prim)" stroke-width="0.8" />
-            <polygon points="104,27 105.2,29.5 108,29.8 106,31.7 106.5,34.5 104,33.1 101.5,34.5 102,31.7 100,29.8 102.8,29.5" fill="#FFFDF0" />
-            <!-- Arabic Calligraphy: نُور -->
-            <path d="M 87 118 C 87 132 93 138 100 138 C 107 138 113 132 113 118" fill="none" stroke="#FFFDF0" stroke-width="3.2" stroke-linecap="round" />
-            <polygon points="100,105 103.5,109 100,113 96.5,109" fill="#FFFDF0" />
-            <circle cx="106" cy="116" r="3" fill="#FFFDF0" />
-            <path d="M 112 120 C 113 125 116 128 118 129" fill="none" stroke="#FFFDF0" stroke-width="2.4" stroke-linecap="round" />
-          </g>
-        </svg>
-      </div>
-
-      <!-- Brand Title: NOOR CONNECT -->
-      <h1 style="margin:18px 0 0 0;font-size:1.25rem;font-weight:800;letter-spacing:0.22em;color:var(--accent-text);text-shadow:0 0 18px var(--accent-glow);text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
-        NOOR CONNECT
-      </h1>
-
-      <!-- Subtitle: ISLAMIC COMPANION -->
-      <p id="splash-subtitle" style="margin:4px 0 0 0;font-size:0.72rem;font-weight:600;letter-spacing:0.30em;color:var(--text-secondary);text-align:center;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;">
-        ISLAMIC COMPANION
-      </p>
-
-      <!-- Living Emblem Edition Badge -->
-      <div style="margin-top:10px;padding:3px 14px;border-radius:999px;font-size:0.66rem;font-weight:600;letter-spacing:0.08em;color:var(--accent-text);background-color:var(--accent-soft);border:1px solid var(--border);box-shadow:0 0 12px var(--accent-glow);display:inline-flex;align-items:center;gap:4px;">
-        <span>✦</span>
-        <span>Living Islamic Emblem</span>
-        <span>✦</span>
-      </div>
-
-      <!-- Sleek Dynamic Shimmer Loader Bar -->
-      <div style="width:140px;height:3px;background:rgba(255, 255, 255, 0.10);border:none;border-radius:999px;overflow:hidden;margin-top:22px;position:relative;">
-        <div style="position:absolute;inset:0;width:35%;height:100%;border-radius:999px;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:shimmerComet 1.6s ease-in-out infinite;"></div>
-      </div>
-    </div>
-    <div style="position:absolute;bottom:0;left:0;right:0;height:128px;pointer-events:none;background:linear-gradient(to top, var(--accent-soft), transparent);"></div>
-  </div>
+  <!-- Static pre-React splash element: clean minimal dark background (#090D16) removed immediately upon React render to eliminate mid-splash double-logo jump -->
+  <div id="initial-splash" class="static-splash" aria-hidden="true" style="position:fixed;inset:0;width:100vw;height:100dvh;background:#090D16;z-index:2147483647;pointer-events:all;"></div>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

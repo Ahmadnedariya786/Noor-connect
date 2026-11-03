@@ -1,6 +1,7 @@
 
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    
     <!-- Deep Obsidian-Emerald Rich Background Gradient -->
     <radialGradient id="masterBg" cx="50%" cy="45%" r="70%">
       <stop offset="0%" stop-color="#0E4230" />
@@ -57,23 +58,21 @@
       <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000000" flood-opacity="0.75" />
       <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#D4AF37" flood-opacity="0.4" />
     </filter>
+
   </defs>
 
   <circle cx="512" cy="512" r="510" fill="url(#masterBg)" stroke="url(#goldRim)" stroke-width="8" />
 
   <!-- Center Artwork Scaled to 1024x1024 Coordinate Space -->
   <g transform="translate(512 512) scale(4.4) translate(-100 -100)">
-    <!-- Outer Counter-Rotating Rub el Hizb (۞) Golden Filigree Ring -->
+    
     <g>
       <!-- Outer Dotted Halo Ring -->
       <circle cx="100" cy="100" r="92" stroke="url(#goldRadiant)" stroke-width="1.2" stroke-dasharray="2.5 4" fill="none" opacity="0.6" />
-      
       <!-- Square 1 -->
       <rect x="36" y="36" width="128" height="128" rx="10" stroke="url(#goldPrimary)" stroke-width="1.8" fill="none" opacity="0.88" />
-      
       <!-- Square 2 (Rotated 45 degrees) -->
       <rect x="36" y="36" width="128" height="128" rx="10" transform="rotate(45 100 100)" stroke="url(#goldPrimary)" stroke-width="1.8" fill="none" opacity="0.88" />
-      
       <!-- 8 Golden Starlight Nodes at Vertices -->
       <circle cx="100" cy="8" r="3.2" fill="#FFFDF0" filter="url(#goldGlow)" />
       <circle cx="192" cy="100" r="3.2" fill="#FFFDF0" filter="url(#goldGlow)" />
@@ -91,34 +90,14 @@
     <!-- Centerpiece Container with Deep Shadow -->
     <g filter="url(#deepShadow)">
       <!-- Left Blooming Mushaf Petal / Page -->
-      <path
-        d="M 100 162 C 84 158 54 152 44 136 C 36 122 46 102 64 98 C 76 96 88 108 96 126 Z"
-        fill="url(#goldPrimary)"
-        stroke="#FFFDF0"
-        stroke-width="1"
-      />
-      <path
-        d="M 96 156 C 80 150 56 142 50 130 C 46 120 54 108 66 106 C 76 104 86 114 94 128 Z"
-        fill="url(#jewelVelvet)"
-        opacity="0.88"
-      />
-      <!-- Page Veins -->
+      <path d="M 100 162 C 84 158 54 152 44 136 C 36 122 46 102 64 98 C 76 96 88 108 96 126 Z" fill="url(#goldPrimary)" stroke="#FFFDF0" stroke-width="1" />
+      <path d="M 96 156 C 80 150 56 142 50 130 C 46 120 54 108 66 106 C 76 104 86 114 94 128 Z" fill="url(#jewelVelvet)" opacity="0.88" />
       <path d="M 52 130 Q 74 132 94 142" stroke="url(#goldRadiant)" stroke-width="1" fill="none" opacity="0.8" />
       <path d="M 60 118 Q 80 124 94 134" stroke="url(#goldRadiant)" stroke-width="1" fill="none" opacity="0.8" />
 
       <!-- Right Blooming Mushaf Petal / Page -->
-      <path
-        d="M 100 162 C 116 158 146 152 156 136 C 164 122 154 102 136 98 C 124 96 112 108 104 126 Z"
-        fill="url(#goldPrimary)"
-        stroke="#FFFDF0"
-        stroke-width="1"
-      />
-      <path
-        d="M 104 156 C 120 150 144 142 150 130 C 154 120 146 108 134 106 C 124 104 114 114 106 128 Z"
-        fill="url(#jewelVelvet)"
-        opacity="0.88"
-      />
-      <!-- Page Veins -->
+      <path d="M 100 162 C 116 158 146 152 156 136 C 164 122 154 102 136 98 C 124 96 112 108 104 126 Z" fill="url(#goldPrimary)" stroke="#FFFDF0" stroke-width="1" />
+      <path d="M 104 156 C 120 150 144 142 150 130 C 154 120 146 108 134 106 C 124 104 114 114 106 128 Z" fill="url(#jewelVelvet)" opacity="0.88" />
       <path d="M 148 130 Q 126 132 106 142" stroke="url(#goldRadiant)" stroke-width="1" fill="none" opacity="0.8" />
       <path d="M 140 118 Q 120 124 106 134" stroke="url(#goldRadiant)" stroke-width="1" fill="none" opacity="0.8" />
 
@@ -127,68 +106,31 @@
       <circle cx="100" cy="168" r="2.8" fill="#FFFDF0" />
 
       <!-- Royal Mihrab Arch Backdrop -->
-      <path
-        d="M 76 144 L 76 102 C 76 80 88 64 100 52 C 112 64 124 80 124 102 L 124 144 Z"
-        fill="url(#jewelVelvet)"
-        stroke="url(#goldPrimary)"
-        stroke-width="2.2"
-      />
-
-      <!-- Decorative Inner Cusped Foil -->
-      <path
-        d="M 82 142 L 82 104 C 82 92 88 84 94 76 C 96 80 100 82 100 82 C 100 82 104 80 106 76 C 112 84 118 92 118 104 L 118 142 Z"
-        fill="none"
-        stroke="url(#goldRadiant)"
-        stroke-width="1.2"
-        stroke-dasharray="1.5 2"
-        opacity="0.9"
-      />
+      <path d="M 76 144 L 76 102 C 76 80 88 64 100 52 C 112 64 124 80 124 102 L 124 144 Z" fill="url(#jewelVelvet)" stroke="url(#goldPrimary)" stroke-width="2.2" />
+      <path d="M 82 142 L 82 104 C 82 92 88 84 94 76 C 96 80 100 82 100 82 C 100 82 104 80 106 76 C 112 84 118 92 118 104 L 118 142 Z" fill="none" stroke="url(#goldRadiant)" stroke-width="1.2" stroke-dasharray="1.5 2" opacity="0.9" />
 
       <!-- Sculpted Pointed Mihrab Dome -->
-      <path
-        d="M 72 102 C 72 74 86 52 100 40 C 114 52 128 74 128 102 Z"
-        fill="url(#goldPrimary)"
-        stroke="#FFFDF0"
-        stroke-width="1.4"
-      />
-      <!-- Dome Ribs -->
+      <path d="M 72 102 C 72 74 86 52 100 40 C 114 52 128 74 128 102 Z" fill="url(#goldPrimary)" stroke="#FFFDF0" stroke-width="1.4" />
       <line x1="100" y1="40" x2="100" y2="102" stroke="url(#jewelVelvet)" stroke-width="1.2" />
       <path d="M 86 98 Q 94 66 100 42" stroke="#FFFDF0" stroke-width="0.8" fill="none" opacity="0.75" />
       <path d="M 114 98 Q 106 66 100 42" stroke="#FFFDF0" stroke-width="0.8" fill="none" opacity="0.75" />
 
       <!-- Crescent Moon & Star Finial -->
       <g filter="url(#goldGlow)">
-        <path
-          d="M 98 24 C 95 24 92 26.5 92 30 C 92 33.5 95 36 98.5 36 C 96.5 35 95.5 33 95.5 30 C 95.5 27 97 25 99 24.2 C 98.6 24.1 98.3 24 98 24 Z"
-          fill="#FFFDF0"
-          stroke="url(#goldPrimary)"
-          stroke-width="0.8"
-        />
-        <polygon
-          points="104,27 105.2,29.5 108,29.8 106,31.7 106.5,34.5 104,33.1 101.5,34.5 102,31.7 100,29.8 102.8,29.5"
-          fill="#FFFDF0"
-        />
+        <path d="M 98 24 C 95 24 92 26.5 92 30 C 92 33.5 95 36 98.5 36 C 96.5 35 95.5 33 95.5 30 C 95.5 27 97 25 99 24.2 C 98.6 24.1 98.3 24 98 24 Z" fill="#FFFDF0" stroke="url(#goldPrimary)" stroke-width="0.8" />
+        <polygon points="104,27 105.2,29.5 108,29.8 106,31.7 106.5,34.5 104,33.1 101.5,34.5 102,31.7 100,29.8 102.8,29.5" fill="#FFFDF0" />
         <line x1="100" y1="36" x2="100" y2="40" stroke="url(#goldPrimary)" stroke-width="2" stroke-linecap="round" />
       </g>
 
       <!-- Sculpted Arabic Calligraphy: نُور (Noor) -->
       <g filter="url(#goldGlow)">
-        <!-- Letter 'ن' (Main protective crescent vessel) -->
-        <path
-          d="M 87 118 C 87 132 93 138 100 138 C 107 138 113 132 113 118"
-          fill="none"
-          stroke="#FFFDF0"
-          stroke-width="3.4"
-          stroke-linecap="round"
-        />
-        <!-- Radiant Diamond Dot of the Nun -->
+        <path d="M 87 118 C 87 132 93 138 100 138 C 107 138 113 132 113 118" fill="none" stroke="#FFFDF0" stroke-width="3.4" stroke-linecap="round" />
         <polygon points="100,105 103.5,109 100,113 96.5,109" fill="#FFFDF0" stroke="url(#goldPrimary)" stroke-width="0.8" />
-        <!-- Letter 'و' -->
         <circle cx="106" cy="116" r="3.2" fill="#FFFDF0" />
         <path d="M 109 119 C 111 123 113 126 114 127" fill="none" stroke="#FFFDF0" stroke-width="2.2" stroke-linecap="round" />
-        <!-- Letter 'ر' -->
         <path d="M 112 120 C 113 125 116 128 118 129" fill="none" stroke="#FFFDF0" stroke-width="2.6" stroke-linecap="round" />
       </g>
     </g>
+  
   </g>
 </svg>

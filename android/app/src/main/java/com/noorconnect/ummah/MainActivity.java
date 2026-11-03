@@ -110,6 +110,9 @@ public class MainActivity extends BridgeActivity {
         // Create default notification channel for Capacitor LocalNotifications
         createDefaultNotificationChannel();
 
+        // Ensure user-selected launcher icon alias matches persisted preference
+        applyPersistedLauncherIcon();
+
         // First-launch permission sequence (Step A: background dialog -> Step B: exact alarm settings)
         // is now explicitly coordinated by runFirstLaunchPermissionOnboarding() in the UI layer.
 
@@ -578,6 +581,30 @@ public class MainActivity extends BridgeActivity {
                             return false;
                         }
                     }
+
+                    @android.webkit.JavascriptInterface
+                    public void setLauncherIconEdition(final int editionIndex) {
+                        try {
+                            final int target = (editionIndex >= 0 && editionIndex <= 4) ? editionIndex : 0;
+                            android.content.SharedPreferences prefs = getSharedPreferences("noor_connect_prefs", MODE_PRIVATE);
+                            int current = prefs.getInt("selected_logo_edition", -1);
+                            if (current == target) return;
+                            prefs.edit().putInt("selected_logo_edition", target).apply();
+
+                            android.content.pm.PackageManager pm = getPackageManager();
+                            String pkg = getPackageName();
+                            for (int i = 0; i <= 4; i++) {
+                                android.content.ComponentName cn = new android.content.ComponentName(pkg, pkg + ".LauncherAlias" + i);
+                                int newState = (i == target)
+                                    ? android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                                    : android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+                                pm.setComponentEnabledSetting(cn, newState, android.content.pm.PackageManager.DONT_KILL_APP);
+                            }
+                            Log.i(TAG, "Switched launcher icon to edition: " + target);
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Failed to switch launcher icon edition", t);
+                        }
+                    }
                 }, "AndroidBridge");
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to register AndroidBridge JavascriptInterface", t);
@@ -600,6 +627,28 @@ public class MainActivity extends BridgeActivity {
         // Adhan alarms use setAlarmClock() which is Doze-immune.
         // Adhan playback uses a short-lived foreground service started
         // by AdhanAlarmReceiver only when it's time to play.
+    }
+
+    private void applyPersistedLauncherIcon() {
+        try {
+            android.content.SharedPreferences prefs = getSharedPreferences("noor_connect_prefs", MODE_PRIVATE);
+            int target = prefs.getInt("selected_logo_edition", -1);
+            if (target < 0 || target > 4) return;
+
+            android.content.pm.PackageManager pm = getPackageManager();
+            String pkg = getPackageName();
+            for (int i = 0; i <= 4; i++) {
+                android.content.ComponentName cn = new android.content.ComponentName(pkg, pkg + ".LauncherAlias" + i);
+                int desired = (i == target)
+                    ? android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    : android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+                if (pm.getComponentEnabledSetting(cn) != desired) {
+                    pm.setComponentEnabledSetting(cn, desired, android.content.pm.PackageManager.DONT_KILL_APP);
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to apply persisted launcher icon", t);
+        }
     }
 
     /**

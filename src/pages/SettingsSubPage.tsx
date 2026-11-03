@@ -88,7 +88,7 @@ import {
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
-import { NoorDynamicLogo, cycleLogoEdition, getActiveLogoEdition, NOOR_LOGO_EDITIONS } from '@/components/NoorDynamicLogo';
+import { NoorDynamicLogo, NoorLogoVisualPicker, cycleLogoEdition, getSelectedLogoEdition, setSelectedLogoEdition, NOOR_LOGO_EDITIONS, LOGO_EDITION_CHANGE_EVENT, LOGO_EDITION_CHANGED_EVENT } from '@/components/NoorDynamicLogo';
 import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
 import { OwnerSecurityVaultCard } from '@/components/OwnerSecurityVaultCard';
 import { isOwnerSessionUnlocked, isUpgradationLockEnabled, subscribeOwnerSecurity, lockOwnerSession } from '@/lib/owner-security';
@@ -442,7 +442,32 @@ const SettingsSubPage: React.FC = () => {
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [apkDownloadProgress, setApkDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
-  const [logoEdition, setLogoEdition] = useState(() => getActiveLogoEdition());
+  const [logoEdition, setLogoEdition] = useState(() => getSelectedLogoEdition());
+
+  useEffect(() => {
+    const handleSyncLogo = (e?: Event) => {
+      if (e && 'detail' in e) {
+        const detail = (e as CustomEvent).detail;
+        if (typeof detail === 'number') {
+          setLogoEdition(detail as any);
+          return;
+        }
+        if (detail && typeof detail === 'object' && typeof detail.edition === 'number') {
+          setLogoEdition(detail.edition as any);
+          return;
+        }
+      }
+      setLogoEdition(getSelectedLogoEdition());
+    };
+    window.addEventListener(LOGO_EDITION_CHANGE_EVENT, handleSyncLogo);
+    window.addEventListener(LOGO_EDITION_CHANGED_EVENT, handleSyncLogo);
+    window.addEventListener('storage', handleSyncLogo);
+    return () => {
+      window.removeEventListener(LOGO_EDITION_CHANGE_EVENT, handleSyncLogo);
+      window.removeEventListener(LOGO_EDITION_CHANGED_EVENT, handleSyncLogo);
+      window.removeEventListener('storage', handleSyncLogo);
+    };
+  }, []);
 
   // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1 when unlocked)
   const [isOwnerUnlocked, setIsOwnerUnlocked] = useState(() => isOwnerSessionUnlocked());
@@ -951,6 +976,23 @@ const SettingsSubPage: React.FC = () => {
         {sectionId === 'app-theme' && (
           <div className="space-y-4">
             <ThemePicker />
+
+            {/* App Logo & Home Icon (5 Royal Emblems) Card */}
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <div>
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">App Logo & Home Icon</h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  Choose from 5 royal emblem editions. Synchronized across splash, in-app headers, and Android home screen icon.
+                </p>
+              </div>
+              <NoorLogoVisualPicker
+                onSelect={(ed) => {
+                  toast({
+                    title: `✓ App Logo & Home Screen Icon set to: ${NOOR_LOGO_EDITIONS[ed]?.name}`,
+                  });
+                }}
+              />
+            </Card>
           </div>
         )}
 
@@ -1676,6 +1718,17 @@ const SettingsSubPage: React.FC = () => {
                   <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
                   <span>Switch Logo Style ({logoEdition + 1}/5) • {NOOR_LOGO_EDITIONS[logoEdition]?.shortName}</span>
                 </button>
+              </div>
+
+              {/* 5-Logo Visual Selector Grid */}
+              <div className="pt-2 pb-1 w-full max-w-sm mx-auto">
+                <NoorLogoVisualPicker
+                  onSelect={(ed) => {
+                    toast({
+                      title: `✓ App Logo & Home Screen Icon set to: ${NOOR_LOGO_EDITIONS[ed]?.name}`,
+                    });
+                  }}
+                />
               </div>
               <div className="pt-2 space-y-1 max-w-xs mx-auto">
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>

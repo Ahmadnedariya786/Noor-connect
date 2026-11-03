@@ -77,6 +77,14 @@ try {
         </ErrorBoundary>
       </StrictMode>
     );
+
+    // Immediately remove initial pre-React splash element to eliminate mid-splash double-logo jump
+    try {
+      document.getElementById('initial-splash')?.remove();
+      document.getElementById('static-splash')?.remove();
+    } catch {
+      // Safe fallback
+    }
   } else {
     console.error("Root element not found");
   }

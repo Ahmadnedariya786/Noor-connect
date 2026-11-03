@@ -68,60 +68,108 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
   },
 ] as const;
 
+export const SELECTED_LOGO_KEY = 'noor_selected_logo_edition';
 const STORAGE_LAUNCH_KEY = 'noor_logo_launch_edition_v1';
 const STORAGE_MANUAL_KEY = 'noor_logo_manual_edition';
-const SESSION_INIT_KEY = 'noor_logo_session_initialized';
+export const LOGO_EDITION_CHANGE_EVENT = 'noor-logo-edition-change';
 export const LOGO_EDITION_CHANGED_EVENT = 'noor-logo-edition-changed';
 
 /**
- * Returns the active logo edition (0..4) based on launch rotation or manual selection.
+ * Returns the user-selected logo edition (0..4) locked globally as the single source of truth.
+ * Defaults to 0 (Royal Mihrab & Mushaf) if unset.
  */
-export function getActiveLogoEdition(): NoorLogoEditionId {
+export function getSelectedLogoEdition(): NoorLogoEditionId {
   if (typeof window === 'undefined') return 0;
   try {
-    const manual = localStorage.getItem(STORAGE_MANUAL_KEY);
-    if (manual !== null) {
-      const idx = parseInt(manual, 10);
-      if (!isNaN(idx) && idx >= 0 && idx < NOOR_LOGO_EDITIONS.length) {
+    const val = localStorage.getItem(SELECTED_LOGO_KEY);
+    if (val !== null) {
+      const idx = parseInt(val, 10);
+      if (!isNaN(idx) && idx >= 0 && idx <= 4) {
         return idx as NoorLogoEditionId;
       }
     }
-    const count = parseInt(localStorage.getItem(STORAGE_LAUNCH_KEY) || '0', 10);
-    return (Math.abs(count) % NOOR_LOGO_EDITIONS.length) as NoorLogoEditionId;
+    const manual = localStorage.getItem(STORAGE_MANUAL_KEY);
+    if (manual !== null) {
+      const idx = parseInt(manual, 10);
+      if (!isNaN(idx) && idx >= 0 && idx <= 4) {
+        return idx as NoorLogoEditionId;
+      }
+    }
+    return 0;
   } catch {
     return 0;
   }
 }
 
 /**
- * Cycles to the next logo edition and broadcasts an update event.
+ * Compatibility alias returning the user-selected logo edition.
+ */
+export function getActiveLogoEdition(): NoorLogoEditionId {
+  return getSelectedLogoEdition();
+}
+
+/**
+ * Sets and locks the user's chosen logo edition across the entire app,
+ * dispatches change events to all reactive subscribers, updates the favicon,
+ * and notifies the native Android bridge to switch the Android launcher icon.
+ */
+export function setSelectedLogoEdition(edition: NoorLogoEditionId): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const clamped = (Math.max(0, Math.min(4, Math.floor(edition))) || 0) as NoorLogoEditionId;
+    localStorage.setItem(SELECTED_LOGO_KEY, String(clamped));
+    // Keep legacy storage keys in sync for backward compatibility
+    localStorage.setItem(STORAGE_LAUNCH_KEY, String(clamped));
+    localStorage.setItem(STORAGE_MANUAL_KEY, String(clamped));
+
+    // Dispatch both event variants so all listeners update synchronously
+    window.dispatchEvent(new CustomEvent(LOGO_EDITION_CHANGE_EVENT, { detail: { edition: clamped } }));
+    window.dispatchEvent(new CustomEvent(LOGO_EDITION_CHANGED_EVENT, { detail: clamped }));
+
+    // Dynamically update web favicon
+    try {
+      const favIcons = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
+      favIcons.forEach((el) => {
+        try {
+          const url = new URL(el.href, window.location.origin);
+          url.searchParams.set('v', `ed${clamped}_${Date.now()}`);
+          el.href = url.toString();
+        } catch {
+          // Ignore invalid URL parsing
+        }
+      });
+    } catch {
+      // Safe fallback for favicon update
+    }
+
+    // Call native Android bridge to switch Home Screen launcher icon
+    try {
+      type BridgeType = {
+        AndroidBridge?: {
+          setLauncherIconEdition?: (editionIndex: number) => void;
+        };
+      };
+      (window as unknown as BridgeType).AndroidBridge?.setLauncherIconEdition?.(clamped);
+    } catch (err) {
+      console.warn('Native AndroidBridge.setLauncherIconEdition error:', err);
+    }
+  } catch (err) {
+    console.warn('setSelectedLogoEdition failed:', err);
+  }
+}
+
+/**
+ * Cycles to the next logo edition, saves it as the locked choice, and broadcasts updates.
  */
 export function cycleLogoEdition(): NoorLogoEditionId {
   if (typeof window === 'undefined') return 0;
   try {
-    const cur = getActiveLogoEdition();
+    const cur = getSelectedLogoEdition();
     const next = ((cur + 1) % NOOR_LOGO_EDITIONS.length) as NoorLogoEditionId;
-    localStorage.setItem(STORAGE_MANUAL_KEY, String(next));
-    window.dispatchEvent(new CustomEvent(LOGO_EDITION_CHANGED_EVENT, { detail: next }));
+    setSelectedLogoEdition(next);
     return next;
   } catch {
     return 0;
-  }
-}
-
-// Initialize per-session launch rotation once per app boot
-if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
-  try {
-    if (!sessionStorage.getItem(SESSION_INIT_KEY)) {
-      sessionStorage.setItem(SESSION_INIT_KEY, 'true');
-      const prev = parseInt(localStorage.getItem(STORAGE_LAUNCH_KEY) || '0', 10);
-      const next = (prev + 1) % NOOR_LOGO_EDITIONS.length;
-      localStorage.setItem(STORAGE_LAUNCH_KEY, String(next));
-      // Reset manual override on fresh app boot so user enjoys rotation
-      localStorage.removeItem(STORAGE_MANUAL_KEY);
-    }
-  } catch {
-    // Graceful fallback for restricted WebViews
   }
 }
 
@@ -686,10 +734,10 @@ export const NoorDynamicLogo: React.FC<NoorDynamicLogoProps> = ({
   const reactId = useId().replace(/:/g, '');
   const prefix = `noor-logo-${reactId}`;
 
-  // Listen to live edition changes (e.g. from Settings "Switch Style")
+  // Listen to live edition changes (e.g. from Settings "Switch Style" or visual picker)
   const [activeEdition, setActiveEdition] = useState<NoorLogoEditionId>(() => {
     if (edition !== undefined) return edition;
-    return getActiveLogoEdition();
+    return getSelectedLogoEdition();
   });
 
   useEffect(() => {
@@ -699,17 +747,27 @@ export const NoorDynamicLogo: React.FC<NoorDynamicLogoProps> = ({
     }
 
     const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<number>;
-      if (typeof customEvent.detail === 'number') {
-        setActiveEdition(customEvent.detail as NoorLogoEditionId);
-      } else {
-        setActiveEdition(getActiveLogoEdition());
+      const customEvent = e as CustomEvent<{ edition?: number } | number>;
+      if (customEvent.detail !== undefined) {
+        if (typeof customEvent.detail === 'number') {
+          setActiveEdition(customEvent.detail as NoorLogoEditionId);
+          return;
+        }
+        if (typeof customEvent.detail === 'object' && typeof customEvent.detail.edition === 'number') {
+          setActiveEdition(customEvent.detail.edition as NoorLogoEditionId);
+          return;
+        }
       }
+      setActiveEdition(getSelectedLogoEdition());
     };
 
+    window.addEventListener(LOGO_EDITION_CHANGE_EVENT, handler);
     window.addEventListener(LOGO_EDITION_CHANGED_EVENT, handler);
+    window.addEventListener('storage', handler);
     return () => {
+      window.removeEventListener(LOGO_EDITION_CHANGE_EVENT, handler);
       window.removeEventListener(LOGO_EDITION_CHANGED_EVENT, handler);
+      window.removeEventListener('storage', handler);
     };
   }, [edition]);
 
@@ -783,6 +841,91 @@ export const NoorDynamicLogo: React.FC<NoorDynamicLogoProps> = ({
           ✦ {currentMeta.shortName} ✦
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── 5-LOGO VISUAL SELECTOR GRID COMPONENT ───
+
+export interface NoorLogoVisualPickerProps {
+  className?: string;
+  onSelect?: (edition: NoorLogoEditionId) => void;
+}
+
+export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
+  className = '',
+  onSelect,
+}) => {
+  const [selected, setSelected] = useState<NoorLogoEditionId>(() => getSelectedLogoEdition());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setSelected(getSelectedLogoEdition());
+    };
+    window.addEventListener(LOGO_EDITION_CHANGE_EVENT, handleUpdate);
+    window.addEventListener(LOGO_EDITION_CHANGED_EVENT, handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener(LOGO_EDITION_CHANGE_EVENT, handleUpdate);
+      window.removeEventListener(LOGO_EDITION_CHANGED_EVENT, handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
+  const handlePick = (edition: NoorLogoEditionId) => {
+    setSelected(edition);
+    setSelectedLogoEdition(edition);
+    if (onSelect) {
+      onSelect(edition);
+    }
+  };
+
+  return (
+    <div className={`space-y-2 select-none ${className}`}>
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+        {NOOR_LOGO_EDITIONS.map((ed) => {
+          const isCurrent = selected === ed.id;
+          return (
+            <button
+              key={ed.id}
+              type="button"
+              onClick={() => handlePick(ed.id)}
+              className={`group relative flex flex-col items-center justify-between p-2 rounded-xl border transition-all duration-200 select-none ${
+                isCurrent
+                  ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40 bg-[var(--accent-soft)] shadow-md scale-[1.02]'
+                  : 'border-[var(--border)] hover:border-[var(--accent)]/40 bg-[var(--surface-2)]/60 hover:bg-[var(--surface-2)] opacity-85 hover:opacity-100'
+              }`}
+              title={`${ed.name} (Tap to set as App & Launcher Icon)`}
+              aria-label={`Select ${ed.name}`}
+            >
+              {/* Active Checkmark Badge */}
+              {isCurrent && (
+                <div
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center shadow"
+                  style={{ background: 'var(--accent)', color: 'var(--on-accent, #000)' }}
+                >
+                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+
+              <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center my-0.5 pointer-events-none">
+                <NoorDynamicLogo edition={ed.id} size="sm" animated={false} />
+              </div>
+
+              <span
+                className="text-[10px] sm:text-[11px] font-semibold text-center leading-tight line-clamp-2 mt-1"
+                style={{
+                  color: isCurrent ? 'var(--accent-text)' : 'var(--text-secondary)',
+                }}
+              >
+                {ed.shortName}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
