@@ -401,22 +401,7 @@ public class AdhanPlaybackService extends Service {
     }
 
     private String getPrayerHadithQuote(String prayerName) {
-        if (prayerName == null)
-            return "\"Establish prayer at the decline of the sun until the darkness of the night.\" (Surah Al-Isra 17:78)";
-        switch (prayerName.toLowerCase(Locale.ROOT)) {
-            case "fajr":
-                return "\"The two rak'ahs at dawn are better than this world and all it contains.\" — Sahih Muslim";
-            case "dhuhr":
-                return "\"Whoever observes four rak'ahs before Dhuhr and four after it, Allah makes him forbidden to the Fire.\" — Jami' at-Tirmidhi";
-            case "asr":
-                return "\"He who leaves the Asr prayer, his good deeds will be annulled.\" — Sahih Al-Bukhari";
-            case "maghrib":
-                return "\"Hurry to perform the Maghrib prayer before the stars appear in the sky.\" — Musnad Ahmad";
-            case "isha":
-                return "\"Whoever prays the Isha prayer in congregation, it is as if he prayed for half the night.\" — Sahih Muslim";
-            default:
-                return "\"Indeed, prayer has been decreed upon the believers a decree of specified times.\" (Surah An-Nisa 4:103)";
-        }
+        return PrayerHadithHelper.getPrayerHadith(this, prayerName);
     }
 
     public static Bitmap createPrayerEmblemBitmap(String prayerName) {

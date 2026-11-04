@@ -8,6 +8,14 @@ import {
 } from '@/lib/prayer-alarm-events';
 import { togglePrayer } from '@/lib/salah-tracker';
 import hapticService from '@/lib/haptic-service';
+import {
+  getPrayerHadithLang,
+  setPrayerHadithLang,
+  getPrayerHadith,
+  PRAYER_HADITH_LANG_OPTIONS,
+  PRAYER_HADITH_LANG_EVENT,
+  type PrayerHadithLang,
+} from '@/lib/prayer-hadith-i18n';
 import { toast } from 'sonner';
 
 export const PRAYER_BANNER_ALERT_EVENT = 'noor-in-app-prayer-alert';
@@ -69,6 +77,7 @@ export const PrayerReminderBanner: React.FC = () => {
   const [prayerTime12h, setPrayerTime12h] = useState('05:15 AM');
   const [isPlayingAdhan, setIsPlayingAdhan] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState(() => getSelectedLogoEdition());
+  const [hadithLang, setHadithLang] = useState<PrayerHadithLang>(() => getPrayerHadithLang());
 
   useEffect(() => {
     // 1. Listen for in-app prayer alert dispatch
@@ -84,6 +93,7 @@ export const PrayerReminderBanner: React.FC = () => {
             new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
         );
         setSelectedLogo(getSelectedLogoEdition());
+        setHadithLang(getPrayerHadithLang());
         setIsVisible(true);
         void hapticService.trigger('success');
       }
@@ -103,18 +113,35 @@ export const PrayerReminderBanner: React.FC = () => {
               new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
           );
           setSelectedLogo(getSelectedLogoEdition());
+          setHadithLang(getPrayerHadithLang());
           setIsVisible(true);
         }
       }
     };
 
+    // 3. Listen for Hadith translation language preference changes
+    const handleHadithLangChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ lang: PrayerHadithLang }>;
+      if (customEvent.detail?.lang) {
+        setHadithLang(customEvent.detail.lang);
+      }
+    };
+
     window.addEventListener(PRAYER_BANNER_ALERT_EVENT, handleAlert);
     window.addEventListener(PRAYER_ALARM_STATE_EVENT, handleAdhanState);
+    window.addEventListener(PRAYER_HADITH_LANG_EVENT, handleHadithLangChange);
 
     return () => {
       window.removeEventListener(PRAYER_BANNER_ALERT_EVENT, handleAlert);
       window.removeEventListener(PRAYER_ALARM_STATE_EVENT, handleAdhanState);
+      window.removeEventListener(PRAYER_HADITH_LANG_EVENT, handleHadithLangChange);
     };
+  }, []);
+
+  const handleHadithLangSwitch = useCallback((lang: PrayerHadithLang) => {
+    void hapticService.trigger('light');
+    setHadithLang(lang);
+    setPrayerHadithLang(lang);
   }, []);
 
   const handleDismiss = useCallback(() => {
@@ -162,6 +189,7 @@ export const PrayerReminderBanner: React.FC = () => {
     rakah: 'Obligatory Prayer',
     default12h: prayerTime12h,
   };
+  const hadithData = getPrayerHadith(prayerName, hadithLang);
 
   return (
     <div
@@ -254,17 +282,68 @@ export const PrayerReminderBanner: React.FC = () => {
           </button>
         </div>
 
-        {/* ── HADITH QUOTE ── */}
+        {/* ── HADITH QUOTE WITH INLINE LANGUAGE SWITCHER ── */}
         <div
-          className="mt-2.5 pt-2 border-t px-2 py-1.5 rounded-lg text-xs leading-relaxed"
+          className="mt-2.5 pt-2 border-t px-2.5 py-2 rounded-xl text-xs space-y-1.5"
           style={{
             borderColor: 'var(--border)',
             background: 'var(--surface-2)',
           }}
         >
-          <p className="text-[11px] text-[var(--text-primary)] font-medium italic">
-            «الصَّلَاةُ فِي وَقْتِهَا» — &ldquo;The deed most beloved to Allah is prayer offered at its earliest appointed time.&rdquo;{' '}
-            <span className="text-[10px] text-[var(--text-secondary)] not-italic font-mono">(Bukhari 527)</span>
+          {/* Top Bar: Arabic Matn (Left) + 3-Pill Language Switcher (Right) */}
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="font-arabic font-bold text-xs leading-none shrink-0"
+              style={{ color: 'var(--accent)' }}
+            >
+              {hadithData.arabic}
+            </span>
+
+            {/* Compact 3-Pill Switcher [ اردو | EN | ગુજ ] */}
+            <div
+              className="flex items-center p-0.5 rounded-lg border shrink-0"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              {PRAYER_HADITH_LANG_OPTIONS.map((opt) => {
+                const isActive = hadithLang === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleHadithLangSwitch(opt.id)}
+                    aria-label={`Switch Hadith translation to ${opt.label}`}
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-[var(--accent)] text-[var(--on-accent, #000)] shadow-xs scale-[1.02]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                    style={{
+                      fontFamily: opt.id === 'ur' ? 'var(--font-urdu), serif' : undefined,
+                    }}
+                  >
+                    {opt.pillLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Localized Hadith Translation Text */}
+          <p
+            style={{
+              fontFamily: hadithLang === 'ur' ? 'var(--font-urdu), serif' : undefined,
+              direction: hadithLang === 'ur' ? 'rtl' : 'ltr',
+              textAlign: hadithLang === 'ur' ? 'right' : 'left',
+              fontSize: hadithLang === 'ur' ? '0.96rem' : '0.84rem',
+              lineHeight: hadithLang === 'ur' ? 2.05 : hadithLang === 'gu' ? 1.65 : 1.55,
+              fontStyle: hadithLang === 'en' ? 'italic' : 'normal',
+              color: 'var(--text-primary)',
+            }}
+          >
+            {hadithData.translation}
           </p>
         </div>
 

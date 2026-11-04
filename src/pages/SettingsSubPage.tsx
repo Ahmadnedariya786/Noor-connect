@@ -89,6 +89,14 @@ import {
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
 import { triggerInAppPrayerAlert } from '@/components/PrayerReminderBanner';
+import {
+  getPrayerHadithLang,
+  setPrayerHadithLang,
+  getPrayerHadith,
+  PRAYER_HADITH_LANG_OPTIONS,
+  PRAYER_HADITH_LANG_EVENT,
+  type PrayerHadithLang,
+} from '@/lib/prayer-hadith-i18n';
 import { NoorDynamicLogo, NoorLogoVisualPicker, cycleLogoEdition, getSelectedLogoEdition, setSelectedLogoEdition, NOOR_LOGO_EDITIONS, LOGO_EDITION_CHANGE_EVENT, LOGO_EDITION_CHANGED_EVENT } from '@/components/NoorDynamicLogo';
 import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
 import { OwnerSecurityVaultCard } from '@/components/OwnerSecurityVaultCard';
@@ -469,6 +477,33 @@ const SettingsSubPage: React.FC = () => {
       window.removeEventListener('storage', handleSyncLogo);
     };
   }, []);
+
+  // Prayer notification Hadith translation language preference ('ur' | 'en' | 'gu')
+  const [hadithLang, setHadithLang] = useState<PrayerHadithLang>(() => getPrayerHadithLang());
+
+  useEffect(() => {
+    const handleHadithLangChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ lang: PrayerHadithLang }>;
+      if (customEvent.detail?.lang) {
+        setHadithLang(customEvent.detail.lang);
+      }
+    };
+    window.addEventListener(PRAYER_HADITH_LANG_EVENT, handleHadithLangChange);
+    return () => {
+      window.removeEventListener(PRAYER_HADITH_LANG_EVENT, handleHadithLangChange);
+    };
+  }, []);
+
+  const handlePrayerHadithLangSelect = (lang: PrayerHadithLang) => {
+    setHadithLang(lang);
+    setPrayerHadithLang(lang);
+    toast({
+      title: '✨ Hadith Translation Language Updated',
+      description: `Prayer alerts will display Hadith translation in ${
+        lang === 'ur' ? 'Urdu (اردو)' : lang === 'gu' ? 'Gujarati (ગુજરાતી)' : 'English'
+      }.`,
+    });
+  };
 
   // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1 when unlocked)
   const [isOwnerUnlocked, setIsOwnerUnlocked] = useState(() => isOwnerSessionUnlocked());
@@ -1155,6 +1190,89 @@ const SettingsSubPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Hadith Translation Language Selector */}
+              <div className="pt-3 border-t border-[var(--border)] space-y-2.5">
+                <div>
+                  <Label className="text-sm font-bold flex items-center justify-between">
+                    <span>Hadith Translation Language</span>
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)]">
+                      {hadithLang.toUpperCase()}
+                    </span>
+                  </Label>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    Choose language for Hadith translation inside prayer alerts (Urdu, English, or Gujarati)
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  {PRAYER_HADITH_LANG_OPTIONS.map((opt) => {
+                    const isSelected = hadithLang === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handlePrayerHadithLangSelect(opt.id)}
+                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all text-center active:scale-95 cursor-pointer ${
+                          isSelected
+                            ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)] ring-2 ring-[var(--accent)]/30 shadow-sm'
+                            : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/40'
+                        }`}
+                        style={{
+                          fontFamily: opt.id === 'ur' ? 'var(--font-urdu), serif' : undefined,
+                        }}
+                      >
+                        {opt.nativeLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Live Preview Box */}
+                {(() => {
+                  const previewHadith = getPrayerHadith('Fajr', hadithLang);
+                  return (
+                    <div
+                      className="mt-2 p-3 rounded-xl border space-y-1.5 transition-all"
+                      style={{
+                        background: 'var(--surface-2)',
+                        borderColor: 'var(--border)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between text-[11px] font-semibold">
+                        <span className="flex items-center gap-1.5 text-[var(--accent-text)]">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Live Notification Preview (Fajr)
+                        </span>
+                        <span className="font-mono text-[10px] text-[var(--text-secondary)]">
+                          {previewHadith.reference}
+                        </span>
+                      </div>
+
+                      <p
+                        className="font-arabic font-bold text-xs"
+                        style={{ color: 'var(--accent)' }}
+                      >
+                        {previewHadith.arabic}
+                      </p>
+
+                      <p
+                        style={{
+                          fontFamily: hadithLang === 'ur' ? 'var(--font-urdu), serif' : undefined,
+                          direction: hadithLang === 'ur' ? 'rtl' : 'ltr',
+                          textAlign: hadithLang === 'ur' ? 'right' : 'left',
+                          fontSize: hadithLang === 'ur' ? '0.96rem' : '0.84rem',
+                          lineHeight: hadithLang === 'ur' ? 2.05 : hadithLang === 'gu' ? 1.65 : 1.55,
+                          fontStyle: hadithLang === 'en' ? 'italic' : 'normal',
+                          color: 'var(--text-primary)',
+                        }}
+                      >
+                        {previewHadith.translation}
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* 2. Play Adhan as Alarm Volume */}
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div className="pe-2">
@@ -1465,6 +1583,7 @@ const SettingsSubPage: React.FC = () => {
                     const res = await unifiedNotifications.testNotification();
                     if (typeof window !== 'undefined' && (window as any).AndroidBridge?.triggerTestPrayerNotification) {
                       try {
+                        (window as any).AndroidBridge?.setPrayerNotificationLang?.(hadithLang);
                         (window as any).AndroidBridge.triggerTestPrayerNotification('Fajr', '05:15 AM');
                       } catch (err) {
                         console.warn('Native test prayer notification bridge failed:', err);

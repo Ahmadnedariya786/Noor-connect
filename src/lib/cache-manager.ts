@@ -113,6 +113,7 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
   // Notifications
   /^notification[_-](?:preferences|history|last[_-]asked|permission[_-]timestamp|permission[_-]denied)$/,
   /^(?:smart[_-]salah|prayer[_-]dnd|prayer[_-]advance|prayer[_-]alarm|prayer[_-]fullscreen|prayer[_-]countdown)(?:[_-].+)?$/,
+  /^noor[_-]prayer[_-]hadith[_-]lang$/,
 ];
 
 export function isProtectedPersonalKey(key: string): boolean {

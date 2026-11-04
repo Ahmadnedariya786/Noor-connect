@@ -609,6 +609,15 @@ public class MainActivity extends BridgeActivity {
                     }
 
                     @android.webkit.JavascriptInterface
+                    public void setPrayerNotificationLang(final String lang) {
+                        try {
+                            PrayerHadithHelper.setHadithLanguage(MainActivity.this, lang);
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Failed to update prayer notification Hadith language", t);
+                        }
+                    }
+
+                    @android.webkit.JavascriptInterface
                     public void triggerTestPrayerNotification(final String prayerName, final String prayerTime12h) {
                         runOnUiThread(() -> {
                             try {
@@ -645,8 +654,9 @@ public class MainActivity extends BridgeActivity {
                                 );
 
                                 String title = pName + " Prayer • " + pTime;
+                                String hadith = PrayerHadithHelper.getPrayerHadith(MainActivity.this, pName);
                                 String bigText = "🕌 Hayya 'alas-Salah — Time for " + pName + " (" + pTime + ")\n"
-                                        + "«الصَّلَاةُ فِي وَقْتِهَا» — \"The deed most beloved to Allah is prayer offered at its earliest appointed time.\" (Sahih al-Bukhari 527)";
+                                        + hadith;
 
                                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, channelId)
                                         .setSmallIcon(R.drawable.ic_stat_noor_mosque)
