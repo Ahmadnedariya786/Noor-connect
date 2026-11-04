@@ -298,7 +298,8 @@ class WidgetForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_stat_noor_mosque)
+            .setColor(0xFFD4AF37.toInt())
             .setContentTitle(getString(R.string.widget_monitor_notif_title))
             .setContentText(getString(R.string.widget_monitor_notif_text))
             .setPriority(NotificationCompat.PRIORITY_LOW)

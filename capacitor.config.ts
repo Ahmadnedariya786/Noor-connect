@@ -21,8 +21,8 @@ const config: CapacitorConfig = {
       showSpinner: false
     },
     LocalNotifications: {
-      smallIcon: "ic_notification",
-      iconColor: "#F5C542",
+      smallIcon: "ic_stat_noor_mosque",
+      iconColor: "#D4AF37",
       sound: "beep.wav"
     },
     PushNotifications: {

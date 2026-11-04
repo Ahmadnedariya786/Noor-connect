@@ -284,6 +284,203 @@ function drawRoyalNoorEmblem(ctx: CanvasRenderingContext2D, cx: number, cy: numb
 }
 
 /**
+ * Draws the subtle Rub el Hizb geometric mandala watermark in the center of the parchment page
+ */
+function drawWatermarkMandala(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(180, 142, 62, 0.045)';
+  ctx.lineWidth = 1.4;
+
+  // Concentric circles
+  const radii = [r, r * 0.85, r * 0.70, r * 0.50, r * 0.35, r * 0.20];
+  radii.forEach((radius) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  // Multiple rotated squares for 8-pointed & 16-pointed mandala
+  ctx.translate(cx, cy);
+  const sqSizes = [r * 0.72, r * 0.52, r * 0.35];
+  sqSizes.forEach((sq) => {
+    for (let rot = 0; rot < 4; rot++) {
+      ctx.save();
+      ctx.rotate((rot * Math.PI) / 8);
+      ctx.strokeRect(-sq, -sq, sq * 2, sq * 2);
+      ctx.restore();
+    }
+  });
+
+  // 16 Radial lines
+  for (let i = 0; i < 16; i++) {
+    ctx.save();
+    ctx.rotate((i * Math.PI) / 8);
+    ctx.beginPath();
+    ctx.moveTo(0, r * 0.2);
+    ctx.lineTo(0, r);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * Draws an authentic 8-pointed Islamic corner rosette (۞)
+ */
+function drawCornerRosette(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.strokeStyle = '#C59B27';
+  ctx.fillStyle = '#FAF2DF';
+  ctx.lineWidth = 1.3;
+
+  const half = size / 2;
+  // Square 1
+  ctx.fillRect(-half, -half, size, size);
+  ctx.strokeRect(-half, -half, size, size);
+
+  // Square 2 rotated 45 deg
+  ctx.rotate(Math.PI / 4);
+  ctx.fillRect(-half, -half, size, size);
+  ctx.strokeRect(-half, -half, size, size);
+
+  // Center gold dot
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = '#C59B27';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * Draws a numbered 8-pointed octagonal badge (28px × 28px) on table rows
+ */
+function drawOctagonalRowBadge(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+  numStr: string,
+  isLiability: boolean
+) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  const radius = size / 2;
+  const cut = radius * 0.42;
+
+  // 8-sided polygon path
+  ctx.beginPath();
+  ctx.moveTo(-radius + cut, -radius);
+  ctx.lineTo(radius - cut, -radius);
+  ctx.lineTo(radius, -radius + cut);
+  ctx.lineTo(radius, radius - cut);
+  ctx.lineTo(radius - cut, radius);
+  ctx.lineTo(-radius + cut, radius);
+  ctx.lineTo(-radius, radius - cut);
+  ctx.lineTo(-radius, -radius + cut);
+  ctx.closePath();
+
+  ctx.fillStyle = isLiability ? '#BE123C' : '#083326';
+  ctx.fill();
+
+  ctx.strokeStyle = isLiability ? '#F43F5E' : '#D4AF37';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+
+  // Inner decorative ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.65, 0, Math.PI * 2);
+  ctx.strokeStyle = isLiability ? 'rgba(255,255,255,0.35)' : 'rgba(212,175,55,0.45)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // Numeral text
+  ctx.fillStyle = isLiability ? '#FFFFFF' : '#F5D061';
+  ctx.font = 'bold 13px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(numStr, 0, 1);
+
+  ctx.restore();
+}
+
+/**
+ * Draws the official Circular/Octagonal Golden Islamic Seal Stamp rotated -8deg
+ */
+function drawShariahSealStamp(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((-8 * Math.PI) / 180); // Authentically tilted -8 degrees
+
+  // Outer circular seal border
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.85)';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Inner dotted concentric ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius - 5, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(245, 208, 97, 0.65)';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([3, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Inner solid ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius - 12, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.75)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Background subtle gold tint
+  ctx.beginPath();
+  ctx.arc(0, 0, radius - 13, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(245, 208, 97, 0.08)';
+  ctx.fill();
+
+  // 8-pointed star in center
+  const sq = (radius - 14) * 0.45;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-sq, -sq, sq * 2, sq * 2);
+  ctx.rotate(Math.PI / 4);
+  ctx.strokeRect(-sq, -sq, sq * 2, sq * 2);
+  ctx.restore();
+
+  // Seal Calligraphy & Typography
+  ctx.fillStyle = '#F5D061';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Arabic Top Seal Text
+  ctx.font = 'bold 15px "Amiri", "Traditional Arabic", serif, sans-serif';
+  ctx.fillText('شَرِيعَة • مُعْتَمَد', 0, -radius * 0.38);
+
+  // English Center
+  ctx.font = 'bold 11.5px system-ui, sans-serif';
+  ctx.fillText('SHARIAH COMPLIANT', 0, -radius * 0.08);
+
+  // 2.5% Rate & Hawl
+  ctx.font = 'bold 14px monospace, system-ui, sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('2.5% AL-MĀL', 0, radius * 0.22);
+
+  // Year Bottom
+  ctx.font = 'bold 10px system-ui, sans-serif';
+  ctx.fillStyle = '#E2C15A';
+  ctx.fillText('★ 1448 AH • 2026 ★', 0, radius * 0.50);
+
+  ctx.restore();
+}
+
+/**
  * Canonical Islamic (Hijri) Month Names across the 4 supported languages.
  * Eliminates the Android WebView bug where Intl falls back to Gregorian names like "May 23, 1448 BC AH".
  */
@@ -566,193 +763,262 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   const activeEdition: NoorLogoEditionId = data.edition !== undefined ? data.edition : getSelectedLogoEdition();
   const logoImg = await getLogoEditionImage(activeEdition);
 
-  // 1. Pure White Background
-  ctx.fillStyle = '#FFFFFF';
+  // 1. Royal Warm Parchment 3-Stop Background
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+  bgGrad.addColorStop(0, '#FDFBF7');
+  bgGrad.addColorStop(0.5, '#F7F1E3');
+  bgGrad.addColorStop(1, '#EFE6D2');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Ornate Double Border
-  // Outer Emerald Border
-  ctx.strokeStyle = '#047857';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(20, 20, width - 40, height - 40);
+  // 2. Center 8-Pointed Rub el Hizb Geometric Mandala Watermark
+  drawWatermarkMandala(ctx, 620, 880, 340);
 
-  // Inner Gold Border
-  ctx.strokeStyle = '#D97706';
-  ctx.lineWidth = 1.5;
+  // 3. Double Ornate Border Frame with 8-Pointed Islamic Corner Rosettes
+  // Outer Deep Emerald/Gold Border (margin = 28px)
+  ctx.strokeStyle = '#0B3B2D';
+  ctx.lineWidth = 3;
   ctx.strokeRect(28, 28, width - 56, height - 56);
 
-  // Corner Ornaments (Little Diamond Embellishments)
-  const corners = [
-    [28, 28],
-    [width - 28, 28],
-    [28, height - 28],
-    [width - 28, height - 28],
-  ];
-  ctx.fillStyle = '#D97706';
-  corners.forEach(([cx, cy]) => {
-    ctx.beginPath();
-    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-    ctx.fill();
-  });
+  // Inner 24K Burnished Gold Border (margin = 38px)
+  ctx.strokeStyle = '#C59B27';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(38, 38, width - 76, height - 76);
 
-  // 3. Royal Header Banner
-  const headerX = 42;
-  const headerY = 36;
-  const headerW = width - 84; // 1156
-  const headerH = 205;
+  // 4 Corner Rosettes (۞)
+  drawCornerRosette(ctx, 38, 38, 20);
+  drawCornerRosette(ctx, width - 38, 38, 20);
+  drawCornerRosette(ctx, 38, height - 38, 20);
+  drawCornerRosette(ctx, width - 38, height - 38, 20);
 
-  // Emerald/Dark Green Gradient Fill
+  // 4. Redesigned Royal Header Banner (Zero Logo/Metadata Overlap!)
+  const headerX = 56;
+  const headerY = 56;
+  const headerW = 1128; // width - 112
+  const headerH = 216;
+
+  // 3-Stop Luxury Emerald Gradient Fill
   const headerGrad = ctx.createLinearGradient(headerX, headerY, headerX, headerY + headerH);
-  headerGrad.addColorStop(0, '#064E3B');
-  headerGrad.addColorStop(1, '#022C22');
+  headerGrad.addColorStop(0, '#041E16');
+  headerGrad.addColorStop(0.5, '#093829');
+  headerGrad.addColorStop(1, '#05261C');
   ctx.fillStyle = headerGrad;
-  roundRect(ctx, headerX, headerY, headerW, headerH, 14);
+  roundRect(ctx, headerX, headerY, headerW, headerH, 22);
   ctx.fill();
 
-  // Ornate Gold Header Border
-  ctx.strokeStyle = '#F59E0B';
-  ctx.lineWidth = 1.5;
-  roundRect(ctx, headerX, headerY, headerW, headerH, 14);
+  // Burnished Gold Header Border (2px)
+  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 2;
+  roundRect(ctx, headerX, headerY, headerW, headerH, 22);
   ctx.stroke();
 
-  // Draw Symmetrical User-Selected Logo Editions on Header Flanks
-  const logoSize = 100;
-  const leftLogoX = headerX + 38; // x = 80..180
-  const leftLogoY = headerY + 24; // y = 60..160
-  const rightLogoX = headerX + headerW - 38 - logoSize; // x = 1060..1160
-  const rightLogoY = headerY + 24; // y = 60..160
+  // Subtle Golden Mihrab Arch Pattern Lines inside Header Background
+  ctx.save();
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.08)';
+  ctx.lineWidth = 1.2;
+  for (let archI = -3; archI <= 3; archI++) {
+    const archX = 620 + archI * 120;
+    ctx.beginPath();
+    ctx.moveTo(archX - 50, headerY + headerH);
+    ctx.lineTo(archX - 50, headerY + 110);
+    ctx.quadraticCurveTo(archX, headerY + 60, archX + 50, headerY + 110);
+    ctx.lineTo(archX + 50, headerY + headerH);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Draw Symmetrical User-Selected Logo Editions on Header Flanks inside Golden Rings
+  const logoSize = 104;
+  const leftLogoCx = 136;
+  const leftLogoCy = 156;
+  const rightLogoCx = 1104;
+  const rightLogoCy = 156;
+
+  // Golden Circular Rings for Logo Framing
+  ctx.beginPath();
+  ctx.arc(leftLogoCx, leftLogoCy, 56, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(rightLogoCx, rightLogoCy, 56, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
   if (logoImg) {
-    ctx.drawImage(logoImg, leftLogoX, leftLogoY, logoSize, logoSize);
-    ctx.drawImage(logoImg, rightLogoX, rightLogoY, logoSize, logoSize);
+    ctx.drawImage(logoImg, leftLogoCx - logoSize / 2, leftLogoCy - logoSize / 2, logoSize, logoSize);
+    ctx.drawImage(logoImg, rightLogoCx - logoSize / 2, rightLogoCy - logoSize / 2, logoSize, logoSize);
   } else {
     // Graceful canvas fallback
-    drawRoyalNoorEmblem(ctx, leftLogoX + logoSize / 2, leftLogoY + logoSize / 2, 40);
-    drawRoyalNoorEmblem(ctx, rightLogoX + logoSize / 2, rightLogoY + logoSize / 2, 40);
+    drawRoyalNoorEmblem(ctx, leftLogoCx, leftLogoCy, 42);
+    drawRoyalNoorEmblem(ctx, rightLogoCx, rightLogoCy, 42);
   }
 
-  // Arabic Bismillah (Centered)
-  ctx.fillStyle = '#FDE68A';
-  ctx.font = 'bold 22px "Amiri", "Traditional Arabic", serif, sans-serif';
+  // Header Center Typography (strictly bounded within x = 210..1030)
+  // y = 92: Golden Arabic Bismillah
+  ctx.fillStyle = '#F5D061';
+  ctx.font = 'bold 24px "Amiri", "Traditional Arabic", serif, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', width / 2, headerY + 38);
+  ctx.fillText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 620, 92);
 
-  // App Title / Localized Branding
-  ctx.fillStyle = '#FBBF24';
-  ctx.font = getPdfFont(data.lang, 12, true);
-  ctx.fillText(pdfUi.brandingSub, width / 2, headerY + 64);
+  // y = 122: Tracked uppercase subtitle
+  ctx.fillStyle = '#E2C15A';
+  ctx.font = getPdfFont(data.lang, 12.5, true);
+  ctx.fillText('NOOR CONNECT • SHARIAH WEALTH & ZAKAT AL-MĀL CERTIFICATE', 620, 122);
 
-  // Report Main Title: Localized Title & Arabic Calligraphy
+  // y = 162: Bold localized main title + زكاة المال
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = getPdfFont(data.lang, 23, true);
+  ctx.font = getPdfFont(data.lang, 28, true);
   const reportMainTitle = `${ui.reportTitle} • زكاة المال`;
-  ctx.fillText(reportMainTitle, width / 2, headerY + 104);
+  ctx.fillText(reportMainTitle, 620, 162, 780);
 
   // Gregorian + Authentic Hijri Date
   const now = new Date();
   const gregDateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   const hijriDateStr = getAuthenticHijriDate(now, data.lang);
+  const currencySymbol =
+    data.currency === 'INR' ? '₹' :
+    data.currency === 'USD' ? '$' :
+    data.currency === 'GBP' ? '£' :
+    data.currency === 'EUR' ? '€' :
+    data.currency === 'AED' ? 'د.إ' :
+    data.currency === 'SAR' ? '﷼' : data.currency;
 
-  // Metadata Strip inside Header (Pill Bar strictly centered with 30px lateral clearance from logos)
-  const metaBoxW = 820;
-  const metaBoxX = (width - metaBoxW) / 2; // x: 210..1030 (clear from left logo at 180 and right at 1060)
-  const metaBoxY = headerY + 148;          // y: 184..222 (clear from logos bottom at 160)
-  const metaBoxH = 38;
+  // y = 192..228: Compact Centered Metadata Pill — STRICT WIDTH 760px (x = 240..1000)
+  // Guaranteed 52px clearance from left logo (x = 84..188) and right logo (x = 1052..1156)!
+  const metaPillX = 240;
+  const metaPillY = 192;
+  const metaPillW = 760;
+  const metaPillH = 36;
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
-  roundRect(ctx, metaBoxX, metaBoxY, metaBoxW, metaBoxH, 8);
+  ctx.fillStyle = 'rgba(212, 175, 55, 0.14)';
+  roundRect(ctx, metaPillX, metaPillY, metaPillW, metaPillH, 18);
   ctx.fill();
 
-  ctx.fillStyle = '#E2E8F0';
-  ctx.font = getPdfFont(data.lang, 11.5, false);
-  const metaText = `📅 ${gregDateStr}  •  🌙 ${hijriDateStr}  •  🪙 ${pdfUi.currencyLabel}: ${data.currency}  •  ⚖️ ${pdfUi.shariahStandardLabel}`;
-  ctx.fillText(metaText, width / 2, metaBoxY + 24);
-
-  // 4. Live Bullion & Nisab Reference Bar
-  const refY = 252;
-  const refH = 80;
-  ctx.fillStyle = '#F8FAFC';
-  roundRect(ctx, headerX, refY, headerW, refH, 10);
-  ctx.fill();
-  ctx.strokeStyle = '#E2E8F0';
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
   ctx.lineWidth = 1;
-  roundRect(ctx, headerX, refY, headerW, refH, 10);
+  roundRect(ctx, metaPillX, metaPillY, metaPillW, metaPillH, 18);
   ctx.stroke();
 
-  const colW = headerW / 4;
-  const refCols = [
-    {
-      label: ui.fineGold24k,
-      val1: `${formatCurrencyAmount(data.goldPerGram, data.currency)}/g`,
-      val2: `${formatCurrencyAmount(data.goldPerTola, data.currency)}/tola`,
-      color: '#B45309',
-    },
-    {
-      label: ui.fineSilver999,
-      val1: `${formatCurrencyAmount(data.silverPerGram, data.currency)}/g`,
-      val2: `${formatCurrencyAmount(data.silverPerTola, data.currency)}/tola`,
-      color: '#475569',
-    },
-    {
-      label: ui.nisabSectionTitle,
-      val1: data.nisabChoice === 'silver' ? pdfUi.silverStdVal : pdfUi.goldStdVal,
-      val2: data.nisabChoice === 'silver' ? pdfUi.silverStdSub : pdfUi.goldStdSub,
-      color: '#047857',
-    },
-    {
-      label: ui.activeNisabLabel,
-      val1: formatCurrencyAmount(data.activeNisabThreshold, data.currency),
-      val2: data.isNisabReached ? pdfUi.statusMet : pdfUi.statusBelow,
-      color: data.isNisabReached ? '#047857' : '#B45309',
-    },
-  ];
+  ctx.fillStyle = '#FFF7D6';
+  ctx.font = getPdfFont(data.lang, 12, true);
+  const metaText = `📅 ${gregDateStr}  •  🌙 ${hijriDateStr}  •  🪙 ${pdfUi.currencyLabel}: ${data.currency} (${currencySymbol})`;
+  ctx.fillText(metaText, 620, 215, 730);
 
-  refCols.forEach((col, idx) => {
-    const colX = headerX + idx * colW;
-    ctx.textAlign = 'center';
+  // 5. 3-Column Luxury Bullion & Nisab Reference Cards (y = 294, height = 118)
+  const refY = 294;
+  const refH = 118;
+  const cardW = 360;
+  const cardGap = 24;
 
-    // Vertical Divider
-    if (idx > 0) {
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.beginPath();
-      ctx.moveTo(colX, refY + 10);
-      ctx.lineTo(colX, refY + refH - 10);
-      ctx.stroke();
-    }
+  // Card 1: 24K Fine Gold Rate (x = 56)
+  const card1X = headerX;
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, card1X, refY, cardW, refH, 14);
+  ctx.fill();
+  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, card1X, refY, cardW, refH, 14);
+  ctx.stroke();
 
-    // Top Label
-    ctx.fillStyle = col.color;
-    ctx.font = getPdfFont(data.lang, 10, true);
-    ctx.fillText(col.label, colX + colW / 2, refY + 22);
-
-    // Primary Value
-    ctx.fillStyle = '#0F172A';
-    ctx.font = 'bold 13.5px monospace, system-ui, sans-serif';
-    ctx.fillText(col.val1, colX + colW / 2, refY + 44);
-
-    // Secondary Value
-    ctx.fillStyle = '#64748B';
-    ctx.font = getPdfFont(data.lang, 10.5, false);
-    ctx.fillText(col.val2, colX + colW / 2, refY + 64);
-  });
-
-  // 5. Itemized Wealth & Liabilities Table
-  const tableY = 344;
-  const tableHeaderH = 34;
-  const rowH = 43;
-
-  // Table Header
-  ctx.fillStyle = '#064E3B';
-  roundRect(ctx, headerX, tableY, headerW, tableHeaderH, 6);
+  // Top Accent Bar
+  ctx.fillStyle = '#C59B27';
+  roundRect(ctx, card1X, refY, cardW, 6, 3);
   ctx.fill();
 
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#B45309';
+  ctx.font = getPdfFont(data.lang, 11, true);
+  ctx.fillText(`🪙 ${ui.fineGold24k.toUpperCase()}`, card1X + cardW / 2, refY + 28);
+
+  ctx.fillStyle = '#0F172A';
+  ctx.font = 'bold 17px monospace, system-ui, sans-serif';
+  ctx.fillText(`${formatCurrencyAmount(data.goldPerGram, data.currency)}/g`, card1X + cardW / 2, refY + 58);
+
+  ctx.fillStyle = '#64748B';
+  ctx.font = getPdfFont(data.lang, 12.5, false);
+  ctx.fillText(`${formatCurrencyAmount(data.goldPerTola, data.currency)}/tola`, card1X + cardW / 2, refY + 86);
+
+  // Card 2: 999 Fine Silver Rate (x = 440)
+  const card2X = headerX + cardW + cardGap;
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = getPdfFont(data.lang, 12, true);
+  roundRect(ctx, card2X, refY, cardW, refH, 14);
+  ctx.fill();
+  ctx.strokeStyle = '#94A3B8';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, card2X, refY, cardW, refH, 14);
+  ctx.stroke();
+
+  // Top Accent Bar
+  ctx.fillStyle = '#64748B';
+  roundRect(ctx, card2X, refY, cardW, 6, 3);
+  ctx.fill();
+
+  ctx.fillStyle = '#475569';
+  ctx.font = getPdfFont(data.lang, 11, true);
+  ctx.fillText(`🥈 ${ui.fineSilver999.toUpperCase()}`, card2X + cardW / 2, refY + 28);
+
+  ctx.fillStyle = '#0F172A';
+  ctx.font = 'bold 17px monospace, system-ui, sans-serif';
+  ctx.fillText(`${formatCurrencyAmount(data.silverPerGram, data.currency)}/g`, card2X + cardW / 2, refY + 58);
+
+  ctx.fillStyle = '#64748B';
+  ctx.font = getPdfFont(data.lang, 12.5, false);
+  ctx.fillText(`${formatCurrencyAmount(data.silverPerTola, data.currency)}/tola`, card2X + cardW / 2, refY + 86);
+
+  // Card 3: Active Shariah Nisab Standard (x = 824) - Highlighted warm gold-tinted card
+  const card3X = headerX + (cardW + cardGap) * 2;
+  ctx.fillStyle = '#FAF2DF';
+  roundRect(ctx, card3X, refY, cardW, refH, 14);
+  ctx.fill();
+  ctx.strokeStyle = '#C59B27';
+  ctx.lineWidth = 2;
+  roundRect(ctx, card3X, refY, cardW, refH, 14);
+  ctx.stroke();
+
+  // Top Accent Bar
+  ctx.fillStyle = '#083326';
+  roundRect(ctx, card3X, refY, cardW, 6, 3);
+  ctx.fill();
+
+  ctx.fillStyle = '#047857';
+  ctx.font = getPdfFont(data.lang, 11, true);
+  ctx.fillText(`⚖️ ${ui.nisabSectionTitle.toUpperCase()}`, card3X + cardW / 2, refY + 28);
+
+  ctx.fillStyle = '#0F172A';
+  ctx.font = getPdfFont(data.lang, 14, true);
+  const nisabChoiceText = data.nisabChoice === 'silver' ? pdfUi.silverChoiceLabel : pdfUi.goldChoiceLabel;
+  const nisabChoiceVal = data.nisabChoice === 'silver' ? pdfUi.silverStdVal : pdfUi.goldStdVal;
+  ctx.fillText(`${nisabChoiceText}: ${nisabChoiceVal}`, card3X + cardW / 2, refY + 58);
+
+  ctx.fillStyle = '#B45309';
+  ctx.font = 'bold 13px monospace, system-ui, sans-serif';
+  const nisabThresholdText = `Nisab: ${formatCurrencyAmount(data.activeNisabThreshold, data.currency)} • ${data.isNisabReached ? pdfUi.statusMet : pdfUi.statusBelow}`;
+  ctx.fillText(nisabThresholdText, card3X + cardW / 2, refY + 86);
+
+  // 6. Modern Islamic Itemized Wealth Table with Numbered Octagonal Badges (y = 434)
+  const tableY = 434;
+  const tableHeaderH = 46;
+  const rowH = 50;
+
+  // Table Header Banner (Deep emerald #083326 with gold border)
+  ctx.fillStyle = '#083326';
+  roundRect(ctx, headerX, tableY, headerW, tableHeaderH, 12);
+  ctx.fill();
+  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, headerX, tableY, headerW, tableHeaderH, 12);
+  ctx.stroke();
+
+  ctx.fillStyle = '#F5D061';
+  ctx.font = getPdfFont(data.lang, 12.5, true);
   ctx.textAlign = 'left';
-  ctx.fillText(pdfUi.itemizedBreakdown, headerX + 16, tableY + 22);
+  ctx.fillText(pdfUi.itemizedBreakdown, headerX + 24, tableY + 28);
 
   ctx.textAlign = 'right';
-  ctx.fillText(`${pdfUi.amountHeader} (${data.currency})`, headerX + headerW - 16, tableY + 22);
+  ctx.fillText(`${pdfUi.amountHeader} (${data.currency})`, headerX + headerW - 24, tableY + 28);
 
   const categories = [
     { title: ui.cashTitle, val: data.cashTotal, isNeg: false },
@@ -768,204 +1034,221 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
 
   let curY = tableY + tableHeaderH;
   categories.forEach((cat, idx) => {
-    // Zebra background
+    // Alternating warm ivory and soft parchment backgrounds
     if (cat.isNeg) {
       ctx.fillStyle = '#FFF1F2'; // Soft rose for liabilities
     } else if (idx % 2 === 1) {
-      ctx.fillStyle = '#F8FAFC';
+      ctx.fillStyle = '#F6EFE0';
     } else {
       ctx.fillStyle = '#FFFFFF';
     }
     ctx.fillRect(headerX, curY, headerW, rowH);
 
-    // Row divider
-    ctx.strokeStyle = '#F1F5F9';
+    // Golden-beige row divider
+    ctx.strokeStyle = '#E5D9C0';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(headerX, curY + rowH);
     ctx.lineTo(headerX + headerW, curY + rowH);
     ctx.stroke();
 
+    // Numbered 8-Pointed Octagonal Badge (28px × 28px) on Left
+    drawOctagonalRowBadge(ctx, headerX + 28, curY + rowH / 2, 28, String(idx + 1), cat.isNeg);
+
     // Category Title
     ctx.fillStyle = cat.isNeg ? '#BE123C' : '#1E293B';
-    ctx.font = getPdfFont(data.lang, 12, false);
+    ctx.font = getPdfFont(data.lang, 12.5, cat.isNeg);
     ctx.textAlign = 'left';
-    ctx.fillText(cat.title, headerX + 16, curY + 26);
+    ctx.fillText(cat.title, headerX + 54, curY + 31);
 
-    // Value on Right
+    // Value on Right with Optional Subtle Pill Background
     ctx.textAlign = 'right';
     if (cat.isLivestock) {
       ctx.fillStyle = data.livestockZakatable ? '#B45309' : '#64748B';
       ctx.font = getPdfFont(data.lang, 12, true);
-      ctx.fillText(data.livestockZakatable ? (cat.note || pdfUi.zakatDueBadge) : pdfUi.belowNisabBadge, headerX + headerW - 16, curY + 26);
+      ctx.fillText(data.livestockZakatable ? (cat.note || pdfUi.zakatDueBadge) : pdfUi.belowNisabBadge, headerX + headerW - 24, curY + 31);
     } else {
-      ctx.fillStyle = cat.isNeg ? '#BE123C' : '#0F172A';
-      ctx.font = 'bold 13px monospace, system-ui, sans-serif';
       const formattedVal = (cat.isNeg && cat.val > 0 ? '-' : '') + formatCurrencyAmount(cat.val, data.currency);
-      ctx.fillText(formattedVal, headerX + headerW - 16, curY + 26);
+      if (cat.val > 0) {
+        // Subtle pill background
+        const valWidth = 160;
+        ctx.fillStyle = cat.isNeg ? 'rgba(244, 63, 94, 0.12)' : 'rgba(212, 175, 55, 0.12)';
+        roundRect(ctx, headerX + headerW - valWidth - 14, curY + 9, valWidth, 32, 6);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = cat.isNeg ? '#BE123C' : '#0F172A';
+      ctx.font = 'bold 13.5px monospace, system-ui, sans-serif';
+      ctx.fillText(formattedVal, headerX + headerW - 24, curY + 31);
     }
 
     curY += rowH;
   });
 
   // Table Outer Frame
-  ctx.strokeStyle = '#CBD5E1';
-  ctx.lineWidth = 1;
-  roundRect(ctx, headerX, tableY, headerW, curY - tableY, 8);
+  ctx.strokeStyle = '#C59B27';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, headerX, tableY, headerW, curY - tableY, 12);
   ctx.stroke();
 
-  // 6. Final Calculation Summary & Shariah Verdict Box
-  const summaryY = curY + 16;
-  const summaryH = 430;
+  // 7. Executive Shariah Assessment Ledger (y = 955, height = 175)
+  const ledgerY = 955;
+  const ledgerH = 175;
 
   ctx.fillStyle = '#FFFFFF';
-  roundRect(ctx, headerX, summaryY, headerW, summaryH, 12);
+  roundRect(ctx, headerX, ledgerY, headerW, ledgerH, 14);
   ctx.fill();
-  ctx.strokeStyle = '#CBD5E1';
+  ctx.strokeStyle = '#D4AF37';
   ctx.lineWidth = 1.5;
-  roundRect(ctx, headerX, summaryY, headerW, summaryH, 12);
+  roundRect(ctx, headerX, ledgerY, headerW, ledgerH, 14);
   ctx.stroke();
 
-  // Summary Card Header
-  ctx.fillStyle = '#0F172A';
+  // Ledger Header
+  ctx.fillStyle = '#0B3B2D';
   ctx.font = getPdfFont(data.lang, 13.5, true);
   ctx.textAlign = 'left';
-  ctx.fillText(pdfUi.shariahAssessmentVerdict, headerX + 20, summaryY + 30);
+  ctx.fillText(pdfUi.shariahAssessmentVerdict, headerX + 24, ledgerY + 28);
 
   // Calculation Breakdown Rows
-  const nisabChoiceText = data.nisabChoice === 'silver' ? pdfUi.silverChoiceLabel : pdfUi.goldChoiceLabel;
   const breakdownRows = [
     { label: ui.grossWealth, val: formatCurrencyAmount(data.totalGrossWealth, data.currency), color: '#0F172A', bold: false },
     { label: ui.lessLiabilities, val: `-${formatCurrencyAmount(data.totalLiabilities, data.currency)}`, color: '#BE123C', bold: false },
-    { label: ui.netWealth, val: formatCurrencyAmount(data.netZakatableWealth, data.currency), color: '#047857', bold: true },
+    { label: ui.netWealth, val: formatCurrencyAmount(data.netZakatableWealth, data.currency), color: '#047857', bold: true, isHighlight: true },
     { label: `${ui.activeNisabLabel} (${nisabChoiceText}):`, val: formatCurrencyAmount(data.activeNisabThreshold, data.currency), color: '#64748B', bold: false },
   ];
 
-  let bY = summaryY + 54;
+  let bY = ledgerY + 44;
   breakdownRows.forEach((row) => {
-    ctx.fillStyle = '#64748B';
-    ctx.font = getPdfFont(data.lang, 12, false);
+    if (row.isHighlight) {
+      // Warm golden-ivory highlight bar
+      ctx.fillStyle = '#FAF2DF';
+      roundRect(ctx, headerX + 16, bY - 3, headerW - 32, 28, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#C59B27';
+      ctx.lineWidth = 1;
+      roundRect(ctx, headerX + 16, bY - 3, headerW - 32, 28, 6);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = row.isHighlight ? '#047857' : '#475569';
+    ctx.font = getPdfFont(data.lang, 12, row.bold);
     ctx.textAlign = 'left';
-    ctx.fillText(row.label, headerX + 20, bY + 14);
+    ctx.fillText(row.label, headerX + 24, bY + 16);
 
     ctx.fillStyle = row.color;
-    ctx.font = `${row.bold ? 'bold 14.5px' : '13px'} monospace, system-ui, sans-serif`;
+    ctx.font = `${row.bold ? 'bold 15px' : '13px'} monospace, system-ui, sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(row.val, headerX + headerW - 20, bY + 14);
+    ctx.fillText(row.val, headerX + headerW - 24, bY + 16);
 
-    bY += 26;
+    bY += 31;
   });
 
-  // Nisab Status Verdict Banner
-  const verdictY = bY + 8;
-  const verdictH = 42;
-  if (data.isNisabReached) {
-    ctx.fillStyle = '#ECFDF5';
-    ctx.strokeStyle = '#10B981';
-    roundRect(ctx, headerX + 16, verdictY, headerW - 32, verdictH, 8);
-    ctx.fill();
-    ctx.stroke();
+  // 8. Grand Zakat Al-Māl Verdict Card + Official Shariah Seal Stamp (y = 1148, height = 185)
+  const verdictCardY = 1148;
+  const verdictCardH = 185;
 
-    ctx.fillStyle = '#065F46';
-    ctx.font = getPdfFont(data.lang, 12.5, true);
-    ctx.textAlign = 'center';
-    ctx.fillText(ui.nisabReached, width / 2, verdictY + 26);
-  } else {
-    ctx.fillStyle = '#FFFBEB';
-    ctx.strokeStyle = '#F59E0B';
-    roundRect(ctx, headerX + 16, verdictY, headerW - 32, verdictH, 8);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#92400E';
-    ctx.font = getPdfFont(data.lang, 12.5, true);
-    ctx.textAlign = 'center';
-    ctx.fillText(ui.belowNisab, width / 2, verdictY + 26);
-  }
-
-  // Hero Zakat Due Box
-  const dueBoxY = verdictY + verdictH + 16;
-  const dueBoxH = 175;
-
-  const dueGrad = ctx.createLinearGradient(headerX + 16, dueBoxY, headerX + 16, dueBoxY + dueBoxH);
-  dueGrad.addColorStop(0, '#064E3B');
-  dueGrad.addColorStop(1, '#047857');
+  const dueGrad = ctx.createLinearGradient(headerX, verdictCardY, headerX, verdictCardY + verdictCardH);
+  dueGrad.addColorStop(0, '#062B1F');
+  dueGrad.addColorStop(0.5, '#0C4735');
+  dueGrad.addColorStop(1, '#062B1F');
   ctx.fillStyle = dueGrad;
-  roundRect(ctx, headerX + 16, dueBoxY, headerW - 32, dueBoxH, 12);
+  roundRect(ctx, headerX, verdictCardY, headerW, verdictCardH, 16);
   ctx.fill();
 
-  ctx.strokeStyle = '#F59E0B';
+  // Double Gold Border
+  ctx.strokeStyle = '#D4AF37';
   ctx.lineWidth = 2;
-  roundRect(ctx, headerX + 16, dueBoxY, headerW - 32, dueBoxH, 12);
+  roundRect(ctx, headerX, verdictCardY, headerW, verdictCardH, 16);
   ctx.stroke();
 
-  // Top Label in Due Box
-  ctx.fillStyle = '#FDE68A';
-  ctx.font = getPdfFont(data.lang, 13, true);
-  ctx.textAlign = 'center';
-  ctx.fillText(ui.zakatDueTitle.toUpperCase(), width / 2, dueBoxY + 34);
+  ctx.strokeStyle = '#E5C158';
+  ctx.lineWidth = 1;
+  roundRect(ctx, headerX + 6, verdictCardY + 6, headerW - 12, verdictCardH - 12, 12);
+  ctx.stroke();
 
-  // Large Zakat Due Amount
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 36px monospace, system-ui, sans-serif';
-  ctx.fillText(formatCurrencyAmount(data.zakatDue, data.currency), width / 2, dueBoxY + 82);
+  // Top Pill Badge: Verdict
+  const verdictPillW = 340;
+  const verdictPillH = 26;
+  const verdictPillY = verdictCardY + 16;
+  ctx.fillStyle = 'rgba(245, 208, 97, 0.16)';
+  roundRect(ctx, headerX + 24, verdictPillY, verdictPillW, verdictPillH, 13);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(245, 208, 97, 0.5)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, headerX + 24, verdictPillY, verdictPillW, verdictPillH, 13);
+  ctx.stroke();
+
+  ctx.fillStyle = '#F5D061';
+  ctx.font = getPdfFont(data.lang, 11, true);
+  ctx.textAlign = 'center';
+  const verdictPillText = data.isNisabReached ? `✓ ${ui.nisabReached.toUpperCase()}` : ui.belowNisab.toUpperCase();
+  ctx.fillText(verdictPillText, headerX + 24 + verdictPillW / 2, verdictPillY + 18);
+
+  // Center-Left Zakat Due Title
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#FDE68A';
+  ctx.font = getPdfFont(data.lang, 13.5, true);
+  ctx.fillText(ui.zakatDueTitle.toUpperCase(), headerX + 24, verdictCardY + 68);
+
+  // Monumental Golden Amount (52px bold gold #F5D061)
+  ctx.fillStyle = '#F5D061';
+  ctx.font = 'bold 50px monospace, system-ui, sans-serif';
+  ctx.fillText(formatCurrencyAmount(data.zakatDue, data.currency), headerX + 24, verdictCardY + 122);
 
   // Monthly Installment Breakdown
   if (data.zakatDue > 0) {
     ctx.fillStyle = '#FEF3C7';
     ctx.font = getPdfFont(data.lang, 12, false);
     const monthlyAmt = formatCurrencyAmount(Math.round(data.zakatDue / 12), data.currency);
-    ctx.fillText(`💡 ${ui.monthlyOpt} ${monthlyAmt} / month ${pdfUi.monthlyInstallmentSuffix}`, width / 2, dueBoxY + 115);
+    ctx.fillText(`💡 ${ui.monthlyOpt} ${monthlyAmt} / month ${pdfUi.monthlyInstallmentSuffix}`, headerX + 24, verdictCardY + 154);
   }
 
   // Ushr or Livestock Notes if applicable
   if (data.ushrDue > 0 || (data.livestockZakatable && data.livestockDueText)) {
     ctx.fillStyle = '#D1FAE5';
-    ctx.font = getPdfFont(data.lang, 11.5, false);
+    ctx.font = getPdfFont(data.lang, 11, false);
     const extraNotes = [
       data.ushrDue > 0 ? `${pdfUi.ushrDuePrefix} ${formatCurrencyAmount(data.ushrDue, data.currency)}` : null,
       data.livestockZakatable ? `${pdfUi.livestockPrefix} ${data.livestockDueText || pdfUi.zakatDueBadge}` : null,
     ].filter(Boolean).join('  •  ');
-    ctx.fillText(extraNotes, width / 2, dueBoxY + 144);
+    ctx.fillText(extraNotes, headerX + 24, verdictCardY + 172);
   }
 
-  // 7. Footer: Quranic Ayah Citation & Authenticity Seal
-  const footerY = 1530;
+  // Right Side: Official Circular/Octagonal Golden Islamic Seal Stamp rotated -8deg!
+  drawShariahSealStamp(ctx, 1040, verdictCardY + verdictCardH / 2, 64);
 
-  // Decorative Rule
-  ctx.strokeStyle = '#D97706';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(headerX, footerY);
-  ctx.lineTo(headerX + headerW, footerY);
-  ctx.stroke();
+  // 9. Bottom Quranic Scroll Footer (y = 1350, height = 105)
+  const footerY = 1350;
+  const footerH = 105;
 
-  // Ayah Box
-  ctx.fillStyle = '#F8FAFC';
-  roundRect(ctx, headerX, footerY + 12, headerW, 90, 8);
+  ctx.fillStyle = '#FAF6ED';
+  roundRect(ctx, headerX, footerY, headerW, footerH, 14);
   ctx.fill();
-  ctx.strokeStyle = '#E2E8F0';
-  ctx.lineWidth = 1;
-  roundRect(ctx, headerX, footerY + 12, headerW, 90, 8);
+  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, headerX, footerY, headerW, footerH, 14);
   ctx.stroke();
 
-  // Arabic Ayah
+  // Arabic Ayah from Surah At-Tawbah (9:103)
   ctx.fillStyle = '#065F46';
-  ctx.font = 'bold 15px "Amiri", "Traditional Arabic", serif, sans-serif';
+  ctx.font = 'bold 18px "Amiri", "Traditional Arabic", serif, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(pdfUi.ayahArabic, width / 2, footerY + 42);
+  ctx.fillText(pdfUi.ayahArabic, 620, footerY + 38);
 
-  // Translation
+  // Localized Translation
   ctx.fillStyle = '#475569';
-  ctx.font = getPdfFont(data.lang, 11.5, false);
-  ctx.fillText(pdfUi.ayahTranslation, width / 2, footerY + 68);
+  ctx.font = getPdfFont(data.lang, 12, false);
+  ctx.fillText(pdfUi.ayahTranslation, 620, footerY + 68);
 
   // Bottom Security & Privacy Guarantee
-  ctx.fillStyle = '#94A3B8';
-  ctx.font = getPdfFont(data.lang, 10, false);
+  ctx.fillStyle = '#64748B';
+  ctx.font = getPdfFont(data.lang, 10.5, false);
   ctx.textAlign = 'center';
-  ctx.fillText(pdfUi.securityNote1, width / 2, footerY + 130);
-  ctx.fillText(pdfUi.securityNote2, width / 2, footerY + 148);
+  ctx.fillText(pdfUi.securityNote1, 620, footerY + 130);
+
+  ctx.fillStyle = '#94A3B8';
+  ctx.font = getPdfFont(data.lang, 9.5, false);
+  ctx.fillText(pdfUi.securityNote2, 620, footerY + 148);
 
   // 8. Convert Canvas to High-Quality JPEG Data URL
   const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.93);

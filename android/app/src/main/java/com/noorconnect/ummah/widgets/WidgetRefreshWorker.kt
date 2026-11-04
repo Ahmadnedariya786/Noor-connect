@@ -135,7 +135,8 @@ class WidgetRefreshWorker(
     override suspend fun getForegroundInfo(): ForegroundInfo {
         ensureChannel(applicationContext)
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_stat_noor_mosque)
+            .setColor(0xFFD4AF37.toInt())
             .setContentTitle(applicationContext.getString(R.string.notif_widget_sync_text))
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)

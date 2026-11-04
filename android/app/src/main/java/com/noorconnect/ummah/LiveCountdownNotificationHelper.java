@@ -81,7 +81,8 @@ public class LiveCountdownNotificationHelper {
             String title = "Next: " + nextPrayerName + (nextPrayerTimeFormatted.isEmpty() ? "" : " • " + nextPrayerTimeFormatted);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_notification)
+                    .setSmallIcon(R.drawable.ic_stat_noor_mosque)
+                    .setColor(0xFFD4AF37)
                     .setContentTitle(title)
                     .setContentText(allPrayersSummary.isEmpty() ? "Tap to open Noor Connect" : allPrayersSummary)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(allPrayersSummary))

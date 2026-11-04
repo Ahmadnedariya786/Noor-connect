@@ -26,6 +26,8 @@ export interface LogoEditionMeta {
   id: NoorLogoEditionId;
   name: string;
   shortName: string;
+  shortLabel: string;
+  fullTitle: string;
   subtitle: string;
   arabicName: string;
 }
@@ -35,6 +37,8 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     id: 0,
     name: 'Al-Miftah Royal Mihrab & Blooming Mushaf',
     shortName: 'Royal Mihrab & Mushaf',
+    shortLabel: 'Royal\nMihrab',
+    fullTitle: 'Royal Mihrab & Mushaf',
     subtitle: 'Blooming Quran & Luminous Mihrab Dome',
     arabicName: 'المحراب الملكي والمصحف الشريف',
   },
@@ -42,6 +46,8 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     id: 1,
     name: 'Celestial Rub el Hizb Mandala & Sacred Fanous',
     shortName: 'Celestial Mandala & Fanous',
+    shortLabel: 'Celestial\nFanous',
+    fullTitle: 'Celestial Mandala & Fanous',
     subtitle: 'Arabesque Mandala & Radiating Lantern',
     arabicName: 'المندالة النورانية والفانوس المبارك',
   },
@@ -49,6 +55,8 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     id: 2,
     name: 'Haramain Sanctuary Crest & Minarets',
     shortName: 'Haramain Crest & Minarets',
+    shortLabel: 'Haramain\nCrest',
+    fullTitle: 'Haramain Crest & Minarets',
     subtitle: 'Illuminated Dome & Twin Ottoman Minarets',
     arabicName: 'صرح الحرمين الشريفين والمآذن العالية',
   },
@@ -56,6 +64,8 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     id: 3,
     name: 'Noor Al-Quran 3D Flame Medallion',
     shortName: 'Noor Calligraphic Flame',
+    shortLabel: 'Noor\nFlame',
+    fullTitle: 'Noor Calligraphic Flame',
     subtitle: 'Sculpted Thuluth Calligraphy & Sacred Flame',
     arabicName: 'شعلة القرآن والخط الثلثي المجسم',
   },
@@ -63,6 +73,8 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     id: 4,
     name: 'Mamluk Royal Starburst & Qibla Sanctuary',
     shortName: 'Mamluk Starburst & Sanctuary',
+    shortLabel: 'Mamluk\nStar',
+    fullTitle: 'Mamluk Starburst & Sanctuary',
     subtitle: '16-Point Rub el Hizb & Celestial Kaaba Compass',
     arabicName: 'النجمة المملوكية ومحراب القبلة',
   },
@@ -1113,12 +1125,20 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
               </div>
 
               <span
-                className="text-[10px] sm:text-[11px] font-semibold text-center leading-tight line-clamp-2 mt-1"
+                className="text-center font-bold mt-1 w-full"
                 style={{
                   color: isCurrent ? 'var(--accent-text)' : 'var(--text-secondary)',
+                  fontSize: '0.63rem',
+                  lineHeight: '1.2',
+                  fontWeight: 700,
+                  textAlign: 'center',
+                  whiteSpace: 'pre-line',
+                  overflow: 'hidden',
+                  width: '100%',
+                  paddingInline: '2px',
                 }}
               >
-                {ed.shortName}
+                {ed.shortLabel || ed.shortName}
               </span>
             </button>
           );

@@ -7,6 +7,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -323,6 +328,8 @@ public class AdhanPlaybackService extends Service {
         switch (prayerName.toLowerCase(Locale.ROOT)) {
             case "fajr":
                 return "🌅";
+            case "sunrise":
+                return "🌄";
             case "dhuhr":
                 return "☀️";
             case "asr":
@@ -342,6 +349,8 @@ public class AdhanPlaybackService extends Service {
         switch (prayerName.toLowerCase(Locale.ROOT)) {
             case "fajr":
                 return "صلاة الفجر";
+            case "sunrise":
+                return "صلاة الشروق";
             case "dhuhr":
                 return "صلاة الظهر";
             case "asr":
@@ -353,6 +362,127 @@ public class AdhanPlaybackService extends Service {
             default:
                 return "الصلاة";
         }
+    }
+
+    private String getPrayerRakahGuide(String prayerName) {
+        if (prayerName == null) return "Obligatory Prayer";
+        switch (prayerName.toLowerCase(Locale.ROOT)) {
+            case "fajr":
+                return "2 Sunnah • 2 Fard";
+            case "dhuhr":
+                return "4 Sunnah • 4 Fard • 2 Sunnah";
+            case "asr":
+                return "4 Sunnah • 4 Fard";
+            case "maghrib":
+                return "3 Fard • 2 Sunnah";
+            case "isha":
+                return "4 Fard • 2 Sunnah • 3 Witr";
+            default:
+                return "Obligatory Prayer";
+        }
+    }
+
+    private String getPrayerSummaryLine(String prayerName) {
+        if (prayerName == null) return "Tap to open Noor Connect & log prayer";
+        switch (prayerName.toLowerCase(Locale.ROOT)) {
+            case "fajr":
+                return "2 Sunnah • 2 Fard — Tap to log prayer & read adhkar";
+            case "dhuhr":
+                return "4 Sunnah • 4 Fard • 2 Sunnah — Time for Dhuhr remembrance";
+            case "asr":
+                return "4 Sunnah • 4 Fard — Guard the middle prayer";
+            case "maghrib":
+                return "3 Fard • 2 Sunnah — Blessed evening prayer";
+            case "isha":
+                return "4 Fard • 2 Sunnah • 3 Witr — Night peace & Surah Al-Mulk";
+            default:
+                return "Tap to open Noor Connect & log prayer";
+        }
+    }
+
+    private String getPrayerHadithQuote(String prayerName) {
+        if (prayerName == null)
+            return "\"Establish prayer at the decline of the sun until the darkness of the night.\" (Surah Al-Isra 17:78)";
+        switch (prayerName.toLowerCase(Locale.ROOT)) {
+            case "fajr":
+                return "\"The two rak'ahs at dawn are better than this world and all it contains.\" — Sahih Muslim";
+            case "dhuhr":
+                return "\"Whoever observes four rak'ahs before Dhuhr and four after it, Allah makes him forbidden to the Fire.\" — Jami' at-Tirmidhi";
+            case "asr":
+                return "\"He who leaves the Asr prayer, his good deeds will be annulled.\" — Sahih Al-Bukhari";
+            case "maghrib":
+                return "\"Hurry to perform the Maghrib prayer before the stars appear in the sky.\" — Musnad Ahmad";
+            case "isha":
+                return "\"Whoever prays the Isha prayer in congregation, it is as if he prayed for half the night.\" — Sahih Muslim";
+            default:
+                return "\"Indeed, prayer has been decreed upon the believers a decree of specified times.\" (Surah An-Nisa 4:103)";
+        }
+    }
+
+    public static Bitmap createPrayerEmblemBitmap(String prayerName) {
+        int size = 144;
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        // 1. Deep emerald circular badge (#072A20)
+        Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bgPaint.setColor(0xFF072A20);
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f - 4, bgPaint);
+
+        // 2. Double geometric gold border (#D4AF37)
+        Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setColor(0xFFD4AF37);
+        borderPaint.setStrokeWidth(3f);
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f - 6, borderPaint);
+
+        Paint innerBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        innerBorderPaint.setStyle(Paint.Style.STROKE);
+        innerBorderPaint.setColor(0x80D4AF37);
+        innerBorderPaint.setStrokeWidth(1.5f);
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f - 12, innerBorderPaint);
+
+        // 3. 8-pointed Rub el Hizb geometric star lines
+        canvas.save();
+        canvas.translate(size / 2f, size / 2f);
+        float sq = size * 0.30f;
+        RectF rect = new RectF(-sq, -sq, sq, sq);
+        Paint starPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        starPaint.setStyle(Paint.Style.STROKE);
+        starPaint.setColor(0x44D4AF37);
+        starPaint.setStrokeWidth(1.5f);
+        canvas.drawRect(rect, starPaint);
+        canvas.rotate(45);
+        canvas.drawRect(rect, starPaint);
+        canvas.restore();
+
+        // 4. Center Arabic Calligraphic Prayer Name in luminous gold (#F5D061)
+        String arabic;
+        if (prayerName == null) {
+            arabic = "الصلاة";
+        } else {
+            switch (prayerName.toLowerCase(Locale.ROOT)) {
+                case "fajr": arabic = "الفجر"; break;
+                case "sunrise": arabic = "الشروق"; break;
+                case "dhuhr": arabic = "الظهر"; break;
+                case "asr": arabic = "العصر"; break;
+                case "maghrib": arabic = "المغرب"; break;
+                case "isha": arabic = "العشاء"; break;
+                default: arabic = "الصلاة"; break;
+            }
+        }
+
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(0xFFF5D061);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD));
+        textPaint.setTextSize(size * 0.28f);
+
+        Paint.FontMetrics fm = textPaint.getFontMetrics();
+        float yPos = (size / 2f) - ((fm.ascent + fm.descent) / 2f);
+        canvas.drawText(arabic, size / 2f, yPos, textPaint);
+
+        return bitmap;
     }
 
     private Notification createNotification(String prayerName) {
@@ -367,25 +497,35 @@ public class AdhanPlaybackService extends Service {
         stopIntent.setAction(ACTION_STOP);
         PendingIntent stopPendingIntent = PendingIntent.getService(this, 1, stopIntent, stopFlags);
 
-        String emoji = getPrayerEmoji(prayerName);
         String arabic = getPrayerArabic(prayerName);
-        String currentTime = new SimpleDateFormat("h:mm a", Locale.getDefault()).format(new Date());
+        String currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
+        String normalizedName = prayerName != null && !prayerName.isEmpty()
+                ? prayerName.substring(0, 1).toUpperCase(Locale.ROOT) + prayerName.substring(1).toLowerCase(Locale.ROOT)
+                : "Prayer";
 
-        // Rich expanded text shown in BigText style
-        String bigText = arabic + "\n"
-                + "It is time to pray " + prayerName + ".\n"
-                + "\"Hayya 'ala as-Salah — Come to Prayer\"\n"
-                + "Tap to open Noor Connect ✦ " + currentTime;
+        String title = "🕌 " + normalizedName + " • " + arabic + " (" + currentTime + ")";
+        String subText = "حي على الصلاة • Hayya 'ala-s-Salah";
+        String summaryLine = getPrayerSummaryLine(prayerName);
+        String rakahGuide = getPrayerRakahGuide(prayerName);
+        String hadith = getPrayerHadithQuote(prayerName);
+
+        String bigText = "✨ Hayya 'ala-s-Salah • Hayya 'ala-l-Falah (Come to Prayer, Come to Success)\n"
+                + "📿 Rak'aat: " + rakahGuide + "\n"
+                + hadith;
+
+        Bitmap largeIconBitmap = createPrayerEmblemBitmap(prayerName);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(emoji + " " + prayerName + " Prayer Time")
-                .setContentText(arabic + " — " + currentTime)
+                .setContentTitle(title)
+                .setSubText(subText)
+                .setContentText(summaryLine)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(bigText)
-                        .setBigContentTitle(emoji + " " + prayerName + " Prayer — " + currentTime)
-                        .setSummaryText("Noor Connect 🕌"))
-                .setSmallIcon(R.drawable.ic_notification)
-                .setColor(0xFF22C55E) // Green accent
+                        .setBigContentTitle(title)
+                        .setSummaryText(subText)
+                        .bigText(bigText))
+                .setSmallIcon(R.drawable.ic_stat_noor_mosque)
+                .setLargeIcon(largeIconBitmap)
+                .setColor(0xFFD4AF37) // Royal Burnished Gold
                 .setColorized(true)
                 .setContentIntent(contentIntent)
                 .setFullScreenIntent(contentIntent, true)
@@ -394,8 +534,8 @@ public class AdhanPlaybackService extends Service {
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
-                .addAction(R.drawable.ic_notification, "⏹ Stop Adhan", stopPendingIntent)
-                .addAction(R.drawable.ic_notification, "🕌 Open App", contentIntent)
+                .addAction(R.drawable.ic_stat_noor_mosque, "✓ Open & Log Prayer", contentIntent)
+                .addAction(R.drawable.ic_stat_noor_mosque, "🔇 Silence Adhan", stopPendingIntent)
                 .build();
     }
 

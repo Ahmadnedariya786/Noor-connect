@@ -1716,7 +1716,7 @@ const SettingsSubPage: React.FC = () => {
                   title="Switch between the 5 living sacred logo editions"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-                  <span>Switch Logo Style ({logoEdition + 1}/5) • {NOOR_LOGO_EDITIONS[logoEdition]?.shortName}</span>
+                  <span>Switch Logo Style ({logoEdition + 1}/5) • {NOOR_LOGO_EDITIONS[logoEdition]?.fullTitle || NOOR_LOGO_EDITIONS[logoEdition]?.shortName}</span>
                 </button>
               </div>
 

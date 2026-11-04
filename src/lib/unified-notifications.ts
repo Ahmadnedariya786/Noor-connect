@@ -6,6 +6,7 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PRAYER_QUOTES } from './prayer-quotes';
 import { getPrayerDisplayName } from './prayer-utils';
+import { getPrayerNotificationMessage } from './local-notifications';
 
 export interface NotificationOptions {
   title: string;
@@ -153,9 +154,9 @@ class UnifiedNotificationService {
             schedule: { at: scheduleTime },
             channelId: channelId,
             sound: 'default',
-            smallIcon: 'ic_notification',
+            smallIcon: 'ic_stat_noor_mosque',
             largeIcon: 'ic_launcher',
-            iconColor: '#1a4a4a',
+            iconColor: '#D4AF37',
             extra: options.data || {}
           }]
         });
@@ -266,9 +267,13 @@ class UnifiedNotificationService {
 
     // Test immediate notification
     try {
+      const now = new Date();
+      const testTime12h = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+      const testMsg = getPrayerNotificationMessage('Asr', testTime12h, now);
+
       const directSuccess = await this.showNotification({
-        title: '🕌 Test Notification',
-        body: 'If you see this, notifications are working correctly!',
+        title: testMsg.title,
+        body: testMsg.body,
         tag: 'test-immediate',
         requireInteraction: false,
         data: { test: true, source: 'immediate' }
@@ -316,12 +321,13 @@ class UnifiedNotificationService {
       return false;
     }
 
-    const randomQuote = PRAYER_QUOTES[Math.floor(Math.random() * PRAYER_QUOTES.length)];
     const displayName = getPrayerDisplayName(prayerName, prayerTime);
+    const time12h = prayerTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    const message = getPrayerNotificationMessage(prayerName, time12h, prayerTime);
 
     const notificationOptions: NotificationOptions = {
-      title: `🕌 ${displayName} Prayer Time`,
-      body: `It's time for ${displayName} prayer.\n${randomQuote}`,
+      title: message.title,
+      body: message.body,
       tag: `prayer-${prayerName.toLowerCase()}`,
       requireInteraction: true,
       data: { prayerName: displayName, originalPrayerName: prayerName, url: '/' },
@@ -340,8 +346,8 @@ class UnifiedNotificationService {
               allowWhileIdle: true
             },
             sound: 'default',
-            smallIcon: 'ic_notification',
-            iconColor: '#22c55e',
+            smallIcon: 'ic_stat_noor_mosque',
+            iconColor: '#D4AF37',
             extra: notificationOptions.data
           }]
         });

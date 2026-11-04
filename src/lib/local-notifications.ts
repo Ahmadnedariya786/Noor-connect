@@ -41,14 +41,52 @@ type ServiceWorkerPrayerTimings = Record<string, { time: string }>;
 
 const PRAYER_NAMES = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
 
-const getPrayerNotificationMessage = (prayerName: string, prayerTime: string, date?: Date): { title: string; body: string } => {
+export const PRAYER_ARABIC_CALLIGRAPHY: Record<string, string> = {
+  Fajr: 'صلاة الفجر',
+  Sunrise: 'صلاة الشروق',
+  Dhuhr: 'صلاة الظهر',
+  Jummah: 'صلاة الجمعة',
+  Asr: 'صلاة العصر',
+  Maghrib: 'صلاة المغرب',
+  Isha: 'صلاة العشاء',
+};
+
+export const PRAYER_RAKAH_BREAKDOWN: Record<string, string> = {
+  Fajr: '2 Sunnah • 2 Fard — Tap to log prayer & read adhkar',
+  Sunrise: 'Ishraq / Duha remembrance',
+  Dhuhr: '4 Sunnah • 4 Fard • 2 Sunnah — Time for Dhuhr remembrance',
+  Jummah: '4 Sunnah • 2 Fard • 4 Sunnah — Friday Jummah Mubarak',
+  Asr: '4 Sunnah • 4 Fard — Guard the middle prayer',
+  Maghrib: '3 Fard • 2 Sunnah — Blessed evening prayer',
+  Isha: '4 Fard • 2 Sunnah • 3 Witr — Night peace & Surah Al-Mulk',
+};
+
+export function format12HourTime(timeStr: string): string {
+  if (!timeStr) return '';
+  const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return timeStr;
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  const hoursStr = hours.toString().padStart(2, '0');
+  return `${hoursStr}:${minutes} ${ampm}`;
+}
+
+export const getPrayerNotificationMessage = (prayerName: string, prayerTime: string, date?: Date): { title: string; body: string } => {
   const displayName = getPrayerDisplayName(prayerName, date);
-  const quotes = PRAYER_QUOTES[prayerName] || PRAYER_QUOTES['Default'];
+  const arabic = PRAYER_ARABIC_CALLIGRAPHY[displayName] || PRAYER_ARABIC_CALLIGRAPHY[prayerName] || 'الصلاة';
+  const time12h = format12HourTime(prayerTime);
+  const rakah = PRAYER_RAKAH_BREAKDOWN[displayName] || PRAYER_RAKAH_BREAKDOWN[prayerName] || 'Obligatory Prayer';
+  const quotes = PRAYER_QUOTES[displayName] || PRAYER_QUOTES[prayerName] || PRAYER_QUOTES['Default'];
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-  return {
-    title: `${displayName} Prayer Time`,
-    body: `It's time for ${displayName} prayer (${prayerTime}).\n${randomQuote}`,
-  };
+
+  const timeFormatted = time12h ? ` (${time12h})` : (prayerTime ? ` (${prayerTime})` : '');
+  const title = `🕌 ${displayName} • ${arabic}${timeFormatted}`;
+  const body = `✨ Hayya 'ala-s-Salah • Hayya 'ala-l-Falah\n📿 ${rakah}\n${randomQuote}`;
+
+  return { title, body };
 };
 
 export interface PrayerTime {
@@ -296,9 +334,9 @@ export class LocalNotificationManager {
               repeats: false,
             },
             sound: 'default',
-            smallIcon: 'ic_notification',
+            smallIcon: 'ic_stat_noor_mosque',
             largeIcon: 'ic_launcher',
-            iconColor: '#1a4a4a',
+            iconColor: '#D4AF37',
             extra: {
               prayerName,
               prayerTime: cleaned,
@@ -407,19 +445,20 @@ export class LocalNotificationManager {
           const notificationId = this.getNotificationId(prayer.name, prayer.date);
 
           const displayName = getPrayerDisplayName(prayer.name, prayer.date);
+          const message = getPrayerNotificationMessage(prayer.name, prayer.time, prayer.date);
           const notification = {
             id: notificationId,
-            title: `${displayName} Prayer Time`,
-            body: `It's time for ${displayName} prayer. ${prayer.time}`,
+            title: message.title,
+            body: message.body,
             schedule: {
               at: prayer.date,
               allowWhileIdle: true, // Wake up device
               repeats: false,
             },
             sound: 'default',
-            smallIcon: 'ic_notification',
+            smallIcon: 'ic_stat_noor_mosque',
             largeIcon: 'ic_launcher',
-            iconColor: '#1a4a4a',
+            iconColor: '#D4AF37',
             extra: {
               prayerName: displayName,
               originalPrayerName: prayer.name,
@@ -514,20 +553,22 @@ export class LocalNotificationManager {
       const notificationId = this.getNotificationId(prayerName, prayerDate);
       const displayName = getPrayerDisplayName(prayerName, prayerDate);
 
+      const message = getPrayerNotificationMessage(prayerName, prayerTime, prayerDate);
+
       await LocalNotifications.schedule({
         notifications: [{
           id: notificationId,
-          title: `${displayName} Prayer Time`,
-          body: `It's time for ${displayName} prayer. ${prayerTime}`,
+          title: message.title,
+          body: message.body,
           schedule: {
             at: prayerDate,
             allowWhileIdle: true, // Wake up device
             repeats: false,
           },
           sound: 'default',
-          smallIcon: 'ic_notification',
+          smallIcon: 'ic_stat_noor_mosque',
           largeIcon: 'ic_launcher',
-          iconColor: '#1a4a4a',
+          iconColor: '#D4AF37',
           extra: {
             prayerName: displayName,
             originalPrayerName: prayerName,
@@ -704,9 +745,9 @@ export class LocalNotificationManager {
             repeats: false,
           },
           sound: 'default',
-          smallIcon: 'ic_notification',
+          smallIcon: 'ic_stat_noor_mosque',
           largeIcon: 'ic_launcher',
-          iconColor: '#1a4a4a',
+          iconColor: '#D4AF37',
           extra: {
             type: 'islamic_event',
             eventId: id

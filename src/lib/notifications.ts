@@ -6,6 +6,7 @@
 import { Capacitor } from '@capacitor/core';
 import { PRAYER_QUOTES } from './prayer-quotes';
 import { getPrayerDisplayName } from './prayer-utils';
+import { getPrayerNotificationMessage } from './local-notifications';
 
 const NOTIFICATION_PERMISSION_KEY = 'prayer-notifications-enabled';
 
@@ -246,13 +247,12 @@ export const schedulePrayerNotification = (prayerName: string, prayerTime: Date)
     clearTimeout(existingTimeout);
   }
 
-  const randomQuote = PRAYER_QUOTES[Math.floor(Math.random() * PRAYER_QUOTES.length)];
-
-  const displayName = getPrayerDisplayName(prayerName, prayerTime);
+  const time12h = prayerTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  const message = getPrayerNotificationMessage(prayerName, time12h, prayerTime);
 
   const timeoutId = window.setTimeout(() => {
-    showNotification(`${displayName} Prayer Time`, {
-      body: `It's time for ${displayName} prayer.\n${randomQuote}`,
+    showNotification(message.title, {
+      body: message.body,
       tag: `prayer-${prayerName.toLowerCase()}`,
     });
     activeTimeouts.delete(id);
