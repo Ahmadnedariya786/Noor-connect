@@ -85,12 +85,29 @@ export interface ZakatHistoryRecord {
 const ZAKAT_HISTORY_KEY = 'noor_zakat_history_v1';
 const ZAKAT_SAVED_DRAFT_KEY = 'noor_zakat_draft_v1';
 
-interface ZakatCalculatorProps {
+export interface ZakatCalculatorProps {
   isEmbedded?: boolean;
+  onBack?: () => void;
 }
 
-export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorProps) {
+export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCalculatorProps) {
   const navigate = useNavigate();
+
+  const handleBack = useCallback(() => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/settings')) {
+      navigate('/profile');
+      return;
+    }
+    if (typeof window !== 'undefined' && window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate('/services');
+    }
+  }, [onBack, navigate]);
 
   // Multi-Language Content Engine
   const { contentLang } = useContentLanguage();
@@ -638,12 +655,13 @@ export default function ZakatCalculator({ isEmbedded = false }: ZakatCalculatorP
       >
         <div className="max-w-xl mx-auto flex items-center justify-between gap-2.5 w-full">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            {!isEmbedded && (
+            {(!isEmbedded || Boolean(onBack)) && (
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
                 aria-label="Back"
                 className="w-9 h-9 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-primary)] hover:border-[var(--accent)] active:scale-95 transition-all shrink-0"
+                style={{ zIndex: 30, position: 'relative', minWidth: '40px', minHeight: '40px', cursor: 'pointer' }}
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>

@@ -4,6 +4,7 @@
 
 import { quranService } from './quran-service';
 import { SURAH_START_PAGES } from './mushaf-service';
+import { safeSetLocalStorageItem } from './cache-manager';
 
 export type MushafLineFormat = 7 | 13 | 15;
 export const MUSHAF_LINE_FORMAT_KEY = 'noor_mushaf_line_format_v1';
@@ -336,7 +337,7 @@ function persistVersePageMap(): void {
       verseToPageMap.forEach((p, k) => {
         obj[k] = p;
       });
-      localStorage.setItem(AYAH_PAGE_CACHE_KEY, JSON.stringify(obj));
+      safeSetLocalStorageItem(AYAH_PAGE_CACHE_KEY, JSON.stringify(obj));
     } catch {
       // Safe catch for storage limits
     }
@@ -417,6 +418,40 @@ async function fetchFromCdnFallback(pageNumber: number): Promise<InteractiveVers
 
 export const memoryPageCache = new Map<number, InteractivePageData>();
 
+const MUSHAF_CACHE_NAME = 'noor-mushaf-pages-v1';
+
+async function getCachedPageFromCacheStorage(
+  pageNumber: number
+): Promise<{ verses: InteractiveVerse[]; tajweed: Record<string, string> } | null> {
+  if (typeof window === 'undefined' || !('caches' in window)) return null;
+  try {
+    const cache = await caches.open(MUSHAF_CACHE_NAME);
+    const res = await cache.match(`/api/mushaf/page-${pageNumber}.json`);
+    if (res && res.ok) {
+      return await res.json();
+    }
+  } catch {
+    // Cache match fallback
+  }
+  return null;
+}
+
+async function setCachedPageInCacheStorage(
+  pageNumber: number,
+  data: { verses: InteractiveVerse[]; tajweed: Record<string, string> }
+): Promise<void> {
+  if (typeof window === 'undefined' || !('caches' in window)) return;
+  try {
+    const cache = await caches.open(MUSHAF_CACHE_NAME);
+    const response = new Response(JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    await cache.put(`/api/mushaf/page-${pageNumber}.json`, response);
+  } catch {
+    // Cache write fallback
+  }
+}
+
 export async function fetchMushafPage(
   pageNumber: number,
   includeTajweed: boolean = true
@@ -432,10 +467,20 @@ export async function fetchMushafPage(
     return memCached;
   }
 
+  // 2. CacheStorage hit (unlimited origin quota, non-blocking)
+  const diskCached = await getCachedPageFromCacheStorage(pageNumber);
+  if (diskCached?.verses && diskCached.verses.length > 0 && (!includeTajweed || diskCached.tajweed)) {
+    registerVersesForPage(pageNumber, diskCached.verses);
+    const data = buildPageData(pageNumber, diskCached.verses, diskCached.tajweed || {}, false);
+    memoryPageCache.set(pageNumber, data);
+    prefetchAdjacentMushafPages(pageNumber, includeTajweed);
+    return data;
+  }
+
   const pageKey = `${PAGE_CACHE_PREFIX}${pageNumber}`;
   const tajweedKey = `${TAJWEED_CACHE_PREFIX}${pageNumber}`;
 
-  // Check localStorage cache
+  // 3. Check legacy localStorage cache and immediately migrate to CacheStorage
   let cachedVerses: InteractiveVerse[] | null = null;
   let cachedTajweed: Record<string, string> | null = null;
 
@@ -443,6 +488,7 @@ export async function fetchMushafPage(
     const rawPage = localStorage.getItem(pageKey);
     if (rawPage) {
       cachedVerses = JSON.parse(rawPage);
+      localStorage.removeItem(pageKey); // Migrate out of localStorage to free up quota
     }
   } catch {
     // Safe cache read catch
@@ -452,16 +498,18 @@ export async function fetchMushafPage(
     const rawTajweed = localStorage.getItem(tajweedKey);
     if (rawTajweed) {
       cachedTajweed = JSON.parse(rawTajweed);
+      localStorage.removeItem(tajweedKey); // Migrate out of localStorage to free up quota
     }
   } catch {
     // Safe cache read catch
   }
 
-  // If already cached and tajweed matches requirement, return immediately
+  // If already cached in legacy storage and tajweed matches requirement, return immediately
   if (cachedVerses && (!includeTajweed || cachedTajweed)) {
     registerVersesForPage(pageNumber, cachedVerses);
     const data = buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
     memoryPageCache.set(pageNumber, data);
+    void setCachedPageInCacheStorage(pageNumber, { verses: cachedVerses, tajweed: cachedTajweed || {} });
     prefetchAdjacentMushafPages(pageNumber, includeTajweed);
     return data;
   }
@@ -531,12 +579,7 @@ export async function fetchMushafPage(
           };
         });
 
-        // Cache fetched verses
-        try {
-          localStorage.setItem(pageKey, JSON.stringify(fetchedVerses));
-        } catch {
-          // localStorage full or quota exceeded
-        }
+        // Verses parsed successfully
       }
     }
 
@@ -550,11 +593,6 @@ export async function fetchMushafPage(
               tajweedMap[item.verse_key] = sanitizeTajweedHtml(item.text_uthmani_tajweed);
             }
           });
-          try {
-            localStorage.setItem(tajweedKey, JSON.stringify(tajweedMap));
-          } catch {
-            // Safe catch for storage
-          }
         }
       } catch {
         // Safe catch for parsing tajweed
@@ -562,6 +600,7 @@ export async function fetchMushafPage(
     }
 
     if (fetchedVerses.length > 0) {
+      void setCachedPageInCacheStorage(pageNumber, { verses: fetchedVerses, tajweed: tajweedMap });
       registerVersesForPage(pageNumber, fetchedVerses);
       const data = buildPageData(pageNumber, fetchedVerses, tajweedMap, false);
       memoryPageCache.set(pageNumber, data);

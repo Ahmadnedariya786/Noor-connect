@@ -658,7 +658,7 @@ const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
     goldStdSub: '7.5 Tola Std',
     ushrDuePrefix: '🌾 Ushr Due:',
     livestockPrefix: '🐑 Livestock:',
-    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا »',
+    ayahArabic: 'خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِمْ بِهَا',
     ayahTranslation: '“Take from their wealth a charity by which you purify them and cause them increase.” (Surah At-Tawbah 9:103)',
     securityNote1: 'Calculated locally on your device according to authentic Islamic Shariah (Hawl & Nisab) • Noor Connect',
     securityNote2: 'Personal data never leaves your device • 100% Private, Secure & Offline-First',
@@ -683,7 +683,7 @@ const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
     goldStdSub: '7.5 تولہ معیار',
     ushrDuePrefix: '🌾 واجب الادا عشر:',
     livestockPrefix: '🐑 مویشی:',
-    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا »',
+    ayahArabic: 'خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِمْ بِهَا',
     ayahTranslation: '”ان کے اموال میں سے صدقہ لیجیے جس کے ذریعے آپ انہیں پاک اور بابرکت بنائیں گے۔“ (سورہ التوبہ 9:103)',
     securityNote1: 'آپ کے آلے پر مستند اسلامی شریعت (حول اور نصاب) کے مطابق حساب کیا گیا • نور کنیکٹ',
     securityNote2: 'ذاتی معلومات کبھی آپ کے آلے سے باہر نہیں جاتی • 100٪ نجی، محفوظ اور آف لائن',
@@ -708,7 +708,7 @@ const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
     goldStdSub: '7.5 તોલા માનક',
     ushrDuePrefix: '🌾 વાજિબ ઉશ્ર:',
     livestockPrefix: '🐑 પશુધન:',
-    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَતુઝَકِّيهِم بِهَا »',
+    ayahArabic: 'خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِمْ بِهَا',
     ayahTranslation: '“તેમના ધનમાંથી સદકો લો જેના દ્વારા તમે તેમને પવિત્ર અને બરકતવાળા બનાવો.” (સૂરહ અત-તૌબા 9:103)',
     securityNote1: 'પ્રમાણભૂત ઇસ્લામી શરીઅત (હૌલ અને નિસાબ) મુજબ આપના ડિવાઇસ પર ગણતરી કરેલ • નૂર કનેક્ટ',
     securityNote2: 'વ્યક્તિગત માહિતી ક્યારેય આપના ડિવાઇસ બહાર જતી નથી • 100% ખાનગી, સુરક્ષિત અને ઑફલાઇન',
@@ -733,7 +733,7 @@ const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
     goldStdSub: '7.5 तोला मानक',
     ushrDuePrefix: '🌾 देय उश्र:',
     livestockPrefix: '🐑 पशुधन:',
-    ayahArabic: '« خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا »',
+    ayahArabic: 'خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِمْ بِهَا',
     ayahTranslation: '“उनके धनों में से सदक़ा लीजिए जिसके द्वारा आप उन्हें पवित्र और बरकत वाला बनाएं।” (सूरह अत-तौबा 9:103)',
     securityNote1: 'प्रामाणिक इस्लामी शरीअत (हौल और निसाब) के अनुसार आपके डिवाइस पर गणना की गई • नूर कनेक्ट',
     securityNote2: 'व्यक्तिगत डेटा कभी भी आपके डिवाइस से बाहर नहीं जाता • 100% निजी, सुरक्षित और ऑफ़लाइन',
@@ -744,6 +744,15 @@ const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
  * Generates the 1-Page A4 Zakat Report PDF Blob via High-DPI Offscreen Canvas
  */
 export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> {
+  // Ensure all fonts are loaded before canvas rasterization
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // Font load fallback
+    }
+  }
+
   const width = 1240;
   const height = 1754;
 
@@ -994,8 +1003,8 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   ctx.fillText(`${nisabChoiceText}: ${nisabChoiceVal}`, card3X + cardW / 2, refY + 58);
 
   ctx.fillStyle = '#B45309';
-  ctx.font = 'bold 13px monospace, system-ui, sans-serif';
-  const nisabThresholdText = `Nisab: ${formatCurrencyAmount(data.activeNisabThreshold, data.currency)} • ${data.isNisabReached ? pdfUi.statusMet : pdfUi.statusBelow}`;
+  ctx.font = getPdfFont(data.lang, 12, true);
+  const nisabThresholdText = `${ui.nisabSectionTitle}: ${formatCurrencyAmount(data.activeNisabThreshold, data.currency)} • ${data.isNisabReached ? pdfUi.statusMet : pdfUi.statusBelow}`;
   ctx.fillText(nisabThresholdText, card3X + cardW / 2, refY + 86);
 
   // 6. Modern Islamic Itemized Wealth Table with Numbered Octagonal Badges (y = 434)
@@ -1230,10 +1239,13 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   ctx.stroke();
 
   // Arabic Ayah from Surah At-Tawbah (9:103)
+  ctx.save();
+  ctx.direction = 'rtl';
   ctx.fillStyle = '#065F46';
-  ctx.font = 'bold 18px "Amiri", "Traditional Arabic", serif, sans-serif';
+  ctx.font = 'bold 20px "Amiri", "Scheherazade New", "Traditional Arabic", "Noto Naskh Arabic", serif, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(pdfUi.ayahArabic, 620, footerY + 38);
+  ctx.restore();
 
   // Localized Translation
   ctx.fillStyle = '#475569';

@@ -3,6 +3,8 @@
  * Manages bookmarks, notes, and recitation progress for Quran
  */
 
+import { safeSetLocalStorageItem } from './cache-manager';
+
 export interface QuranBookmark {
   id: string;
   surahNumber: number;
@@ -115,7 +117,7 @@ class QuranFeaturesService {
   }
 
   private saveBookmarks(bookmarks: QuranBookmark[]): void {
-    localStorage.setItem(this.BOOKMARKS_KEY, JSON.stringify(bookmarks));
+    safeSetLocalStorageItem(this.BOOKMARKS_KEY, JSON.stringify(bookmarks));
   }
 
   // Notes Methods
@@ -169,7 +171,7 @@ class QuranFeaturesService {
   }
 
   private saveNotes(notes: QuranNote[]): void {
-    localStorage.setItem(this.NOTES_KEY, JSON.stringify(notes));
+    safeSetLocalStorageItem(this.NOTES_KEY, JSON.stringify(notes));
   }
 
   // Recitation Progress & Unique Page Tracking Methods
@@ -202,7 +204,7 @@ class QuranFeaturesService {
       current.push(pageNumber);
       current.sort((a, b) => a - b);
       try {
-        localStorage.setItem(this.READ_PAGES_KEY, JSON.stringify(current));
+        safeSetLocalStorageItem(this.READ_PAGES_KEY, JSON.stringify(current));
       } catch {
         // Storage quota fallback
       }
@@ -338,7 +340,7 @@ class QuranFeaturesService {
   }
 
   private saveRecitationProgress(progress: RecitationProgress[]): void {
-    localStorage.setItem(this.PROGRESS_KEY, JSON.stringify(progress));
+    safeSetLocalStorageItem(this.PROGRESS_KEY, JSON.stringify(progress));
     this.syncWidgetProgress(progress);
   }
 
@@ -364,7 +366,7 @@ class QuranFeaturesService {
         goalPercent: 100,
         lastUpdated: Date.now()
       };
-      localStorage.setItem(this.WIDGET_PROGRESS_KEY, JSON.stringify(widgetPayload));
+      safeSetLocalStorageItem(this.WIDGET_PROGRESS_KEY, JSON.stringify(widgetPayload));
     } catch (error) {
       console.error('Error syncing widget progress:', error);
     }
@@ -451,7 +453,7 @@ class QuranFeaturesService {
   }
   
   private saveReadingStreak(streak: QuranStreak): void {
-    localStorage.setItem(this.STREAK_KEY, JSON.stringify(streak));
+    safeSetLocalStorageItem(this.STREAK_KEY, JSON.stringify(streak));
   }
 
   // Achievement Methods
@@ -548,7 +550,7 @@ class QuranFeaturesService {
   }
   
   private saveAchievements(achievements: QuranAchievement[]): void {
-    localStorage.setItem(this.ACHIEVEMENTS_KEY, JSON.stringify(achievements));
+    safeSetLocalStorageItem(this.ACHIEVEMENTS_KEY, JSON.stringify(achievements));
   }
 
   // Utility Methods

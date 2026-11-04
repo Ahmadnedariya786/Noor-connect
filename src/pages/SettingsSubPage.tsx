@@ -88,6 +88,7 @@ import {
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
+import { triggerInAppPrayerAlert } from '@/components/PrayerReminderBanner';
 import { NoorDynamicLogo, NoorLogoVisualPicker, cycleLogoEdition, getSelectedLogoEdition, setSelectedLogoEdition, NOOR_LOGO_EDITIONS, LOGO_EDITION_CHANGE_EVENT, LOGO_EDITION_CHANGED_EVENT } from '@/components/NoorDynamicLogo';
 import { OwnerSecurityModal } from '@/components/OwnerSecurityModal';
 import { OwnerSecurityVaultCard } from '@/components/OwnerSecurityVaultCard';
@@ -1009,7 +1010,7 @@ const SettingsSubPage: React.FC = () => {
         {/* PERSONAL / ZAKAT SECTION */}
         {(sectionId === 'personal' || sectionId === 'zakat') && (
           <div className="space-y-4">
-            <ZakatCalculator isEmbedded />
+            <ZakatCalculator isEmbedded onBack={() => navigate('/profile')} />
           </div>
         )}
 
@@ -1462,7 +1463,15 @@ const SettingsSubPage: React.FC = () => {
                   className="w-full rounded-xl"
                   onClick={async () => {
                     const res = await unifiedNotifications.testNotification();
-                    toast({ title: res.success ? 'Test notification sent' : 'Notification failed' });
+                    if (typeof window !== 'undefined' && (window as any).AndroidBridge?.triggerTestPrayerNotification) {
+                      try {
+                        (window as any).AndroidBridge.triggerTestPrayerNotification('Fajr', '05:15 AM');
+                      } catch (err) {
+                        console.warn('Native test prayer notification bridge failed:', err);
+                      }
+                    }
+                    triggerInAppPrayerAlert('Fajr', '05:15 AM');
+                    toast({ title: res.success ? '✨ Test Notification & Royal HUD Sent' : 'Notification failed' });
                   }}
                 >
                   Send Test Notification

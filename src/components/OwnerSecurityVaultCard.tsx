@@ -232,13 +232,13 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
         >
           {isUnlocked ? (
             <>
-              <Unlock className="w-3 h-3" />
-              <span>🔓 Unlocked ({formatSessionTime(remainingSec)})</span>
+              <Unlock className="w-3 h-3 shrink-0" />
+              <span className="whitespace-nowrap">Unlocked ({formatSessionTime(remainingSec)})</span>
             </>
           ) : (
             <>
-              <Lock className="w-3 h-3" />
-              <span>🔒 Locked</span>
+              <Lock className="w-3 h-3 shrink-0" />
+              <span className="whitespace-nowrap">Locked</span>
             </>
           )}
         </div>

@@ -1,5 +1,6 @@
 import { getMenstrualModeData } from './haidh-tracker';
 import { type PrayerName } from './salah-tracker';
+import { safeSetLocalStorageItem } from './cache-manager';
 
 export type { PrayerName };
 
@@ -43,7 +44,7 @@ export const getQazaPrayers = (): Record<PrayerName, number> => {
 
 // Save Qaza prayers
 const saveQazaPrayers = (prayers: Record<PrayerName, number>): void => {
-  localStorage.setItem(QAZA_STORAGE_KEY, JSON.stringify(prayers));
+  safeSetLocalStorageItem(QAZA_STORAGE_KEY, JSON.stringify(prayers));
 };
 
 // Add Qaza prayer
@@ -93,7 +94,7 @@ const getProcessedQaza = (): Set<string> => {
 
 // Save processed Qaza cache
 const saveProcessedQaza = (processed: Set<string>): void => {
-  localStorage.setItem(PROCESSED_QAZA_KEY, JSON.stringify(Array.from(processed)));
+  safeSetLocalStorageItem(PROCESSED_QAZA_KEY, JSON.stringify(Array.from(processed).slice(-300)));
 };
 
 /**
@@ -207,7 +208,9 @@ export const getQazaHistory = (): QazaHistoryEntry[] => {
 };
 
 const saveQazaHistory = (history: QazaHistoryEntry[]): void => {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  // Cap history to latest 500 entries to prevent QuotaExceededError
+  const capped = history.slice(-500);
+  safeSetLocalStorageItem(HISTORY_KEY, JSON.stringify(capped));
 };
 
 export const addQazaHistoryEntry = (prayer: PrayerName): void => {
@@ -226,7 +229,7 @@ export const getQazaDailyGoal = (): number => {
 };
 
 export const setQazaDailyGoal = (goal: number): void => {
-  localStorage.setItem(GOAL_KEY, goal.toString());
+  safeSetLocalStorageItem(GOAL_KEY, goal.toString());
 };
 
 export const getTodayQazaCompleted = (): number => {

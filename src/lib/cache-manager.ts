@@ -368,3 +368,92 @@ export async function clearTemporaryCache(): Promise<{
     breakdown: newBreakdown,
   };
 }
+
+/**
+ * Scans localStorage and frees up space if quota is tight or exceeded.
+ * Purges heavy temporary keys (> 40KB or matching temporary cache patterns).
+ * Never touches protected personal keys (themes, prayer offsets, worship logs, bookmarks, etc.).
+ */
+export function freeUpLocalStorageQuota(): number {
+  if (typeof localStorage === 'undefined') return 0;
+  let freedBytes = 0;
+
+  try {
+    const keysToRemove: string[] = [];
+    const heavyKeys: { key: string; size: number }[] = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      if (isProtectedPersonalKey(key)) continue;
+
+      const val = localStorage.getItem(key) || '';
+      const size = (key.length + val.length) * 2;
+
+      // Automatically purge explicit temporary cache keys
+      if (isTemporaryCacheKey(key)) {
+        keysToRemove.push(key);
+        freedBytes += size;
+      } else if (size > 40 * 1024) {
+        // Unprotected large payloads
+        heavyKeys.push({ key, size });
+      }
+    }
+
+    for (const key of keysToRemove) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // Safe remove fallback
+      }
+    }
+
+    // If still need space, remove heavy unprotected keys
+    heavyKeys.sort((a, b) => b.size - a.size);
+    for (const item of heavyKeys) {
+      try {
+        localStorage.removeItem(item.key);
+        freedBytes += item.size;
+      } catch {
+        // Safe remove fallback
+      }
+    }
+  } catch (err) {
+    console.warn('[CacheManager] Error during freeUpLocalStorageQuota:', err);
+  }
+
+  return freedBytes;
+}
+
+/**
+ * Safe wrapper for localStorage.setItem with QuotaExceededError recovery and retry.
+ */
+export function safeSetLocalStorageItem(key: string, value: string): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error: any) {
+    const isQuotaError =
+      error?.name === 'QuotaExceededError' ||
+      error?.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      error?.code === 22 ||
+      error?.code === 1014;
+
+    if (isQuotaError) {
+      console.warn(`[CacheManager] Quota exceeded on key "${key}", freeing temporary caches and retrying...`);
+      freeUpLocalStorageQuota();
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (retryError) {
+        console.error(`[CacheManager] Quota still exceeded after freeing cache for "${key}":`, retryError);
+        return false;
+      }
+    }
+    console.error(`[CacheManager] Failed to set localStorage key "${key}":`, error);
+    return false;
+  }
+}
+

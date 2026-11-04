@@ -1,5 +1,6 @@
 import { initThemeEngine } from "@/lib/theme-engine";
 import { initCrashLogger } from "@/lib/crash-logger";
+import { freeUpLocalStorageQuota } from "@/lib/cache-manager";
 import {
   checkAndRecordStartupCrash,
   markStartupStep,
@@ -36,6 +37,13 @@ try {
   checkAndRecordStartupCrash();
 } catch (e) {
   console.warn("Crash logger / startup breadcrumb check failed:", e);
+}
+
+// 2. Proactively run Quota Guardian to prune any bloated temporary caches before mounting
+try {
+  freeUpLocalStorageQuota();
+} catch (e) {
+  console.warn("Quota guardian startup cleanup failed:", e);
 }
 
 import { StrictMode } from "react";

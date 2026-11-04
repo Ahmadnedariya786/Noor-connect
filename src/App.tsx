@@ -143,15 +143,21 @@ const GlobalPrayerAlarm = lazy(() => import("@/components/GlobalPrayerAlarm").th
 const SalamGreeting = lazy(() => import("@/components/SalamGreeting").then(module => ({ default: module.SalamGreeting })));
 const FestivePopup = lazy(() => import("@/components/FestivePopup").then(module => ({ default: module.FestivePopup })));
 
+// Eagerly loaded primary routes for 0ms tab switching and zero loading spinner delays
 import Dashboard from "./pages/Dashboard";
+import SurahList from "./pages/SurahList";
+import QuranReader from "./pages/QuranReader";
+import Qibla from "./pages/Qibla";
+import Services from "./pages/Services";
+import Profile from "./pages/Profile";
+import SettingsSubPage from "./pages/SettingsSubPage";
+import ZakatCalculator from "./pages/ZakatCalculator";
+import PrayerReminderBanner from "@/components/PrayerReminderBanner";
 
-// Lazy load route components
+// Lazy load secondary/deep route components
 const DashboardWidgets = lazy(() => import("./pages/DashboardWidgets"));
-const SurahList = lazy(() => import("./pages/SurahList"));
-const QuranReader = lazy(() => import("./pages/QuranReader"));
 const QuranProgress = lazy(() => import("./pages/QuranProgress"));
 const Tasbeeh = lazy(() => import("./pages/Tasbeeh"));
-const Qibla = lazy(() => import("./pages/Qibla"));
 const Duas = lazy(() => import("./pages/Duas"));
 const Hadith = lazy(() => import("./pages/Hadith"));
 const HadithCollections = lazy(() => import("./pages/HadithCollections"));
@@ -159,14 +165,12 @@ const HadithBook = lazy(() => import("./pages/HadithBook"));
 const HadithBookContent = lazy(() => import("./pages/HadithBookContent"));
 const HadithDetail = lazy(() => import("./pages/HadithDetail"));
 const HadithBookmarksPage = lazy(() => import("./pages/HadithBookmarks"));
-const Profile = lazy(() => import("./pages/Profile"));
 const IslamicCalendar = lazy(() => import("./pages/IslamicCalendar"));
 const Ebooks = lazy(() => import("./pages/EbooksModern"));
 const QazaPage = lazy(() => import("./pages/QazaPage"));
 const RamadanMode = lazy(() => import("./pages/RamadanMode"));
 
 const NotificationHistory = lazy(() => import("./pages/NotificationHistory"));
-const ZakatCalculator = lazy(() => import("./pages/ZakatCalculator"));
 const NamesOfAllah = lazy(() => import("./pages/NamesOfAllah"));
 const IslamicQuiz = lazy(() => import("./pages/EnhancedIslamicQuiz"));
 const PrayerStats = lazy(() => import("./pages/PrayerStats"));
@@ -176,13 +180,11 @@ const QuranAudio = lazy(() => import("./pages/QuranAudio"));
 const NasheedPlayer = lazy(() => import("./pages/NasheedPlayer"));
 const LiveStreams = lazy(() => import("./pages/LiveStreams"));
 const RadioStats = lazy(() => import("./pages/RadioStats"));
-const Services = lazy(() => import("./pages/Services"));
 const IslamicRemedies = lazy(() => import("./pages/IslamicRemedies"));
 const RemedyFavorites = lazy(() => import("./pages/RemedyFavorites"));
 const Tafsir = lazy(() => import("./pages/Tafsir-New"));
 const EidChecklist = lazy(() => import("./pages/EidChecklist"));
 const FitranaCalculator = lazy(() => import("./pages/FitranaCalculator"));
-const SettingsSubPage = lazy(() => import("./pages/SettingsSubPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const SeerahHome = lazy(() => import("./pages/SeerahHome"));
 const SeerahReader = lazy(() => import("./pages/SeerahReader"));
@@ -403,6 +405,7 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <TilawahProvider>
             <div className="flex flex-col min-h-screen overflow-x-hidden">
+              <PrayerReminderBanner />
               <GlobalTilawahBar />
               <div className="flex-shrink-0">
                 <Suspense fallback={null}>

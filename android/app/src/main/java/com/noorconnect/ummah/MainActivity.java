@@ -4,6 +4,8 @@ import android.app.AlarmManager;
 import android.app.DownloadManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import androidx.core.app.NotificationCompat;
 import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -604,6 +606,66 @@ public class MainActivity extends BridgeActivity {
                         } catch (Throwable t) {
                             Log.w(TAG, "Failed to switch launcher icon edition", t);
                         }
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void triggerTestPrayerNotification(final String prayerName, final String prayerTime12h) {
+                        runOnUiThread(() -> {
+                            try {
+                                final String pName = (prayerName != null && !prayerName.trim().isEmpty()) ? prayerName : "Fajr";
+                                final String pTime = (prayerTime12h != null && !prayerTime12h.trim().isEmpty()) ? prayerTime12h : "05:15 AM";
+                                final String channelId = "noor_prayer_reminders";
+
+                                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                if (nm == null) return;
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    NotificationChannel channel = nm.getNotificationChannel(channelId);
+                                    if (channel == null) {
+                                        channel = new NotificationChannel(
+                                                channelId,
+                                                "Prayer Reminders",
+                                                NotificationManager.IMPORTANCE_HIGH
+                                        );
+                                        channel.setDescription("Authentic prayer time alerts and Adhan reminders");
+                                        channel.enableLights(true);
+                                        channel.enableVibration(true);
+                                        channel.setShowBadge(true);
+                                        nm.createNotificationChannel(channel);
+                                    }
+                                }
+
+                                Intent openAppIntent = new Intent(MainActivity.this, MainActivity.class);
+                                openAppIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                PendingIntent contentPi = PendingIntent.getActivity(
+                                        MainActivity.this,
+                                        7701,
+                                        openAppIntent,
+                                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                                );
+
+                                String title = pName + " Prayer • " + pTime;
+                                String bigText = "🕌 Hayya 'alas-Salah — Time for " + pName + " (" + pTime + ")\n"
+                                        + "«الصَّلَاةُ فِي وَقْتِهَا» — \"The deed most beloved to Allah is prayer offered at its earliest appointed time.\" (Sahih al-Bukhari 527)";
+
+                                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, channelId)
+                                        .setSmallIcon(R.drawable.ic_stat_noor_mosque)
+                                        .setColor(0xFFD4AF37)
+                                        .setContentTitle(title)
+                                        .setContentText("It is now time for " + pName + " prayer (" + pTime + "). Tap to open.")
+                                        .setSubText("Noor Connect")
+                                        .setStyle(new NotificationCompat.BigTextStyle().bigText(bigText))
+                                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                        .setDefaults(NotificationCompat.DEFAULT_ALL)
+                                        .setAutoCancel(true)
+                                        .setContentIntent(contentPi);
+
+                                nm.notify(7701, builder.build());
+                                Log.i(TAG, "Triggered test prayer notification for: " + pName);
+                            } catch (Throwable t) {
+                                Log.w(TAG, "Failed to trigger test prayer notification", t);
+                            }
+                        });
                     }
                 }, "AndroidBridge");
             } catch (Throwable t) {

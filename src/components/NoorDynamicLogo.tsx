@@ -1100,7 +1100,7 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
               key={ed.id}
               type="button"
               onClick={() => handlePick(ed.id)}
-              className={`group relative flex flex-col items-center justify-between p-2 rounded-xl border transition-all duration-200 select-none ${
+              className={`group relative flex flex-col items-center justify-between p-1.5 sm:p-2 rounded-xl border transition-all duration-200 select-none min-w-0 overflow-hidden ${
                 isCurrent
                   ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40 bg-[var(--accent-soft)] shadow-md scale-[1.02]'
                   : 'border-[var(--border)] hover:border-[var(--accent)]/40 bg-[var(--surface-2)]/60 hover:bg-[var(--surface-2)] opacity-85 hover:opacity-100'
@@ -1120,22 +1120,24 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
                 </div>
               )}
 
-              <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center my-0.5 pointer-events-none">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center my-0.5 pointer-events-none shrink-0">
                 <NoorDynamicLogo edition={ed.id} size="sm" animated={false} />
               </div>
 
               <span
-                className="text-center font-bold mt-1 w-full"
+                className="text-center font-bold mt-1 w-full truncate"
                 style={{
                   color: isCurrent ? 'var(--accent-text)' : 'var(--text-secondary)',
-                  fontSize: '0.63rem',
-                  lineHeight: '1.2',
+                  fontSize: '0.56rem',
+                  minWidth: 0,
+                  lineHeight: 1.15,
                   fontWeight: 700,
                   textAlign: 'center',
-                  whiteSpace: 'pre-line',
                   overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   width: '100%',
-                  paddingInline: '2px',
+                  paddingInline: '1px',
                 }}
               >
                 {ed.shortLabel || ed.shortName}
