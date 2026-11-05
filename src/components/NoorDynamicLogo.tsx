@@ -27,6 +27,7 @@ export interface LogoEditionMeta {
   name: string;
   shortName: string;
   shortLabel: string;
+  cardTitle: string;
   fullTitle: string;
   subtitle: string;
   arabicName: string;
@@ -38,6 +39,7 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     name: 'Al-Miftah Royal Mihrab & Blooming Mushaf',
     shortName: 'Royal Mihrab & Mushaf',
     shortLabel: 'Royal\nMihrab',
+    cardTitle: 'Royal Mihrab',
     fullTitle: 'Royal Mihrab & Mushaf',
     subtitle: 'Blooming Quran & Luminous Mihrab Dome',
     arabicName: 'المحراب الملكي والمصحف الشريف',
@@ -47,6 +49,7 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     name: 'Celestial Rub el Hizb Mandala & Sacred Fanous',
     shortName: 'Celestial Mandala & Fanous',
     shortLabel: 'Celestial\nFanous',
+    cardTitle: 'Celestial Fanous',
     fullTitle: 'Celestial Mandala & Fanous',
     subtitle: 'Arabesque Mandala & Radiating Lantern',
     arabicName: 'المندالة النورانية والفانوس المبارك',
@@ -56,6 +59,7 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     name: 'Haramain Sanctuary Crest & Minarets',
     shortName: 'Haramain Crest & Minarets',
     shortLabel: 'Haramain\nCrest',
+    cardTitle: 'Haramain Crest',
     fullTitle: 'Haramain Crest & Minarets',
     subtitle: 'Illuminated Dome & Twin Ottoman Minarets',
     arabicName: 'صرح الحرمين الشريفين والمآذن العالية',
@@ -65,6 +69,7 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     name: 'Noor Al-Quran 3D Flame Medallion',
     shortName: 'Noor Calligraphic Flame',
     shortLabel: 'Noor\nFlame',
+    cardTitle: 'Noor Flame',
     fullTitle: 'Noor Calligraphic Flame',
     subtitle: 'Sculpted Thuluth Calligraphy & Sacred Flame',
     arabicName: 'شعلة القرآن والخط الثلثي المجسم',
@@ -74,6 +79,7 @@ export const NOOR_LOGO_EDITIONS: readonly LogoEditionMeta[] = [
     name: 'Mamluk Royal Starburst & Qibla Sanctuary',
     shortName: 'Mamluk Starburst & Sanctuary',
     shortLabel: 'Mamluk\nStar',
+    cardTitle: 'Mamluk Star',
     fullTitle: 'Mamluk Starburst & Sanctuary',
     subtitle: '16-Point Rub el Hizb & Celestial Kaaba Compass',
     arabicName: 'النجمة المملوكية ومحراب القبلة',
@@ -1092,7 +1098,7 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
 
   return (
     <div className={`space-y-2 select-none w-full ${className}`}>
-      <div className="grid grid-cols-5 gap-1 sm:gap-1.5 w-full">
+      <div className="grid grid-cols-3 gap-2.5 w-full">
         {NOOR_LOGO_EDITIONS.map((ed) => {
           const isCurrent = selected === ed.id;
           return (
@@ -1100,59 +1106,54 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
               key={ed.id}
               type="button"
               onClick={() => handlePick(ed.id)}
-              className={`group relative flex flex-col items-center justify-between rounded-xl border transition-all duration-200 select-none min-w-0 overflow-hidden ${
+              className={`group relative flex flex-col items-center justify-between rounded-xl border transition-all duration-200 select-none min-w-0 ${
                 isCurrent
                   ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40 bg-[var(--accent-soft)] shadow-md scale-[1.02]'
                   : 'border-[var(--border)] hover:border-[var(--accent)]/40 bg-[var(--surface-2)]/60 hover:bg-[var(--surface-2)] opacity-85 hover:opacity-100'
               }`}
               style={{
+                padding: '10px 6px',
                 minWidth: 0,
                 maxWidth: '100%',
-                overflow: 'hidden',
-                padding: '4px 2px',
                 boxSizing: 'border-box',
+                position: 'relative',
               }}
               title={`${ed.name} (Tap to set as App & Launcher Icon)`}
               aria-label={`Select ${ed.name}`}
             >
-              {/* Active Checkmark Badge */}
+              {/* Active Checkmark Badge — strictly inside boundaries (zero negative offsets) */}
               {isCurrent && (
                 <div
-                  className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center shadow"
+                  className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center shadow z-10"
                   style={{ background: 'var(--accent)', color: 'var(--on-accent, #000)' }}
                 >
-                  <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               )}
 
               <div
-                className="flex items-center justify-center pointer-events-none shrink-0"
-                style={{ width: '30px', height: '30px', maxWidth: '100%', overflow: 'hidden', margin: '0 auto' }}
+                className="flex items-center justify-center pointer-events-none shrink-0 my-0.5 mx-auto"
+                style={{ width: '38px', height: '38px', maxWidth: '100%', overflow: 'hidden' }}
               >
-                <NoorDynamicLogo edition={ed.id} customSize={26} animated={false} />
+                <NoorDynamicLogo edition={ed.id} customSize={36} animated={false} />
               </div>
 
               <span
                 style={{
-                  color: isCurrent ? 'var(--accent-text)' : 'var(--text-secondary)',
-                  fontSize: '0.52rem',
-                  minWidth: 0,
-                  maxWidth: '100%',
-                  lineHeight: 1.15,
+                  fontSize: '0.68rem',
+                  lineHeight: 1.25,
                   fontWeight: 700,
-                  display: 'block',
                   textAlign: 'center',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  display: 'block',
                   width: '100%',
-                  boxSizing: 'border-box',
-                  paddingInline: '1px',
+                  whiteSpace: 'normal',
+                  wordBreak: 'keep-all',
+                  color: isCurrent ? 'var(--accent-text)' : 'var(--text-secondary)',
                 }}
               >
-                {ed.shortLabel ? ed.shortLabel.replace('\n', ' ') : ed.shortName}
+                {ed.cardTitle || ed.shortLabel?.replace('\n', ' ') || ed.shortName}
               </span>
             </button>
           );

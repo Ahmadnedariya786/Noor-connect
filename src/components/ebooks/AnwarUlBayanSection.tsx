@@ -47,6 +47,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
   const [activeLinkingVolId, setActiveLinkingVolId] = useState<string | null>(null);
   const [overviewVolume, setOverviewVolume] = useState<AnwarUlBayanVolume | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const batchFileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshStatus = async () => {
     const statuses: Record<string, boolean> = {};
@@ -167,6 +168,89 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
     }
   };
 
+  const handleBatchFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files).filter(
+      (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+    );
+
+    if (fileList.length === 0) {
+      toast({
+        title: 'No PDF Files Found',
+        description: 'Please select valid PDF files.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Linking Volumes in Batch...',
+      description: `Processing ${fileList.length} PDF file(s) into IndexedDB offline storage...`,
+    });
+
+    let linkedCount = 0;
+    for (const file of fileList) {
+      const lower = file.name.toLowerCase();
+      let matchedVol: AnwarUlBayanVolume | undefined;
+
+      // 1. Try matching volume number 1..5 in filename
+      for (const vol of ANWAR_UL_BAYAN_VOLUMES) {
+        const v = vol.volNumber;
+        const regexes = [
+          new RegExp(`vol(ume)?[_\\s-]*0?${v}\\b`, 'i'),
+          new RegExp(`part[_\\s-]*0?${v}\\b`, 'i'),
+          new RegExp(`جلد[_\\s-]*0?${v}\\b`, 'i'),
+          new RegExp(`[\\b_\\-]0?${v}[\\b_\\-]`, 'i'),
+        ];
+        if (regexes.some((r) => r.test(lower))) {
+          matchedVol = vol;
+          break;
+        }
+      }
+
+      // 2. If exactly 1 file was selected with activeLinkingVolId
+      if (!matchedVol && activeLinkingVolId) {
+        matchedVol = ANWAR_UL_BAYAN_VOLUMES.find((v) => v.id === activeLinkingVolId);
+      }
+
+      // 3. If user selected exactly 5 files, match sequentially
+      if (!matchedVol && fileList.length === ANWAR_UL_BAYAN_VOLUMES.length) {
+        const idx = fileList.indexOf(file);
+        matchedVol = ANWAR_UL_BAYAN_VOLUMES[idx];
+      }
+
+      if (matchedVol) {
+        try {
+          await linkVolumeLocalFile(matchedVol.localKey, file);
+          linkedCount++;
+        } catch (err) {
+          console.warn(`Failed to link ${matchedVol.title}:`, err);
+        }
+      }
+    }
+
+    await refreshStatus();
+
+    if (linkedCount > 0) {
+      toast({
+        title: `✓ ${linkedCount} Volume(s) Linked Successfully`,
+        description: 'Linked volume(s) are now 100% available offline in IndexedDB storage.',
+      });
+    } else {
+      toast({
+        title: 'Could Not Auto-Match Files',
+        description: 'Please ensure filenames include Vol 1 to Vol 5 (e.g., AnwarulBayan-Vol1.pdf).',
+        variant: 'destructive',
+      });
+    }
+
+    if (batchFileInputRef.current) {
+      batchFileInputRef.current.value = '';
+    }
+  };
+
   const handleUnlinkVolume = async (vol: AnwarUlBayanVolume) => {
     try {
       await unlinkVolumeLocalFile(vol.localKey);
@@ -182,13 +266,23 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
 
   return (
     <section className="space-y-4">
-      {/* Hidden File Input for Linking Local PDF */}
+      {/* Hidden File Input for Linking Single Local PDF */}
       <input
         type="file"
         ref={fileInputRef}
         accept="application/pdf,.pdf"
         className="hidden"
         onChange={handleFileSelected}
+      />
+
+      {/* Hidden File Input for Batch Linking Multiple Local PDFs */}
+      <input
+        type="file"
+        ref={batchFileInputRef}
+        accept="application/pdf,.pdf"
+        multiple
+        className="hidden"
+        onChange={handleBatchFilesSelected}
       />
 
       {/* Showcase Master Banner */}
@@ -241,8 +335,29 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
           </div>
 
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-2xl">
-            A celebrated 20th-century exegesis renowned throughout the Muslim world for combining authentic classical sources (Tabari, Ibn Kathir, Qurtubi) with contemporary clarity. Stream online or link your local 100MB+ PDF files for seamless, 100% offline reading anytime.
+            A celebrated 20th-century exegesis renowned throughout the Muslim world for combining authentic classical sources (Tabari, Ibn Kathir, Qurtubi) with contemporary clarity. Link your local 100MB+ PDF files for seamless, 100% offline reading anytime.
           </p>
+
+          <div className="pt-2 flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => batchFileInputRef.current?.click()}
+              className="h-8 text-xs font-bold gap-1.5 border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 cursor-pointer shadow-sm"
+            >
+              <FileCheck className="w-3.5 h-3.5" />
+              <span>📚 Link All 5 Volumes at Once (Auto-Match Vol 1–5)</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => window.open('https://archive.org/details/TafseerAnwarUlBayan', '_blank', 'noopener,noreferrer')}
+              className="h-8 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] gap-1.5 cursor-pointer"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>🌐 Find on Archive.org</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -407,61 +522,57 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                 </DialogDescription>
               </DialogHeader>
 
-              {/* Offline Storage Recommendation Box */}
+              {/* Primary Local PDF Linking Actions */}
               <div
-                className="p-3.5 rounded-xl border border-[var(--accent)] space-y-2"
+                className="p-3.5 rounded-xl border border-[var(--accent)] space-y-2.5"
                 style={{ background: 'var(--accent-soft)' }}
               >
                 <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-text)]">
                   <HardDrive className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>100% Offline Recommendation</span>
+                  <span>100% Offline Fast Reading (Recommended)</span>
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-                  Tafseer Anwar-ul-Bayan volumes are extensive ~100MB to 160MB books. For zero latency, zero streaming buffering, and 100% private offline reading, link your local PDF file directly into browser IndexedDB storage.
+                  Tafseer Anwar-ul-Bayan volumes are extensive ~100MB to 160MB books. Link your local PDF file into browser IndexedDB storage for instant loading, zero data usage, and offline access.
                 </p>
-                <Button
-                  onClick={() => {
-                    const id = overviewVolume.id;
-                    setOverviewVolume(null);
-                    handleTriggerLinkFile(id);
-                  }}
-                  className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md"
-                >
-                  <Upload className="w-4 h-4" />
-                  📁 Select & Link Local PDF File
-                </Button>
-              </div>
-
-              {/* Online Read & Archive Options */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block">
-                  Alternative Reading Options
-                </span>
-                <div className="flex flex-col gap-2">
+                <div className="space-y-2 pt-1">
+                  <Button
+                    onClick={() => {
+                      const id = overviewVolume.id;
+                      setOverviewVolume(null);
+                      handleTriggerLinkFile(id);
+                    }}
+                    className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md"
+                  >
+                    <Upload className="w-4 h-4" />
+                    📁 Select & Link Local PDF File (Part {overviewVolume.volNumber})
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => {
-                      const vol = overviewVolume;
                       setOverviewVolume(null);
-                      onOpenReader({
-                        url: vol.onlinePdfUrl,
-                        title: vol.title,
-                      });
+                      batchFileInputRef.current?.click();
                     }}
-                    className="w-full justify-start text-xs font-semibold gap-2 border-[var(--border)] hover:border-[var(--accent)]"
+                    className="w-full text-xs font-semibold gap-2 border-[var(--border)] hover:border-[var(--accent)] cursor-pointer"
                   >
-                    <BookOpen className="w-4 h-4 text-[var(--accent)]" />
-                    <span>Stream Online via Archive.org</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => window.open(overviewVolume.onlinePdfUrl, '_blank', 'noopener,noreferrer')}
-                    className="w-full justify-start text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] gap-2"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Download Volume PDF from Archive.org</span>
+                    <FileCheck className="w-4 h-4 text-[var(--accent)]" />
+                    📚 Link All 5 Volumes at Once (Auto-Match Vol 1–5)
                   </Button>
                 </div>
+              </div>
+
+              {/* External Archive.org Download Option (Never empty URL!) */}
+              <div className="space-y-1.5">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    const archiveUrl = overviewVolume.urduStreamUrl || 'https://archive.org/details/TafseerAnwarUlBayan';
+                    window.open(archiveUrl, '_blank', 'noopener,noreferrer');
+                  }}
+                  className="w-full justify-start text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] gap-2 cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-[var(--accent)]" />
+                  <span>🌐 Find / Download PDF from Archive.org</span>
+                </Button>
               </div>
 
               {/* Surahs Included in this Volume */}

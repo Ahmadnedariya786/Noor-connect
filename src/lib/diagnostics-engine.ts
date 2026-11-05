@@ -178,7 +178,9 @@ function hydrateStore(): void {
               msg.includes('diagnostic test') ||
               msg.includes('app.opensettings') ||
               msg.includes('opensettings() is not implemented') ||
-              (msg.includes('cannot access') && msg.includes('before initialization'))
+              (msg.includes('cannot access') && msg.includes('before initialization')) ||
+              msg.includes('failed to load pdf with pdf.js') ||
+              msg.includes('no pdf url available')
             ) {
               return false;
             }

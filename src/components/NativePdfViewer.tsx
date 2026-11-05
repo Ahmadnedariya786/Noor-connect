@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Eye, EyeOff, HardDrive, Upload } from 'lucide-react';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
+import { savePdfBlob } from '@/lib/idb-pdf-store';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
 import { sanitizeUrl, isArchiveOrgUrl } from '@/lib/url-sanitizer';
 import PdfAudioPlayer from '@/components/PdfAudioPlayer';
@@ -128,7 +129,7 @@ function PdfPage({ pdf, pageNumber, scale }: { pdf: any; pageNumber: number; sca
         await renderTask.promise;
       } catch (error: any) {
         if (error.name !== 'RenderingCancelledException') {
-          console.error('Error rendering page', pageNumber, error);
+          console.warn('Non-fatal notice rendering page', pageNumber, error?.message || error);
         }
       }
     };
@@ -155,6 +156,7 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   const objectUrlRef = useRef<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pdfDocumentRef = useRef<any>(null);
+  const fallbackFileInputRef = useRef<HTMLInputElement>(null);
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -231,12 +233,16 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
           pdfUrl = blobUrl;
           objectUrlRef.current = blobUrl;
         } else if (!url) {
-          throw new Error('Local PDF not found in storage');
+          setError('NO_URL');
+          setViewerMode('error');
+          return;
         }
       }
 
       if (!pdfUrl) {
-        throw new Error('No PDF URL available');
+        setError('NO_URL');
+        setViewerMode('error');
+        return;
       }
 
       // Handle archive.org URLs - get direct download URL
@@ -287,19 +293,19 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
 
       saveReadingProgress(effectiveProgressKey, initialPage, pdf.numPages);
     } catch (err: any) {
-      console.error('Failed to load PDF with pdf.js:', err);
+      console.warn('PDF load notice:', err?.message || err);
 
       // Check if it's a CORS error
       const isCorsError = err?.message?.includes('Failed to fetch') ||
         err?.name === 'UnknownErrorException' ||
         err?.message?.includes('CORS');
 
-      if (isCorsError) {
+      if (isCorsError && url) {
         console.log('CORS error detected, using iframe with direct PDF URL');
         // Fall back to iframe-based viewer with direct PDF URL for CORS-restricted PDFs
         setViewerMode('iframe');
       } else {
-        setError(`Unable to load PDF: ${err?.message || 'Unknown error'}`);
+        setError(err?.message ? `Unable to load PDF: ${err.message}` : 'Unable to load PDF');
         setViewerMode('error');
       }
     }
@@ -329,8 +335,8 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
       };
 
       await page.render(renderContext).promise;
-    } catch (err) {
-      console.error('Failed to render page:', err);
+    } catch (err: any) {
+      console.warn('Page render notice:', err?.message || err);
       setError('Failed to render PDF page.');
     }
   };
@@ -411,6 +417,8 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
 
   // Error state
   if (viewerMode === 'error') {
+    const isNoUrl = error === 'NO_URL' || !url;
+
     return (
       <div className="fixed inset-0 bg-background z-[1000] flex flex-col">
         <header
@@ -422,26 +430,83 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
           </Button>
           <h1 className="flex-1 font-medium text-sm truncate">{title}</h1>
         </header>
+
+        {/* Hidden file input for linking directly from reader fallback */}
+        <input
+          type="file"
+          ref={fallbackFileInputRef}
+          accept="application/pdf,.pdf"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+              if (localKey) {
+                await savePdfBlob(localKey, file, file.name);
+              }
+              const blobUrl = URL.createObjectURL(file);
+              objectUrlRef.current = blobUrl;
+              setResolvedPdfSource(blobUrl);
+              await loadPdf();
+            } catch (linkErr) {
+              console.warn('Failed to link PDF from viewer:', linkErr);
+            }
+          }}
+        />
+
         <div className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center max-w-md">
-            <p className="text-destructive mb-2 text-sm">{error}</p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Some PDF sources may be restricted by browser CORS policies.
-              You can try opening the PDF directly in your browser.
-            </p>
-            <div className="flex gap-2 flex-col sm:flex-row justify-center">
-              <Button variant="outline" onClick={loadPdf}>
-                Retry
-              </Button>
-              <Button variant="default" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in Browser
-              </Button>
-              <Button variant="ghost" onClick={onClose}>
-                Go Back
-              </Button>
+          {isNoUrl ? (
+            <div className="text-center max-w-md p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-lg space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center mx-auto text-[var(--accent)]">
+                <HardDrive className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
+                  Select Local PDF File to Read Offline
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-1.5 leading-relaxed">
+                  This volume is not linked yet. Choose the PDF file from your device storage to read offline with 100% privacy and zero buffering.
+                </p>
+              </div>
+              <div className="space-y-2 pt-2">
+                <Button
+                  onClick={() => fallbackFileInputRef.current?.click()}
+                  className="w-full text-xs font-bold gap-2 py-2.5 cursor-pointer shadow-md"
+                >
+                  <Upload className="w-4 h-4" />
+                  📁 Choose PDF File from Device
+                </Button>
+                <Button variant="ghost" onClick={onClose} className="w-full text-xs cursor-pointer">
+                  Go Back
+                </Button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-center max-w-md">
+              <p className="text-destructive mb-2 text-sm">{error}</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Some PDF sources may be restricted by browser CORS policies.
+                You can try opening the PDF directly in your browser.
+              </p>
+              <div className="flex gap-2 flex-col sm:flex-row justify-center">
+                <Button variant="outline" onClick={loadPdf}>
+                  Retry
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open in Browser
+                </Button>
+                <Button variant="ghost" onClick={onClose}>
+                  Go Back
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
