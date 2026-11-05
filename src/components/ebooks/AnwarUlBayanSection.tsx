@@ -536,12 +536,12 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
         >
           {overviewVolume && (
             <div className="space-y-3.5">
-              <DialogHeader className="text-left space-y-1 pb-2 border-b border-[var(--border)]">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]">
+              <DialogHeader className="text-left space-y-1 pb-2 border-b border-[var(--border)] pr-10">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)] shrink-0">
                     Part {overviewVolume.volNumber} • {overviewVolume.juzCoverage}
                   </span>
-                  <Badge variant="outline" className="text-[10px] font-mono border-[var(--border)] text-[var(--text-secondary)]">
+                  <Badge variant="outline" className="text-[10px] font-mono border-[var(--border)] text-[var(--text-secondary)] shrink-0">
                     ~{overviewVolume.estimatedSize}
                   </Badge>
                 </div>

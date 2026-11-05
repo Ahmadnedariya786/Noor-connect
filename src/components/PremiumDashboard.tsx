@@ -126,7 +126,11 @@ function PremiumDashboardInner({
       setTodayWorship(getDayWorshipLog(formatDateKey(new Date())));
     };
     window.addEventListener('salah-updated', handleWorshipSync);
-    return () => window.removeEventListener('salah-updated', handleWorshipSync);
+    window.addEventListener('noor-qaza-updated', handleWorshipSync);
+    return () => {
+      window.removeEventListener('salah-updated', handleWorshipSync);
+      window.removeEventListener('noor-qaza-updated', handleWorshipSync);
+    };
   }, []);
 
   const qiblaBearing = React.useMemo(() => {

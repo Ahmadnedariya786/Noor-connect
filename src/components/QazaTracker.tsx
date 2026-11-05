@@ -20,10 +20,12 @@ import {
   getDateWiseQazaList,
   markSingleDatePrayerCompleted,
   formatHijriDate,
+  getDetailedHijriDate,
   syncUnmarkedDailySalahToQaza,
   type QazaPrayerName,
   type DateWiseQazaRecord,
 } from "@/lib/qaza-tracker";
+import { RoyalDatePickerModal } from "@/components/RoyalDatePickerModal";
 import { useToast } from "@/hooks/use-toast";
 
 const prayerLabels: { id: QazaPrayerName; label: string; arabicLabel: string }[] = [
@@ -56,6 +58,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
   const [dateRecords, setDateRecords] = useState<DateWiseQazaRecord[]>(() => getDateWiseQazaList());
   const [editMode, setEditMode] = useState<QazaPrayerName | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const refresh = useCallback(() => {
     setPrayers(getQazaPrayers());
@@ -78,12 +81,14 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
 
     window.addEventListener('qaza-updated', handleUpdate);
     window.addEventListener('qaza-date-updated', handleUpdate);
+    window.addEventListener('noor-qaza-updated', handleUpdate);
     window.addEventListener('salah-updated', handleSalahUpdate);
     window.addEventListener('storage', handleUpdate);
 
     return () => {
       window.removeEventListener('qaza-updated', handleUpdate);
       window.removeEventListener('qaza-date-updated', handleUpdate);
+      window.removeEventListener('noor-qaza-updated', handleUpdate);
       window.removeEventListener('salah-updated', handleSalahUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
@@ -323,7 +328,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                   );
                   if (pendingKeys.length === 0) return null;
 
-                  const displayDate = record.hijriDate || formatHijriDate(record.date);
+                  const detailed = getDetailedHijriDate(record.date);
 
                   return (
                     <div
@@ -333,18 +338,39 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                         background: 'var(--surface-2)',
                       }}
                     >
-                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                      {/* Line 1: Gregorian Date + Pending Badge */}
+                      <div className="flex items-center justify-between gap-2">
                         <span
-                          className="text-[11px] font-bold text-[var(--text-primary)] truncate"
-                          title={displayDate}
+                          className="font-extrabold text-[var(--text-primary)]"
+                          style={{ fontSize: '0.80rem' }}
                         >
-                          {displayDate}
+                          📅 {detailed.gregorian}
                         </span>
-                        <span className="text-[10px] font-semibold text-[var(--text-secondary)] shrink-0">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--surface)] text-[var(--accent-text)] border border-[var(--border)] shrink-0 whitespace-nowrap">
                           {pendingKeys.length} to pray
                         </span>
                       </div>
 
+                      {/* Line 2: Full unclipped Hijri date in English and Arabic/Urdu */}
+                      <div
+                        className="mt-0.5 mb-2 w-full"
+                        style={{ whiteSpace: 'normal', overflow: 'visible' }}
+                      >
+                        <p
+                          className="font-semibold text-[var(--accent-text)]"
+                          style={{
+                            fontSize: '0.74rem',
+                            lineHeight: 1.7,
+                            fontFamily: 'var(--font-urdu), sans-serif',
+                            whiteSpace: 'normal',
+                            overflow: 'visible',
+                          }}
+                        >
+                          {detailed.fullHijri}
+                        </p>
+                      </div>
+
+                      {/* Pending Prayer Action Pills */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {pendingKeys.map((pName) => {
                           const label = prayerLabels.find((p) => p.id === pName)?.label || pName;
@@ -358,7 +384,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                             >
                               <span className="w-1.5 h-1.5 rounded-full bg-[var(--danger,#ef4444)] qaza-dot-blink shrink-0" />
                               <span className="capitalize">{label}</span>
-                              <span className="text-[9px] opacity-75 font-normal">✕ Tap ✓</span>
+                              <span className="text-[9px] opacity-80 font-medium">• Tap ✓</span>
                             </button>
                           );
                         })}
@@ -382,36 +408,48 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
             </div>
           )}
 
-          {/* Bottom Action Bar */}
-          <div className="pt-2.5 mt-2.5 border-t border-[var(--border)] flex items-center gap-2">
+          {/* Bottom Action Bar — Strict 2-Column Responsive Grid */}
+          <div className="grid grid-cols-2 gap-2 w-full mt-3">
             <button
               type="button"
-              onClick={() => navigate('/qaza')}
-              className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              onClick={() => setIsDatePickerOpen(true)}
+              className="min-w-0 w-full py-2.5 px-2 rounded-xl font-bold border flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer box-border whitespace-nowrap"
               style={{
                 background: 'var(--surface-2)',
                 color: 'var(--text-primary)',
                 borderColor: 'var(--border)',
+                fontSize: '0.74rem',
               }}
             >
               <Calendar className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-              <span className="truncate">+ Select Date / Log Qaza</span>
+              <span className="truncate">+ Select Date</span>
             </button>
             <button
               type="button"
               onClick={() => navigate('/qaza')}
-              className="py-1.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0"
+              className="min-w-0 w-full py-2.5 px-2 rounded-xl font-bold border flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer box-border whitespace-nowrap shrink-0"
               style={{
                 background: 'var(--accent-soft)',
                 color: 'var(--accent-text)',
                 borderColor: 'var(--accent)',
+                fontSize: '0.74rem',
               }}
             >
-              <span>Open Qaza Tracker</span>
+              <span>Qaza Tracker</span>
               <span>{isRTL ? '←' : '→'}</span>
             </button>
           </div>
         </CardContent>
+
+        {/* Royal Islamic Date Picker Modal */}
+        <RoyalDatePickerModal
+          isOpen={isDatePickerOpen}
+          onClose={() => setIsDatePickerOpen(false)}
+          selectedDate={new Date().toISOString().split('T')[0]}
+          onSelectDate={() => {
+            refresh();
+          }}
+        />
       </Card>
     );
   }

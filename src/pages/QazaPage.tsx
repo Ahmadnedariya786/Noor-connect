@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Minus, Target, TrendingUp, Calendar, RotateCcw, Check, Sparkles, Clock, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Target, Calendar, RotateCcw, Check, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,6 @@ import {
   completeQazaPrayer, 
   setQazaCount,
   clearAllQaza,
-  addQazaHistoryEntry,
   getQazaHistory,
   getQazaDailyGoal,
   setQazaDailyGoal,
@@ -26,11 +25,13 @@ import {
   markSingleDatePrayerCompleted,
   deleteDateQazaRecord,
   formatHijriDate,
+  getDetailedHijriDate,
   syncUnmarkedDailySalahToQaza,
   type PrayerName,
   type QazaPrayerName,
   type DateWiseQazaRecord,
 } from "@/lib/qaza-tracker";
+import { RoyalDatePickerModal } from "@/components/RoyalDatePickerModal";
 
 const PRAYERS: { name: QazaPrayerName; label: string; arabicLabel: string }[] = [
   { name: "fajr", label: "Fajr", arabicLabel: "الفجر" },
@@ -51,12 +52,13 @@ export default function QazaPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [qazaCounts, setQazaCounts] = useState<Record<QazaPrayerName, number>>(getQazaPrayers());
-  const [dailyGoal, setDailyGoal] = useState(getQazaDailyGoal());
-  const [todayCompleted, setTodayCompleted] = useState(getTodayQazaCompleted());
-  const [history, setHistory] = useState<QazaHistory[]>(getQazaHistory() as QazaHistory[]);
+  const [qazaCounts, setQazaCounts] = useState<Record<QazaPrayerName, number>>(() => getQazaPrayers());
+  const [dailyGoal, setDailyGoal] = useState(() => getQazaDailyGoal());
+  const [todayCompleted, setTodayCompleted] = useState(() => getTodayQazaCompleted());
+  const [history, setHistory] = useState<QazaHistory[]>(() => getQazaHistory() as QazaHistory[]);
   const [editingPrayer, setEditingPrayer] = useState<QazaPrayerName | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   // Date-Wise Qaza state
   const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -78,35 +80,37 @@ export default function QazaPage() {
     setDateRecords(getDateWiseQazaList());
   }, []);
 
-  useEffect(() => {
-    syncUnmarkedDailySalahToQaza();
-    loadQazaData();
-
-    const handleQazaUpdate = () => {
-      setQazaCounts(getQazaPrayers());
-      refreshDateRecords();
-    };
-    const handleSalahUpdate = () => {
-      syncUnmarkedDailySalahToQaza();
-      loadQazaData();
-    };
-    window.addEventListener('qaza-updated', handleQazaUpdate);
-    window.addEventListener('qaza-date-updated', refreshDateRecords);
-    window.addEventListener('salah-updated', handleSalahUpdate);
-    return () => {
-      window.removeEventListener('qaza-updated', handleQazaUpdate);
-      window.removeEventListener('qaza-date-updated', refreshDateRecords);
-      window.removeEventListener('salah-updated', handleSalahUpdate);
-    };
-  }, [refreshDateRecords]);
-
-  const loadQazaData = () => {
+  const loadQazaData = useCallback(() => {
     setQazaCounts(getQazaPrayers());
     setDailyGoal(getQazaDailyGoal());
     setHistory(getQazaHistory() as QazaHistory[]);
     setTodayCompleted(getTodayQazaCompleted());
     setDateRecords(getDateWiseQazaList());
-  };
+  }, []);
+
+  useEffect(() => {
+    syncUnmarkedDailySalahToQaza();
+    loadQazaData();
+
+    const handleQazaUpdate = () => {
+      loadQazaData();
+    };
+    const handleSalahUpdate = () => {
+      syncUnmarkedDailySalahToQaza();
+      loadQazaData();
+    };
+
+    window.addEventListener('qaza-updated', handleQazaUpdate);
+    window.addEventListener('qaza-date-updated', refreshDateRecords);
+    window.addEventListener('noor-qaza-updated', handleQazaUpdate);
+    window.addEventListener('salah-updated', handleSalahUpdate);
+    return () => {
+      window.removeEventListener('qaza-updated', handleQazaUpdate);
+      window.removeEventListener('qaza-date-updated', refreshDateRecords);
+      window.removeEventListener('noor-qaza-updated', handleQazaUpdate);
+      window.removeEventListener('salah-updated', handleSalahUpdate);
+    };
+  }, [refreshDateRecords, loadQazaData]);
 
   const totalQaza = Object.values(qazaCounts).reduce((a, b) => a + b, 0);
   const goalProgress = Math.min((todayCompleted / dailyGoal) * 100, 100);
@@ -122,7 +126,6 @@ export default function QazaPage() {
     if ((Number(latestPrayers[prayer]) || 0) <= 0) return;
     
     completeQazaPrayer(prayer, 1);
-    addQazaHistoryEntry(prayer as PrayerName);
     setQazaCounts(getQazaPrayers());
     setHistory(getQazaHistory() as QazaHistory[]);
     setTodayCompleted(getTodayQazaCompleted());
@@ -130,7 +133,7 @@ export default function QazaPage() {
   };
 
   const handleSetCount = (prayer: QazaPrayerName) => {
-    const count = parseInt(editValue);
+    const count = parseInt(editValue, 10);
     if (isNaN(count) || count < 0) {
       toast({ title: "Invalid number", variant: "destructive" });
       return;
@@ -149,16 +152,14 @@ export default function QazaPage() {
 
   const handleReset = () => {
     clearAllQaza();
-    setQazaCounts(getQazaPrayers());
-    setHistory([]);
-    setTodayCompleted(0);
-    setDateRecords([]);
+    loadQazaData();
     toast({ title: "All Qaza reset", description: "Starting fresh" });
   };
 
   // Date-wise handlers
   const handleTogglePrayerForDate = (prayer: QazaPrayerName) => {
     toggleDatePrayerQaza(selectedDate, prayer);
+    loadQazaData();
     toast({
       title: "Updated Qaza Planner",
       description: `Updated ${prayer.toUpperCase()} status for ${selectedDate}`,
@@ -167,14 +168,16 @@ export default function QazaPage() {
 
   const handleCompletePendingDatePrayer = (date: string, prayer: QazaPrayerName) => {
     markSingleDatePrayerCompleted(date, prayer);
+    loadQazaData();
     toast({
-      title: "✓ Prayed / Completed",
-      description: `Marked ${prayer.toUpperCase()} Qaza for ${date} as prayed!`,
+      title: "Qaza Prayer Completed",
+      description: `Marked ${prayer.toUpperCase()} for ${date} as prayed!`,
     });
   };
 
   const handleDeleteDateRecord = (date: string) => {
     deleteDateQazaRecord(date);
+    loadQazaData();
     toast({
       title: "Record Deleted",
       description: `Cleared date record for ${date}`,
@@ -187,13 +190,17 @@ export default function QazaPage() {
   );
 
   // Calculate stats
-  const last7Days = history.filter(h => {
+  const last7Days = history.filter((h) => {
     const date = new Date(h.date);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     return date >= weekAgo;
   });
-  const weeklyTotal = last7Days.reduce((sum, h) => sum + h.completed, 0);
+  const weeklyTotal = last7Days.reduce((sum, h) => sum + (Number(h.completed) || 1), 0);
+
+  const selectedDetailed = useMemo(() => {
+    return getDetailedHijriDate(selectedDate);
+  }, [selectedDate]);
 
   return (
     <LayoutManager>
@@ -233,9 +240,11 @@ export default function QazaPage() {
 
         {/* ── DATE-WISE QAZA PLANNER & LOG CARD ── */}
         <Card className="p-4 space-y-3.5 border border-[var(--border)] shadow-md bg-[var(--surface)]">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[var(--accent)]" />
+              <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center text-[var(--accent)]">
+                <Calendar className="w-4 h-4" />
+              </div>
               <div>
                 <h2 className="font-bold text-sm text-[var(--text-primary)]">
                   Date-Wise Qaza Planner & Log
@@ -247,51 +256,64 @@ export default function QazaPage() {
             </div>
           </div>
 
-          {/* Date Picker Row with Quick-Select Pills */}
+          {/* Theme-Adaptive Royal Date Picker Trigger Button */}
           <div className="space-y-2 pt-1 border-t border-[var(--border)]">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Input
-                type="date"
-                max={todayIso}
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="h-9 w-auto text-xs font-mono font-medium border-[var(--border)] bg-[var(--surface-2)]"
-              />
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={selectedDate === todayIso ? "default" : "outline"}
-                  onClick={() => setSelectedDate(todayIso)}
-                  className="h-8 text-[11px] px-2.5 font-bold cursor-pointer"
-                >
-                  Today
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={selectedDate === yesterdayIso ? "default" : "outline"}
-                  onClick={() => setSelectedDate(yesterdayIso)}
-                  className="h-8 text-[11px] px-2.5 font-bold cursor-pointer"
-                >
-                  Yesterday
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={selectedDate === twoDaysAgoIso ? "default" : "outline"}
-                  onClick={() => setSelectedDate(twoDaysAgoIso)}
-                  className="h-8 text-[11px] px-2 font-bold cursor-pointer"
-                >
-                  2 Days Ago
-                </Button>
+            <button
+              type="button"
+              onClick={() => setIsDatePickerOpen(true)}
+              className="w-full p-2.5 sm:p-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)] transition-all flex items-center justify-between text-left cursor-pointer group shadow-sm"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-[var(--accent-text)]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                    {selectedDetailed.gregorianDay}, {selectedDetailed.gregorian}
+                  </p>
+                  <p
+                    className="text-[11px] font-semibold text-[var(--accent-text)] truncate"
+                    style={{ fontFamily: 'var(--font-urdu), sans-serif', lineHeight: 1.6 }}
+                  >
+                    {selectedDetailed.fullHijri}
+                  </p>
+                </div>
               </div>
-            </div>
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[var(--surface)] text-[var(--accent-text)] border border-[var(--border)] group-hover:border-[var(--accent)] transition-colors shrink-0">
+                Change Date ▾
+              </span>
+            </button>
 
-            {/* Display Hijri date header for chosen date */}
-            <p className="text-[11px] font-semibold text-[var(--accent-text)] px-0.5">
-              📅 {formatHijriDate(selectedDate)}
-            </p>
+            {/* Quick Preset Pills */}
+            <div className="flex items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar">
+              <Button
+                type="button"
+                size="sm"
+                variant={selectedDate === todayIso ? "default" : "outline"}
+                onClick={() => setSelectedDate(todayIso)}
+                className="h-7 text-[11px] px-2.5 font-bold cursor-pointer"
+              >
+                Today
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={selectedDate === yesterdayIso ? "default" : "outline"}
+                onClick={() => setSelectedDate(yesterdayIso)}
+                className="h-7 text-[11px] px-2.5 font-bold cursor-pointer"
+              >
+                Yesterday
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={selectedDate === twoDaysAgoIso ? "default" : "outline"}
+                onClick={() => setSelectedDate(twoDaysAgoIso)}
+                className="h-7 text-[11px] px-2 font-bold cursor-pointer"
+              >
+                2 Days Ago
+              </Button>
+            </div>
           </div>
 
           {/* Prayer Selection Grid for the Chosen Date */}
@@ -318,7 +340,9 @@ export default function QazaPage() {
                         : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
                   >
-                    <span className="font-arabic text-sm">{p.arabicLabel}</span>
+                    <span className="font-arabic text-sm" style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 1.4 }}>
+                      {p.arabicLabel}
+                    </span>
                     <span className="text-[11px] font-bold capitalize mt-0.5">{p.name}</span>
                     <span className="text-[9px] font-mono mt-1 font-bold">
                       {isPending ? '● PENDING' : isCompleted ? '✓ PRAYED' : '—'}
@@ -349,25 +373,56 @@ export default function QazaPage() {
                   );
                   if (pendingPrayers.length === 0) return null;
 
+                  const detailed = getDetailedHijriDate(r.date);
+
                   return (
                     <div
                       key={r.date}
                       className="p-2.5 rounded-xl border bg-[var(--surface-2)] border-[var(--border)] space-y-1.5"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[var(--text-primary)]">
-                          {formatHijriDate(r.date)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteDateRecord(r.date)}
-                          title="Clear date record"
-                          className="text-[var(--text-secondary)] hover:text-[var(--danger)] transition-colors p-1"
+                      {/* Line 1: Gregorian Date + Pending Badge + Trash */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className="font-extrabold text-[var(--text-primary)]"
+                          style={{ fontSize: '0.80rem' }}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          📅 {detailed.gregorian}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--surface)] text-[var(--accent-text)] border border-[var(--border)] shrink-0 whitespace-nowrap">
+                            {pendingPrayers.length} to pray
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDateRecord(r.date)}
+                            title="Clear date record"
+                            className="text-[var(--text-secondary)] hover:text-[var(--danger)] transition-colors p-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
+                      {/* Line 2: Full unclipped Hijri date in English and Arabic/Urdu */}
+                      <div
+                        className="mt-0.5 mb-2 w-full"
+                        style={{ whiteSpace: 'normal', overflow: 'visible' }}
+                      >
+                        <p
+                          className="font-semibold text-[var(--accent-text)]"
+                          style={{
+                            fontSize: '0.74rem',
+                            lineHeight: 1.7,
+                            fontFamily: 'var(--font-urdu), sans-serif',
+                            whiteSpace: 'normal',
+                            overflow: 'visible',
+                          }}
+                        >
+                          {detailed.fullHijri}
+                        </p>
+                      </div>
+
+                      {/* Pending Action Pills */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {pendingPrayers.map((pName) => (
                           <button
@@ -416,155 +471,181 @@ export default function QazaPage() {
               </Button>
             </div>
           </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)] border border-[var(--border)]">
-            <div 
-              className="h-full rounded-full transition-all duration-300"
-              style={{
-                width: `${Math.min(100, goalProgress)}%`,
-                background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
-              }}
-            />
+          <Progress value={goalProgress} className="h-2" />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{todayCompleted} completed today</span>
+            <span>{Math.round(goalProgress)}% of goal</span>
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            {todayCompleted} of {dailyGoal} prayers made up today
-          </p>
         </Card>
 
-        {/* Prayer Counts */}
-        <div className="space-y-2">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Prayers to Make Up
-          </h2>
-          
-          {PRAYERS.map(prayer => (
-            <Card
-              key={prayer.name}
-              className={`p-3 transition-all ${
-                (qazaCounts[prayer.name] || 0) > 0 ? 'qaza-pending-blink' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <span className="font-arabic text-lg">{prayer.arabicLabel}</span>
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium">{prayer.label}</p>
-                  {editingPrayer === prayer.name ? (
-                    <div className="flex items-center gap-2 mt-1">
-                      <Input
-                        type="number"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="h-8 w-20"
-                        placeholder="0"
-                      />
-                      <Button size="sm" onClick={() => handleSetCount(prayer.name)}>Set</Button>
-                      <Button size="sm" variant="ghost" onClick={() => setEditingPrayer(null)}>Cancel</Button>
+        {/* Prayer Cards */}
+        <div className="space-y-3">
+          {PRAYERS.map((prayer) => {
+            const count = qazaCounts[prayer.name] || 0;
+            const isEditing = editingPrayer === prayer.name;
+
+            return (
+              <Card 
+                key={prayer.name} 
+                className={`p-4 transition-all ${
+                  count > 0 ? 'border-[var(--accent)] shadow-sm' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-arabic text-lg text-[var(--accent-text)]">{prayer.arabicLabel}</span>
+                      <span className="font-semibold text-[var(--text-primary)]">{prayer.label}</span>
                     </div>
-                  ) : (
-                    <p 
-                      className="text-2xl font-bold text-primary cursor-pointer"
-                      onClick={() => {
-                        setEditingPrayer(prayer.name);
-                        setEditValue((qazaCounts[prayer.name] || 0).toString());
-                      }}
+                    {isEditing ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="w-24 h-8 text-sm"
+                          placeholder="Count"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleSetCount(prayer.name)}>
+                          Save
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => {
+                            setEditingPrayer(null);
+                            setEditValue("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingPrayer(prayer.name);
+                          setEditValue(count.toString());
+                        }}
+                        className="text-2xl font-bold text-left hover:text-primary transition-colors cursor-pointer"
+                      >
+                        {count}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full"
+                      onClick={() => handleAdd(prayer.name, 1)}
                     >
-                      {qazaCounts[prayer.name] || 0}
-                    </p>
-                  )}
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="h-10 w-10 rounded-full"
+                      onClick={() => handleComplete(prayer.name)}
+                      disabled={count === 0}
+                    >
+                      <Check className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="h-10 w-10"
-                    onClick={() => handleAdd(prayer.name)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    size="icon" 
-                    className="h-10 w-10"
-                    onClick={() => handleComplete(prayer.name)}
-                    disabled={(qazaCounts[prayer.name] || 0) <= 0}
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
 
-        {/* Quick Add */}
+        {/* Quick Add Presets */}
         <Card className="p-4 space-y-3">
-          <h3 className="font-medium flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Quick Add (Bulk)
-          </h3>
+          <div className="font-medium text-sm text-[var(--text-primary)]">Quick Add (All Prayers)</div>
           <div className="grid grid-cols-3 gap-2">
-            {[1, 5, 10].map(count => (
-              <Button 
-                key={count}
-                variant="outline"
-                onClick={() => {
-                  PRAYERS.forEach(p => handleAdd(p.name, count));
-                }}
-              >
-                +{count} All
-              </Button>
-            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                PRAYERS.forEach(p => addQazaPrayer(p.name, 1));
+                setQazaCounts(getQazaPrayers());
+                toast({ title: "Added 1 day for all prayers" });
+              }}
+            >
+              +1 Day
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                PRAYERS.forEach(p => addQazaPrayer(p.name, 7));
+                setQazaCounts(getQazaPrayers());
+                toast({ title: "Added 1 week for all prayers" });
+              }}
+            >
+              +1 Week
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                PRAYERS.forEach(p => addQazaPrayer(p.name, 30));
+                setQazaCounts(getQazaPrayers());
+                toast({ title: "Added 1 month for all prayers" });
+              }}
+            >
+              +1 Month
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            Add {"{count}"} to each prayer at once
-          </p>
         </Card>
+
+        {/* Reset Button */}
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={handleReset}
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reset All Qaza
+        </Button>
 
         {/* History Summary */}
         <Card className="p-4 space-y-3">
-          <h3 className="font-medium">Last 7 Days</h3>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 7 }).map((_, i) => {
+          <div className="font-medium text-sm text-[var(--text-primary)]">Recent Activity</div>
+          <div className="space-y-2">
+            {[0, 1, 2, 3, 4, 5, 6].map((daysAgo) => {
               const date = new Date();
-              date.setDate(date.getDate() - (6 - i));
-              const dayHistory = history.filter(h => h.date === date.toDateString());
-              const count = dayHistory.reduce((sum, h) => sum + h.completed, 0);
-              
+              date.setDate(date.getDate() - daysAgo);
+              const dateStr = date.toDateString();
+              const dayHistory = history.filter((h) => h.date === dateStr);
+              const count = dayHistory.reduce((sum, h) => sum + (Number(h.completed) || 1), 0);
+
               return (
-                <div key={i} className="text-center">
-                  <div 
-                    className={`h-8 rounded flex items-center justify-center text-xs font-medium ${
-                      count >= dailyGoal 
-                        ? 'bg-[var(--success)] text-white' 
-                        : count > 0 
-                          ? 'bg-primary/20 text-primary' 
-                          : 'bg-muted'
-                    }`}
-                  >
-                    {count}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {date.toLocaleDateString('en', { weekday: 'short' }).charAt(0)}
-                  </p>
+                <div key={daysAgo} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
+                  <span className="text-muted-foreground">
+                    {daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : date.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' })}
+                  </span>
+                  <span className="font-medium text-[var(--text-primary)]">
+                    {count} {count === 1 ? "prayer" : "prayers"} completed
+                  </span>
                 </div>
               );
             })}
           </div>
         </Card>
 
-        {/* Reset Button */}
-        <Button 
-          variant="outline" 
-          className="w-full text-destructive"
-          onClick={handleReset}
-        >
-          <RotateCcw className="w-4 h-4 ms-2" />
-          Reset All Qaza
-        </Button>
+        {/* Royal Islamic Date Picker Modal */}
+        <RoyalDatePickerModal
+          isOpen={isDatePickerOpen}
+          onClose={() => setIsDatePickerOpen(false)}
+          selectedDate={selectedDate}
+          onSelectDate={(newDate) => {
+            setSelectedDate(newDate);
+            loadQazaData();
+          }}
+        />
       </div>
-    </div>
+      </div>
     </LayoutManager>
   );
 }
