@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppBar } from "@/components/AppBar";
 import { PageTransition } from "@/components/PageTransition";
@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext-new";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
 import { useSettings } from "@/contexts/SettingsContext";
 import { shouldShowMenstrualFeatures } from "@/lib/gender-settings";
+import { getQazaStats } from "@/lib/qaza-tracker";
 import {
     Radio, Target, Heart, Calculator,
     Star, Trophy, Coins, Calendar, Library, Tv, Sparkles, HeartHandshake, BookOpen, BookText, Moon, Headphones,
@@ -78,6 +79,26 @@ export default function Services() {
     })();
 
     const showNoorCycle = shouldShowMenstrualFeatures();
+
+    const [pendingQazaCount, setPendingQazaCount] = useState(() => {
+        try {
+            return getQazaStats().total;
+        } catch {
+            return 0;
+        }
+    });
+
+    useEffect(() => {
+        const handleQazaUpdate = () => {
+            try {
+                setPendingQazaCount(getQazaStats().total);
+            } catch {
+                // Ignore
+            }
+        };
+        window.addEventListener('qaza-updated', handleQazaUpdate);
+        return () => window.removeEventListener('qaza-updated', handleQazaUpdate);
+    }, []);
 
     const baseServices = useMemo(() => [
         { title: ui.salahTracker, subtitle: ui.salahTrackerSub, path: "/services/salah-tracker", icon: CheckCircle },
@@ -265,22 +286,46 @@ export default function Services() {
                                                 <item.icon className="w-5 h-5" strokeWidth={2} />
                                             </div>
 
-                                            <span
-                                                style={{
-                                                    fontSize: '0.58rem',
-                                                    fontWeight: 700,
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.04em',
-                                                    padding: '2px 6px',
-                                                    borderRadius: '999px',
-                                                    background: 'var(--bg-base)',
-                                                    border: '1px solid var(--border)',
-                                                    color: 'var(--accent-text)',
-                                                    whiteSpace: 'nowrap',
-                                                }}
-                                            >
-                                                {category}
-                                            </span>
+                                            {item.path === '/qaza' && pendingQazaCount > 0 ? (
+                                                <span
+                                                    className="qaza-badge-blink"
+                                                    style={{
+                                                        fontSize: '0.58rem',
+                                                        fontWeight: 800,
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.04em',
+                                                        padding: '2px 7px',
+                                                        borderRadius: '999px',
+                                                        background: 'var(--accent-soft)',
+                                                        border: '1px solid var(--accent)',
+                                                        color: 'var(--accent-text)',
+                                                        whiteSpace: 'nowrap',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                    }}
+                                                >
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--danger,#ef4444)] qaza-dot-blink inline-block" />
+                                                    {pendingQazaCount} Pending
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    style={{
+                                                        fontSize: '0.58rem',
+                                                        fontWeight: 700,
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.04em',
+                                                        padding: '2px 6px',
+                                                        borderRadius: '999px',
+                                                        background: 'var(--bg-base)',
+                                                        border: '1px solid var(--border)',
+                                                        color: 'var(--accent-text)',
+                                                        whiteSpace: 'nowrap',
+                                                    }}
+                                                >
+                                                    {category}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Middle: Bold Tool Title & Subtitle */}

@@ -114,6 +114,10 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
   /^notification[_-](?:preferences|history|last[_-]asked|permission[_-]timestamp|permission[_-]denied)$/,
   /^(?:smart[_-]salah|prayer[_-]dnd|prayer[_-]advance|prayer[_-]alarm|prayer[_-]fullscreen|prayer[_-]countdown)(?:[_-].+)?$/,
   /^noor[_-]prayer[_-]hadith[_-]lang$/,
+
+  // Qaza Records & Date Log
+  /^noor[_-]qaza[_-]date[_-]records[_-]v1$/,
+  /^qaza[_-](?:prayers|history|daily[_-]goal)$/,
 ];
 
 export function isProtectedPersonalKey(key: string): boolean {

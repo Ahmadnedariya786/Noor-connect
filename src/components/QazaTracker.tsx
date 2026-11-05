@@ -100,13 +100,14 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
             </CardTitle>
             {stats.total > 0 ? (
               <span
-                className="text-xs px-2.5 py-1 rounded-full font-bold"
+                className="text-xs px-2.5 py-1 rounded-full font-bold qaza-badge-blink flex items-center gap-1.5"
                 style={{
                   background: 'var(--accent-soft)',
                   color: 'var(--accent-text)',
                   border: '1px solid var(--accent)',
                 }}
               >
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--danger,#ef4444)] qaza-dot-blink inline-block shrink-0" />
                 <span dir="ltr" className="inline-block tabular-nums font-mono">{stats.total}</span> {ui.toMakeUp}
               </span>
             ) : (
@@ -115,7 +116,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                 style={{
                   background: 'var(--accent-soft)',
                   color: 'var(--accent-text)',
-                  border: '1px solid var(--accent)',
+                  border: '1px solid var(--border)',
                 }}
               >
                 <span dir="ltr" className="inline-block tabular-nums font-mono">0</span> {ui.pending}
@@ -144,7 +145,9 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
               return (
                 <div
                   key={prayer.id}
-                  className="flex flex-col items-center justify-between gap-1.5 rounded-[14px] transition-all duration-300 group"
+                  className={`flex flex-col items-center justify-between gap-1.5 rounded-[14px] transition-all duration-300 group ${
+                    hasPending ? 'qaza-pending-blink' : ''
+                  }`}
                   style={{
                     minWidth: 0,
                     width: '100%',

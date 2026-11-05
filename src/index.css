@@ -2289,3 +2289,72 @@ html[lang="ur"] [data-quran-arabic="true"],
   touch-action: pan-y !important;
 }
 
+/* ── Qaza Pending & Blinking Alerts ── */
+@keyframes qazaPulseBlink {
+  0%, 100% {
+    border-color: #F59E0B;
+    box-shadow: 0 0 16px 2px rgba(245, 158, 11, 0.48), inset 0 0 14px rgba(245, 158, 11, 0.18);
+  }
+  50% {
+    border-color: #EF4444;
+    box-shadow: 0 0 18px 3px rgba(239, 68, 68, 0.52), inset 0 0 16px rgba(239, 68, 68, 0.22);
+  }
+}
+
+@keyframes qazaDotBlink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+}
+
+.qaza-pending-blink {
+  animation: qazaPulseBlink 1.3s infinite ease-in-out !important;
+}
+
+.qaza-badge-blink {
+  animation: qazaPulseBlink 1.3s infinite ease-in-out !important;
+}
+
+.qaza-dot-blink {
+  animation: qazaDotBlink 0.9s infinite ease-in-out !important;
+}
+
+/* ── Sunnah Surahs Continuous Blinking & Highlight ── */
+@keyframes sunnahCardBlink {
+  0%, 100% {
+    border-color: var(--accent-text);
+    box-shadow: 0 0 18px 2px var(--accent-glow), inset 0 0 14px var(--accent-soft);
+  }
+  50% {
+    border-color: var(--accent);
+    box-shadow: 0 0 24px 4px var(--accent-glow), inset 0 0 18px var(--accent-soft);
+  }
+}
+
+@keyframes sunnahPillBlink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 10px 1px var(--accent-glow);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(0.98);
+    box-shadow: 0 0 4px 0px var(--accent-soft);
+  }
+}
+
+.sunnah-active-blink {
+  animation: sunnahCardBlink 1.4s infinite ease-in-out !important;
+}
+
+.sunnah-pill-blink {
+  animation: sunnahPillBlink 1.4s infinite ease-in-out !important;
+}
+
+

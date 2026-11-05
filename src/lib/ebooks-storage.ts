@@ -3,6 +3,11 @@
  * Handles PDF downloads, caching, and user books
  */
 import localforage from 'localforage';
+import {
+  getPdfBlob as getIdbPdfBlob,
+  savePdfBlob as saveIdbPdfBlob,
+  deletePdfBlob as deleteIdbPdfBlob,
+} from './idb-pdf-store';
 
 // Initialize stores
 const pdfStore = localforage.createInstance({
@@ -152,6 +157,13 @@ export const downloadBook = async (
 // Get PDF blob URL for viewing
 export const getPdfBlobUrl = async (localKey: string): Promise<string | null> => {
   try {
+    // 1. First check IndexedDB large-file store (handles 50MB, 150MB, 300MB+ with 0 base64 overhead)
+    const idbBlob = await getIdbPdfBlob(localKey);
+    if (idbBlob) {
+      return URL.createObjectURL(idbBlob);
+    }
+
+    // 2. Fallback to legacy localForage base64 store
     const base64 = await pdfStore.getItem<string>(localKey);
     if (!base64) return null;
     
@@ -191,13 +203,10 @@ export const getUserBooks = async (): Promise<UserBook[]> => {
 };
 
 export const addUserBook = async (file: File, title: string): Promise<UserBook> => {
-  const arrayBuffer = await file.arrayBuffer();
-  const base64 = btoa(
-    new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-  );
-  
   const localKey = sanitizeFilename(title);
-  await pdfStore.setItem(localKey, base64);
+
+  // Store directly into IndexedDB large-file store without base64 encoding bloat
+  await saveIdbPdfBlob(localKey, file, file.name);
   
   const userBook: UserBook = {
     id: localKey,
@@ -219,6 +228,7 @@ export const deleteUserBook = async (id: string): Promise<void> => {
   const book = books.find(b => b.id === id);
   
   if (book) {
+    await deleteIdbPdfBlob(book.localKey);
     await pdfStore.removeItem(book.localKey);
     const updatedBooks = books.filter(b => b.id !== id);
     await metaStore.setItem('user-books', updatedBooks);

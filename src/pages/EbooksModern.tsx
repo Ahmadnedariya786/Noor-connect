@@ -38,6 +38,7 @@ import { BookShelf } from "@/components/ebooks/BookShelf";
 import { BookDetailModal } from "@/components/ebooks/BookDetailModal";
 import { CategoryGridItem } from "@/components/ebooks/CategoryGridItem";
 import { ContinueReadingCard } from "@/components/ebooks/ContinueReadingCard";
+import { AnwarUlBayanSection } from "@/components/ebooks/AnwarUlBayanSection";
 import { LibraryBook } from "@/types/ebooks";
 import { 
   Collection, createCollection, getCollections, 
@@ -557,6 +558,9 @@ export default function EbooksModern() {
                   />
                 </section>
               )}
+
+              {/* Tafseer Anwar-ul-Bayan 5-Volume Master Showcase */}
+              <AnwarUlBayanSection onOpenReader={(target) => setViewingBook(target)} />
               
               {readingStats.totalBooks > 0 && (
                 <section className="grid grid-cols-3 gap-3">
@@ -698,6 +702,12 @@ export default function EbooksModern() {
                   </select>
                 </div>
               </div>
+
+              {selectedCategory === 'Quran & Tafsir' && (
+                <div className="mb-4">
+                  <AnwarUlBayanSection onOpenReader={(target) => setViewingBook(target)} />
+                </div>
+              )}
               
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">

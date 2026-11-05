@@ -1,4 +1,5 @@
 
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Dialog, DialogContent, DialogHeader, 
   DialogTitle, DialogDescription 
@@ -8,15 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   ChevronLeft, BookmarkCheck, Bookmark, 
-  HardDrive, BookOpen, Download, CheckCircle 
+  HardDrive, BookOpen, Download, CheckCircle,
+  Upload, Trash2
 } from "lucide-react";
 import { 
   CATEGORY_THEMES, cleanTitle, detectCategory, 
   extractAuthor, generateSubtitle, getDecorationElements 
 } from "@/lib/book-themes";
 import { formatFileSize, ensureHttps } from "@/lib/ebooks-storage";
+import { hasPdfBlob, savePdfBlob, deletePdfBlob } from "@/lib/idb-pdf-store";
 import { getReadingProgress } from "@/lib/reading-progress";
 import { LibraryBook } from "@/types/ebooks";
+import { useToast } from "@/hooks/use-toast";
 
 interface BookDetailModalProps {
   book: LibraryBook | null;
@@ -41,6 +45,24 @@ export const BookDetailModal = ({
   isDownloaded,
   progress
 }: BookDetailModalProps) => {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLocalLinked, setIsLocalLinked] = useState(false);
+
+  useEffect(() => {
+    if (!book) {
+      setIsLocalLinked(false);
+      return;
+    }
+    let mounted = true;
+    void hasPdfBlob(ensureHttps(book.url)).then((linked) => {
+      if (mounted) setIsLocalLinked(linked);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [book]);
+
   if (!book) return null;
   
   const category = detectCategory(cleanTitle(book.title));
@@ -49,10 +71,63 @@ export const BookDetailModal = ({
   const progressData = getReadingProgress(ensureHttps(book.url));
   const author = extractAuthor(book.title);
   const subtitle = generateSubtitle(book.title, category);
+
+  const handleLinkLocalPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !book) return;
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      toast({
+        title: "Invalid file",
+        description: "Please select a valid PDF file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Linking Local PDF...",
+        description: `Saving ${file.name} (${formatFileSize(file.size)}) to offline storage...`,
+      });
+
+      await savePdfBlob(ensureHttps(book.url), file, file.name);
+      setIsLocalLinked(true);
+      toast({
+        title: "✓ Local PDF Linked",
+        description: "Book is now linked directly from your local device storage!",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to store PDF locally",
+        variant: "destructive",
+      });
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleUnlink = async () => {
+    if (!book) return;
+    await deletePdfBlob(ensureHttps(book.url));
+    setIsLocalLinked(false);
+    toast({
+      title: "File Unlinked",
+      description: "Local copy removed from IndexedDB",
+    });
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md p-0 overflow-hidden">
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="application/pdf,.pdf"
+          className="hidden"
+          onChange={handleLinkLocalPdf}
+        />
         {/* Hero section */}
         <div className={`relative h-48 bg-gradient-to-br ${theme.gradient}`}>
           {/* Pattern */}
@@ -121,12 +196,17 @@ export const BookDetailModal = ({
                 <span>{progress}% read</span>
               </div>
             )}
-            {isDownloaded && (
+            {isLocalLinked ? (
+              <div className="flex items-center gap-1.5 text-[var(--success)]">
+                <CheckCircle className="w-4 h-4" />
+                <span>Local File Linked</span>
+              </div>
+            ) : isDownloaded ? (
               <div className="flex items-center gap-1.5 text-[var(--success)]">
                 <CheckCircle className="w-4 h-4" />
                 <span>Downloaded</span>
               </div>
-            )}
+            ) : null}
           </div>
           
           {/* Progress bar if started */}
@@ -145,7 +225,7 @@ export const BookDetailModal = ({
           )}
           
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <Button 
               className="flex-1 h-11"
               onClick={onRead}
@@ -153,7 +233,26 @@ export const BookDetailModal = ({
               <BookOpen className="w-4 h-4 mr-2" />
               {progress > 0 ? 'Continue Reading' : 'Start Reading'}
             </Button>
-            {!isDownloaded && (
+            {isLocalLinked ? (
+              <Button 
+                variant="outline" 
+                className="h-11 px-3 text-[var(--text-secondary)] hover:text-[var(--danger)]"
+                onClick={handleUnlink}
+                title="Unlink local file"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="h-11 px-3 border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)]"
+                onClick={() => fileInputRef.current?.click()}
+                title="Link Local PDF File"
+              >
+                <Upload className="w-4 h-4" />
+              </Button>
+            )}
+            {!isDownloaded && !isLocalLinked && (
               <Button 
                 variant="outline" 
                 className="h-11 px-4"

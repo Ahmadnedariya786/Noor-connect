@@ -13,6 +13,9 @@ import android.util.Log;
  * Receives exact alarm events and starts native adhan playback service.
  * Acquires a WakeLock to prevent the CPU from sleeping before the
  * foreground service has a chance to call startForeground().
+ *
+ * The started AdhanPlaybackService retrieves authentic localized prayer Hadith quotes
+ * (Urdu, English, or Gujarati) via PrayerHadithHelper based on the user's saved preference.
  */
 public class AdhanAlarmReceiver extends BroadcastReceiver {
     private static final String TAG = "AdhanAlarmReceiver";

@@ -4,6 +4,18 @@ import { safeSetLocalStorageItem } from './cache-manager';
 
 export type { PrayerName };
 
+export type QazaPrayerName = PrayerName | 'witr';
+
+export const QAZA_DATE_RECORDS_KEY = 'noor_qaza_date_records_v1';
+
+export interface DateWiseQazaRecord {
+  id: string;
+  date: string; // YYYY-MM-DD
+  hijriDate?: string;
+  prayers: Record<QazaPrayerName, 'pending' | 'completed' | 'none'>;
+  note?: string;
+}
+
 /**
  * Qaza (Missed Prayer) Tracker
  * Track prayers that need to be made up
@@ -17,19 +29,21 @@ const GOAL_KEY = 'qaza-daily-goal';
 
 export interface QazaStats {
   total: number;
-  byPrayer: Record<PrayerName, number>;
+  byPrayer: Record<QazaPrayerName, number>;
 }
 
 // Get all Qaza prayers
-export const getQazaPrayers = (): Record<PrayerName, number> => {
+export const getQazaPrayers = (): Record<QazaPrayerName, number> => {
   try {
     const data = localStorage.getItem(QAZA_STORAGE_KEY);
-    return data ? JSON.parse(data) : {
-      fajr: 0,
-      dhuhr: 0,
-      asr: 0,
-      maghrib: 0,
-      isha: 0
+    const parsed = data ? JSON.parse(data) : {};
+    return {
+      fajr: Math.max(0, Number(parsed.fajr) || 0),
+      dhuhr: Math.max(0, Number(parsed.dhuhr) || 0),
+      asr: Math.max(0, Number(parsed.asr) || 0),
+      maghrib: Math.max(0, Number(parsed.maghrib) || 0),
+      isha: Math.max(0, Number(parsed.isha) || 0),
+      witr: Math.max(0, Number(parsed.witr) || 0),
     };
   } catch {
     return {
@@ -37,18 +51,19 @@ export const getQazaPrayers = (): Record<PrayerName, number> => {
       dhuhr: 0,
       asr: 0,
       maghrib: 0,
-      isha: 0
+      isha: 0,
+      witr: 0,
     };
   }
 };
 
 // Save Qaza prayers
-const saveQazaPrayers = (prayers: Record<PrayerName, number>): void => {
+const saveQazaPrayers = (prayers: Record<QazaPrayerName, number>): void => {
   safeSetLocalStorageItem(QAZA_STORAGE_KEY, JSON.stringify(prayers));
 };
 
 // Add Qaza prayer
-export const addQazaPrayer = (prayer: PrayerName, count: number = 1): void => {
+export const addQazaPrayer = (prayer: QazaPrayerName, count: number = 1): void => {
   const prayers = getQazaPrayers();
   const validCount = Math.max(0, Number(count) || 0);
   prayers[prayer] = Math.max(0, (Number(prayers[prayer]) || 0) + validCount);
@@ -56,7 +71,7 @@ export const addQazaPrayer = (prayer: PrayerName, count: number = 1): void => {
 };
 
 // Remove/complete Qaza prayer (Guaranteed never to go below 0)
-export const completeQazaPrayer = (prayer: PrayerName, count: number = 1): void => {
+export const completeQazaPrayer = (prayer: QazaPrayerName, count: number = 1): void => {
   const prayers = getQazaPrayers();
   const current = Math.max(0, Number(prayers[prayer]) || 0);
   if (current <= 0) return;
@@ -66,7 +81,7 @@ export const completeQazaPrayer = (prayer: PrayerName, count: number = 1): void 
 };
 
 // Set specific Qaza count
-export const setQazaCount = (prayer: PrayerName, count: number): void => {
+export const setQazaCount = (prayer: QazaPrayerName, count: number): void => {
   const prayers = getQazaPrayers();
   prayers[prayer] = Math.max(0, Number(count) || 0);
   saveQazaPrayers(prayers);
@@ -239,3 +254,120 @@ export const getTodayQazaCompleted = (): number => {
     .filter(h => h.date === today)
     .reduce((sum, h) => sum + h.completed, 0);
 };
+
+// ── Date-Wise Qaza Planner & Log ─────────────────────────────
+
+export const formatHijriDate = (dateStr: string): string => {
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      const gregorian = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const hijri = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(d);
+      return `${gregorian} • ${hijri}`;
+    }
+  } catch {
+    // Non-critical fallback
+  }
+  return dateStr;
+};
+
+export const getDateWiseQazaList = (): DateWiseQazaRecord[] => {
+  try {
+    const raw = localStorage.getItem(QAZA_DATE_RECORDS_KEY);
+    if (!raw) return [];
+    const list: DateWiseQazaRecord[] = JSON.parse(raw);
+    if (!Array.isArray(list)) return [];
+    return list.sort((a, b) => b.date.localeCompare(a.date));
+  } catch {
+    return [];
+  }
+};
+
+const saveDateWiseQazaList = (records: DateWiseQazaRecord[]): void => {
+  try {
+    // Retain up to 365 days of date-wise logs
+    const capped = records.slice(0, 365);
+    safeSetLocalStorageItem(QAZA_DATE_RECORDS_KEY, JSON.stringify(capped));
+  } catch (err) {
+    console.warn('Failed to save date-wise Qaza records:', err);
+  }
+};
+
+export const toggleDatePrayerQaza = (
+  date: string,
+  prayer: QazaPrayerName
+): void => {
+  const records = getDateWiseQazaList();
+  let record = records.find((r) => r.date === date);
+
+  if (!record) {
+    record = {
+      id: `qaza_date_${date}`,
+      date,
+      hijriDate: formatHijriDate(date),
+      prayers: {
+        fajr: 'none',
+        dhuhr: 'none',
+        asr: 'none',
+        maghrib: 'none',
+        isha: 'none',
+        witr: 'none',
+      },
+    };
+    records.push(record);
+  }
+
+  const current = record.prayers[prayer] || 'none';
+
+  if (current === 'none') {
+    // 'none' -> 'pending' (increments that prayer's total Qaza count by +1)
+    record.prayers[prayer] = 'pending';
+    addQazaPrayer(prayer, 1);
+  } else if (current === 'pending') {
+    // 'pending' -> 'completed' (decrements pending Qaza by -1, increments completed-today by +1)
+    record.prayers[prayer] = 'completed';
+    completeQazaPrayer(prayer, 1);
+    addQazaHistoryEntry(prayer as PrayerName);
+  } else {
+    // 'completed' -> 'none'
+    record.prayers[prayer] = 'none';
+  }
+
+  saveDateWiseQazaList(records);
+  window.dispatchEvent(new CustomEvent('qaza-updated'));
+  window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+};
+
+export const markSingleDatePrayerCompleted = (
+  date: string,
+  prayer: QazaPrayerName
+): void => {
+  const records = getDateWiseQazaList();
+  const record = records.find((r) => r.date === date);
+  if (!record) return;
+
+  if (record.prayers[prayer] === 'pending') {
+    record.prayers[prayer] = 'completed';
+    completeQazaPrayer(prayer, 1);
+    addQazaHistoryEntry(prayer as PrayerName);
+    saveDateWiseQazaList(records);
+    window.dispatchEvent(new CustomEvent('qaza-updated'));
+    window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+  }
+};
+
+export const deleteDateQazaRecord = (date: string): void => {
+  const records = getDateWiseQazaList().filter((r) => r.date !== date);
+  saveDateWiseQazaList(records);
+  window.dispatchEvent(new CustomEvent('qaza-updated'));
+  window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+};
+

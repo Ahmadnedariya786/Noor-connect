@@ -1172,7 +1172,8 @@ export default function SurahList() {
             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] whitespace-nowrap shrink-0">
               {uiStrings.oftenRead || 'SUNNAH SURAHS'}
             </span>
-            <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--accent-text)] whitespace-nowrap shrink-0">
+            <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--accent-text)] whitespace-nowrap shrink-0 sunnah-pill-blink flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] qaza-dot-blink inline-block" />
               ✦ {spotlightVirtue.prayerLabel} SUNNAH
             </span>
           </div>
@@ -1186,7 +1187,9 @@ export default function SurahList() {
                   key={surah.number}
                   type="button"
                   onClick={() => handleSurahClick(surah.number)}
-                  className="rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] snap-start text-left"
+                  className={`rounded-xl border flex flex-col justify-between shrink-0 transition-all active:scale-[0.97] snap-start text-left ${
+                    isFeatured ? 'sunnah-active-blink' : ''
+                  }`}
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -1212,8 +1215,10 @@ export default function SurahList() {
                   {/* Row 1: Badge Row */}
                   <div className="w-full flex items-center justify-start">
                     <span
+                      className={isFeatured ? "sunnah-pill-blink flex items-center gap-1" : undefined}
                       style={{
                         display: "inline-flex",
+                        alignItems: "center",
                         width: "fit-content",
                         fontSize: "0.64rem",
                         lineHeight: 1.2,
@@ -1226,6 +1231,7 @@ export default function SurahList() {
                         border: isFeatured ? "none" : "1px solid var(--border)",
                       }}
                     >
+                      {isFeatured && <span className="w-1.5 h-1.5 rounded-full bg-[var(--on-accent,#000)] qaza-dot-blink inline-block" />}
                       {surah.badgeLabel}
                     </span>
                   </div>
@@ -1295,7 +1301,7 @@ export default function SurahList() {
         {/* FAZILAT SPOTLIGHT INVITATION CARD */}
         <div className="max-w-2xl mx-auto px-4 mb-3.5">
           <div
-            className="p-3 rounded-[16px] border flex items-center justify-between gap-3 shadow-sm transition-all"
+            className="p-3 rounded-[16px] border flex items-center justify-between gap-3 shadow-sm transition-all sunnah-active-blink"
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
@@ -1320,7 +1326,7 @@ export default function SurahList() {
               <button
                 type="button"
                 onClick={() => handleSurahClick(featuredSurah.number)}
-                className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-sm sunnah-pill-blink"
                 style={{
                   background: "var(--accent)",
                   color: "var(--on-accent)",
