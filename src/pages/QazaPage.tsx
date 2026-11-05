@@ -26,6 +26,7 @@ import {
   markSingleDatePrayerCompleted,
   deleteDateQazaRecord,
   formatHijriDate,
+  syncUnmarkedDailySalahToQaza,
   type PrayerName,
   type QazaPrayerName,
   type DateWiseQazaRecord,
@@ -78,17 +79,24 @@ export default function QazaPage() {
   }, []);
 
   useEffect(() => {
+    syncUnmarkedDailySalahToQaza();
     loadQazaData();
 
     const handleQazaUpdate = () => {
       setQazaCounts(getQazaPrayers());
       refreshDateRecords();
     };
+    const handleSalahUpdate = () => {
+      syncUnmarkedDailySalahToQaza();
+      loadQazaData();
+    };
     window.addEventListener('qaza-updated', handleQazaUpdate);
     window.addEventListener('qaza-date-updated', refreshDateRecords);
+    window.addEventListener('salah-updated', handleSalahUpdate);
     return () => {
       window.removeEventListener('qaza-updated', handleQazaUpdate);
       window.removeEventListener('qaza-date-updated', refreshDateRecords);
+      window.removeEventListener('salah-updated', handleSalahUpdate);
     };
   }, [refreshDateRecords]);
 

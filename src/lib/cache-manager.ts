@@ -117,6 +117,8 @@ const PROTECTED_KEY_PATTERNS: RegExp[] = [
 
   // Qaza Records & Date Log
   /^noor[_-]qaza[_-]date[_-]records[_-]v1$/,
+  /^noor[_-]qaza[_-]autosync(?:ed[_-]slots|ed[_-]slot|[_-]start[_-]date)[_-]v1$/,
+  /^noor[_-]qaza[_-]autosync/,
   /^qaza[_-](?:prayers|history|daily[_-]goal)$/,
 ];
 

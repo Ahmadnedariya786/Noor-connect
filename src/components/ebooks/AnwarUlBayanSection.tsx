@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
-  FileCheck,
+  FolderUp,
+  Layers,
   Upload,
   Sparkles,
   HardDrive,
   Trash2,
-  ExternalLink,
   CheckCircle,
-  Clock,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +45,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
   >({});
   const [activeLinkingVolId, setActiveLinkingVolId] = useState<string | null>(null);
   const [overviewVolume, setOverviewVolume] = useState<AnwarUlBayanVolume | null>(null);
+  const [expandedVolSurahs, setExpandedVolSurahs] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const batchFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -302,10 +302,11 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
           style={{ background: 'var(--accent-glow)' }}
         />
 
-        <div className="relative z-10 space-y-2.5">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="relative z-10 space-y-3">
+          {/* Top Badges Row */}
+          <div className="flex items-center justify-between gap-2 flex-wrap" style={{ marginBottom: '14px' }}>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)]">
-              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)]">
                 Master Classical Tafsir • 5 Volumes
               </span>
@@ -318,19 +319,29 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
             </Badge>
           </div>
 
-          <div>
+          {/* Titles & Author */}
+          <div className="space-y-2">
             <h2
               dir="rtl"
-              className="text-2xl sm:text-3xl font-extrabold text-[var(--accent-text)] mb-1 leading-normal"
-              style={{ fontFamily: 'var(--font-urdu), serif' }}
+              className="text-xl sm:text-2xl font-extrabold text-[var(--accent-text)]"
+              style={{
+                fontFamily: 'var(--font-urdu), serif',
+                lineHeight: 2.15,
+                marginTop: '6px',
+                marginBottom: '8px',
+              }}
             >
               تفسیر انوار البیان فی کشف اسرار القرآن
             </h2>
-            <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)]">
+            <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
               Tafseer Anwar-ul-Bayan — Complete 5-Volume Set
             </h3>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-              By حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی (رحمه الله)
+            <p
+              dir="rtl"
+              className="text-xs text-[var(--text-secondary)] leading-relaxed"
+              style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 1.9 }}
+            >
+              تالیف: حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی (رحمه الله)
             </p>
           </div>
 
@@ -343,71 +354,78 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
               size="sm"
               variant="outline"
               onClick={() => batchFileInputRef.current?.click()}
-              className="h-8 text-xs font-bold gap-1.5 border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 cursor-pointer shadow-sm"
+              className="h-9 px-3.5 text-xs font-bold gap-2 border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 cursor-pointer shadow-sm"
             >
-              <FileCheck className="w-3.5 h-3.5" />
-              <span>📚 Link All 5 Volumes at Once (Auto-Match Vol 1–5)</span>
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => window.open('https://archive.org/details/TafseerAnwarUlBayan', '_blank', 'noopener,noreferrer')}
-              className="h-8 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] gap-1.5 cursor-pointer"
-            >
-              <ExternalLink className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>🌐 Find on Archive.org</span>
+              <FolderUp className="w-4 h-4 shrink-0 text-[var(--accent)]" />
+              <span>Link All 5 Volumes (Vol 1–5)</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* 5 Volumes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {ANWAR_UL_BAYAN_VOLUMES.map((vol) => {
           const isLinked = !!linkedStatus[vol.id];
           const meta = metadataMap[vol.id];
+          const isSurahsExpanded = !!expandedVolSurahs[vol.id];
+          const displayedSurahs = isSurahsExpanded ? vol.surahs : vol.surahs.slice(0, 4);
 
           return (
             <Card
               key={vol.id}
-              className="overflow-hidden border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] transition-all flex flex-col justify-between p-4 shadow-sm"
+              className="overflow-hidden border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] transition-all flex flex-col justify-between shadow-sm"
               style={{
+                padding: '12px 14px',
                 boxShadow: 'inset 0 1px 0 var(--card-sheen)',
               }}
             >
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {/* Header Tag Row */}
                 <div className="flex items-center justify-between gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]">
                     Part {vol.volNumber} • {vol.juzCoverage}
                   </span>
 
-                  {isLinked ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--success)] bg-[var(--success)]/10 px-2 py-0.5 rounded-full border border-[var(--success)]/40">
-                      <CheckCircle className="w-3 h-3" />
-                      Offline Linked
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      dir="rtl"
+                      className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]"
+                      style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 1.4 }}
+                    >
+                      جلد {vol.volNumber}
                     </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-2)] px-2 py-0.5 rounded-full border border-[var(--border)]">
-                      <HardDrive className="w-3 h-3" />
-                      {vol.estimatedSize}
-                    </span>
-                  )}
+                    {isLinked ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--success)] bg-[var(--success)]/10 px-2 py-0.5 rounded-full border border-[var(--success)]/40">
+                        <CheckCircle className="w-3 h-3 shrink-0" />
+                        Offline
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-2)] px-2 py-0.5 rounded-full border border-[var(--border)]">
+                        <HardDrive className="w-3 h-3 shrink-0" />
+                        {vol.estimatedSize}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Urdu & English Titles */}
                 <div>
                   <h4
                     dir="rtl"
-                    className="text-base font-bold text-[var(--accent-text)] line-clamp-1 leading-normal"
-                    style={{ fontFamily: 'var(--font-urdu), serif' }}
+                    className="text-base font-bold text-[var(--accent-text)]"
+                    style={{
+                      fontFamily: 'var(--font-urdu), serif',
+                      lineHeight: 1.9,
+                      marginBottom: '2px',
+                    }}
                   >
                     {vol.urduTitle}
                   </h4>
-                  <h5 className="text-sm font-bold text-[var(--text-primary)] mt-0.5">
+                  <h5 className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
                     {vol.title}
                   </h5>
-                  <p className="text-[11px] text-[var(--accent-text)] font-medium mt-1">
+                  <p className="text-[11px] text-[var(--accent-text)] font-medium mt-0.5">
                     📖 {vol.coverage}
                   </p>
                 </div>
@@ -417,23 +435,32 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                 </p>
 
                 {/* Surahs Included Pill Tags */}
-                <div className="pt-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
+                <div className="pt-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1">
                     Surahs Included:
                   </span>
-                  <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto pr-0.5">
-                    {vol.surahs.slice(0, 6).map((s) => (
+                  <div className="flex flex-wrap gap-1">
+                    {displayedSurahs.map((s) => (
                       <span
                         key={s.number}
-                        className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]"
+                        className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] shrink-0"
                       >
                         #{s.number} {s.name}
                       </span>
                     ))}
-                    {vol.surahs.length > 6 && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
-                        +{vol.surahs.length - 6} more
-                      </span>
+                    {vol.surahs.length > 4 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedVolSurahs((prev) => ({
+                            ...prev,
+                            [vol.id]: !prev[vol.id],
+                          }))
+                        }
+                        className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors cursor-pointer shrink-0 font-bold"
+                      >
+                        {isSurahsExpanded ? 'Show less' : `+${vol.surahs.length - 4} Surahs`}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -452,11 +479,11 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3.5 mt-3 border-t border-[var(--border)] flex items-center gap-2">
+              <div className="pt-3 mt-2.5 border-t border-[var(--border)] flex items-center gap-2">
                 <Button
                   size="sm"
                   onClick={() => handleReadVolume(vol)}
-                  className="flex-1 text-xs font-bold gap-1.5 cursor-pointer"
+                  className="flex-1 text-xs font-bold gap-1.5 cursor-pointer h-8"
                 >
                   <BookOpen className="w-3.5 h-3.5" />
                   Read Volume
@@ -471,7 +498,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                       handleUnlinkVolume(vol);
                     }}
                     title="Unlink local file"
-                    className="h-9 px-2.5 text-[var(--text-secondary)] hover:text-[var(--danger)] cursor-pointer"
+                    className="h-8 px-2.5 text-[var(--text-secondary)] hover:text-[var(--danger)] cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -484,7 +511,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                       handleTriggerLinkFile(vol.id);
                     }}
                     title="Link local PDF file from device storage"
-                    className="h-9 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)]"
+                    className="h-8 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)]"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Link Local PDF</span>
@@ -498,10 +525,18 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
 
       {/* In-App Volume Overview & Local PDF Setup Sheet */}
       <Dialog open={!!overviewVolume} onOpenChange={(open) => !open && setOverviewVolume(null)}>
-        <DialogContent className="max-w-md w-[94vw] p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-2xl max-h-[88vh] overflow-y-auto">
+        <DialogContent
+          className="w-[94vw] rounded-2xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-2xl max-h-[88vh] overflow-y-auto"
+          style={{
+            maxWidth: 'calc(100vw - 32px)',
+            overflowX: 'hidden',
+            padding: '16px',
+            boxSizing: 'border-box',
+          }}
+        >
           {overviewVolume && (
-            <div className="space-y-4">
-              <DialogHeader className="text-left space-y-1.5 pb-2 border-b border-[var(--border)]">
+            <div className="space-y-3.5">
+              <DialogHeader className="text-left space-y-1 pb-2 border-b border-[var(--border)]">
                 <div className="flex items-center justify-between gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]">
                     Part {overviewVolume.volNumber} • {overviewVolume.juzCoverage}
@@ -512,8 +547,8 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                 </div>
                 <DialogTitle
                   dir="rtl"
-                  className="text-xl font-bold text-[var(--accent-text)] leading-normal mt-1"
-                  style={{ fontFamily: 'var(--font-urdu), serif' }}
+                  className="text-lg sm:text-xl font-bold text-[var(--accent-text)] leading-normal mt-1"
+                  style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 2.0 }}
                 >
                   {overviewVolume.urduTitle}
                 </DialogTitle>
@@ -543,8 +578,8 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                     }}
                     className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md"
                   >
-                    <Upload className="w-4 h-4" />
-                    📁 Select & Link Local PDF File (Part {overviewVolume.volNumber})
+                    <FolderUp className="w-4 h-4 shrink-0" />
+                    <span>Select & Link Local PDF (Part {overviewVolume.volNumber})</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -554,25 +589,10 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                     }}
                     className="w-full text-xs font-semibold gap-2 border-[var(--border)] hover:border-[var(--accent)] cursor-pointer"
                   >
-                    <FileCheck className="w-4 h-4 text-[var(--accent)]" />
-                    📚 Link All 5 Volumes at Once (Auto-Match Vol 1–5)
+                    <Layers className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                    <span>Link All 5 Volumes (Vol 1–5)</span>
                   </Button>
                 </div>
-              </div>
-
-              {/* External Archive.org Download Option (Never empty URL!) */}
-              <div className="space-y-1.5">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    const archiveUrl = overviewVolume.urduStreamUrl || 'https://archive.org/details/TafseerAnwarUlBayan';
-                    window.open(archiveUrl, '_blank', 'noopener,noreferrer');
-                  }}
-                  className="w-full justify-start text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] gap-2 cursor-pointer"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-[var(--accent)]" />
-                  <span>🌐 Find / Download PDF from Archive.org</span>
-                </Button>
               </div>
 
               {/* Surahs Included in this Volume */}
@@ -594,7 +614,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                         setOverviewVolume(null);
                         navigate(`/tafsir?surah=${s.number}`);
                       }}
-                      className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                      className="text-[11px] font-mono px-2 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-all cursor-pointer flex items-center gap-1 active:scale-95 shrink-0"
                       title={`Open Surah ${s.name} in interactive Tafsir`}
                     >
                       <span className="font-bold">#{s.number}</span>
