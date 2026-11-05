@@ -3,6 +3,7 @@ import { useClockStyle } from '@/lib/clock-style';
 import { ClockRenderer } from './ClockRenderer';
 import { getPrayerDisplayName } from '@/lib/prayer-utils';
 import { LivingSkyAura } from './LivingSkyAura';
+import { evaluateMakruhState } from '@/lib/makruh-times';
 
 interface ClockHeroProps {
   hijriDate: string;
@@ -18,6 +19,7 @@ interface ClockHeroProps {
     time: string;
     date?: Date;
   } | null;
+  prayers?: any[];
 }
 
 export const ClockHero: React.FC<ClockHeroProps> = memo(({
@@ -25,6 +27,7 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
   timeFormat,
   nextPrayer,
   previousPrayer,
+  prayers,
 }) => {
   const { clockStyle } = useClockStyle();
   const [now, setNow] = useState<Date>(() => new Date());
@@ -94,10 +97,12 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
     .replace(/al-ōlā/gi, 'al-ūlā')
     .replace(/ō/g, 'ū');
 
+  const makruhState = evaluateMakruhState(prayers || [], now, normalizedTimeFormat);
+
   return (
-    <div className="w-full flex justify-center items-center relative overflow-hidden rounded-[26px]" key="clock-hero-wrapper">
+    <div className="w-full flex flex-col justify-center items-center relative overflow-hidden rounded-[26px]" key="clock-hero-wrapper">
       <LivingSkyAura nextPrayerName={nextPrayer?.name} currentHour={now.getHours()} />
-      <div className="relative z-10 w-full flex justify-center items-center">
+      <div className="relative z-10 w-full flex flex-col justify-center items-center">
         <ClockRenderer
           key={`clock-${clockStyle}`}
           styleId={clockStyle}
@@ -107,6 +112,30 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
           nextPrayer={normalizedNext}
           previousPrayer={normalizedPrev}
         />
+
+        {/* Real-Time Makruh Prohibited Waqt Blinking Pill Indicator */}
+        {makruhState.isMakruhNow && makruhState.activeWindow && (
+          <div
+            className="mt-3 mx-auto px-3.5 py-1.5 rounded-full makruh-red-blink-banner flex items-center justify-between gap-2 max-w-[340px] w-[92%] text-xs font-bold select-none transition-all duration-300"
+            style={{
+              border: '1px solid #EF4444',
+              color: '#FEE2E2',
+              background: 'rgba(239, 68, 68, 0.20)',
+              boxShadow: '0 0 16px rgba(239, 68, 68, 0.45)',
+            }}
+            role="alert"
+          >
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="w-2 h-2 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
+              <span className="tracking-wide uppercase text-[11px] truncate text-red-100 font-extrabold">
+                MAKRUH WAQT • {makruhState.activeWindow.shortLabel}
+              </span>
+            </div>
+            <span className="font-mono tabular-nums text-[11px] shrink-0 text-red-200 font-bold pl-2" dir="ltr">
+              Ends in {makruhState.remainingFormatted}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

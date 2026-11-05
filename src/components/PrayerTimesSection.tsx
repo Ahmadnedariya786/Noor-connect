@@ -14,6 +14,8 @@ import {
   formatLocalizedAfterPrayer,
 } from '@/lib/home-prayer-i18n';
 import type { LanguageCode } from '@/lib/language-config';
+import { cn } from '@/lib/utils';
+import { evaluateMakruhState } from '@/lib/makruh-times';
 
 export interface PrayerItem {
   name: string;
@@ -386,6 +388,48 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       { name: 'Isha', time: formatPrayerTime(t.Isha, timeFormat), date: viewedDate, originalName: 'Isha' },
     ];
   }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat, refreshKey]);
+
+  // Real-time 1-second ticker for second-accurate Makruh window tracking & instant auto-dismissal
+  const [now, setNow] = useState<Date>(() => new Date());
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const startTicker = () => {
+      if (intervalId !== null) return;
+      setNow(new Date());
+      intervalId = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
+        setNow(new Date());
+      }, 1000);
+    };
+    const stopTicker = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopTicker();
+      else startTicker();
+    };
+    startTicker();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      stopTicker();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  const makruhState = useMemo(() => {
+    return evaluateMakruhState(
+      displayedPrayers,
+      now,
+      timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h'
+    );
+  }, [displayedPrayers, now, timeFormat]);
+
+  const isMakruhActive = Boolean(
+    selectedDateOffset === 0 && makruhState.isMakruhNow && makruhState.activeWindow
+  );
 
   // Notification status check for bell styling
   const [notificationsEnabled] = useState(() => {
@@ -870,6 +914,104 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       </div>
 
       {/* ═════════════════════════════════════════════════════════════ */}
+      {/* HIGH-VISIBILITY RED BLINKING MAKRUH (PROHIBITED) ALERT CARD */}
+      {/* ═════════════════════════════════════════════════════════════ */}
+      {isMakruhActive && makruhState.activeWindow && (
+        <div
+          className="w-full mt-3.5 p-4 rounded-2xl makruh-red-blink-banner transition-all duration-300 relative overflow-hidden select-none"
+          style={{
+            border: '1.5px solid #EF4444',
+            boxShadow: '0 0 24px rgba(239, 68, 68, 0.45)',
+            background: 'rgba(239, 68, 68, 0.14)',
+            boxSizing: 'border-box',
+          }}
+          role="alert"
+          aria-live="assertive"
+        >
+          {/* Subtle Red Warning Accent Glow */}
+          <div
+            className="pointer-events-none absolute -top-10 -right-10 w-28 h-28 rounded-full bg-red-500/20 blur-xl"
+            aria-hidden="true"
+          />
+
+          {/* Header Line: Blinking Dot + Prohibited Warning Badge + Live Countdown */}
+          <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
+              <span className="text-[11px] font-black tracking-wider uppercase text-red-200 truncate">
+                PROHIBITED PRAYER TIME • MAKRUH WAQT
+              </span>
+            </div>
+            <div
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold text-red-100 flex items-center gap-1 shrink-0 font-mono tabular-nums"
+              style={{
+                background: 'rgba(220, 38, 38, 0.40)',
+                border: '1px solid #DC2626',
+              }}
+            >
+              <span>Ends in</span>
+              <span dir="ltr">{makruhState.remainingFormatted}</span>
+            </div>
+          </div>
+
+          {/* Primary Titles: English + Arabic Calligraphy */}
+          <div className="flex items-center justify-between gap-3 mb-2 relative z-10">
+            <div className="min-w-0 flex-1">
+              <div className="text-base font-extrabold text-white tracking-tight truncate">
+                {makruhState.activeWindow.title}
+              </div>
+              <div
+                className="text-xs text-red-300 font-mono tracking-tight mt-0.5"
+                dir="ltr"
+              >
+                {makruhState.activeWindow.startFormatted} – {makruhState.activeWindow.endFormatted}
+              </div>
+            </div>
+            <div
+              className="text-xl font-bold text-red-200 shrink-0 text-right"
+              style={{
+                fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
+                textShadow: '0 0 10px rgba(239, 68, 68, 0.6)',
+              }}
+            >
+              {makruhState.activeWindow.arabicTitle}
+            </div>
+          </div>
+
+          {/* Urdu Title & Shariah Ruling in Jameel Noori Nastaliq */}
+          <div
+            className="pt-2 border-t border-red-500/30 text-right space-y-1 relative z-10"
+            dir="rtl"
+          >
+            <div
+              className="text-sm font-semibold text-red-200"
+              style={{ fontFamily: "var(--font-urdu), 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif", lineHeight: 1.8 }}
+            >
+              {makruhState.activeWindow.titleUrdu}
+            </div>
+            <div
+              className="text-xs text-red-100/90"
+              style={{ fontFamily: "var(--font-urdu), 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif", lineHeight: 1.9 }}
+            >
+              {makruhState.activeWindow.rulingUrdu}
+            </div>
+          </div>
+
+          {/* Shariah Guidance & Hadith Reference Badge */}
+          <div className="mt-2.5 pt-2 border-t border-red-500/20 flex items-center justify-between gap-2 text-[10px] text-red-200/80 relative z-10">
+            <span className="truncate">
+              {makruhState.activeWindow.ruling}
+            </span>
+            <span
+              className="px-2 py-0.5 rounded-full bg-red-950/60 border border-red-500/40 font-mono text-[9px] font-bold text-red-300 shrink-0"
+            >
+              {makruhState.activeWindow.hadithRef}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════ */}
       {/* PART 3: FLOATING PRAYER LIST CARDS WITH GLOWING ACTIVE STATE */}
       {/* ═════════════════════════════════════════════════════════════ */}
       <div
@@ -894,11 +1036,21 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               isMatchingPrayer(canonicalName, resolvedNextDisplayName)
             )
           );
+          const isMakruhRow = Boolean(
+            isMakruhActive &&
+            makruhState.activeWindow &&
+            (makruhState.activeWindow.relatedRow === rawName ||
+             makruhState.activeWindow.relatedRow === prayer.name ||
+             (makruhState.activeWindow.relatedRow === 'Dhuhr' && rawName.toLowerCase() === 'jummah'))
+          );
 
           return (
             <div
               key={rawName}
-              className="flex items-center justify-between transition-all duration-200"
+              className={cn(
+                "flex items-center justify-between transition-all duration-200",
+                isMakruhRow && "makruh-row-red-blink"
+              )}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -906,11 +1058,21 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 gap: '12px',
                 padding: '13px 16px',
                 borderRadius: '14px',
-                background: isRowActive
+                background: isMakruhRow
+                  ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.22), var(--surface))'
+                  : isRowActive
                   ? 'linear-gradient(90deg, var(--accent-soft), var(--surface))'
                   : 'var(--surface)',
-                border: isRowActive ? '1.5px solid var(--accent)' : '1px solid var(--border)',
-                boxShadow: isRowActive ? '0 0 16px var(--accent-glow)' : 'none',
+                border: isMakruhRow
+                  ? '1.5px solid #EF4444'
+                  : isRowActive
+                  ? '1.5px solid var(--accent)'
+                  : '1px solid var(--border)',
+                boxShadow: isMakruhRow
+                  ? '0 0 20px rgba(239, 68, 68, 0.55)'
+                  : isRowActive
+                  ? '0 0 16px var(--accent-glow)'
+                  : 'none',
               }}
             >
               {/* Row Left Side: Time-of-Day Icon + Prayer Name */}
@@ -944,11 +1106,31 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   flexShrink: 0,
                 }}
               >
+                {isMakruhRow && (
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1 shrink-0"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.30)',
+                      border: '1px solid #EF4444',
+                      color: '#FEE2E2',
+                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.45)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink" />
+                    <span>MAKRUH WAQT ({makruhState.remainingFormatted})</span>
+                  </span>
+                )}
+
                 <span
                   className="ltr-num tabular-nums"
                   dir="ltr"
                   style={{
-                    color: isRowActive ? 'var(--accent-text)' : 'var(--text-primary)',
+                    color: isMakruhRow
+                      ? '#FCA5A5'
+                      : isRowActive
+                      ? 'var(--accent-text)'
+                      : 'var(--text-primary)',
                     fontWeight: 600,
                     fontVariantNumeric: 'tabular-nums',
                     fontSize: '0.95rem',

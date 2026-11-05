@@ -468,6 +468,7 @@ function PremiumDashboardInner({
           timeFormat={timeFormat}
           nextPrayer={nextPrayer}
           previousPrayer={previousPrayer}
+          prayers={prayers}
         />
 
         {/* ── Dynamic Widgets Container ── */}
