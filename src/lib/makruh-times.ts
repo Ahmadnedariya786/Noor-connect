@@ -175,10 +175,10 @@ export function evaluateMakruhState(
     const endSec = sunriseSec + 15 * 60;
     windows.push({
       id: 'tulu',
-      title: "Sunrise / Tulu' Waqt",
+      title: "Sunrise (Tulu' al-Shams)",
       titleUrdu: 'طلوعِ آفتاب (مکروہ وقت)',
-      arabicTitle: 'طُلُوعُ الشَّمْس',
-      shortLabel: "Sunrise (Tulu')",
+      arabicTitle: 'طلوع الشمس',
+      shortLabel: 'Sunrise',
       hadithRef: 'Sahih Muslim 831',
       ruling:
         'During Sunrise until 15 minutes after, all Salah (Fard, Sunnah, Nafl) and Sajdah at-Tilawat are strictly prohibited (Makruh Tahrimi).',
@@ -200,10 +200,10 @@ export function evaluateMakruhState(
     const endSec = dhuhrSec;
     windows.push({
       id: 'zawal',
-      title: 'Zawal / Istiwa Waqt',
+      title: 'Zawal (Midday Zenith)',
       titleUrdu: 'زوالِ آفتاب / استواء (مکروہ وقت)',
-      arabicTitle: 'نِصْفُ النَّهَار / الزَّوَال',
-      shortLabel: 'Zawal (Istiwa)',
+      arabicTitle: 'وقت الزوال',
+      shortLabel: 'Zawal',
       hadithRef: 'Sahih Muslim 831',
       ruling:
         'At midday (Istiwa) when the sun reaches its zenith until Dhuhr begins, all prayer and Sajdah are strictly prohibited (Makruh Tahrimi).',
@@ -225,10 +225,10 @@ export function evaluateMakruhState(
     const endSec = maghribSec;
     windows.push({
       id: 'ghurub',
-      title: 'Sunset / Ghurub Waqt',
+      title: 'Sunset (Ghurub al-Shams)',
       titleUrdu: 'غروبِ آفتاب (مکروہ وقت)',
-      arabicTitle: 'غُرُوبُ الشَّمْس',
-      shortLabel: 'Sunset (Ghurub)',
+      arabicTitle: 'غروب الشمس',
+      shortLabel: 'Sunset',
       hadithRef: 'Sahih Muslim 831',
       ruling:
         "Before sunset (as the sun turns pale yellow) until Maghrib enters, prayer is prohibited, except that day's unperformed Asr (which remains Makruh to delay).",

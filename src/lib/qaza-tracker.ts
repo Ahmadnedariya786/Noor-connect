@@ -293,13 +293,13 @@ export const getTodayQazaCompleted = (): number => {
 
 export const ISLAMIC_MONTH_NAMES_EN = [
   'Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
-  'Jumada al-Ula', 'Jumada al-Akhirah', 'Rajab', "Sha'ban",
+  'Jumādā al-Ūlā', 'Jumādā al-Ākhirah', 'Rajab', "Sha'ban",
   'Ramadan', 'Shawwal', "Dhu al-Qi'dah", "Dhu al-Hijjah",
 ] as const;
 
 export const ISLAMIC_MONTH_NAMES_AR_UR = [
   'محرم', 'صفر', 'ربیع الاول', 'ربیع الثانی',
-  'جمادی الاولیٰ', 'جمادی الاخریٰ', 'رجب', 'شعبان',
+  'جمادی الأولى', 'جمادی الآخرة', 'رجب', 'شعبان',
   'رمضان', 'شوال', 'ذوالقعدۃ', 'ذوالحجہ',
 ] as const;
 

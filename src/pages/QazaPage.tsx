@@ -261,26 +261,27 @@ export default function QazaPage() {
             <button
               type="button"
               onClick={() => setIsDatePickerOpen(true)}
-              className="w-full p-2.5 sm:p-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)] transition-all flex items-center justify-between text-left cursor-pointer group shadow-sm"
+              className="w-full p-2.5 sm:p-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--accent)] transition-all flex items-center justify-between text-left cursor-pointer group shadow-sm gap-2"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center shrink-0">
                   <Calendar className="w-4 h-4 text-[var(--accent-text)]" />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-[var(--text-primary)] truncate">
                     {selectedDetailed.gregorianDay}, {selectedDetailed.gregorian}
                   </p>
                   <p
-                    className="text-[11px] font-semibold text-[var(--accent-text)] truncate"
-                    style={{ fontFamily: 'var(--font-urdu), sans-serif', lineHeight: 1.6 }}
+                    className="font-semibold text-[var(--accent-text)] truncate"
+                    style={{ fontSize: '0.70rem', whiteSpace: 'nowrap', lineHeight: 1.5 }}
                   >
-                    {selectedDetailed.fullHijri}
+                    🌙 {selectedDetailed.hijriEn}
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[var(--surface)] text-[var(--accent-text)] border border-[var(--border)] group-hover:border-[var(--accent)] transition-colors shrink-0">
-                Change Date ▾
+              <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-[var(--surface)] text-[var(--accent-text)] border border-[var(--border)] group-hover:border-[var(--accent)] transition-colors shrink-0 flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                <span>Select ▾</span>
               </span>
             </button>
 
@@ -403,23 +404,43 @@ export default function QazaPage() {
                         </div>
                       </div>
 
-                      {/* Line 2: Full unclipped Hijri date in English and Arabic/Urdu */}
+                      {/* Line 2: Balanced Hijri + Urdu date row */}
                       <div
-                        className="mt-0.5 mb-2 w-full"
-                        style={{ whiteSpace: 'normal', overflow: 'visible' }}
+                        className="w-full flex items-center justify-between gap-2 flex-wrap"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                          marginTop: '2px',
+                          marginBottom: '8px',
+                        }}
                       >
-                        <p
-                          className="font-semibold text-[var(--accent-text)]"
+                        <span
+                          dir="ltr"
+                          className="font-semibold"
                           style={{
-                            fontSize: '0.74rem',
-                            lineHeight: 1.7,
-                            fontFamily: 'var(--font-urdu), sans-serif',
-                            whiteSpace: 'normal',
-                            overflow: 'visible',
+                            fontSize: '0.72rem',
+                            color: 'var(--accent-text)',
+                            whiteSpace: 'nowrap',
                           }}
                         >
-                          {detailed.fullHijri}
-                        </p>
+                          🌙 {detailed.hijriEn}
+                        </span>
+                        <span
+                          dir="rtl"
+                          className="font-semibold"
+                          style={{
+                            fontFamily: 'var(--font-urdu), sans-serif',
+                            fontSize: '0.80rem',
+                            color: 'var(--accent-text)',
+                            whiteSpace: 'nowrap',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {detailed.hijriArUr}
+                        </span>
                       </div>
 
                       {/* Pending Action Pills */}

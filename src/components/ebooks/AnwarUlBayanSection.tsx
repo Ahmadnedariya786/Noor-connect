@@ -409,19 +409,8 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                   </div>
                 </div>
 
-                {/* Urdu & English Titles */}
+                {/* English Title & Coverage */}
                 <div>
-                  <h4
-                    dir="rtl"
-                    className="text-base font-bold text-[var(--accent-text)]"
-                    style={{
-                      fontFamily: 'var(--font-urdu), serif',
-                      lineHeight: 1.9,
-                      marginBottom: '2px',
-                    }}
-                  >
-                    {vol.urduTitle}
-                  </h4>
                   <h5 className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
                     {vol.title}
                   </h5>
@@ -547,8 +536,15 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                 </div>
                 <DialogTitle
                   dir="rtl"
-                  className="text-lg sm:text-xl font-bold text-[var(--accent-text)] leading-normal mt-1"
-                  style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 2.0 }}
+                  className="font-bold text-[var(--accent-text)] mt-1 truncate"
+                  style={{
+                    fontFamily: 'var(--font-urdu), serif',
+                    lineHeight: 2.0,
+                    fontSize: '1.05rem',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
                 >
                   {overviewVolume.urduTitle}
                 </DialogTitle>

@@ -936,14 +936,17 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
           {/* Header Line: Blinking Dot + Prohibited Warning Badge + Live Countdown */}
           <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0 shrink-0">
               <span className="w-2.5 h-2.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
-              <span className="text-[11px] font-black tracking-wider uppercase text-red-200 truncate">
-                PROHIBITED PRAYER TIME • MAKRUH WAQT
+              <span
+                style={{ fontSize: '0.70rem', fontWeight: 800, letterSpacing: '0.03em', whiteSpace: 'nowrap' }}
+                className="uppercase text-red-200"
+              >
+                ● MAKRUH WAQT (PROHIBITED)
               </span>
             </div>
             <div
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold text-red-100 flex items-center gap-1 shrink-0 font-mono tabular-nums"
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold text-red-100 flex items-center gap-1 shrink-0 font-mono tabular-nums whitespace-nowrap"
               style={{
                 background: 'rgba(220, 38, 38, 0.40)',
                 border: '1px solid #DC2626',
@@ -957,22 +960,28 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           {/* Primary Titles: English + Arabic Calligraphy */}
           <div className="flex items-center justify-between gap-3 mb-2 relative z-10">
             <div className="min-w-0 flex-1">
-              <div className="text-base font-extrabold text-white tracking-tight truncate">
+              <div
+                style={{ fontSize: '0.90rem', fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap' }}
+                className="tracking-tight"
+              >
                 {makruhState.activeWindow.title}
               </div>
               <div
-                className="text-xs text-red-300 font-mono tracking-tight mt-0.5"
+                style={{ fontSize: '0.74rem', color: '#FCA5A5' }}
+                className="font-mono tracking-tight mt-0.5"
                 dir="ltr"
               >
                 {makruhState.activeWindow.startFormatted} – {makruhState.activeWindow.endFormatted}
               </div>
             </div>
             <div
-              className="text-xl font-bold text-red-200 shrink-0 text-right"
               style={{
+                fontSize: '1.25rem',
+                flexShrink: 0,
                 fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', serif",
                 textShadow: '0 0 10px rgba(239, 68, 68, 0.6)',
               }}
+              className="font-bold text-red-200 text-right"
             >
               {makruhState.activeWindow.arabicTitle}
             </div>
@@ -997,12 +1006,15 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             </div>
           </div>
 
-          {/* Shariah Guidance & Hadith Reference Badge */}
-          <div className="mt-2.5 pt-2 border-t border-red-500/20 flex items-center justify-between gap-2 text-[10px] text-red-200/80 relative z-10">
-            <span className="truncate">
+          {/* Shariah Guidance & Hadith Reference Badge (Natural 2-Line Wrap, Zero '...' Cutoff) */}
+          <div className="mt-2.5 pt-2 border-t border-red-500/20 flex items-end justify-between gap-2 relative z-10">
+            <span
+              style={{ whiteSpace: 'normal', lineHeight: 1.4, fontSize: '0.70rem', color: '#FECACA', flex: 1 }}
+            >
               {makruhState.activeWindow.ruling}
             </span>
             <span
+              style={{ flexShrink: 0, alignSelf: 'flex-end' }}
               className="px-2 py-0.5 rounded-full bg-red-950/60 border border-red-500/40 font-mono text-[9px] font-bold text-red-300 shrink-0"
             >
               {makruhState.activeWindow.hadithRef}

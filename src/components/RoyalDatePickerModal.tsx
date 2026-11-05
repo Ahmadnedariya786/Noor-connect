@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { Calendar, ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
 import {
@@ -193,295 +194,309 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
   };
 
   if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="royal-date-picker-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99995] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 99995,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        background: 'rgba(0, 0, 0, 0.82)',
+        backdropFilter: 'blur(6px)',
+      }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[430px] rounded-[24px] border border-[var(--border)] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
+        className="w-full rounded-[20px] border border-[var(--border)] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
         style={{
+          width: '100%',
+          maxWidth: '348px',
+          maxHeight: 'calc(100vh - 48px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '14px',
+          borderRadius: '20px',
           background: 'var(--bg-elev)',
-          borderColor: 'var(--border)',
+          border: '1.5px solid var(--border)',
+          boxSizing: 'border-box',
           boxShadow: '0 24px 48px rgba(0, 0, 0, 0.85), inset 0 1px 0 var(--card-sheen)',
-          maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
+          gap: '10px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div
-          className="p-4 sm:p-4.5 border-b border-[var(--border)] relative"
-          style={{
-            background: 'var(--surface)',
-          }}
-        >
-          <div className="flex items-start justify-between gap-3 pr-8">
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                <Calendar className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <span id="royal-date-picker-title">Royal Islamic Date Picker</span>
-              </div>
-              <h2 className="text-base sm:text-lg font-extrabold text-[var(--text-primary)] leading-tight">
-                {detailedDate.gregorianDay}, {detailedDate.gregorian}
-              </h2>
-              <p
-                className="text-xs sm:text-sm font-semibold text-[var(--accent-text)]"
-                style={{
-                  fontFamily: 'var(--font-urdu), sans-serif',
-                  lineHeight: 1.8,
-                }}
-              >
-                {detailedDate.fullHijri}
-              </p>
+        {/* Row 1: Top Header + Close Button */}
+        <div className="flex items-center justify-between gap-2 w-full">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+              <Calendar className="w-3 h-3 text-[var(--accent)] shrink-0" />
+              <span id="royal-date-picker-title" className="truncate">Royal Islamic Date Picker</span>
             </div>
-
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer"
-              aria-label="Close date picker"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <h2 className="text-sm font-extrabold text-[var(--text-primary)] leading-tight truncate mt-0.5">
+              {detailedDate.gregorianDay}, {detailedDate.gregorian}
+            </h2>
           </div>
-
-          {/* Quick Preset Pills Row */}
-          <div className="flex items-center gap-1.5 pt-3 overflow-x-auto no-scrollbar">
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(todayIso)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all shrink-0 cursor-pointer ${
-                activeDate === todayIso
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
-                  : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(yesterdayIso)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all shrink-0 cursor-pointer ${
-                activeDate === yesterdayIso
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
-                  : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              Yesterday
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(twoDaysAgoIso)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all shrink-0 cursor-pointer ${
-                activeDate === twoDaysAgoIso
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
-                  : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              2 Days Ago
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(lastJumuahIso)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all shrink-0 cursor-pointer ${
-                activeDate === lastJumuahIso
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
-                  : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              Last Jumu&apos;ah
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-7 h-7 rounded-full flex items-center justify-center border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer shrink-0"
+            aria-label="Close date picker"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-4.5 space-y-4 overflow-y-auto">
+        {/* Row 2: Hijri Date Pill */}
+        <div
+          className="w-full rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-2 border border-[var(--border)] bg-[var(--surface-2)]"
+          style={{ fontSize: '0.72rem' }}
+        >
+          <span dir="ltr" className="font-semibold text-[var(--accent-text)] whitespace-nowrap">
+            🌙 {detailedDate.hijriEn}
+          </span>
+          <span
+            dir="rtl"
+            className="font-semibold text-[var(--accent-text)] whitespace-nowrap"
+            style={{ fontFamily: 'var(--font-urdu), sans-serif', fontSize: '0.78rem' }}
+          >
+            {detailedDate.hijriArUr}
+          </span>
+        </div>
+
+        {/* Row 3: 4 Preset Pills in strict grid grid-cols-4 gap-1.5 w-full */}
+        <div className="grid grid-cols-4 gap-1.5 w-full">
+          <button
+            type="button"
+            onClick={() => handleSelectPreset(todayIso)}
+            className={`rounded-lg border transition-all cursor-pointer text-center ${
+              activeDate === todayIso
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
+                : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
+            }`}
+            style={{ fontSize: '0.66rem', fontWeight: 700, padding: '5px 2px', whiteSpace: 'nowrap' }}
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectPreset(yesterdayIso)}
+            className={`rounded-lg border transition-all cursor-pointer text-center ${
+              activeDate === yesterdayIso
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
+                : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
+            }`}
+            style={{ fontSize: '0.66rem', fontWeight: 700, padding: '5px 2px', whiteSpace: 'nowrap' }}
+          >
+            Yesterday
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectPreset(twoDaysAgoIso)}
+            className={`rounded-lg border transition-all cursor-pointer text-center ${
+              activeDate === twoDaysAgoIso
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
+                : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
+            }`}
+            style={{ fontSize: '0.66rem', fontWeight: 700, padding: '5px 2px', whiteSpace: 'nowrap' }}
+          >
+            -2 Days
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectPreset(lastJumuahIso)}
+            className={`rounded-lg border transition-all cursor-pointer text-center ${
+              activeDate === lastJumuahIso
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
+                : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
+            }`}
+            style={{ fontSize: '0.66rem', fontWeight: 700, padding: '5px 2px', whiteSpace: 'nowrap' }}
+          >
+            Jumu&apos;ah
+          </button>
+        </div>
+
+        {/* Row 4: Compact Month Bar + 7-Column Calendar Grid */}
+        <div className="w-full space-y-1">
           {/* Month & Year Navigator */}
           <div className="flex items-center justify-between px-1">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold"
+              className="p-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer flex items-center justify-center text-xs"
+              aria-label="Previous month"
             >
-              <ChevronLeft className="w-4 h-4 text-[var(--accent)]" />
-              <span className="hidden sm:inline">Prev</span>
+              <ChevronLeft className="w-3.5 h-3.5 text-[var(--accent)]" />
             </button>
 
-            <div className="text-center">
-              <span className="text-sm font-extrabold text-[var(--text-primary)]">
-                {MONTH_NAMES[viewMonth]} {viewYear}
-              </span>
-            </div>
+            <span className="text-xs font-extrabold text-[var(--text-primary)]">
+              {MONTH_NAMES[viewMonth]} {viewYear}
+            </span>
 
             <button
               type="button"
               onClick={handleNextMonth}
               disabled={isNextMonthDisabled}
-              className="p-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold disabled:opacity-30 disabled:pointer-events-none"
+              className="p-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer flex items-center justify-center text-xs disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="Next month"
             >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight className="w-4 h-4 text-[var(--accent)]" />
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--accent)]" />
             </button>
           </div>
 
-          {/* 7-Column Calendar Grid */}
-          <div className="space-y-1.5">
-            {/* Day of Week Headers */}
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {WEEKDAYS.map((wd, idx) => (
-                <span
-                  key={wd}
-                  className={`text-[10px] font-extrabold tracking-wider ${
-                    idx === 5 ? 'text-[var(--accent-text)]' : 'text-[var(--text-secondary)]'
+          {/* Weekday headers */}
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {WEEKDAYS.map((wd, idx) => (
+              <span
+                key={wd}
+                className={`text-[9px] font-extrabold tracking-wider ${
+                  idx === 5 ? 'text-[var(--accent-text)]' : 'text-[var(--text-secondary)]'
+                }`}
+              >
+                {wd}
+              </span>
+            ))}
+          </div>
+
+          {/* Days Matrix */}
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map((item, idx) => {
+              if (!item.day || !item.dateIso) {
+                return <div key={`empty-${idx}`} style={{ height: '32px' }} className="rounded-lg" />;
+              }
+
+              const isFuture = item.dateIso > todayIso;
+              const isSelected = item.dateIso === activeDate;
+              const isToday = item.dateIso === todayIso;
+              const hasPending = hasPendingQaza(item.dateIso);
+
+              return (
+                <button
+                  key={item.dateIso}
+                  type="button"
+                  disabled={isFuture}
+                  onClick={() => handleDayClick(item.dateIso!)}
+                  className={`rounded-lg flex flex-col items-center justify-center relative transition-all cursor-pointer ${
+                    isFuture
+                      ? 'opacity-25 cursor-not-allowed'
+                      : isSelected
+                      ? 'font-extrabold shadow-md'
+                      : 'hover:bg-[var(--surface-2)]'
                   }`}
+                  style={{
+                    height: '32px',
+                    fontSize: '0.76rem',
+                    ...(isSelected
+                      ? {
+                          background: 'var(--accent)',
+                          color: 'var(--on-accent)',
+                          boxShadow: '0 0 10px var(--accent-glow)',
+                        }
+                      : {
+                          background: isToday ? 'var(--surface-2)' : 'transparent',
+                          color: 'var(--text-primary)',
+                          border: isToday ? '1px solid var(--accent)' : '1px solid transparent',
+                        }),
+                  }}
                 >
-                  {wd}
-                </span>
-              ))}
-            </div>
-
-            {/* Days Matrix */}
-            <div className="grid grid-cols-7 gap-1">
-              {calendarDays.map((item, idx) => {
-                if (!item.day || !item.dateIso) {
-                  return <div key={`empty-${idx}`} className="h-9 sm:h-10 rounded-xl" />;
-                }
-
-                const isFuture = item.dateIso > todayIso;
-                const isSelected = item.dateIso === activeDate;
-                const isToday = item.dateIso === todayIso;
-                const hasPending = hasPendingQaza(item.dateIso);
-
-                return (
-                  <button
-                    key={item.dateIso}
-                    type="button"
-                    disabled={isFuture}
-                    onClick={() => handleDayClick(item.dateIso!)}
-                    className={`h-9 sm:h-10 rounded-xl flex flex-col items-center justify-center relative transition-all cursor-pointer ${
-                      isFuture
-                        ? 'opacity-25 cursor-not-allowed'
-                        : isSelected
-                        ? 'font-extrabold shadow-md'
-                        : 'hover:bg-[var(--surface-2)]'
-                    }`}
-                    style={
-                      isSelected
-                        ? {
-                            background: 'var(--accent)',
-                            color: 'var(--on-accent)',
-                            boxShadow: '0 0 12px var(--accent-glow)',
-                          }
-                        : {
-                            background: isToday ? 'var(--surface-2)' : 'transparent',
-                            color: 'var(--text-primary)',
-                            border: isToday ? '1px solid var(--accent)' : '1px solid transparent',
-                          }
-                    }
-                  >
-                    <span className="text-xs font-bold leading-none">{item.day}</span>
-                    {hasPending && (
-                      <span
-                        className="w-1.5 h-1.5 rounded-full qaza-dot-blink inline-block mt-0.5"
-                        style={{
-                          background: isSelected ? 'var(--on-accent)' : 'var(--warning, #f59e0b)',
-                        }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Direct 6-Prayer Qaza Selector Inside Modal */}
-          <div
-            className="p-3 sm:p-3.5 rounded-2xl border border-[var(--border)] space-y-2.5"
-            style={{
-              background: 'var(--surface-2)',
-            }}
-          >
-            <div className="flex items-center justify-between gap-1">
-              <div>
-                <p className="text-xs font-bold text-[var(--text-primary)]">
-                  Missed Prayers for {detailedDate.gregorian}
-                </p>
-                <p className="text-[10px] text-[var(--text-secondary)]">
-                  Tap to cycle: [ None → ● Pending → ✓ Completed ]
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-              {PRAYERS.map((p) => {
-                const status = currentRecord?.prayers[p.name] || 'none';
-                const isPending = status === 'pending';
-                const isCompleted = status === 'completed';
-
-                return (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => handleTogglePrayer(p.name)}
-                    className={`p-1.5 rounded-xl border flex flex-col items-center justify-center text-center transition-all cursor-pointer active:scale-95 ${
-                      isPending
-                        ? 'qaza-pending-blink bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent-text)]'
-                        : isCompleted
-                        ? 'bg-[var(--success)]/10 border-[var(--success)] text-[var(--success)]'
-                        : 'bg-[var(--surface)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                    }`}
-                  >
+                  <span className="font-bold leading-none">{item.day}</span>
+                  {hasPending && (
                     <span
-                      className="text-xs font-arabic"
-                      style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 1.4 }}
-                    >
-                      {p.arabicLabel}
-                    </span>
-                    <span className="text-[10px] font-bold capitalize mt-0.5">{p.label}</span>
-                    <span className="text-[8px] font-mono mt-0.5 font-bold">
-                      {isPending ? '● PENDING' : isCompleted ? '✓ PRAYED' : '—'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                      className="w-1.5 h-1.5 rounded-full qaza-dot-blink inline-block mt-0.5"
+                      style={{
+                        background: isSelected ? 'var(--on-accent)' : 'var(--warning, #f59e0b)',
+                      }}
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Modal Footer with Done Button */}
+        {/* Row 5: All 6 Prayers (Fajr to Witr) Visible Without Scrolling! */}
         <div
-          className="p-3 sm:p-4 border-t border-[var(--border)] flex items-center justify-between gap-3"
-          style={{ background: 'var(--surface)' }}
+          className="w-full rounded-xl border border-[var(--border)] p-2 space-y-1.5"
+          style={{ background: 'var(--surface-2)' }}
         >
-          <div className="text-[11px] text-[var(--text-secondary)] truncate">
-            Selected: <span className="font-bold text-[var(--text-primary)]">{activeDate}</span>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-[var(--text-primary)]">
+              Missed Prayers: {activeDate}
+            </span>
+            <span className="text-[9px] text-[var(--text-secondary)]">
+              Tap: None → ● Pending → ✓ Done
+            </span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleSaveAndDone}
-            className="px-4 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
-            style={{
-              background: 'var(--accent)',
-              color: 'var(--on-accent)',
-              borderColor: 'var(--accent)',
-              boxShadow: '0 2px 10px var(--accent-glow)',
-            }}
-          >
-            <Check className="w-3.5 h-3.5" />
-            <span>✓ Done & Save</span>
-          </button>
+          <div className="grid grid-cols-3 gap-1.5">
+            {PRAYERS.map((p) => {
+              const status = currentRecord?.prayers[p.name] || 'none';
+              const isPending = status === 'pending';
+              const isCompleted = status === 'completed';
+
+              return (
+                <button
+                  key={p.name}
+                  type="button"
+                  onClick={() => handleTogglePrayer(p.name)}
+                  className={`rounded-lg border flex flex-col items-center justify-center text-center transition-all cursor-pointer active:scale-95 ${
+                    isPending
+                      ? 'qaza-pending-blink bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent-text)]'
+                      : isCompleted
+                      ? 'bg-[var(--success)]/10 border-[var(--success)] text-[var(--success)]'
+                      : 'bg-[var(--surface)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                  style={{ padding: '6px 4px' }}
+                >
+                  <span
+                    className="text-[11px]"
+                    style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 1.2 }}
+                  >
+                    {p.arabicLabel}
+                  </span>
+                  <span className="text-[10px] font-bold capitalize mt-0.5">{p.label}</span>
+                  <span className="text-[8px] font-mono mt-0.5 font-bold">
+                    {isPending ? '● PENDING' : isCompleted ? '✓ DONE' : '—'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Row 6: Bottom Action Button */}
+        <button
+          type="button"
+          onClick={handleSaveAndDone}
+          className="w-full border flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+          style={{
+            background: 'var(--accent)',
+            color: 'var(--on-accent)',
+            borderColor: 'var(--accent)',
+            boxShadow: '0 2px 10px var(--accent-glow)',
+            padding: '9px',
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            borderRadius: '12px',
+          }}
+        >
+          <Check className="w-4 h-4" />
+          <span>✓ Done & Save Qaza</span>
+        </button>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default RoyalDatePickerModal;

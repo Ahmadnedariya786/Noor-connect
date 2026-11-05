@@ -24,6 +24,8 @@ import { hasHomeEntranceCompleted } from "@/lib/home-entrance";
 import { PrayerTimesSection } from "@/components/PrayerTimesSection";
 import { getDayWorshipLog, formatDateKey } from "@/lib/worship-log";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { triggerInAppPrayerAlert } from "@/components/PrayerReminderBanner";
+import { parseTimeToSeconds } from "@/lib/makruh-times";
 
 // Lazy load widget components to reduce initial bundle size
 const EnhancedDailyAyah = lazy(() => import("@/components/EnhancedDailyAyah"));
@@ -132,6 +134,62 @@ function PremiumDashboardInner({
       window.removeEventListener('noor-qaza-updated', handleWorshipSync);
     };
   }, []);
+
+  // ── Auto-Trigger Royal Prayer Reminder Banner at "DUE NOW" (Part 2) ──
+  useEffect(() => {
+    if (!prayers || prayers.length === 0) return;
+
+    const FARD_PRAYERS = ['fajr', 'dhuhr', 'jummah', 'asr', 'maghrib', 'isha'];
+
+    const checkDueNow = () => {
+      const now = new Date();
+      const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      for (const p of prayers) {
+        const rawName = (p.originalName || p.name || '').trim();
+        const lower = rawName.toLowerCase();
+        if (!FARD_PRAYERS.includes(lower)) continue;
+
+        const prayerSec = parseTimeToSeconds(p.date || p.time);
+        if (prayerSec === null) continue;
+
+        // Check if current time is within the first 60 seconds of this prayer entry
+        if (nowSec >= prayerSec && nowSec < prayerSec + 60) {
+          const canonicalName = lower === 'jummah' ? 'Dhuhr' : rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+          const triggerKey = `${todayIso}:${canonicalName}`;
+
+          const lastTriggeredSession = sessionStorage.getItem('noor_last_auto_triggered_prayer');
+          const lastTriggeredLocal = localStorage.getItem('noor_last_auto_triggered_prayer');
+
+          if (lastTriggeredSession !== triggerKey && lastTriggeredLocal !== triggerKey) {
+            try {
+              sessionStorage.setItem('noor_last_auto_triggered_prayer', triggerKey);
+              localStorage.setItem('noor_last_auto_triggered_prayer', triggerKey);
+            } catch {
+              // Safe storage fallback
+            }
+
+            // Immediately auto-open PrayerReminderBanner with 12h time
+            const time12h = p.time || now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            triggerInAppPrayerAlert(canonicalName, time12h);
+
+            // Native Android notification trigger if on Android bridge
+            try {
+              (window as any).AndroidBridge?.triggerTestPrayerNotification?.(canonicalName, time12h);
+            } catch {
+              // Safe bridge fallback
+            }
+            break;
+          }
+        }
+      }
+    };
+
+    checkDueNow();
+    const intervalId = setInterval(checkDueNow, 1000);
+    return () => clearInterval(intervalId);
+  }, [prayers]);
 
   const qiblaBearing = React.useMemo(() => {
     if (location?.latitude && location?.longitude) {

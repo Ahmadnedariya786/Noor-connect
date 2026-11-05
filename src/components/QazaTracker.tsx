@@ -351,23 +351,43 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                         </span>
                       </div>
 
-                      {/* Line 2: Full unclipped Hijri date in English and Arabic/Urdu */}
+                      {/* Line 2: Balanced Hijri + Urdu date row */}
                       <div
-                        className="mt-0.5 mb-2 w-full"
-                        style={{ whiteSpace: 'normal', overflow: 'visible' }}
+                        className="w-full flex items-center justify-between gap-2 flex-wrap"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                          marginTop: '2px',
+                          marginBottom: '8px',
+                        }}
                       >
-                        <p
-                          className="font-semibold text-[var(--accent-text)]"
+                        <span
+                          dir="ltr"
+                          className="font-semibold"
                           style={{
-                            fontSize: '0.74rem',
-                            lineHeight: 1.7,
-                            fontFamily: 'var(--font-urdu), sans-serif',
-                            whiteSpace: 'normal',
-                            overflow: 'visible',
+                            fontSize: '0.72rem',
+                            color: 'var(--accent-text)',
+                            whiteSpace: 'nowrap',
                           }}
                         >
-                          {detailed.fullHijri}
-                        </p>
+                          🌙 {detailed.hijriEn}
+                        </span>
+                        <span
+                          dir="rtl"
+                          className="font-semibold"
+                          style={{
+                            fontFamily: 'var(--font-urdu), sans-serif',
+                            fontSize: '0.80rem',
+                            color: 'var(--accent-text)',
+                            whiteSpace: 'nowrap',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {detailed.hijriArUr}
+                        </span>
                       </div>
 
                       {/* Pending Prayer Action Pills */}

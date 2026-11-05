@@ -116,8 +116,18 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
         {/* Real-Time Makruh Prohibited Waqt Blinking Pill Indicator */}
         {makruhState.isMakruhNow && makruhState.activeWindow && (
           <div
-            className="mt-3 mx-auto px-3.5 py-1.5 rounded-full makruh-red-blink-banner flex items-center justify-between gap-2 max-w-[340px] w-[92%] text-xs font-bold select-none transition-all duration-300"
+            className="mt-3 mx-auto rounded-full makruh-red-blink-banner select-none transition-all duration-300"
             style={{
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              padding: '6px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              width: '100%',
+              maxWidth: '340px',
+              boxSizing: 'border-box',
               border: '1px solid #EF4444',
               color: '#FEE2E2',
               background: 'rgba(239, 68, 68, 0.20)',
@@ -125,13 +135,17 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
             }}
             role="alert"
           >
-            <div className="flex items-center gap-1.5 truncate">
+            <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
               <span className="w-2 h-2 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
-              <span className="tracking-wide uppercase text-[11px] truncate text-red-100 font-extrabold">
-                MAKRUH WAQT • {makruhState.activeWindow.shortLabel}
+              <span className="tracking-wide uppercase text-red-100 font-extrabold whitespace-nowrap">
+                {makruhState.activeWindow.id === 'tulu'
+                  ? 'MAKRUH • Sunrise'
+                  : makruhState.activeWindow.id === 'zawal'
+                  ? 'MAKRUH • Zawal'
+                  : 'MAKRUH • Sunset'}
               </span>
             </div>
-            <span className="font-mono tabular-nums text-[11px] shrink-0 text-red-200 font-bold pl-2" dir="ltr">
+            <span className="font-mono tabular-nums shrink-0 text-red-200 font-bold whitespace-nowrap" dir="ltr">
               Ends in {makruhState.remainingFormatted}
             </span>
           </div>
