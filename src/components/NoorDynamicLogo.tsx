@@ -1091,8 +1091,8 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
   };
 
   return (
-    <div className={`space-y-2 select-none ${className}`}>
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+    <div className={`space-y-2 select-none w-full ${className}`}>
+      <div className="grid grid-cols-5 gap-1 sm:gap-1.5 w-full">
         {NOOR_LOGO_EDITIONS.map((ed) => {
           const isCurrent = selected === ed.id;
           return (
@@ -1100,47 +1100,59 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
               key={ed.id}
               type="button"
               onClick={() => handlePick(ed.id)}
-              className={`group relative flex flex-col items-center justify-between p-1.5 sm:p-2 rounded-xl border transition-all duration-200 select-none min-w-0 overflow-hidden ${
+              className={`group relative flex flex-col items-center justify-between rounded-xl border transition-all duration-200 select-none min-w-0 overflow-hidden ${
                 isCurrent
                   ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40 bg-[var(--accent-soft)] shadow-md scale-[1.02]'
                   : 'border-[var(--border)] hover:border-[var(--accent)]/40 bg-[var(--surface-2)]/60 hover:bg-[var(--surface-2)] opacity-85 hover:opacity-100'
               }`}
+              style={{
+                minWidth: 0,
+                maxWidth: '100%',
+                overflow: 'hidden',
+                padding: '4px 2px',
+                boxSizing: 'border-box',
+              }}
               title={`${ed.name} (Tap to set as App & Launcher Icon)`}
               aria-label={`Select ${ed.name}`}
             >
               {/* Active Checkmark Badge */}
               {isCurrent && (
                 <div
-                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center shadow"
+                  className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center shadow"
                   style={{ background: 'var(--accent)', color: 'var(--on-accent, #000)' }}
                 >
-                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               )}
 
-              <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center my-0.5 pointer-events-none shrink-0">
-                <NoorDynamicLogo edition={ed.id} size="sm" animated={false} />
+              <div
+                className="flex items-center justify-center pointer-events-none shrink-0"
+                style={{ width: '30px', height: '30px', maxWidth: '100%', overflow: 'hidden', margin: '0 auto' }}
+              >
+                <NoorDynamicLogo edition={ed.id} customSize={26} animated={false} />
               </div>
 
               <span
-                className="text-center font-bold mt-1 w-full truncate"
                 style={{
                   color: isCurrent ? 'var(--accent-text)' : 'var(--text-secondary)',
-                  fontSize: '0.56rem',
+                  fontSize: '0.52rem',
                   minWidth: 0,
+                  maxWidth: '100%',
                   lineHeight: 1.15,
                   fontWeight: 700,
+                  display: 'block',
                   textAlign: 'center',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                   width: '100%',
+                  boxSizing: 'border-box',
                   paddingInline: '1px',
                 }}
               >
-                {ed.shortLabel || ed.shortName}
+                {ed.shortLabel ? ed.shortLabel.replace('\n', ' ') : ed.shortName}
               </span>
             </button>
           );

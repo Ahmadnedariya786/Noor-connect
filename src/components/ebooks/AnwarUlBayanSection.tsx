@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   FileCheck,
@@ -13,6 +14,13 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
   ANWAR_UL_BAYAN_VOLUMES,
@@ -30,12 +38,14 @@ interface AnwarUlBayanSectionProps {
 }
 
 export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpenReader }) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [linkedStatus, setLinkedStatus] = useState<Record<string, boolean>>({});
   const [metadataMap, setMetadataMap] = useState<
     Record<string, { name: string; size: number; updatedAt: number } | null>
   >({});
   const [activeLinkingVolId, setActiveLinkingVolId] = useState<string | null>(null);
+  const [overviewVolume, setOverviewVolume] = useState<AnwarUlBayanVolume | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshStatus = async () => {
@@ -66,26 +76,30 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
   }, []);
 
   const handleReadVolume = async (vol: AnwarUlBayanVolume) => {
-    try {
-      const source = await getVolumeResolvedSource(vol);
-      onOpenReader({
-        url: source.url,
-        title: vol.title,
-        localKey: source.localKey,
-      });
-      toast({
-        title: `Opening ${vol.title}`,
-        description: source.isLocal
-          ? 'Reading from 100% offline local PDF storage.'
-          : 'Streaming from online Archive.org collection.',
-      });
-    } catch (err) {
-      console.warn('Failed to resolve volume source:', err);
-      toast({
-        title: 'Error Opening Book',
-        description: 'Could not open the requested volume.',
-        variant: 'destructive',
-      });
+    const isLinked = !!linkedStatus[vol.id];
+    if (isLinked) {
+      try {
+        const source = await getVolumeResolvedSource(vol);
+        onOpenReader({
+          url: source.url,
+          title: vol.title,
+          localKey: source.localKey,
+        });
+        toast({
+          title: `Opening ${vol.title}`,
+          description: 'Reading from 100% offline local PDF storage.',
+        });
+      } catch (err) {
+        console.warn('Failed to resolve volume source:', err);
+        toast({
+          title: 'Error Opening Book',
+          description: 'Could not open the requested volume.',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      // Unlinked volume: show the rich Volume Overview & Local PDF Setup Dialog
+      setOverviewVolume(vol);
     }
   };
 
@@ -124,8 +138,20 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
 
       toast({
         title: '✓ Local PDF Linked Successfully',
-        description: `${vol.title} is now permanently available 100% offline!`,
+        description: `${vol.title} is now permanently available 100% offline! Opening reader...`,
       });
+
+      // Auto-launch NativePdfViewer upon successful linking
+      try {
+        const source = await getVolumeResolvedSource(vol);
+        onOpenReader({
+          url: source.url,
+          title: vol.title,
+          localKey: source.localKey,
+        });
+      } catch (openErr) {
+        console.warn('Auto-launch reader failed:', openErr);
+      }
     } catch (err) {
       console.warn('Failed to link local file:', err);
       toast({
@@ -325,7 +351,10 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleUnlinkVolume(vol)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnlinkVolume(vol);
+                    }}
                     title="Unlink local file"
                     className="h-9 px-2.5 text-[var(--text-secondary)] hover:text-[var(--danger)] cursor-pointer"
                   >
@@ -335,7 +364,10 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleTriggerLinkFile(vol.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTriggerLinkFile(vol.id);
+                    }}
                     title="Link local PDF file from device storage"
                     className="h-9 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)]"
                   >
@@ -348,6 +380,122 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
           );
         })}
       </div>
+
+      {/* In-App Volume Overview & Local PDF Setup Sheet */}
+      <Dialog open={!!overviewVolume} onOpenChange={(open) => !open && setOverviewVolume(null)}>
+        <DialogContent className="max-w-md w-[94vw] p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-2xl max-h-[88vh] overflow-y-auto">
+          {overviewVolume && (
+            <div className="space-y-4">
+              <DialogHeader className="text-left space-y-1.5 pb-2 border-b border-[var(--border)]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]">
+                    Part {overviewVolume.volNumber} • {overviewVolume.juzCoverage}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] font-mono border-[var(--border)] text-[var(--text-secondary)]">
+                    ~{overviewVolume.estimatedSize}
+                  </Badge>
+                </div>
+                <DialogTitle
+                  dir="rtl"
+                  className="text-xl font-bold text-[var(--accent-text)] leading-normal mt-1"
+                  style={{ fontFamily: 'var(--font-urdu), serif' }}
+                >
+                  {overviewVolume.urduTitle}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-[var(--text-secondary)] font-medium">
+                  {overviewVolume.title} — {overviewVolume.coverage}
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* Offline Storage Recommendation Box */}
+              <div
+                className="p-3.5 rounded-xl border border-[var(--accent)] space-y-2"
+                style={{ background: 'var(--accent-soft)' }}
+              >
+                <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-text)]">
+                  <HardDrive className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                  <span>100% Offline Recommendation</span>
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  Tafseer Anwar-ul-Bayan volumes are extensive ~100MB to 160MB books. For zero latency, zero streaming buffering, and 100% private offline reading, link your local PDF file directly into browser IndexedDB storage.
+                </p>
+                <Button
+                  onClick={() => {
+                    const id = overviewVolume.id;
+                    setOverviewVolume(null);
+                    handleTriggerLinkFile(id);
+                  }}
+                  className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md"
+                >
+                  <Upload className="w-4 h-4" />
+                  📁 Select & Link Local PDF File
+                </Button>
+              </div>
+
+              {/* Online Read & Archive Options */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block">
+                  Alternative Reading Options
+                </span>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const vol = overviewVolume;
+                      setOverviewVolume(null);
+                      onOpenReader({
+                        url: vol.onlinePdfUrl,
+                        title: vol.title,
+                      });
+                    }}
+                    className="w-full justify-start text-xs font-semibold gap-2 border-[var(--border)] hover:border-[var(--accent)]"
+                  >
+                    <BookOpen className="w-4 h-4 text-[var(--accent)]" />
+                    <span>Stream Online via Archive.org</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => window.open(overviewVolume.onlinePdfUrl, '_blank', 'noopener,noreferrer')}
+                    className="w-full justify-start text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] gap-2"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Download Volume PDF from Archive.org</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Surahs Included in this Volume */}
+              <div className="space-y-2 pt-2 border-t border-[var(--border)]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Surahs Covered in this Volume:
+                  </span>
+                  <span className="text-[10px] text-[var(--text-secondary)]">
+                    Tap to open in Tafsir
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                  {overviewVolume.surahs.map((s) => (
+                    <button
+                      key={s.number}
+                      type="button"
+                      onClick={() => {
+                        setOverviewVolume(null);
+                        navigate(`/tafsir?surah=${s.number}`);
+                      }}
+                      className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                      title={`Open Surah ${s.name} in interactive Tafsir`}
+                    >
+                      <span className="font-bold">#{s.number}</span>
+                      <span>{s.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

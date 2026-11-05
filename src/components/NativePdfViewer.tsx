@@ -33,17 +33,47 @@ interface NativePdfViewerProps {
 
 type ViewerMode = 'loading' | 'pdfjs' | 'iframe' | 'error';
 
+// Top-level helpers to avoid any Temporal Dead Zone (TDZ) or minification ordering issues
+function getOptimalScale(baseScale: number): number {
+  const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 1) : 1;
+  return baseScale / dpr;
+}
+
+function getBetterViewerUrl(pdfUrl: string): string {
+  // codeql[js/incomplete-url-substring-sanitization] "Checked via parsed hostname"
+  if (isArchiveOrgUrl(pdfUrl)) {
+    try {
+      const parsed = new URL(pdfUrl);
+      // Try to get the direct PDF download URL from archive.org
+      const downloadMatch = parsed.pathname.match(/\/download\/([^/]+)\/.*\.pdf/);
+      if (downloadMatch?.[1]) {
+        return parsed.href;
+      }
+      
+      // If it's a details page, try to construct the download URL
+      const detailsMatch = parsed.pathname.match(/\/details\/([^/]+)/);
+      if (detailsMatch?.[1]) {
+        const item = encodeURIComponent(detailsMatch[1]);
+        return `https://archive.org/download/${item}/${item}.pdf`;
+      }
+      
+      // If it's already a download URL, keep it as is
+      if (parsed.pathname.startsWith('/download/')) {
+        return parsed.href;
+      }
+    } catch {
+      // Fallback to sanitized URL
+    }
+  }
+  return sanitizeUrl(pdfUrl) || pdfUrl;
+}
+
 // Sub-component for rendering individual pages in vertical mode
 function PdfPage({ pdf, pageNumber, scale }: { pdf: any; pageNumber: number; scale: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   const renderTaskRef = useRef<any>(null);
-
-  const getOptimalScale = (baseScale: number) => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1);
-    return baseScale / dpr;
-  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -360,7 +390,10 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   if (viewerMode === 'loading') {
     return (
       <div className="fixed inset-0 bg-background z-[1000] flex flex-col">
-        <header className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top">
+        <header
+          className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top"
+          style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 12px), 40px)' }}
+        >
           <Button size="icon" variant="ghost" onClick={onClose}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -380,7 +413,10 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
   if (viewerMode === 'error') {
     return (
       <div className="fixed inset-0 bg-background z-[1000] flex flex-col">
-        <header className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top">
+        <header
+          className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top"
+          style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 12px), 40px)' }}
+        >
           <Button size="icon" variant="ghost" onClick={onClose}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -411,36 +447,6 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
     );
   }
 
-  // Helper to handle archive.org URLs and other external links
-  const getBetterViewerUrl = (pdfUrl: string): string => {
-    // codeql[js/incomplete-url-substring-sanitization] "Checked via parsed hostname"
-    if (isArchiveOrgUrl(pdfUrl)) {
-      try {
-        const parsed = new URL(pdfUrl);
-        // Try to get the direct PDF download URL from archive.org
-        const downloadMatch = parsed.pathname.match(/\/download\/([^/]+)\/.*\.pdf/);
-        if (downloadMatch?.[1]) {
-          return parsed.href;
-        }
-        
-        // If it's a details page, try to construct the download URL
-        const detailsMatch = parsed.pathname.match(/\/details\/([^/]+)/);
-        if (detailsMatch?.[1]) {
-          const item = encodeURIComponent(detailsMatch[1]);
-          return `https://archive.org/download/${item}/${item}.pdf`;
-        }
-        
-        // If it's already a download URL, keep it as is
-        if (parsed.pathname.startsWith('/download/')) {
-          return parsed.href;
-        }
-      } catch {
-        // Fallback to sanitized URL
-      }
-    }
-    return sanitizeUrl(pdfUrl) || pdfUrl;
-  };
-
   // External viewer mode (fallback for CORS-restricted PDFs)
   if (viewerMode === 'iframe') {
     const rawViewerUrl = getBetterViewerUrl(url);
@@ -449,7 +455,10 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
     return (
       <div className="fixed inset-0 bg-background z-[1000] flex flex-col">
         {/* Header */}
-        <header className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top">
+        <header
+          className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top"
+          style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 12px), 40px)' }}
+        >
           <Button size="icon" variant="ghost" onClick={onClose}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -490,7 +499,10 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
     <div className="fixed inset-0 bg-background z-[1000] flex flex-col animate-in fade-in slide-in-from-bottom-5 duration-300">
       {/* Header */}
       {!focusMode && (
-        <header className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top">
+        <header
+          className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border shrink-0 safe-area-top"
+          style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 12px), 40px)' }}
+        >
           <Button size="icon" variant="ghost" onClick={onClose}>
             <ArrowLeft className="w-5 h-5" />
           </Button>

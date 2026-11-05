@@ -177,7 +177,8 @@ function hydrateStore(): void {
               msg.includes('controlled verification error') ||
               msg.includes('diagnostic test') ||
               msg.includes('app.opensettings') ||
-              msg.includes('opensettings() is not implemented')
+              msg.includes('opensettings() is not implemented') ||
+              (msg.includes('cannot access') && msg.includes('before initialization'))
             ) {
               return false;
             }

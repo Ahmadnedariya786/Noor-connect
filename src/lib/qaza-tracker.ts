@@ -1,6 +1,7 @@
 import { getMenstrualModeData } from './haidh-tracker';
 import { type PrayerName } from './salah-tracker';
 import { safeSetLocalStorageItem } from './cache-manager';
+import { islamicCalendarService } from './islamic-calendar-service';
 
 export type { PrayerName };
 
@@ -257,6 +258,12 @@ export const getTodayQazaCompleted = (): number => {
 
 // ── Date-Wise Qaza Planner & Log ─────────────────────────────
 
+export const ISLAMIC_MONTH_NAMES_EN = [
+  'Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
+  'Jumada al-Ula', 'Jumada al-Akhirah', 'Rajab', "Sha'ban",
+  'Ramadan', 'Shawwal', "Dhu al-Qi'dah", "Dhu al-Hijjah",
+] as const;
+
 export const formatHijriDate = (dateStr: string): string => {
   try {
     const parts = dateStr.split('-');
@@ -266,11 +273,52 @@ export const formatHijriDate = (dateStr: string): string => {
       const day = parseInt(parts[2], 10);
       const d = new Date(year, month, day);
       const gregorian = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      const hijri = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }).format(d);
+
+      let hijriDay = 1;
+      let hijriMonth = 1;
+      let hijriYear = 1448;
+      let parsed = false;
+
+      try {
+        const intl = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', {
+          day: 'numeric',
+          month: 'numeric',
+          year: 'numeric',
+        });
+        const p = intl.formatToParts(d);
+        for (const part of p) {
+          if (part.type === 'day') hijriDay = parseInt(part.value, 10);
+          else if (part.type === 'month') hijriMonth = parseInt(part.value, 10);
+          else if (part.type === 'year') {
+            const cleanYear = parseInt(part.value.replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(cleanYear) && cleanYear >= 1300 && cleanYear <= 1600) {
+              hijriYear = cleanYear;
+            }
+          }
+        }
+        if (hijriDay >= 1 && hijriDay <= 30 && hijriMonth >= 1 && hijriMonth <= 12 && hijriYear >= 1300 && hijriYear <= 1600) {
+          parsed = true;
+        }
+      } catch {
+        parsed = false;
+      }
+
+      if (!parsed) {
+        try {
+          const calc = islamicCalendarService.calculateIslamicDate(d);
+          hijriDay = parseInt(calc.hijri.day, 10) || 1;
+          hijriMonth = calc.hijri.month.number || 1;
+          hijriYear = parseInt(calc.hijri.year, 10) || 1448;
+        } catch {
+          hijriDay = day;
+          hijriMonth = 5;
+          hijriYear = 1448;
+        }
+      }
+
+      const mIdx = Math.max(0, Math.min(11, hijriMonth - 1));
+      const mName = ISLAMIC_MONTH_NAMES_EN[mIdx];
+      const hijri = `${hijriDay} ${mName} ${hijriYear} AH`;
       return `${gregorian} • ${hijri}`;
     }
   } catch {
@@ -285,7 +333,30 @@ export const getDateWiseQazaList = (): DateWiseQazaRecord[] => {
     if (!raw) return [];
     const list: DateWiseQazaRecord[] = JSON.parse(raw);
     if (!Array.isArray(list)) return [];
-    return list.sort((a, b) => b.date.localeCompare(a.date));
+
+    let hasMigration = false;
+    const migrated = list.map((record) => {
+      // Auto-migrate any historical records with broken Hijri date (e.g. "BC" or Gregorian month fallbacks)
+      if (
+        record.hijriDate &&
+        (record.hijriDate.includes('BC') ||
+          /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b.*•.*\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(record.hijriDate) ||
+          record.hijriDate.includes('undefined'))
+      ) {
+        hasMigration = true;
+        return {
+          ...record,
+          hijriDate: formatHijriDate(record.date),
+        };
+      }
+      return record;
+    });
+
+    if (hasMigration) {
+      saveDateWiseQazaList(migrated);
+    }
+
+    return migrated.sort((a, b) => b.date.localeCompare(a.date));
   } catch {
     return [];
   }
