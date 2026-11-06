@@ -306,7 +306,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   locationLabel,
 }) => {
   const navigate = useNavigate();
-  const { t, ui, isRTL, language } = useLanguage();
+  const { ui, isRTL, language } = useLanguage();
   const location = useLocationState();
   const { timeFormat } = useSettings();
 
@@ -377,6 +377,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   }, [selectedDateOffset, viewedDate, offsetSchedule, ui]);
 
   const displayedPrayers = useMemo(() => {
+    void refreshKey;
     if (selectedDateOffset === 0 && prayers.length > 0) return prayers;
     if (!offsetSchedule) return prayers;
     const t = offsetSchedule.timings;
@@ -526,9 +527,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   }, [prayers]);
 
   const suhoorTime = suhoorIftaar?.suhoorTime || fajrPrayer?.time || '--:--';
-  const suhoorLabel = 'Suhoor';
   const iftaarTime = suhoorIftaar?.iftaarTime || maghribPrayer?.time || '--:--';
-  const iftaarLabel = 'Iftaar';
 
   // Arabic calligraphy vocalized waqt mapping (Part 2)
   const WAQT_CALLIGRAPHY_MAP: Record<string, string> = {
@@ -1367,20 +1366,29 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
                       {isActive ? (
                         <span
-                          className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap animate-pulse"
+                          className="font-bold font-mono px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap animate-pulse"
                           style={{
                             background: 'var(--accent)',
                             color: 'var(--on-accent)',
                             boxShadow: '0 0 8px var(--accent-glow)',
+                            fontSize: '0.68rem',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
                           }}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                          <span>● ACTIVE • {nafl.remainingFormatted} left</span>
+                          <span>● Active • {nafl.remainingFormatted}</span>
                         </span>
                       ) : (
                         <span
-                          className="text-[10px] font-medium truncate max-w-[170px] text-right"
-                          style={{ color: 'var(--text-secondary)', opacity: 0.85 }}
+                          className="font-medium shrink-0 text-right whitespace-nowrap"
+                          style={{
+                            color: 'var(--text-secondary)',
+                            opacity: 0.9,
+                            fontSize: '0.68rem',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
                           title={nafl.virtue}
                         >
                           {nafl.conciseVirtue}

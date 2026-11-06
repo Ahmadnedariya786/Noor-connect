@@ -38,6 +38,143 @@ export function setMushafLineFormat(format: MushafLineFormat): void {
   }
 }
 
+export interface MushafLineToken {
+  type: 'word' | 'medallion' | 'header';
+  word?: InteractiveWord;
+  surahNumber: number;
+  verseNumber: number;
+  key: string;
+  lineNum?: number;
+}
+
+export function getStrippedArabicCharLength(text: string): number {
+  if (!text) return 0;
+  return text.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '').length;
+}
+
+export function getTokenVisualUnits(token: MushafLineToken, format: MushafLineFormat = 15): number {
+  if (token.type === 'medallion') {
+    return 4; // Ayah End Medallion: 4 visual units
+  }
+  const text = (format === 13 ? (token.word?.text_indopak || token.word?.text_uthmani) : token.word?.text_uthmani) || '';
+  const stripped = text.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '');
+  return Math.max(2, stripped.length + 1); // +1 accounts for space
+}
+
+export function getMaxLineUnits(format: MushafLineFormat): number {
+  if (format === 13) return 35;
+  if (format === 7) return 18;
+  return 37; // 15-line mode
+}
+
+export interface TokenItem {
+  tokens: MushafLineToken[];
+  units: number;
+}
+
+export function groupTokensIntoItems(tokens: MushafLineToken[], format: MushafLineFormat): TokenItem[] {
+  const items: TokenItem[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const token = tokens[i];
+    if (token.type === 'word') {
+      const itemTokens: MushafLineToken[] = [token];
+      let itemUnits = getTokenVisualUnits(token, format);
+      // If the next token is an Ayah medallion, attach it to this word so it never gets orphaned
+      if (i + 1 < tokens.length && tokens[i + 1].type === 'medallion') {
+        itemTokens.push(tokens[i + 1]);
+        itemUnits += getTokenVisualUnits(tokens[i + 1], format);
+        i++;
+      }
+      items.push({ tokens: itemTokens, units: itemUnits });
+    } else if (token.type === 'medallion') {
+      if (items.length > 0) {
+        items[items.length - 1].tokens.push(token);
+        items[items.length - 1].units += getTokenVisualUnits(token, format);
+      } else {
+        items.push({ tokens: [token], units: getTokenVisualUnits(token, format) });
+      }
+    }
+    i++;
+  }
+  return items;
+}
+
+export function packSurahTokensWithBudget(
+  tokens: MushafLineToken[],
+  format: MushafLineFormat
+): MushafLineToken[][] {
+  if (tokens.length === 0) return [];
+  const maxUnits = getMaxLineUnits(format);
+  const items = groupTokensIntoItems(tokens, format);
+
+  if (items.length === 0) return [];
+
+  // Greedy line packing subject to strict maxUnits
+  const lineItems: TokenItem[][] = [];
+  let curLine: TokenItem[] = [];
+  let curUnits = 0;
+
+  for (const item of items) {
+    if (curLine.length > 0 && curUnits + item.units > maxUnits) {
+      lineItems.push(curLine);
+      curLine = [item];
+      curUnits = item.units;
+    } else {
+      curLine.push(item);
+      curUnits += item.units;
+    }
+  }
+  if (curLine.length > 0) {
+    lineItems.push(curLine);
+  }
+
+  // Smooth adjacent lines within this Surah segment
+  if (lineItems.length > 1) {
+    for (let pass = 0; pass < 3; pass++) {
+      let changed = false;
+      for (let i = 0; i < lineItems.length - 1; i++) {
+        const lineA = lineItems[i];
+        const lineB = lineItems[i + 1];
+        if (lineA.length <= 1) continue;
+
+        const unitsA = lineA.reduce((s, it) => s + it.units, 0);
+        const unitsB = lineB.reduce((s, it) => s + it.units, 0);
+
+        // Case 1: Line A is heavy and Line B is light
+        if (unitsA > unitsB + 5) {
+          const lastItem = lineA[lineA.length - 1];
+          if (unitsB + lastItem.units <= maxUnits) {
+            const diffBefore = Math.abs(unitsA - unitsB);
+            const diffAfter = Math.abs((unitsA - lastItem.units) - (unitsB + lastItem.units));
+            if (diffAfter < diffBefore) {
+              lineA.pop();
+              lineB.unshift(lastItem);
+              changed = true;
+            }
+          }
+        }
+        // Case 2: Line B is heavy and Line A has room
+        else if (unitsB > unitsA + 5 && lineB.length > 1) {
+          const firstItem = lineB[0];
+          if (unitsA + firstItem.units <= maxUnits) {
+            const diffBefore = Math.abs(unitsA - unitsB);
+            const diffAfter = Math.abs((unitsA + firstItem.units) - (unitsB - firstItem.units));
+            if (diffAfter < diffBefore) {
+              lineB.shift();
+              lineA.push(firstItem);
+              changed = true;
+            }
+          }
+        }
+      }
+      if (!changed) break;
+    }
+  }
+
+  return lineItems.map((line) => line.flatMap((item) => item.tokens));
+}
+
 export interface InteractiveWord {
   id: number;
   position: number;
@@ -253,18 +390,15 @@ export function applyTajweedToWord(wordText: string): string {
   let styled = wordText;
 
   // 1. Madd (Madda sign \u0653 or prolonged letters with madd) -> #F43F5E
-  // eslint-disable-next-line no-misleading-character-class
   styled = styled.replace(/([\u0621-\u064A\u0671-\u06D3][\u0653])/g, '<span style="color: #F43F5E; font-weight: 600;">$1</span>');
 
   // 2. Ghunnah (Nun/Meem with Shaddah: نّ or مّ) -> #10B981
-  // eslint-disable-next-line no-misleading-character-class
   styled = styled.replace(/([نم][\u0651][\u064B-\u0650\u0652]?)/g, '<span style="color: #10B981; font-weight: 600;">$1</span>');
 
   // 3. Iqlab (Small high Meem \u06E2 or isolated mark) -> #06B6D4
   styled = styled.replace(/([\u06E2]|ن\u06E2)/g, '<span style="color: #06B6D4; font-weight: 600;">$1</span>');
 
   // 4. Qalqalah (Sakin letters of Qutb Jadd: ق، ط، ب، ج، د with sukun \u0652) -> #38BDF8
-  // eslint-disable-next-line no-misleading-character-class
   styled = styled.replace(/([قطبجد][\u0652])/g, '<span style="color: #38BDF8; font-weight: 600;">$1</span>');
 
   // 5. Waqf marks (Quranic stop symbols) -> #FACC15
@@ -380,7 +514,7 @@ async function fetchFromCdnFallback(pageNumber: number): Promise<InteractiveVers
     const data = await res.json();
     if (data && Array.isArray(data.chapter)) {
       const verses: InteractiveVerse[] = [];
-      data.chapter.forEach((verseItem: any) => {
+      data.chapter.forEach((verseItem: { verse?: number; text?: string }) => {
         const aNum = verseItem.verse || 1;
         const knownPage = getKnownPageForAyah(sNum, aNum) || pageNumber;
         if (knownPage === pageNumber) {
@@ -533,23 +667,23 @@ export async function fetchMushafPage(
     if (versesRes.status === 'fulfilled' && versesRes.value && versesRes.value.ok) {
       const data = await versesRes.value.json();
       if (Array.isArray(data.verses)) {
-        fetchedVerses = data.verses.map((v: any) => {
+        fetchedVerses = data.verses.map((v: { verse_key?: string; verse_number?: number; words?: Array<Record<string, unknown>> }) => {
           const parts = (v.verse_key || '').split(':');
           const surahNum = parseInt(parts[0], 10) || 1;
           const ayahNum = parseInt(parts[1], 10) || v.verse_number || 1;
 
           const words: InteractiveWord[] = Array.isArray(v.words)
-            ? v.words.map((w: any) => ({
-                id: w.id,
-                position: w.position,
-                audio_url: w.audio_url || null,
+            ? (v.words as Array<Record<string, unknown>>).map((w) => ({
+                id: (w.id as number) || 0,
+                position: (w.position as number) || 0,
+                audio_url: (w.audio_url as string) || null,
                 char_type_name: w.char_type_name === 'end' ? 'end' : 'word',
-                text_uthmani: cleanQuranicGlyphs(w.text_uthmani || w.text || ''),
-                text_indopak: cleanQuranicGlyphs(w.text_indopak || w.text_uthmani || w.text || ''),
-                text_uthmani_tajweed: w.text_uthmani_tajweed ? cleanQuranicGlyphs(w.text_uthmani_tajweed) : undefined,
+                text_uthmani: cleanQuranicGlyphs((w.text_uthmani as string) || (w.text as string) || ''),
+                text_indopak: cleanQuranicGlyphs((w.text_indopak as string) || (w.text_uthmani as string) || (w.text as string) || ''),
+                text_uthmani_tajweed: w.text_uthmani_tajweed ? cleanQuranicGlyphs(w.text_uthmani_tajweed as string) : undefined,
                 line_number: typeof w.line_number === 'number' ? w.line_number : undefined,
-                translation: w.translation ? { text: w.translation.text, language_name: 'english' } : undefined,
-                transliteration: w.transliteration ? { text: w.transliteration.text, language_name: 'english' } : undefined,
+                translation: w.translation ? { text: (w.translation as { text: string }).text, language_name: 'english' } : undefined,
+                transliteration: w.transliteration ? { text: (w.transliteration as { text: string }).text, language_name: 'english' } : undefined,
               }))
             : [];
 
@@ -588,7 +722,7 @@ export async function fetchMushafPage(
       try {
         const tData = await tajweedRes.value.json();
         if (Array.isArray(tData.verses)) {
-          tData.verses.forEach((item: any) => {
+          tData.verses.forEach((item: { verse_key?: string; text_uthmani_tajweed?: string }) => {
             if (item.verse_key && item.text_uthmani_tajweed) {
               tajweedMap[item.verse_key] = sanitizeTajweedHtml(item.text_uthmani_tajweed);
             }
@@ -682,8 +816,9 @@ export function prefetchAdjacentMushafPages(currentPage: number, includeTajweed:
     });
   };
 
-  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(executePrefetch, { timeout: 2500 });
+  const win = typeof window !== 'undefined' ? (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }) : null;
+  if (win?.requestIdleCallback) {
+    win.requestIdleCallback(executePrefetch, { timeout: 2500 });
   } else {
     setTimeout(executePrefetch, 250);
   }
@@ -703,8 +838,9 @@ export function prewarmSunnahMushafPages(): void {
     });
   };
 
-  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(executePrewarm, { timeout: 3000 });
+  const win = typeof window !== 'undefined' ? (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }) : null;
+  if (win?.requestIdleCallback) {
+    win.requestIdleCallback(executePrewarm, { timeout: 3000 });
   } else {
     setTimeout(executePrewarm, 300);
   }

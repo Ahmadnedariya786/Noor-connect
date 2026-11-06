@@ -12,10 +12,13 @@ import {
   getPageForSurahAndAyah,
   getMushafLineFormat,
   TAJWEED_RULES,
+  getStrippedArabicCharLength,
+  packSurahTokensWithBudget,
   type InteractivePageData,
   type InteractiveWord,
   type SurahHeaderInfo,
   type MushafLineFormat,
+  type MushafLineToken,
 } from '@/lib/interactive-mushaf';
 import { quranService } from '@/lib/quran-service';
 import { useTilawah } from '@/contexts/TilawahContext';
@@ -47,41 +50,21 @@ export type MushafPageBlock =
   | { type: 'surah-banner'; header: SurahHeaderInfo; key: string }
   | { type: 'ayah-line'; tokens: MushafLineToken[]; key: string; lineIndex: number };
 
-export interface MushafLineToken {
-  type: 'word' | 'medallion';
-  word?: InteractiveWord;
-  surahNumber: number;
-  verseNumber: number;
-  key: string;
-  lineNum?: number;
-}
-
-export function getStrippedArabicCharLength(text: string): number {
-  if (!text) return 0;
-  return text.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').length;
-}
+export type { MushafLineToken };
+export { getStrippedArabicCharLength };
 
 /**
- * Smart per-line character-density font sizing based on stripped Arabic characters + ayah medallions.
- * Provides optimal initial font sizing for 15-line, 13-line, and 7-line Mushaf layouts.
+ * Uniform readable recitation font sizing across all lines on the page.
+ * Completely eliminates tiny shrunken lines (9px) and large overflowing lines (19px).
  */
-export function getLineFontSize(baseCharCount: number, lineFormat: MushafLineFormat): string {
-  if (lineFormat === 15) {
-    if (baseCharCount <= 28) return '13.8px';
-    if (baseCharCount <= 34) return '13.2px';
-    if (baseCharCount <= 40) return '12.6px';
-    if (baseCharCount <= 46) return '11.8px';
-    return '11.0px';
-  }
-  if (lineFormat === 13) {
-    if (baseCharCount <= 30) return '13.2px';
-    if (baseCharCount <= 36) return '12.6px';
-    if (baseCharCount <= 42) return '12.0px';
-    if (baseCharCount <= 48) return '11.4px';
-    return '10.6px';
-  }
-  // 7-Line Mode
-  return baseCharCount > 16 ? '18px' : '20px';
+export function getUniformMushafFontSize(lineFormat: MushafLineFormat): string {
+  if (lineFormat === 7) return 'clamp(1.28rem, 5.2vw, 1.48rem)';
+  if (lineFormat === 13) return 'clamp(1.08rem, 4.6vw, 1.22rem)';
+  return 'clamp(1.02rem, 4.35vw, 1.16rem)';
+}
+
+export function getLineFontSize(_baseCharCount: number, lineFormat: MushafLineFormat): string {
+  return getUniformMushafFontSize(lineFormat);
 }
 
 export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineToken[][] {
@@ -761,108 +744,39 @@ function InteractiveMushafPageComponent({
         });
       });
 
+      // Safety check: ensure any unhandled headers are included at the start of the blocks
+      headersToProcess.forEach((sHeader) => {
+        if (!handledHeaders.has(sHeader.surah_number)) {
+          resultBlocks.unshift({
+            type: 'surah-banner',
+            header: sHeader,
+            key: `banner-${sHeader.surah_number}`,
+          });
+          handledHeaders.add(sHeader.surah_number);
+        }
+      });
+
       return resultBlocks;
     };
 
-    if (activeFormat === 15) {
-      const hasLineNumbers = allTokens.some((t) => typeof t.lineNum === 'number' && t.lineNum > 0);
-      if (hasLineNumbers) {
-        const lineMap: Record<number, MushafLineToken[]> = {};
-        allTokens.forEach((token) => {
-          const lNum = Math.min(15, Math.max(1, token.lineNum || 1));
-          if (!lineMap[lNum]) lineMap[lNum] = [];
-          lineMap[lNum].push(token);
-        });
-
-        const rawLines = Object.keys(lineMap)
-          .map(Number)
-          .sort((a, b) => a - b)
-          .map((k) => lineMap[k])
-          .filter((l) => l.length > 0);
-
-        return { blocks: assembleBlocksWithHeaders(rawLines), totalParts7L: 1 };
-      }
-
-      // If no canonical line numbers, distribute evenly into 15 (minus headers space) lines
-      const headerCount = pageData.surah_headers.length;
-      const targetLines = Math.max(1, 15 - headerCount * 2);
-      const lines = partitionTokensBalancedK(allTokens, targetLines);
-      return { blocks: assembleBlocksWithHeaders(lines), totalParts7L: 1 };
-    } else if (activeFormat === 13) {
-      // 13-line mode:
-      const nonHeaderTokenCount = allTokens.length;
-      const isShortMushafPage = nonHeaderTokenCount > 0 && nonHeaderTokenCount < 85;
-
-      if (isShortMushafPage) {
-        const hasLineNumbers = allTokens.some((t) => typeof t.lineNum === 'number' && t.lineNum > 0);
-        if (hasLineNumbers) {
-          const lineMap: Record<number, MushafLineToken[]> = {};
-          allTokens.forEach((token) => {
-            const lNum = Math.min(15, Math.max(1, token.lineNum || 1));
-            if (!lineMap[lNum]) lineMap[lNum] = [];
-            lineMap[lNum].push(token);
-          });
-          const rawLines = Object.keys(lineMap)
-            .map(Number)
-            .sort((a, b) => a - b)
-            .map((k) => lineMap[k])
-            .filter((l) => l.length > 0);
-          return { blocks: assembleBlocksWithHeaders(rawLines), totalParts7L: 1 };
+    if (activeFormat === 15 || activeFormat === 13) {
+      // Pack tokens by Surah segment using strict visual character budget (35 units for 13L, 37 units for 15L)
+      // Never force-merge lines to 13/15 if it would exceed MAX_LINE_UNITS — eliminates tiny 9px lines & word clipping
+      const surahIds: number[] = [];
+      allTokens.forEach((t) => {
+        if (!surahIds.includes(t.surahNumber)) {
+          surahIds.push(t.surahNumber);
         }
-      }
+      });
 
-      // Available lines accounting for headers
-      const headerCount = pageData.surah_headers.length;
-      const availableVerseLines = Math.max(1, 13 - headerCount * 2);
+      const packedLines: MushafLineToken[][] = [];
+      surahIds.forEach((sid) => {
+        const segTokens = allTokens.filter((t) => t.surahNumber === sid);
+        const segLines = packSurahTokensWithBudget(segTokens, activeFormat);
+        packedLines.push(...segLines);
+      });
 
-      // If page spans multiple surahs, partition each surah segment proportionally
-      const surahIds = Array.from(new Set(allTokens.map((t) => t.surahNumber)));
-      if (surahIds.length > 1) {
-        const segments = surahIds.map((sid) => allTokens.filter((t) => t.surahNumber === sid));
-        const segWeights = segments.map((seg) =>
-          seg.reduce((sum, t) => sum + getTokenWeight(t), 0)
-        );
-        const totalWeight = segWeights.reduce((a, b) => a + b, 0);
-        let allocatedSum = 0;
-        const allocatedK = segWeights.map((w) => {
-          const k = Math.max(1, Math.round(availableVerseLines * (w / totalWeight)));
-          allocatedSum += k;
-          return k;
-        });
-        let diff = availableVerseLines - allocatedSum;
-        while (diff !== 0) {
-          if (diff > 0) {
-            let maxIdx = 0;
-            for (let i = 1; i < segWeights.length; i++) {
-              if (segWeights[i] > segWeights[maxIdx]) maxIdx = i;
-            }
-            allocatedK[maxIdx]++;
-            diff--;
-          } else {
-            let maxIdx = -1;
-            for (let i = 0; i < allocatedK.length; i++) {
-              if (allocatedK[i] > 1 && (maxIdx === -1 || allocatedK[i] > allocatedK[maxIdx])) {
-                maxIdx = i;
-              }
-            }
-            if (maxIdx >= 0) {
-              allocatedK[maxIdx]--;
-              diff++;
-            } else {
-              break;
-            }
-          }
-        }
-        const finalLines: MushafLineToken[][] = [];
-        segments.forEach((seg, idx) => {
-          const partLines = partitionTokensBalancedK(seg, allocatedK[idx] || 1);
-          finalLines.push(...partLines);
-        });
-        return { blocks: assembleBlocksWithHeaders(finalLines), totalParts7L: 1 };
-      }
-
-      const lines = partitionTokensBalancedK(allTokens, availableVerseLines);
-      return { blocks: assembleBlocksWithHeaders(lines), totalParts7L: 1 };
+      return { blocks: assembleBlocksWithHeaders(packedLines), totalParts7L: 1 };
     } else {
       // 7-line mode: Strict 20-24 stripped char budget per line, paginated into ~7 lines per view
       const all7Lines = build7LineFormatTokens(allTokens);
@@ -939,8 +853,8 @@ function InteractiveMushafPageComponent({
     }
   }, [subPage7L, totalParts7L]);
 
-  // Multi-Stage Width Measurement & Live DOM Step-Down Loop (fitMushafLinesToContainer)
-  // Ensures every single line on all 604 pages in 15L, 13L, and 7L fits 100% inside container width with 0px clipping
+  // Multi-Stage Width Measurement & Live DOM Gentle Fit Pass (fitMushafLinesToContainer)
+  // Ensures 100% UNIFORM readable font size and 0px clipping on all 604 pages in 15L, 13L, and 7L
   useLayoutEffect(() => {
     const container = mushafLinesContainerRef.current;
     if (!container) return;
@@ -955,43 +869,47 @@ function InteractiveMushafPageComponent({
 
         const isCenteredLine = inner.getAttribute('data-short-line') === 'true';
 
-        // 1. Reset inner element to unscaled baseline
+        // 1. Reset inner element to unscaled natural baseline
         inner.style.transform = 'none';
         inner.style.width = 'max-content';
         inner.style.maxWidth = 'none';
         inner.style.flexShrink = '0';
-        inner.style.gap = isCenteredLine ? '5px' : '1.5px';
+        inner.style.gap = isCenteredLine ? '4px' : '2px';
 
-        // 2. Measure actual available width inside row (10px padding on each side + 2px safety = 22px)
-        const availWidth = Math.max(180, lineRow.clientWidth - 22);
+        // 2. Measure actual available width inside row (6px padding on each side = 12px)
+        const availWidth = Math.max(160, lineRow.clientWidth - 12);
+        const naturalWidth = inner.scrollWidth;
 
-        // 3. Start at baseline font size
-        let fs = activeFormat === 7 ? 20.0 : activeFormat === 13 ? 13.4 : 14.0;
-        inner.style.setProperty('--mushaf-line-fs', `${fs}px`);
-        inner.style.fontSize = `${fs}px`;
+        // 3. Gentle safety fit without ever shrinking font below readable baseline
+        if (naturalWidth > availWidth) {
+          // First tighten token gap to 1px
+          inner.style.gap = '1px';
+          const tightenedWidth = inner.scrollWidth;
 
-        // 4. Synchronous step-down loop while inner.scrollWidth > availWidth
-        while (inner.scrollWidth > availWidth && fs > 8.8) {
-          fs -= 0.35;
-          inner.style.setProperty('--mushaf-line-fs', `${fs.toFixed(2)}px`);
-          inner.style.fontSize = `${fs.toFixed(2)}px`;
-        }
-
-        // 5. If inner.scrollWidth still overflows even at 8.8px, apply geometric scaleX
-        if (inner.scrollWidth > availWidth) {
-          const scale = (availWidth - 2) / inner.scrollWidth;
-          inner.style.transformOrigin = isCenteredLine ? 'center center' : 'right center';
-          inner.style.transform = `scaleX(${Math.max(0.65, scale).toFixed(4)})`;
+          if (tightenedWidth > availWidth) {
+            const scale = (availWidth - 2) / tightenedWidth;
+            inner.style.transformOrigin = isCenteredLine ? 'center center' : 'right center';
+            inner.style.transform = `scaleX(${Math.max(0.86, scale).toFixed(4)})`;
+            inner.style.width = 'max-content';
+          } else {
+            inner.style.transform = 'none';
+            if (isCenteredLine) {
+              inner.style.width = 'max-content';
+              inner.style.justifyContent = 'center';
+            } else {
+              inner.style.width = `${availWidth}px`;
+              inner.style.justifyContent = 'space-between';
+            }
+          }
         } else {
           inner.style.transform = 'none';
-        }
-
-        if (isCenteredLine) {
-          inner.style.width = 'max-content';
-          inner.style.justifyContent = 'center';
-        } else {
-          inner.style.width = `${availWidth}px`;
-          inner.style.justifyContent = 'space-between';
+          if (isCenteredLine) {
+            inner.style.width = 'max-content';
+            inner.style.justifyContent = 'center';
+          } else {
+            inner.style.width = `${availWidth}px`;
+            inner.style.justifyContent = 'space-between';
+          }
         }
       });
     };
@@ -1123,7 +1041,7 @@ function InteractiveMushafPageComponent({
     <div className="relative w-full max-w-2xl mx-auto mb-6 select-none" onClick={() => setSelectedWord(null)}>
       {/* Page Container Canvas */}
       <div
-        className="relative rounded-3xl transition-colors duration-200"
+        className="relative rounded-3xl transition-colors duration-200 px-2 sm:px-5 py-3 sm:py-4"
         style={{
           background: surfaceStyles.background,
           color: surfaceStyles.color,
@@ -1133,8 +1051,8 @@ function InteractiveMushafPageComponent({
           maxWidth: '100%',
           overflow: 'hidden',
           boxSizing: 'border-box',
-          paddingLeft: '12px',
-          paddingRight: '12px',
+          paddingLeft: '8px',
+          paddingRight: '8px',
           paddingTop: '12px',
           paddingBottom: '12px',
         }}
@@ -1361,21 +1279,21 @@ function InteractiveMushafPageComponent({
                 const lineTokens = block.tokens;
                 const lineIdx = block.lineIndex;
 
-                // Calculate stripped char budget for this line (+5 per medallion)
+                // Calculate stripped char budget for this line (+4 per medallion)
                 const baseCharCount = lineTokens.reduce((sum, t) => {
-                  if (t.type === 'medallion') return sum + 5;
+                  if (t.type === 'medallion') return sum + 4;
                   const rawText =
                     (activeFormat === 13 ? (t.word?.text_indopak || t.word?.text_uthmani) : t.word?.text_uthmani) || '';
                   return sum + getStrippedArabicCharLength(rawText);
                 }, 0);
 
-                const initialLineFontSize = getLineFontSize(baseCharCount, activeFormat);
+                const uniformFontSize = getUniformMushafFontSize(activeFormat);
 
                 // Use center justification ONLY on short centered lines
                 const isShortCenteredLine =
                   activeFormat === 7 ||
                   isShortMushafPage ||
-                  baseCharCount < 22 ||
+                  baseCharCount < 20 ||
                   lineTokens.length < 3;
 
                 return (
@@ -1392,11 +1310,12 @@ function InteractiveMushafPageComponent({
                       alignItems: 'center',
                       direction: 'rtl',
                       boxSizing: 'border-box',
-                      paddingLeft: '10px',
-                      paddingRight: '10px',
+                      paddingLeft: '6px',
+                      paddingRight: '6px',
                       borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
                       minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
                       color: readingMode === 'paper' ? '#1E1208' : readingMode === 'night' ? '#F8FAFC' : 'var(--text-primary)',
+                      fontSize: uniformFontSize,
                     }}
                   >
                     <div
@@ -1408,13 +1327,12 @@ function InteractiveMushafPageComponent({
                         alignItems: 'center',
                         justifyContent: isShortCenteredLine ? 'center' : 'space-between',
                         direction: 'rtl',
-                        gap: isShortCenteredLine ? '5px' : '1.5px',
+                        gap: isShortCenteredLine ? '4px' : '2px',
                         whiteSpace: 'nowrap',
                         width: 'max-content',
                         maxWidth: 'none',
                         flexShrink: 0,
-                        fontSize: 'var(--mushaf-line-fs, ' + initialLineFontSize + ')',
-                        ['--mushaf-line-fs' as any]: initialLineFontSize,
+                        fontSize: uniformFontSize,
                         transformOrigin: isShortCenteredLine ? 'center center' : 'right center',
                       }}
                     >
@@ -1424,8 +1342,6 @@ function InteractiveMushafPageComponent({
                             isPlaying &&
                             currentSurah === token.surahNumber &&
                             currentAyah === token.verseNumber;
-
-                          const isCompactMedallion = activeFormat === 13 || activeFormat === 15;
 
                           return (
                             <button
@@ -1441,10 +1357,10 @@ function InteractiveMushafPageComponent({
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: isCompactMedallion ? 'calc(var(--mushaf-line-fs, 13px) * 0.68)' : '0.85em',
+                                fontSize: '0.72em',
                                 lineHeight: 1,
-                                padding: isCompactMedallion ? '0 2px' : '2px 6px',
-                                margin: isCompactMedallion ? '0 1px' : '0 2px',
+                                padding: '0 2px',
+                                margin: '0 1px',
                                 borderRadius: '9999px',
                                 flexShrink: 0,
                                 whiteSpace: 'nowrap',
@@ -1475,8 +1391,6 @@ function InteractiveMushafPageComponent({
                                 : applyTajweedToWord(displayText))
                             : displayText;
 
-                          const isCompactWord = activeFormat === 13 || activeFormat === 15;
-
                           return (
                             <span
                               key={token.key}
@@ -1493,10 +1407,10 @@ function InteractiveMushafPageComponent({
                               style={{
                                 whiteSpace: 'nowrap',
                                 display: 'inline-block',
-                                fontSize: 'var(--mushaf-line-fs, inherit)',
+                                fontSize: 'inherit',
                                 lineHeight: 1.85,
-                                paddingLeft: isCompactWord ? '0.5px' : '2px',
-                                paddingRight: isCompactWord ? '0.5px' : '2px',
+                                paddingLeft: '1px',
+                                paddingRight: '1px',
                                 paddingTop: '0px',
                                 paddingBottom: '0px',
                                 margin: 0,

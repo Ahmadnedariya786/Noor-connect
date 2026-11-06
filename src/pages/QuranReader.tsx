@@ -903,7 +903,7 @@ export default function QuranReader() {
         </div>
 
         {/* INTERACTIVE MUSHAF PAGE CANVAS OR AYAH CARDS VIEW */}
-        <div className="max-w-2xl mx-auto px-3 sm:px-4 py-4">
+        <div className="max-w-2xl mx-auto px-1.5 sm:px-4 py-4">
           {readerViewMode === 'mushaf' ? (
             <InteractiveMushafPage
               pageNumber={mushafPageNumber}
