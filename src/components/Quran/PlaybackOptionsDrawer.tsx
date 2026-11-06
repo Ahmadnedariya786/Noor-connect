@@ -188,14 +188,14 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({
             >
               <Sliders className="w-5 h-5 text-[var(--accent-text)]" />
             </div>
-            <div className="min-w-0">
-              <h2 id="playback-options-title" className="text-base sm:text-lg font-bold tracking-tight truncate flex items-center gap-1.5">
+            <div className="min-w-0 flex-1">
+              <h2 id="playback-options-title" className="text-base sm:text-lg font-bold tracking-tight flex items-center flex-wrap gap-1.5">
                 Playback Options
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-text)] border border-[var(--accent)]/30">
                   Audio Studio
                 </span>
               </h2>
-              <p className="text-[11px] text-[var(--text-secondary)] truncate">
+              <p className="text-[11px] text-[var(--text-secondary)] leading-tight mt-0.5 whitespace-normal break-words">
                 Ayah delay, interval repeats & recitation speed
               </p>
             </div>
@@ -210,7 +210,7 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({
         </div>
 
         {/* Scrollable controls */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 pb-8 space-y-4 no-scrollbar">
           {/* 1. Reciter Selector Row */}
           <div>
             <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">

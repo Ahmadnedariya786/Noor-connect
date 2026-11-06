@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sunset, Bell, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { getPrayerDisplayName, isMatchingPrayer } from '@/lib/prayer-utils';
@@ -390,17 +390,58 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     ];
   }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat, refreshKey]);
 
-  // Real-time 1-second ticker for second-accurate Makruh window tracking & instant auto-dismissal
+  // Real-time intelligent ticker:
+  // - When a Makruh or Nafl window is active: ticks every 1 second for smooth countdown
+  // - When idle: checks boundaries every 1 second, but only updates state on minute change or boundary crossing
   const [now, setNow] = useState<Date>(() => new Date());
+  const activeTrackerRef = useRef<{ wasActive: boolean; lastMinute: number }>({
+    wasActive: false,
+    lastMinute: new Date().getMinutes(),
+  });
+
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | null = null;
+    const tf = timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
+
+    const checkAndTick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const currentDate = new Date();
+      const currentMin = currentDate.getMinutes();
+
+      // If user is browsing another date offset, only tick once a minute
+      if (selectedDateOffset !== 0) {
+        if (currentMin !== activeTrackerRef.current.lastMinute) {
+          activeTrackerRef.current.lastMinute = currentMin;
+          setNow(currentDate);
+        }
+        return;
+      }
+
+      // Check current Makruh & Nafl activity
+      const currentMakruh = evaluateMakruhState(displayedPrayers, currentDate, tf);
+      const currentNafl = evaluateNaflPrayers(displayedPrayers, currentDate, tf);
+      const isAnyActive = Boolean(currentMakruh.isMakruhNow || currentNafl.hasActiveNafl);
+
+      if (isAnyActive) {
+        // Active countdown visible: update state every second
+        activeTrackerRef.current.wasActive = true;
+        activeTrackerRef.current.lastMinute = currentMin;
+        setNow(currentDate);
+      } else if (activeTrackerRef.current.wasActive) {
+        // Just transitioned from active to inactive: update immediately to dismiss alert
+        activeTrackerRef.current.wasActive = false;
+        activeTrackerRef.current.lastMinute = currentMin;
+        setNow(currentDate);
+      } else if (currentMin !== activeTrackerRef.current.lastMinute) {
+        // Normal idle minute tick
+        activeTrackerRef.current.lastMinute = currentMin;
+        setNow(currentDate);
+      }
+    };
+
     const startTicker = () => {
       if (intervalId !== null) return;
-      setNow(new Date());
-      intervalId = setInterval(() => {
-        if (typeof document !== 'undefined' && document.hidden) return;
-        setNow(new Date());
-      }, 1000);
+      intervalId = setInterval(checkAndTick, 1000);
     };
     const stopTicker = () => {
       if (intervalId !== null) {
@@ -410,7 +451,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     };
     const handleVisibilityChange = () => {
       if (document.hidden) stopTicker();
-      else startTicker();
+      else {
+        checkAndTick();
+        startTicker();
+      }
     };
     startTicker();
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -418,7 +462,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       stopTicker();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [displayedPrayers, selectedDateOffset, timeFormat]);
 
   const makruhState = useMemo(() => {
     return evaluateMakruhState(
@@ -1270,53 +1314,60 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                         : 'none',
                     }}
                   >
-                    {/* Row 1: Prayer Title + Arabic Name on Left, Start – End Time on Right */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
+                    {/* Row 1: English Name on Left, Arabic Name + Rak'at on Right */}
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-base shrink-0 select-none">{nafl.icon}</span>
                         <span
-                          className="font-bold text-xs truncate"
+                          className="font-extrabold text-xs whitespace-nowrap"
                           style={{
                             color: isActive
                               ? 'var(--accent-text)'
                               : 'var(--text-primary)',
                           }}
                         >
-                          {nafl.displayTitle}
+                          {nafl.name}
                         </span>
                       </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span
+                          className="font-arabic text-xs"
+                          style={{ color: 'var(--accent-text)' }}
+                          dir="rtl"
+                        >
+                          {nafl.arabicName}
+                        </span>
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded font-semibold whitespace-nowrap"
+                          style={{
+                            background: 'var(--surface)',
+                            color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
+                            border: '1px solid var(--border)',
+                          }}
+                        >
+                          {nafl.rakaat}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Window Times on Left, Active Countdown or Virtue on Right */}
+                    <div className="flex items-center justify-between gap-2 pt-0.5 min-w-0">
                       <span
-                        className="text-xs font-bold font-mono tracking-tight shrink-0 ltr-num tabular-nums"
+                        className="text-xs font-bold font-mono tracking-tight shrink-0 ltr-num tabular-nums whitespace-nowrap"
                         dir="ltr"
                         style={{
                           color: isActive
                             ? 'var(--accent-text)'
                             : 'var(--text-primary)',
-                          whiteSpace: 'nowrap',
                           fontVariantNumeric: 'tabular-nums',
                         }}
                       >
-                        {nafl.windowFormatted}
-                      </span>
-                    </div>
-
-                    {/* Row 2: Rak'at Badge on Left, Active Countdown Pill or Virtue Label on Right */}
-                    <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-md font-semibold shrink-0"
-                        style={{
-                          background: 'var(--surface)',
-                          color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
-                          border: '1px solid var(--border)',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {nafl.rakaat}
+                        ⏰ {nafl.windowFormatted}
                       </span>
 
                       {isActive ? (
                         <span
-                          className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full flex items-center gap-1.5 shrink-0 whitespace-nowrap animate-pulse"
+                          className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap animate-pulse"
                           style={{
                             background: 'var(--accent)',
                             color: 'var(--on-accent)',
@@ -1324,11 +1375,11 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                           }}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                          <span>ACTIVE • Ends in {nafl.remainingFormatted}</span>
+                          <span>● ACTIVE • {nafl.remainingFormatted} left</span>
                         </span>
                       ) : (
                         <span
-                          className="text-[10px] font-medium truncate max-w-[200px] text-right"
+                          className="text-[10px] font-medium truncate max-w-[170px] text-right"
                           style={{ color: 'var(--text-secondary)', opacity: 0.85 }}
                           title={nafl.virtue}
                         >

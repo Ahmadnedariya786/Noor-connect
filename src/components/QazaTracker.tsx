@@ -4,7 +4,7 @@
  * Supports all 6 prayers (Fajr, Dhuhr, Asr, Maghrib, Isha, Witr)
  * Real-time Date-Wise Pending List with blinking action pills
  */
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext-new";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -634,4 +634,4 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
   );
 }
 
-export default QazaTracker;
+export default memo(QazaTracker);

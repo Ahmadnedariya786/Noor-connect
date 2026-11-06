@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Compass, MapPin, Navigation, ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,4 +91,4 @@ export function QiblaQuickWidget() {
   );
 }
 
-export default QiblaQuickWidget;
+export default memo(QiblaQuickWidget);

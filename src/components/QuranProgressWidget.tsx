@@ -4,7 +4,7 @@
  * Features a dual-ring SVG radial gauge, recessed stat tiles, and 0ms SPA routing.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -398,4 +398,4 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   );
 }
 
-export default QuranProgressWidget;
+export default memo(QuranProgressWidget);

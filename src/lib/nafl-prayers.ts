@@ -105,6 +105,26 @@ export function evaluateNaflPrayers(
     ishaVal = prayerInput.Isha || (prayerInput as Record<string, unknown>).isha as string | Date;
   }
 
+  // Strict validation: avoid startup '--:--' or missing prayer time Nafl calculation
+  const isValidTimeValue = (val: unknown): boolean => {
+    if (!val) return false;
+    if (val instanceof Date) return !isNaN(val.getTime());
+    if (typeof val === 'string') {
+      const trimmed = val.replace(/\s*\([^)]*\)\s*/g, '').trim();
+      if (!trimmed || trimmed.includes('--')) return false;
+      return /^\d{1,2}:\d{2}/.test(trimmed);
+    }
+    return false;
+  };
+
+  if (!isValidTimeValue(sunriseVal)) {
+    return {
+      hasActiveNafl: false,
+      activeNafl: null,
+      prayers: [],
+    };
+  }
+
   const sunriseSec = parseTimeToSeconds(sunriseVal);
   const dhuhrSec = parseTimeToSeconds(dhuhrVal);
   const maghribSec = parseTimeToSeconds(maghribVal);
@@ -126,10 +146,10 @@ export function evaluateNaflPrayers(
       id: 'ishraq',
       name: 'Ishraq',
       shortName: 'Ishraq',
-      arabicName: 'صلاة الإشراق',
+      arabicName: 'الإشراق',
       urduName: 'نماز اشراق',
-      displayTitle: 'Ishraq • الإشراق',
-      rakaat: "2–4 Rak'at Nafl",
+      displayTitle: 'Ishraq',
+      rakaat: "2–4 Rak'at",
       virtue: "Reward of complete Hajj & Umrah (Tirmidhi 586)",
       conciseVirtue: 'Hajj & Umrah Reward',
       hadithRef: 'Tirmidhi 586',
@@ -160,10 +180,10 @@ export function evaluateNaflPrayers(
       id: 'chasht',
       name: 'Chasht (Duha)',
       shortName: 'Chasht',
-      arabicName: 'صلاة الضحى',
+      arabicName: 'الضحى',
       urduName: 'نماز چاشت',
-      displayTitle: 'Chasht (Duha) • الضحى',
-      rakaat: "2–12 Rak'at Nafl",
+      displayTitle: 'Chasht (Duha)',
+      rakaat: "2–12 Rak'at",
       virtue: "Charity for all 360 joints of the body (Muslim 720)",
       conciseVirtue: '360 Joints Charity',
       hadithRef: 'Muslim 720',
@@ -194,10 +214,10 @@ export function evaluateNaflPrayers(
       id: 'awwabin',
       name: 'Awwabin',
       shortName: 'Awwabin',
-      arabicName: 'صلاة الأوابين',
+      arabicName: 'الأوابين',
       urduName: 'نماز اوابین',
-      displayTitle: 'Awwabin • الأوابين',
-      rakaat: "6–20 Rak'at Nafl",
+      displayTitle: 'Awwabin',
+      rakaat: "6–20 Rak'at",
       virtue: "Reward of 12 years of worship (Tirmidhi 435)",
       conciseVirtue: 'After Maghrib Sunnah',
       hadithRef: 'Tirmidhi 435',

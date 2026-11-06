@@ -3,7 +3,7 @@
  * Shows prayer tracking statistics and achievements
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -294,4 +294,4 @@ export function PrayerStatsWidget() {
   );
 }
 
-export default PrayerStatsWidget;
+export default memo(PrayerStatsWidget);

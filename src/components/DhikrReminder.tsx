@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, BellOff, Clock, RefreshCw } from "lucide-react";
@@ -161,4 +161,4 @@ export function DhikrReminder() {
   );
 }
 
-export default DhikrReminder;
+export default memo(DhikrReminder);

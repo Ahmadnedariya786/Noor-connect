@@ -80,8 +80,34 @@ type PrayerTimingMap = {
   Lastthird?: string;
 };
 
+function getInitialStoredPrayerTimes(): PrayerTimes | null {
+  try {
+    const stored = localStorage.getItem('cached_prayer_times');
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    if (!parsed || !parsed.fajr || !parsed.dhuhr) return null;
+    const fajrDate = new Date(parsed.fajr);
+    if (fajrDate.toDateString() !== new Date().toDateString()) return null;
+    return {
+      fajr: fajrDate,
+      sunrise: new Date(parsed.sunrise),
+      dhuhr: new Date(parsed.dhuhr),
+      asr: new Date(parsed.asr),
+      maghrib: new Date(parsed.maghrib),
+      isha: new Date(parsed.isha),
+      midnight: new Date(parsed.midnight),
+      imsak: parsed.imsak ? new Date(parsed.imsak) : undefined,
+      ishraq: parsed.ishraq ? new Date(parsed.ishraq) : undefined,
+      duha: parsed.duha ? new Date(parsed.duha) : undefined,
+      tahajjud: parsed.tahajjud ? new Date(parsed.tahajjud) : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function usePrayerTimes(): UsePrayerTimesReturn {
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(() => getInitialStoredPrayerTimes());
   const [prayerTimesWithEnd, setPrayerTimesWithEnd] = useState<PrayerTimesWithEnd | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -364,6 +390,11 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
 
       setPrayerTimes(times);
       setPrayerTimesWithEnd(withEnd);
+      try {
+        localStorage.setItem('cached_prayer_times', JSON.stringify(times));
+      } catch {
+        // Safe storage fallback
+      }
       const finalLocation: LocationData = { ...locationData, timeZone };
 
       setLocation(finalLocation);

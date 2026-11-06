@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Moon, Sunrise, Sunset, Timer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -249,5 +249,5 @@ export function RamadanWidget({
   );
 }
 
-export default RamadanWidget;
+export default memo(RamadanWidget);
 

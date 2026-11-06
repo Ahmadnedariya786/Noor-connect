@@ -531,19 +531,21 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                     Part {overviewVolume.volNumber} • {overviewVolume.juzCoverage}
                   </span>
                   <Badge variant="outline" className="text-[10px] font-mono border-[var(--border)] text-[var(--text-secondary)] shrink-0">
-                    ~{overviewVolume.estimatedSize}
+                    {overviewVolume.estimatedSize.startsWith('~') ? overviewVolume.estimatedSize : `~${overviewVolume.estimatedSize}`}
                   </Badge>
                 </div>
                 <DialogTitle
                   dir="rtl"
-                  className="font-bold text-[var(--accent-text)] mt-1 truncate"
+                  className="font-bold text-[var(--accent-text)] mt-1"
                   style={{
                     fontFamily: 'var(--font-urdu), serif',
                     lineHeight: 2.0,
                     fontSize: '1.05rem',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
+                    width: '100%',
+                    maxWidth: '100%',
+                    textAlign: 'right',
                   }}
                 >
                   {overviewVolume.urduTitle}
@@ -555,27 +557,27 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
 
               {/* Primary Local PDF Linking Actions */}
               <div
-                className="p-3.5 rounded-xl border border-[var(--accent)] space-y-2.5"
-                style={{ background: 'var(--accent-soft)' }}
+                className="p-3.5 rounded-xl border border-[var(--accent)] space-y-2.5 w-full max-w-full min-w-0"
+                style={{ background: 'var(--accent-soft)', boxSizing: 'border-box' }}
               >
                 <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-text)]">
                   <HardDrive className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>100% Offline Fast Reading (Recommended)</span>
+                  <span className="break-words">100% Offline Fast Reading (Recommended)</span>
                 </div>
-                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed w-full max-w-full min-w-0 break-words whitespace-normal">
                   Tafseer Anwar-ul-Bayan volumes are extensive ~100MB to 160MB books. Link your local PDF file into browser IndexedDB storage for instant loading, zero data usage, and offline access.
                 </p>
-                <div className="space-y-2 pt-1">
+                <div className="space-y-2 pt-1 w-full max-w-full min-w-0">
                   <Button
                     onClick={() => {
                       const id = overviewVolume.id;
                       setOverviewVolume(null);
                       handleTriggerLinkFile(id);
                     }}
-                    className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md"
+                    className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md box-border min-w-0"
                   >
                     <FolderUp className="w-4 h-4 shrink-0" />
-                    <span>Select & Link Local PDF (Part {overviewVolume.volNumber})</span>
+                    <span className="truncate">Select & Link Local PDF (Part {overviewVolume.volNumber})</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -583,25 +585,25 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                       setOverviewVolume(null);
                       batchFileInputRef.current?.click();
                     }}
-                    className="w-full text-xs font-semibold gap-2 border-[var(--border)] hover:border-[var(--accent)] cursor-pointer"
+                    className="w-full text-xs font-semibold gap-2 border-[var(--border)] hover:border-[var(--accent)] cursor-pointer box-border min-w-0"
                   >
                     <Layers className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                    <span>Link All 5 Volumes (Vol 1–5)</span>
+                    <span className="truncate">Link All 5 Volumes (Vol 1–5)</span>
                   </Button>
                 </div>
               </div>
 
               {/* Surahs Included in this Volume */}
-              <div className="space-y-2 pt-2 border-t border-[var(--border)]">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+              <div className="space-y-2 pt-2 border-t border-[var(--border)] w-full max-w-full min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] truncate">
                     Surahs Covered in this Volume:
                   </span>
-                  <span className="text-[10px] text-[var(--text-secondary)]">
-                    Tap to open in Tafsir
+                  <span className="text-[10px] text-[var(--text-secondary)] shrink-0 whitespace-nowrap" style={{ fontSize: '0.68rem' }}>
+                    Tap for Tafsir →
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1 w-full max-w-full min-w-0">
                   {overviewVolume.surahs.map((s) => (
                     <button
                       key={s.number}

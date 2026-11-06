@@ -48,6 +48,63 @@ let cachedTargetTime: Date | null = null;
 let cachedRawTimings: AladhanPrayerTime | null = null;
 let cachedOffsetsFingerprint: string = "";
 
+function getInitialCachedPrayers(): PrayerTime[] {
+  if (cachedDashboardPrayers.length > 0) return cachedDashboardPrayers;
+  try {
+    const stored = localStorage.getItem('noor_cached_dashboard_prayers');
+    if (stored) {
+      const parsed = JSON.parse(stored) as PrayerTime[];
+      if (Array.isArray(parsed) && parsed.length >= 5) {
+        const hydrated = parsed.map(p => ({
+          ...p,
+          date: p.date ? new Date(p.date) : undefined,
+        }));
+        cachedDashboardPrayers = hydrated;
+        return hydrated;
+      }
+    }
+  } catch {
+    // Ignore parse error
+  }
+  return [];
+}
+
+function getInitialNextPrayer(): { name: string; time: string; targetTime: Date | null } {
+  if (cachedNextPrayerName && cachedNextPrayerTime) {
+    return { name: cachedNextPrayerName, time: cachedNextPrayerTime, targetTime: cachedTargetTime };
+  }
+  try {
+    const stored = localStorage.getItem('noor_cached_next_prayer');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed?.name && parsed?.time && parsed.time !== '--:--') {
+        cachedNextPrayerName = parsed.name;
+        cachedNextPrayerTime = parsed.time;
+        cachedTargetTime = parsed.targetTime ? new Date(parsed.targetTime) : null;
+        return { name: parsed.name, time: parsed.time, targetTime: cachedTargetTime };
+      }
+    }
+  } catch {
+    // Ignore parse error
+  }
+  return { name: "", time: "", targetTime: null };
+}
+
+function getInitialSuhoorIftaar(): { suhoorTime: string; suhoorLabel: string; iftaarTime: string; iftaarLabel: string } | undefined {
+  try {
+    const stored = localStorage.getItem('noor_cached_suhoor_iftaar');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed?.suhoorTime && parsed?.iftaarTime) {
+        return parsed;
+      }
+    }
+  } catch {
+    // Ignore parse error
+  }
+  return undefined;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -60,23 +117,23 @@ export default function Dashboard() {
   }, []);
   const [minuteTick, setMinuteTick] = useState(0);
   const [greeting, setGreeting] = useState("");
-  const [prayers, setPrayers] = useState<PrayerTime[]>(() => cachedDashboardPrayers);
-  const [loading, setLoading] = useState(() => cachedDashboardPrayers.length === 0);
+
+  const initialCached = useMemo(() => getInitialCachedPrayers(), []);
+  const initialNext = useMemo(() => getInitialNextPrayer(), []);
+  const initialSuhoor = useMemo(() => getInitialSuhoorIftaar(), []);
+
+  const [prayers, setPrayers] = useState<PrayerTime[]>(() => initialCached);
+  const [loading, setLoading] = useState(() => initialCached.length === 0);
   // Use Islamic calendar hook for accurate Hijri dates
   const { hijriDate, isEidAlFitr, isEidAlAdha } = useIslamicCalendar();
   const isEid = isEidAlFitr || isEidAlAdha;
-  const [nextPrayerName, setNextPrayerName] = useState<string>(() => cachedNextPrayerName);
-  const [nextPrayerTime, setNextPrayerTime] = useState<string>(() => cachedNextPrayerTime);
+  const [nextPrayerName, setNextPrayerName] = useState<string>(() => initialNext.name);
+  const [nextPrayerTime, setNextPrayerTime] = useState<string>(() => initialNext.time);
   const [loadingAPI, setLoadingAPI] = useState(false);
   const [timezone, setTimezone] = useState<string>("");
-  const [initialLoad, setInitialLoad] = useState(() => cachedDashboardPrayers.length === 0);
-  const [targetTime, setTargetTime] = useState<Date | null>(() => cachedTargetTime);
-  const [suhoorIftaar, setSuhoorIftaar] = useState<{
-    suhoorTime: string;
-    suhoorLabel: string;
-    iftaarTime: string;
-    iftaarLabel: string;
-  } | undefined>(undefined);
+  const [initialLoad, setInitialLoad] = useState(() => initialCached.length === 0);
+  const [targetTime, setTargetTime] = useState<Date | null>(() => initialNext.targetTime);
+  const [suhoorIftaar, setSuhoorIftaar] = useState<typeof initialSuhoor>(() => initialSuhoor);
   const { toast } = useToast();
 
   // Memoized prayer icons
@@ -269,6 +326,25 @@ export default function Dashboard() {
           setTargetTime(nextEvent.targetDate);
         }
       }
+
+      try {
+        localStorage.setItem('noor_cached_dashboard_prayers', JSON.stringify(prayerList));
+        localStorage.setItem('noor_cached_suhoor_iftaar', JSON.stringify({
+          suhoorTime: sTime,
+          suhoorLabel: sLabel,
+          iftaarTime: iTime,
+          iftaarLabel: "Iftaar",
+        }));
+        if (nextEvent) {
+          localStorage.setItem('noor_cached_next_prayer', JSON.stringify({
+            name: cachedNextPrayerName,
+            time: cachedNextPrayerTime,
+            targetTime: nextEvent.targetDate ? nextEvent.targetDate.toISOString() : null,
+          }));
+        }
+      } catch {
+        // Safe storage fallback
+      }
     } catch (error) {
       console.error('Failed to load API prayer times:', error);
       // Fallback to offline calculation
@@ -297,12 +373,13 @@ export default function Dashboard() {
       setPrayers(fallbackPrayers);
 
       // Offline Suhoor & Iftaar per Guard 1
-      setSuhoorIftaar({
+      const offlineSuhoor = {
         suhoorTime: formatTimeFromAPI(fallbackTimings.Fajr),
         suhoorLabel: "Suhoor",
         iftaarTime: formatTimeFromAPI(fallbackTimings.Maghrib),
         iftaarLabel: "Iftaar",
-      });
+      };
+      setSuhoorIftaar(offlineSuhoor);
 
       const { getNextPrayer } = await import('@/lib/prayer-calculator');
       const nextPrayer = getNextPrayer(location.latitude, location.longitude);
@@ -315,6 +392,20 @@ export default function Dashboard() {
         setNextPrayerTime(formattedTime);
         cachedTargetTime = nextPrayer.time;
         setTargetTime(nextPrayer.time);
+      }
+
+      try {
+        localStorage.setItem('noor_cached_dashboard_prayers', JSON.stringify(fallbackPrayers));
+        localStorage.setItem('noor_cached_suhoor_iftaar', JSON.stringify(offlineSuhoor));
+        if (nextPrayer) {
+          localStorage.setItem('noor_cached_next_prayer', JSON.stringify({
+            name: cachedNextPrayerName,
+            time: cachedNextPrayerTime,
+            targetTime: nextPrayer.time ? nextPrayer.time.toISOString() : null,
+          }));
+        }
+      } catch {
+        // Safe storage fallback
       }
     } finally {
       setLoadingAPI(false);

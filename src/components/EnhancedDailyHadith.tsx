@@ -4,7 +4,7 @@
  * text truncation with Read More / Show Less, and premium dark/gold aesthetics.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -703,4 +703,4 @@ export function EnhancedDailyHadith() {
   );
 }
 
-export default EnhancedDailyHadith;
+export default memo(EnhancedDailyHadith);

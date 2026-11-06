@@ -163,6 +163,28 @@ export function evaluateMakruhState(
     maghribVal = prayerInput.Maghrib || prayerInput.maghrib;
   }
 
+  // Strict validation: eliminate startup '--:--' / missing prayer time false Makruh calculation
+  const isValidTimeValue = (val: unknown): boolean => {
+    if (!val) return false;
+    if (val instanceof Date) return !isNaN(val.getTime());
+    if (typeof val === 'string') {
+      const trimmed = val.replace(/\s*\([^)]*\)\s*/g, '').trim();
+      if (!trimmed || trimmed.includes('--')) return false;
+      return /^\d{1,2}:\d{2}/.test(trimmed);
+    }
+    return false;
+  };
+
+  if (!isValidTimeValue(sunriseVal) || !isValidTimeValue(dhuhrVal) || !isValidTimeValue(maghribVal)) {
+    return {
+      isMakruhNow: false,
+      activeWindow: null,
+      remainingSeconds: 0,
+      remainingFormatted: '',
+      allWindows: [],
+    };
+  }
+
   const sunriseSec = parseTimeToSeconds(sunriseVal);
   const dhuhrSec = parseTimeToSeconds(dhuhrVal);
   const maghribSec = parseTimeToSeconds(maghribVal);
