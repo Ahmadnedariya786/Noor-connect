@@ -5,11 +5,9 @@
 
 import {
   savePdfBlob,
-  getPdfBlob,
   getPdfBlobUrl,
   hasPdfBlob,
   deletePdfBlob,
-  getPdfMetadata,
 } from './idb-pdf-store';
 
 export interface AnwarUlBayanVolume {
@@ -17,6 +15,7 @@ export interface AnwarUlBayanVolume {
   volNumber: number;
   title: string;
   urduTitle: string;
+  urduSubtitle: string;
   author: string;
   urduAuthor: string;
   coverage: string;
@@ -25,6 +24,8 @@ export interface AnwarUlBayanVolume {
   category: 'Quran & Tafsir';
   streamUrl: string;
   urduStreamUrl: string;
+  embedViewerUrl?: string;
+  primaryDownloadUrl?: string;
   estimatedSize: string;
   localKey: string;
   description: string;
@@ -36,17 +37,22 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     id: 'anwar-ul-bayan-vol-1',
     volNumber: 1,
     title: 'Tafseer Anwar-ul-Bayan — Part 1 (Vol. 1)',
-    urduTitle: 'تفسیر انوار البیان — جلد اول (پارہ ۱ تا ۷)',
+    urduTitle: 'تفسیر انوار البیان — جلد اول',
+    urduSubtitle: 'پارہ ۱ تا ۷',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: "Surah Al-Fatiha (1) to Surah Al-Ma'idah (5) • Juz 1 to 7",
     juzCoverage: 'Juz 1 to 7',
     surahRange: "Al-Fatiha (1) — Al-Ma'idah (5)",
     category: 'Quran & Tafsir',
+    primaryDownloadUrl:
+      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
     streamUrl:
       'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-1.pdf',
     urduStreamUrl:
       'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%201.pdf',
+    embedViewerUrl:
+      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-1',
     estimatedSize: '~120 MB',
     localKey: 'anwar-ul-bayan-vol-1',
     description:
@@ -63,17 +69,22 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     id: 'anwar-ul-bayan-vol-2',
     volNumber: 2,
     title: 'Tafseer Anwar-ul-Bayan — Part 2 (Vol. 2)',
-    urduTitle: 'تفسیر انوار البیان — جلد دوم (پارہ ۸ تا ۱۳)',
+    urduTitle: 'تفسیر انوار البیان — جلد دوم',
+    urduSubtitle: 'پارہ ۸ تا ۱۳',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: "Surah Al-An'am (6) to Surah Ibrahim (14) • Juz 7 to 13",
     juzCoverage: 'Juz 7 to 13',
     surahRange: "Al-An'am (6) — Ibrahim (14)",
     category: 'Quran & Tafsir',
+    primaryDownloadUrl:
+      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
     streamUrl:
       'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-2.pdf',
     urduStreamUrl:
       'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%202.pdf',
+    embedViewerUrl:
+      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-2',
     estimatedSize: '~135 MB',
     localKey: 'anwar-ul-bayan-vol-2',
     description:
@@ -94,17 +105,22 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     id: 'anwar-ul-bayan-vol-3',
     volNumber: 3,
     title: 'Tafseer Anwar-ul-Bayan — Part 3 (Vol. 3)',
-    urduTitle: 'تفسیر انوار البیان — جلد سوم (پارہ ۱۴ تا ۱۸)',
+    urduTitle: 'تفسیر انوار البیان — جلد سوم',
+    urduSubtitle: 'پارہ ۱۴ تا ۱۸',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Al-Hijr (15) to Surah Al-Ankabut (29) • Juz 14 to 21',
     juzCoverage: 'Juz 14 to 21',
     surahRange: 'Al-Hijr (15) — Al-Ankabut (29)',
     category: 'Quran & Tafsir',
+    primaryDownloadUrl:
+      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
     streamUrl:
       'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-3.pdf',
     urduStreamUrl:
       'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%203.pdf',
+    embedViewerUrl:
+      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-3',
     estimatedSize: '~145 MB',
     localKey: 'anwar-ul-bayan-vol-3',
     description:
@@ -131,17 +147,22 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     id: 'anwar-ul-bayan-vol-4',
     volNumber: 4,
     title: 'Tafseer Anwar-ul-Bayan — Part 4 (Vol. 4)',
-    urduTitle: 'تفسیر انوار البیان — جلد چہارم (پارہ ۱۹ تا ۲۴)',
+    urduTitle: 'تفسیر انوار البیان — جلد چہارم',
+    urduSubtitle: 'پارہ ۱۹ تا ۲۴',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Ar-Rum (30) to Surah Al-Hadid (57) • Juz 21 to 27',
     juzCoverage: 'Juz 21 to 27',
     surahRange: 'Ar-Rum (30) — Al-Hadid (57)',
     category: 'Quran & Tafsir',
+    primaryDownloadUrl:
+      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
     streamUrl:
       'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-4.pdf',
     urduStreamUrl:
       'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%204.pdf',
+    embedViewerUrl:
+      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-4',
     estimatedSize: '~140 MB',
     localKey: 'anwar-ul-bayan-vol-4',
     description:
@@ -161,17 +182,22 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     id: 'anwar-ul-bayan-vol-5',
     volNumber: 5,
     title: 'Tafseer Anwar-ul-Bayan — Part 5 (Vol. 5)',
-    urduTitle: 'تفسیر انوار البیان — جلد پنجم (پارہ ۲۵ تا ۳۰)',
+    urduTitle: 'تفسیر انوار البیان — جلد پنجم',
+    urduSubtitle: 'پارہ ۲۵ تا ۳۰',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Al-Mujadilah (58) to Surah An-Nas (114) • Juz 28 to 30',
     juzCoverage: 'Juz 28 to 30',
     surahRange: 'Al-Mujadilah (58) — An-Nas (114)',
     category: 'Quran & Tafsir',
+    primaryDownloadUrl:
+      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
     streamUrl:
       'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-5.pdf',
     urduStreamUrl:
       'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%205.pdf',
+    embedViewerUrl:
+      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-5',
     estimatedSize: '~150 MB',
     localKey: 'anwar-ul-bayan-vol-5',
     description:

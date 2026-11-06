@@ -42,7 +42,7 @@ export interface MakruhState {
 }
 
 export type MakruhPrayerInput =
-  | { Sunrise?: string | Date; Dhuhr?: string | Date; Maghrib?: string | Date; [key: string]: any }
+  | ({ Sunrise?: string | Date; Dhuhr?: string | Date; Maghrib?: string | Date } & Record<string, unknown>)
   | Array<{ name?: string; originalName?: string; time?: string; date?: Date }>;
 
 /**
@@ -197,7 +197,7 @@ export function evaluateMakruhState(
     const endSec = sunriseSec + 15 * 60;
     windows.push({
       id: 'tulu',
-      title: "Sunrise (Tulu' al-Shams)",
+      title: "Sunrise (Tulu')",
       titleUrdu: 'طلوعِ آفتاب (مکروہ وقت)',
       arabicTitle: 'طلوع الشمس',
       shortLabel: 'Sunrise',
@@ -222,7 +222,7 @@ export function evaluateMakruhState(
     const endSec = dhuhrSec;
     windows.push({
       id: 'zawal',
-      title: 'Zawal (Midday Zenith)',
+      title: 'Zawal (Zenith)',
       titleUrdu: 'زوالِ آفتاب / استواء (مکروہ وقت)',
       arabicTitle: 'وقت الزوال',
       shortLabel: 'Zawal',
@@ -241,13 +241,13 @@ export function evaluateMakruhState(
     });
   }
 
-  // Window 3: Sunset (Ghurub al-Shams) -> [Maghrib - 15 min, Maghrib)
+  // Window 3: Sunset (Ghurub) -> [Maghrib - 15 min, Maghrib)
   if (maghribSec !== null) {
     const startSec = maghribSec - 15 * 60;
     const endSec = maghribSec;
     windows.push({
       id: 'ghurub',
-      title: 'Sunset (Ghurub al-Shams)',
+      title: 'Sunset (Ghurub)',
       titleUrdu: 'غروبِ آفتاب (مکروہ وقت)',
       arabicTitle: 'غروب الشمس',
       shortLabel: 'Sunset',

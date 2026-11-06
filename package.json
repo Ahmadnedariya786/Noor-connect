@@ -20,7 +20,8 @@
     "analyze-assets": "node scripts/analyze-assets.js",
     "simple-optimize": "node scripts/simple-optimize.js",
     "android:build": "npm run build && node scripts/clean-dist-data.js && cap sync android && cd android && ./gradlew assembleRelease",
-    "clean:dist": "node scripts/clean-dist-data.js"
+    "clean:dist": "node scripts/clean-dist-data.js",
+    "ebooks:publish": "node scripts/upload-ebooks-release.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",

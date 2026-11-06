@@ -9,6 +9,11 @@ import {
   HardDrive,
   Trash2,
   CheckCircle,
+  Download,
+  Globe,
+  ExternalLink,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +36,15 @@ import {
 } from '@/lib/anwar-ul-bayan-data';
 import { getPdfMetadata } from '@/lib/idb-pdf-store';
 import { formatFileSize } from '@/lib/ebooks-storage';
+import {
+  downloadCloudEbook,
+  cancelCloudEbookDownload,
+  subscribeDownloadProgress,
+  getDownloadState,
+  formatBytes,
+  syncCloudCatalogFromRemote,
+  type DownloadProgressState,
+} from '@/lib/ebooks-cloud';
 
 interface AnwarUlBayanSectionProps {
   onOpenReader: (target: { url: string; title: string; localKey?: string }) => void;
@@ -45,6 +59,11 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
   >({});
   const [activeLinkingVolId, setActiveLinkingVolId] = useState<string | null>(null);
   const [overviewVolume, setOverviewVolume] = useState<AnwarUlBayanVolume | null>(null);
+  const [inAppStreamBook, setInAppStreamBook] = useState<{
+    vol: AnwarUlBayanVolume;
+    embedUrl: string;
+  } | null>(null);
+  const [downloads, setDownloads] = useState<Record<string, DownloadProgressState>>({});
   const [expandedVolSurahs, setExpandedVolSurahs] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const batchFileInputRef = useRef<HTMLInputElement>(null);
@@ -67,13 +86,32 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
 
   useEffect(() => {
     void refreshStatus();
+    void syncCloudCatalogFromRemote();
+
+    // Populate initial download states
+    const initDownloads: Record<string, DownloadProgressState> = {};
+    ANWAR_UL_BAYAN_VOLUMES.forEach((v) => {
+      const existing = getDownloadState(v.id);
+      if (existing) initDownloads[v.id] = existing;
+    });
+    setDownloads(initDownloads);
+
+    const unsubProgress = subscribeDownloadProgress((state) => {
+      setDownloads((prev) => ({ ...prev, [state.volId]: state }));
+      if (state.isCompleted) {
+        void refreshStatus();
+      }
+    });
 
     const handleLinkedEvent = () => {
       void refreshStatus();
     };
 
     window.addEventListener('anwar-ul-bayan-linked', handleLinkedEvent);
-    return () => window.removeEventListener('anwar-ul-bayan-linked', handleLinkedEvent);
+    return () => {
+      unsubProgress();
+      window.removeEventListener('anwar-ul-bayan-linked', handleLinkedEvent);
+    };
   }, []);
 
   const handleReadVolume = async (vol: AnwarUlBayanVolume) => {
@@ -99,9 +137,42 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
         });
       }
     } else {
-      // Unlinked volume: show the rich Volume Overview & Local PDF Setup Dialog
+      // Unlinked volume: show 3-Option Universal Cloud Delivery Modal
       setOverviewVolume(vol);
     }
+  };
+
+  const handleStartDownload = async (volId: string) => {
+    const vol = ANWAR_UL_BAYAN_VOLUMES.find((v) => v.id === volId);
+    if (!vol) return;
+
+    toast({
+      title: `Starting Download: Part ${vol.volNumber}`,
+      description: 'Downloading from Cloud CDN with offline IndexedDB storage...',
+    });
+
+    const success = await downloadCloudEbook(volId);
+    if (success) {
+      toast({
+        title: '✓ Download Complete',
+        description: `${vol.title} is now 100% available offline!`,
+      });
+      await refreshStatus();
+    }
+  };
+
+  const handleCancelDownload = (volId: string) => {
+    cancelCloudEbookDownload(volId);
+    toast({
+      title: 'Download Cancelled',
+      description: 'The download process was stopped.',
+    });
+  };
+
+  const handleOpenInstantStream = (vol: AnwarUlBayanVolume) => {
+    setOverviewVolume(null);
+    const embedUrl = vol.embedViewerUrl || vol.streamUrl;
+    setInAppStreamBook({ vol, embedUrl });
   };
 
   const handleTriggerLinkFile = (volId: string) => {
@@ -142,7 +213,6 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
         description: `${vol.title} is now permanently available 100% offline! Opening reader...`,
       });
 
-      // Auto-launch NativePdfViewer upon successful linking
       try {
         const source = await getVolumeResolvedSource(vol);
         onOpenReader({
@@ -162,9 +232,6 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
       });
     } finally {
       setActiveLinkingVolId(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
 
@@ -172,61 +239,35 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const fileList = Array.from(files).filter(
-      (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
-    );
-
-    if (fileList.length === 0) {
-      toast({
-        title: 'No PDF Files Found',
-        description: 'Please select valid PDF files.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    toast({
-      title: 'Linking Volumes in Batch...',
-      description: `Processing ${fileList.length} PDF file(s) into IndexedDB offline storage...`,
-    });
-
     let linkedCount = 0;
-    for (const file of fileList) {
-      const lower = file.name.toLowerCase();
-      let matchedVol: AnwarUlBayanVolume | undefined;
+    const fileList = Array.from(files);
 
-      // 1. Try matching volume number 1..5 in filename
-      for (const vol of ANWAR_UL_BAYAN_VOLUMES) {
-        const v = vol.volNumber;
-        const regexes = [
-          new RegExp(`vol(ume)?[_\\s-]*0?${v}\\b`, 'i'),
-          new RegExp(`part[_\\s-]*0?${v}\\b`, 'i'),
-          new RegExp(`جلد[_\\s-]*0?${v}\\b`, 'i'),
-          new RegExp(`[\\b_\\-]0?${v}[\\b_\\-]`, 'i'),
-        ];
-        if (regexes.some((r) => r.test(lower))) {
-          matchedVol = vol;
-          break;
-        }
-      }
+    for (const vol of ANWAR_UL_BAYAN_VOLUMES) {
+      const match = fileList.find((f) => {
+        const lower = f.name.toLowerCase();
+        const vNum = vol.volNumber;
+        return (
+          lower.includes(`vol${vNum}`) ||
+          lower.includes(`vol-${vNum}`) ||
+          lower.includes(`vol_${vNum}`) ||
+          lower.includes(`vol ${vNum}`) ||
+          lower.includes(`volume${vNum}`) ||
+          lower.includes(`volume-${vNum}`) ||
+          lower.includes(`volume_${vNum}`) ||
+          lower.includes(`volume ${vNum}`) ||
+          lower.includes(`part${vNum}`) ||
+          lower.includes(`part ${vNum}`) ||
+          lower.includes(`jild${vNum}`) ||
+          lower.includes(`jild ${vNum}`)
+        );
+      });
 
-      // 2. If exactly 1 file was selected with activeLinkingVolId
-      if (!matchedVol && activeLinkingVolId) {
-        matchedVol = ANWAR_UL_BAYAN_VOLUMES.find((v) => v.id === activeLinkingVolId);
-      }
-
-      // 3. If user selected exactly 5 files, match sequentially
-      if (!matchedVol && fileList.length === ANWAR_UL_BAYAN_VOLUMES.length) {
-        const idx = fileList.indexOf(file);
-        matchedVol = ANWAR_UL_BAYAN_VOLUMES[idx];
-      }
-
-      if (matchedVol) {
+      if (match) {
         try {
-          await linkVolumeLocalFile(matchedVol.localKey, file);
+          await linkVolumeLocalFile(vol.localKey, match);
           linkedCount++;
         } catch (err) {
-          console.warn(`Failed to link ${matchedVol.title}:`, err);
+          console.warn(`Failed to auto-link ${vol.title}:`, err);
         }
       }
     }
@@ -241,7 +282,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
     } else {
       toast({
         title: 'Could Not Auto-Match Files',
-        description: 'Please ensure filenames include Vol 1 to Vol 5 (e.g., AnwarulBayan-Vol1.pdf).',
+        description: 'Please ensure filenames include Vol 1 to Vol 5 (e.g., AnwarulBayan-Volume1.pdf).',
         variant: 'destructive',
       });
     }
@@ -346,7 +387,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
           </div>
 
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-2xl">
-            A celebrated 20th-century exegesis renowned throughout the Muslim world for combining authentic classical sources (Tabari, Ibn Kathir, Qurtubi) with contemporary clarity. Link your local 100MB+ PDF files for seamless, 100% offline reading anytime.
+            A celebrated 20th-century exegesis renowned throughout the Muslim world for combining authentic classical sources (Tabari, Ibn Kathir, Qurtubi) with contemporary clarity. Stream instantly online or download 100% offline into app storage.
           </p>
 
           <div className="pt-2 flex items-center gap-2 flex-wrap">
@@ -368,6 +409,8 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
         {ANWAR_UL_BAYAN_VOLUMES.map((vol) => {
           const isLinked = !!linkedStatus[vol.id];
           const meta = metadataMap[vol.id];
+          const dlState = downloads[vol.id];
+          const isDownloading = Boolean(dlState?.isDownloading);
           const isSurahsExpanded = !!expandedVolSurahs[vol.id];
           const displayedSurahs = isSurahsExpanded ? vol.surahs : vol.surahs.slice(0, 4);
 
@@ -400,6 +443,11 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                         <CheckCircle className="w-3 h-3 shrink-0" />
                         Offline
                       </span>
+                    ) : isDownloading ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-full border border-[var(--accent)] animate-pulse">
+                        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                        {dlState?.percent || 0}%
+                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-2)] px-2 py-0.5 rounded-full border border-[var(--border)]">
                         <HardDrive className="w-3 h-3 shrink-0" />
@@ -414,14 +462,47 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                   <h5 className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
                     {vol.title}
                   </h5>
-                  <p className="text-[11px] text-[var(--accent-text)] font-medium mt-0.5">
-                    📖 {vol.coverage}
-                  </p>
+                  <div className="flex items-center justify-between gap-2 mt-1">
+                    <p className="text-[11px] text-[var(--accent-text)] font-medium">
+                      📖 {vol.coverage}
+                    </p>
+                    <span
+                      dir="rtl"
+                      className="text-[10px] text-[var(--text-secondary)] shrink-0 font-medium"
+                      style={{ fontFamily: 'var(--font-urdu), serif' }}
+                    >
+                      {vol.urduSubtitle}
+                    </span>
+                  </div>
                 </div>
 
                 <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
                   {vol.description}
                 </p>
+
+                {/* Live Download Progress Bar */}
+                {isDownloading && dlState && (
+                  <div className="space-y-1 my-2 p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--accent)] animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <span className="text-[var(--accent-text)] font-bold flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        {dlState.percent}%
+                      </span>
+                      <span className="text-[var(--text-secondary)]">
+                        {formatBytes(dlState.loadedBytes)} / {formatBytes(dlState.totalBytes)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--surface)] h-2 rounded-full overflow-hidden border border-[var(--border)]">
+                      <div
+                        className="bg-[var(--accent)] h-full transition-all duration-200"
+                        style={{ width: `${Math.max(3, dlState.percent)}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-[var(--text-secondary)] truncate">
+                      {dlState.statusText}
+                    </p>
+                  </div>
+                )}
 
                 {/* Surahs Included Pill Tags */}
                 <div className="pt-0.5">
@@ -469,14 +550,26 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
 
               {/* Action Buttons */}
               <div className="pt-3 mt-2.5 border-t border-[var(--border)] flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handleReadVolume(vol)}
-                  className="flex-1 text-xs font-bold gap-1.5 cursor-pointer h-8"
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Read Volume
-                </Button>
+                {isDownloading ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleCancelDownload(vol.id)}
+                    className="flex-1 text-xs font-semibold gap-1.5 cursor-pointer h-8 text-[var(--danger)] border-[var(--danger)]/50 hover:bg-[var(--danger)]/10"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Cancel Download</span>
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => handleReadVolume(vol)}
+                    className="flex-1 text-xs font-bold gap-1.5 cursor-pointer h-8"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>{isLinked ? 'Read (Offline)' : 'Read Volume'}</span>
+                  </Button>
+                )}
 
                 {isLinked ? (
                   <Button
@@ -491,28 +584,41 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTriggerLinkFile(vol.id);
-                    }}
-                    title="Link local PDF file from device storage"
-                    className="h-8 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)]"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Link Local PDF</span>
-                  </Button>
-                )}
+                ) : !isDownloading ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartDownload(vol.id);
+                      }}
+                      title="Download Offline to App (Fast Cloud CDN)"
+                      className="h-8 px-2.5 cursor-pointer border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTriggerLinkFile(vol.id);
+                      }}
+                      title="Link local PDF file from device storage"
+                      className="h-8 px-2.5 text-xs font-semibold cursor-pointer border-[var(--border)] text-[var(--text-secondary)]"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                    </Button>
+                  </>
+                ) : null}
               </div>
             </Card>
           );
         })}
       </div>
 
-      {/* In-App Volume Overview & Local PDF Setup Sheet */}
+      {/* In-App Volume 3-Option Universal Delivery Sheet */}
       <Dialog open={!!overviewVolume} onOpenChange={(open) => !open && setOverviewVolume(null)}>
         <DialogContent
           className="w-[94vw] rounded-2xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-2xl max-h-[88vh] overflow-y-auto"
@@ -526,23 +632,35 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
           {overviewVolume && (
             <div className="space-y-3.5">
               <DialogHeader className="text-left space-y-1 pb-2 border-b border-[var(--border)] pr-10">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)] shrink-0">
-                    Part {overviewVolume.volNumber} • {overviewVolume.juzCoverage}
-                  </span>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)] shrink-0">
+                      Part {overviewVolume.volNumber} • {overviewVolume.juzCoverage}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[11px] font-bold border-[var(--border)] text-[var(--accent-text)] bg-[var(--surface-2)] shrink-0"
+                      style={{ fontFamily: 'var(--font-urdu), serif' }}
+                    >
+                      {overviewVolume.urduSubtitle}
+                    </Badge>
+                  </div>
                   <Badge variant="outline" className="text-[10px] font-mono border-[var(--border)] text-[var(--text-secondary)] shrink-0">
                     {overviewVolume.estimatedSize.startsWith('~') ? overviewVolume.estimatedSize : `~${overviewVolume.estimatedSize}`}
                   </Badge>
                 </div>
+
+                {/* Clean 1-Line Urdu Title Without Awkward Parenthesis Wraps */}
                 <DialogTitle
                   dir="rtl"
-                  className="font-bold text-[var(--accent-text)] mt-1"
+                  className="font-bold text-[var(--accent-text)] mt-1.5"
                   style={{
                     fontFamily: 'var(--font-urdu), serif',
-                    lineHeight: 2.0,
-                    fontSize: '1.05rem',
-                    whiteSpace: 'normal',
-                    wordBreak: 'break-word',
+                    lineHeight: 1.8,
+                    fontSize: '1.25rem',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                     width: '100%',
                     maxWidth: '100%',
                     textAlign: 'right',
@@ -555,41 +673,128 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                 </DialogDescription>
               </DialogHeader>
 
-              {/* Primary Local PDF Linking Actions */}
-              <div
-                className="p-3.5 rounded-xl border border-[var(--accent)] space-y-2.5 w-full max-w-full min-w-0"
-                style={{ background: 'var(--accent-soft)', boxSizing: 'border-box' }}
-              >
-                <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-text)]">
-                  <HardDrive className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span className="break-words">100% Offline Fast Reading (Recommended)</span>
+              {/* 3 Universal Reading & Delivery Options */}
+              <div className="space-y-2.5 w-full max-w-full min-w-0">
+                {/* Option 1: Instant Cloud Stream */}
+                <div
+                  className="p-3 rounded-xl border border-[var(--border)] space-y-2 w-full max-w-full min-w-0"
+                  style={{ background: 'var(--surface-2)' }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-text)]">
+                      <Globe className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                      <span>Option 1: Read Online Now (Instant Stream)</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-[var(--success)] bg-[var(--success)]/10 px-2 py-0.5 rounded-full border border-[var(--success)]/30">
+                      0s Wait • Zero CORS
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Open the book immediately in the in-app interactive Cloud Reader without waiting for the {overviewVolume.estimatedSize} download.
+                  </p>
+                  <Button
+                    onClick={() => handleOpenInstantStream(overviewVolume)}
+                    className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-sm"
+                  >
+                    <BookOpen className="w-4 h-4 shrink-0" />
+                    <span>Open Instant Cloud Reader</span>
+                  </Button>
                 </div>
-                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed w-full max-w-full min-w-0 break-words whitespace-normal">
-                  Tafseer Anwar-ul-Bayan volumes are extensive ~100MB to 160MB books. Link your local PDF file into browser IndexedDB storage for instant loading, zero data usage, and offline access.
-                </p>
-                <div className="space-y-2 pt-1 w-full max-w-full min-w-0">
-                  <Button
-                    onClick={() => {
-                      const id = overviewVolume.id;
-                      setOverviewVolume(null);
-                      handleTriggerLinkFile(id);
-                    }}
-                    className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md box-border min-w-0"
-                  >
-                    <FolderUp className="w-4 h-4 shrink-0" />
-                    <span className="truncate">Select & Link Local PDF (Part {overviewVolume.volNumber})</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setOverviewVolume(null);
-                      batchFileInputRef.current?.click();
-                    }}
-                    className="w-full text-xs font-semibold gap-2 border-[var(--border)] hover:border-[var(--accent)] cursor-pointer box-border min-w-0"
-                  >
-                    <Layers className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                    <span className="truncate">Link All 5 Volumes (Vol 1–5)</span>
-                  </Button>
+
+                {/* Option 2: In-App Offline Downloader */}
+                <div
+                  className="p-3 rounded-xl border border-[var(--accent)] space-y-2 w-full max-w-full min-w-0"
+                  style={{ background: 'var(--accent-soft)' }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-text)]">
+                      <Download className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                      <span>Option 2: Download Offline to App</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-[var(--accent-text)] bg-[var(--surface)] px-2 py-0.5 rounded-full border border-[var(--border)]">
+                      Permanent Offline
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Downloads high-speed chunks directly into app IndexedDB storage. Read anytime without internet.
+                  </p>
+
+                  {downloads[overviewVolume.id]?.isDownloading ? (
+                    <div className="space-y-1.5 p-2 rounded-lg bg-[var(--surface)] border border-[var(--accent)]">
+                      <div className="flex items-center justify-between text-[11px] font-mono">
+                        <span className="text-[var(--accent-text)] font-bold flex items-center gap-1">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Downloading ({downloads[overviewVolume.id].percent}%)
+                        </span>
+                        <span className="text-[var(--text-secondary)]">
+                          {formatBytes(downloads[overviewVolume.id].loadedBytes)} /{' '}
+                          {formatBytes(downloads[overviewVolume.id].totalBytes)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-[var(--surface-2)] h-2 rounded-full overflow-hidden border border-[var(--border)]">
+                        <div
+                          className="bg-[var(--accent)] h-full transition-all duration-200"
+                          style={{ width: `${Math.max(3, downloads[overviewVolume.id].percent)}%` }}
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCancelDownload(overviewVolume.id)}
+                        className="w-full text-xs font-semibold text-[var(--danger)] border-[var(--danger)]/50 mt-1"
+                      >
+                        <X className="w-3.5 h-3.5 mr-1" />
+                        Cancel Download
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => handleStartDownload(overviewVolume.id)}
+                      className="w-full text-xs font-bold gap-2 py-2 cursor-pointer shadow-md"
+                    >
+                      <Download className="w-4 h-4 shrink-0" />
+                      <span>Download Part {overviewVolume.volNumber} ({overviewVolume.estimatedSize})</span>
+                    </Button>
+                  )}
+                </div>
+
+                {/* Option 3: Link Local PDF */}
+                <div
+                  className="p-3 rounded-xl border border-[var(--border)] space-y-2 w-full max-w-full min-w-0"
+                  style={{ background: 'var(--surface)' }}
+                >
+                  <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
+                    <HardDrive className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
+                    <span>Option 3: Link Local File from Device</span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Already downloaded this volume on your device? Link it in 0 seconds with zero network usage.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const id = overviewVolume.id;
+                        setOverviewVolume(null);
+                        handleTriggerLinkFile(id);
+                      }}
+                      className="w-full text-xs font-semibold gap-1.5 py-1.5 border-[var(--border)]"
+                    >
+                      <FolderUp className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Select PDF File</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setOverviewVolume(null);
+                        batchFileInputRef.current?.click();
+                      }}
+                      className="w-full text-xs font-semibold gap-1.5 py-1.5 border-[var(--border)]"
+                    >
+                      <Layers className="w-3.5 h-3.5 shrink-0 text-[var(--accent)]" />
+                      <span className="truncate">Auto-Link All 5</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -603,7 +808,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                     Tap for Tafsir →
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1 w-full max-w-full min-w-0">
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1 w-full max-w-full min-w-0">
                   {overviewVolume.surahs.map((s) => (
                     <button
                       key={s.number}
@@ -622,6 +827,56 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                 </div>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* In-App Cloud Book Reader Modal (0s Wait, Full Screen, Zero CORS) */}
+      <Dialog open={!!inAppStreamBook} onOpenChange={(open) => !open && setInAppStreamBook(null)}>
+        <DialogContent
+          className="w-[96vw] max-w-4xl h-[92vh] p-2 sm:p-4 bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-2xl flex flex-col rounded-2xl"
+          style={{ maxWidth: 'calc(100vw - 16px)', boxSizing: 'border-box' }}
+        >
+          {inAppStreamBook && (
+            <>
+              <DialogHeader className="flex flex-row items-center justify-between gap-2 pb-2 border-b border-[var(--border)] shrink-0 pr-8">
+                <div className="min-w-0 flex-1">
+                  <DialogTitle className="text-sm sm:text-base font-bold text-[var(--accent-text)] truncate">
+                    {inAppStreamBook.vol.title}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-[var(--text-secondary)] truncate">
+                    Instant Cloud Reader • {inAppStreamBook.vol.coverage}
+                  </DialogDescription>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      window.open(
+                        inAppStreamBook.vol.cloudStreamUrl || inAppStreamBook.embedUrl,
+                        '_blank',
+                        'noopener,noreferrer'
+                      )
+                    }
+                    className="h-7 px-2 text-[10px] font-semibold gap-1 text-[var(--accent-text)] border-[var(--border)]"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span className="hidden sm:inline">Browser Mode</span>
+                  </Button>
+                </div>
+              </DialogHeader>
+
+              <div className="flex-1 w-full relative min-h-0 mt-2 rounded-xl overflow-hidden border border-[var(--border)] bg-black/40">
+                <iframe
+                  src={inAppStreamBook.embedUrl}
+                  title={inAppStreamBook.vol.title}
+                  className="w-full h-full border-0"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

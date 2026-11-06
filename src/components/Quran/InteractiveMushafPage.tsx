@@ -58,7 +58,7 @@ export { getStrippedArabicCharLength };
  * Completely eliminates tiny shrunken lines (9px) and large overflowing lines (19px).
  */
 export function getUniformMushafFontSize(lineFormat: MushafLineFormat): string {
-  if (lineFormat === 7) return 'clamp(1.28rem, 5.2vw, 1.48rem)';
+  if (lineFormat === 7) return 'clamp(1.16rem, 4.9vw, 1.32rem)';
   if (lineFormat === 13) return 'clamp(1.08rem, 4.6vw, 1.22rem)';
   return 'clamp(1.02rem, 4.35vw, 1.16rem)';
 }
@@ -68,45 +68,15 @@ export function getLineFontSize(_baseCharCount: number, lineFormat: MushafLineFo
 }
 
 export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineToken[][] {
-  const lines: MushafLineToken[][] = [];
-  let currentLine: MushafLineToken[] = [];
-  let currentWeight = 0;
-
-  for (const token of tokens) {
-    if (token.type === 'medallion') {
-      // Verse medallions must always stay attached to the preceding verse word on the same line
-      if (currentLine.length > 0) {
-        currentLine.push(token);
-        currentWeight += 3;
-      } else if (lines.length > 0) {
-        lines[lines.length - 1].push(token);
-      } else {
-        currentLine.push(token);
-        currentWeight += 3;
-      }
-      continue;
-    }
-
-    const tokenText = token.word?.text_uthmani || token.word?.text_indopak || '';
-    const tokenWeight = getStrippedArabicCharLength(tokenText) || 4;
-    const currentWordCount = currentLine.filter((t) => t.type === 'word').length;
-
-    // Strict max 18 stripped chars & max 4 words per line for 360px mobile fit with zero edge clipping
-    if (currentWordCount >= 4 || (currentWordCount >= 2 && currentWeight + tokenWeight > 18)) {
-      lines.push(currentLine);
-      currentLine = [token];
-      currentWeight = tokenWeight;
-    } else {
-      currentLine.push(token);
-      currentWeight += tokenWeight;
-    }
-  }
-
-  if (currentLine.length > 0) {
-    lines.push(currentLine);
-  }
-
-  return lines;
+  if (tokens.length === 0) return [];
+  const surahIds = Array.from(new Set(tokens.map((t) => t.surahNumber)));
+  const allLines: MushafLineToken[][] = [];
+  surahIds.forEach((sid) => {
+    const segTokens = tokens.filter((t) => t.surahNumber === sid);
+    const segLines = packSurahTokensWithBudget(segTokens, 7);
+    allLines.push(...segLines);
+  });
+  return allLines;
 }
 
 export function getTokenWeight(t: MushafLineToken): number {
@@ -1291,10 +1261,9 @@ function InteractiveMushafPageComponent({
 
                 // Use center justification ONLY on short centered lines
                 const isShortCenteredLine =
-                  activeFormat === 7 ||
                   isShortMushafPage ||
-                  baseCharCount < 20 ||
-                  lineTokens.length < 3;
+                  baseCharCount < (activeFormat === 7 ? 14 : 20) ||
+                  lineTokens.length < 2;
 
                 return (
                   <div

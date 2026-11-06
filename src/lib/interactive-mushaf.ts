@@ -63,7 +63,7 @@ export function getTokenVisualUnits(token: MushafLineToken, format: MushafLineFo
 
 export function getMaxLineUnits(format: MushafLineFormat): number {
   if (format === 13) return 35;
-  if (format === 7) return 18;
+  if (format === 7) return 22;
   return 37; // 15-line mode
 }
 

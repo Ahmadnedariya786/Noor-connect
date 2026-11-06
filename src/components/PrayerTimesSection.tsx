@@ -988,21 +988,19 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
           {/* Header Line: Blinking Dot + Prohibited Warning Badge + Live Countdown */}
           <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 shrink-0">
               <span className="w-2.5 h-2.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
               <span
                 style={{
-                  fontSize: '0.68rem',
+                  fontSize: '0.72rem',
                   fontWeight: 800,
                   letterSpacing: '0.03em',
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
                 className="uppercase text-red-200"
               >
-                MAKRUH (PROHIBITED)
+                MAKRUH WAQT
               </span>
             </div>
             <div
@@ -1151,26 +1149,50 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   : 'none',
               }}
             >
-              {/* Row Left Side: Time-of-Day Icon + Prayer Name */}
+              {/* Row Left Side: Time-of-Day Icon + Prayer Name + Inline Makruh Badge */}
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  gap: '8px',
                   minWidth: 0,
+                  flexShrink: 0,
                 }}
               >
                 <WaqtIcon name={rawName} isActive={isRowActive} />
                 <span
-                  className="truncate"
                   style={{
                     color: 'var(--text-primary)',
                     fontWeight: isRowActive ? 700 : 600,
-                    fontSize: '1rem',
+                    fontSize: '0.95rem',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
                   }}
                 >
                   {localizedName}
                 </span>
+                {isMakruhRow && (
+                  <span
+                    style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 800,
+                      padding: '2px 7px',
+                      borderRadius: '9999px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      background: 'rgba(239, 68, 68, 0.30)',
+                      border: '1px solid #EF4444',
+                      color: '#FEE2E2',
+                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.45)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
+                    <span>MAKRUH ({makruhState.remainingFormatted})</span>
+                  </span>
+                )}
               </div>
 
               {/* Row Right Side: Formatted Time + Notification Bell Button */}
@@ -1178,25 +1200,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  gap: '10px',
                   flexShrink: 0,
                 }}
               >
-                {isMakruhRow && (
-                  <span
-                    className="px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1 shrink-0"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.30)',
-                      border: '1px solid #EF4444',
-                      color: '#FEE2E2',
-                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.45)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink" />
-                    <span>MAKRUH WAQT ({makruhState.remainingFormatted})</span>
-                  </span>
-                )}
 
                 <span
                   className="ltr-num tabular-nums"
