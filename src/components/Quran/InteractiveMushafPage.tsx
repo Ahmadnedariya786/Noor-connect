@@ -67,21 +67,21 @@ export function getStrippedArabicCharLength(text: string): number {
  */
 export function getLineFontSize(baseCharCount: number, lineFormat: MushafLineFormat): string {
   if (lineFormat === 15) {
-    if (baseCharCount <= 30) return 'clamp(1.02rem, 4.3vw, 1.18rem)';
-    if (baseCharCount <= 36) return 'clamp(0.94rem, 3.9vw, 1.08rem)';
-    if (baseCharCount <= 42) return 'clamp(0.86rem, 3.5vw, 0.98rem)';
-    if (baseCharCount <= 48) return 'clamp(0.78rem, 3.2vw, 0.90rem)';
-    return 'clamp(0.72rem, 2.9vw, 0.84rem)';
+    if (baseCharCount <= 30) return '14.2px';
+    if (baseCharCount <= 36) return '13.5px';
+    if (baseCharCount <= 42) return '12.8px';
+    if (baseCharCount <= 48) return '12.0px';
+    return '11.4px';
   }
   if (lineFormat === 13) {
-    if (baseCharCount <= 32) return 'clamp(1.00rem, 4.1vw, 1.14rem)';
-    if (baseCharCount <= 38) return 'clamp(0.90rem, 3.7vw, 1.04rem)';
-    if (baseCharCount <= 44) return 'clamp(0.82rem, 3.35vw, 0.94rem)';
-    if (baseCharCount <= 50) return 'clamp(0.75rem, 3.05vw, 0.86rem)';
-    return 'clamp(0.68rem, 2.8vw, 0.80rem)';
+    if (baseCharCount <= 32) return '13.5px';
+    if (baseCharCount <= 38) return '12.8px';
+    if (baseCharCount <= 44) return '12.0px';
+    if (baseCharCount <= 50) return '11.4px';
+    return '10.8px';
   }
   // 7-Line Mode
-  return baseCharCount > 16 ? 'clamp(1.04rem, 4.0vw, 1.20rem)' : 'clamp(1.28rem, 5.2vw, 1.46rem)';
+  return baseCharCount > 16 ? '18px' : '21px';
 }
 
 export function build7LineFormatTokens(tokens: MushafLineToken[]): MushafLineToken[][] {
@@ -939,14 +939,14 @@ function InteractiveMushafPageComponent({
     }
   }, [subPage7L, totalParts7L]);
 
-  // Two-Stage Width Measurement & Geometric Auto-Fit Engine (fitMushafLinesToContainer)
+  // Multi-Stage Width Measurement & Geometric Auto-Fit Engine (fitMushafLinesToContainer)
   // Ensures every single line on all 604 pages in 15L, 13L, and 7L fits 100% inside container width with 0px clipping
   useLayoutEffect(() => {
     const container = mushafLinesContainerRef.current;
     if (!container) return;
 
-    const baseFontSize =
-      activeFormat === 15 ? '15.5px' : activeFormat === 13 ? '14.5px' : '18px';
+    const basePx =
+      activeFormat === 7 ? 20 : activeFormat === 13 ? 13.5 : 14.2;
 
     const fitMushafLinesToContainer = () => {
       const lineRows = container.querySelectorAll<HTMLElement>('[data-mushaf-line]');
@@ -959,59 +959,77 @@ function InteractiveMushafPageComponent({
         const isCenteredLine = inner.getAttribute('data-short-line') === 'true';
 
         // 1. Reset inner element to unscaled baseline
-        inner.style.width = 'max-content';
         inner.style.transform = 'none';
-        inner.style.fontSize = baseFontSize;
+        inner.style.width = 'max-content';
+        inner.style.maxWidth = 'none';
+        inner.style.fontSize = `${basePx}px`;
 
         // 2. Measure actual available width for the line
-        const maxAllowedWidth = Math.max(200, lineRow.clientWidth - 10);
+        // (lineRow has paddingLeft 12px, paddingRight 12px, plus 2px safety buffer = 26px)
+        const availWidth = Math.max(180, lineRow.clientWidth - 26);
 
         // 3. Measure natural content width
-        const actualContentWidth = inner.scrollWidth;
+        const currentWidth = inner.scrollWidth;
 
         // 4. If content overflows, calculate font scale ratio and geometric scaleX if needed
-        if (actualContentWidth > maxAllowedWidth) {
-          const scaleRatio = (maxAllowedWidth - 2) / actualContentWidth;
-          const newFontPx = Math.max(9.5, parseFloat(baseFontSize) * scaleRatio);
-          inner.style.fontSize = newFontPx.toFixed(2) + 'px';
+        if (currentWidth > availWidth) {
+          const fontRatio = (availWidth - 1) / currentWidth;
+          const newFontPx = Math.max(10.5, basePx * fontRatio);
+          inner.style.fontSize = `${newFontPx.toFixed(2)}px`;
 
           const afterFontWidth = inner.scrollWidth;
-          if (afterFontWidth > maxAllowedWidth) {
-            const finalScale = (maxAllowedWidth - 2) / afterFontWidth;
-            inner.style.transform = 'scaleX(' + finalScale.toFixed(4) + ')';
-            inner.style.transformOrigin = 'center center';
+          if (afterFontWidth > availWidth) {
+            const finalScale = (availWidth - 1) / afterFontWidth;
+            inner.style.transform = `scaleX(${Math.min(1, finalScale).toFixed(4)})`;
+            inner.style.transformOrigin = isCenteredLine ? 'center center' : 'right center';
+          } else {
+            inner.style.transform = 'none';
           }
 
           if (isCenteredLine) {
-            inner.style.width = 'auto';
+            inner.style.width = 'max-content';
             inner.style.justifyContent = 'center';
           } else {
-            inner.style.width = maxAllowedWidth + 'px';
+            inner.style.width = `${availWidth}px`;
             inner.style.justifyContent = 'space-between';
           }
         } else {
-          // 5. Content fits within maxAllowedWidth
+          // 5. Content fits within availWidth
+          inner.style.transform = 'none';
           if (isCenteredLine) {
-            inner.style.width = 'auto';
+            inner.style.width = 'max-content';
             inner.style.justifyContent = 'center';
           } else {
-            inner.style.width = maxAllowedWidth + 'px';
+            inner.style.width = `${availWidth}px`;
             inner.style.justifyContent = 'space-between';
           }
         }
       });
     };
 
+    // Stage 1: Immediate layout pass
     fitMushafLinesToContainer();
 
-    // Re-check once webfonts finish rendering to account for exact glyph metrics
+    // Stage 2: Next frame pass
+    const rAFId = requestAnimationFrame(() => {
+      fitMushafLinesToContainer();
+    });
+
+    // Stage 3: Multi-interval passes for late asynchronous font shaping on mobile WebViews
+    const t1 = setTimeout(() => fitMushafLinesToContainer(), 60);
+    const t2 = setTimeout(() => fitMushafLinesToContainer(), 180);
+    const t3 = setTimeout(() => fitMushafLinesToContainer(), 420);
+
+    // Stage 4: Re-check when web fonts complete loading
     if (typeof document !== 'undefined' && 'fonts' in document && document.fonts?.ready) {
-      document.fonts.ready.then(() => {
-        fitMushafLinesToContainer();
-      }).catch(() => {});
+      document.fonts.ready
+        .then(() => {
+          fitMushafLinesToContainer();
+        })
+        .catch(() => {});
     }
 
-    // Attach ResizeObserver to container
+    // Stage 5: ResizeObserver for dynamic orientation changes
     let ro: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(() => {
@@ -1024,6 +1042,10 @@ function InteractiveMushafPageComponent({
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(rAFId);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
       if (ro) ro.disconnect();
       window.removeEventListener('resize', handleResize);
     };
@@ -1377,12 +1399,12 @@ function InteractiveMushafPageComponent({
                       width: '100%',
                       overflow: 'hidden',
                       display: 'flex',
-                      justifyContent: 'center',
+                      justifyContent: isShortCenteredLine ? 'center' : 'flex-start',
                       alignItems: 'center',
                       direction: 'rtl',
                       boxSizing: 'border-box',
-                      paddingLeft: '4px',
-                      paddingRight: '4px',
+                      paddingLeft: '12px',
+                      paddingRight: '12px',
                       borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
                       minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
                       color: readingMode === 'paper' ? '#1E1208' : readingMode === 'night' ? '#F8FAFC' : 'var(--text-primary)',
@@ -1399,8 +1421,11 @@ function InteractiveMushafPageComponent({
                         direction: 'rtl',
                         gap: isShortCenteredLine ? '6px' : '2px',
                         whiteSpace: 'nowrap',
+                        width: 'max-content',
+                        maxWidth: 'none',
+                        flexShrink: 0,
                         fontSize: initialLineFontSize,
-                        transformOrigin: 'center center',
+                        transformOrigin: isShortCenteredLine ? 'center center' : 'right center',
                       }}
                     >
                       {lineTokens.map((token) => {
@@ -1426,8 +1451,8 @@ function InteractiveMushafPageComponent({
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: isCompactMedallion ? '0.72em' : '0.85em',
-                                lineHeight: 'inherit',
+                                fontSize: isCompactMedallion ? '0.70em' : '0.85em',
+                                lineHeight: 1,
                                 padding: isCompactMedallion ? '0 2px' : '2px 6px',
                                 margin: isCompactMedallion ? '0 1px' : '0 2px',
                                 borderRadius: '9999px',
@@ -1480,8 +1505,8 @@ function InteractiveMushafPageComponent({
                                 display: 'inline-block',
                                 fontSize: 'inherit',
                                 lineHeight: 'inherit',
-                                paddingLeft: isCompactWord ? '1px' : '2px',
-                                paddingRight: isCompactWord ? '1px' : '2px',
+                                paddingLeft: isCompactWord ? '0.5px' : '2px',
+                                paddingRight: isCompactWord ? '0.5px' : '2px',
                                 paddingTop: '0px',
                                 paddingBottom: '0px',
                                 margin: 0,

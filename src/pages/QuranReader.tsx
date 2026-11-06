@@ -516,7 +516,7 @@ export default function QuranReader() {
   };
 
   const handlePrevPage = () => {
-    if (readerViewMode !== 'cards' && lineFormat === 7 && subPage7L > 1) {
+    if (readerViewMode !== 'card' && lineFormat === 7 && subPage7L > 1) {
       setSubPage7L((prev) => prev - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -529,7 +529,7 @@ export default function QuranReader() {
   };
 
   const handleNextPage = () => {
-    if (readerViewMode !== 'cards' && lineFormat === 7 && subPage7L < totalParts7L) {
+    if (readerViewMode !== 'card' && lineFormat === 7 && subPage7L < totalParts7L) {
       setSubPage7L((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -589,7 +589,7 @@ export default function QuranReader() {
               <ArrowLeft className="w-4 h-4" />
             </button>
 
-            {/* Center: Arabic Surah Title + English Surah Name + Page & Juz */}
+            {/* Center: Surah Name + Page & Juz (Zero truncation guarantee) */}
             <div
               className="cursor-pointer select-none text-center"
               style={{ flex: 1, minWidth: 0, overflow: 'hidden', padding: '0 4px' }}
@@ -597,22 +597,19 @@ export default function QuranReader() {
               title="Return to Quran index"
             >
               <div className="truncate font-bold text-[0.84rem] leading-tight text-[var(--text-primary)]">
-                {currentSurahInfo?.englishName || `Surah ${surahOnPage}`}{' '}
-                <span className="font-arabic text-[var(--accent-text)]">
-                  {currentSurahInfo?.name || ''}
-                </span>
+                {currentSurahInfo?.englishName || `Surah ${surahOnPage}`}
               </div>
               <div className="truncate text-[0.68rem] leading-tight text-[var(--text-secondary)]">
                 Page {mushafPageNumber} • Juz {currentJuz}
               </div>
             </div>
 
-            {/* Right: Guide, Study & Hifz + Star Bookmark */}
+            {/* Right: Guide, Study & Hifz, Tilawah Audio + Star Bookmark */}
             <div
               className="shrink-0"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
             >
-              {/* Guide Button: 36x36 circular button with single HelpCircle icon */}
+              {/* Guide Button: 36x36 circular button */}
               <button
                 type="button"
                 onClick={() => setShowGuideModal(true)}
@@ -631,31 +628,29 @@ export default function QuranReader() {
                   color: 'var(--accent-text)',
                 }}
               >
-                <HelpCircle style={{ width: '18px', height: '18px' }} />
+                <HelpCircle style={{ width: '17px', height: '17px' }} />
               </button>
 
-              {/* Study Button: 36px height pill with single BookOpen icon + localized label */}
+              {/* Study Button: 36x36 circular button matching Guide, Sliders & Star */}
               <button
                 type="button"
                 onClick={() => handleOpenStudySheet(surahOnPage, 1)}
-                title="Study & Hifz Memorization"
-                className="hover:border-[var(--accent)] transition-all shadow-sm active:scale-95 select-none font-bold"
+                title={uiStrings.studyBtn || 'Study & Hifz Memorization'}
+                aria-label={uiStrings.studyBtn || 'Study & Hifz Memorization'}
+                className="hover:border-[var(--accent)] transition-all shadow-sm active:scale-95 select-none"
                 style={{
+                  width: '36px',
                   height: '36px',
-                  padding: '0 11px',
                   borderRadius: '9999px',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '5px',
                   background: 'var(--accent-soft)',
                   border: '1px solid var(--accent)',
                   color: 'var(--accent-text)',
-                  fontSize: '0.76rem',
                 }}
               >
-                <BookOpen className="w-4 h-4" />
-                <span>{uiStrings.studyBtn}</span>
+                <BookOpen style={{ width: '17px', height: '17px' }} />
               </button>
 
               {/* Audio Drawer & Tilawah Options Button */}
@@ -1082,7 +1077,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handlePrevPage}
-              disabled={readerViewMode !== 'cards' && lineFormat === 7 ? (mushafPageNumber <= 1 && subPage7L <= 1) : mushafPageNumber <= 1}
+              disabled={readerViewMode !== 'card' && lineFormat === 7 ? (mushafPageNumber <= 1 && subPage7L <= 1) : mushafPageNumber <= 1}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',
@@ -1124,7 +1119,7 @@ export default function QuranReader() {
                   lineHeight: 1.2,
                 }}
               >
-                {readerViewMode !== 'cards' && lineFormat === 7 && totalParts7L > 1
+                {readerViewMode !== 'card' && lineFormat === 7 && totalParts7L > 1
                   ? `P.${mushafPageNumber} (Part ${subPage7L}/${totalParts7L})`
                   : `${uiStrings.page} ${mushafPageNumber} / 604`}
               </div>
@@ -1162,7 +1157,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handleNextPage}
-              disabled={readerViewMode !== 'cards' && lineFormat === 7 ? (mushafPageNumber >= 604 && subPage7L >= totalParts7L) : mushafPageNumber >= 604}
+              disabled={readerViewMode !== 'card' && lineFormat === 7 ? (mushafPageNumber >= 604 && subPage7L >= totalParts7L) : mushafPageNumber >= 604}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',

@@ -26,11 +26,13 @@ export type NaflPrayerId = 'ishraq' | 'chasht' | 'awwabin';
 export interface NaflPrayerInfo {
   id: NaflPrayerId;
   name: string;
+  shortName: string;
   arabicName: string;
   urduName: string;
   displayTitle: string;
   rakaat: string;
   virtue: string;
+  conciseVirtue: string;
   hadithRef: string;
   icon: string;
   start: Date;
@@ -123,11 +125,13 @@ export function evaluateNaflPrayers(
     prayers.push({
       id: 'ishraq',
       name: 'Ishraq',
+      shortName: 'Ishraq',
       arabicName: 'صلاة الإشراق',
       urduName: 'نماز اشراق',
       displayTitle: 'Ishraq • الإشراق',
-      rakaat: "2–4 Rak'at",
-      virtue: "2–4 Rak'at Nafl • Reward of complete Hajj & Umrah (Tirmidhi 586)",
+      rakaat: "2–4 Rak'at Nafl",
+      virtue: "Reward of complete Hajj & Umrah (Tirmidhi 586)",
+      conciseVirtue: 'Hajj & Umrah Reward',
       hadithRef: 'Tirmidhi 586',
       icon: '☀️',
       start: createDateFromSeconds(nowDate, startSec),
@@ -155,11 +159,13 @@ export function evaluateNaflPrayers(
     prayers.push({
       id: 'chasht',
       name: 'Chasht (Duha)',
+      shortName: 'Chasht',
       arabicName: 'صلاة الضحى',
       urduName: 'نماز چاشت',
       displayTitle: 'Chasht (Duha) • الضحى',
-      rakaat: "2–12 Rak'at",
-      virtue: "2–12 Rak'at Nafl • Charity for all 360 joints of the body (Muslim 720)",
+      rakaat: "2–12 Rak'at Nafl",
+      virtue: "Charity for all 360 joints of the body (Muslim 720)",
+      conciseVirtue: '360 Joints Charity',
       hadithRef: 'Muslim 720',
       icon: '🌤️',
       start: createDateFromSeconds(nowDate, startSec),
@@ -187,11 +193,13 @@ export function evaluateNaflPrayers(
     prayers.push({
       id: 'awwabin',
       name: 'Awwabin',
+      shortName: 'Awwabin',
       arabicName: 'صلاة الأوابين',
       urduName: 'نماز اوابین',
       displayTitle: 'Awwabin • الأوابين',
-      rakaat: "6–20 Rak'at",
-      virtue: "6–20 Rak'at Nafl • Reward of 12 years of worship (Tirmidhi 435)",
+      rakaat: "6–20 Rak'at Nafl",
+      virtue: "Reward of 12 years of worship (Tirmidhi 435)",
+      conciseVirtue: 'After Maghrib Sunnah',
       hadithRef: 'Tirmidhi 435',
       icon: '🌙',
       start: createDateFromSeconds(nowDate, startSec),

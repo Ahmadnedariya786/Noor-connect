@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sunset, Bell, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { Moon, Sunset, Bell, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { getPrayerDisplayName, isMatchingPrayer } from '@/lib/prayer-utils';
 import { useLanguage } from '@/contexts/LanguageContext-new';
 import { useLocationState } from '@/lib/location-state';
 import { OnlinePrayerAPI, type LiveDaySchedule } from '@/lib/online-prayer-api';
 import { useSettings } from '@/contexts/SettingsContext';
 import { formatPrayerTime } from '@/lib/time-formatter';
-import { getPrayerMinuteOffsets, applyOffsetsToTimings, PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
+import { PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
 import {
   getLocalizedPrayerName,
   formatLocalizedCountdown,
@@ -1213,17 +1213,17 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             {/* Header: Title + Active Badge */}
             <div className="flex items-center justify-between gap-2 mb-2.5">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-sm shrink-0">✨</span>
+                <Sparkles className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
                 <span
-                  className="font-bold tracking-wide uppercase truncate"
-                  style={{ fontSize: '0.72rem', color: 'var(--accent-text)' }}
+                  className="font-extrabold tracking-wider uppercase truncate"
+                  style={{ fontSize: '0.76rem', color: 'var(--accent-text)', letterSpacing: '0.05em' }}
                 >
-                  NAFL & MUSTAHABB PRAYERS <span className="opacity-75 font-normal text-[10px] lowercase tracking-normal">(start – end time)</span>
+                  NAFL PRAYERS
                 </span>
               </div>
               {selectedDateOffset === 0 && naflState.hasActiveNafl && naflState.activeNafl ? (
                 <div
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 animate-pulse"
+                  className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 animate-pulse"
                   style={{
                     background: 'var(--accent-soft, rgba(212, 175, 55, 0.15))',
                     border: '1px solid var(--accent)',
@@ -1232,7 +1232,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
                   <span className="whitespace-nowrap">
-                    ● {naflState.activeNafl.name} Active Now
+                    {naflState.activeNafl.shortName} Active Now
                   </span>
                 </div>
               ) : (
@@ -1244,12 +1244,12 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                     border: '1px solid var(--border)',
                   }}
                 >
-                  3 Sunnah Nafl Windows
+                  Start – End Times
                 </span>
               )}
             </div>
 
-            {/* 3 Nafl Prayer Rows */}
+            {/* 3 Nafl Prayer Rows: Spacious 2-Row Layout per sub-card */}
             <div className="space-y-2">
               {naflState.prayers.map((nafl) => {
                 const isActive = selectedDateOffset === 0 && nafl.isActiveNow;
@@ -1257,7 +1257,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 return (
                   <div
                     key={nafl.id}
-                    className="p-2.5 rounded-xl transition-all duration-200 border"
+                    className="p-3 rounded-xl transition-all duration-200 border flex flex-col gap-2"
                     style={{
                       background: isActive
                         ? 'var(--accent-soft, rgba(212, 175, 55, 0.12))'
@@ -1270,77 +1270,71 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                         : 'none',
                     }}
                   >
+                    {/* Row 1: Prayer Title + Arabic Name on Left, Start – End Time on Right */}
                     <div className="flex items-center justify-between gap-2">
-                      {/* Left Side: Icon + Name + Rak'aat Badge */}
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base shrink-0">{nafl.icon}</span>
-                        <div className="flex flex-col min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className="font-bold text-xs truncate"
-                              style={{
-                                color: isActive
-                                  ? 'var(--accent-text)'
-                                  : 'var(--text-primary)',
-                              }}
-                            >
-                              {nafl.displayTitle}
-                            </span>
-                            <span
-                              className="text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0"
-                              style={{
-                                background: 'var(--surface)',
-                                color: 'var(--text-secondary)',
-                                border: '1px solid var(--border)',
-                              }}
-                            >
-                              {nafl.rakaat}
-                            </span>
-                          </div>
-                          <span
-                            className="text-[10px] truncate"
-                            style={{ color: 'var(--text-secondary)' }}
-                            title={nafl.virtue}
-                          >
-                            {nafl.virtue}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Right Side: Start – End Window + Active Remaining Pill */}
-                      <div className="flex flex-col items-end shrink-0 pl-1">
+                        <span className="text-base shrink-0 select-none">{nafl.icon}</span>
                         <span
-                          className="text-xs font-bold font-mono tracking-tight"
+                          className="font-bold text-xs truncate"
                           style={{
                             color: isActive
                               ? 'var(--accent-text)'
                               : 'var(--text-primary)',
-                            whiteSpace: 'nowrap',
-                            fontVariantNumeric: 'tabular-nums',
                           }}
                         >
-                          {nafl.windowFormatted}
+                          {nafl.displayTitle}
                         </span>
-                        {isActive ? (
-                          <span
-                            className="text-[10px] font-bold font-mono mt-0.5 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap animate-pulse"
-                            style={{
-                              background: 'var(--accent)',
-                              color: 'var(--on-accent)',
-                              boxShadow: '0 0 8px var(--accent-glow)',
-                            }}
-                          >
-                            <span>● ACTIVE • Ends in {nafl.remainingFormatted}</span>
-                          </span>
-                        ) : (
-                          <span
-                            className="text-[10px] font-medium"
-                            style={{ color: 'var(--text-secondary)', opacity: 0.75 }}
-                          >
-                            Sunnah Nafl
-                          </span>
-                        )}
                       </div>
+                      <span
+                        className="text-xs font-bold font-mono tracking-tight shrink-0 ltr-num tabular-nums"
+                        dir="ltr"
+                        style={{
+                          color: isActive
+                            ? 'var(--accent-text)'
+                            : 'var(--text-primary)',
+                          whiteSpace: 'nowrap',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {nafl.windowFormatted}
+                      </span>
+                    </div>
+
+                    {/* Row 2: Rak'at Badge on Left, Active Countdown Pill or Virtue Label on Right */}
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-md font-semibold shrink-0"
+                        style={{
+                          background: 'var(--surface)',
+                          color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
+                          border: '1px solid var(--border)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {nafl.rakaat}
+                      </span>
+
+                      {isActive ? (
+                        <span
+                          className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full flex items-center gap-1.5 shrink-0 whitespace-nowrap animate-pulse"
+                          style={{
+                            background: 'var(--accent)',
+                            color: 'var(--on-accent)',
+                            boxShadow: '0 0 8px var(--accent-glow)',
+                          }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+                          <span>ACTIVE • Ends in {nafl.remainingFormatted}</span>
+                        </span>
+                      ) : (
+                        <span
+                          className="text-[10px] font-medium truncate max-w-[200px] text-right"
+                          style={{ color: 'var(--text-secondary)', opacity: 0.85 }}
+                          title={nafl.virtue}
+                        >
+                          {nafl.conciseVirtue}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
