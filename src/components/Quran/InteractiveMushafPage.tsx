@@ -939,11 +939,14 @@ function InteractiveMushafPageComponent({
     }
   }, [subPage7L, totalParts7L]);
 
-  // Guaranteed DOM measurement auto-fit pass (fitMushafLinesToContainer)
-  // Ensures every single line on Page 344 and all 604 pages in 15L, 13L, and 7L fits 100% inside container width with 0px clipping
+  // Two-Stage Width Measurement & Geometric Auto-Fit Engine (fitMushafLinesToContainer)
+  // Ensures every single line on all 604 pages in 15L, 13L, and 7L fits 100% inside container width with 0px clipping
   useLayoutEffect(() => {
     const container = mushafLinesContainerRef.current;
     if (!container) return;
+
+    const baseFontSize =
+      activeFormat === 15 ? '15.5px' : activeFormat === 13 ? '14.5px' : '18px';
 
     const fitMushafLinesToContainer = () => {
       const lineRows = container.querySelectorAll<HTMLElement>('[data-mushaf-line]');
@@ -953,32 +956,47 @@ function InteractiveMushafPageComponent({
         const inner = lineRow.querySelector<HTMLElement>('[data-mushaf-line-inner]');
         if (!inner) return;
 
-        const isShort = inner.getAttribute('data-short-line') === 'true';
-        const initialSize = inner.getAttribute('data-initial-font-size') || '';
+        const isCenteredLine = inner.getAttribute('data-short-line') === 'true';
 
-        // Reset to unscaled initial state before measuring
-        inner.style.fontSize = initialSize;
-        inner.style.transform = 'none';
-
-        const availableWidth = lineRow.clientWidth - 20; // 10px left + 10px right padding
-        if (availableWidth <= 50) return;
-
-        // Temporarily set width to max-content to measure true unclipped natural scrollWidth
+        // 1. Reset inner element to unscaled baseline
         inner.style.width = 'max-content';
-        const naturalWidth = Math.max(inner.scrollWidth, inner.offsetWidth);
-        inner.style.width = isShort ? 'auto' : '100%';
+        inner.style.transform = 'none';
+        inner.style.fontSize = baseFontSize;
 
-        if (naturalWidth > availableWidth) {
-          const ratio = (availableWidth - 2) / naturalWidth;
-          const computedPx = parseFloat(window.getComputedStyle(inner).fontSize) || 16;
-          const fittedPx = Math.max(10.5, computedPx * ratio);
-          inner.style.fontSize = `${fittedPx.toFixed(2)}px`;
+        // 2. Measure actual available width for the line
+        const maxAllowedWidth = Math.max(200, lineRow.clientWidth - 10);
 
-          // Safety re-check for narrow screens / complex ligatures
-          if (inner.scrollWidth > lineRow.clientWidth - 2) {
-            const remRatio = (lineRow.clientWidth - 4) / inner.scrollWidth;
-            inner.style.transform = `scaleX(${Math.max(0.82, remRatio).toFixed(3)})`;
-            inner.style.transformOrigin = isShort ? 'center' : 'right center';
+        // 3. Measure natural content width
+        const actualContentWidth = inner.scrollWidth;
+
+        // 4. If content overflows, calculate font scale ratio and geometric scaleX if needed
+        if (actualContentWidth > maxAllowedWidth) {
+          const scaleRatio = (maxAllowedWidth - 2) / actualContentWidth;
+          const newFontPx = Math.max(9.5, parseFloat(baseFontSize) * scaleRatio);
+          inner.style.fontSize = newFontPx.toFixed(2) + 'px';
+
+          const afterFontWidth = inner.scrollWidth;
+          if (afterFontWidth > maxAllowedWidth) {
+            const finalScale = (maxAllowedWidth - 2) / afterFontWidth;
+            inner.style.transform = 'scaleX(' + finalScale.toFixed(4) + ')';
+            inner.style.transformOrigin = 'center center';
+          }
+
+          if (isCenteredLine) {
+            inner.style.width = 'auto';
+            inner.style.justifyContent = 'center';
+          } else {
+            inner.style.width = maxAllowedWidth + 'px';
+            inner.style.justifyContent = 'space-between';
+          }
+        } else {
+          // 5. Content fits within maxAllowedWidth
+          if (isCenteredLine) {
+            inner.style.width = 'auto';
+            inner.style.justifyContent = 'center';
+          } else {
+            inner.style.width = maxAllowedWidth + 'px';
+            inner.style.justifyContent = 'space-between';
           }
         }
       });
@@ -1104,7 +1122,10 @@ function InteractiveMushafPageComponent({
           maxWidth: '100%',
           overflow: 'hidden',
           boxSizing: 'border-box',
-          padding: '12px 10px',
+          paddingLeft: '12px',
+          paddingRight: '12px',
+          paddingTop: '12px',
+          paddingBottom: '12px',
         }}
       >
         {/* Top Page Header Ribbon: Juz and Page Number */}
@@ -1143,11 +1164,12 @@ function InteractiveMushafPageComponent({
               flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px 10px',
+              gap: '4px 8px',
               padding: '6px 10px',
               borderRadius: '12px',
               width: '100%',
               boxSizing: 'border-box',
+              overflow: 'visible',
               background: readingMode === 'paper' ? 'rgba(44, 30, 17, 0.07)' : 'var(--surface-2)',
               borderColor: readingMode === 'paper' ? 'rgba(44, 30, 17, 0.18)' : 'var(--border)',
             }}
@@ -1352,15 +1374,15 @@ function InteractiveMushafPageComponent({
                     className="mushaf-line-row w-full max-w-full my-0.5 transition-colors"
                     dir="rtl"
                     style={{
-                      direction: 'rtl',
                       width: '100%',
-                      paddingLeft: '10px',
-                      paddingRight: '10px',
-                      boxSizing: 'border-box',
                       overflow: 'hidden',
                       display: 'flex',
+                      justifyContent: 'center',
                       alignItems: 'center',
-                      justifyContent: isShortCenteredLine ? 'center' : 'space-between',
+                      direction: 'rtl',
+                      boxSizing: 'border-box',
+                      paddingLeft: '4px',
+                      paddingRight: '4px',
                       borderBottom: '1px solid rgba(212, 175, 55, 0.08)',
                       minHeight: activeFormat === 7 ? '3.2rem' : activeFormat === 13 ? '2.4rem' : '2.1rem',
                       color: readingMode === 'paper' ? '#1E1208' : readingMode === 'night' ? '#F8FAFC' : 'var(--text-primary)',
@@ -1368,18 +1390,17 @@ function InteractiveMushafPageComponent({
                   >
                     <div
                       data-mushaf-line-inner={lineIdx + 1}
-                      data-initial-font-size={initialLineFontSize}
                       data-short-line={isShortCenteredLine ? 'true' : 'false'}
                       style={{
-                        direction: 'rtl',
                         display: 'inline-flex',
+                        flexWrap: 'nowrap',
                         alignItems: 'center',
                         justifyContent: isShortCenteredLine ? 'center' : 'space-between',
-                        width: isShortCenteredLine ? 'auto' : '100%',
-                        flexWrap: 'nowrap',
-                        gap: isShortCenteredLine ? '6px' : (activeFormat === 7 ? '8px' : '2px'),
+                        direction: 'rtl',
+                        gap: isShortCenteredLine ? '6px' : '2px',
+                        whiteSpace: 'nowrap',
                         fontSize: initialLineFontSize,
-                        transformOrigin: isShortCenteredLine ? 'center' : 'right center',
+                        transformOrigin: 'center center',
                       }}
                     >
                       {lineTokens.map((token) => {
@@ -1405,9 +1426,9 @@ function InteractiveMushafPageComponent({
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: isCompactMedallion ? '0.76em' : '0.85em',
-                                lineHeight: 1,
-                                padding: isCompactMedallion ? '1px 3px' : '2px 6px',
+                                fontSize: isCompactMedallion ? '0.72em' : '0.85em',
+                                lineHeight: 'inherit',
+                                padding: isCompactMedallion ? '0 2px' : '2px 6px',
                                 margin: isCompactMedallion ? '0 1px' : '0 2px',
                                 borderRadius: '9999px',
                                 flexShrink: 0,
@@ -1458,9 +1479,12 @@ function InteractiveMushafPageComponent({
                                 whiteSpace: 'nowrap',
                                 display: 'inline-block',
                                 fontSize: 'inherit',
-                                lineHeight: activeFormat === 7 ? 2.0 : 1.85,
-                                padding: isCompactWord ? '1px 1.5px' : '2px 4px',
-                                margin: '0',
+                                lineHeight: 'inherit',
+                                paddingLeft: isCompactWord ? '1px' : '2px',
+                                paddingRight: isCompactWord ? '1px' : '2px',
+                                paddingTop: '0px',
+                                paddingBottom: '0px',
+                                margin: 0,
                                 flexShrink: 0,
                                 minWidth: 0,
                                 letterSpacing: 'normal',
@@ -1478,7 +1502,6 @@ function InteractiveMushafPageComponent({
                                       borderRadius: '6px',
                                       boxShadow: '0 0 10px var(--accent-glow)',
                                       transition: 'background-color 120ms ease',
-                                      padding: '0 3px',
                                     }
                                   : isVersePlaying
                                   ? {

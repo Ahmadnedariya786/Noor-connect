@@ -16,6 +16,7 @@ import {
 import type { LanguageCode } from '@/lib/language-config';
 import { cn } from '@/lib/utils';
 import { evaluateMakruhState } from '@/lib/makruh-times';
+import { evaluateNaflPrayers } from '@/lib/nafl-prayers';
 
 export interface PrayerItem {
   name: string;
@@ -430,6 +431,14 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   const isMakruhActive = Boolean(
     selectedDateOffset === 0 && makruhState.isMakruhNow && makruhState.activeWindow
   );
+
+  const naflState = useMemo(() => {
+    return evaluateNaflPrayers(
+      displayedPrayers,
+      now,
+      timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h'
+    );
+  }, [displayedPrayers, now, timeFormat]);
 
   // Notification status check for bell styling
   const [notificationsEnabled] = useState(() => {
@@ -936,18 +945,30 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
           {/* Header Line: Blinking Dot + Prohibited Warning Badge + Live Countdown */}
           <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
-            <div className="flex items-center gap-1.5 min-w-0 shrink-0">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
               <span className="w-2.5 h-2.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
               <span
-                style={{ fontSize: '0.70rem', fontWeight: 800, letterSpacing: '0.03em', whiteSpace: 'nowrap' }}
+                style={{
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.03em',
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
                 className="uppercase text-red-200"
               >
-                ● MAKRUH WAQT (PROHIBITED)
+                MAKRUH (PROHIBITED)
               </span>
             </div>
             <div
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold text-red-100 flex items-center gap-1 shrink-0 font-mono tabular-nums whitespace-nowrap"
+              className="rounded-full text-red-100 flex items-center gap-1 font-mono tabular-nums"
               style={{
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+                fontSize: '0.68rem',
+                padding: '3px 8px',
                 background: 'rgba(220, 38, 38, 0.40)',
                 border: '1px solid #DC2626',
               }}
@@ -1177,6 +1198,156 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             </div>
           );
         })}
+
+        {/* ═════════════════════════════════════════════════════════════ */}
+        {/* NAFL & MUSTAHABB PRAYERS (START – END TIME) ROYAL SECTION   */}
+        {/* ═════════════════════════════════════════════════════════════ */}
+        {naflState.prayers.length > 0 && (
+          <div
+            className="w-full mt-3 p-3.5 sm:p-4 rounded-2xl border border-[var(--border)] transition-all select-none relative overflow-hidden"
+            style={{
+              background: 'var(--surface)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.22)',
+            }}
+          >
+            {/* Header: Title + Active Badge */}
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-sm shrink-0">✨</span>
+                <span
+                  className="font-bold tracking-wide uppercase truncate"
+                  style={{ fontSize: '0.72rem', color: 'var(--accent-text)' }}
+                >
+                  NAFL & MUSTAHABB PRAYERS <span className="opacity-75 font-normal text-[10px] lowercase tracking-normal">(start – end time)</span>
+                </span>
+              </div>
+              {selectedDateOffset === 0 && naflState.hasActiveNafl && naflState.activeNafl ? (
+                <div
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 animate-pulse"
+                  style={{
+                    background: 'var(--accent-soft, rgba(212, 175, 55, 0.15))',
+                    border: '1px solid var(--accent)',
+                    color: 'var(--accent-text)',
+                  }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
+                  <span className="whitespace-nowrap">
+                    ● {naflState.activeNafl.name} Active Now
+                  </span>
+                </div>
+              ) : (
+                <span
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0"
+                  style={{
+                    background: 'var(--surface-2)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  3 Sunnah Nafl Windows
+                </span>
+              )}
+            </div>
+
+            {/* 3 Nafl Prayer Rows */}
+            <div className="space-y-2">
+              {naflState.prayers.map((nafl) => {
+                const isActive = selectedDateOffset === 0 && nafl.isActiveNow;
+
+                return (
+                  <div
+                    key={nafl.id}
+                    className="p-2.5 rounded-xl transition-all duration-200 border"
+                    style={{
+                      background: isActive
+                        ? 'var(--accent-soft, rgba(212, 175, 55, 0.12))'
+                        : 'var(--surface-2)',
+                      borderColor: isActive
+                        ? 'var(--accent)'
+                        : 'var(--border)',
+                      boxShadow: isActive
+                        ? '0 0 14px var(--accent-glow, rgba(212, 175, 55, 0.25))'
+                        : 'none',
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      {/* Left Side: Icon + Name + Rak'aat Badge */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base shrink-0">{nafl.icon}</span>
+                        <div className="flex flex-col min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className="font-bold text-xs truncate"
+                              style={{
+                                color: isActive
+                                  ? 'var(--accent-text)'
+                                  : 'var(--text-primary)',
+                              }}
+                            >
+                              {nafl.displayTitle}
+                            </span>
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0"
+                              style={{
+                                background: 'var(--surface)',
+                                color: 'var(--text-secondary)',
+                                border: '1px solid var(--border)',
+                              }}
+                            >
+                              {nafl.rakaat}
+                            </span>
+                          </div>
+                          <span
+                            className="text-[10px] truncate"
+                            style={{ color: 'var(--text-secondary)' }}
+                            title={nafl.virtue}
+                          >
+                            {nafl.virtue}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right Side: Start – End Window + Active Remaining Pill */}
+                      <div className="flex flex-col items-end shrink-0 pl-1">
+                        <span
+                          className="text-xs font-bold font-mono tracking-tight"
+                          style={{
+                            color: isActive
+                              ? 'var(--accent-text)'
+                              : 'var(--text-primary)',
+                            whiteSpace: 'nowrap',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {nafl.windowFormatted}
+                        </span>
+                        {isActive ? (
+                          <span
+                            className="text-[10px] font-bold font-mono mt-0.5 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap animate-pulse"
+                            style={{
+                              background: 'var(--accent)',
+                              color: 'var(--on-accent)',
+                              boxShadow: '0 0 8px var(--accent-glow)',
+                            }}
+                          >
+                            <span>● ACTIVE • Ends in {nafl.remainingFormatted}</span>
+                          </span>
+                        ) : (
+                          <span
+                            className="text-[10px] font-medium"
+                            style={{ color: 'var(--text-secondary)', opacity: 0.75 }}
+                          >
+                            Sunnah Nafl
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Full-Width Subtle Action Row: Monthly Prayer Timetable */}
         <button
