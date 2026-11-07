@@ -20,12 +20,15 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.webkit.RenderProcessGoneDetail;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -34,7 +37,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +48,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.json.JSONObject;
 
+import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebViewClient;
 import com.getcapacitor.WebViewListener;
 import com.noorconnect.ummah.widgets.WidgetBridge;
 import com.noorconnect.ummah.widgets.WidgetForegroundService;
@@ -695,6 +702,9 @@ public class MainActivity extends BridgeActivity {
         // Install renderer process crash handler via Capacitor's bridge listener
         installRenderProcessCrashHandler();
 
+        // Install native GitHub Release E-Book stream proxy on BridgeWebViewClient
+        installGhEbookStreamProxy();
+
         // No persistent foreground service needed.
         // Adhan alarms use setAlarmClock() which is Doze-immune.
         // Adhan playback uses a short-lived foreground service started
@@ -811,6 +821,145 @@ public class MainActivity extends BridgeActivity {
             });
         } catch (Throwable t) {
             Log.w(TAG, "Could not install render process crash handler", t);
+        }
+    }
+
+    /**
+     * Intercepts `/__gh_ebook__/` URLs inside the WebView to stream large PDF volumes
+     * directly from GitHub Releases (`ebooks-library-v1`) with native HttpURLConnection,
+     * following cross-domain redirects (github.com -> AWS S3) and injecting CORS headers
+     * so JavaScript `fetch()` receives the exact Content-Length without CORS blocks.
+     */
+    private void installGhEbookStreamProxy() {
+        try {
+            Bridge bridge = getBridge();
+            if (bridge == null) {
+                Log.w(TAG, "Bridge is null; cannot install GitHub ebook stream proxy");
+                return;
+            }
+
+            bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
+                @Override
+                public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                    if (request != null && request.getUrl() != null) {
+                        String path = request.getUrl().getPath();
+                        if (path != null && path.startsWith("/__gh_ebook__/")) {
+                            WebResourceResponse resp = handleGhEbookRequest(request);
+                            if (resp != null) {
+                                return resp;
+                            }
+                        }
+                    }
+                    return super.shouldInterceptRequest(view, request);
+                }
+            });
+            Log.i(TAG, "Installed custom BridgeWebViewClient with GitHub release ebook stream proxy");
+        } catch (Throwable t) {
+            Log.e(TAG, "Failed to install GitHub release ebook stream proxy", t);
+        }
+    }
+
+    private WebResourceResponse handleGhEbookRequest(WebResourceRequest request) {
+        if (request == null || request.getUrl() == null) return null;
+        String method = request.getMethod();
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            Map<String, String> corsHeaders = new HashMap<>();
+            corsHeaders.put("Access-Control-Allow-Origin", "*");
+            corsHeaders.put("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+            corsHeaders.put("Access-Control-Allow-Headers", "*");
+            corsHeaders.put("Access-Control-Max-Age", "86400");
+            return new WebResourceResponse("text/plain", "UTF-8", 200, "OK", corsHeaders, new ByteArrayInputStream(new byte[0]));
+        }
+
+        String path = request.getUrl().getPath();
+        if (path == null) return null;
+        String fileName = path.substring(path.lastIndexOf('/') + 1);
+        if (!fileName.matches("^AnwarulBayan-Volume[1-5]\\.pdf$|^[A-Za-z0-9._-]+\\.pdf$")) {
+            Log.w(TAG, "handleGhEbookRequest: invalid fileName rejected: " + fileName);
+            return null;
+        }
+
+        String targetUrl = "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/" + fileName;
+        Log.i(TAG, "handleGhEbookRequest: streaming " + fileName + " from " + targetUrl);
+
+        HttpURLConnection conn = null;
+        try {
+            String currentUrl = targetUrl;
+            int redirects = 0;
+            final int maxRedirects = 5;
+
+            while (redirects < maxRedirects) {
+                URL u = new URL(currentUrl);
+                conn = (HttpURLConnection) u.openConnection();
+                conn.setConnectTimeout(20000);
+                conn.setReadTimeout(45000);
+                conn.setInstanceFollowRedirects(false);
+                conn.setRequestProperty("User-Agent", "NoorConnect-Android/2.2.1");
+
+                if (request.getRequestHeaders() != null) {
+                    for (Map.Entry<String, String> entry : request.getRequestHeaders().entrySet()) {
+                        if ("Range".equalsIgnoreCase(entry.getKey()) || "If-Range".equalsIgnoreCase(entry.getKey())) {
+                            conn.setRequestProperty(entry.getKey(), entry.getValue());
+                        }
+                    }
+                }
+
+                int code = conn.getResponseCode();
+                if (code == HttpURLConnection.HTTP_MOVED_PERM ||
+                    code == HttpURLConnection.HTTP_MOVED_TEMP ||
+                    code == HttpURLConnection.HTTP_SEE_OTHER ||
+                    code == 307 || code == 308) {
+                    String loc = conn.getHeaderField("Location");
+                    if (loc == null || loc.trim().isEmpty()) {
+                        break;
+                    }
+                    URL base = new URL(currentUrl);
+                    currentUrl = new URL(base, loc).toExternalForm();
+                    conn.disconnect();
+                    redirects++;
+                    continue;
+                }
+                break;
+            }
+
+            if (conn == null) {
+                return null;
+            }
+
+            int statusCode = conn.getResponseCode();
+            String statusMsg = conn.getResponseMessage();
+            if (statusMsg == null || statusMsg.trim().isEmpty()) {
+                statusMsg = (statusCode >= 200 && statusCode < 300) ? "OK" : "Error";
+            }
+
+            Map<String, String> responseHeaders = new HashMap<>();
+            responseHeaders.put("Access-Control-Allow-Origin", "*");
+            responseHeaders.put("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+            responseHeaders.put("Access-Control-Allow-Headers", "*");
+            responseHeaders.put("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges, Content-Type");
+            responseHeaders.put("Content-Type", "application/pdf");
+
+            long contentLength = conn.getContentLengthLong();
+            if (contentLength > 0) {
+                responseHeaders.put("Content-Length", String.valueOf(contentLength));
+            }
+            String contentRange = conn.getHeaderField("Content-Range");
+            if (contentRange != null) {
+                responseHeaders.put("Content-Range", contentRange);
+            }
+            String acceptRanges = conn.getHeaderField("Accept-Ranges");
+            if (acceptRanges != null) {
+                responseHeaders.put("Accept-Ranges", acceptRanges);
+            }
+
+            InputStream is = (statusCode >= 200 && statusCode < 400) ? conn.getInputStream() : conn.getErrorStream();
+            return new WebResourceResponse("application/pdf", null, statusCode, statusMsg, responseHeaders, is);
+        } catch (Exception e) {
+            Log.e(TAG, "handleGhEbookRequest exception for " + fileName, e);
+            if (conn != null) {
+                try { conn.disconnect(); } catch (Throwable ignored) {}
+            }
+            return null;
         }
     }
 

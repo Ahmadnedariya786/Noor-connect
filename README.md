@@ -15,11 +15,11 @@
 [![Nasheed Partner](https://img.shields.io/badge/Partner-No%20Copyright%20Nasheed-purple.svg)](https://nocopyrightnasheed.com/)
 
 <p align="center">
-  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/noor-connect-nightly.apk">
+  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk">
     <img src="https://img.shields.io/badge/📲%20Download%20Latest%20APK-v2.2.1%20(Direct)-D4AF37?style=for-the-badge&logo=android&logoColor=white" alt="Download Latest APK" height="42" />
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/NoorConnect-v2.2.1.apk">
+  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk">
     <img src="https://img.shields.io/badge/📦%20Download%20Versioned%20APK-NoorConnect--v2.2.1.apk-14213D?style=for-the-badge&logo=github&logoColor=white" alt="Download Versioned APK" height="42" />
   </a>
 </p>
@@ -64,12 +64,12 @@ Unlike conventional Islamic mobile apps that monetize spiritual habits or sell g
 
 | Asset | Target | Size | Direct Link | Checksum |
 | :--- | :--- | :--- | :--- | :--- |
-| **noor-connect-nightly.apk** | Android 8.0+ (ARM64 / ARMv7 / x86_64) | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/noor-connect-nightly.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/noor-connect-nightly.apk.sha256) |
-| **NoorConnect-v2.2.1.apk** | Official Stable Release Asset | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/NoorConnect-v2.2.1.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/NoorConnect-v2.2.1.apk.sha256) |
-| **version.json** | Fast In-App Auto-Updater Manifest | <1 KB | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/version.json) | — |
+| **noor-connect-nightly.apk** | Android 8.0+ (ARM64 / ARMv7 / x86_64) | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk.sha256) |
+| **NoorConnect-v2.2.1.apk** | Official Stable Release Asset | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk.sha256) |
+| **version.json** | Fast In-App Auto-Updater Manifest | <1 KB | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/version.json) | — |
 
 ### Installing the APK on Android
-1. Tap **[Download Latest APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest/download/noor-connect-nightly.apk)** directly on your Android phone.
+1. Tap **[Download Latest APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk)** directly on your Android phone.
 2. When prompted by Chrome or your browser, select **Download anyway** and then tap **Install**.
 3. If this is your first manual APK install, enable *"Allow from this source"* in Android Settings.
 4. Noor Connect includes an in-app turbo 4-thread parallel downloader: future updates can be checked and installed in 1 tap from `Settings > About Noor Connect` or the Home update banner.

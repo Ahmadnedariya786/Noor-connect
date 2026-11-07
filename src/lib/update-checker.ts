@@ -26,7 +26,6 @@ const NIGHTLY_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/ta
 const CACHE_KEY = 'noor_nightly_update_cache';
 const DISMISSED_COMMIT_KEY = 'noor_dismissed_update_commit';
 const DISMISSED_SESSION_KEY = 'noor_update_banner_dismissed_session';
-const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const FETCH_TIMEOUT_MS = 8000; // 8 seconds
 
 export const UPDATE_CHECK_CACHE_KEY = 'noor_update_check_cache_v1';
@@ -175,12 +174,13 @@ export function isSameCommit(shaA?: string | null, shaB?: string | null): boolea
  * - abort => "Timed out"
  * Never shows generic "Failed to fetch".
  */
-export function formatUpdateError(err: any): string {
+export function formatUpdateError(err: unknown): string {
   if (!err) return 'Network error - check internet';
-  if (err?.name === 'AbortError' || err?.message?.toLowerCase().includes('timeout') || err?.message?.toLowerCase().includes('abort')) {
+  const errObj = err as { name?: string; message?: string } | null;
+  if (errObj?.name === 'AbortError' || errObj?.message?.toLowerCase().includes('timeout') || errObj?.message?.toLowerCase().includes('abort')) {
     return 'Timed out';
   }
-  const msg = typeof err?.message === 'string' ? err.message : String(err);
+  const msg = typeof errObj?.message === 'string' ? errObj.message : String(err);
   if (msg.includes('Release not found') || msg.includes('404')) {
     return 'Release not found';
   }
@@ -473,6 +473,21 @@ async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyR
     }
 
     const data = await res.json();
+
+    // Strict Guard: Never confuse non-APK release tags (e.g. ebooks-library-v1) with app updates
+    if (
+      data?.tag_name === 'ebooks-library-v1' ||
+      (typeof data?.tag_name === 'string' && data.tag_name.startsWith('ebooks-'))
+    ) {
+      console.warn(`[UpdateChecker] Release tag "${data.tag_name}" is an e-books release, not an app update. Ignoring.`);
+      return null;
+    }
+
+    if (!Array.isArray(data.assets) || !data.assets.some((a: { name?: string }) => typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk'))) {
+      console.warn(`[UpdateChecker] Release "${data?.tag_name}" contains no .apk assets. Ignoring.`);
+      return null;
+    }
+
     const publishedAt = data.published_at || data.created_at;
     const remoteCommit = extractCommitFromRelease(data.body, data.target_commitish) || undefined;
 
@@ -480,10 +495,10 @@ async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyR
     let sizeBytes: number | undefined;
     let latestApkUploadedAt: string | null = null;
     let maxUploadedMs = -1;
-    let selectedApkAsset: any = null;
+    let selectedApkAsset: { browser_download_url?: string; size?: number } | null = null;
 
     if (Array.isArray(data.assets)) {
-      const apkAssets = data.assets.filter((a: any) =>
+      const apkAssets = data.assets.filter((a: { name?: string }) =>
         typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk')
       );
 
@@ -518,8 +533,8 @@ async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyR
       body: data.body,
       sizeBytes,
     };
-  } catch (err: any) {
-    if (err?.name === 'AbortError') throw err;
+  } catch (err: unknown) {
+    if ((err as { name?: string })?.name === 'AbortError') throw err;
     console.warn('[UpdateChecker] GitHub Releases API fetch failed:', err);
     return null;
   }
@@ -532,7 +547,6 @@ async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyR
 async function fetchCommitFromAtomFeed(signal: AbortSignal): Promise<NightlyReleaseInfo | null> {
   const atomUrls = [
     `https://github.com/${GITHUB_REPO}/commits/main.atom?t=${Date.now()}`,
-    `https://github.com/${GITHUB_REPO}/releases.atom?t=${Date.now()}`,
   ];
 
   for (const url of atomUrls) {
@@ -569,8 +583,8 @@ async function fetchCommitFromAtomFeed(signal: AbortSignal): Promise<NightlyRele
           body: `Auto-synchronized via GitHub Atom feed (Commit: ${commitSha.slice(0, 7)})`,
         };
       }
-    } catch (err: any) {
-      if (err?.name === 'AbortError') throw err;
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name === 'AbortError') throw err;
       console.warn(`[UpdateChecker] Atom feed fetch failed for ${url}:`, err);
     }
   }
@@ -620,8 +634,8 @@ async function fetchCommitFromVersionManifest(signal: AbortSignal): Promise<Nigh
           body: `Auto-synchronized via version manifest (Commit: ${(data.shortCommit || data.commit || '').slice(0, 7)})`,
         };
       }
-    } catch (err: any) {
-      if (err?.name === 'AbortError') throw err;
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name === 'AbortError') throw err;
       console.warn(`[UpdateChecker] Version manifest fetch failed for ${url}:`, err);
     }
   }
@@ -695,8 +709,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     // Primary: GitHub Releases API
     try {
       releaseInfo = await fetchFromGitHubReleasesApi(controller.signal);
-    } catch (e: any) {
-      if (e?.name === 'AbortError') throw e;
+    } catch (e: unknown) {
+      if ((e as { name?: string })?.name === 'AbortError') throw e;
     }
 
     // Fallback A: GitHub Atom Feed (bypasses GitHub API rate limits completely)
@@ -704,8 +718,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       try {
         console.log('[UpdateChecker] Primary API unavailable; attempting Fallback A (GitHub Atom feed)...');
         releaseInfo = await fetchCommitFromAtomFeed(controller.signal);
-      } catch (e: any) {
-        if (e?.name === 'AbortError') throw e;
+      } catch (e: unknown) {
+        if ((e as { name?: string })?.name === 'AbortError') throw e;
       }
     }
 
@@ -714,8 +728,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       try {
         console.log('[UpdateChecker] Fallback A unavailable; attempting Fallback B (Published version manifest)...');
         releaseInfo = await fetchCommitFromVersionManifest(controller.signal);
-      } catch (e: any) {
-        if (e?.name === 'AbortError') throw e;
+      } catch (e: unknown) {
+        if ((e as { name?: string })?.name === 'AbortError') throw e;
       }
     }
 
@@ -753,7 +767,7 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     }
 
     return checkResult;
-  } catch (err: any) {
+  } catch (err: unknown) {
     const message = formatUpdateError(err);
 
     return {
@@ -852,7 +866,7 @@ let inMemoryBannerDismissed = false;
 /**
  * Check if the update banner was dismissed for this launch.
  */
-export function isBannerDismissed(_commitSha?: string | null): boolean {
+export function isBannerDismissed(): boolean {
   if (inMemoryBannerDismissed) return true;
   try {
     return sessionStorage.getItem(DISMISSED_SESSION_KEY) === '1';
@@ -866,7 +880,7 @@ export function isBannerDismissed(_commitSha?: string | null): boolean {
  * Dismiss the update banner for this launch only.
  * Returns next launch while update is newer; once updated, SHA matches and banner never shows.
  */
-export function dismissBanner(_commitSha?: string | null): void {
+export function dismissBanner(): void {
   inMemoryBannerDismissed = true;
   try {
     sessionStorage.setItem(DISMISSED_SESSION_KEY, '1');

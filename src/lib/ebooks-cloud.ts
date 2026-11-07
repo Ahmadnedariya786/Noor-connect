@@ -1,5 +1,5 @@
 // Noor Connect — Multi-Tier Universal Cloud E-Book Delivery Engine
-// Supports GitHub Releases CDN, Archive.org Mirrors, Instant Cloud Streaming & Chunked Offline Downloader
+// Streams large PDF volumes directly from GitHub Releases (ebooks-library-v1) via native Android stream proxy
 
 import { savePdfBlob } from './idb-pdf-store';
 
@@ -17,10 +17,9 @@ export interface CloudEbookItem {
   category: string;
   estimatedSize: string;
   approxBytes: number;
-  primaryDownloadUrl: string;
-  mirrorDownloadUrls: string[];
-  cloudStreamUrl: string;
-  embedViewerUrl: string;
+  fileName: string;
+  androidStreamUrl: string;
+  githubReleaseUrl: string;
   localKey: string;
 }
 
@@ -52,25 +51,19 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     volNumber: 1,
     title: 'Tafseer Anwar-ul-Bayan — Part 1 (Vol. 1)',
     urduTitle: 'تفسیر انوار البیان — جلد اول',
-    urduSubtitle: 'پارہ ۱ تا ۷',
+    urduSubtitle: 'پارہ 1 تا 7',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: "Surah Al-Fatiha (1) to Surah Al-Ma'idah (5) • Juz 1 to 7",
     juzCoverage: 'Juz 1 to 7',
     surahRange: "Al-Fatiha (1) — Al-Ma'idah (5)",
     category: 'Quran & Tafsir',
-    estimatedSize: '~120 MB',
-    approxBytes: 125829120,
-    primaryDownloadUrl:
+    estimatedSize: '157.4 MB',
+    approxBytes: 165044224,
+    fileName: 'AnwarulBayan-Volume1.pdf',
+    androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume1.pdf',
+    githubReleaseUrl:
       'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
-    mirrorDownloadUrls: [
-      'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-1.pdf',
-      'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%201.pdf',
-    ],
-    cloudStreamUrl:
-      'https://archive.org/details/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-1/mode/2up?view=theater',
-    embedViewerUrl:
-      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-1',
     localKey: 'anwar-ul-bayan-vol-1',
   },
   {
@@ -78,25 +71,19 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     volNumber: 2,
     title: 'Tafseer Anwar-ul-Bayan — Part 2 (Vol. 2)',
     urduTitle: 'تفسیر انوار البیان — جلد دوم',
-    urduSubtitle: 'پارہ ۸ تا ۱۳',
+    urduSubtitle: 'پارہ 7 تا 13',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: "Surah Al-An'am (6) to Surah Ibrahim (14) • Juz 7 to 13",
     juzCoverage: 'Juz 7 to 13',
     surahRange: "Al-An'am (6) — Ibrahim (14)",
     category: 'Quran & Tafsir',
-    estimatedSize: '~135 MB',
-    approxBytes: 141557760,
-    primaryDownloadUrl:
+    estimatedSize: '154.7 MB',
+    approxBytes: 162214912,
+    fileName: 'AnwarulBayan-Volume2.pdf',
+    androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume2.pdf',
+    githubReleaseUrl:
       'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
-    mirrorDownloadUrls: [
-      'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-2.pdf',
-      'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%202.pdf',
-    ],
-    cloudStreamUrl:
-      'https://archive.org/details/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-2/mode/2up?view=theater',
-    embedViewerUrl:
-      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-2',
     localKey: 'anwar-ul-bayan-vol-2',
   },
   {
@@ -104,25 +91,19 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     volNumber: 3,
     title: 'Tafseer Anwar-ul-Bayan — Part 3 (Vol. 3)',
     urduTitle: 'تفسیر انوار البیان — جلد سوم',
-    urduSubtitle: 'پارہ ۱۴ تا ۱۸',
+    urduSubtitle: 'پارہ 14 تا 21',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Al-Hijr (15) to Surah Al-Ankabut (29) • Juz 14 to 21',
     juzCoverage: 'Juz 14 to 21',
     surahRange: 'Al-Hijr (15) — Al-Ankabut (29)',
     category: 'Quran & Tafsir',
-    estimatedSize: '~145 MB',
-    approxBytes: 152043520,
-    primaryDownloadUrl:
+    estimatedSize: '139.7 MB',
+    approxBytes: 146486272,
+    fileName: 'AnwarulBayan-Volume3.pdf',
+    androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume3.pdf',
+    githubReleaseUrl:
       'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
-    mirrorDownloadUrls: [
-      'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-3.pdf',
-      'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%203.pdf',
-    ],
-    cloudStreamUrl:
-      'https://archive.org/details/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-3/mode/2up?view=theater',
-    embedViewerUrl:
-      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-3',
     localKey: 'anwar-ul-bayan-vol-3',
   },
   {
@@ -130,25 +111,19 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     volNumber: 4,
     title: 'Tafseer Anwar-ul-Bayan — Part 4 (Vol. 4)',
     urduTitle: 'تفسیر انوار البیان — جلد چہارم',
-    urduSubtitle: 'پارہ ۱۹ تا ۲۴',
+    urduSubtitle: 'پارہ 21 تا 27',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Ar-Rum (30) to Surah Al-Hadid (57) • Juz 21 to 27',
     juzCoverage: 'Juz 21 to 27',
     surahRange: 'Ar-Rum (30) — Al-Hadid (57)',
     category: 'Quran & Tafsir',
-    estimatedSize: '~140 MB',
-    approxBytes: 146800640,
-    primaryDownloadUrl:
+    estimatedSize: '160.5 MB',
+    approxBytes: 168296448,
+    fileName: 'AnwarulBayan-Volume4.pdf',
+    androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume4.pdf',
+    githubReleaseUrl:
       'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
-    mirrorDownloadUrls: [
-      'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-4.pdf',
-      'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%204.pdf',
-    ],
-    cloudStreamUrl:
-      'https://archive.org/details/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-4/mode/2up?view=theater',
-    embedViewerUrl:
-      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-4',
     localKey: 'anwar-ul-bayan-vol-4',
   },
   {
@@ -156,25 +131,19 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     volNumber: 5,
     title: 'Tafseer Anwar-ul-Bayan — Part 5 (Vol. 5)',
     urduTitle: 'تفسیر انوار البیان — جلد پنجم',
-    urduSubtitle: 'پارہ ۲۵ تا ۳۰',
+    urduSubtitle: 'پارہ 28 تا 30',
     author: 'Mufti Muhammad Aashiq Ilahi Bulandshahri (R.A.)',
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Al-Mujadilah (58) to Surah An-Nas (114) • Juz 28 to 30',
     juzCoverage: 'Juz 28 to 30',
     surahRange: 'Al-Mujadilah (58) — An-Nas (114)',
     category: 'Quran & Tafsir',
-    estimatedSize: '~150 MB',
-    approxBytes: 157286400,
-    primaryDownloadUrl:
+    estimatedSize: '148.0 MB',
+    approxBytes: 155189248,
+    fileName: 'AnwarulBayan-Volume5.pdf',
+    androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume5.pdf',
+    githubReleaseUrl:
       'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
-    mirrorDownloadUrls: [
-      'https://archive.org/download/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-5.pdf',
-      'https://archive.org/download/TafseerAnwarUlBayan/Tafseer%20Anwar-ul-Bayan%20Vol%205.pdf',
-    ],
-    cloudStreamUrl:
-      'https://archive.org/details/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-5/mode/2up?view=theater',
-    embedViewerUrl:
-      'https://archive.org/embed/islamic-illuminating-discourses-of-the-noble-quran-tafsir-anwarul-bayan/Illuminating-Discourses-of-the-Noble-Quran-Vol-5',
     localKey: 'anwar-ul-bayan-vol-5',
   },
 ];
@@ -296,7 +265,8 @@ export function cancelCloudEbookDownload(volId: string): void {
 }
 
 /**
- * Download a cloud ebook volume with live progress and automatic IndexedDB storage
+ * Download a cloud ebook volume with live progress and automatic IndexedDB storage.
+ * Prioritizes the native Android interceptor URL (/__gh_ebook__/...) to stream directly from GitHub Releases CDN with zero CORS.
  */
 export async function downloadCloudEbook(volId: string): Promise<boolean> {
   const vol = getCloudEbookItem(volId);
@@ -310,8 +280,8 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
   const controller = new AbortController();
   downloadAbortControllers.set(volId, controller);
 
-  // Candidate URLs in priority order: Primary CDN -> Mirrors
-  const urlsToTry = [vol.primaryDownloadUrl, ...vol.mirrorDownloadUrls].filter(Boolean);
+  // Candidate URLs in priority order: Native Android interceptor URL -> Direct GitHub Release URL
+  const urlsToTry = [vol.androidStreamUrl, vol.githubReleaseUrl].filter(Boolean);
 
   let response: Response | null = null;
   let responseError: Error | null = null;
@@ -321,8 +291,8 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
     isDownloading: true,
     percent: 1,
     loadedBytes: 0,
-    totalBytes: vol.approxBytes || 125829120,
-    statusText: 'Connecting to Cloud CDN...',
+    totalBytes: vol.approxBytes || 160000000,
+    statusText: 'Connecting to Noor Connect Cloud CDN...',
   });
 
   for (let uIdx = 0; uIdx < urlsToTry.length; uIdx++) {
@@ -333,8 +303,8 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
         isDownloading: true,
         percent: 2,
         loadedBytes: 0,
-        totalBytes: vol.approxBytes || 125829120,
-        statusText: uIdx === 0 ? 'Connecting to Primary CDN...' : `Connecting to Cloud Mirror ${uIdx}...`,
+        totalBytes: vol.approxBytes || 160000000,
+        statusText: uIdx === 0 ? 'Connecting to Cloud CDN Stream...' : 'Connecting to Direct Release CDN...',
       });
 
       const res = await fetch(candidateUrl, {
@@ -360,7 +330,7 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
       percent: 0,
       loadedBytes: 0,
       totalBytes: 0,
-      statusText: 'Download failed: All cloud mirrors unreachable',
+      statusText: 'Download failed: Could not connect to Cloud CDN',
       error: responseError?.message || 'Could not connect to book servers.',
     });
     downloadAbortControllers.delete(volId);
@@ -371,7 +341,7 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
     const contentLengthHeader = response.headers.get('Content-Length');
     const totalBytes = contentLengthHeader
       ? parseInt(contentLengthHeader, 10)
-      : vol.approxBytes || 130000000;
+      : vol.approxBytes || 160000000;
 
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
@@ -391,7 +361,7 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
           Math.max(1, Math.round((receivedBytes / totalBytes) * 100))
         );
 
-        if (currentPercent !== lastPercentReported || receivedBytes % (1024 * 1024 * 3) === 0) {
+        if (currentPercent !== lastPercentReported || receivedBytes % (1024 * 1024 * 2) === 0) {
           lastPercentReported = currentPercent;
           notifyDownloadProgress({
             volId,
@@ -403,6 +373,10 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
           });
         }
       }
+    }
+
+    if (receivedBytes < 100000) {
+      throw new Error(`Incomplete download: received only ${receivedBytes} bytes.`);
     }
 
     notifyDownloadProgress({

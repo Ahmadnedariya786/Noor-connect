@@ -1359,9 +1359,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                     {/* Row 2: Window Times on Left, Active Countdown or Virtue on Right */}
                     <div className="flex items-center justify-between gap-2 pt-0.5 min-w-0">
                       <span
-                        className="text-xs font-bold font-mono tracking-tight shrink-0 ltr-num tabular-nums whitespace-nowrap"
+                        className="font-bold font-mono tracking-tight shrink-0 ltr-num tabular-nums whitespace-nowrap"
                         dir="ltr"
                         style={{
+                          fontSize: '0.72rem',
                           color: isActive
                             ? 'var(--accent-text)'
                             : 'var(--text-primary)',
@@ -1373,18 +1374,25 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
                       {isActive ? (
                         <span
-                          className="font-bold font-mono px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap animate-pulse"
+                          className="font-bold font-mono rounded-full shrink-0 whitespace-nowrap animate-pulse"
                           style={{
                             background: 'var(--accent)',
                             color: 'var(--on-accent)',
                             boxShadow: '0 0 8px var(--accent-glow)',
-                            fontSize: '0.68rem',
+                            fontSize: '0.65rem',
+                            fontWeight: 800,
+                            padding: '2px 8px',
+                            borderRadius: '9999px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
                             whiteSpace: 'nowrap',
                             flexShrink: 0,
+                            maxWidth: '100%',
                           }}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                          <span>● Active • {nafl.remainingFormatted}</span>
+                          <span>Ends in {nafl.remainingFormatted}</span>
                         </span>
                       ) : (
                         <span
