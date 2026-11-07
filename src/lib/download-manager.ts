@@ -25,9 +25,10 @@ export class QuranDownloadManager {
                 const request = indexedDB.open(this.dbName, this.version);
 
                 request.onerror = (event) => {
-                    console.error("IndexedDB error:", event);
+                    const err = (event?.target as IDBOpenDBRequest)?.error;
+                    console.warn("[QuranDownloadManager] IndexedDB open notice:", err?.message || "Operation failed");
                     this.initPromise = null;
-                    reject("Failed to open database");
+                    reject(err?.message || "Failed to open database");
                 };
 
                 request.onsuccess = (event) => {

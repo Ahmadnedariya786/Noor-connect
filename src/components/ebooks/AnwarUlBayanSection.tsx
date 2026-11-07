@@ -137,7 +137,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
     }
   };
 
-  const handleStartDownload = async (volId: string, autoOpen = false) => {
+  const handleStartDownload = async (volId: string, autoOpen = true) => {
     const vol = ANWAR_UL_BAYAN_VOLUMES.find((v) => v.id === volId);
     if (!vol) return;
 

@@ -169,15 +169,24 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({
       }}
     >
       <div
-        className="w-full max-w-lg max-h-[88vh] flex flex-col rounded-t-[28px] sm:rounded-[28px] border border-[var(--border)] overflow-hidden shadow-2xl transition-all"
+        className="w-full rounded-t-[28px] sm:rounded-[28px] border border-[var(--border)] overflow-hidden shadow-2xl transition-all"
         style={{
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '86vh',
+          width: '100%',
+          maxWidth: '352px',
+          overflow: 'hidden',
           backgroundColor: 'var(--surface)',
           color: 'var(--text-primary)',
           boxShadow: '0 20px 45px rgba(0,0,0,0.45)',
         }}
       >
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[var(--border)] shrink-0 flex items-center justify-between gap-3">
+        {/* Part A: Header */}
+        <div
+          className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between gap-3"
+          style={{ flexShrink: 0 }}
+        >
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
@@ -209,8 +218,17 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({
           </button>
         </div>
 
-        {/* Scrollable controls */}
-        <div className="flex-1 overflow-y-auto p-4 pb-8 space-y-4 no-scrollbar">
+        {/* Part B: Scrollable Body */}
+        <div
+          className="space-y-4 no-scrollbar"
+          style={{
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            padding: '12px 14px 24px 14px',
+          }}
+        >
           {/* 1. Reciter Selector Row */}
           <div>
             <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
@@ -602,8 +620,11 @@ export const PlaybackOptionsDrawer: React.FC<PlaybackOptionsDrawerProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-3 border-t border-[var(--border)] bg-[var(--bg-base)]/40 flex items-center justify-between gap-2 shrink-0">
+        {/* Part C: Footer */}
+        <div
+          className="p-3 border-t border-[var(--border)] bg-[var(--bg-base)]/40 flex items-center justify-between gap-2"
+          style={{ flexShrink: 0 }}
+        >
           <span className="text-[11px] text-[var(--text-secondary)]">
             Powered by EveryAyah & MP3Quran
           </span>

@@ -875,7 +875,7 @@ function InteractiveMushafPageComponent({
         inner.style.width = 'max-content';
         inner.style.maxWidth = 'none';
         inner.style.flexShrink = '0';
-        inner.style.gap = isCenteredLine ? '4px' : '2px';
+        inner.style.gap = isCenteredLine ? '8px' : '2px';
 
         // 2. Measure actual available width inside row (6px padding on each side = 12px)
         const availWidth = Math.max(160, lineRow.clientWidth - 12);
@@ -1283,16 +1283,17 @@ function InteractiveMushafPageComponent({
                   return sum + getStrippedArabicCharLength(rawText);
                 }, 0);
 
+                const wordCountOnLine = lineTokens.filter((t) => t.type === 'word').length;
                 const uniformFontSize = getUniformMushafFontSize(activeFormat);
 
-                // NEVER center a line in the middle of a Surah!
-                // Set isShortCenteredLine = true ONLY when:
+                // Determine whether this line should be compactly centered:
                 // 1. pageNumber === 1 or (pageNumber === 2 && lineIdx < 4), OR
-                // 2. The line is the very last line of a Surah segment AND baseCharCount < 22!
+                // 2. The line is the closing line of a Surah segment AND has short visual weight (baseCharCount < 24 || wordCountOnLine <= 3)!
+                const isClosingLine = isLastLineOfSurahSegment;
                 const isShortCenteredLine =
                   pageNumber === 1 ||
                   (pageNumber === 2 && lineIdx < 4) ||
-                  (isLastLineOfSurahSegment && baseCharCount < 22);
+                  (isClosingLine && (baseCharCount < 24 || wordCountOnLine <= 3));
 
                 return (
                   <div
@@ -1325,7 +1326,7 @@ function InteractiveMushafPageComponent({
                         alignItems: 'center',
                         justifyContent: isShortCenteredLine ? 'center' : 'space-between',
                         direction: 'rtl',
-                        gap: isShortCenteredLine ? '4px' : '2px',
+                        gap: isShortCenteredLine ? '8px' : '2px',
                         whiteSpace: 'nowrap',
                         width: 'max-content',
                         maxWidth: 'none',

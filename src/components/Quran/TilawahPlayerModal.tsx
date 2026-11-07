@@ -10,7 +10,7 @@
  * - Synchronized live Ayah card with vocalized Arabic & translation
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTilawah, PlaybackSpeed, SleepTimerOption } from '@/contexts/TilawahContext';
@@ -22,17 +22,14 @@ import {
   SkipBack,
   SkipForward,
   Moon,
-  Clock,
   BookOpen,
   User,
   Search,
   Check,
   ChevronDown,
   Loader2,
-  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { getPageForSurahAndAyah } from '@/lib/interactive-mushaf';
 import { Badge } from '@/components/ui/badge';
 
@@ -72,6 +69,13 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
 
   const isOpen = propIsOpen !== undefined ? propIsOpen : isPlayerOpen;
   const handleClose = propOnClose || closePlayer;
+  const scrollContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && scrollContentRef.current) {
+      scrollContentRef.current.scrollTop = 0;
+    }
+  }, [isOpen]);
 
   // Reciter Selector Drawer state
   const [showReciterDrawer, setShowReciterDrawer] = useState<boolean>(false);
@@ -158,8 +162,12 @@ export const TilawahPlayerModal: React.FC<TilawahPlayerModalProps> = ({
 
         {/* Scrollable Content */}
         <div
+          ref={scrollContentRef}
           className="px-5 overflow-y-auto space-y-5"
-          style={{ paddingBottom: 'calc(28px + env(safe-area-inset-bottom, 0px))' }}
+          style={{
+            paddingTop: '14px',
+            paddingBottom: 'calc(28px + env(safe-area-inset-bottom, 0px))',
+          }}
         >
           {/* Now Playing Header Card */}
           <div

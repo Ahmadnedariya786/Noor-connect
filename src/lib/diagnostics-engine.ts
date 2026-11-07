@@ -180,7 +180,9 @@ function hydrateStore(): void {
               msg.includes('opensettings() is not implemented') ||
               (msg.includes('cannot access') && msg.includes('before initialization')) ||
               msg.includes('failed to load pdf with pdf.js') ||
-              msg.includes('no pdf url available')
+              msg.includes('no pdf url available') ||
+              msg.includes('istrusted') ||
+              msg.includes('indexeddb error')
             ) {
               return false;
             }
@@ -454,15 +456,19 @@ export function recordDiagnosticEvent(event: {
   const msg = event.message || 'Unknown Diagnostic Event';
   const lowerMsg = msg.toLowerCase();
 
-  // Guard: Never inflate real error counters with test capture verification events
+  // Guard: Never inflate real error counters with test capture verification events or benign IDB/DOM events
   if (
     lowerMsg.includes('[diagnostic_test]') ||
     lowerMsg.includes('controlled verification error') ||
-    lowerMsg.includes('diagnostic test')
+    lowerMsg.includes('diagnostic test') ||
+    lowerMsg.includes('istrusted') ||
+    lowerMsg.includes('indexeddb error')
   ) {
-    recordBreadcrumb('SELF_TEST_OK', 'Diagnostic capture pipeline verified — 0 real errors found');
+    if (lowerMsg.includes('test') || lowerMsg.includes('controlled')) {
+      recordBreadcrumb('SELF_TEST_OK', 'Diagnostic capture pipeline verified — 0 real errors found');
+    }
     return {
-      id: `${now}-test-noop`,
+      id: `${now}-noop`,
       category: event.category,
       message: msg,
       route: event.route || getSafeRoute(),
@@ -830,8 +836,13 @@ export function initDiagnosticsEngine(): void {
       isCapturingConsole = true;
       try {
         const msg = args.map(stringifyConsoleArg).join(' ');
-        // Don't record internal diagnostics logs
-        if (!msg.includes('[NOOR_DIAGNOSTICS]')) {
+        const lower = msg.toLowerCase();
+        // Don't record internal diagnostics logs or benign DOM/IDB event probe errors
+        if (
+          !msg.includes('[NOOR_DIAGNOSTICS]') &&
+          !lower.includes('istrusted') &&
+          !lower.includes('indexeddb error')
+        ) {
           const stack = new Error().stack;
           recordDiagnosticEvent({
             category: 'CONSOLE_ERROR',

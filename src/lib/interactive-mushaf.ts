@@ -62,15 +62,15 @@ export function getTokenVisualUnits(token: MushafLineToken, format: MushafLineFo
 }
 
 export function getMaxLineUnits(format: MushafLineFormat): number {
-  if (format === 7) return 28;
-  if (format === 13) return 36;
-  return 38; // 15-line mode
+  if (format === 7) return 29;
+  if (format === 13) return 40;
+  return 41; // 15-line mode
 }
 
 export function getIdealLineUnits(format: MushafLineFormat): number {
-  if (format === 7) return 25;
-  if (format === 13) return 33;
-  return 35; // 15-line mode
+  if (format === 7) return 26;
+  if (format === 13) return 36;
+  return 37; // 15-line mode
 }
 
 export interface TokenItem {
@@ -143,16 +143,20 @@ export function packSurahTokensWithBudget(
         break;
       }
 
-      let cost = 0;
+      const LINE_COST = 900;
+      let cost = LINE_COST;
       if (j === N - 1) {
-        // Very last line of this Surah segment: cost is 0 (short final lines are natural)
-        cost = 0;
+        // Very last line of this Surah segment:
+        // Anti-orphan penalty (+8000) if the final line is starved (<= 2 words or < 16 units while N > 4)
+        if (N > 4 && (wordCount <= 2 || W < 16)) {
+          cost += 8000;
+        }
       } else {
         const slack = maxUnits - W;
         if (slack < 0) {
           cost = 1000000;
         } else {
-          cost = Math.pow(slack, 3);
+          cost += Math.pow(slack, 3);
           // Strong penalty for starved lines (<= 2 words when significantly under budget)
           if (wordCount <= 2 && W < maxUnits - 6) {
             cost += 10000;

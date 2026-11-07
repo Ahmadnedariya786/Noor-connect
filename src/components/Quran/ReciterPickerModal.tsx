@@ -73,33 +73,57 @@ export const ReciterPickerModal: React.FC<ReciterPickerModalProps> = ({
         }}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[var(--border)] shrink-0 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="p-3.5 sm:p-5 border-b border-[var(--border)] shrink-0 flex items-center justify-between gap-2 w-full">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)]"
               style={{
                 backgroundColor: 'var(--surface-2)',
                 color: 'var(--accent)',
               }}
             >
-              <Volume2 className="w-5 h-5 text-[var(--accent-text)]" />
+              <Volume2 className="w-4.5 h-4.5 text-[var(--accent-text)]" />
             </div>
-            <div className="min-w-0">
-              <h2 id="reciter-modal-title" className="text-base sm:text-lg font-bold tracking-tight truncate flex items-center gap-1.5">
-                45+ Authentic Reciters
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-text)] border border-[var(--accent)]/30">
-                  HD Audio
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-nowrap">
+                <h2
+                  id="reciter-modal-title"
+                  className="tracking-tight text-[var(--text-primary)]"
+                  style={{ fontSize: '0.92rem', fontWeight: 800, whiteSpace: 'nowrap' }}
+                >
+                  47 Authentic Reciters
+                </h2>
+                <span
+                  className="uppercase bg-[var(--accent)]/15 text-[var(--accent-text)] border border-[var(--accent)]/30"
+                  style={{
+                    fontSize: '0.60rem',
+                    fontWeight: 800,
+                    padding: '2px 7px',
+                    borderRadius: '9999px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  HD AUDIO
                 </span>
-              </h2>
-              <p className="text-[11px] text-[var(--text-secondary)] truncate">
-                EveryAyah CDN • Murattal, Mujawwad & Teacher
+              </div>
+              <p
+                className="text-[var(--text-secondary)] leading-tight mt-0.5"
+                style={{
+                  fontSize: '0.70rem',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                EveryAyah CDN • Murattal & Mujawwad
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close reciter selection"
-            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-transform"
           >
             <X className="w-4 h-4" />
           </button>
@@ -127,21 +151,43 @@ export const ReciterPickerModal: React.FC<ReciterPickerModalProps> = ({
             )}
           </div>
 
-          {/* Style Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            {(['All', 'Murattal', 'Mujawwad', 'Teacher (Muallim)'] as StyleFilter[]).map((filter) => {
-              const isActive = activeFilter === filter;
+          {/* Style Filter Pills: Strict 4-Column Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+              gap: '6px',
+              width: '100%',
+            }}
+          >
+            {[
+              { key: 'All' as StyleFilter, label: 'All' },
+              { key: 'Murattal' as StyleFilter, label: 'Murattal' },
+              { key: 'Mujawwad' as StyleFilter, label: 'Mujawwad' },
+              { key: 'Teacher (Muallim)' as StyleFilter, label: 'Muallim' },
+            ].map(({ key, label }) => {
+              const isActive = activeFilter === key;
               return (
                 <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`text-[11px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap transition-all border shrink-0 ${
+                  key={key}
+                  type="button"
+                  onClick={() => setActiveFilter(key)}
+                  className={`rounded-full transition-all border ${
                     isActive
                       ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
                       : 'bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/40'
                   }`}
+                  style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '6px 4px',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
                 >
-                  {filter}
+                  {label}
                 </button>
               );
             })}

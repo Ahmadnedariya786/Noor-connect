@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Eye, EyeOff, HardDrive, Upload } from 'lucide-react';
+import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCw, Loader2, ExternalLink, Scroll, Eye, EyeOff, HardDrive, Upload, FileText } from 'lucide-react';
 import { getPdfBlobUrl } from '@/lib/ebooks-storage';
 import { savePdfBlob } from '@/lib/idb-pdf-store';
 import { getReadingProgress, saveReadingProgress } from '@/lib/reading-progress';
@@ -81,7 +81,7 @@ function PdfPage({ pdf, pageNumber, scale }: { pdf: any; pageNumber: number; sca
       ([entry]) => {
         setInView(entry.isIntersecting);
       },
-      { rootMargin: '100% 0px' } // Preload nicely
+      { rootMargin: '800px 0px' } // Preload visible and nearby pages
     );
 
     if (containerRef.current) {
@@ -145,7 +145,7 @@ function PdfPage({ pdf, pageNumber, scale }: { pdf: any; pageNumber: number; sca
   }, [inView, pdf, pageNumber, scale]);
 
   return (
-    <div ref={containerRef} className="flex justify-center my-4 min-h-[400px]">
+    <div ref={containerRef} className="flex justify-center my-4 min-h-[500px]">
       <canvas ref={canvasRef} className="border border-border shadow-lg bg-white" />
     </div>
   );
@@ -200,12 +200,13 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
     if (!isVertical || !scrollContainerRef.current) return;
     const container = scrollContainerRef.current;
     const handleScroll = () => {
-      const pageHeight = container.scrollHeight / totalPages;
+      const pageHeight = (container.scrollHeight / Math.max(totalPages, 1)) || 600;
       const scrollTop = container.scrollTop;
-      const viewHeight = container.clientHeight;
-      const buffer = 5;
-      const start = Math.max(1, Math.floor(scrollTop / pageHeight) - buffer + 1);
-      const end = Math.min(totalPages, Math.ceil((scrollTop + viewHeight) / pageHeight) + buffer);
+      const viewHeight = container.clientHeight || 800;
+      const buffer = 4;
+      const currentIdx = Math.floor(scrollTop / Math.max(pageHeight, 1)) + 1;
+      const start = Math.max(1, currentIdx - buffer);
+      const end = Math.min(totalPages, currentIdx + Math.ceil(viewHeight / Math.max(pageHeight, 1)) + buffer);
       setVisibleWindow({ start, end });
     };
     handleScroll();
@@ -682,8 +683,18 @@ export default function NativePdfViewer({ url, title, localKey, progressKey, onC
             Array.from({ length: totalPages }, (_, i) => {
               const pageNum = i + 1;
               if (pageNum < visibleWindow.start || pageNum > visibleWindow.end) {
-                // Render placeholder for hidden pages to maintain scroll height
-                return <div key={pageNum} className="flex justify-center my-4 min-h-[400px] items-center text-muted-foreground/30">...</div>;
+                // Render themed placeholder card for hidden pages to maintain scroll height
+                return (
+                  <div
+                    key={pageNum}
+                    className="flex justify-center my-4 min-h-[500px] w-full max-w-[90vw] items-center rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/40 shadow-sm"
+                  >
+                    <div className="flex flex-col items-center gap-1.5 text-[var(--text-secondary)] opacity-40">
+                      <FileText className="w-8 h-8" />
+                      <span className="text-xs font-mono font-bold tracking-wider uppercase">Page {pageNum}</span>
+                    </div>
+                  </div>
+                );
               }
               return (
                 <PdfPage
