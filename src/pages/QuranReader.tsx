@@ -214,17 +214,15 @@ export default function QuranReader() {
   const handleFormatChange = (fmt: MushafLineFormat) => {
     setLineFormatState(fmt);
     setMushafLineFormat(fmt);
-  };
-
-  useEffect(() => {
     setSubPage7L(1);
-  }, [mushafPageNumber]);
+  };
 
   useEffect(() => {
     const handler = (e: Event) => {
       const custom = e as CustomEvent<{ format?: MushafLineFormat }>;
       if (custom?.detail?.format) {
         setLineFormatState(custom.detail.format);
+        setSubPage7L(1);
       }
     };
     window.addEventListener('noor-mushaf-format-changed', handler);
@@ -324,7 +322,7 @@ export default function QuranReader() {
 
   const goToMushafPage = useCallback((
     targetPage: number,
-    options?: { source?: 'user' | 'audio' }
+    options?: { source?: 'user' | 'audio'; targetSubPage?: number }
   ) => {
     if (targetPage < 1 || targetPage > 604) return;
     const isUserAction = options?.source === 'user';
@@ -332,6 +330,10 @@ export default function QuranReader() {
     if (isUserAction && isPlaying) {
       // User manually browsed/peeked at another page while recitation is playing
       setAutoFollow(false);
+    }
+
+    if (typeof options?.targetSubPage === 'number') {
+      setSubPage7L(options.targetSubPage);
     }
 
     setMushafPageNumber(targetPage);
@@ -518,26 +520,35 @@ export default function QuranReader() {
   const handlePrevPage = () => {
     if (readerViewMode !== 'card' && lineFormat === 7 && subPage7L > 1) {
       setSubPage7L((prev) => prev - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (typeof window !== 'undefined' && window.scrollY > 80) {
+        window.scrollTo(0, 0);
+      }
       return;
     }
     if (mushafPageNumber > 1) {
-      setSubPage7L(1);
-      goToMushafPage(mushafPageNumber - 1, { source: 'user' });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const targetSub = lineFormat === 7 ? -1 : 1;
+      setSubPage7L(targetSub);
+      goToMushafPage(mushafPageNumber - 1, { source: 'user', targetSubPage: targetSub });
+      if (typeof window !== 'undefined' && window.scrollY > 80) {
+        window.scrollTo(0, 0);
+      }
     }
   };
 
   const handleNextPage = () => {
-    if (readerViewMode !== 'card' && lineFormat === 7 && subPage7L < totalParts7L) {
+    if (readerViewMode !== 'card' && lineFormat === 7 && subPage7L > 0 && subPage7L < totalParts7L) {
       setSubPage7L((prev) => prev + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (typeof window !== 'undefined' && window.scrollY > 80) {
+        window.scrollTo(0, 0);
+      }
       return;
     }
     if (mushafPageNumber < 604) {
       setSubPage7L(1);
-      goToMushafPage(mushafPageNumber + 1, { source: 'user' });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      goToMushafPage(mushafPageNumber + 1, { source: 'user', targetSubPage: 1 });
+      if (typeof window !== 'undefined' && window.scrollY > 80) {
+        window.scrollTo(0, 0);
+      }
     }
   };
 
@@ -551,6 +562,7 @@ export default function QuranReader() {
 
   const currentJuz = Math.max(1, Math.min(30, Math.ceil(mushafPageNumber / 20)));
   const isTilawahActive = currentSurah !== null && currentAyah !== null;
+  const safeSubPage7L = subPage7L <= 0 ? totalParts7L : Math.min(subPage7L, totalParts7L);
 
   return (
     <PageTransition>
@@ -914,6 +926,7 @@ export default function QuranReader() {
               lineFormat={lineFormat}
               subPage7L={subPage7L}
               onSubPage7LChange={handleSubPage7LChange}
+              onStep7Line={(direction) => (direction === 'prev' ? handlePrevPage() : handleNextPage())}
               onOpenStudySheet={handleOpenStudySheet}
               onPageTurnRequest={handlePageTurnRequest}
               onPageLoaded={handlePageLoaded}
@@ -1077,7 +1090,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handlePrevPage}
-              disabled={readerViewMode !== 'card' && lineFormat === 7 ? (mushafPageNumber <= 1 && subPage7L <= 1) : mushafPageNumber <= 1}
+              disabled={readerViewMode !== 'card' && lineFormat === 7 ? (mushafPageNumber <= 1 && safeSubPage7L <= 1) : mushafPageNumber <= 1}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',
@@ -1120,7 +1133,7 @@ export default function QuranReader() {
                 }}
               >
                 {readerViewMode !== 'card' && lineFormat === 7 && totalParts7L > 1
-                  ? `P.${mushafPageNumber} (Part ${subPage7L}/${totalParts7L})`
+                  ? `P.${mushafPageNumber} (Part ${safeSubPage7L}/${totalParts7L})`
                   : `${uiStrings.page} ${mushafPageNumber} / 604`}
               </div>
               <div
@@ -1157,7 +1170,7 @@ export default function QuranReader() {
             <button
               type="button"
               onClick={handleNextPage}
-              disabled={readerViewMode !== 'card' && lineFormat === 7 ? (mushafPageNumber >= 604 && subPage7L >= totalParts7L) : mushafPageNumber >= 604}
+              disabled={readerViewMode !== 'card' && lineFormat === 7 ? (mushafPageNumber >= 604 && safeSubPage7L >= totalParts7L) : mushafPageNumber >= 604}
               className="rounded-xl font-bold border flex items-center justify-center gap-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               style={{
                 background: 'var(--surface-2)',

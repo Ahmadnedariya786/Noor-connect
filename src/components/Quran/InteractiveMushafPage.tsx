@@ -4,7 +4,8 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import {
   fetchMushafPage,
-  prefetchNextMushafPage,
+  prefetchAdjacentMushafPages,
+  getCachedMushafPageSync,
   toArabicDigits,
   sanitizeTajweedHtml,
   cleanQuranicGlyphs,
@@ -41,6 +42,7 @@ interface InteractiveMushafPageProps {
   lineFormat?: MushafLineFormat;
   subPage7L?: number;
   onSubPage7LChange?: (subPage: number, totalParts: number) => void;
+  onStep7Line?: (direction: 'prev' | 'next') => void;
   onOpenStudySheet: (surah: number, ayah: number) => void;
   onPageTurnRequest?: (newPage: number) => void;
   onPageLoaded?: (data: InteractivePageData) => void;
@@ -306,22 +308,27 @@ function InteractiveMushafPageComponent({
   surfaceMode,
   showTajweed,
   lineFormat,
-  subPage7L: subPage7LProp,
+  subPage7L: subPage7LProp = 1,
   onSubPage7LChange,
+  onStep7Line,
   onOpenStudySheet,
   onPageTurnRequest,
   onPageLoaded,
 }: InteractiveMushafPageProps) {
-  const [pageData, setPageData] = useState<InteractivePageData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [pageData, setPageData] = useState<InteractivePageData | null>(() => getCachedMushafPageSync(pageNumber));
+  const [loading, setLoading] = useState<boolean>(() => !getCachedMushafPageSync(pageNumber));
   const [activeFormat, setActiveFormat] = useState<MushafLineFormat>(() => lineFormat || getMushafLineFormat());
-  const [subPage7L, setSubPage7L] = useState<number>(() => subPage7LProp || 1);
 
   // Stable callback refs to eliminate infinite render loop cascades
   const onSubPage7LChangeRef = useRef(onSubPage7LChange);
   useEffect(() => {
     onSubPage7LChangeRef.current = onSubPage7LChange;
   }, [onSubPage7LChange]);
+
+  const onStep7LineRef = useRef(onStep7Line);
+  useEffect(() => {
+    onStep7LineRef.current = onStep7Line;
+  }, [onStep7Line]);
 
   const onOpenStudySheetRef = useRef(onOpenStudySheet);
   useEffect(() => {
@@ -342,12 +349,6 @@ function InteractiveMushafPageComponent({
   const mushafLinesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof subPage7LProp === 'number' && subPage7LProp > 0) {
-      setSubPage7L((prev) => (prev !== subPage7LProp ? subPage7LProp : prev));
-    }
-  }, [subPage7LProp]);
-
-  useEffect(() => {
     if (lineFormat) {
       setActiveFormat(lineFormat);
     }
@@ -364,10 +365,9 @@ function InteractiveMushafPageComponent({
     return () => window.removeEventListener('noor-mushaf-format-changed', handler);
   }, []);
 
-  // Reset 7L subpage ONLY on page change or line-format change
+  // Reset lastReported7LRef on page change or line-format change
   useEffect(() => {
-    setSubPage7L(1);
-    lastReported7LRef.current = { subPage: 1, totalParts: 0 };
+    lastReported7LRef.current = { subPage: 0, totalParts: 0 };
   }, [pageNumber, activeFormat]);
   const [selectedWord, setSelectedWord] = useState<{
     word: InteractiveWord;
@@ -471,9 +471,21 @@ function InteractiveMushafPageComponent({
     };
   }, []);
 
-  // Load interactive page data & prefetch next page
+  // Load interactive page data & prefetch adjacent pages
   useEffect(() => {
     let isMounted = true;
+
+    // Check synchronous in-memory & fast local cache first (0.01ms)
+    const syncData = getCachedMushafPageSync(pageNumber);
+    if (syncData) {
+      setPageData(syncData);
+      setLoading(false);
+      onPageLoadedRef.current?.(syncData);
+      prefetchAdjacentMushafPages(pageNumber, showTajweed);
+      return;
+    }
+
+    // Only set loading true if uncached, but keep displaying previous pageData to eliminate black flash!
     setLoading(true);
 
     fetchMushafPage(pageNumber, showTajweed)
@@ -482,8 +494,7 @@ function InteractiveMushafPageComponent({
           setPageData(data);
           setLoading(false);
           onPageLoadedRef.current?.(data);
-          // Zero-delay preload: silently prefetch next page in background
-          prefetchNextMushafPage(pageNumber, showTajweed);
+          prefetchAdjacentMushafPages(pageNumber, showTajweed);
         }
       })
       .catch((err) => {
@@ -605,43 +616,15 @@ function InteractiveMushafPageComponent({
     audio.play().catch(() => onAudioDone());
   };
 
-  // Tilawah auto-flip for 7-Line mode (switches between Part 1, Part 2, etc.)
-  useEffect(() => {
-    if (isPlaying && currentSurah > 0 && currentAyah > 0 && activeFormat === 7 && pageData) {
-      const allTokens: MushafLineToken[] = [];
-      pageData.verses.forEach((verse) => {
-        verse.words.forEach((w) => {
-          if (w.char_type_name !== 'end') {
-            allTokens.push({
-              type: 'word',
-              word: w,
-              surahNumber: verse.surah_number,
-              verseNumber: verse.verse_number,
-              key: `w-${w.id}`,
-            });
-          }
-        });
-      });
-      const all7Lines = build7LineFormatTokens(allTokens);
-      const parts = Math.max(1, Math.ceil(all7Lines.length / 7));
-      for (let p = 1; p <= parts; p++) {
-        const pLines = all7Lines.slice((p - 1) * 7, p * 7);
-        const inThisPart = pLines.some((line) =>
-          line.some((t) => t.surahNumber === currentSurah && t.verseNumber === currentAyah)
-        );
-        if (inThisPart && subPage7L !== p) {
-          setSubPage7L(p);
-          onSubPage7LChangeRef.current?.(p, parts);
-          break;
-        }
-      }
-    }
-  }, [isPlaying, currentSurah, currentAyah, activeFormat, pageData, subPage7L]);
-
   // Compute 7L, 13L, and 15L formatted blocks (Surah Opening Banners + Ayah Lines)
-  const { blocks, totalParts7L } = useMemo(() => {
+  const { blocks, totalParts7L, safeSubPage, subPages7L } = useMemo(() => {
     if (!pageData || pageData.verses.length === 0) {
-      return { blocks: [] as MushafPageBlock[], totalParts7L: 1 };
+      return {
+        blocks: [] as MushafPageBlock[],
+        totalParts7L: 1,
+        safeSubPage: 1,
+        subPages7L: [] as MushafPageBlock[][],
+      };
     }
 
     let versesToProcess = pageData.verses;
@@ -759,9 +742,15 @@ function InteractiveMushafPageComponent({
         });
       });
 
-      return { blocks: assembleBlocksWithHeaders(packedLines), totalParts7L: 1 };
+      const assembled = assembleBlocksWithHeaders(packedLines);
+      return {
+        blocks: assembled,
+        totalParts7L: 1,
+        safeSubPage: 1,
+        subPages7L: [assembled],
+      };
     } else {
-      // 7-line mode: Dynamic-programming balanced lines with MAX_UNITS = 28, paginated into ~7 lines per view
+      // 7-line mode: Dynamic-programming balanced lines with MAX_UNITS = 29
       const surahIds: number[] = [];
       allTokens.forEach((t) => {
         if (!surahIds.includes(t.surahNumber)) {
@@ -769,90 +758,136 @@ function InteractiveMushafPageComponent({
         }
       });
 
-      const all7Lines: Array<{ tokens: MushafLineToken[]; isLastLine: boolean }> = [];
+      const packedSurahLines: Array<{ tokens: MushafLineToken[]; isLastLine: boolean }> = [];
       surahIds.forEach((sid) => {
         const segTokens = allTokens.filter((t) => t.surahNumber === sid);
         const segLines = packSurahTokensWithBudget(segTokens, 7);
         segLines.forEach((line, idx) => {
-          all7Lines.push({
+          packedSurahLines.push({
             tokens: line,
             isLastLine: idx === segLines.length - 1,
           });
         });
       });
 
-      // Chunk all7Lines into sub-pages of ~7 lines each
-      const subPages: Array<Array<{ tokens: MushafLineToken[]; isLastLine: boolean }>> = [];
-      for (let i = 0; i < all7Lines.length; i += 7) {
-        subPages.push(all7Lines.slice(i, i + 7));
+      const fullPageBlocks: MushafPageBlock[] = assembleBlocksWithHeaders(packedSurahLines);
+
+      // Rule 1: Never place a Surah header at the bottom of a sub-page without at least 2 ayah lines below it!
+      const subPageBlocksList: MushafPageBlock[][] = [];
+      let currentSubPage: MushafPageBlock[] = [];
+      let currentSlotsUsed = 0;
+
+      for (let i = 0; i < fullPageBlocks.length; i++) {
+        const block = fullPageBlocks[i];
+        const isHeader = block.type === 'surah-banner';
+        const weight = isHeader ? 2 : 1;
+
+        if (isHeader && currentSubPage.length > 0 && currentSlotsUsed >= 4) {
+          subPageBlocksList.push(currentSubPage);
+          currentSubPage = [];
+          currentSlotsUsed = 0;
+        } else if (currentSlotsUsed + weight > 7 && currentSubPage.length > 0) {
+          subPageBlocksList.push(currentSubPage);
+          currentSubPage = [];
+          currentSlotsUsed = 0;
+        }
+
+        currentSubPage.push(block);
+        currentSlotsUsed += weight;
       }
 
-      // If the final sub-page has only 1 line with <= 2 words (or just a medallion),
-      // merge that trailing line into the previous sub-page so the reader never flips to an orphan sub-page
-      if (subPages.length > 1) {
-        const lastPartLines = subPages[subPages.length - 1];
-        if (lastPartLines.length === 1) {
-          const singleLineObj = lastPartLines[0];
-          const wordCount = singleLineObj.tokens.filter(t => t.type !== 'medallion' && t.type !== 'header').length;
-          if (wordCount <= 2) {
-            subPages[subPages.length - 2].push(singleLineObj);
-            subPages.pop();
+      if (currentSubPage.length > 0) {
+        subPageBlocksList.push(currentSubPage);
+      }
+
+      // Rule 2: Absorb 1-line or 2-line orphan final sub-pages
+      if (subPageBlocksList.length > 1) {
+        const lastSubPage = subPageBlocksList[subPageBlocksList.length - 1];
+        const hasHeaderInLast = lastSubPage.some((b) => b.type === 'surah-banner');
+        const ayahLinesInLast = lastSubPage.filter((b) => b.type === 'ayah-line');
+
+        if (!hasHeaderInLast && ayahLinesInLast.length <= 2) {
+          const prevSubPage = subPageBlocksList[subPageBlocksList.length - 2];
+          const prevHasHeader = prevSubPage.some((b) => b.type === 'surah-banner');
+          const combined = [...prevSubPage, ...lastSubPage];
+
+          if (!prevHasHeader) {
+            if (combined.length <= 8) {
+              subPageBlocksList[subPageBlocksList.length - 2] = combined;
+              subPageBlocksList.pop();
+            } else {
+              const half = Math.ceil(combined.length / 2);
+              subPageBlocksList[subPageBlocksList.length - 2] = combined.slice(0, half);
+              subPageBlocksList[subPageBlocksList.length - 1] = combined.slice(half);
+            }
+          } else {
+            const totalAyah = combined.filter((b) => b.type === 'ayah-line').length;
+            if (totalAyah <= 7) {
+              subPageBlocksList[subPageBlocksList.length - 2] = combined;
+              subPageBlocksList.pop();
+            } else {
+              const headerBlock = combined.find((b) => b.type === 'surah-banner')!;
+              const ayahs = combined.filter((b) => b.type === 'ayah-line');
+              const splitIdx = Math.max(2, Math.floor(ayahs.length / 2));
+              subPageBlocksList[subPageBlocksList.length - 2] = [headerBlock, ...ayahs.slice(0, splitIdx)];
+              subPageBlocksList[subPageBlocksList.length - 1] = ayahs.slice(splitIdx);
+            }
           }
         }
       }
 
-      const parts = Math.max(1, subPages.length);
-      const activePart = Math.min(parts, Math.max(1, subPage7L));
-      const visibleLines = subPages[activePart - 1] || [];
+      const parts = Math.max(1, subPageBlocksList.length);
+      const rawSubPage = typeof subPage7LProp === 'number' ? subPage7LProp : 1;
+      const computedSafeSubPage = rawSubPage <= 0 || rawSubPage > parts ? parts : rawSubPage;
+      const visibleBlocks = subPageBlocksList[computedSafeSubPage - 1] || [];
 
-      const blocksFor7L: MushafPageBlock[] = [];
-      const handledHeaders = new Set<number>();
-
-      visibleLines.forEach((lineObj, lineIdx) => {
-        headersToProcess.forEach((sHeader) => {
-          if (!handledHeaders.has(sHeader.surah_number)) {
-            const hasAyah1 = lineObj.tokens.some(
-              (t) => t.surahNumber === sHeader.surah_number && t.verseNumber === 1
-            );
-            if (hasAyah1) {
-              blocksFor7L.push({
-                type: 'surah-banner',
-                header: sHeader,
-                key: `banner-${sHeader.surah_number}`,
-              });
-              handledHeaders.add(sHeader.surah_number);
-            }
-          }
-        });
-
-        blocksFor7L.push({
-          type: 'ayah-line',
-          tokens: lineObj.tokens,
-          lineIndex: lineIdx,
-          isLastLineOfSurahSegment: lineObj.isLastLine,
-          key: `line-7l-${lineIdx}`,
-        });
+      let lineCounter = 0;
+      const finalVisibleBlocks = visibleBlocks.map((b) => {
+        if (b.type === 'ayah-line') {
+          const idx = lineCounter++;
+          return { ...b, lineIndex: idx, key: `line-7l-${computedSafeSubPage}-${idx}` };
+        }
+        return b;
       });
 
-      return { blocks: blocksFor7L, totalParts7L: parts };
+      return {
+        blocks: finalVisibleBlocks,
+        totalParts7L: parts,
+        safeSubPage: computedSafeSubPage,
+        subPages7L: subPageBlocksList,
+      };
     }
-  }, [pageData, activeFormat, subPage7L, targetSurahNumber]);
+  }, [pageData, activeFormat, subPage7LProp, targetSurahNumber]);
 
+  // Synchronize 7-Line sub-page state with parent QuranReader
   useEffect(() => {
-    if (
-      lastReported7LRef.current.subPage !== subPage7L ||
-      lastReported7LRef.current.totalParts !== totalParts7L
-    ) {
-      lastReported7LRef.current = { subPage: subPage7L, totalParts: totalParts7L };
-      onSubPage7LChangeRef.current?.(subPage7L, totalParts7L);
+    if (activeFormat === 7) {
+      if (
+        lastReported7LRef.current.subPage !== safeSubPage ||
+        lastReported7LRef.current.totalParts !== totalParts7L
+      ) {
+        lastReported7LRef.current = { subPage: safeSubPage, totalParts: totalParts7L };
+        onSubPage7LChangeRef.current?.(safeSubPage, totalParts7L);
+      }
     }
-  }, [subPage7L, totalParts7L]);
+  }, [safeSubPage, totalParts7L, activeFormat]);
 
+  // Tilawah auto-flip for 7-Line mode (switches between Part 1, Part 2, etc.)
   useEffect(() => {
-    if (totalParts7L > 0 && subPage7L > totalParts7L) {
-      setSubPage7L(totalParts7L);
+    if (isPlaying && currentSurah > 0 && currentAyah > 0 && activeFormat === 7 && subPages7L.length > 1) {
+      for (let p = 1; p <= subPages7L.length; p++) {
+        const pBlocks = subPages7L[p - 1] || [];
+        const inThisPart = pBlocks.some((b) =>
+          b.type === 'ayah-line' &&
+          b.tokens.some((t) => t.surahNumber === currentSurah && t.verseNumber === currentAyah)
+        );
+        if (inThisPart && safeSubPage !== p) {
+          onSubPage7LChangeRef.current?.(p, subPages7L.length);
+          break;
+        }
+      }
     }
-  }, [subPage7L, totalParts7L]);
+  }, [isPlaying, currentSurah, currentAyah, activeFormat, subPages7L, safeSubPage]);
 
   // Multi-Stage Width Measurement & Live DOM Gentle Fit Pass (fitMushafLinesToContainer)
   // Ensures 100% UNIFORM readable font size and 0px clipping on all 604 pages in 15L, 13L, and 7L
@@ -924,9 +959,16 @@ function InteractiveMushafPageComponent({
     });
 
     // Stage 3: Multi-interval passes for late asynchronous font shaping on mobile WebViews
-    const t1 = setTimeout(() => fitMushafLinesToContainer(), 50);
-    const t2 = setTimeout(() => fitMushafLinesToContainer(), 150);
-    const t3 = setTimeout(() => fitMushafLinesToContainer(), 350);
+    // In 7-line mode, lines fit comfortably so skip delayed setTimeout reflow passes to eliminate visual jitter!
+    let t1: NodeJS.Timeout | undefined;
+    let t2: NodeJS.Timeout | undefined;
+    let t3: NodeJS.Timeout | undefined;
+
+    if (activeFormat !== 7) {
+      t1 = setTimeout(() => fitMushafLinesToContainer(), 50);
+      t2 = setTimeout(() => fitMushafLinesToContainer(), 150);
+      t3 = setTimeout(() => fitMushafLinesToContainer(), 350);
+    }
 
     // Stage 4: Re-check when web fonts complete loading
     if (typeof document !== 'undefined' && 'fonts' in document && document.fonts?.ready) {
@@ -951,13 +993,13 @@ function InteractiveMushafPageComponent({
 
     return () => {
       cancelAnimationFrame(rAFId);
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
+      if (t1) clearTimeout(t1);
+      if (t2) clearTimeout(t2);
+      if (t3) clearTimeout(t3);
       if (ro) ro.disconnect();
       window.removeEventListener('resize', handleResize);
     };
-  }, [pageData, activeFormat, showTajweed, surfaceMode, subPage7L, blocks, pageNumber]);
+  }, [pageData, activeFormat, showTajweed, surfaceMode, safeSubPage, blocks, pageNumber]);
 
   // If Classic Scan mode is selected, or if fallback failed to load verses, render classic scan
   if (surfaceMode === 'classic' || (pageData?.is_fallback && pageData.verses.length === 0)) {
@@ -1159,25 +1201,35 @@ function InteractiveMushafPageComponent({
           </div>
         )}
 
-        {/* Loading Spinner */}
-        {loading && (
+        {/* Loading Spinner only on initial cold mount when pageData is completely null */}
+        {loading && !pageData && (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-7 h-7 animate-spin text-[var(--accent)]" />
             <p className="text-xs font-bold opacity-75">Loading Uthmani Mushaf Page {pageNumber}...</p>
           </div>
         )}
 
+        {/* Subtle transient loading bar when fetching new page while previous page is displayed */}
+        {loading && pageData && (
+          <div className="w-full h-1 bg-[var(--surface-2)] overflow-hidden rounded-full my-1">
+            <div className="h-full bg-[var(--accent)] animate-pulse w-full" />
+          </div>
+        )}
+
         {/* Render Interactive Mushaf Page Content */}
-        {!loading && pageData && (
+        {pageData && (
           <div
             ref={mushafLinesContainerRef}
-            className="uthmani-mushaf-lines-container w-full max-w-full overflow-hidden box-border"
+            className={`uthmani-mushaf-lines-container w-full max-w-full overflow-hidden box-border transition-opacity duration-150 ${
+              loading ? 'opacity-70' : 'opacity-100'
+            }`}
             dir="rtl"
             style={{
               fontFamily: "'Amiri Quran', 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif",
               lineHeight: activeFormat === 7 ? 2.15 : activeFormat === 13 ? 2.25 : 2.15,
               width: '100%',
               maxWidth: '100%',
+              minHeight: activeFormat === 7 ? '390px' : '520px',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -1480,7 +1532,7 @@ function InteractiveMushafPageComponent({
               : '15-Line Madinah Mushaf'}
           </span>
           <span className="font-mono">
-            {activeFormat === 7 && totalParts7L > 1 ? `Page ${pageNumber} (Part ${subPage7L}/${totalParts7L}) • ` : ''}Page {pageNumber} / 604
+            {activeFormat === 7 && totalParts7L > 1 ? `Page ${pageNumber} (Part ${safeSubPage}/${totalParts7L}) • ` : ''}Page {pageNumber} / 604
           </span>
         </div>
 
@@ -1494,14 +1546,18 @@ function InteractiveMushafPageComponent({
           >
             <button
               type="button"
-              disabled={subPage7L <= 1}
+              disabled={safeSubPage <= 1 && pageNumber <= 1}
               onClick={() => {
-                const next = Math.max(1, subPage7L - 1);
-                setSubPage7L(next);
-                onSubPage7LChangeRef.current?.(next, totalParts7L);
+                if (onStep7LineRef.current) {
+                  onStep7LineRef.current('prev');
+                } else if (safeSubPage > 1) {
+                  onSubPage7LChangeRef.current?.(safeSubPage - 1, totalParts7L);
+                } else if (pageNumber > 1) {
+                  onPageTurnRequestRef.current?.(pageNumber - 1);
+                }
               }}
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                subPage7L <= 1
+                safeSubPage <= 1 && pageNumber <= 1
                   ? 'opacity-40 cursor-not-allowed border-transparent'
                   : 'active:scale-95'
               }`}
@@ -1537,18 +1593,22 @@ function InteractiveMushafPageComponent({
                     }
               }
             >
-              Part {subPage7L} of {totalParts7L} • 7-Line Large Print
+              Part {safeSubPage} of {totalParts7L} • 7-Line Large Print
             </span>
             <button
               type="button"
-              disabled={subPage7L >= totalParts7L}
+              disabled={safeSubPage >= totalParts7L && pageNumber >= 604}
               onClick={() => {
-                const next = Math.min(totalParts7L, subPage7L + 1);
-                setSubPage7L(next);
-                onSubPage7LChangeRef.current?.(next, totalParts7L);
+                if (onStep7LineRef.current) {
+                  onStep7LineRef.current('next');
+                } else if (safeSubPage < totalParts7L) {
+                  onSubPage7LChangeRef.current?.(safeSubPage + 1, totalParts7L);
+                } else if (pageNumber < 604) {
+                  onPageTurnRequestRef.current?.(pageNumber + 1);
+                }
               }}
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                subPage7L >= totalParts7L
+                safeSubPage >= totalParts7L && pageNumber >= 604
                   ? 'opacity-40 cursor-not-allowed border-transparent'
                   : 'active:scale-95'
               }`}
