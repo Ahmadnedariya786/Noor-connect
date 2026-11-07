@@ -7,6 +7,8 @@ import {
   getPdfBlob as getIdbPdfBlob,
   savePdfBlob as saveIdbPdfBlob,
   deletePdfBlob as deleteIdbPdfBlob,
+  getIdbPdfStorageStats,
+  clearAllIdbPdfBlobs,
 } from './idb-pdf-store';
 
 // Initialize stores
@@ -235,25 +237,73 @@ export const deleteUserBook = async (id: string): Promise<void> => {
   }
 };
 
-// Storage statistics
+// Storage statistics (includes both localforage PDF cache and noor_ebooks_idb_v1 IndexedDB store)
 export const getStorageStats = async (): Promise<{ totalBooks: number; totalSize: number }> => {
-  const downloaded = await getDownloadedBooks();
-  const userBooks = await getUserBooks();
-  
-  const downloadedSize = downloaded.reduce((sum, b) => sum + b.fileSize, 0);
-  const userSize = userBooks.reduce((sum, b) => sum + b.fileSize, 0);
+  let downloadedSize = 0;
+  let userSize = 0;
+  let downloadedCount = 0;
+  let userCount = 0;
+
+  try {
+    const downloaded = await getDownloadedBooks();
+    downloadedCount = downloaded.length;
+    downloadedSize = downloaded.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+  } catch {
+    // Handled downloaded books error
+  }
+
+  try {
+    const userBooks = await getUserBooks();
+    userCount = userBooks.length;
+    userSize = userBooks.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+  } catch {
+    // Handled user books error
+  }
+
+  // Include large books stored in noor_ebooks_idb_v1 (Tafseer Anwar-ul-Bayan 5 volumes)
+  let idbBooks = 0;
+  let idbSize = 0;
+  try {
+    const idbStats = await getIdbPdfStorageStats();
+    idbBooks = idbStats.totalBooks;
+    idbSize = idbStats.totalSize;
+  } catch {
+    // Handled idb stats error
+  }
   
   return {
-    totalBooks: downloaded.length + userBooks.length,
-    totalSize: downloadedSize + userSize
+    totalBooks: downloadedCount + userCount + idbBooks,
+    totalSize: downloadedSize + userSize + idbSize,
   };
 };
 
-// Clear all cached PDFs
+// Clear all cached PDFs (both localforage cache and noor_ebooks_idb_v1 IndexedDB store)
 export const clearAllBooks = async (): Promise<void> => {
-  await pdfStore.clear();
-  await metaStore.removeItem('downloaded-books');
-  await metaStore.removeItem('user-books');
+  try {
+    await pdfStore.clear();
+  } catch {
+    // Handled pdfStore clear error
+  }
+  try {
+    await metaStore.removeItem('downloaded-books');
+    await metaStore.removeItem('user-books');
+  } catch {
+    // Handled metaStore remove error
+  }
+  try {
+    await clearAllIdbPdfBlobs();
+  } catch {
+    // Handled idb clear error
+  }
+
+  // Dispatch global event so UI updates immediately (resets volume cards to Cloud Ready)
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('anwar-ul-bayan-linked'));
+    } catch {
+      // Safe dispatch
+    }
+  }
 };
 
 // Format file size

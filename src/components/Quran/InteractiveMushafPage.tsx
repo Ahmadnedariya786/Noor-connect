@@ -48,7 +48,13 @@ interface InteractiveMushafPageProps {
 
 export type MushafPageBlock =
   | { type: 'surah-banner'; header: SurahHeaderInfo; key: string }
-  | { type: 'ayah-line'; tokens: MushafLineToken[]; key: string; lineIndex: number };
+  | {
+      type: 'ayah-line';
+      tokens: MushafLineToken[];
+      key: string;
+      lineIndex: number;
+      isLastLineOfSurahSegment?: boolean;
+    };
 
 export type { MushafLineToken };
 export { getStrippedArabicCharLength };
@@ -685,11 +691,13 @@ function InteractiveMushafPageComponent({
     });
 
     // Helper: inserts Surah banner block immediately before the line where Ayah 1 begins
-    const assembleBlocksWithHeaders = (lines: MushafLineToken[][]): MushafPageBlock[] => {
+    const assembleBlocksWithHeaders = (
+      lines: Array<{ tokens: MushafLineToken[]; isLastLine: boolean }>
+    ): MushafPageBlock[] => {
       const resultBlocks: MushafPageBlock[] = [];
       const handledHeaders = new Set<number>();
 
-      lines.forEach((lineTokens, lineIdx) => {
+      lines.forEach(({ tokens: lineTokens, isLastLine }, lineIdx) => {
         headersToProcess.forEach((sHeader) => {
           if (!handledHeaders.has(sHeader.surah_number)) {
             const hasAyah1 = lineTokens.some(
@@ -710,6 +718,7 @@ function InteractiveMushafPageComponent({
           type: 'ayah-line',
           tokens: lineTokens,
           lineIndex: lineIdx,
+          isLastLineOfSurahSegment: isLastLine,
           key: `line-${lineIdx}`,
         });
       });
@@ -730,8 +739,7 @@ function InteractiveMushafPageComponent({
     };
 
     if (activeFormat === 15 || activeFormat === 13) {
-      // Pack tokens by Surah segment using strict visual character budget (35 units for 13L, 37 units for 15L)
-      // Never force-merge lines to 13/15 if it would exceed MAX_LINE_UNITS — eliminates tiny 9px lines & word clipping
+      // Pack tokens by Surah segment using Knuth-Plass minimum-raggedness line balancing
       const surahIds: number[] = [];
       allTokens.forEach((t) => {
         if (!surahIds.includes(t.surahNumber)) {
@@ -739,33 +747,55 @@ function InteractiveMushafPageComponent({
         }
       });
 
-      const packedLines: MushafLineToken[][] = [];
+      const packedLines: Array<{ tokens: MushafLineToken[]; isLastLine: boolean }> = [];
       surahIds.forEach((sid) => {
         const segTokens = allTokens.filter((t) => t.surahNumber === sid);
         const segLines = packSurahTokensWithBudget(segTokens, activeFormat);
-        packedLines.push(...segLines);
+        segLines.forEach((line, idx) => {
+          packedLines.push({
+            tokens: line,
+            isLastLine: idx === segLines.length - 1,
+          });
+        });
       });
 
       return { blocks: assembleBlocksWithHeaders(packedLines), totalParts7L: 1 };
     } else {
-      // 7-line mode: Strict 20-24 stripped char budget per line, paginated into ~7 lines per view
-      const all7Lines = build7LineFormatTokens(allTokens);
+      // 7-line mode: Dynamic-programming balanced lines with MAX_UNITS = 28, paginated into ~7 lines per view
+      const surahIds: number[] = [];
+      allTokens.forEach((t) => {
+        if (!surahIds.includes(t.surahNumber)) {
+          surahIds.push(t.surahNumber);
+        }
+      });
+
+      const all7Lines: Array<{ tokens: MushafLineToken[]; isLastLine: boolean }> = [];
+      surahIds.forEach((sid) => {
+        const segTokens = allTokens.filter((t) => t.surahNumber === sid);
+        const segLines = packSurahTokensWithBudget(segTokens, 7);
+        segLines.forEach((line, idx) => {
+          all7Lines.push({
+            tokens: line,
+            isLastLine: idx === segLines.length - 1,
+          });
+        });
+      });
 
       // Chunk all7Lines into sub-pages of ~7 lines each
-      const subPages: MushafLineToken[][][] = [];
+      const subPages: Array<Array<{ tokens: MushafLineToken[]; isLastLine: boolean }>> = [];
       for (let i = 0; i < all7Lines.length; i += 7) {
         subPages.push(all7Lines.slice(i, i + 7));
       }
 
       // If the final sub-page has only 1 line with <= 2 words (or just a medallion),
-      // merge that trailing line into the previous sub-page so the reader never flips to an orphan sub-page (e.g. Page 106 Part 5/5)
+      // merge that trailing line into the previous sub-page so the reader never flips to an orphan sub-page
       if (subPages.length > 1) {
         const lastPartLines = subPages[subPages.length - 1];
         if (lastPartLines.length === 1) {
-          const singleLine = lastPartLines[0];
-          const wordCount = singleLine.filter(t => t.type !== 'medallion' && t.type !== 'header').length;
+          const singleLineObj = lastPartLines[0];
+          const wordCount = singleLineObj.tokens.filter(t => t.type !== 'medallion' && t.type !== 'header').length;
           if (wordCount <= 2) {
-            subPages[subPages.length - 2].push(singleLine);
+            subPages[subPages.length - 2].push(singleLineObj);
             subPages.pop();
           }
         }
@@ -778,10 +808,10 @@ function InteractiveMushafPageComponent({
       const blocksFor7L: MushafPageBlock[] = [];
       const handledHeaders = new Set<number>();
 
-      visibleLines.forEach((lineTokens, lineIdx) => {
+      visibleLines.forEach((lineObj, lineIdx) => {
         headersToProcess.forEach((sHeader) => {
           if (!handledHeaders.has(sHeader.surah_number)) {
-            const hasAyah1 = lineTokens.some(
+            const hasAyah1 = lineObj.tokens.some(
               (t) => t.surahNumber === sHeader.surah_number && t.verseNumber === 1
             );
             if (hasAyah1) {
@@ -797,8 +827,9 @@ function InteractiveMushafPageComponent({
 
         blocksFor7L.push({
           type: 'ayah-line',
-          tokens: lineTokens,
+          tokens: lineObj.tokens,
           lineIndex: lineIdx,
+          isLastLineOfSurahSegment: lineObj.isLastLine,
           key: `line-7l-${lineIdx}`,
         });
       });
@@ -1175,12 +1206,6 @@ function InteractiveMushafPageComponent({
             })()}
 
             {(() => {
-              const nonHeaderTokenCount = pageData.verses.reduce(
-                (acc, v) => acc + v.words.filter((w) => w.char_type_name === 'word').length,
-                0
-              );
-              const isShortMushafPage = nonHeaderTokenCount > 0 && nonHeaderTokenCount < 85;
-
               return blocks.map((block) => {
                 if (block.type === 'surah-banner') {
                   const surahHeader = block.header;
@@ -1248,6 +1273,7 @@ function InteractiveMushafPageComponent({
                 // Ayah Line
                 const lineTokens = block.tokens;
                 const lineIdx = block.lineIndex;
+                const isLastLineOfSurahSegment = Boolean(block.isLastLineOfSurahSegment);
 
                 // Calculate stripped char budget for this line (+4 per medallion)
                 const baseCharCount = lineTokens.reduce((sum, t) => {
@@ -1259,11 +1285,14 @@ function InteractiveMushafPageComponent({
 
                 const uniformFontSize = getUniformMushafFontSize(activeFormat);
 
-                // Use center justification ONLY on short centered lines
+                // NEVER center a line in the middle of a Surah!
+                // Set isShortCenteredLine = true ONLY when:
+                // 1. pageNumber === 1 or (pageNumber === 2 && lineIdx < 4), OR
+                // 2. The line is the very last line of a Surah segment AND baseCharCount < 22!
                 const isShortCenteredLine =
-                  isShortMushafPage ||
-                  baseCharCount < (activeFormat === 7 ? 14 : 20) ||
-                  lineTokens.length < 2;
+                  pageNumber === 1 ||
+                  (pageNumber === 2 && lineIdx < 4) ||
+                  (isLastLineOfSurahSegment && baseCharCount < 22);
 
                 return (
                   <div

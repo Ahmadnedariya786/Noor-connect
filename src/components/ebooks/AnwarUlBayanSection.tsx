@@ -154,8 +154,8 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
       });
       await refreshStatus();
 
+      setOverviewVolume(null);
       if (autoOpen) {
-        setOverviewVolume(null);
         try {
           const source = await getVolumeResolvedSource(vol);
           onOpenReader({
@@ -427,37 +427,96 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
               }}
             >
               <div className="space-y-2.5">
-                {/* Header Tag Row */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]">
-                    Part {vol.volNumber} • {vol.juzCoverage}
+                {/* Header Tag Row: Single-Line Top Badges */}
+                <div className="flex items-center justify-between gap-1.5 w-full min-w-0 flex-nowrap">
+                  <span
+                    className="font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]"
+                    style={{
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      fontSize: '0.64rem',
+                      fontWeight: 800,
+                      padding: '3px 8px',
+                      borderRadius: '9999px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    PART {vol.volNumber} • JUZ {vol.juzStart}–{vol.juzEnd}
                   </span>
 
-                  <div className="flex items-center gap-1.5">
+                  <span
+                    dir="rtl"
+                    className="font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]"
+                    style={{
+                      fontFamily: 'var(--font-urdu), serif',
+                      fontSize: '0.76rem',
+                      lineHeight: 1.3,
+                      padding: '2px 9px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      borderRadius: '9999px',
+                    }}
+                  >
+                    جلد {vol.volNumber}
+                  </span>
+
+                  {isLinked ? (
                     <span
-                      dir="rtl"
-                      className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]"
-                      style={{ fontFamily: 'var(--font-urdu), serif', lineHeight: 1.4 }}
+                      className="font-bold text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/40"
+                      style={{
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        padding: '3px 8px',
+                        borderRadius: '9999px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
                     >
-                      جلد {vol.volNumber}
+                      <CheckCircle className="w-3 h-3 shrink-0" />
+                      <span>Saved Offline</span>
                     </span>
-                    {isLinked ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--success)] bg-[var(--success)]/10 px-2 py-0.5 rounded-full border border-[var(--success)]/40">
-                        <CheckCircle className="w-3 h-3 shrink-0" />
-                        Saved Offline
-                      </span>
-                    ) : isDownloading ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-full border border-[var(--accent)] animate-pulse">
-                        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
-                        {dlState?.percent || 0}%
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent-text)] bg-[var(--accent-soft)] px-2 py-0.5 rounded-full border border-[var(--accent)]">
-                        <Cloud className="w-3 h-3 shrink-0" />
-                        Cloud Ready
-                      </span>
-                    )}
-                  </div>
+                  ) : isDownloading ? (
+                    <span
+                      className="font-bold text-[var(--accent)] bg-[var(--accent-soft)] border border-[var(--accent)] animate-pulse"
+                      style={{
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        padding: '3px 8px',
+                        borderRadius: '9999px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                      <span>{dlState?.percent || 0}%</span>
+                    </span>
+                  ) : (
+                    <span
+                      className="font-bold text-[var(--accent-text)] bg-[var(--accent-soft)] border border-[var(--accent)]"
+                      style={{
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        padding: '3px 8px',
+                        borderRadius: '9999px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <Cloud className="w-3 h-3 shrink-0" />
+                      <span>Cloud Ready</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* English Title & Coverage */}
@@ -469,13 +528,34 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                     <p className="text-[11px] text-[var(--accent-text)] font-medium">
                       📖 {vol.coverage}
                     </p>
-                    <span
+                    {/* Fix 4B: Explicit RTL BiDi Order so it ALWAYS reads 'پارہ 1 تا 7' */}
+                    <div
                       dir="rtl"
-                      className="text-[11px] text-[var(--accent-text)] font-bold shrink-0 px-1.5 py-0.5 rounded bg-[var(--surface-2)] border border-[var(--border)]"
-                      style={{ fontFamily: 'var(--font-urdu), serif' }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontFamily: 'var(--font-urdu), serif',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.5,
+                        padding: '2px 8px',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        borderRadius: '8px',
+                        background: 'var(--surface-2)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--accent-text)',
+                      }}
                     >
-                      {vol.urduSubtitle}
-                    </span>
+                      <span>پارہ</span>
+                      <span dir="ltr" style={{ fontFamily: 'sans-serif', fontWeight: 700, fontSize: '0.72rem' }}>
+                        {vol.juzStart}
+                      </span>
+                      <span>تا</span>
+                      <span dir="ltr" style={{ fontFamily: 'sans-serif', fontWeight: 700, fontSize: '0.72rem' }}>
+                        {vol.juzEnd}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -638,15 +718,35 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)] shrink-0">
-                      Part {overviewVolume.volNumber} • {overviewVolume.juzCoverage}
+                      PART {overviewVolume.volNumber} • JUZ {overviewVolume.juzStart}–{overviewVolume.juzEnd}
                     </span>
-                    <Badge
-                      variant="outline"
-                      className="text-[11px] font-bold border-[var(--border)] text-[var(--accent-text)] bg-[var(--surface-2)] shrink-0"
-                      style={{ fontFamily: 'var(--font-urdu), serif' }}
+                    <div
+                      dir="rtl"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontFamily: 'var(--font-urdu), serif',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.5,
+                        padding: '2px 8px',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        borderRadius: '8px',
+                        background: 'var(--surface-2)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--accent-text)',
+                      }}
                     >
-                      {overviewVolume.urduSubtitle}
-                    </Badge>
+                      <span>پارہ</span>
+                      <span dir="ltr" style={{ fontFamily: 'sans-serif', fontWeight: 700, fontSize: '0.72rem' }}>
+                        {overviewVolume.juzStart}
+                      </span>
+                      <span>تا</span>
+                      <span dir="ltr" style={{ fontFamily: 'sans-serif', fontWeight: 700, fontSize: '0.72rem' }}>
+                        {overviewVolume.juzEnd}
+                      </span>
+                    </div>
                   </div>
                   <Badge variant="outline" className="text-[10px] font-mono border-[var(--border)] text-[var(--text-secondary)] shrink-0 font-bold">
                     {overviewVolume.estimatedSize}

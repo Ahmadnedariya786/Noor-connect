@@ -62,9 +62,15 @@ export function getTokenVisualUnits(token: MushafLineToken, format: MushafLineFo
 }
 
 export function getMaxLineUnits(format: MushafLineFormat): number {
-  if (format === 13) return 35;
-  if (format === 7) return 22;
-  return 37; // 15-line mode
+  if (format === 7) return 28;
+  if (format === 13) return 36;
+  return 38; // 15-line mode
+}
+
+export function getIdealLineUnits(format: MushafLineFormat): number {
+  if (format === 7) return 25;
+  if (format === 13) return 33;
+  return 35; // 15-line mode
 }
 
 export interface TokenItem {
@@ -110,69 +116,93 @@ export function packSurahTokensWithBudget(
 
   if (items.length === 0) return [];
 
-  // Greedy line packing subject to strict maxUnits
-  const lineItems: TokenItem[][] = [];
-  let curLine: TokenItem[] = [];
-  let curUnits = 0;
-
-  for (const item of items) {
-    if (curLine.length > 0 && curUnits + item.units > maxUnits) {
-      lineItems.push(curLine);
-      curLine = [item];
-      curUnits = item.units;
-    } else {
-      curLine.push(item);
-      curUnits += item.units;
-    }
-  }
-  if (curLine.length > 0) {
-    lineItems.push(curLine);
+  const N = items.length;
+  if (N === 1) {
+    return [items[0].tokens];
   }
 
-  // Smooth adjacent lines within this Surah segment
-  if (lineItems.length > 1) {
-    for (let pass = 0; pass < 3; pass++) {
-      let changed = false;
-      for (let i = 0; i < lineItems.length - 1; i++) {
-        const lineA = lineItems[i];
-        const lineB = lineItems[i + 1];
-        if (lineA.length <= 1) continue;
+  // Dynamic Programming (Knuth-Plass Minimum-Raggedness Line Balancing)
+  // Minimizes (maxUnits - W)^3 across all non-final lines with penalties for starved <=2 word lines
+  const dp: number[] = new Array(N + 1).fill(Infinity);
+  const parent: number[] = new Array(N + 1).fill(-1);
+  dp[0] = 0;
 
-        const unitsA = lineA.reduce((s, it) => s + it.units, 0);
-        const unitsB = lineB.reduce((s, it) => s + it.units, 0);
+  for (let i = 0; i < N; i++) {
+    if (dp[i] === Infinity) continue;
 
-        // Case 1: Line A is heavy and Line B is light
-        if (unitsA > unitsB + 5) {
-          const lastItem = lineA[lineA.length - 1];
-          if (unitsB + lastItem.units <= maxUnits) {
-            const diffBefore = Math.abs(unitsA - unitsB);
-            const diffAfter = Math.abs((unitsA - lastItem.units) - (unitsB + lastItem.units));
-            if (diffAfter < diffBefore) {
-              lineA.pop();
-              lineB.unshift(lastItem);
-              changed = true;
-            }
-          }
-        }
-        // Case 2: Line B is heavy and Line A has room
-        else if (unitsB > unitsA + 5 && lineB.length > 1) {
-          const firstItem = lineB[0];
-          if (unitsA + firstItem.units <= maxUnits) {
-            const diffBefore = Math.abs(unitsA - unitsB);
-            const diffAfter = Math.abs((unitsA + firstItem.units) - (unitsB - firstItem.units));
-            if (diffAfter < diffBefore) {
-              lineB.shift();
-              lineA.push(firstItem);
-              changed = true;
-            }
+    let W = 0;
+    let wordCount = 0;
+
+    for (let j = i; j < N; j++) {
+      W += items[j].units;
+      wordCount += items[j].tokens.filter((t) => t.type === 'word').length;
+
+      // Allow a single item to occupy the line even if it exceeds maxUnits,
+      // but break immediately if multi-item line exceeds maxUnits
+      if (W > maxUnits && j > i) {
+        break;
+      }
+
+      let cost = 0;
+      if (j === N - 1) {
+        // Very last line of this Surah segment: cost is 0 (short final lines are natural)
+        cost = 0;
+      } else {
+        const slack = maxUnits - W;
+        if (slack < 0) {
+          cost = 1000000;
+        } else {
+          cost = Math.pow(slack, 3);
+          // Strong penalty for starved lines (<= 2 words when significantly under budget)
+          if (wordCount <= 2 && W < maxUnits - 6) {
+            cost += 10000;
           }
         }
       }
-      if (!changed) break;
+
+      const totalCost = dp[i] + cost;
+      if (totalCost < dp[j + 1]) {
+        dp[j + 1] = totalCost;
+        parent[j + 1] = i;
+      }
     }
   }
 
-  return lineItems.map((line) => line.flatMap((item) => item.tokens));
+  // Reconstruct lines from DP table
+  const lines: MushafLineToken[][] = [];
+  let curr = N;
+
+  // Fallback to greedy if DP failed to reach N (defensive programming)
+  if (parent[N] === -1) {
+    let curLine: MushafLineToken[] = [];
+    let curUnits = 0;
+    for (const item of items) {
+      if (curLine.length > 0 && curUnits + item.units > maxUnits) {
+        lines.push(curLine);
+        curLine = [...item.tokens];
+        curUnits = item.units;
+      } else {
+        curLine.push(...item.tokens);
+        curUnits += item.units;
+      }
+    }
+    if (curLine.length > 0) {
+      lines.push(curLine);
+    }
+    return lines;
+  }
+
+  while (curr > 0) {
+    const prev = parent[curr];
+    const lineTokens: MushafLineToken[] = [];
+    for (let idx = prev; idx < curr; idx++) {
+      lineTokens.push(...items[idx].tokens);
+    }
+    lines.unshift(lineTokens);
+    curr = prev;
+  }
+
+  return lines;
 }
 
 export interface InteractiveWord {

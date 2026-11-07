@@ -338,10 +338,8 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
   }
 
   try {
-    const contentLengthHeader = response.headers.get('Content-Length');
-    const totalBytes = contentLengthHeader
-      ? parseInt(contentLengthHeader, 10)
-      : vol.approxBytes || 160000000;
+    const headerLen = parseInt(response.headers.get('content-length') || '0', 10);
+    const totalBytes = headerLen > 100000 ? headerLen : (vol.approxBytes || 160000000);
 
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];

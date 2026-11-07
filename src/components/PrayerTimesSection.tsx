@@ -1307,8 +1307,12 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 return (
                   <div
                     key={nafl.id}
-                    className="p-3 rounded-xl transition-all duration-200 border flex flex-col gap-2"
+                    className="rounded-xl transition-all duration-200 border flex flex-col gap-1.5"
                     style={{
+                      padding: '10px 10px',
+                      overflow: 'hidden',
+                      boxSizing: 'border-box',
+                      width: '100%',
                       background: isActive
                         ? 'var(--accent-soft, rgba(212, 175, 55, 0.12))'
                         : 'var(--surface-2)',
@@ -1357,12 +1361,25 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                     </div>
 
                     {/* Row 2: Window Times on Left, Active Countdown or Virtue on Right */}
-                    <div className="flex items-center justify-between gap-2 pt-0.5 min-w-0">
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '6px',
+                        width: '100%',
+                        minWidth: 0,
+                        marginTop: '4px',
+                      }}
+                    >
                       <span
-                        className="font-bold font-mono tracking-tight shrink-0 ltr-num tabular-nums whitespace-nowrap"
+                        className="font-mono tracking-tight shrink-0 ltr-num tabular-nums whitespace-nowrap"
                         dir="ltr"
                         style={{
-                          fontSize: '0.72rem',
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
                           color: isActive
                             ? 'var(--accent-text)'
                             : 'var(--text-primary)',
@@ -1374,25 +1391,24 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
                       {isActive ? (
                         <span
-                          className="font-bold font-mono rounded-full shrink-0 whitespace-nowrap animate-pulse"
+                          className="font-mono rounded-full shrink-0 whitespace-nowrap animate-pulse"
                           style={{
                             background: 'var(--accent)',
                             color: 'var(--on-accent)',
                             boxShadow: '0 0 8px var(--accent-glow)',
-                            fontSize: '0.65rem',
+                            fontSize: '0.62rem',
                             fontWeight: 800,
-                            padding: '2px 8px',
+                            padding: '2px 7px',
                             borderRadius: '9999px',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '5px',
+                            gap: '4px',
                             whiteSpace: 'nowrap',
                             flexShrink: 0,
-                            maxWidth: '100%',
                           }}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                          <span>Ends in {nafl.remainingFormatted}</span>
+                          <span>{nafl.remainingFormatted} left</span>
                         </span>
                       ) : (
                         <span

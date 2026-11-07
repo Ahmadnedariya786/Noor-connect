@@ -21,6 +21,8 @@ export interface AnwarUlBayanVolume {
   urduAuthor: string;
   coverage: string;
   juzCoverage: string;
+  juzStart: number;
+  juzEnd: number;
   surahRange: string;
   category: 'Quran & Tafsir';
   fileName: string;
@@ -46,6 +48,8 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: "Surah Al-Fatiha (1) to Surah Al-Ma'idah (5) • Juz 1 to 7",
     juzCoverage: 'Juz 1 to 7',
+    juzStart: 1,
+    juzEnd: 7,
     surahRange: "Al-Fatiha (1) — Al-Ma'idah (5)",
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume1.pdf',
@@ -79,6 +83,8 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: "Surah Al-An'am (6) to Surah Ibrahim (14) • Juz 7 to 13",
     juzCoverage: 'Juz 7 to 13',
+    juzStart: 7,
+    juzEnd: 13,
     surahRange: "Al-An'am (6) — Ibrahim (14)",
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume2.pdf',
@@ -116,6 +122,8 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Al-Hijr (15) to Surah Al-Ankabut (29) • Juz 14 to 21',
     juzCoverage: 'Juz 14 to 21',
+    juzStart: 14,
+    juzEnd: 21,
     surahRange: 'Al-Hijr (15) — Al-Ankabut (29)',
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume3.pdf',
@@ -159,6 +167,8 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Ar-Rum (30) to Surah Al-Hadid (57) • Juz 21 to 27',
     juzCoverage: 'Juz 21 to 27',
+    juzStart: 21,
+    juzEnd: 27,
     surahRange: 'Ar-Rum (30) — Al-Hadid (57)',
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume4.pdf',
@@ -195,6 +205,8 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     urduAuthor: 'حضرت مولانا مفتی محمد عاشق الٰہی بلند شہری مہاجر مدنی رحمه الله',
     coverage: 'Surah Al-Mujadilah (58) to Surah An-Nas (114) • Juz 28 to 30',
     juzCoverage: 'Juz 28 to 30',
+    juzStart: 28,
+    juzEnd: 30,
     surahRange: 'Al-Mujadilah (58) — An-Nas (114)',
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume5.pdf',

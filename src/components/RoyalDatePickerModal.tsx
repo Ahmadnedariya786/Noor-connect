@@ -258,16 +258,37 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
 
         {/* Row 2: Hijri Date Pill */}
         <div
-          className="w-full rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-2 border border-[var(--border)] bg-[var(--surface-2)]"
-          style={{ fontSize: '0.72rem' }}
+          style={{
+            padding: '6px 10px',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '6px',
+            width: '100%',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+          }}
         >
-          <span dir="ltr" className="font-semibold text-[var(--accent-text)] whitespace-nowrap">
+          <span
+            dir="ltr"
+            className="text-[var(--accent-text)]"
+            style={{ fontSize: '0.66rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}
+          >
             🌙 {detailedDate.hijriEn}
           </span>
           <span
             dir="rtl"
-            className="font-semibold text-[var(--accent-text)] whitespace-nowrap"
-            style={{ fontFamily: 'var(--font-urdu), sans-serif', fontSize: '0.78rem' }}
+            className="text-[var(--accent-text)]"
+            style={{
+              fontFamily: 'var(--font-urdu), sans-serif',
+              fontSize: '0.72rem',
+              lineHeight: 1.5,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
           >
             {detailedDate.hijriArUr}
           </span>
@@ -428,12 +449,34 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
           className="w-full rounded-xl border border-[var(--border)] p-2 space-y-1.5"
           style={{ background: 'var(--surface-2)' }}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[var(--text-primary)]">
-              Missed Prayers: {activeDate}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+              marginBottom: '8px',
+              width: '100%',
+              minWidth: 0,
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+                color: 'var(--text-primary)',
+              }}
+            >
+              Missed Prayers • {detailedDate.gregorian}
             </span>
-            <span className="text-[9px] text-[var(--text-secondary)]">
-              Tap: None → ● Pending → ✓ Done
+            <span
+              style={{
+                fontSize: '0.65rem',
+                color: 'var(--text-secondary)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Tap prayer to cycle: None → ● Pending → ✓ Done
             </span>
           </div>
 
@@ -489,8 +532,8 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
             borderRadius: '12px',
           }}
         >
-          <Check className="w-4 h-4" />
-          <span>✓ Done & Save Qaza</span>
+          <Check className="w-4 h-4 shrink-0" />
+          <span>Done & Save Qaza</span>
         </button>
       </div>
     </div>

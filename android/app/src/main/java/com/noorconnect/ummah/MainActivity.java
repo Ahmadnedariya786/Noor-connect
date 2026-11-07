@@ -940,6 +940,21 @@ public class MainActivity extends BridgeActivity {
             responseHeaders.put("Content-Type", "application/pdf");
 
             long contentLength = conn.getContentLengthLong();
+            if (contentLength <= 0) {
+                String clHeader = conn.getHeaderField("Content-Length");
+                if (clHeader != null && !clHeader.trim().isEmpty()) {
+                    try {
+                        contentLength = Long.parseLong(clHeader.trim());
+                    } catch (Exception ignored) {}
+                }
+            }
+            if (contentLength <= 0) {
+                if (fileName.contains("Volume1")) contentLength = 165044224L;
+                else if (fileName.contains("Volume2")) contentLength = 162214912L;
+                else if (fileName.contains("Volume3")) contentLength = 146486272L;
+                else if (fileName.contains("Volume4")) contentLength = 168296448L;
+                else if (fileName.contains("Volume5")) contentLength = 155189248L;
+            }
             if (contentLength > 0) {
                 responseHeaders.put("Content-Length", String.valueOf(contentLength));
             }

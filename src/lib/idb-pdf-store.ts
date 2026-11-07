@@ -226,3 +226,46 @@ export async function getAllStoredPdfKeys(): Promise<string[]> {
     return [];
   }
 }
+
+/**
+ * Calculate total size and file count of all PDFs stored in IndexedDB (noor_ebooks_idb_v1)
+ */
+export async function getIdbPdfStorageStats(): Promise<{ totalBooks: number; totalSize: number }> {
+  try {
+    const keys = await getAllStoredPdfKeys();
+    let totalSize = 0;
+    let totalBooks = 0;
+    for (const key of keys) {
+      const meta = await getPdfMetadata(key);
+      if (meta && meta.size > 0) {
+        totalSize += meta.size;
+        totalBooks++;
+      }
+    }
+    return { totalBooks, totalSize };
+  } catch {
+    return { totalBooks: 0, totalSize: 0 };
+  }
+}
+
+/**
+ * Clear all PDF records from noor_ebooks_idb_v1
+ */
+export async function clearAllIdbPdfBlobs(): Promise<void> {
+  try {
+    const db = await getDb();
+    return new Promise((resolve, reject) => {
+      try {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.clear();
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  } catch (err) {
+    console.warn('[idb-pdf-store] Failed to clear all IDB PDF blobs:', err);
+  }
+}
