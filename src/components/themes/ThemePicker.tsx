@@ -60,13 +60,14 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                 }
               }}
               className={cn(
-                "group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 cursor-pointer select-none text-left p-3 sm:p-3.5",
+                "group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 cursor-pointer select-none text-left p-2.5 sm:p-3",
                 "backdrop-blur-sm",
                 isSelected
                   ? "border border-[var(--accent)] ring-1 ring-[var(--accent)]"
                   : "border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] active:scale-[0.98]"
               )}
               style={{
+                padding: '10px 10px',
                 background: isSelected
                   ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
                   : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
@@ -75,24 +76,30 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   : 'inset 0 1px 0 var(--card-sheen)',
               }}
             >
-              {/* Row 1: Name and Active Badge */}
-              <div className="flex items-center justify-between gap-1.5 mb-1 w-full min-w-0">
+              {/* Row 1: Name and Active Badge (Zero Truncation at 360px) */}
+              <div className="flex items-center justify-between mb-1 w-full min-w-0" style={{ gap: '4px' }}>
                 <h3
                   className={cn(
-                    "text-[0.82rem] font-extrabold tracking-tight leading-snug whitespace-nowrap overflow-hidden text-ellipsis",
+                    "leading-snug whitespace-nowrap",
                     isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)] group-hover:text-[var(--accent-text)]"
                   )}
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.01em',
+                    whiteSpace: 'nowrap',
+                  }}
                 >
                   {theme.name}
                 </h3>
 
                 {isSelected ? (
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-[var(--accent)] text-[var(--on-accent)] shadow-sm">
-                    <Check className="w-3 h-3 stroke-[3]" />
+                  <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[var(--accent)] text-[var(--on-accent)] shadow-sm">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
                   </span>
                 ) : (
-                  <div className="w-5 h-5 rounded-full border border-[var(--border)] group-hover:border-[var(--accent)]/50 shrink-0 flex items-center justify-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[var(--accent)]/30" />
+                  <div className="w-4 h-4 rounded-full border border-[var(--border)] group-hover:border-[var(--accent)]/50 shrink-0 flex items-center justify-center">
+                    <span className="w-1 h-1 rounded-full bg-transparent group-hover:bg-[var(--accent)]/30" />
                   </div>
                 )}
               </div>

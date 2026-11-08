@@ -264,9 +264,9 @@ const Profile: React.FC = () => {
     try {
       const rawTheme = (localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
       const currentThemeDef = THEMES[rawTheme] || THEMES['oxford-gold'];
-      initial['theme'] = currentThemeDef?.name || 'Nordic Slate';
+      initial['theme'] = currentThemeDef?.name || 'Oxford Gold';
     } catch {
-      initial['theme'] = 'Nordic Slate';
+      initial['theme'] = 'Oxford Gold';
     }
 
     try {
@@ -309,9 +309,9 @@ const Profile: React.FC = () => {
       try {
         const rawTheme = (localStorage.getItem('noor_theme') || 'oxford-gold') as ThemeId;
         const currentThemeDef = THEMES[rawTheme] || THEMES['oxford-gold'];
-        updates['theme'] = currentThemeDef?.name || 'Nordic Slate';
+        updates['theme'] = currentThemeDef?.name || 'Oxford Gold';
       } catch {
-        updates['theme'] = 'Nordic Slate';
+        updates['theme'] = 'Oxford Gold';
       }
 
       try {
