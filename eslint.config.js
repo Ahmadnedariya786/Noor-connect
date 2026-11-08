@@ -13,6 +13,8 @@ export default tseslint.config(
       "android/**",
       "*.js",
       "**/*.js",
+      ".agents/**",
+      ".gemini/**",
     ],
   },
   {

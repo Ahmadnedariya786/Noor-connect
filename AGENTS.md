@@ -32,4 +32,44 @@ Any AI coding assistant, agentic workflow, third-party developer, or automated s
    - The 5-attempt threshold followed by a 60-second cooldown timer and `[SECURITY_WARN]` logging in the Deep X-Ray Diagnostics engine must be preserved at all times.
 
 4. **Protected Subsystems Guarantee:**
-   - Keep 4-thread parallel turbo APK downloader (`MainActivity.java`), permission onboarding, Qibla compass, Prayer calculation math, Splash screen, 6 Clocks, Deep X-Ray Diagnostics (`8/8 PASS`), and all 5 themes intact.
+   - Keep 4-thread parallel turbo APK downloader (`MainActivity.java`), permission onboarding, Qibla compass, Prayer calculation math, Splash screen, 6 Clocks, Deep X-Ray Diagnostics (`8/8 PASS`), and all 6 themes intact.
+
+---
+
+## 3. Google Elephant-Goldfish Model (EGM) Integration & Specialized Domain Skills
+
+Noor Connect integrates Google's open-source **Elephant-Goldfish Model (EGM)** framework (`egm.dev`, Apache-2.0) located in `.agents/` and `.gemini/`. This system enables dual-mode agent operation:
+- **Elephant Mode**: Retains deep architectural context, historical constraints, zero-knowledge security, and authentic Islamic Fiqh rules.
+- **Goldfish Mode**: Spawns isolated review subagents (such as `egm-zoom-out`, `egm-comprehension`, `egm-design`, `egm-structural`, `egm-codebase-details`, `egm-implementation-readiness`, and `egm-inventive-catalyst`) that inspect pull requests and diffs with zero assumed institutional bias to catch missing context, silent failures, and regressions.
+
+### Specialized Noor Connect Domain Skills
+
+In addition to standard EGM review workflows, five specialized Noor Connect domain skills are registered under `.agents/skills/` and mirrored in `.gemini/skills/`:
+
+1. **[`noor-360px-viewport-rtl-guard`](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-360px-viewport-rtl-guard/SKILL.md):**
+   - **360px Horizontal Viewport Budget:** Guarantees `scrollWidth <= clientWidth` on 360px width mobile screens (`312px–336px` inner width) with zero `...` text truncation on badges or action buttons.
+   - **BiDi Isolation for Urdu & Numbers:** Prevents Unicode Bidirectional Algorithm inversions (e.g. `7تا 1پارہ`) by isolating LTR numbers inside `<bdi>` or `<span dir="ltr">`.
+   - **Mushaf 7L / 13L / 15L Invariants:** Enforces uniform readable font sizes, Knuth-Plass dynamic programming line packing with anti-orphan rules, centered short closing lines, and unified `subPage` state synchronization between `QuranReader.tsx` and `InteractiveMushafPage.tsx`.
+
+2. **[`noor-offline-idb-zero-crash`](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-offline-idb-zero-crash/SKILL.md):**
+   - **Zero Console Errors from IndexedDB:** Prevents raw DOM Event leakage (`{"isTrusted": true}`); safely resets object stores using `objectStore.clear()` within readwrite transactions.
+   - **Synchronous In-Memory Cache:** Delivers Mushaf pages on frame 1 without loading flashes; manages a background prefetch sliding window ($N-2$ to $N+4$).
+   - **Viewport-Priority PDF Streaming:** Prioritizes rendering for visible pages in continuous scroll mode and automatically opens completed cloud volumes at 100% download.
+
+3. **[`noor-capacitor-android-native`](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-capacitor-android-native/SKILL.md):**
+   - **Native CORS Proxy Interceptor:** Routes large binary downloads through `MainActivity.java`'s `/__gh_ebook__/` with multi-hop HTTP redirect handling and synthetic CORS headers.
+   - **APK Update Tag Isolation:** Filters candidate app releases strictly for `.apk` assets, isolating app updates from content releases like `ebooks-library-v1`.
+   - **Exact Alarm & Doze Mode Safety:** Preserves exact alarm scheduling for timely Adhan audio playback.
+
+4. **[`noor-6-theme-token-sentinel`](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-6-theme-token-sentinel/SKILL.md):**
+   - **Complete 17 Root Tokens:** Mandates all 17 root CSS tokens across all 6 Royal Themes (`kiswah-noir`, `istanbul-sapphire`, `oxford-gold`, `imperial-violet`, `burgundy-velvet`, `desert-scroll`).
+   - **Plain CSS Fallback:** Requires a standard CSS fallback declaration immediately prior to every `color-mix()` rule for legacy Android WebView compatibility.
+
+5. **[`noor-islamic-fiqh-timing-guard`](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-islamic-fiqh-timing-guard/SKILL.md):**
+   - **Authentic 3 Makruh Windows:** Strictly calculates Sunrise ($+ 15m$), Zawal (Dhuhr $- 10m$), and Sunset (Maghrib $- 15m$), displaying warnings only when active and auto-dismissing at `:00s`.
+   - **3 Nafl Windows:** Evaluates Ishraq, Chasht, and Awwabin, powering a collapsible Home Screen accordion.
+   - **Bidirectional Qaza Reconciliation:** Keeps aggregate counters and date-wise logs in 100% sync, surfaced via the top-of-screen persistent reminder banner.
+
+### Zero Bundle Impact Guarantee
+
+All skills, agents, prompts, and EGM manifests are strictly development and agent configuration artifacts. They are excluded from TypeScript builds, Vite bundling, and the native Android APK (`dist/` size impact = **0 bytes**, APK size impact = **0 bytes**).

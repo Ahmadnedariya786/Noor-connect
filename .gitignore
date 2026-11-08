@@ -52,3 +52,9 @@ dist/
 .temp-probe/
 android/app/src/main/assets/public/
 *.pdf
+
+# Python & Plugin Cache
+**/.pytest_cache/
+**/__pycache__/
+*.pyc
+temp-egm-clone/
