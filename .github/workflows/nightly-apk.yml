@@ -39,6 +39,9 @@ jobs:
           packages: 'platforms;android-36 build-tools;36.0.0'
           accept-android-sdk-licenses: true
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Install dependencies
         run: npm ci
 
@@ -105,7 +108,17 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
+          until ./gradlew assembleRelease --no-daemon; do
+            if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+              echo "❌ Gradle assembleRelease failed after $MAX_ATTEMPTS attempts."
+              exit 1
+            fi
+            echo "⚠️ Gradle build failed (attempt $ATTEMPT/$MAX_ATTEMPTS). Retrying in 10 seconds..."
+            ATTEMPT=$((ATTEMPT + 1))
+            sleep 10
+          done
 
       - name: Prepare APK Asset & Metadata
         id: prep
@@ -155,60 +168,57 @@ jobs:
           echo "size=$FILE_SIZE" >> $GITHUB_OUTPUT
           echo "Prepared noor-connect-nightly.apk and NoorConnect-v2.2.1.apk ($FILE_SIZE)"
 
-      - name: Clean up old release assets
-        continue-on-error: true
+      - name: Publish Official GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view nightly --json assets -q '.assets[].name' 2>/dev/null | while read -r asset; do
-            if [ -n "$asset" ]; then
-              echo "Pruning existing asset: $asset"
-              gh release delete-asset nightly "$asset" -y 2>/dev/null || true
-            fi
-          done || true
+          cat <<'EOF' > release-notes.md
+          ### 🌙 Noor Connect v2.2.1 — Official Latest Release
 
-      - name: Publish Official GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: nightly
-          target_commitish: ${{ github.sha }}
-          name: "Noor Connect v2.2.1 — Latest Official APK (Build ${{ steps.prep.outputs.sha_short }})"
-          prerelease: false
-          make_latest: true
-          fail_on_unmatched_files: false
-          files: |
-            NoorConnect-v2.2.1.apk
-            NoorConnect-v2.2.1.apk.sha256
-            noor-connect-nightly.apk
-            noor-connect-nightly.apk.sha256
-            build-info.json
-            version.json
-          body: |
-            ### 🌙 Noor Connect v2.2.1 — Official Latest Release
-            
-            **Noor Connect** is a privacy-first Islamic companion for Android & Web with 100% offline fallback and zero data tracking.
-            
-            #### 📦 Release Assets
-            | Asset | Description | Direct Download |
-            | :--- | :--- | :--- |
-            | `NoorConnect-v2.2.1.apk` | Official Versioned Release APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk)** |
-            | `noor-connect-nightly.apk` | Fast Direct In-App Auto-Update APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk)** |
-            | `NoorConnect-v2.2.1.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk.sha256) |
-            | `noor-connect-nightly.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk.sha256) |
-            | `version.json` | Live In-App Update Manifest | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/version.json) |
-            | `build-info.json` | Continuous Integration Build Info | [View Info](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/build-info.json) |
+          **Noor Connect** is a privacy-first Islamic companion for Android & Web with 100% offline fallback and zero data tracking.
 
-            - **Version:** `2.2.1`
-            - **Commit SHA:** `${{ github.sha }}` (`${{ steps.prep.outputs.sha_short }}`)
-            - **Branch:** `${{ github.ref_name }}`
-            - **Build Timestamp (UTC):** `${{ steps.prep.outputs.timestamp }}`
-            - **APK Package Size:** `${{ steps.prep.outputs.size }}`
-            
-            #### 🌟 Highlights in v2.2.1
-            - **Quran Mushaf Engine:** 15-line Madani & 7-line IndoPak Quran, interactive word-by-word Tajweed, Surah Ar-Rahman / Al-Kahf / Al-Mulk / Al-Waqi'ah layout alignments, and 47 authentic reciters.
-            - **Ultra-Smart Zakat & Nisab Calculator:** Live gold (XAU) & silver (XAG) market rates across 24K, 22K, 21K, and 18K purity, 8 wealth categories, and 1-page A4 PDF export with native sharing.
-            - **Audio & Tilawah Suite:** In-app audio caching, multi-language Tafsir (Urdu in Jameel Noori Nastaliq, English, Gujarati, Hindi, Arabic, Bengali, Turkish, Russian, French) with offline packs.
-            - **5 Royal Themes:** Oxford Gold, Madinah Emerald, Imperial Violet, Burgundy Velvet, and Desert Scroll.
-            - **Security & Privacy:** Zero-user-impact stealth owner vault and 0 CodeQL security alerts.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #### 📦 Release Assets
+          | Asset | Description | Direct Download |
+          | :--- | :--- | :--- |
+          | `NoorConnect-v2.2.1.apk` | Official Versioned Release APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk)** |
+          | `noor-connect-nightly.apk` | Fast Direct In-App Auto-Update APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk)** |
+          | `NoorConnect-v2.2.1.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk.sha256) |
+          | `noor-connect-nightly.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk.sha256) |
+          | `version.json` | Live In-App Update Manifest | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/version.json) |
+          | `build-info.json` | Continuous Integration Build Info | [View Info](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/build-info.json) |
+
+          - **Version:** `2.2.1`
+          - **Commit SHA:** `${{ github.sha }}` (`${{ steps.prep.outputs.sha_short }}`)
+          - **Branch:** `${{ github.ref_name }}`
+          - **Build Timestamp (UTC):** `${{ steps.prep.outputs.timestamp }}`
+          - **APK Package Size:** `${{ steps.prep.outputs.size }}`
+
+          #### 🌟 Highlights in v2.2.1
+          - **Quran Mushaf Engine:** 15-line Madani & 7-line IndoPak Quran, interactive word-by-word Tajweed, Surah Ar-Rahman / Al-Kahf / Al-Mulk / Al-Waqi'ah layout alignments, and 47 authentic reciters.
+          - **Ultra-Smart Zakat & Nisab Calculator:** Live gold (XAU) & silver (XAG) market rates across 24K, 22K, 21K, and 18K purity, 8 wealth categories, and 1-page A4 PDF export with native sharing.
+          - **Audio & Tilawah Suite:** In-app audio caching, multi-language Tafsir (Urdu in Jameel Noori Nastaliq, English, Gujarati, Hindi, Arabic, Bengali, Turkish, Russian, French) with offline packs.
+          - **6 Dual-Tone Royal Themes:** Oxford Gold, Imperial Violet, Burgundy Velvet, Desert Scroll, Royal Sapphire, and Makkah Silk.
+          - **Security & Privacy:** Zero-user-impact stealth owner vault and 0 CodeQL security alerts.
+          EOF
+
+          RELEASE_TITLE="Noor Connect v2.2.1 — Latest Official APK (Build ${{ steps.prep.outputs.sha_short }})"
+
+          if gh release view nightly >/dev/null 2>&1; then
+            echo "Updating existing 'nightly' release metadata..."
+            gh release edit nightly --title "$RELEASE_TITLE" --notes-file release-notes.md --target "${{ github.sha }}" --latest
+          else
+            echo "Creating new 'nightly' release..."
+            gh release create nightly --title "$RELEASE_TITLE" --notes-file release-notes.md --target "${{ github.sha }}" --latest
+          fi
+
+          echo "Uploading release assets with --clobber..."
+          gh release upload nightly \
+            NoorConnect-v2.2.1.apk \
+            NoorConnect-v2.2.1.apk.sha256 \
+            noor-connect-nightly.apk \
+            noor-connect-nightly.apk.sha256 \
+            build-info.json \
+            version.json \
+            --clobber
+
+          echo "✅ Nightly APK, checksums, and version manifest published successfully with --clobber!"
