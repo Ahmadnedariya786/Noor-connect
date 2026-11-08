@@ -10,6 +10,8 @@ export interface DashboardWidgetConfig {
 }
 
 export const DASHBOARD_WIDGET_CONFIG_STORAGE_KEY = 'widget-customization';
+export const DASHBOARD_WIDGET_CONFIG_VERSION_KEY = 'widget-customization-version';
+export const CURRENT_WIDGET_CONFIG_VERSION = '2.3';
 export const DASHBOARD_WIDGET_CONFIG_CHANGED_EVENT = 'widget-config-changed';
 
 export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
@@ -22,59 +24,35 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     category: 'essential',
   },
   {
+    id: 'salah-tracker',
+    name: 'Salah Tracker',
+    description: 'Track today’s 5 prayers & 7-day mini progress',
+    visible: true,
+    order: 2,
+    category: 'essential',
+  },
+  {
+    id: 'qaza-tracker',
+    name: 'Qaza Tracker',
+    description: 'Track missed prayers and quick makeup',
+    visible: true,
+    order: 3,
+    category: 'essential',
+  },
+  {
     id: 'daily-ayah',
     name: 'Daily Ayah',
     description: 'Quranic verse of the day',
     visible: true,
-    order: 2,
-    category: 'essential',
+    order: 4,
+    category: 'optional',
   },
   {
     id: 'daily-hadith',
     name: 'Daily Hadith',
     description: 'Prophetic tradition of the day',
     visible: true,
-    order: 3,
-    category: 'essential',
-  },
-  {
-    id: 'qibla-quick',
-    name: 'Qibla',
-    description: 'Quick direction & distance to Kaaba',
-    visible: false,
-    order: 4,
-    category: 'optional',
-  },
-  {
-    id: 'tasbeeh-quick',
-    name: 'Tasbeeh',
-    description: 'Fast dhikr counter for today',
-    visible: false,
     order: 5,
-    category: 'optional',
-  },
-  {
-    id: 'ramadan',
-    name: 'Ramadan',
-    description: 'Suhoor/Iftar and Ramadan mode',
-    visible: false,
-    order: 6,
-    category: 'optional',
-  },
-  {
-    id: 'salah-tracker',
-    name: 'Salah Tracker',
-    description: 'Track today’s 5 prayers',
-    visible: true,
-    order: 7,
-    category: 'optional',
-  },
-  {
-    id: 'weekly-chart',
-    name: 'Weekly Progress',
-    description: '7‑day salah completion chart',
-    visible: true,
-    order: 8,
     category: 'optional',
   },
   {
@@ -82,7 +60,39 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     name: 'Quran Progress',
     description: 'Track your Quran reading progress',
     visible: true,
+    order: 6,
+    category: 'optional',
+  },
+  {
+    id: 'weekly-chart',
+    name: 'Weekly Progress',
+    description: '7‑day salah completion chart',
+    visible: false,
+    order: 7,
+    category: 'optional',
+  },
+  {
+    id: 'qibla-quick',
+    name: 'Qibla',
+    description: 'Quick direction & distance to Kaaba',
+    visible: false,
+    order: 8,
+    category: 'optional',
+  },
+  {
+    id: 'tasbeeh-quick',
+    name: 'Tasbeeh',
+    description: 'Fast dhikr counter for today',
+    visible: false,
     order: 9,
+    category: 'optional',
+  },
+  {
+    id: 'ramadan',
+    name: 'Ramadan',
+    description: 'Suhoor/Iftar and Ramadan mode',
+    visible: false,
+    order: 10,
     category: 'optional',
   },
   {
@@ -90,7 +100,7 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     name: 'Islamic Events',
     description: 'Upcoming Islamic holidays and events',
     visible: false,
-    order: 10,
+    order: 11,
     category: 'optional',
   },
   {
@@ -98,14 +108,6 @@ export const DEFAULT_DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     name: 'Prayer Statistics',
     description: 'Your local salah streak & stats',
     visible: false,
-    order: 11,
-    category: 'optional',
-  },
-  {
-    id: 'qaza-tracker',
-    name: 'Qaza Tracker',
-    description: 'Track missed prayers',
-    visible: true,
     order: 12,
     category: 'optional',
   },
@@ -194,7 +196,21 @@ export function normalizeDashboardWidgetConfig(
 
 export function loadDashboardWidgetConfig(): DashboardWidgetConfig[] {
   try {
+    const version = localStorage.getItem(DASHBOARD_WIDGET_CONFIG_VERSION_KEY);
     const raw = localStorage.getItem(DASHBOARD_WIDGET_CONFIG_STORAGE_KEY);
+
+    // If version is older, migrate to new decluttered order with worship tracking up front
+    if (version !== CURRENT_WIDGET_CONFIG_VERSION) {
+      const merged = normalizeDashboardWidgetConfig(DEFAULT_DASHBOARD_WIDGETS);
+      try {
+        localStorage.setItem(DASHBOARD_WIDGET_CONFIG_STORAGE_KEY, JSON.stringify(merged));
+        localStorage.setItem(DASHBOARD_WIDGET_CONFIG_VERSION_KEY, CURRENT_WIDGET_CONFIG_VERSION);
+      } catch {
+        // Safe storage write fallback
+      }
+      return merged;
+    }
+
     if (!raw) return normalizeDashboardWidgetConfig(DEFAULT_DASHBOARD_WIDGETS);
 
     const parsed: unknown = JSON.parse(raw);

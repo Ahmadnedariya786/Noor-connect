@@ -375,7 +375,7 @@ export function EnhancedDailyAyah() {
       />
       <div className="pointer-events-none absolute -bottom-10 -left-10 w-36 h-36 bg-[var(--accent)]/5 rounded-full blur-2xl" />
 
-      <CardContent className="p-4 sm:p-[18px] space-y-4 relative z-10">
+      <CardContent className="p-3.5 sm:p-4 space-y-3 relative z-10">
         {/* Header Section & Action Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -483,9 +483,9 @@ export function EnhancedDailyAyah() {
         {/* Ornamental Recessed Arabic Verse Box */}
         <div className={`transition-all duration-300 ${isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
           <div
-            className="relative rounded-2xl p-4 sm:p-5 border border-[var(--border)] overflow-hidden"
+            className="relative rounded-2xl p-3 sm:p-3.5 border border-[var(--border)] overflow-hidden"
             style={{
-              background: 'color-mix(in srgb, var(--bg-base) 65%, transparent)',
+              background: 'var(--surface-2)',
               boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)',
             }}
           >

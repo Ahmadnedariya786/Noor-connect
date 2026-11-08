@@ -80,30 +80,88 @@ type PrayerTimingMap = {
   Lastthird?: string;
 };
 
-function getInitialStoredPrayerTimes(): PrayerTimes | null {
+function computeOfflinePrayerTimesSync(): PrayerTimes | null {
   try {
-    const stored = localStorage.getItem('cached_prayer_times');
-    if (!stored) return null;
-    const parsed = JSON.parse(stored);
-    if (!parsed || !parsed.fajr || !parsed.dhuhr) return null;
-    const fajrDate = new Date(parsed.fajr);
-    if (fajrDate.toDateString() !== new Date().toDateString()) return null;
+    let lat = 24.08;
+    let lon = 72.48; // Vadgam, India fallback
+    const storedLoc = localStorage.getItem(LOCATION_STORAGE_KEY);
+    if (storedLoc) {
+      const parsed = JSON.parse(storedLoc);
+      if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+        lat = parsed.latitude;
+        lon = parsed.longitude;
+      }
+    } else {
+      const timeZone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Asia/Kolkata';
+      const fallback = getFallbackLocationByTimezone(timeZone);
+      lat = fallback.lat;
+      lon = fallback.lon;
+    }
+
+    const today = new Date();
+    const times = calculatePrayerTimes(lat, lon, today);
+    const offsets = getPrayerMinuteOffsets();
+
+    const fajr = applyOffsetToDate(times.fajr, offsets.fajr);
+    const sunrise = applyOffsetToDate(times.sunrise, offsets.sunrise);
+    const dhuhr = applyOffsetToDate(times.dhuhr, offsets.dhuhr);
+    const asr = applyOffsetToDate(times.asr, offsets.asr);
+    const maghrib = applyOffsetToDate(times.maghrib, offsets.maghrib);
+    const isha = applyOffsetToDate(times.isha, offsets.isha);
+
+    const nextFajr = new Date(fajr.getTime() + 24 * 3600 * 1000);
+    const midnight = new Date(maghrib.getTime() + (nextFajr.getTime() - maghrib.getTime()) / 2);
+    const ishraq = new Date(sunrise.getTime() + 15 * 60 * 1000);
+    const duha = new Date(sunrise.getTime() + 45 * 60 * 1000);
+    const tahajjud = new Date(midnight.getTime() + 60 * 60 * 1000);
+
     return {
-      fajr: fajrDate,
-      sunrise: new Date(parsed.sunrise),
-      dhuhr: new Date(parsed.dhuhr),
-      asr: new Date(parsed.asr),
-      maghrib: new Date(parsed.maghrib),
-      isha: new Date(parsed.isha),
-      midnight: new Date(parsed.midnight),
-      imsak: parsed.imsak ? new Date(parsed.imsak) : undefined,
-      ishraq: parsed.ishraq ? new Date(parsed.ishraq) : undefined,
-      duha: parsed.duha ? new Date(parsed.duha) : undefined,
-      tahajjud: parsed.tahajjud ? new Date(parsed.tahajjud) : undefined,
+      fajr,
+      sunrise,
+      dhuhr,
+      asr,
+      maghrib,
+      isha,
+      midnight,
+      ishraq,
+      duha,
+      tahajjud,
     };
   } catch {
     return null;
   }
+}
+
+function getInitialStoredPrayerTimes(): PrayerTimes | null {
+  try {
+    const stored = localStorage.getItem('cached_prayer_times');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.fajr && parsed.dhuhr) {
+        const fajrDate = new Date(parsed.fajr);
+        if (fajrDate.toDateString() === new Date().toDateString()) {
+          return {
+            fajr: fajrDate,
+            sunrise: new Date(parsed.sunrise),
+            dhuhr: new Date(parsed.dhuhr),
+            asr: new Date(parsed.asr),
+            maghrib: new Date(parsed.maghrib),
+            isha: new Date(parsed.isha),
+            midnight: new Date(parsed.midnight),
+            imsak: parsed.imsak ? new Date(parsed.imsak) : undefined,
+            ishraq: parsed.ishraq ? new Date(parsed.ishraq) : undefined,
+            duha: parsed.duha ? new Date(parsed.duha) : undefined,
+            tahajjud: parsed.tahajjud ? new Date(parsed.tahajjud) : undefined,
+          };
+        }
+      }
+    }
+  } catch {
+    // Safe storage parse fallback
+  }
+
+  // If cached schedule is from yesterday or missing, immediately compute today's offline astronomical times!
+  return computeOfflinePrayerTimesSync();
 }
 
 export function usePrayerTimes(): UsePrayerTimesReturn {

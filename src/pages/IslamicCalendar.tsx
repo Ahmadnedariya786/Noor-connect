@@ -593,7 +593,7 @@ export default function IslamicCalendar() {
             <div
               className="grid grid-cols-7 gap-1 text-center py-1.5 mb-1"
               style={{
-                borderBottom: '1px solid color-mix(in srgb, var(--border) 55%, transparent)',
+                borderBottom: '1px solid var(--border)',
               }}
             >
               {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI ✦', 'SAT'].map((col, idx) => {
@@ -643,7 +643,7 @@ export default function IslamicCalendar() {
                       key={`week-${wIdx}`}
                       className="grid grid-cols-7 gap-1 py-1"
                       style={{
-                        borderBottom: isLastWeek ? 'none' : '1px solid color-mix(in srgb, var(--border) 55%, transparent)',
+                        borderBottom: isLastWeek ? 'none' : '1px solid var(--border)',
                       }}
                     >
                       {week.map((day, dIdx) => {
@@ -667,7 +667,7 @@ export default function IslamicCalendar() {
                           boxShadow = '0 4px 16px var(--accent-glow)';
                           borderStyle = { borderRadius: '14px' };
                         } else if (isAyyam) {
-                          cellBg = 'color-mix(in srgb, var(--accent-soft) 65%, transparent)';
+                          cellBg = 'var(--accent-soft)';
                           borderStyle = {
                             borderTop: '1px dashed var(--accent)',
                             borderBottom: '1px dashed var(--accent)',
@@ -684,7 +684,7 @@ export default function IslamicCalendar() {
                           };
                         } else if (isFri) {
                           // Delicate vertical column tint for Friday cells
-                          cellBg = 'color-mix(in srgb, var(--accent-soft) 35%, transparent)';
+                          cellBg = 'var(--accent-soft)';
                           borderStyle = { borderRadius: '10px' };
                         }
 
@@ -764,7 +764,7 @@ export default function IslamicCalendar() {
                 style={{
                   fontSize: '0.70rem',
                   whiteSpace: 'nowrap',
-                  background: 'color-mix(in srgb, var(--accent-soft) 55%, transparent)',
+                  background: 'var(--accent-soft)',
                   border: '1px solid var(--accent)',
                   color: 'var(--accent-text)',
                 }}

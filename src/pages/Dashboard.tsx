@@ -36,9 +36,11 @@ import { GeocodingService } from "@/lib/geocoding";
 import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { getPrayerDisplayName, isMatchingPrayer } from "@/lib/prayer-utils";
+import { calculatePrayerTimes, formatPrayerTime } from "@/lib/prayer-calculator";
+import { loadStoredLocation } from "@/lib/location-state";
 
 import { hasHomeEntranceCompleted, markHomeEntranceCompleted } from "@/lib/home-entrance";
-import { getPrayerMinuteOffsets, applyOffsetsToTimings, PRAYER_OFFSETS_CHANGED_EVENT } from "@/lib/prayer-offsets";
+import { getPrayerMinuteOffsets, applyOffsetsToTimings, applyOffsetToDate, PRAYER_OFFSETS_CHANGED_EVENT } from "@/lib/prayer-offsets";
 
 // Persistent module-level cache so prayer times remain mounted across route transitions and clock style switches
 let cachedDashboardPrayers: PrayerTime[] = [];
@@ -48,46 +50,124 @@ let cachedTargetTime: Date | null = null;
 let cachedRawTimings: AladhanPrayerTime | null = null;
 let cachedOffsetsFingerprint: string = "";
 
+function computeTodayOfflineDashboardPrayersSync(): PrayerTime[] {
+  try {
+    const loc = loadStoredLocation();
+    const today = new Date();
+    const times = calculatePrayerTimes(loc.latitude, loc.longitude, today);
+    const offsets = getPrayerMinuteOffsets();
+
+    const fajr = applyOffsetToDate(times.fajr, offsets.fajr);
+    const sunrise = applyOffsetToDate(times.sunrise, offsets.sunrise);
+    const dhuhr = applyOffsetToDate(times.dhuhr, offsets.dhuhr);
+    const asr = applyOffsetToDate(times.asr, offsets.asr);
+    const maghrib = applyOffsetToDate(times.maghrib, offsets.maghrib);
+    const isha = applyOffsetToDate(times.isha, offsets.isha);
+
+    const list: PrayerTime[] = [
+      { name: "Fajr", time: formatPrayerTime(fajr, '12h'), date: fajr },
+      { name: "Sunrise", time: formatPrayerTime(sunrise, '12h'), date: sunrise },
+      { name: "Dhuhr", time: formatPrayerTime(dhuhr, '12h'), date: dhuhr },
+      { name: "Asr", time: formatPrayerTime(asr, '12h'), date: asr },
+      { name: "Maghrib", time: formatPrayerTime(maghrib, '12h'), date: maghrib },
+      { name: "Isha", time: formatPrayerTime(isha, '12h'), date: isha },
+    ];
+    cachedDashboardPrayers = list;
+    return list;
+  } catch {
+    return [];
+  }
+}
+
+function computeTodayOfflineNextPrayerSync(): { name: string; time: string; targetTime: Date | null } {
+  try {
+    const todayPrayers = cachedDashboardPrayers.length >= 5
+      ? cachedDashboardPrayers
+      : computeTodayOfflineDashboardPrayersSync();
+
+    const now = new Date();
+    const upcoming = todayPrayers.find(p => p.date && p.date.getTime() > now.getTime());
+    if (upcoming && upcoming.date) {
+      const displayName = getPrayerDisplayName(upcoming.name, upcoming.date);
+      cachedNextPrayerName = displayName;
+      cachedNextPrayerTime = upcoming.time;
+      cachedTargetTime = upcoming.date;
+      return { name: displayName, time: upcoming.time, targetTime: upcoming.date };
+    }
+
+    const fajr = todayPrayers.find(p => p.name?.toLowerCase() === 'fajr');
+    if (fajr && fajr.date) {
+      const tomorrowFajr = new Date(fajr.date.getTime() + 24 * 3600 * 1000);
+      const displayName = getPrayerDisplayName('Fajr', tomorrowFajr);
+      cachedNextPrayerName = displayName;
+      cachedNextPrayerTime = fajr.time;
+      cachedTargetTime = tomorrowFajr;
+      return { name: displayName, time: fajr.time, targetTime: tomorrowFajr };
+    }
+  } catch {
+    // Safe calculation fallback
+  }
+  return { name: "", time: "", targetTime: null };
+}
+
 function getInitialCachedPrayers(): PrayerTime[] {
-  if (cachedDashboardPrayers.length > 0) return cachedDashboardPrayers;
+  if (cachedDashboardPrayers.length > 0) {
+    const first = cachedDashboardPrayers[0];
+    if (first?.date && first.date.toDateString() === new Date().toDateString()) {
+      return cachedDashboardPrayers;
+    }
+  }
   try {
     const stored = localStorage.getItem('noor_cached_dashboard_prayers');
     if (stored) {
       const parsed = JSON.parse(stored) as PrayerTime[];
       if (Array.isArray(parsed) && parsed.length >= 5) {
-        const hydrated = parsed.map(p => ({
-          ...p,
-          date: p.date ? new Date(p.date) : undefined,
-        }));
-        cachedDashboardPrayers = hydrated;
-        return hydrated;
+        const fajrEntry = parsed.find(p => p.name?.toLowerCase() === 'fajr');
+        const fajrDate = fajrEntry?.date ? new Date(fajrEntry.date) : null;
+        if (fajrDate && fajrDate.toDateString() === new Date().toDateString()) {
+          const hydrated = parsed.map(p => ({
+            ...p,
+            date: p.date ? new Date(p.date) : undefined,
+          }));
+          cachedDashboardPrayers = hydrated;
+          return hydrated;
+        }
       }
     }
   } catch {
-    // Ignore parse error
+    // Safe storage parse fallback
   }
-  return [];
+  // Stale or missing prayers from yesterday: calculate today's offline astronomical prayer times synchronously!
+  return computeTodayOfflineDashboardPrayersSync();
 }
 
 function getInitialNextPrayer(): { name: string; time: string; targetTime: Date | null } {
-  if (cachedNextPrayerName && cachedNextPrayerTime) {
-    return { name: cachedNextPrayerName, time: cachedNextPrayerTime, targetTime: cachedTargetTime };
+  if (cachedNextPrayerName && cachedNextPrayerTime && cachedTargetTime) {
+    const now = new Date();
+    if (cachedTargetTime.getTime() > now.getTime() && cachedTargetTime.toDateString() === now.toDateString()) {
+      return { name: cachedNextPrayerName, time: cachedNextPrayerTime, targetTime: cachedTargetTime };
+    }
   }
   try {
     const stored = localStorage.getItem('noor_cached_next_prayer');
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed?.name && parsed?.time && parsed.time !== '--:--') {
-        cachedNextPrayerName = parsed.name;
-        cachedNextPrayerTime = parsed.time;
-        cachedTargetTime = parsed.targetTime ? new Date(parsed.targetTime) : null;
-        return { name: parsed.name, time: parsed.time, targetTime: cachedTargetTime };
+      if (parsed?.name && parsed?.time && parsed.time !== '--:--' && parsed.targetTime) {
+        const targetDate = new Date(parsed.targetTime);
+        const now = new Date();
+        if (targetDate.toDateString() === now.toDateString() && targetDate.getTime() > now.getTime()) {
+          cachedNextPrayerName = parsed.name;
+          cachedNextPrayerTime = parsed.time;
+          cachedTargetTime = targetDate;
+          return { name: parsed.name, time: parsed.time, targetTime: cachedTargetTime };
+        }
       }
     }
   } catch {
-    // Ignore parse error
+    // Safe storage parse fallback
   }
-  return { name: "", time: "", targetTime: null };
+  // Stale or past targetTime: synchronously compute today's next prayer on frame 1!
+  return computeTodayOfflineNextPrayerSync();
 }
 
 function getInitialSuhoorIftaar(): { suhoorTime: string; suhoorLabel: string; iftaarTime: string; iftaarLabel: string } | undefined {

@@ -42,7 +42,7 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
         </div>
       </div>
 
-      {/* 2-Column Grid of 5 Preview Cards */}
+      {/* 2-Column Grid of 6 Preview Cards (Symmetrical 3x2 Grid) */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {themes.map((theme) => {
           const isSelected = currentTheme === theme.id;
@@ -75,21 +75,16 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   : 'inset 0 1px 0 var(--card-sheen)',
               }}
             >
-              {/* Top Row: Name and Active Badge */}
-              <div className="flex items-start justify-between gap-1 mb-2">
-                <div className="min-w-0 flex-1">
-                  <h3
-                    className={cn(
-                      "text-xs sm:text-sm font-bold tracking-tight leading-snug",
-                      isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)] group-hover:text-[var(--accent-text)]"
-                    )}
-                  >
-                    {theme.name}
-                  </h3>
-                  <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1">
-                    {theme.subtitle}
-                  </p>
-                </div>
+              {/* Row 1: Name and Active Badge */}
+              <div className="flex items-center justify-between gap-1.5 mb-1 w-full">
+                <h3
+                  className={cn(
+                    "text-xs sm:text-sm font-bold tracking-tight leading-snug truncate",
+                    isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)] group-hover:text-[var(--accent-text)]"
+                  )}
+                >
+                  {theme.name}
+                </h3>
 
                 {isSelected ? (
                   <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[var(--accent)] text-[var(--on-accent)] shrink-0 shadow-sm">
@@ -97,9 +92,14 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                     Active
                   </span>
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full border border-[var(--border)] group-hover:border-[var(--accent)]/50 shrink-0 mt-0.5" />
+                  <div className="w-3.5 h-3.5 rounded-full border border-[var(--border)] group-hover:border-[var(--accent)]/50 shrink-0" />
                 )}
               </div>
+
+              {/* Row 2: Full-Width Subtitle (Zero Truncation) */}
+              <p className="text-[10px] text-[var(--text-secondary)] font-medium mb-2.5 w-full leading-tight">
+                {theme.subtitle}
+              </p>
 
               {/* Static Mini Dashboard Mock: bg gradient + sample card + text lines + accent button */}
               <div

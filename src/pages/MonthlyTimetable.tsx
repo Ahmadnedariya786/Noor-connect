@@ -731,38 +731,94 @@ export default function MonthlyTimetable() {
               </div>
             </div>
 
-            {/* Month Switcher Row */}
-            <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handlePrevMonth}
-                  className="h-8 w-8 rounded-xl border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] shrink-0 print:hidden"
-                  aria-label="Previous Month"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
+            {/* Month Switcher Row — 100% Contained With Zero Right-Edge Overflow */}
+            <div
+              className="mt-3 pt-3 border-t border-[var(--border)]"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            >
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePrevMonth}
+                className="border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] shrink-0 print:hidden transition-all active:scale-95"
+                style={{
+                  flexShrink: 0,
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                }}
+                aria-label="Previous Month"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
 
-                <div className="px-3 py-1 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-center flex-1 sm:flex-initial print:border-none print:bg-transparent print:p-0">
-                  <h2 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] print:text-black">
-                    {monthName} {currentYear}
-                  </h2>
-                  <p className="text-[10px] font-medium text-[var(--accent-text)] truncate print:text-gray-600">
-                    {hijriMonthSpan}
-                  </p>
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNextMonth}
-                  className="h-8 w-8 rounded-xl border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] shrink-0 print:hidden"
-                  aria-label="Next Month"
+              <div
+                className="bg-[var(--surface-2)] border border-[var(--border)] print:border-none print:bg-transparent print:p-0"
+                style={{
+                  flex: '1 1 0%',
+                  minWidth: 0,
+                  padding: '6px 10px',
+                  borderRadius: '14px',
+                  textAlign: 'center',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden',
+                }}
+              >
+                <h2
+                  className="font-bold text-[var(--text-primary)] print:text-black truncate"
+                  style={{
+                    fontSize: '0.86rem',
+                    fontWeight: 800,
+                    lineHeight: 1.25,
+                  }}
                 >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+                  {monthName} {currentYear}
+                </h2>
+                <p
+                  className="font-medium text-[var(--accent-text)] print:text-gray-600 truncate"
+                  style={{
+                    fontSize: '0.65rem',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    marginTop: '2px',
+                  }}
+                  title={hijriMonthSpan}
+                >
+                  {hijriMonthSpan}
+                </p>
               </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleNextMonth}
+                className="border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--accent-soft)] shrink-0 print:hidden transition-all active:scale-95"
+                style={{
+                  flexShrink: 0,
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                }}
+                aria-label="Next Month"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
 
             {/* 2-Column Action Buttons Grid (360px overflow proof) */}

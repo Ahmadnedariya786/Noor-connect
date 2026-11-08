@@ -20,9 +20,11 @@ import { globalTimerManager } from "@/lib/timer-manager";
 import { useAnimationTier } from "@/hooks/useAnimationTier";
 import { UpdateBanner } from "@/components/UpdateBanner";
 import { ClockHero } from "@/components/clocks/ClockHero";
+import { TopQazaReminderBanner } from "@/components/TopQazaReminderBanner";
 import { hasHomeEntranceCompleted } from "@/lib/home-entrance";
 import { PrayerTimesSection } from "@/components/PrayerTimesSection";
 import { getDayWorshipLog, formatDateKey } from "@/lib/worship-log";
+import { getPrayerHistory } from "@/lib/salah-tracker";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { triggerInAppPrayerAlert } from "@/components/PrayerReminderBanner";
 import { parseTimeToSeconds } from "@/lib/makruh-times";
@@ -298,7 +300,7 @@ function PremiumDashboardInner({
     <div
       className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden"
     >
-      {/* ── Ambient Top Radial Aura across all 5 themes ── */}
+      {/* ── Ambient Top Radial Aura across all 6 themes ── */}
       <div
         className="pointer-events-none absolute top-0 left-0 right-0 h-[380px] z-0 select-none"
         style={{
@@ -465,7 +467,7 @@ function PremiumDashboardInner({
       )}
 
       {/* Content */}
-      <div className="flex-1 px-5 pb-36 safe-top space-y-6 max-w-lg mx-auto w-full" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
+      <div className="flex-1 px-5 pb-36 safe-top space-y-3 max-w-lg mx-auto w-full" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
 
         {/* ── Top Bar ── */}
         <div className="flex items-center justify-between pt-4 gap-2">
@@ -529,8 +531,14 @@ function PremiumDashboardInner({
           prayers={prayers}
         />
 
+        {/* ── High-Visibility Top-of-Screen Persistent Qaza Reminder & 1-Tap Makeup Banner ── */}
+        <TopQazaReminderBanner
+          prayers={prayers}
+          timeFormat={timeFormat}
+        />
+
         {/* ── Dynamic Widgets Container ── */}
-        <div className="space-y-6">
+        <div className="space-y-3">
           {widgets
             .filter(w => w.visible)
             .sort((a, b) => a.order - b.order)
@@ -767,6 +775,109 @@ function PremiumDashboardInner({
                                 {isFasted ? `🌕 ${ui.fastKept} ✓` : `🌕 ${ui.fastLog} ${isRTL ? '←' : '→'}`}
                               </span>
                             </button>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Unified 7-Day Weekly Progress Mini-Pill Bar */}
+                      {(() => {
+                        const history = getPrayerHistory(7);
+                        const todayStr = new Date().toDateString();
+                        const daysData = [...history].reverse().map((day) => {
+                          const dt = new Date(day.date);
+                          const isToday = dt.toDateString() === todayStr;
+                          const rawDay = dt.toLocaleDateString('en-US', { weekday: 'short' });
+                          const dayLabel = rawDay.slice(0, 3);
+                          const count = [day.fajr, day.dhuhr, day.asr, day.maghrib, day.isha].filter(Boolean).length;
+                          return { dayLabel, count, isToday, dateStr: day.date };
+                        });
+
+                        return (
+                          <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                            <div className="flex items-center justify-between mb-2">
+                              <span
+                                className="font-bold tracking-wider uppercase truncate"
+                                style={{
+                                  fontSize: '0.68rem',
+                                  color: 'var(--text-secondary)',
+                                  letterSpacing: '0.04em',
+                                }}
+                              >
+                                7-DAY SALAH PROGRESS
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => navigate('/prayer-stats')}
+                                className="text-[10px] font-bold text-[var(--accent-text)] hover:underline flex items-center gap-0.5 cursor-pointer"
+                              >
+                                <span>Stats</span>
+                                <span>{isRTL ? '←' : '→'}</span>
+                              </button>
+                            </div>
+
+                            <div
+                              className="grid grid-cols-7 gap-1"
+                              style={{ width: '100%', boxSizing: 'border-box' }}
+                            >
+                              {daysData.map((d, i) => (
+                                <button
+                                  key={d.dateStr || i}
+                                  type="button"
+                                  onClick={() => navigate('/prayer-stats')}
+                                  className="flex flex-col items-center justify-between py-1.5 px-0.5 rounded-xl border transition-all active:scale-95 cursor-pointer"
+                                  style={{
+                                    background: d.isToday ? 'var(--accent-soft)' : 'var(--surface-2)',
+                                    borderColor: d.isToday
+                                      ? 'var(--accent)'
+                                      : d.count === 5
+                                      ? 'rgba(16, 185, 129, 0.4)'
+                                      : 'var(--border)',
+                                    boxShadow: d.isToday ? '0 0 10px var(--accent-glow)' : 'none',
+                                    minWidth: 0,
+                                  }}
+                                  title={`${d.dayLabel}: ${d.count}/5 prayed`}
+                                >
+                                  <span
+                                    className="font-bold text-[9px] truncate"
+                                    style={{
+                                      color: d.isToday ? 'var(--accent-text)' : 'var(--text-secondary)',
+                                    }}
+                                  >
+                                    {d.dayLabel}
+                                  </span>
+
+                                  <div
+                                    className="w-5 h-5 rounded-full flex items-center justify-center my-0.5 font-bold tabular-nums"
+                                    style={{
+                                      fontSize: '9px',
+                                      background: d.count === 5
+                                        ? 'var(--accent)'
+                                        : d.count > 0
+                                        ? 'var(--surface)'
+                                        : 'rgba(255, 255, 255, 0.05)',
+                                      color: d.count === 5
+                                        ? 'var(--on-accent)'
+                                        : d.count > 0
+                                        ? 'var(--text-primary)'
+                                        : 'var(--text-secondary)',
+                                      border: d.count === 5 ? 'none' : '1px solid var(--border)',
+                                    }}
+                                  >
+                                    {d.count}
+                                  </div>
+
+                                  <span
+                                    className="text-[8px] font-semibold tabular-nums"
+                                    style={{
+                                      color: d.count === 5 ? 'var(--accent-text)' : 'var(--text-secondary)',
+                                      opacity: 0.8,
+                                    }}
+                                  >
+                                    /5
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         );
                       })()}

@@ -42,28 +42,53 @@ export const THEMES: Record<ThemeId, AppTheme> = {
       '--danger': '#E07A7A',
     },
   },
-  'madinah-emerald': {
-    id: 'madinah-emerald',
-    name: 'Madinah Emerald',
-    subtitle: 'Royal Rawdah Malachite & Sunlit Madinah Gold',
-    description: 'Deep forest malachite shades, tranquil emerald surfaces, and sunlit Rawdah gold accents.',
+  'kiswah-noir': {
+    id: 'kiswah-noir',
+    name: 'Kaaba Kiswah Noir',
+    subtitle: '24K Gold & Black Silk',
+    description: 'Sacred black Kiswah silk of the Holy Kaaba embroidered with pure 24-karat gold threads.',
     tokens: {
-      '--bg-base': '#03130E',
-      '--bg-elev': '#072219',
-      '--surface': '#0A2B20',
-      '--surface-2': '#103B2C',
-      '--border': 'rgba(52, 211, 153, 0.26)',
-      '--accent': '#10B981',
-      '--accent-2': '#EAB308',
-      '--accent-text': '#6EE7B7',
-      '--on-accent': '#021A11',
-      '--accent-soft': 'rgba(16, 185, 129, 0.16)',
-      '--accent-glow': 'rgba(16, 185, 129, 0.35)',
-      '--card-sheen': 'linear-gradient(135deg, rgba(52, 211, 153, 0.22) 0%, rgba(234, 179, 8, 0.12) 50%, transparent 100%)',
-      '--text-primary': '#F0FDF9',
-      '--text-secondary': '#A7F3D0',
-      '--success': '#34D399',
-      '--warning': '#EAB308',
+      '--bg-base': '#07070A',
+      '--bg-elev': '#0E0E14',
+      '--surface': '#14141C',
+      '--surface-2': '#1B1B26',
+      '--border': '#3D331E',
+      '--accent': '#D4AF37',
+      '--accent-2': '#C5A059',
+      '--accent-text': '#F5D76E',
+      '--on-accent': '#07070A',
+      '--accent-soft': 'rgba(212, 175, 55, 0.14)',
+      '--accent-glow': 'rgba(245, 215, 110, 0.30)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(20, 20, 28, 0) 60%)',
+      '--text-primary': '#FAF6EE',
+      '--text-secondary': '#B8B0A0',
+      '--success': '#10B981',
+      '--warning': '#F59E0B',
+      '--danger': '#EF4444',
+    },
+  },
+  'istanbul-sapphire': {
+    id: 'istanbul-sapphire',
+    name: 'Royal Iznik Sapphire',
+    subtitle: 'Iznik Teal & Champagne',
+    description: 'Illuminated Ottoman Iznik tiles, deep Bosphorus sapphire waters, and champagne dome gold.',
+    tokens: {
+      '--bg-base': '#05131B',
+      '--bg-elev': '#091E2A',
+      '--surface': '#0E2938',
+      '--surface-2': '#143547',
+      '--border': '#23536B',
+      '--accent': '#E6B665',
+      '--accent-2': '#2DD4BF',
+      '--accent-text': '#F7D488',
+      '--on-accent': '#05131B',
+      '--accent-soft': 'rgba(230, 182, 101, 0.15)',
+      '--accent-glow': 'rgba(56, 189, 248, 0.28)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(45, 212, 191, 0.12) 0%, rgba(230, 182, 101, 0.08) 100%)',
+      '--text-primary': '#F0F9FF',
+      '--text-secondary': '#94BACB',
+      '--success': '#10B981',
+      '--warning': '#F59E0B',
       '--danger': '#EF4444',
     },
   },
@@ -146,7 +171,8 @@ export const THEMES: Record<ThemeId, AppTheme> = {
 
 export const APP_THEMES: AppTheme[] = [
   THEMES['oxford-gold'],
-  THEMES['madinah-emerald'],
+  THEMES['kiswah-noir'],
+  THEMES['istanbul-sapphire'],
   THEMES['imperial-violet'],
   THEMES['burgundy-velvet'],
   THEMES['desert-scroll'],
@@ -156,10 +182,20 @@ const VALID_THEME_IDS = new Set<ThemeId>(APP_THEMES.map((t) => t.id));
 
 /**
  * Returns the currently persisted theme ID or the default 'oxford-gold'.
+ * Includes safe migration from legacy 'madinah-emerald' to flagship 'kiswah-noir'.
  */
 export function getTheme(): ThemeId {
   try {
     const val = localStorage.getItem(ALT_THEME_STORAGE_KEY) || localStorage.getItem(THEME_STORAGE_KEY) || localStorage.getItem(LEGACY_THEME_KEY);
+    if (val === 'madinah-emerald') {
+      try {
+        localStorage.setItem(ALT_THEME_STORAGE_KEY, 'kiswah-noir');
+        localStorage.setItem(THEME_STORAGE_KEY, 'kiswah-noir');
+      } catch {
+        // Safe localStorage write fallback
+      }
+      return 'kiswah-noir';
+    }
     if (val && VALID_THEME_IDS.has(val as ThemeId)) {
       return val as ThemeId;
     }
@@ -225,7 +261,8 @@ export function applyThemeToDOM(themeId: ThemeId): void {
 
 export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
   'oxford-gold': '#000000',
-  'madinah-emerald': '#03130E',
+  'kiswah-noir': '#07070A',
+  'istanbul-sapphire': '#05131B',
   'imperial-violet': '#1F0035',
   'burgundy-velvet': '#0B0B0B',
   'desert-scroll': '#110A06',

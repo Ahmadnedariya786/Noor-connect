@@ -54,7 +54,9 @@ const BottomNav = memo(function BottomNav() {
           borderRadius: '26px',
           background: (!animationEnabled || noBlur)
             ? 'var(--bg-elev)'
-            : 'color-mix(in srgb, var(--bg-elev) 90%, transparent)',
+            : (typeof CSS !== 'undefined' && CSS.supports?.('color', 'color-mix(in srgb, red 50%, blue)'))
+            ? 'color-mix(in srgb, var(--bg-elev) 90%, transparent)'
+            : 'var(--bg-elev)',
           backdropFilter: (!animationEnabled || noBlur) ? 'none' : 'blur(16px)',
           WebkitBackdropFilter: (!animationEnabled || noBlur) ? 'none' : 'blur(16px)',
           border: '1px solid var(--border)',

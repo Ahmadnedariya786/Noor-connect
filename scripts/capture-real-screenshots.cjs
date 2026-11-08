@@ -170,16 +170,16 @@ const TARGETS = [
   {
     name: '2_quran_hub.png',
     path: '/quran',
-    theme: 'madinah-emerald',
+    theme: 'kiswah-noir',
     delay: 3000,
-    title: 'Quran Hub & Sunnah Surahs (Madinah Emerald)',
+    title: 'Quran Hub & Sunnah Surahs (Kaaba Kiswah Noir)',
   },
   {
     name: '3_mushaf_tajweed.png',
     path: '/quran/55',
-    theme: 'madinah-emerald',
+    theme: 'kiswah-noir',
     delay: 4500,
-    title: 'Surah Ar-Rahman Tajweed Mushaf (Madinah Emerald)',
+    title: 'Surah Ar-Rahman Tajweed Mushaf (Kaaba Kiswah Noir)',
   },
   {
     name: '4_zakat_calculator.png',

@@ -1,6 +1,7 @@
 export type ThemeId =
   | 'oxford-gold'
-  | 'madinah-emerald'
+  | 'kiswah-noir'
+  | 'istanbul-sapphire'
   | 'imperial-violet'
   | 'burgundy-velvet'
   | 'desert-scroll';
