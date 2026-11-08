@@ -137,12 +137,12 @@ export interface WidgetSyncPayload extends WidgetStyleConfig {
 }
 
 export const THEME_HEX_MAP: Record<string, string> = {
-  'oxford-gold': '#060A12',
-  'kiswah-noir': '#070709',
-  'istanbul-sapphire': '#041018',
-  'imperial-violet': '#0C0617',
-  'burgundy-velvet': '#110508',
-  'desert-scroll': '#110B07',
+  'oxford-gold': '#080B14',
+  'kiswah-noir': '#080705',
+  'imperial-violet': '#1F0035',
+  'burgundy-velvet': '#0B0B0B',
+  'desert-scroll': '#110A06',
+  'istanbul-sapphire': '#051020',
 };
 
 export function getActiveThemeHex(): string {

@@ -21,12 +21,12 @@ Activate this skill whenever any of the following files are inspected or modifie
 
 ### A. The 6 Royal Themes Canon
 The application features exactly 6 Royal Themes in a symmetrical 3×2 selector grid:
-1. **`kiswah-noir` (`Kaaba Kiswah`):** Pure OLED Black Silk & 24K Gold.
-2. **`oxford-gold` (`Nordic Slate`):** Midnight Steel & Silver (`#06141B`, `#253745`, `#9BA8AB`, `#CCD0CF`).
-3. **`istanbul-sapphire` (`Iznik Sapphire`):** Ocean Cyan & Sky Blue (`#05161A`, `#0C7075`, `#0F969C`, `#6DA5C0`).
-4. **`imperial-violet` (`Imperial Violet`):** Cosmic Indigo & Lavender (`#0B0720`, `#25134D`, `#9D71E8`, `#D1B8FF`).
-5. **`burgundy-velvet` (`Burgundy Velvet`):** Ruby Wine & Rose Blush (`#1C0209`, `#881144`, `#C24366`, `#FF85B3`).
-6. **`desert-scroll` (`Desert Scroll`):** Arabian Oud & Copper (`#120B07`, `#261810`, `#D97736`, `#F4A261`).
+1. **`oxford-gold` (`Oxford Gold`):** Classic Midnight & Gold (`#080B14`, `#14213D`, `#D4AF37`, `#FFD34D`).
+2. **`kiswah-noir` (`Haramain Noir`):** Obsidian Silk & 24K Gold (`#080705`, `#18140E`, `#EAB308`, `#D97706`).
+3. **`imperial-violet` (`Imperial Violet`):** Royal Plum & Warm Gold (`#1F0035`, `#390040`, `#C7940E`, `#E5B83C`).
+4. **`burgundy-velvet` (`Burgundy Velvet`):** Deep Onyx & Crimson (`#0B0B0B`, `#241012`, `#C24552`, `#E0707E`).
+5. **`desert-scroll` (`Desert Scroll`):** Royal Arabian Oud (`#110A06`, `#25170E`, `#F59E0B`, `#EA580C`).
+6. **`istanbul-sapphire` (`Royal Sapphire`):** Deep Sapphire & Gold (`#051020`, `#0F2444`, `#F59E0B`, `#38BDF8`).
 
 *(Note: `madinah-emerald` is permanently deprecated; any legacy storage reference automatically migrates to `kiswah-noir`).*
 

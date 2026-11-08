@@ -72,8 +72,8 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
                   : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
                 boxShadow: isSelected
-                  ? '0 0 18px var(--accent-glow), inset 0 1px 0 var(--card-sheen)'
-                  : 'inset 0 1px 0 var(--card-sheen)',
+                  ? '0 0 18px var(--accent-glow)'
+                  : undefined,
               }}
             >
               {/* Row 1: Name and Active Badge (Zero Truncation at 360px) */}
@@ -123,16 +123,18 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   style={{
                     background: theme.tokens['--surface'],
                     borderColor: theme.tokens['--border'],
-                    boxShadow: `inset 0 1px 0 ${theme.tokens['--card-sheen']}, 0 4px 14px rgba(0,0,0,0.35)`,
+                    boxShadow: theme.tokens['--card-sheen'].startsWith('linear-gradient')
+                      ? '0 4px 14px rgba(0,0,0,0.35)'
+                      : `inset 0 1px 0 ${theme.tokens['--card-sheen']}, 0 4px 14px rgba(0,0,0,0.35)`,
                   }}
                 >
-                  {/* Card Header Line */}
-                  <div className="flex items-center justify-between mb-1">
+                  {/* Card Header Line (FIXED: NEXT to prevent ellipsis truncation at 360px) */}
+                  <div className="flex items-center justify-between mb-1 gap-1">
                     <span
-                      className="text-[8px] font-bold uppercase tracking-wider truncate"
+                      className="text-[8px] font-bold uppercase tracking-wider shrink-0"
                       style={{ color: theme.tokens['--accent-text'] }}
                     >
-                      NEXT PRAYER
+                      NEXT
                     </span>
                     <span
                       className="text-[7.5px] font-mono px-1 py-0.5 rounded font-bold shrink-0"
