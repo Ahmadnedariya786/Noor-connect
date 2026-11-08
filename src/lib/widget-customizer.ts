@@ -142,7 +142,7 @@ export const THEME_HEX_MAP: Record<string, string> = {
   'imperial-violet': '#1F0035',
   'burgundy-velvet': '#0B0B0B',
   'desert-scroll': '#110A06',
-  'istanbul-sapphire': '#051020',
+  'istanbul-sapphire': '#040812',
 };
 
 export function getActiveThemeHex(): string {

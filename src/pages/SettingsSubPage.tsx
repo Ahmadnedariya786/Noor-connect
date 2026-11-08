@@ -942,20 +942,20 @@ const SettingsSubPage: React.FC = () => {
 
             <Card className="p-4 space-y-4 rounded-2xl" style={{ paddingBottom: '20px', overflow: 'visible', maxHeight: 'none' }}>
               <div
-                className="flex items-center justify-between py-1 cursor-pointer group"
+                className="flex items-center justify-between py-1 cursor-pointer group gap-2 w-full"
                 onClick={() => navigate('/settings/app-theme', { replace: true })}
                 role="button"
                 tabIndex={0}
               >
-                <div>
-                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors">{appearanceStrings.appThemeTitle}</Label>
-                  <p className="text-xs text-[var(--text-secondary)]">{appearanceStrings.appThemeSubtitle}</p>
+                <div className="min-w-0 flex-1">
+                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors truncate block">{appearanceStrings.appThemeTitle}</Label>
+                  <p className="text-xs text-[var(--text-secondary)] truncate">{appearanceStrings.appThemeSubtitle}</p>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)] whitespace-nowrap shrink-0 inline-flex items-center">
                     {currentThemeName}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
               </div>
 

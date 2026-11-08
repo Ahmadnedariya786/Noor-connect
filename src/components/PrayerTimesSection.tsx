@@ -1131,8 +1131,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '12px',
-                padding: '13px 16px',
+                gap: '8px',
+                padding: '12px 14px',
                 borderRadius: '14px',
                 background: isMakruhRow
                   ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.22), var(--surface))'
@@ -1156,9 +1156,9 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: isMakruhRow ? '6px' : '8px',
                   minWidth: 0,
-                  flexShrink: 0,
+                  flex: '1 1 auto',
                 }}
               >
                 <WaqtIcon name={rawName} isActive={isRowActive} />
@@ -1173,28 +1173,33 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 >
                   {localizedName}
                 </span>
-                {isMakruhRow && (
-                  <span
-                    style={{
-                      fontSize: '0.62rem',
-                      fontWeight: 800,
-                      padding: '2px 7px',
-                      borderRadius: '9999px',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      background: 'rgba(239, 68, 68, 0.30)',
-                      border: '1px solid #EF4444',
-                      color: '#FEE2E2',
-                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.45)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
-                    <span>MAKRUH ({makruhState.remainingFormatted})</span>
-                  </span>
-                )}
+                {isMakruhRow && (() => {
+                  const makruhCompactCountdown = makruhState.remainingSeconds >= 60
+                    ? `${Math.ceil(makruhState.remainingSeconds / 60)}m`
+                    : `${Math.max(1, makruhState.remainingSeconds)}s`;
+                  return (
+                    <span
+                      style={{
+                        fontSize: '0.58rem',
+                        fontWeight: 800,
+                        padding: '2px 6px',
+                        borderRadius: '9999px',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        background: 'rgba(239, 68, 68, 0.30)',
+                        border: '1px solid #EF4444',
+                        color: '#FEE2E2',
+                        boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3.5px',
+                      }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
+                      <span>MAKRUH • {makruhCompactCountdown}</span>
+                    </span>
+                  );
+                })()}
               </div>
 
               {/* Row Right Side: Formatted Time + Notification Bell Button */}
@@ -1202,7 +1207,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: '8px',
                   flexShrink: 0,
                 }}
               >

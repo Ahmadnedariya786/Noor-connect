@@ -457,12 +457,41 @@ export const getDateWiseQazaList = (): DateWiseQazaRecord[] => {
   }
 };
 
-const saveDateWiseQazaList = (records: DateWiseQazaRecord[]): void => {
+export const saveDateWiseQazaList = (records: DateWiseQazaRecord[]): void => {
   try {
     const capped = records.slice(0, 365);
     safeSetLocalStorageItem(QAZA_DATE_RECORDS_KEY, JSON.stringify(capped));
   } catch (err) {
     console.warn('Failed to save date-wise Qaza records:', err);
+  }
+};
+
+export const addPendingDateQazaPrayer = (date: string, prayer: QazaPrayerName): void => {
+  const records = getDateWiseQazaList();
+  let record = records.find((r) => r.date === date);
+
+  if (!record) {
+    record = {
+      id: `qaza_date_${date}`,
+      date,
+      hijriDate: formatHijriDate(date),
+      prayers: {
+        fajr: 'none',
+        dhuhr: 'none',
+        asr: 'none',
+        maghrib: 'none',
+        isha: 'none',
+        witr: 'none',
+      },
+    };
+    records.push(record);
+  }
+
+  if (record.prayers[prayer] !== 'pending') {
+    record.prayers[prayer] = 'pending';
+    saveDateWiseQazaList(records);
+    window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+    window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
   }
 };
 
@@ -518,22 +547,35 @@ export const markSingleDatePrayerCompleted = (date: string, prayer: QazaPrayerNa
     saveDateWiseQazaList(records);
     completeQazaPrayer(prayer, 1, { skipDateReconciliation: true });
 
-    // Bidirectional sync: If this date is today and prayer is one of the 5 daily prayers, sync to salah-tracker
-    const now = new Date();
-    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    if (date === todayIso && prayer !== 'witr') {
+    // Bidirectional sync: If prayer is one of the 5 daily prayers, sync to salah-tracker (Worship Journal & Home)
+    if (prayer !== 'witr') {
       try {
+        const now = new Date();
+        const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const isToday = (date === todayIso);
+
         const rawSalah = localStorage.getItem('salah-tracker');
-        if (rawSalah) {
-          const days = JSON.parse(rawSalah);
-          if (days[todayIso] && !days[todayIso][prayer]) {
-            days[todayIso][prayer] = true;
-            localStorage.setItem('salah-tracker', JSON.stringify(days));
-            window.dispatchEvent(new CustomEvent('salah-updated'));
-          }
+        const days = rawSalah ? JSON.parse(rawSalah) : {};
+        if (!days[date]) {
+          days[date] = {
+            date,
+            fajr: false,
+            dhuhr: false,
+            asr: false,
+            maghrib: false,
+            isha: false,
+          };
         }
+        days[date][prayer] = true;
+        const currentStatuses = days[date].statuses || {};
+        days[date].statuses = {
+          ...currentStatuses,
+          [prayer]: isToday ? 'ontime' : 'makeup',
+        };
+        localStorage.setItem('salah-tracker', JSON.stringify(days));
+        window.dispatchEvent(new CustomEvent('salah-updated'));
       } catch {
-        // Safe fallback
+        // Safe storage fallback
       }
     }
 

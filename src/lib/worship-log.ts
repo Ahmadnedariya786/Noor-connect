@@ -5,7 +5,16 @@
  */
 
 import { type PrayerName } from './salah-tracker';
-import { getQazaPrayers, addQazaPrayer, completeQazaPrayer, addQazaHistoryEntry, getQazaStats } from './qaza-tracker';
+import {
+  getQazaPrayers,
+  addQazaPrayer,
+  completeQazaPrayer,
+  addQazaHistoryEntry,
+  getQazaStats,
+  addPendingDateQazaPrayer,
+  getDateWiseQazaList,
+  saveDateWiseQazaList,
+} from './qaza-tracker';
 import { OnlinePrayerAPI, onlinePrayerApi, type LiveDaySchedule } from './online-prayer-api';
 import { getPrayerMinuteOffsets, applyOffsetsToTimings } from './prayer-offsets';
 import { calculatePrayerTimes } from './prayer-calculator';
@@ -111,13 +120,24 @@ export const getDayWorshipLog = (dateKey: string): DayWorshipLog => {
 
   const rawStatuses = raw.statuses || {};
 
-  // Bidirectional resolution: if boolean is true but status is none/missing, default to 'ontime'
+  // Strict bidirectional resolution: completed boolean and granular status must stay in 100% sync
+  const resolveStatus = (pKey: PrayerName, isDone: boolean): PrayerStatus => {
+    const s = rawStatuses[pKey];
+    if (isDone) {
+      if (s === 'ontime' || s === 'late' || s === 'makeup') return s;
+      return 'ontime';
+    } else {
+      if (s === 'ontime' || s === 'late' || s === 'makeup') return 'none';
+      return s || 'none';
+    }
+  };
+
   const statuses: Record<PrayerName, PrayerStatus> = {
-    fajr: rawStatuses.fajr || (fFajr ? 'ontime' : 'none'),
-    dhuhr: rawStatuses.dhuhr || (fDhuhr ? 'ontime' : 'none'),
-    asr: rawStatuses.asr || (fAsr ? 'ontime' : 'none'),
-    maghrib: rawStatuses.maghrib || (fMaghrib ? 'ontime' : 'none'),
-    isha: rawStatuses.isha || (fIsha ? 'ontime' : 'none'),
+    fajr: resolveStatus('fajr', fFajr),
+    dhuhr: resolveStatus('dhuhr', fDhuhr),
+    asr: resolveStatus('asr', fAsr),
+    maghrib: resolveStatus('maghrib', fMaghrib),
+    isha: resolveStatus('isha', fIsha),
   };
 
   const rawSunnah = raw.sunnah || {};
@@ -163,17 +183,32 @@ export const updatePrayerStatus = (
 
   // Qaza Transitions
   if (resolvedStatus === 'missed' && prevStatus !== 'missed') {
-    // User marks Missed -> increment Qaza pending (+1)
+    // User marks Missed -> increment Qaza pending (+1) & add to date record
     addQazaPrayer(prayer, 1);
+    addPendingDateQazaPrayer(dateKey, prayer);
   } else if (prevStatus === 'missed' && resolvedStatus !== 'missed') {
     // User changed mind from Missed -> decrement pending Qaza (-1, floor 0)
     completeQazaPrayer(prayer, 1);
+    const records = getDateWiseQazaList();
+    const r = records.find((rec) => rec.date === dateKey);
+    if (r && r.prayers[prayer] === 'pending') {
+      r.prayers[prayer] = (resolvedStatus === 'makeup' || resolvedStatus === 'ontime') ? 'completed' : 'none';
+      saveDateWiseQazaList(records);
+      window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+    }
   }
 
   if (resolvedStatus === 'makeup' && prevStatus !== 'makeup') {
     // User completed a makeup prayer -> decrement pending Qaza (-1, floor 0) & log history
     completeQazaPrayer(prayer, 1);
     addQazaHistoryEntry(prayer);
+    const records = getDateWiseQazaList();
+    const r = records.find((rec) => rec.date === dateKey);
+    if (r && r.prayers[prayer] === 'pending') {
+      r.prayers[prayer] = 'completed';
+      saveDateWiseQazaList(records);
+      window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+    }
   }
 
   // Determine boolean completed state for Home Dashboard

@@ -192,15 +192,26 @@ export const togglePrayer = (prayer: PrayerName, prayerTimes?: Record<string, { 
     }
   }
 
+  const willBeCompleted = !days[today][prayer];
+  const existingStatuses = (days[today] as any).statuses || {};
+  const newStatuses = {
+    ...existingStatuses,
+    [prayer]: willBeCompleted ? 'ontime' : 'none',
+  };
+
   const newDays = { ...days };
-  newDays[today] = { ...newDays[today], [prayer]: !newDays[today][prayer] };
+  newDays[today] = {
+    ...newDays[today],
+    [prayer]: willBeCompleted,
+    statuses: newStatuses,
+  };
   saveAllDays(newDays);
   updateStreak();
 
   return {
     success: true,
-    message: newDays[today][prayer] ? `${prayer} marked as completed!` : `${prayer} unchecked`,
-    completed: newDays[today][prayer]
+    message: willBeCompleted ? `${prayer} marked as completed!` : `${prayer} unchecked`,
+    completed: willBeCompleted,
   };
 };
 

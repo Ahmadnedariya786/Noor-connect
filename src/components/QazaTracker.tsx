@@ -384,6 +384,8 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                             color: 'var(--accent-text)',
                             whiteSpace: 'nowrap',
                             lineHeight: 1.4,
+                            paddingRight: '4px',
+                            paddingLeft: '2px',
                           }}
                         >
                           {detailed.hijriArUr}

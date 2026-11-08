@@ -259,12 +259,12 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
         {/* Row 2: Hijri Date Pill */}
         <div
           style={{
-            padding: '6px 10px',
+            padding: '7px 14px',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '6px',
+            gap: '8px',
             width: '100%',
             boxSizing: 'border-box',
             overflow: 'hidden',
@@ -275,7 +275,15 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
           <span
             dir="ltr"
             className="text-[var(--accent-text)]"
-            style={{ fontSize: '0.66rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}
+            style={{
+              fontSize: '0.62rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              minWidth: 0,
+              flex: '1 1 auto',
+            }}
           >
             🌙 {detailedDate.hijriEn}
           </span>
@@ -284,10 +292,12 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
             className="text-[var(--accent-text)]"
             style={{
               fontFamily: 'var(--font-urdu), sans-serif',
-              fontSize: '0.72rem',
-              lineHeight: 1.5,
+              fontSize: '0.68rem',
+              lineHeight: 1.4,
               whiteSpace: 'nowrap',
               flexShrink: 0,
+              paddingRight: '4px',
+              paddingLeft: '2px',
             }}
           >
             {detailedDate.hijriArUr}
