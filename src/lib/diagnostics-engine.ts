@@ -182,7 +182,10 @@ function hydrateStore(): void {
               msg.includes('failed to load pdf with pdf.js') ||
               msg.includes('no pdf url available') ||
               msg.includes('istrusted') ||
-              msg.includes('indexeddb error')
+              msg.includes('indexeddb error') ||
+              msg.includes('/services/qaza-tracker') ||
+              msg.includes('/qaza-tracker') ||
+              (msg.includes('404 error') && msg.includes('qaza'))
             ) {
               return false;
             }
@@ -841,7 +844,9 @@ export function initDiagnosticsEngine(): void {
         if (
           !msg.includes('[NOOR_DIAGNOSTICS]') &&
           !lower.includes('istrusted') &&
-          !lower.includes('indexeddb error')
+          !lower.includes('indexeddb error') &&
+          !lower.includes('/services/qaza-tracker') &&
+          !lower.includes('/qaza-tracker')
         ) {
           const stack = new Error().stack;
           recordDiagnosticEvent({

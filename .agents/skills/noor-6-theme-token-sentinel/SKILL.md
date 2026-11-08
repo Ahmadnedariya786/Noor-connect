@@ -21,12 +21,12 @@ Activate this skill whenever any of the following files are inspected or modifie
 
 ### A. The 6 Royal Themes Canon
 The application features exactly 6 Royal Themes in a symmetrical 3×2 selector grid:
-1. **`kiswah-noir` (`Kaaba Kiswah Noir`):** Sacred Black Silk & 24K Gold Embroidery.
-2. **`istanbul-sapphire` (`Royal Iznik Sapphire`):** Ottoman Turquoise-Teal & Champagne Rose-Gold.
-3. **`oxford-gold` (`Oxford Gold`):** Midnight Navy Blue & Warm Luminous Gold.
-4. **`imperial-violet` (`Imperial Violet`):** Deep Regal Amethyst & Burnished Gold.
-5. **`burgundy-velvet` (`Burgundy Velvet`):** Crimson Velvet & Antique Brass.
-6. **`desert-scroll` (`Desert Scroll`):** Parchment Sandstone & Warm Umber.
+1. **`kiswah-noir` (`Kaaba Kiswah`):** Pure OLED Black Silk & 24K Gold.
+2. **`oxford-gold` (`Nordic Slate`):** Midnight Steel & Silver (`#06141B`, `#253745`, `#9BA8AB`, `#CCD0CF`).
+3. **`istanbul-sapphire` (`Iznik Sapphire`):** Ocean Cyan & Sky Blue (`#05161A`, `#0C7075`, `#0F969C`, `#6DA5C0`).
+4. **`imperial-violet` (`Imperial Violet`):** Cosmic Indigo & Lavender (`#0B0720`, `#25134D`, `#9D71E8`, `#D1B8FF`).
+5. **`burgundy-velvet` (`Burgundy Velvet`):** Ruby Wine & Rose Blush (`#1C0209`, `#881144`, `#C24366`, `#FF85B3`).
+6. **`desert-scroll` (`Desert Scroll`):** Arabian Oud & Copper (`#120B07`, `#261810`, `#D97736`, `#F4A261`).
 
 *(Note: `madinah-emerald` is permanently deprecated; any legacy storage reference automatically migrates to `kiswah-noir`).*
 

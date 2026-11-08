@@ -163,7 +163,7 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
 
         <button
           type="button"
-          onClick={() => navigate('/services/qaza-tracker')}
+          onClick={() => navigate('/qaza')}
           className="shrink-0 flex items-center gap-1 transition-all hover:scale-105 active:scale-95 shadow-sm"
           style={{
             fontSize: '0.68rem',

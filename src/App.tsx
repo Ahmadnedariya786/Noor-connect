@@ -281,6 +281,9 @@ function AppRoutes() {
               <Route path="/calendar" element={<IslamicCalendar />} />
               <Route path="/ebooks" element={<Ebooks />} />
               <Route path="/qaza" element={<QazaPage />} />
+              <Route path="/qaza-tracker" element={<QazaPage />} />
+              <Route path="/services/qaza" element={<QazaPage />} />
+              <Route path="/services/qaza-tracker" element={<QazaPage />} />
               <Route path="/ramadan" element={<RamadanMode />} />
               <Route path="/menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
               <Route path="/enhanced-menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
@@ -350,6 +353,9 @@ function AppRoutes() {
               <Route path="/calendar" element={<IslamicCalendar />} />
               <Route path="/ebooks" element={<Ebooks />} />
               <Route path="/qaza" element={<QazaPage />} />
+              <Route path="/qaza-tracker" element={<QazaPage />} />
+              <Route path="/services/qaza" element={<QazaPage />} />
+              <Route path="/services/qaza-tracker" element={<QazaPage />} />
               <Route path="/ramadan" element={<RamadanMode />} />
               <Route path="/menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />
               <Route path="/enhanced-menstrual-mode" element={<Navigate to="/noor-cycle" replace />} />

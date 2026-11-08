@@ -76,10 +76,10 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
               }}
             >
               {/* Row 1: Name and Active Badge */}
-              <div className="flex items-center justify-between gap-1.5 mb-1 w-full">
+              <div className="flex items-center justify-between gap-1.5 mb-1 w-full min-w-0">
                 <h3
                   className={cn(
-                    "text-xs sm:text-sm font-bold tracking-tight leading-snug truncate",
+                    "text-[0.82rem] font-extrabold tracking-tight leading-snug whitespace-nowrap overflow-hidden text-ellipsis",
                     isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)] group-hover:text-[var(--accent-text)]"
                   )}
                 >
@@ -87,12 +87,13 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                 </h3>
 
                 {isSelected ? (
-                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[var(--accent)] text-[var(--on-accent)] shrink-0 shadow-sm">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    Active
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-[var(--accent)] text-[var(--on-accent)] shadow-sm">
+                    <Check className="w-3 h-3 stroke-[3]" />
                   </span>
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full border border-[var(--border)] group-hover:border-[var(--accent)]/50 shrink-0" />
+                  <div className="w-5 h-5 rounded-full border border-[var(--border)] group-hover:border-[var(--accent)]/50 shrink-0 flex items-center justify-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[var(--accent)]/30" />
+                  </div>
                 )}
               </div>
 
