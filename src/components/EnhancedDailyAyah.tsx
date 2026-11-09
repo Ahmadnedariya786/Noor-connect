@@ -360,7 +360,7 @@ export function EnhancedDailyAyah() {
       className="relative overflow-hidden rounded-[22px] border border-[var(--border)] transition-all duration-300"
       style={{
         background: 'linear-gradient(145deg, var(--surface) 0%, var(--surface-2) 100%)',
-        boxShadow: '0 12px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen)',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
       }}
     >
       {/* Radiant Top Accent Line */}
@@ -566,7 +566,7 @@ export function EnhancedDailyAyah() {
             className="p-3 rounded-xl border-l-[3px] border-[var(--accent)] text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed space-y-1.5 bidi-plaintext"
             style={{
               background: 'var(--surface-2)',
-              boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+              boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
               unicodeBidi: 'plaintext',
               textAlign: isRtl ? 'right' : 'start',
             }}

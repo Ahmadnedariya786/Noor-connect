@@ -51,7 +51,7 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
       } border border-[var(--border)] backdrop-blur-md select-none transition-all ${className}`}
       style={{
         background: 'var(--surface-2)',
-        boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+        boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
       }}
       role="radiogroup"
       aria-label={label || 'Select Content Language'}

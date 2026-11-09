@@ -850,7 +850,8 @@ const SettingsSubPage: React.FC = () => {
     const res = await clearTemporaryCache();
     const updated = await getStorageBreakdown();
     setStorageBreakdown(updated);
-    setStorageStats({ totalBooks: 0, totalSize: 0 });
+    const stats = await getStorageStats();
+    setStorageStats(stats);
     const description =
       res.freedBytes > 0
         ? `Cleared ${res.freedFormatted} of temporary cache. Personal data is safe.`
@@ -1721,7 +1722,7 @@ const SettingsSubPage: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <X className="w-3.5 h-3.5 text-destructive shrink-0" />
-                            <span>Downloaded e-book PDFs</span>
+                            <span>Cached audio metadata & temporary API responses</span>
                           </div>
                         </div>
                       </div>
@@ -1883,7 +1884,7 @@ const SettingsSubPage: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <RefreshCw className={`w-4 h-4 text-amber-500 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 text-[var(--accent)] ${isCheckingUpdate ? 'animate-spin' : ''}`} />
                   <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Software Updates
                   </Label>
@@ -2098,7 +2099,7 @@ const SettingsSubPage: React.FC = () => {
                 >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500">
+                  <div className="p-1 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
                     <Activity className="w-4 h-4" />
                   </div>
                   <div>
@@ -2110,7 +2111,7 @@ const SettingsSubPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <div className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/25">
+                <div className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
                   Active
                 </div>
               </div>
@@ -2120,7 +2121,7 @@ const SettingsSubPage: React.FC = () => {
                 {/* Pill 1: Commit */}
                 <div className="px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60 flex items-center gap-1.5">
                   <span className="text-muted-foreground text-[10px]">Commit:</span>
-                  <span className="font-bold text-amber-500 dark:text-amber-400">
+                  <span className="font-bold text-[var(--accent-text)]">
                     {BUILD_COMMIT !== 'unknown' ? BUILD_COMMIT.slice(0, 7) : 'dev'}
                   </span>
                 </div>
@@ -2370,7 +2371,7 @@ const SettingsSubPage: React.FC = () => {
                     onClick={() => setIsBreadcrumbsExpanded(!isBreadcrumbsExpanded)}
                     disabled={flightBreadcrumbs.length === 0}
                   >
-                    <Activity className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                    <Activity className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
                     <span className="truncate">{isBreadcrumbsExpanded ? 'Hide Trail' : `Trail (${flightBreadcrumbs.length})`}</span>
                   </button>
 
@@ -2669,7 +2670,7 @@ const SettingsSubPage: React.FC = () => {
                         <span className="font-mono text-muted-foreground shrink-0 text-[9px] pt-0.5">
                           {new Date(crumb.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </span>
-                        <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[9px] bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                        <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[9px] bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] shrink-0">
                           {crumb.type}
                         </span>
                         <span
@@ -2689,7 +2690,7 @@ const SettingsSubPage: React.FC = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full h-8 text-xs rounded-xl border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/10 text-amber-500 dark:text-amber-400 font-medium flex items-center justify-center gap-1.5"
+                  className="w-full h-8 text-xs rounded-xl border-[var(--border)] hover:bg-[var(--accent-soft)] text-[var(--accent-text)] font-medium flex items-center justify-center gap-1.5"
                   onClick={async () => {
                     const rerunAction = async () => {
                       if (!Capacitor.isNativePlatform()) {

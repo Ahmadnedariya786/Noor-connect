@@ -580,7 +580,7 @@ function PremiumDashboardInner({
                       })}
                       className="p-5 rounded-[22px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md relative overflow-hidden"
                       style={{
-                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen)',
+                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                       }}
                     >
                       <div className="flex items-center justify-between gap-2 mb-2" style={{ whiteSpace: 'nowrap' }}>

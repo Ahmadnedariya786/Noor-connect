@@ -149,13 +149,13 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
           </span>
           <span
-            className="leading-tight"
+            className="leading-tight truncate"
             style={{
-              fontSize: '0.74rem',
+              fontSize: '0.72rem',
               fontWeight: 800,
               color: 'var(--accent-text)',
               letterSpacing: '0.01em',
-              wordBreak: 'break-word',
+              whiteSpace: 'nowrap',
             }}
           >
             🕌 QAZA REMINDER • {totalPendingQaza} Pending
@@ -169,11 +169,12 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
           style={{
             fontSize: '0.68rem',
             fontWeight: 800,
-            padding: '3px 8px',
+            padding: '3px 10px',
             borderRadius: '9999px',
-            background: 'var(--accent)',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
             color: 'var(--on-accent)',
             whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           <span>Tracker</span>

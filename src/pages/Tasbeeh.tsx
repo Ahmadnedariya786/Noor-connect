@@ -611,7 +611,7 @@ const Tasbeeh = () => {
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--border)',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
               position: 'relative',
               padding: '12px 16px',
               display: 'flex',
@@ -1034,7 +1034,7 @@ const Tasbeeh = () => {
                 <div
                   className="absolute inset-3 rounded-full pointer-events-none"
                   style={{
-                    border: '1px dashed var(--card-sheen)',
+                    border: '1px dashed var(--card-sheen-line, var(--card-sheen))',
                     opacity: 0.6,
                   }}
                 />
@@ -1166,7 +1166,7 @@ const Tasbeeh = () => {
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--border)',
-              boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+              boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             }}
           >
             <div className="flex items-center justify-between">

@@ -276,7 +276,7 @@ export default function PrayerStats() {
             {/* KPI 1: On-Time Streak */}
             <Card
               className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
-              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Flame className="w-4 h-4 text-[var(--accent)]" />
@@ -298,7 +298,7 @@ export default function PrayerStats() {
             {/* KPI 2: Sunnah Kept % */}
             <Card
               className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
-              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Sparkles className="w-4 h-4 text-[var(--accent-2)]" />
@@ -319,7 +319,7 @@ export default function PrayerStats() {
             {/* KPI 3: Fasted Days */}
             <Card
               className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
-              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Moon className="w-4 h-4 text-[var(--accent)]" />
@@ -341,7 +341,7 @@ export default function PrayerStats() {
             {/* KPI 4: Qaza Owed */}
             <Card
               className="p-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-center text-center shadow-sm"
-              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+              style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -374,7 +374,7 @@ export default function PrayerStats() {
           {/* INTERACTIVE 3-MONTH GITHUB-STYLE HEATMAP — Flexbox Header Fix with Zero Text Overlap */}
           <Card
             className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md"
-            style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
+            style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
           >
             <div
               style={{
@@ -575,7 +575,7 @@ export default function PrayerStats() {
                 <Card
                   key={prayer.key}
                   className="p-3.5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-sm"
-                  style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+                  style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
                 >
                   {/* Top Line: Name + Live Time + Sunnah Rawatib Chip */}
                   <div className="flex items-center justify-between gap-2">
@@ -658,7 +658,7 @@ export default function PrayerStats() {
           {/* NIGHT WORSHIP CARD BELOW ISHA (Witr Prayed Toggle + Qiyam Stepper) */}
           <Card
             className="p-3.5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-sm space-y-3"
-            style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+            style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
           >
             <div className="flex items-center gap-2">
               <Moon className="w-4 h-4 text-[var(--accent)]" />
@@ -721,7 +721,7 @@ export default function PrayerStats() {
           {/* INTEGRATED SUNNAH & RAMADAN FASTING CARD */}
           <Card
             className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md space-y-3.5"
-            style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
+            style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
           >
             {/* Header: Title + Auto-Detected Recommended Fast Badge */}
             <div className="flex items-center justify-between gap-2 flex-wrap">

@@ -292,7 +292,7 @@ export async function getStorageBreakdown(): Promise<StorageBreakdown> {
 
 /**
  * Purges all temporary API/Mushaf caches from localStorage, sessionStorage,
- * window.caches, and cached e-books. NEVER touches protected personal data.
+ * and window.caches. NEVER touches protected personal data or offline e-books.
  */
 export async function clearTemporaryCache(): Promise<{
   freedBytes: number;
@@ -329,16 +329,7 @@ export async function clearTemporaryCache(): Promise<{
     // SessionStorage clear fallback
   }
 
-  // 3. Clear e-books cache
-  try {
-    const stats = await getStorageStats();
-    freedBytes += stats.totalSize || 0;
-    await clearAllBooks();
-  } catch {
-    // Clear books fallback
-  }
-
-  // 4. Clear CacheStorage (window.caches)
+  // 3. Clear CacheStorage (window.caches)
   if (typeof window !== 'undefined' && 'caches' in window) {
     try {
       const cacheNames = await caches.keys();

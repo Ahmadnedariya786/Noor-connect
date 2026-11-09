@@ -10,7 +10,7 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg-base)" }}>
-      <div className="text-center p-8 rounded-3xl border" style={{ background: "var(--surface)", borderColor: "var(--border)", boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)" }}>
+      <div className="text-center p-8 rounded-3xl border" style={{ background: "var(--surface)", borderColor: "var(--border)", boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)" }}>
         <h1 className="mb-4 text-5xl font-bold" style={{ color: "var(--accent)" }}>404</h1>
         <p className="mb-6 text-xl font-medium" style={{ color: "var(--text-secondary)" }}>Oops! Page not found</p>
         <a

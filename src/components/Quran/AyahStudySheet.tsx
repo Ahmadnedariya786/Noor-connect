@@ -1032,7 +1032,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
             style={{
               backgroundColor: 'var(--surface)',
               border: '1px solid var(--border)',
-              boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+              boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             }}
           >
             {/* Memory Test Blur Mask */}

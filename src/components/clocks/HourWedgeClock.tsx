@@ -125,7 +125,7 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
         style={{
           border: '1.5px solid var(--border)',
           background: 'radial-gradient(circle at 50% 50%, var(--surface-2) 0%, var(--surface) 50%, var(--bg-elev) 100%)',
-          boxShadow: '0 18px 40px rgba(0,0,0,0.55), inset 0 1px 0 var(--card-sheen)',
+          boxShadow: '0 18px 40px rgba(0,0,0,0.55), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         <svg

@@ -832,7 +832,7 @@ export default function QuranReader() {
               {/* 3-Pill Switcher: [ 7L | 13L | 15L ] */}
               <div
                 className="flex items-center rounded-full p-0.5 border border-[var(--border)] bg-[var(--surface-2)] shrink-0"
-                style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+                style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
               >
                 {([7, 13, 15] as const).map((fmt) => (
                   <button
@@ -956,8 +956,8 @@ export default function QuranReader() {
                         background: 'var(--surface)',
                         borderColor: isThisPlaying ? 'var(--accent)' : 'var(--border)',
                         boxShadow: isThisPlaying
-                          ? '0 0 18px var(--accent-glow), inset 0 1px 0 var(--card-sheen)'
-                          : 'inset 0 1px 0 var(--card-sheen)',
+                          ? '0 0 18px var(--accent-glow), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))'
+                          : 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                       }}
                     >
                       {/* Top Header Row */}
@@ -965,7 +965,7 @@ export default function QuranReader() {
                         <div className="flex items-center gap-2 min-w-0">
                           <span
                             className="w-7 h-7 rounded-full border border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-center font-bold text-xs text-[var(--accent-text)] font-mono shrink-0"
-                            style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+                            style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
                           >
                             {v.verse_number}
                           </span>
@@ -1211,7 +1211,7 @@ export default function QuranReader() {
               style={{
                 background: 'var(--surface)',
                 borderColor: 'var(--border)',
-                boxShadow: '0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 var(--card-sheen)',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                 overscrollBehavior: 'contain',
               }}
               onClick={(e) => e.stopPropagation()}

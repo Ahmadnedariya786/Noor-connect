@@ -82,7 +82,7 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
         style={{
           border: '2px solid var(--border)',
           background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 40%, var(--bg-base) 85%)',
-          boxShadow: '0 16px 40px rgba(0,0,0,0.65), inset 0 1px 0 var(--card-sheen)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.65), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         <svg
@@ -96,8 +96,8 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
               <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
             <linearGradient id="moonGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#FFF9E6" />
-              <stop offset="100%" stopColor="#E2C98A" />
+              <stop offset="0%" stopColor="var(--text-primary)" />
+              <stop offset="100%" stopColor="var(--accent-text)" />
             </linearGradient>
             {!isStaticPreview && (
               <filter id="crescentHandShadow" x="-20%" y="-20%" width="140%" height="140%">
@@ -184,7 +184,7 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
               opacity="0.9"
             />
             {/* Deep Night-Sky Inner Fill */}
-            <circle cx="0" cy="0" r={moonRadius + 2} fill="#040814" />
+            <circle cx="0" cy="0" r={moonRadius + 2} fill="var(--bg-base)" />
 
             {/* Tiny Star Dots in Night Sky */}
             <circle cx="-7" cy="-5" r="0.6" fill="#FFFFFF" opacity="0.8" />
@@ -197,7 +197,7 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
             <path
               d={getMoonSvgPath(moonInfo.phase, moonRadius)}
               fill="url(#moonGlow)"
-              filter={!isStaticPreview ? "drop-shadow(0 0 3px rgba(255, 245, 200, 0.5))" : undefined}
+              filter={!isStaticPreview ? "drop-shadow(0 0 3px var(--accent-glow))" : undefined}
             />
           </g>
 

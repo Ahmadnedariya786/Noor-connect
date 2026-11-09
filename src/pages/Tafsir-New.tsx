@@ -687,7 +687,7 @@ const Tafsir = () => {
                           style={{
                             background: 'var(--surface)',
                             borderColor: 'var(--border)',
-                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                           }}
                         >
                           <div
@@ -740,7 +740,7 @@ const Tafsir = () => {
                           style={{
                             background: 'var(--surface)',
                             borderColor: 'var(--border)',
-                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                           }}
                         >
                           <div
@@ -786,7 +786,7 @@ const Tafsir = () => {
                           style={{
                             background: 'var(--surface)',
                             borderColor: 'var(--border)',
-                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                           }}
                         >
                           <div
@@ -822,7 +822,7 @@ const Tafsir = () => {
                 style={{
                   background: 'var(--surface)',
                   borderColor: 'var(--border)',
-                  boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
+                  boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)',
                 }}
               >
                 <div className="flex items-center justify-between mb-4">
@@ -975,7 +975,7 @@ const Tafsir = () => {
                           style={{
                             background: 'var(--surface)',
                             borderColor: 'var(--border)',
-                            boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)',
                           }}
                         >
                           {/* Ayah Reference Badge */}

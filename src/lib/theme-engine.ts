@@ -120,23 +120,24 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'desert-scroll': {
     id: 'desert-scroll',
     name: 'Desert Scroll',
-    subtitle: 'Warm tan leather & copper oud tones',
+    subtitle: 'Royal oud leather with copper foil accents',
     description: 'Warm espresso and tan leather tones with radiant parchment gold and burnished copper glow.',
     tokens: {
-      '--bg-base': '#191007',
-      '--bg-elev': '#26190D',
-      '--surface': '#352513',
-      '--surface-2': '#48341B',
-      '--border': 'rgba(230, 126, 52, 0.30)',
-      '--accent': '#E8863C',
-      '--accent-2': '#C96A2A',
-      '--accent-text': '#FFC08A',
-      '--on-accent': '#26190D',
-      '--accent-soft': 'rgba(232, 134, 60, 0.16)',
-      '--accent-glow': 'rgba(232, 134, 60, 0.35)',
-      '--card-sheen': 'rgba(255, 240, 210, 0.05)',
-      '--text-primary': '#FAF1E2',
-      '--text-secondary': '#D8BE9C',
+      '--bg-base': '#150E07',
+      '--bg-elev': '#221709',
+      '--surface': '#31220F',
+      '--surface-2': '#42301A',
+      '--border': 'rgba(224, 138, 60, 0.30)',
+      '--accent': '#E08A3C',
+      '--accent-2': '#B45318',
+      '--accent-text': '#F2BE7E',
+      '--on-accent': '#2A1808',
+      '--accent-soft': 'rgba(224, 138, 60, 0.16)',
+      '--accent-glow': 'rgba(224, 138, 60, 0.34)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(255, 214, 150, 0.10) 0%, rgba(180, 83, 24, 0.05) 60%)',
+      '--card-sheen-line': 'rgba(255, 214, 150, 0.16)',
+      '--text-primary': '#F8EEDC',
+      '--text-secondary': '#D6BC96',
       '--success': '#A8D69A',
       '--warning': '#FFD98A',
       '--danger': '#E09A8A',
@@ -145,26 +146,27 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'istanbul-sapphire': {
     id: 'istanbul-sapphire',
     name: 'Royal Sapphire',
-    subtitle: 'Vivid royal blue velvet with ice-cyan glow',
-    description: 'Vivid royal blue velvet base with radiant imperial gold and ice-cyan highlights.',
+    subtitle: 'Abyssal midnight blue with ice-cyan glow',
+    description: 'Abyssal midnight blue velvet base with luminous ice-cyan and sky blue highlights.',
     tokens: {
-      '--bg-base': '#06203C',
-      '--bg-elev': '#0A2E52',
-      '--surface': '#144A7E',
-      '--surface-2': '#1D5C96',
-      '--border': 'rgba(125, 211, 252, 0.32)',
-      '--accent': '#F5C542',
-      '--accent-2': '#4DD3E8',
-      '--accent-text': '#FFE08A',
-      '--on-accent': '#06203C',
-      '--accent-soft': 'rgba(245, 197, 66, 0.16)',
-      '--accent-glow': 'rgba(125, 211, 252, 0.35)',
-      '--card-sheen': 'rgba(255, 255, 255, 0.06)',
-      '--text-primary': '#F4F9FF',
-      '--text-secondary': '#BBD4EC',
-      '--success': '#6EE7A0',
-      '--warning': '#E8C07A',
-      '--danger': '#E08A8A',
+      '--bg-base': '#030B14',
+      '--bg-elev': '#06182B',
+      '--surface': '#0A2440',
+      '--surface-2': '#103456',
+      '--border': 'rgba(56, 189, 248, 0.26)',
+      '--accent': '#22D3EE',
+      '--accent-2': '#0EA5E9',
+      '--accent-text': '#7DD3FC',
+      '--on-accent': '#03202E',
+      '--accent-soft': 'rgba(34, 211, 238, 0.16)',
+      '--accent-glow': 'rgba(56, 189, 248, 0.34)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(125, 211, 252, 0.14) 0%, rgba(14, 165, 233, 0.04) 60%)',
+      '--card-sheen-line': 'rgba(125, 211, 252, 0.20)',
+      '--text-primary': '#F0F9FF',
+      '--text-secondary': '#9CC3E0',
+      '--success': '#34D399',
+      '--warning': '#FBBF24',
+      '--danger': '#F87171',
     },
   },
 };
@@ -232,10 +234,19 @@ export function applyThemeToDOM(themeId: ThemeId): void {
     }
   });
 
-  // 3. Write all 15 CSS custom properties directly onto document root
+  // 3. Write all theme CSS custom properties directly onto document root
   (Object.keys(theme.tokens) as Array<keyof ThemeTokens>).forEach((token) => {
-    root.style.setProperty(token, theme.tokens[token]);
+    const val = theme.tokens[token];
+    if (val !== undefined) {
+      root.style.setProperty(token, val);
+    }
   });
+
+  if (theme.tokens['--card-sheen-line']) {
+    root.style.setProperty('--card-sheen-line', theme.tokens['--card-sheen-line']);
+  } else {
+    root.style.removeProperty('--card-sheen-line');
+  }
 
   // 4. Force status bar to LightContent (Style.Dark) unconditionally since all 5 themes are dark-based
   if (Capacitor.isNativePlatform()) {
@@ -264,8 +275,8 @@ export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
   'kiswah-noir': '#050506',
   'imperial-violet': '#1F0035',
   'burgundy-velvet': '#0B0B0B',
-  'desert-scroll': '#191007',
-  'istanbul-sapphire': '#06203C',
+  'desert-scroll': '#150E07',
+  'istanbul-sapphire': '#030B14',
 };
 
 /**

@@ -148,7 +148,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
       <Card
         className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] rounded-[22px] overflow-hidden backdrop-blur-md relative"
         style={{
-          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen)',
+          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         <CardHeader className="pb-2 pt-4 px-4 sm:px-5">

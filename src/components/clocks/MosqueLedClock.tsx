@@ -66,7 +66,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
           border: '1.5px solid var(--border)',
           boxShadow: isStaticPreview
             ? '0 6px 18px rgba(0,0,0,0.45)'
-            : '0 10px 28px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
+            : '0 10px 28px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         {/* ── Inner Recessed LED Screen ── */}

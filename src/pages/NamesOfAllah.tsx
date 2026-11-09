@@ -166,7 +166,7 @@ export default function NamesOfAllah() {
             style={{
               background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
               borderColor: "var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
             }}
           >
             <div
@@ -264,7 +264,7 @@ export default function NamesOfAllah() {
                     style={{
                       background: "var(--surface)",
                       borderColor: "var(--border)",
-                      boxShadow: "inset 0 1px 0 var(--card-sheen), 0 8px 24px rgba(0,0,0,0.2)",
+                      boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 8px 24px rgba(0,0,0,0.2)",
                     }}
                     onClick={() => setSelectedName(name)}
                   >
@@ -379,7 +379,7 @@ export default function NamesOfAllah() {
                 style={{
                   background: "var(--surface)",
                   borderColor: "var(--border)",
-                  boxShadow: "inset 0 1px 0 var(--card-sheen), 0 20px 50px rgba(0,0,0,0.5)",
+                  boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 20px 50px rgba(0,0,0,0.5)",
                 }}
               >
                 <div

@@ -168,7 +168,7 @@ export default function Services() {
                         style={{
                             background: 'linear-gradient(145deg, var(--surface), var(--surface-2))',
                             border: '1px solid var(--border)',
-                            boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 8px 32px rgba(0,0,0,0.25)'
+                            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 8px 32px rgba(0,0,0,0.25)'
                         }}
                     >
                         {/* Elegant Light Gradients */}
@@ -209,7 +209,7 @@ export default function Services() {
                                 background: 'var(--surface)',
                                 border: '1px solid var(--border)',
                                 color: 'var(--text-primary)',
-                                boxShadow: 'inset 0 1px 0 var(--card-sheen)'
+                                boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))'
                             }}
                         />
                         {searchQuery && (
@@ -251,7 +251,7 @@ export default function Services() {
                                             borderRadius: '18px',
                                             background: 'linear-gradient(145deg, var(--surface), var(--surface-2))',
                                             border: '1px solid var(--border)',
-                                            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                                            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                                             display: 'flex',
                                             flexDirection: 'column',
                                             justifyContent: 'space-between',

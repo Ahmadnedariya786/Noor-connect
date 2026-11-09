@@ -270,7 +270,7 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
           background: 'var(--bg-elev)',
           border: '1.5px solid var(--border)',
           boxSizing: 'border-box',
-          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.85), inset 0 1px 0 var(--card-sheen)',
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.85), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',

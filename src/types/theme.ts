@@ -19,6 +19,7 @@ export interface ThemeTokens {
   '--accent-soft': string;
   '--accent-glow': string;
   '--card-sheen': string;
+  '--card-sheen-line'?: string;
   '--text-primary': string;
   '--text-secondary': string;
   '--success': string;

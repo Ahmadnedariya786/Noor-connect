@@ -150,7 +150,7 @@ export function QuranProgressWidget({ className }: QuranProgressWidgetProps) {
   return (
     <Card className={`relative overflow-hidden bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-md rounded-[24px] ${className || ''}`}
       style={{
-        boxShadow: '0 10px 28px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen)',
+        boxShadow: '0 10px 28px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
       }}
     >
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-80" />

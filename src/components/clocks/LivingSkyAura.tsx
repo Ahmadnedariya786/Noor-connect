@@ -62,8 +62,8 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
             </linearGradient>
             <radialGradient id="morningStarGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#FDE047" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#FDE047" stopOpacity="0" />
+              <stop offset="50%" stopColor="var(--accent)" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
             </radialGradient>
           </defs>
           <rect width="400" height="240" fill="url(#dawnGrad)" />
@@ -87,15 +87,15 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
         >
           <defs>
             <radialGradient id="zenithGlow" cx="50%" cy="0%" r="80%">
-              <stop offset="0%" stopColor="#FBBF24" stopOpacity="0.75" />
-              <stop offset="45%" stopColor="#F59E0B" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.55" />
+              <stop offset="45%" stopColor="var(--accent-2)" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="transparent" stopOpacity="0.0" />
             </radialGradient>
           </defs>
           <rect width="400" height="240" fill="url(#zenithGlow)" />
           {/* Subtle radiating solar corona rings */}
-          <circle cx="200" cy="0" r="85" fill="none" stroke="#FDE68A" strokeWidth="1.5" strokeOpacity="0.35" />
-          <circle cx="200" cy="0" r="130" fill="none" stroke="#FBBF24" strokeWidth="1" strokeOpacity="0.2" />
+          <circle cx="200" cy="0" r="85" fill="none" stroke="var(--accent-text)" strokeWidth="1.5" strokeOpacity="0.35" />
+          <circle cx="200" cy="0" r="130" fill="none" stroke="var(--accent)" strokeWidth="1" strokeOpacity="0.2" />
         </svg>
       )}
 
@@ -117,7 +117,7 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
           </defs>
           <rect width="400" height="240" fill="url(#twilightGrad)" />
           {/* Soft sinking solar arc */}
-          <ellipse cx="200" cy="240" rx="140" ry="45" fill="#FED7AA" fillOpacity="0.45" />
+          <ellipse cx="200" cy="240" rx="140" ry="45" fill="var(--accent-soft)" fillOpacity="0.6" />
         </svg>
       )}
 
@@ -149,9 +149,9 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
           {/* Crescent Moon */}
           <path
             d="M 315 35 A 12 12 0 1 0 327 56 A 15 15 0 0 1 315 35 Z"
-            fill="#FEF08A"
+            fill="var(--accent-text)"
             fillOpacity="0.85"
-            style={{ filter: 'drop-shadow(0 0 6px rgba(254, 240, 138, 0.6))' }}
+            style={{ filter: 'drop-shadow(0 0 6px var(--accent-glow))' }}
           />
         </svg>
       )}

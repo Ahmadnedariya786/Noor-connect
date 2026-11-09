@@ -65,7 +65,7 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
           border: '1px solid var(--border)',
           boxShadow: isStaticPreview
             ? '0 4px 14px rgba(0,0,0,0.3)'
-            : '0 12px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen)',
+            : '0 12px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         {/* Subtle Ambient Radial Glow Behind Numerals */}

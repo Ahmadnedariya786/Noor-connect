@@ -60,7 +60,7 @@ const BottomNav = memo(function BottomNav() {
           backdropFilter: (!animationEnabled || noBlur) ? 'none' : 'blur(16px)',
           WebkitBackdropFilter: (!animationEnabled || noBlur) ? 'none' : 'blur(16px)',
           border: '1px solid var(--border)',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.55), inset 0 1px 0 var(--card-sheen)',
+          boxShadow: '0 12px 32px rgba(0,0,0,0.55), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
           overflow: 'hidden',
           boxSizing: 'border-box',
         }}

@@ -334,7 +334,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
         className="relative overflow-hidden rounded-[24px] p-5 sm:p-6 border border-[var(--border)] shadow-xl"
         style={{
           background: 'linear-gradient(135deg, var(--surface), var(--surface-2))',
-          boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.3)',
+          boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.3)',
         }}
       >
         <div
@@ -423,7 +423,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
               className="overflow-hidden border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] transition-all flex flex-col justify-between shadow-sm"
               style={{
                 padding: '12px 14px',
-                boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
               }}
             >
               <div className="space-y-2.5">

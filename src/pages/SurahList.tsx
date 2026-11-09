@@ -91,7 +91,7 @@ const SurahCard = memo(
         <div
           className="w-full flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-[18px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors"
           style={{
-            boxShadow: "inset 0 1px 0 var(--card-sheen)",
+            boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
           }}
         >
           {/* Left Side: 8-Point Rub el Hizb Star Emblem + Details Stack */}
@@ -652,7 +652,7 @@ export default function SurahList() {
           <div
             className="flex items-center justify-center mx-auto mb-2.5 px-4 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--accent-text)] shadow-sm max-w-fit"
             style={{
-              boxShadow: "inset 0 1px 0 var(--card-sheen)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
             }}
           >
             <p className="font-arabic text-[1.22rem] leading-[1.8] font-bold text-center select-none text-[var(--accent-text)]">
@@ -667,7 +667,7 @@ export default function SurahList() {
               padding: "10px 12px",
               background: "linear-gradient(145deg, rgba(16, 85, 60, 0.22), var(--surface))",
               border: "1px solid var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
             }}
           >
             <div className="min-w-0 flex-1">
@@ -769,7 +769,7 @@ export default function SurahList() {
               style={{
                 background: "var(--surface)",
                 borderColor: "var(--border)",
-                boxShadow: "inset 0 1px 0 var(--card-sheen)",
+                boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
               }}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -805,7 +805,7 @@ export default function SurahList() {
               style={{
                 background: "var(--surface)",
                 borderColor: isKhatmahExpanded ? "var(--accent)" : "var(--border)",
-                boxShadow: isKhatmahExpanded ? "0 0 12px var(--accent-soft)" : "inset 0 1px 0 var(--card-sheen)",
+                boxShadow: isKhatmahExpanded ? "0 0 12px var(--accent-soft)" : "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
               }}
             >
               <div className="flex items-center justify-between gap-1 mb-1">
@@ -834,7 +834,7 @@ export default function SurahList() {
               style={{
                 background: "var(--surface)",
                 borderColor: isPlaying ? "var(--accent)" : "var(--border)",
-                boxShadow: isPlaying ? "0 0 12px var(--accent-soft)" : "inset 0 1px 0 var(--card-sheen)",
+                boxShadow: isPlaying ? "0 0 12px var(--accent-soft)" : "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
               }}
             >
               <div className="flex items-center justify-between gap-1 mb-1">
@@ -875,7 +875,7 @@ export default function SurahList() {
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
             }}
           >
             <div className="flex items-center justify-between mb-2">
@@ -978,7 +978,7 @@ export default function SurahList() {
           <div className="max-w-2xl mx-auto px-4 mb-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
             <Card
               className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md space-y-3"
-              style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen)" }}
+              style={{ boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -1136,7 +1136,7 @@ export default function SurahList() {
               {/* Spiritual Hasanat & Arabic Letters Counter */}
               <div
                 className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-between gap-2 shadow-xs"
-                style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+                style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-7 h-7 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center shrink-0">
@@ -1213,8 +1213,8 @@ export default function SurahList() {
                       : undefined,
                     borderColor: isFeatured ? "var(--accent)" : "var(--border)",
                     boxShadow: isFeatured
-                      ? "0 6px 20px -4px var(--accent-glow), inset 0 1px 0 var(--card-sheen)"
-                      : "inset 0 1px 0 var(--card-sheen)",
+                      ? "0 6px 20px -4px var(--accent-glow), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))"
+                      : "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
                     borderWidth: isFeatured ? "1.5px" : "1px",
                   }}
                 >
@@ -1312,7 +1312,7 @@ export default function SurahList() {
               background: "var(--surface)",
               borderColor: "var(--border)",
               borderLeft: "3.5px solid var(--accent)",
-              boxShadow: "0 4px 16px -4px var(--accent-soft), inset 0 1px 0 var(--card-sheen)",
+              boxShadow: "0 4px 16px -4px var(--accent-soft), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
             }}
           >
             {/* Left: Micro-label + Fazilat Hook */}
@@ -1572,7 +1572,7 @@ export default function SurahList() {
                 <div
                   key={juz.number}
                   className="w-full rounded-[18px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors p-3.5 space-y-2 shadow-xs cv-auto"
-                  style={{ boxShadow: "inset 0 1px 0 var(--card-sheen)" }}
+                  style={{ boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))" }}
                 >
                   <button
                     type="button"
@@ -1781,7 +1781,7 @@ export default function SurahList() {
                         style={{
                           backgroundColor: "var(--surface)",
                           borderColor: "var(--border)",
-                          boxShadow: "inset 0 1px 0 var(--card-sheen)",
+                          boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
                         }}
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -1863,7 +1863,7 @@ export default function SurahList() {
                         style={{
                           backgroundColor: "var(--surface)",
                           borderColor: "var(--border)",
-                          boxShadow: "inset 0 1px 0 var(--card-sheen)",
+                          boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
                         }}
                       >
                         <div className="flex items-center justify-between gap-2">

@@ -412,7 +412,7 @@ export default function IslamicCalendar() {
           style={{
             background: 'var(--surface)',
             borderColor: 'var(--border)',
-            boxShadow: 'inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)',
+            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)',
           }}
         >
           <CardHeader className="text-center pb-3">
@@ -498,7 +498,7 @@ export default function IslamicCalendar() {
             borderRadius: '24px',
             background: 'var(--surface)',
             border: '1px solid var(--border)',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             padding: '16px 12px',
           }}
         >
@@ -782,7 +782,7 @@ export default function IslamicCalendar() {
                   background: 'var(--surface-2)',
                   borderColor: 'var(--border)',
                   borderRadius: '14px',
-                  boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                  boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                 }}
                 title="Tap to view full details"
               >
@@ -962,7 +962,7 @@ export default function IslamicCalendar() {
           style={{
             background: 'var(--surface)',
             borderColor: 'var(--border)',
-            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
           }}
         >
           <CardHeader>
@@ -1006,7 +1006,7 @@ export default function IslamicCalendar() {
           style={{
             background: 'var(--surface)',
             borderColor: 'var(--border)',
-            boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
           }}
         >
           <CardHeader>

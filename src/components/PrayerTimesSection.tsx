@@ -630,7 +630,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             'radial-gradient(circle at 100% 0%, var(--accent-soft) 0%, transparent 60%), linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)',
           border: '1px solid var(--border)',
           boxShadow:
-            '0 10px 30px -10px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow), inset 0 1px 0 var(--card-sheen)',
+            '0 10px 30px -10px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
           boxSizing: 'border-box',
         }}
       >
@@ -930,7 +930,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       <div
         className="w-full flex items-center justify-between px-3 py-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] mt-3.5 select-none transition-all"
         style={{
-          boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+          boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         <button

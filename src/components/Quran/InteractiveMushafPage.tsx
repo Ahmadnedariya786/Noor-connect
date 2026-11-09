@@ -1023,7 +1023,7 @@ function InteractiveMushafPageComponent({
       background: 'var(--surface)',
       color: 'var(--text-primary)',
       border: '1px solid var(--border)',
-      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen)',
+      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
       bismillahColor: 'var(--accent-text, #FDE68A)',
       headerBg: 'var(--surface-2)',
       headerBorder: 'var(--border)',
@@ -1275,7 +1275,7 @@ function InteractiveMushafPageComponent({
                         borderColor: readingMode === 'paper' ? '#B89352' : readingMode === 'night' ? 'rgba(245, 208, 97, 0.35)' : 'var(--border)',
                         borderWidth: readingMode === 'paper' ? '1.5px' : '1px',
                         borderStyle: 'solid',
-                        boxShadow: readingMode === 'paper' ? 'none' : 'inset 0 1px 0 var(--card-sheen)',
+                        boxShadow: readingMode === 'paper' ? 'none' : 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                       }}
                     >
                       <div
@@ -1648,7 +1648,7 @@ function InteractiveMushafPageComponent({
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--accent)',
-              boxShadow: '0 12px 36px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen)',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             }}
           >
             <div className="flex items-center justify-between mb-2">
@@ -1736,7 +1736,7 @@ function InteractiveMushafPageComponent({
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--border)',
-              boxShadow: '0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 var(--card-sheen)',
+              boxShadow: '0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             }}
             onClick={(e) => e.stopPropagation()}
           >

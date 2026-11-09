@@ -272,7 +272,7 @@ export default function FitranaCalculator() {
               style={{
                 background: "var(--surface)",
                 borderColor: "var(--border)",
-                boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+                boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
               }}
             >
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-50" />
@@ -322,7 +322,7 @@ export default function FitranaCalculator() {
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen), 0 8px 24px rgba(0,0,0,0.2)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 8px 24px rgba(0,0,0,0.2)",
             }}
           >
             <div className="flex items-start gap-4">
@@ -348,7 +348,7 @@ export default function FitranaCalculator() {
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
             }}
           >
             <div className="relative z-10 space-y-5">
@@ -446,7 +446,7 @@ export default function FitranaCalculator() {
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
             }}
           >
             <div className="relative z-10 space-y-4">
@@ -593,7 +593,7 @@ export default function FitranaCalculator() {
               </div>
               <div
                 className="inline-flex items-center gap-2 px-3 py-1 bg-black/20 backdrop-blur-md rounded-full mt-2 border"
-                style={{ borderColor: "var(--card-sheen)" }}
+                style={{ borderColor: "var(--card-sheen-line, var(--card-sheen))" }}
               >
                 <Users className="w-3.5 h-3.5" />
                 <p className="text-xs font-bold uppercase tracking-wider">
@@ -637,7 +637,7 @@ export default function FitranaCalculator() {
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
             }}
           >
             <div className="flex items-center gap-3 mb-4">
@@ -711,7 +711,7 @@ export default function FitranaCalculator() {
               style={{
                 background: "var(--surface)",
                 borderColor: "var(--border)",
-                boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+                boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
               }}
             >
               <div className="flex items-center gap-3 mb-4">

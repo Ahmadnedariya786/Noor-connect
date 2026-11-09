@@ -216,7 +216,7 @@ export const ReciterPickerModal: React.FC<ReciterPickerModalProps> = ({
                       : 'bg-[var(--surface)] border-[var(--border)] hover:border-[var(--accent)]/40'
                   }`}
                   style={{
-                    boxShadow: isSelected ? 'inset 0 1px 0 var(--card-sheen)' : undefined,
+                    boxShadow: isSelected ? 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' : undefined,
                   }}
                 >
                   <div className="min-w-0 flex-1">

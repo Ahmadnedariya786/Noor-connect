@@ -151,7 +151,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
         style={{
           border: '1.5px solid var(--border)',
           background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 50%, var(--bg-base) 100%)',
-          boxShadow: '0 16px 40px rgba(0,0,0,0.65), inset 0 1px 0 var(--card-sheen)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.65), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         <svg

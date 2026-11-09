@@ -37,7 +37,7 @@ const PdfAudioPlayer: React.FC<PdfAudioPlayerProps> = ({
         style={{
           background: "var(--surface)",
           borderColor: "var(--border)",
-          boxShadow: "inset 0 1px 0 var(--card-sheen), 0 20px 50px rgba(0,0,0,0.5)",
+          boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 20px 50px rgba(0,0,0,0.5)",
           color: "var(--text-primary)",
         }}
       >

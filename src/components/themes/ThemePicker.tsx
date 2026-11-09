@@ -123,16 +123,20 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   style={{
                     background: theme.tokens['--surface'],
                     borderColor: theme.tokens['--border'],
-                    boxShadow: theme.tokens['--card-sheen'].startsWith('linear-gradient')
-                      ? '0 4px 14px rgba(0,0,0,0.35)'
+                    boxShadow: theme.tokens['--card-sheen-line']
+                      ? `inset 0 1px 0 ${theme.tokens['--card-sheen-line']}, 0 4px 14px rgba(0,0,0,0.35)`
                       : `inset 0 1px 0 ${theme.tokens['--card-sheen']}, 0 4px 14px rgba(0,0,0,0.35)`,
                   }}
                 >
-                  {/* Card Header Line (FIXED: NEXT to prevent ellipsis truncation at 360px) */}
+                  {/* Card Header Line (NEXT badge + countdown) */}
                   <div className="flex items-center justify-between mb-1 gap-1">
                     <span
-                      className="text-[8px] font-bold uppercase tracking-wider shrink-0"
-                      style={{ color: theme.tokens['--accent-text'] }}
+                      className="text-[7.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
+                        color: theme.tokens['--on-accent'],
+                        boxShadow: `0 1px 4px ${theme.tokens['--accent-glow']}`,
+                      }}
                     >
                       NEXT
                     </span>

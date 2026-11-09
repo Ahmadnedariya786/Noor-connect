@@ -745,7 +745,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                 background: 'var(--surface)',
                 borderColor: 'var(--border)',
                 backgroundImage: 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface))',
-                boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
               }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -790,7 +790,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* ── LIVE GOLD & SILVER MARKET RATES CARD (NO TEXT COLLISION) ── */}
             <div
               className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -889,7 +889,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* ── NISAB THRESHOLD SELECTOR CARD (NON-WRAPPING LAYOUT) ── */}
             <div
               className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5 whitespace-nowrap">
@@ -984,7 +984,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 1) Cash & Bank Balances */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1082,7 +1082,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 2) Gold (Jewelry, Coins & Bars) */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1200,7 +1200,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 3) Silver (Utensils, Coins & Bars) */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1299,7 +1299,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 4) Investments, Shares & Crypto */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1364,7 +1364,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 5) Business Inventory & Trade Goods */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1429,7 +1429,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 6) Other Zakatable Assets */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1494,7 +1494,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 7) Agricultural Produce (Optional Expandable Ushr Card) */}
             <div
               className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <button
                 type="button"
@@ -1604,7 +1604,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 8) Livestock (Optional Expandable An'am Card - Horizontally Aligned) */}
             <div
               className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
             >
               <button
                 type="button"
@@ -1717,7 +1717,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-rose-500/30 space-y-3 shadow-xs"
               style={{
-                boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+                boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                 backgroundImage: 'linear-gradient(135deg, color-mix(in srgb, var(--danger) 5%, var(--surface)), var(--surface))',
               }}
             >
@@ -1785,7 +1785,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             <div
               className="rounded-[22px] p-4.5 bg-[var(--surface)] border border-[var(--border)] space-y-4 shadow-md"
               style={{
-                boxShadow: '0 8px 32px -8px var(--accent-glow), inset 0 1px 0 var(--card-sheen)',
+                boxShadow: '0 8px 32px -8px var(--accent-glow), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                 borderWidth: '1.5px',
               }}
             >
@@ -2071,7 +2071,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                   <div
                     key={record.id}
                     className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-                    style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen)' }}
+                    style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

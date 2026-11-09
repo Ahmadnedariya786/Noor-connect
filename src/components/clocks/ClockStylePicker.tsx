@@ -91,8 +91,8 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
               style={{
                 borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
                 boxShadow: isSelected
-                  ? '0 0 16px var(--accent-glow), inset 0 1px 0 var(--card-sheen)'
-                  : 'inset 0 1px 0 var(--card-sheen)',
+                  ? '0 0 16px var(--accent-glow), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))'
+                  : 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
                 background: isSelected
                   ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
                   : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
@@ -104,7 +104,7 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                   <h3
                     className={cn(
                       "text-xs sm:text-sm font-bold tracking-tight leading-snug",
-                      isSelected ? "text-amber-400" : "text-[var(--text-primary)]"
+                      isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)]"
                     )}
                     style={{ color: isSelected ? 'var(--accent-text)' : undefined }}
                   >

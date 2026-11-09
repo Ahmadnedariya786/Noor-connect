@@ -155,7 +155,7 @@ const SurahRow = memo<SurahRowProps>(({ surah, index, isCurrent, isPlaying, avai
       style={{
         background: isCurrent ? 'var(--accent-soft)' : 'var(--surface)',
         borderColor: isCurrent ? 'var(--accent)' : 'var(--border)',
-        boxShadow: 'inset 0 1px 0 var(--card-sheen)',
+        boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         animationDelay: `${Math.min(index * 15, 240)}ms`,
       }}
     >

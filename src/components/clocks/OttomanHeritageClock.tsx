@@ -98,7 +98,7 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
         style={{
           border: '2px solid var(--border)',
           background: 'radial-gradient(circle at 50% 35%, var(--surface-2) 0%, var(--surface) 40%, var(--bg-base) 85%)',
-          boxShadow: '0 16px 40px rgba(0,0,0,0.7), inset 0 1px 0 var(--card-sheen)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.7), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
         }}
       >
         <svg

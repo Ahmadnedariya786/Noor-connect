@@ -364,7 +364,7 @@ export default function EidChecklist() {
               style={{
                 background: "var(--surface)",
                 borderColor: "var(--border)",
-                boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+                boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
               }}
             >
               <div className="relative z-10 space-y-6">
@@ -437,7 +437,7 @@ export default function EidChecklist() {
             style={{
               background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
               borderColor: "var(--border)",
-              boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
             }}
           >
             {/* Content */}
@@ -610,7 +610,7 @@ export default function EidChecklist() {
                             style={{
                               background: item.checked ? "var(--surface-2)" : "var(--surface)",
                               borderColor: "var(--border)",
-                              boxShadow: "inset 0 1px 0 var(--card-sheen)",
+                              boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))",
                             }}
                             onClick={() => handleCheckboxChange(item.id, !item.checked)}
                           >
@@ -681,7 +681,7 @@ export default function EidChecklist() {
                 style={{
                   background: "var(--surface)",
                   borderColor: "var(--border)",
-                  boxShadow: "inset 0 1px 0 var(--card-sheen), 0 10px 30px rgba(0,0,0,0.35)",
+                  boxShadow: "inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)",
                 }}
               >
                 <PartyPopper className="w-12 h-12" style={{ color: "var(--accent)" }} />

@@ -212,7 +212,7 @@ export function LocationSearch({ onLocationSelect, isLoading = false }: Location
         <div className="space-y-4 relative" ref={wrapperRef}>
           <div className="relative">
             <Input
-              placeholder="Search city (e.g. Delhi, Mumbai, London)"
+              placeholder="Search city or country..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
