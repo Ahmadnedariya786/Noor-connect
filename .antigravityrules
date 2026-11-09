@@ -4,7 +4,7 @@
 
 - End-users inside the mobile app UI must experience 0% friction, 0 password popups, and 0ms latency overhead.
 - Normal app updates (1-tap Check now, turbo 4-thread download, Install, and browser fallback on both Home Update Banner and Settings > About Noor Connect) and 100% of app features (Prayer calculations, Qibla, Quran, 17 Services, Themes, Clocks) work seamlessly without EVER asking for a key.
-- The `OWNER SECURITY VAULT` inside `Settings > About Noor Connect` is 100% invisible by default to regular users, accessible strictly via a secret 5-tap gesture on the `Version 2.2.1` badge within 3 seconds, and immediately returning to stealth mode upon vault lock or leaving the page.
+- The `OWNER SECURITY VAULT` inside `Settings > About Noor Connect` is 100% invisible by default to regular users, accessible strictly via a secret 5-tap gesture on the `Version 2.3.0` badge within 3 seconds, and immediately returning to stealth mode upon vault lock or leaving the page.
 - Developer & Admin tools inside the app (`Re-run permission onboarding`, `Clear` logs, `Test Capture`, and `Change Owner Secret Key`) remain strictly gated by the Owner Master Key when intentionally accessed.
 
 ## CODEBASE & AI-AGENT MODIFICATION LAYER LOCK

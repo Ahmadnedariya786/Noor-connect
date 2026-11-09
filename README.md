@@ -4,10 +4,10 @@
 
 # 🌙 Noor Connect
 ### Your Sovereign, Privacy-First Islamic Companion
-**Version 2.2.1 • Android & Modern Web • 100% Offline Fallback • Zero Trackers**
+**Version 2.3.0 • Android & Modern Web • 100% Offline Fallback • Zero Trackers**
 
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release: v2.2.1](https://img.shields.io/badge/Release-v2.2.1-emerald.svg)](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest)
+[![Release: v2.3.0](https://img.shields.io/badge/Release-v2.3.0-emerald.svg)](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest)
 [![Status: Production Stable](https://img.shields.io/badge/Status-Production%20Stable-gold.svg)](https://github.com/Ahmadnedariya786/Noor-connect)
 [![CodeQL: 0 Alerts](https://img.shields.io/badge/CodeQL-0%20Security%20Alerts-brightgreen.svg)](https://github.com/Ahmadnedariya786/Noor-connect/security/code-scanning)
 [![F-Droid Ready](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml)
@@ -16,11 +16,11 @@
 
 <p align="center">
   <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk">
-    <img src="https://img.shields.io/badge/📲%20Download%20Latest%20APK-v2.2.1%20(Direct)-D4AF37?style=for-the-badge&logo=android&logoColor=white" alt="Download Latest APK" height="42" />
+    <img src="https://img.shields.io/badge/📲%20Download%20Latest%20APK-v2.3.0%20(Direct)-D4AF37?style=for-the-badge&logo=android&logoColor=white" alt="Download Latest APK" height="42" />
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk">
-    <img src="https://img.shields.io/badge/📦%20Download%20Versioned%20APK-NoorConnect--v2.2.1.apk-14213D?style=for-the-badge&logo=github&logoColor=white" alt="Download Versioned APK" height="42" />
+  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk">
+    <img src="https://img.shields.io/badge/📦%20Download%20Versioned%20APK-NoorConnect--v2.3.0.apk-14213D?style=for-the-badge&logo=github&logoColor=white" alt="Download Versioned APK" height="42" />
   </a>
 </p>
 
@@ -32,7 +32,7 @@
 
 - [🌙 Overview](#-overview)
 - [📲 Direct Downloads & Installation](#-direct-downloads--installation)
-- [📱 Visual Showcase (v2.2.1 Screenshots)](#-visual-showcase-v221-screenshots)
+- [📱 Visual Showcase (v2.3.0 Screenshots)](#-visual-showcase-v230-screenshots)
 - [🌟 Key Subsystems & Highlights](#-key-subsystems--highlights)
   - [📖 Quran Mushaf & Audio Suite](#-quran-mushaf--audio-suite)
   - [💰 Shariah-Compliant Zakat & Nisab Calculator](#-shariah-compliant-zakat--nisab-calculator)
@@ -65,7 +65,7 @@ Unlike conventional Islamic mobile apps that monetize spiritual habits or sell g
 | Asset | Target | Size | Direct Link | Checksum |
 | :--- | :--- | :--- | :--- | :--- |
 | **noor-connect-nightly.apk** | Android 8.0+ (ARM64 / ARMv7 / x86_64) | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk.sha256) |
-| **NoorConnect-v2.2.1.apk** | Official Stable Release Asset | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk.sha256) |
+| **NoorConnect-v2.3.0.apk** | Official Stable Release Asset | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk.sha256) |
 | **version.json** | Fast In-App Auto-Updater Manifest | <1 KB | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/version.json) | — |
 
 ### Installing the APK on Android
@@ -76,9 +76,9 @@ Unlike conventional Islamic mobile apps that monetize spiritual habits or sell g
 
 ---
 
-## 📱 Visual Showcase (v2.2.1 Screenshots)
+## 📱 Visual Showcase (v2.3.0 Screenshots)
 
-Captured directly from the live v2.2.1 production build across all **5 Royal Themes**:
+Captured directly from the live v2.3.0 production build across all **6 Royal Themes**:
 
 <table>
   <tr>

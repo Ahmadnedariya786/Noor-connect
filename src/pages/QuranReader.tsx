@@ -13,6 +13,11 @@ import {
   HelpCircle,
   Copy,
   Share2,
+  Sparkles,
+  ScrollText,
+  Moon,
+  Image as ImageIcon,
+  LayoutGrid,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PlaybackOptionsDrawer } from '@/components/Quran/PlaybackOptionsDrawer';
@@ -726,24 +731,26 @@ export default function QuranReader() {
                 <button
                   type="button"
                   onClick={() => setReaderViewMode('mushaf')}
-                  className={`flex items-center gap-1 py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
                     readerViewMode === 'mushaf'
                       ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <span>📖 Mushaf</span>
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Mushaf</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setReaderViewMode('card')}
-                  className={`flex items-center gap-1 py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
                     readerViewMode === 'card'
                       ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <span>🗂️ Cards</span>
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Cards</span>
                 </button>
               </div>
 
@@ -751,25 +758,26 @@ export default function QuranReader() {
                 /* 4 Surface modes */
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
                   {[
-                    { mode: 'jewel' as const, icon: '✦', label: uiStrings.jewel },
-                    { mode: 'parchment' as const, icon: '📜', label: uiStrings.paper },
-                    { mode: 'night' as const, icon: '🌙', label: uiStrings.night },
-                    { mode: 'classic' as const, icon: '🖼', label: uiStrings.scan },
+                    { mode: 'jewel' as const, icon: Sparkles, label: uiStrings.jewel },
+                    { mode: 'parchment' as const, icon: ScrollText, label: uiStrings.paper },
+                    { mode: 'night' as const, icon: Moon, label: uiStrings.night },
+                    { mode: 'classic' as const, icon: ImageIcon, label: uiStrings.scan },
                   ].map((item) => {
+                    const IconComp = item.icon;
                     const isActive = surfaceMode === item.mode;
                     return (
                       <button
                         key={item.mode}
                         type="button"
                         onClick={() => handleSurfaceChange(item.mode)}
-                        className={`flex items-center justify-center gap-1 py-1 px-2 rounded-xl text-xs font-bold transition-all select-none ${
+                        className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-xl text-xs font-bold transition-all select-none ${
                           isActive
                             ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                             : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]'
                         }`}
                         title={item.label}
                       >
-                        <span className="text-[11px] leading-none">{item.icon}</span>
+                        <IconComp className="w-3.5 h-3.5 shrink-0" />
                         <span className="hidden sm:inline">{item.label}</span>
                       </button>
                     );

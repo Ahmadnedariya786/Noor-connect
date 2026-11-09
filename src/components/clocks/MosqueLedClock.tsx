@@ -26,7 +26,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
 
   // Compute live countdown string
   const countdownText = useMemo(() => {
-    if (isStaticPreview) return 'IN 2h 22m';
+    if (isStaticPreview) return 'IN 2h 15m';
     if (!nextPrayer?.targetTime) return 'APPROACHING';
 
     const diff = nextPrayer.targetTime.getTime() - now.getTime();
@@ -74,7 +74,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
           className={cn(
             "w-full relative overflow-hidden flex flex-col justify-between",
             isStaticPreview
-              ? "p-1.5 rounded-lg"
+              ? "px-1.5 py-1 rounded-lg"
               : "p-4 sm:p-5 rounded-[16px]"
           )}
           style={{
@@ -203,7 +203,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             className={cn(
               "relative z-10 w-full flex items-center justify-between font-mono font-bold",
               isStaticPreview
-                ? "text-[0.65rem] mt-1 pt-1 tracking-normal"
+                ? "text-[0.55rem] mt-1 pt-1 tracking-tight px-0.5"
                 : "text-[10px] sm:text-xs mt-2 pt-2 tracking-wider"
             )}
             style={{ borderTop: '1px solid var(--border)' }}
@@ -212,12 +212,15 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             <div
               className={cn(
                 "uppercase flex items-center shrink-0",
-                isStaticPreview ? "gap-1" : "gap-1.5 truncate max-w-[55%]"
+                isStaticPreview ? "gap-0.5 text-[0.55rem]" : "gap-1.5 truncate max-w-[55%]"
               )}
               style={{ color: 'var(--text-secondary)' }}
             >
               <span
-                className="w-1.5 h-1.5 rounded-full inline-block shrink-0"
+                className={cn(
+                  "rounded-full inline-block shrink-0",
+                  isStaticPreview ? "w-1 h-1" : "w-1.5 h-1.5"
+                )}
                 style={{
                   background: 'var(--accent)',
                   boxShadow: '0 0 6px var(--accent-glow)',
@@ -232,7 +235,7 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
             <span
               className={cn(
                 "font-black shrink-0 text-right whitespace-nowrap",
-                isStaticPreview ? "text-[0.65rem] ml-1" : "ml-2"
+                isStaticPreview ? "text-[0.55rem] ml-0.5" : "ml-2"
               )}
               style={{
                 color: 'var(--accent-text)',

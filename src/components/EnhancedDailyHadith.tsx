@@ -596,10 +596,10 @@ export function EnhancedDailyHadith() {
         </div>
 
         {/* Translation Section */}
-        <div className={`space-y-2 transition-all duration-300 ${isAnimating ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}`}>
+        <div className={`space-y-2 transition-opacity duration-150 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
           <p
             dir={isRtl ? "rtl" : "ltr"}
-            className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text transition-all duration-300 bidi-plaintext ${
+            className={`text-sm sm:text-[15px] leading-relaxed text-[var(--text-primary)] font-normal break-words select-text bidi-plaintext ${
               contentLang === 'ur' ? "font-urdu text-right leading-[2.35] text-base" : isRtl ? "font-arabic text-right leading-[2.1]" : ""
             } ${!isExpanded && isEnglishLong ? "line-clamp-3" : ""}`}
             style={{ unicodeBidi: 'plaintext' }}

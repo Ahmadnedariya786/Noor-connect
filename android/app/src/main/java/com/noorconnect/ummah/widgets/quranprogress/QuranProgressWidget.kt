@@ -96,8 +96,8 @@ class QuranProgressWidget : AppWidgetProvider() {
                     views.setTextColor(R.id.widget_goal_label, subCol)
                 } catch (_: Throwable) {}
 
-                // ─── 4. Font Scaling ───
-                val scaledTitle = (15f * style.fontScale / 100f).coerceIn(12f, 20f)
+                // ─── 4. Font Scaling (Auto-fit so Last read never clips at 4x2) ───
+                val scaledTitle = (13f * style.fontScale / 100f).coerceIn(10f, 16f)
                 views.setTextViewTextSize(R.id.widget_last_read, TypedValue.COMPLEX_UNIT_SP, scaledTitle)
 
                 // ─── 5. Stale data badge (permanently gone) ───

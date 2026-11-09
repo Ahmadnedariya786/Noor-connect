@@ -298,7 +298,7 @@ function PremiumDashboardInner({
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden"
+      className="min-h-screen flex flex-col bg-background text-foreground relative overflow-x-hidden"
     >
       {/* ── Ambient Top Radial Aura across all 6 themes ── */}
       <div

@@ -133,14 +133,14 @@ jobs:
             "commit": "${{ github.sha }}",
             "sha_short": "$(echo ${{ github.sha }} | cut -c1-7)",
             "timestamp": "$BUILD_TIME",
-            "version": "2.2.1"
+            "version": "2.3.0"
           }
           EOF
 
           # Create version.json manifest asset for unlimited rate-limit fallback
           cat <<EOF > version.json
           {
-            "version": "2.2.1",
+            "version": "2.3.0",
             "commit": "${{ github.sha }}",
             "shortCommit": "$(echo ${{ github.sha }} | cut -c1-7)",
             "builtAt": "$BUILD_TIME",
@@ -159,49 +159,49 @@ jobs:
           mkdir -p android/app/build/outputs/apk/release
           cp "$APK_FILE" android/app/build/outputs/apk/release/app-release.apk
           cp "$APK_FILE" noor-connect-nightly.apk
-          cp "$APK_FILE" NoorConnect-v2.2.1.apk
+          cp "$APK_FILE" NoorConnect-v2.3.0.apk
 
           sha256sum noor-connect-nightly.apk > noor-connect-nightly.apk.sha256
-          sha256sum NoorConnect-v2.2.1.apk > NoorConnect-v2.2.1.apk.sha256
+          sha256sum NoorConnect-v2.3.0.apk > NoorConnect-v2.3.0.apk.sha256
 
           FILE_SIZE=$(ls -lh noor-connect-nightly.apk | awk '{print $5}')
           echo "size=$FILE_SIZE" >> $GITHUB_OUTPUT
-          echo "Prepared noor-connect-nightly.apk and NoorConnect-v2.2.1.apk ($FILE_SIZE)"
+          echo "Prepared noor-connect-nightly.apk and NoorConnect-v2.3.0.apk ($FILE_SIZE)"
 
       - name: Publish Official GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat <<'EOF' > release-notes.md
-          ### 🌙 Noor Connect v2.2.1 — Official Latest Release
+          ### 🌙 Noor Connect v2.3.0 — Official Latest Release
 
           **Noor Connect** is a privacy-first Islamic companion for Android & Web with 100% offline fallback and zero data tracking.
 
           #### 📦 Release Assets
           | Asset | Description | Direct Download |
           | :--- | :--- | :--- |
-          | `NoorConnect-v2.2.1.apk` | Official Versioned Release APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk)** |
+          | `NoorConnect-v2.3.0.apk` | Official Versioned Release APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk)** |
           | `noor-connect-nightly.apk` | Fast Direct In-App Auto-Update APK | **[Download APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk)** |
-          | `NoorConnect-v2.2.1.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.2.1.apk.sha256) |
+          | `NoorConnect-v2.3.0.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk.sha256) |
           | `noor-connect-nightly.apk.sha256` | SHA-256 Integrity Verification | [View Checksum](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk.sha256) |
           | `version.json` | Live In-App Update Manifest | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/version.json) |
           | `build-info.json` | Continuous Integration Build Info | [View Info](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/build-info.json) |
 
-          - **Version:** `2.2.1`
+          - **Version:** `2.3.0`
           - **Commit SHA:** `${{ github.sha }}` (`${{ steps.prep.outputs.sha_short }}`)
           - **Branch:** `${{ github.ref_name }}`
           - **Build Timestamp (UTC):** `${{ steps.prep.outputs.timestamp }}`
           - **APK Package Size:** `${{ steps.prep.outputs.size }}`
 
-          #### 🌟 Highlights in v2.2.1
-          - **Quran Mushaf Engine:** 15-line Madani & 7-line IndoPak Quran, interactive word-by-word Tajweed, Surah Ar-Rahman / Al-Kahf / Al-Mulk / Al-Waqi'ah layout alignments, and 47 authentic reciters.
-          - **Ultra-Smart Zakat & Nisab Calculator:** Live gold (XAU) & silver (XAG) market rates across 24K, 22K, 21K, and 18K purity, 8 wealth categories, and 1-page A4 PDF export with native sharing.
-          - **Audio & Tilawah Suite:** In-app audio caching, multi-language Tafsir (Urdu in Jameel Noori Nastaliq, English, Gujarati, Hindi, Arabic, Bengali, Turkish, Russian, French) with offline packs.
-          - **6 Dual-Tone Royal Themes:** Oxford Gold, Haramain Noir, Imperial Violet, Burgundy Velvet, Desert Scroll, and Royal Sapphire.
-          - **Security & Privacy:** Zero-user-impact stealth owner vault and 0 CodeQL security alerts.
+          #### 🌟 Highlights in v2.3.0
+          - **6 Dual-Tone Royal Themes & 5 Logo Editions:** Oxford Gold, Haramain Noir, Imperial Violet, Burgundy Velvet, Desert Scroll, and Royal Sapphire with complete 17 root CSS tokens.
+          - **Smart Home Screen & Top Qaza Reminder:** Persistent top Qaza makeup banner, collapsible Nafl accordion, Makruh Waqt engine, and Phase 2 Worship & Fasting Journal with 3-month consistency heatmap.
+          - **Phase 3 Quran & Cloud E-Books Suite:** Knuth-Plass DP balanced 7L/13L/15L Mushaf with 6-page memory prefetch, Smart Khatmah planner + Juz hub, 47 authentic reciters, 14+ Tafsir sources, and 5-Volume Tafseer Anwar-ul-Bayan Cloud CDN downloader.
+          - **Home Screen Widgets & Security:** 1-tap pin widgets (including interactive Tasbeeh widget), SHA-256 Owner Security Vault, and 8/8 Deep X-Ray Diagnostics on com.noorconnect.ummah.
+          - **Visual Consistency & Polish:** 20-point visual sweep with sequential page fade transitions, themed custom bottom-sheet selectors for Zakat Calculator, 360px viewport zero-truncation guarantee, and full Urdu, Gujarati, & Hindi localization.
           EOF
 
-          RELEASE_TITLE="Noor Connect v2.2.1 — Latest Official APK (Build ${{ steps.prep.outputs.sha_short }})"
+          RELEASE_TITLE="Noor Connect v2.3.0 — Latest Official APK (Build ${{ steps.prep.outputs.sha_short }})"
 
           if gh release view nightly >/dev/null 2>&1; then
             echo "Updating existing 'nightly' release metadata..."
@@ -213,8 +213,8 @@ jobs:
 
           echo "Uploading release assets with --clobber..."
           gh release upload nightly \
-            NoorConnect-v2.2.1.apk \
-            NoorConnect-v2.2.1.apk.sha256 \
+            NoorConnect-v2.3.0.apk \
+            NoorConnect-v2.3.0.apk.sha256 \
             noor-connect-nightly.apk \
             noor-connect-nightly.apk.sha256 \
             build-info.json \

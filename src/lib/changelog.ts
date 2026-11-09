@@ -31,6 +31,18 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
+    version: '2.3.0',
+    date: '2026-11-09',
+    title: 'Ultimate Combined Edition — 6 Royal Themes, Smart Home, Mushaf DP & Cloud E-Books',
+    changes: [
+      { type: 'feature', description: '6 Dual-Tone Royal Themes & 5 Logo Editions: Oxford Gold, Haramain Noir, Imperial Violet, Burgundy Velvet, Desert Scroll, and Royal Sapphire.' },
+      { type: 'feature', description: 'Smart Home Screen & Top Qaza Reminder: Persistent top Qaza makeup banner, collapsible Nafl accordion, Makruh Waqt engine, and Phase 2 Worship & Fasting Journal with 3-month consistency heatmap.' },
+      { type: 'feature', description: 'Phase 3 Quran & Cloud E-Books Suite: Knuth-Plass DP balanced 7L/13L/15L Mushaf with 6-page memory prefetch, Smart Khatmah planner + Juz hub, 47 authentic reciters, 14+ Tafsir sources, and 5-Volume Tafseer Anwar-ul-Bayan Cloud CDN downloader.' },
+      { type: 'feature', description: 'Home Screen Widgets & Security: 1-tap pin widgets (including interactive Tasbeeh widget), SHA-256 Owner Security Vault, and 8/8 Deep X-Ray Diagnostics on com.noorconnect.ummah.' },
+      { type: 'improvement', description: 'Visual Consistency & Polish: 20-point visual sweep with sequential page fade transitions, themed custom bottom-sheet selectors for Zakat Calculator, 360px viewport zero-truncation guarantee, and full Urdu, Gujarati, & Hindi localization.' },
+    ],
+  },
+  {
     version: '2.2.1',
     date: '2026-10-27',
     title: 'Phase 3 & Phase 2 Polish — Tilawah, Hifz, Heatmaps & Dark-Jewel Themes',

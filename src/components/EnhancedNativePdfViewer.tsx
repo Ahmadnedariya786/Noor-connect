@@ -164,9 +164,15 @@ const EnhancedPdfHeader = ({
         {/* Layout Toggle */}
         <Button
           size="icon"
-          variant={isVertical ? "secondary" : "ghost"}
+          variant={isVertical ? "default" : "ghost"}
           onClick={toggleLayout}
           title={isVertical ? "Switch to Page View" : "Switch to Vertical Scroll"}
+          className={isVertical ? "border border-[var(--border)] shadow-sm text-[var(--on-accent)]" : ""}
+          style={isVertical ? {
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+            color: 'var(--on-accent)',
+            borderColor: 'var(--border)',
+          } : undefined}
         >
           <Scroll className="w-4 h-4" />
         </Button>

@@ -127,17 +127,19 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
   // Nisab Choice: Silver (Recommended) vs Gold
   const [nisabChoice, setNisabChoice] = useState<'silver' | 'gold'>('silver');
 
-  // Modals
+  // Modals & Bottom Sheets
   const [showShariahRulesModal, setShowShariahRulesModal] = useState<boolean>(false);
   const [showOverrideModal, setShowOverrideModal] = useState<boolean>(false);
+  const [showCurrencySheet, setShowCurrencySheet] = useState<boolean>(false);
+  const [showPuritySheet, setShowPuritySheet] = useState<boolean>(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   // Override Form State
   const [overrideGoldGram, setOverrideGoldGram] = useState<string>('');
   const [overrideSilverGram, setOverrideSilverGram] = useState<string>('');
 
-  // Lock body scroll when either modal is open
-  useBodyScrollLock(showShariahRulesModal || showOverrideModal);
+  // Lock body scroll when either modal or sheet is open
+  useBodyScrollLock(showShariahRulesModal || showOverrideModal || showCurrencySheet || showPuritySheet);
 
   // Wealth Inputs
   // 1. Cash & Bank
@@ -678,20 +680,19 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             </h1>
           </div>
 
-          {/* Top Right: Compact Currency selector pill */}
+          {/* Top Right: Themed Currency Selector Bottom-Sheet Trigger */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <select
-              value={activeCurrency}
-              onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-xs font-bold text-[var(--accent-text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer shrink-0 whitespace-nowrap"
-              style={{ padding: '6px 10px', fontSize: '0.76rem' }}
+            <button
+              type="button"
+              onClick={() => setShowCurrencySheet(true)}
+              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-xs font-bold text-[var(--accent-text)] hover:border-[var(--accent)] cursor-pointer shrink-0 whitespace-nowrap flex items-center gap-1.5 active:scale-95 shadow-xs transition-all"
+              style={{ padding: '6px 11px', fontSize: '0.76rem' }}
+              aria-label={`Selected currency: ${activeCurrency}`}
             >
-              {SUPPORTED_CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.flag} {c.code} ({c.symbol})
-                </option>
-              ))}
-            </select>
+              <span className="text-sm leading-none">{SUPPORTED_CURRENCIES.find((c) => c.code === activeCurrency)?.flag || '🌐'}</span>
+              <span>{activeCurrency}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-80" />
+            </button>
           </div>
         </div>
 
@@ -1154,19 +1155,17 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
 
                   {/* Purity Karat */}
                   {goldInputMode !== 'value' && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-[10px] font-bold uppercase text-[var(--text-secondary)] whitespace-nowrap">{ui.purityLabel}</span>
-                      <select
-                        value={goldKarat}
-                        onChange={(e) => setGoldKarat(Number(e.target.value))}
-                        className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2 py-1 text-xs font-bold text-[var(--accent-text)] cursor-pointer"
+                      <button
+                        type="button"
+                        onClick={() => setShowPuritySheet(true)}
+                        className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-2.5 py-1 text-xs font-bold text-[var(--accent-text)] hover:border-[var(--accent)] cursor-pointer flex items-center gap-1 active:scale-95 shadow-xs transition-all"
+                        aria-label={`Gold Purity: ${GOLD_KARAT_MULTIPLIERS[goldKarat]?.label || `${goldKarat}K`}`}
                       >
-                        {Object.entries(GOLD_KARAT_MULTIPLIERS).map(([karat, info]) => (
-                          <option key={karat} value={karat}>
-                            {info.label}
-                          </option>
-                        ))}
-                      </select>
+                        <span>{GOLD_KARAT_MULTIPLIERS[goldKarat]?.label || `${goldKarat}K`}</span>
+                        <ChevronDown className="w-3 h-3 text-[var(--text-secondary)] opacity-80" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -2314,6 +2313,158 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                   Apply Override
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* BOTTOM SHEET 1: THEMED CURRENCY SELECTOR                             */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {showCurrencySheet && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setShowCurrencySheet(false)}
+        >
+          <div
+            className="w-full max-w-md bg-[var(--bg-elev)] border-t sm:border border-[var(--border)] rounded-t-[28px] sm:rounded-[28px] flex flex-col shadow-2xl max-h-[82vh] overflow-hidden"
+            style={{ boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.45)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
+                  <Coins className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">
+                  Select Currency
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCurrencySheet(false)}
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+                aria-label="Close currency sheet"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* List */}
+            <div className="p-3 overflow-y-auto space-y-1.5 max-h-[60vh]">
+              {SUPPORTED_CURRENCIES.map((c) => {
+                const isSelected = activeCurrency === c.code;
+                return (
+                  <button
+                    key={c.code}
+                    type="button"
+                    onClick={() => {
+                      handleCurrencyChange(c.code);
+                      setShowCurrencySheet(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all border text-left active:scale-[0.99] ${
+                      isSelected
+                        ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent-text)] ring-1 ring-[var(--accent)]/30'
+                        : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)]/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-xl leading-none">{c.flag}</span>
+                      <div>
+                        <div className="font-bold text-xs flex items-center gap-1.5">
+                          <span>{c.code}</span>
+                          <span className="text-[11px] text-[var(--text-secondary)]">({c.symbol})</span>
+                        </div>
+                        <div className="text-[10px] text-[var(--text-secondary)] font-medium">
+                          {c.name}
+                        </div>
+                      </div>
+                    </div>
+                    {isSelected ? (
+                      <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center shrink-0 shadow-sm">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </span>
+                    ) : (
+                      <span className="w-5 h-5 rounded-full border border-[var(--border)] shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* BOTTOM SHEET 2: THEMED GOLD PURITY SELECTOR                          */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {showPuritySheet && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setShowPuritySheet(false)}
+        >
+          <div
+            className="w-full max-w-md bg-[var(--bg-elev)] border-t sm:border border-[var(--border)] rounded-t-[28px] sm:rounded-[28px] flex flex-col shadow-2xl max-h-[75vh] overflow-hidden"
+            style={{ boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.45)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
+                  <Scale className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">
+                  {ui.purityLabel || 'Gold Purity (Karat)'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPuritySheet(false)}
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+                aria-label="Close purity sheet"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* List */}
+            <div className="p-3 overflow-y-auto space-y-1.5 max-h-[55vh]">
+              {Object.entries(GOLD_KARAT_MULTIPLIERS).map(([karatStr, info]) => {
+                const karatNum = Number(karatStr);
+                const isSelected = goldKarat === karatNum;
+                return (
+                  <button
+                    key={karatStr}
+                    type="button"
+                    onClick={() => {
+                      setGoldKarat(karatNum);
+                      setShowPuritySheet(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all border text-left active:scale-[0.99] ${
+                      isSelected
+                        ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent-text)] ring-1 ring-[var(--accent)]/30'
+                        : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)]/40'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-xs text-[var(--text-primary)]">
+                        {info.label}
+                      </div>
+                      <div className="text-[10px] text-[var(--text-secondary)] font-medium">
+                        Standard multiplier: {(info.factor * 100).toFixed(1)}% pure gold content
+                      </div>
+                    </div>
+                    {isSelected ? (
+                      <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center shrink-0 shadow-sm">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </span>
+                    ) : (
+                      <span className="w-5 h-5 rounded-full border border-[var(--border)] shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

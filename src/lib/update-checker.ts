@@ -625,7 +625,7 @@ async function fetchCommitFromVersionManifest(signal: AbortSignal): Promise<Nigh
 
         return {
           tagName: 'nightly',
-          releaseName: `Nightly Build v${data.version || '2.2.1'}`,
+          releaseName: `Nightly Build v${data.version || '2.3.0'}`,
           publishedAt: builtAt,
           latestAssetUploadedAt: builtAt,
           commitSha,

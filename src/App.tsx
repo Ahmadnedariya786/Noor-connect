@@ -244,8 +244,9 @@ function AppRoutes() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.11, ease: "easeInOut" }}
-            className="w-full h-full"
+            transition={{ duration: 0.12, ease: "easeOut" }}
+            className="w-full h-full page-transition-wrapper"
+            style={{ backgroundColor: 'var(--bg-base)' }}
           >
             <Routes location={location}>
               <Route path="/" element={<Dashboard />} />
@@ -318,7 +319,7 @@ function AppRoutes() {
             </Routes>
           </m.div>
         ) : (
-          <div key={location.pathname} className="w-full h-full">
+          <div key={location.pathname} className="w-full h-full page-transition-wrapper" style={{ backgroundColor: 'var(--bg-base)' }}>
             <Routes location={location}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />

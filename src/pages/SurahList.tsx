@@ -1142,12 +1142,18 @@ export default function SurahList() {
                   <div className="w-7 h-7 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center shrink-0">
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] truncate">
-                      Spiritual Hasanat Counter (حسنة ×10)
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="font-bold uppercase tracking-wider text-[var(--accent-text)] leading-tight"
+                      style={{ fontSize: '0.66rem', wordBreak: 'break-word' }}
+                    >
+                      Spiritual Hasanat
                     </div>
-                    <div className="text-[11px] font-semibold text-[var(--text-primary)] truncate">
-                      ~{((khatmahPlan?.currentPage || lastRead?.page || 1) * 562).toLocaleString()} Letters Read (حروف)
+                    <div
+                      className="font-semibold text-[var(--text-primary)] leading-tight mt-0.5"
+                      style={{ fontSize: '0.66rem', wordBreak: 'break-word' }}
+                    >
+                      ~{((khatmahPlan?.currentPage || lastRead?.page || 1) * 562).toLocaleString()} Letters
                     </div>
                   </div>
                 </div>

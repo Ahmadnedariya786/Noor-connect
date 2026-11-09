@@ -894,7 +894,7 @@ public class MainActivity extends BridgeActivity {
                 conn.setConnectTimeout(20000);
                 conn.setReadTimeout(45000);
                 conn.setInstanceFollowRedirects(false);
-                conn.setRequestProperty("User-Agent", "NoorConnect-Android/2.2.1");
+                conn.setRequestProperty("User-Agent", "NoorConnect-Android/2.3.0");
 
                 if (request.getRequestHeaders() != null) {
                     for (Map.Entry<String, String> entry : request.getRequestHeaders().entrySet()) {

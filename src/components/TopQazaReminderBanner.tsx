@@ -141,20 +141,21 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
         boxShadow: '0 6px 20px rgba(0, 0, 0, 0.28), 0 0 14px var(--accent-glow)',
       }}
     >
-      {/* ── Row 1: Header + Quick Nav ── */}
+      {/* ── Row 1: Header + Quick Nav (Zero mid-title ellipsis) ── */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <span className="relative flex h-2 w-2 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
           </span>
           <span
-            className="truncate"
+            className="leading-tight"
             style={{
-              fontSize: '0.76rem',
+              fontSize: '0.74rem',
               fontWeight: 800,
               color: 'var(--accent-text)',
-              letterSpacing: '0.02em',
+              letterSpacing: '0.01em',
+              wordBreak: 'break-word',
             }}
           >
             🕌 QAZA REMINDER • {totalPendingQaza} Pending
@@ -168,14 +169,14 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
           style={{
             fontSize: '0.68rem',
             fontWeight: 800,
-            padding: '3px 9px',
+            padding: '3px 8px',
             borderRadius: '9999px',
             background: 'var(--accent)',
             color: 'var(--on-accent)',
             whiteSpace: 'nowrap',
           }}
         >
-          <span>Qaza Tracker</span>
+          <span>Tracker</span>
           <span className="text-[10px]">→</span>
         </button>
       </div>

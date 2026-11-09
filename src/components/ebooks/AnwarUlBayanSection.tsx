@@ -571,7 +571,15 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                         <Loader2 className="w-3 h-3 animate-spin" />
                         {dlState.percent}%
                       </span>
-                      <span className="text-[var(--text-secondary)]">
+                      <span
+                        className="text-[var(--text-secondary)]"
+                        style={{
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          fontVariantNumeric: 'tabular-nums',
+                          fontSize: '0.72rem',
+                        }}
+                      >
                         {formatBytes(dlState.loadedBytes)} / {formatBytes(dlState.totalBytes)}
                       </span>
                     </div>
@@ -803,7 +811,15 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           Downloading ({downloads[overviewVolume.id].percent}%)
                         </span>
-                        <span className="text-[var(--text-secondary)]">
+                        <span
+                          className="text-[var(--text-secondary)]"
+                          style={{
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            fontVariantNumeric: 'tabular-nums',
+                            fontSize: '0.72rem',
+                          }}
+                        >
                           {formatBytes(downloads[overviewVolume.id].loadedBytes)} /{' '}
                           {formatBytes(downloads[overviewVolume.id].totalBytes)}
                         </span>

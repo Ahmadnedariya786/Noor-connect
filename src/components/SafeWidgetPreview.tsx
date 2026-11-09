@@ -254,10 +254,10 @@ const QuranProgressPreview = () => (
         </svg>
         <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[var(--text-primary)]">42%</div>
       </div>
-      <div>
-        <p className="text-sm font-bold text-foreground">48 / 114</p>
-        <p className="text-xs text-muted-foreground">Surahs completed</p>
-        <p className="text-xs text-muted-foreground">2,840 / 6,236 ayahs</p>
+      <div className="min-w-0">
+        <p className="font-bold text-[var(--text-primary)] leading-tight whitespace-normal break-words" style={{ fontSize: '0.66rem' }}>Last read: Al-Kahf</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">Surahs: 48 / 114 (42%)</p>
+        <p className="text-[10px] text-muted-foreground">Juz 16 • Page 302</p>
       </div>
     </div>
   </div>

@@ -73,6 +73,8 @@ interface RemediesI18n {
   copiedToast: string;
   savedFavoriteToast: string;
   removedFavoriteToast: string;
+  saved: string;
+  noMoodsMatch: string;
   moods: Record<string, string>;
 }
 
@@ -98,6 +100,8 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
     copiedToast: "Copied to clipboard",
     savedFavoriteToast: "Saved to favorites",
     removedFavoriteToast: "Removed from favorites",
+    saved: "Saved",
+    noMoodsMatch: "No moods match your search. Try a different term.",
     moods: {
       anxious: "Anxious",
       sad: "Sad",
@@ -134,6 +138,8 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
     copiedToast: "تم النسخ إلى الحافظة",
     savedFavoriteToast: "تم الحفظ في المفضلة",
     removedFavoriteToast: "تمت الإزالة من المفضلة",
+    saved: "المحفوظات",
+    noMoodsMatch: "لم يتم العثور على مشاعر مطابقة لبحثك.",
     moods: {
       anxious: "قلق",
       sad: "حزين",
@@ -170,6 +176,8 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
     copiedToast: "کلپ بورڈ پر کاپی ہو گیا",
     savedFavoriteToast: "پسندیدہ میں محفوظ کر لیا گیا",
     removedFavoriteToast: "پسندیدہ سے ہٹا دیا گیا",
+    saved: "محفوظ شدہ",
+    noMoodsMatch: "آپ کی تلاش کے مطابق کوئی موڈ نہیں ملا۔",
     moods: {
       anxious: "بے چین",
       sad: "اداس",
@@ -206,6 +214,8 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
     copiedToast: "ક્લિપબોર્ડ પર કૉપિ થઈ ગયું",
     savedFavoriteToast: "મનપસંદમાં સાચવ્યું",
     removedFavoriteToast: "મનપસંદમાંથી હટાવ્યું",
+    saved: "સાચવેલા",
+    noMoodsMatch: "તમારી શોધ સાથે કોઈ મૂડ મેળ ખાતો નથી.",
     moods: {
       anxious: "ચિંતિત",
       sad: "ઉદાસ",
@@ -242,6 +252,8 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
     copiedToast: "क्लिपबोर्ड पर कॉपी हो गया",
     savedFavoriteToast: "पसंदीदा में सहेजा गया",
     removedFavoriteToast: "पसंदीदा से हटाया गया",
+    saved: "सहेजे गए",
+    noMoodsMatch: "आपकी खोज से कोई मूड मेल नहीं खाता।",
     moods: {
       anxious: "चिंतित",
       sad: "उदास",
@@ -278,6 +290,8 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
     copiedToast: "ক্লিপবোর্ডে কপি করা হয়েছে",
     savedFavoriteToast: "পছন্দতালিকায় সংরক্ষিত",
     removedFavoriteToast: "পছন্দতালিকা থেকে অপসারিত",
+    saved: "সংরক্ষিত",
+    noMoodsMatch: "কোনো অনুভূতি মিলছে না। অন্য শব্দ চেষ্টা করুন।",
     moods: {
       anxious: "উদ্বিগ্ন",
       sad: "দুঃখিত",
@@ -313,6 +327,8 @@ const REMEDIES_I18N: Record<string, RemediesI18n> = {
     copiedToast: "Скопировано в буфер",
     savedFavoriteToast: "Добавлено в избранное",
     removedFavoriteToast: "Удалено из избранного",
+    saved: "Сохранённые",
+    noMoodsMatch: "Ничего не найдено. Попробуйте другой запрос.",
     moods: {
       anxious: "Тревога",
       sad: "Грусть",
@@ -593,7 +609,7 @@ export default function IslamicRemedies() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-32">
+      <div className={`min-h-screen bg-background pb-32 ${contentLang === 'ur' ? 'font-urdu' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
         <AppBar
           title={strings.title}
           showBack={true}
@@ -716,13 +732,13 @@ export default function IslamicRemedies() {
 
             {filteredMoods.length === 0 && (
               <div className="text-center py-8 text-sm text-muted-foreground">
-                No moods match your search. Try a different term.
+                {strings.noMoodsMatch}
               </div>
             )}
 
             <div className="flex gap-3 justify-center pt-1">
               <Button variant="ghost" size="sm" onClick={() => navigate("/remedy-favorites")} className="rounded-full text-xs gap-2">
-                <Heart className="w-3.5 h-3.5" /> Saved ({favorites.length})
+                <Heart className="w-3.5 h-3.5" /> {strings.saved} ({favorites.length})
               </Button>
             </div>
           </div>

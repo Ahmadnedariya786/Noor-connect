@@ -380,11 +380,11 @@ interface StatCardProps {
 
 const StatCard = memo(function StatCard({ label, value, icon }: StatCardProps) {
   return (
-    <Card className="p-3 border-border/40 flex items-center gap-3">
+    <Card className="p-3 border-border/40 flex items-center gap-2.5">
       <div className="w-9 h-9 rounded-xl bg-[#C9860A]/10 flex items-center justify-center shrink-0">{icon}</div>
-      <div className="min-w-0">
-        <div className="text-lg font-bold leading-tight tabular-nums truncate">{value}</div>
-        <div className="text-[10px] text-muted-foreground truncate">{label}</div>
+      <div className="min-w-0 flex-1">
+        <div className="text-base sm:text-lg font-bold leading-tight tabular-nums truncate">{value}</div>
+        <div className="text-[10px] text-muted-foreground leading-tight break-words">{label}</div>
       </div>
     </Card>
   );
@@ -927,12 +927,12 @@ export default function HabitTrackerPage() {
             icon={<Target className="w-4 h-4 text-blue-500" />}
           />
           <StatCard
-            label="30-day consistency"
+            label="30d Consistency"
             value={`${totals.rate}%`}
             icon={<TrendingUp className="w-4 h-4 text-[var(--accent)]" />}
           />
           <StatCard
-            label="Deeds · last 30 days"
+            label="Deeds • 30d"
             value={String(totals.deeds30)}
             icon={<Sparkles className="w-4 h-4 text-[#C9860A]" />}
           />

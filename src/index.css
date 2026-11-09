@@ -684,10 +684,42 @@
     }
   }
 
-  /* Enhanced Reduced Motion Support */
-  :focus-visible {
-    outline: none;
-    box-shadow: var(--micro-focus-glow);
+  /* Item 2: Themed Focus Ring & Tap Highlight */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible,
+  *:focus-visible {
+    outline: 1px solid var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--accent-glow) !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  /* Item 1: Sequential Page/Tab Transition (Zero Simultaneous Ghosting) */
+  .page-transition-wrapper {
+    width: 100%;
+    min-height: 100%;
+    background-color: var(--bg-base);
+  }
+
+  /* Item 17: Unified App-Wide Settings Value Chip */
+  .settings-value-chip {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    max-width: 45% !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    padding: 4px 11px !important;
+    border-radius: 9999px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: var(--surface-2) !important;
+    color: var(--accent-text) !important;
+    border: 1px solid var(--border) !important;
   }
 
   /* Enhanced Reduced Motion Support */

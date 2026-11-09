@@ -21,6 +21,349 @@ const FONT_LEVELS = [
   { arabic: "2.05rem", translation: "1.10rem" },
 ];
 
+interface DuasI18n {
+  title: string;
+  supplications: string;
+  searchPlaceholder: string;
+  pronunciationShow: string;
+  pronunciationHide: string;
+  translationShow: string;
+  translationHide: string;
+  tap: string;
+  saved: string;
+  duaSingle: string;
+  duaPlural: string;
+  matching: string;
+  noDuasFound: string;
+  clearFilters: string;
+  categories: Record<string, string>;
+}
+
+const DUAS_I18N: Record<string, DuasI18n> = {
+  en: {
+    title: "Duas",
+    supplications: "Supplications",
+    searchPlaceholder: "Search duas or references",
+    pronunciationShow: "▾ Pronunciation",
+    pronunciationHide: "▸ Pronunciation",
+    translationShow: "▾ Translation",
+    translationHide: "▸ Translation",
+    tap: "+ Tap",
+    saved: "saved",
+    duaSingle: "dua",
+    duaPlural: "duas",
+    matching: "matching",
+    noDuasFound: "No supplications found",
+    clearFilters: "Clear filters",
+    categories: {
+      All: "All",
+      Morning: "Morning",
+      Evening: "Evening",
+      Travel: "Travel",
+      Eating: "Eating",
+      Sleeping: "Sleeping",
+      Illness: "Illness",
+      Distress: "Distress",
+      Gratitude: "Gratitude",
+      Forgiveness: "Forgiveness",
+      Protection: "Protection",
+      Weather: "Weather",
+      "After Prayer": "After Prayer",
+      Home: "Home",
+      Mosque: "Mosque",
+      Daily: "Daily",
+      "Special Days": "Special Days",
+      Knowledge: "Knowledge",
+      Character: "Character",
+      Marriage: "Marriage",
+      Family: "Family",
+      Financial: "Financial",
+      Afterlife: "Afterlife",
+      Repentance: "Repentance",
+      Parents: "Parents",
+      Fasting: "Fasting",
+      "Hajj & Umrah": "Hajj & Umrah",
+      "New Moon": "New Moon",
+    },
+  },
+  ur: {
+    title: "دعائیں اور اذکار",
+    supplications: "دعائیں",
+    searchPlaceholder: "دعائیں یا حوالہ جات تلاش کریں...",
+    pronunciationShow: "▾ تلفظ",
+    pronunciationHide: "▸ تلفظ",
+    translationShow: "▾ ترجمہ",
+    translationHide: "▸ ترجمہ",
+    tap: "+ ٹیپ",
+    saved: "محفوظ شدہ",
+    duaSingle: "دعا",
+    duaPlural: "دعائیں",
+    matching: "بمطابق",
+    noDuasFound: "کوئی دعا نہیں ملی",
+    clearFilters: "فلٹرز ختم کریں",
+    categories: {
+      All: "سب",
+      Morning: "صبح",
+      Evening: "شام",
+      Travel: "سفر",
+      Eating: "کھانا",
+      Sleeping: "نیند",
+      Illness: "بیماری",
+      Distress: "پریشانی",
+      Gratitude: "شکر",
+      Forgiveness: "مغفرت",
+      Protection: "حفاظت",
+      Weather: "موسم",
+      "After Prayer": "نماز کے بعد",
+      Home: "گھر",
+      Mosque: "مسجد",
+      Daily: "روزمرہ",
+      "Special Days": "خاص ایام",
+      Knowledge: "علم",
+      Character: "اخلاق",
+      Marriage: "نکاح",
+      Family: "خاندان",
+      Financial: "مالی",
+      Afterlife: "آخرت",
+      Repentance: "توبہ",
+      Parents: "والدین",
+      Fasting: "روزہ",
+      "Hajj & Umrah": "حج و عمرہ",
+      "New Moon": "نیا چاند",
+    },
+  },
+  gu: {
+    title: "દુઆઓ અને અઝકાર",
+    supplications: "દુઆઓ",
+    searchPlaceholder: "દુઆઓ અથવા સંદર્ભો શોધો...",
+    pronunciationShow: "▾ ઉચ્ચારણ",
+    pronunciationHide: "▸ ઉચ્ચારણ",
+    translationShow: "▾ અનુવાદ",
+    translationHide: "▸ અનુવાદ",
+    tap: "+ ટૅપ",
+    saved: "સાચવેલા",
+    duaSingle: "દુઆ",
+    duaPlural: "દુઆઓ",
+    matching: "સાથે મળતા",
+    noDuasFound: "કોઈ દુઆ મળી નથી",
+    clearFilters: "ફિલ્ટર્સ સાફ કરો",
+    categories: {
+      All: "બધા",
+      Morning: "સવાર",
+      Evening: "સાંજ",
+      Travel: "મુસાફરી",
+      Eating: "ભોજન",
+      Sleeping: "ઊંઘ",
+      Illness: "બીમારી",
+      Distress: "તકલીફ",
+      Gratitude: "આભાર",
+      Forgiveness: "માફી",
+      Protection: "સુરક્ષા",
+      Weather: "હવામાન",
+      "After Prayer": "નમાઝ પછી",
+      Home: "ઘર",
+      Mosque: "મસ્જિદ",
+      Daily: "દૈનિક",
+      "Special Days": "વિશેષ દિવસો",
+      Knowledge: "જ્ઞાન",
+      Character: "ચરિત્ર",
+      Marriage: "નિકાહ",
+      Family: "પરિવાર",
+      Financial: "નાણાકીય",
+      Afterlife: "આખિરત",
+      Repentance: "તૌબા",
+      Parents: "માતાપિતા",
+      Fasting: "રોઝા",
+      "Hajj & Umrah": "હજ અને ઉમરાહ",
+      "New Moon": "નવો ચાંદ",
+    },
+  },
+  hi: {
+    title: "दुआएं और अज़कार",
+    supplications: "दुआएं",
+    searchPlaceholder: "दुआएं या संदर्भ खोजें...",
+    pronunciationShow: "▾ उच्चारण",
+    pronunciationHide: "▸ उच्चारण",
+    translationShow: "▾ अनुवाद",
+    translationHide: "▸ अनुवाद",
+    tap: "+ टैप",
+    saved: "सहेजे गए",
+    duaSingle: "दुआ",
+    duaPlural: "दुआएं",
+    matching: "से मेल खाते",
+    noDuasFound: "कोई दुआ नहीं मिली",
+    clearFilters: "फ़िल्टर हटाएं",
+    categories: {
+      All: "सभी",
+      Morning: "सुबह",
+      Evening: "शाम",
+      Travel: "सफ़र",
+      Eating: "भोजन",
+      Sleeping: "सोना",
+      Illness: "बीमारी",
+      Distress: "परेशानी",
+      Gratitude: "शुक्र",
+      Forgiveness: "माफ़ी",
+      Protection: "हिफ़ाज़त",
+      Weather: "मौसम",
+      "After Prayer": "नमाज़ के बाद",
+      Home: "घर",
+      Mosque: "मस्जिद",
+      Daily: "दैनिक",
+      "Special Days": "विशेष दिन",
+      Knowledge: "इल्म",
+      Character: "अख़लाक़",
+      Marriage: "निकाह",
+      Family: "परिवार",
+      Financial: "आर्थिक",
+      Afterlife: "आख़िरत",
+      Repentance: "तौबा",
+      Parents: "माता-पिता",
+      Fasting: "रोज़ा",
+      "Hajj & Umrah": "हज व उमरा",
+      "New Moon": "नया चाँद",
+    },
+  },
+  ar: {
+    title: "الأدعية والأذكار",
+    supplications: "أدعية",
+    searchPlaceholder: "ابحث في الأدعية أو المراجع...",
+    pronunciationShow: "▾ النطق",
+    pronunciationHide: "▸ النطق",
+    translationShow: "▾ الترجمة",
+    translationHide: "▸ الترجمة",
+    tap: "+ عد",
+    saved: "محفوظ",
+    duaSingle: "دعاء",
+    duaPlural: "أدعية",
+    matching: "تطابق",
+    noDuasFound: "لم يتم العثور على أدعية",
+    clearFilters: "مسح عوامل التصفية",
+    categories: {
+      All: "الكل",
+      Morning: "الصباح",
+      Evening: "المساء",
+      Travel: "السفر",
+      Eating: "الطعام",
+      Sleeping: "النوم",
+      Illness: "المرض",
+      Distress: "الكرب",
+      Gratitude: "الشكر",
+      Forgiveness: "المغفرة",
+      Protection: "الحفظ",
+      Weather: "الطقس",
+      "After Prayer": "أدبار الصلوات",
+      Home: "المنزل",
+      Mosque: "المسجد",
+      Daily: "اليومية",
+      "Special Days": "أيام خاصة",
+      Knowledge: "العلم",
+      Character: "الأخلاق",
+      Marriage: "الزواج",
+      Family: "الأسرة",
+      Financial: "المال",
+      Afterlife: "الآخرة",
+      Repentance: "التوبة",
+      Parents: "الوالدين",
+      Fasting: "الصيام",
+      "Hajj & Umrah": "الحج والعمرة",
+      "New Moon": "رؤية الهلال",
+    },
+  },
+  bn: {
+    title: "দোয়া ও যিকির",
+    supplications: "দোয়া",
+    searchPlaceholder: "দোয়া বা রেফারেন্স খুঁজুন...",
+    pronunciationShow: "▾ উচ্চারণ",
+    pronunciationHide: "▸ উচ্চারণ",
+    translationShow: "▾ অনুবাদ",
+    translationHide: "▸ অনুবাদ",
+    tap: "+ ট্যাপ",
+    saved: "সংরক্ষিত",
+    duaSingle: "দোয়া",
+    duaPlural: "দোয়া",
+    matching: "মিলে যাওয়া",
+    noDuasFound: "কোনো দোয়া পাওয়া যায়নি",
+    clearFilters: "ফিল্টার মুছুন",
+    categories: {
+      All: "সব",
+      Morning: "সকাল",
+      Evening: "সন্ধ্যা",
+      Travel: "ভ্রমণ",
+      Eating: "খাবার",
+      Sleeping: "ঘুম",
+      Illness: "অসুস্থতা",
+      Distress: "বিপদ",
+      Gratitude: "কৃতজ্ঞতা",
+      Forgiveness: "ক্ষমা",
+      Protection: "সুরক্ষা",
+      Weather: "আবহাওয়া",
+      "After Prayer": "নামাজের পর",
+      Home: "বাড়ি",
+      Mosque: "মসজিদ",
+      Daily: "দৈনিক",
+      "Special Days": "বিশেষ দিন",
+      Knowledge: "জ্ঞান",
+      Character: "চরিত্র",
+      Marriage: "বিবাহ",
+      Family: "পরিবার",
+      Financial: "আর্থিক",
+      Afterlife: "পরকাল",
+      Repentance: "তওবা",
+      Parents: "বাবা-মা",
+      Fasting: "রোজা",
+      "Hajj & Umrah": "হজ ও ওমরাহ",
+      "New Moon": "নতুন চাঁদ",
+    },
+  },
+  ru: {
+    title: "Дуа и поминания",
+    supplications: "Дуа",
+    searchPlaceholder: "Поиск дуа или источников...",
+    pronunciationShow: "▾ Транскрипция",
+    pronunciationHide: "▸ Транскрипция",
+    translationShow: "▾ Перевод",
+    translationHide: "▸ Перевод",
+    tap: "+ Счёт",
+    saved: "сохранено",
+    duaSingle: "дуа",
+    duaPlural: "дуа",
+    matching: "по запросу",
+    noDuasFound: "Мольбы не найдены",
+    clearFilters: "Сбросить фильтры",
+    categories: {
+      All: "Все",
+      Morning: "Утро",
+      Evening: "Вечер",
+      Travel: "Путешествие",
+      Eating: "Еда",
+      Sleeping: "Сон",
+      Illness: "Болезнь",
+      Distress: "Трудности",
+      Gratitude: "Благодарность",
+      Forgiveness: "Прощение",
+      Protection: "Защита",
+      Weather: "Погода",
+      "After Prayer": "После намаза",
+      Home: "Дом",
+      Mosque: "Мечеть",
+      Daily: "Повседневное",
+      "Special Days": "Особые дни",
+      Knowledge: "Знания",
+      Character: "Нрав",
+      Marriage: "Брак",
+      Family: "Семья",
+      Financial: "Финансы",
+      Afterlife: "Вечная жизнь",
+      Repentance: "Покаяние",
+      Parents: "Родители",
+      Fasting: "Пост",
+      "Hajj & Umrah": "Хадж и умра",
+      "New Moon": "Новолуние",
+    },
+  },
+};
+
 function getTargetCount(dua: Dua): number {
   if (dua.repeatCount && dua.repeatCount > 0) return dua.repeatCount;
   const lower = `${dua.translation} ${dua.transliteration} ${dua.reference || ""}`.toLowerCase();
@@ -56,6 +399,7 @@ const DuaCard = memo(function DuaCard({
   const [showTranslation, setShowTranslation] = useState(true);
 
   const { contentLang, isRtl } = useContentLanguage();
+  const strings = useMemo(() => DUAS_I18N[contentLang] || DUAS_I18N.en, [contentLang]);
   const [translatedTranslation, setTranslatedTranslation] = useState(dua.translation);
 
   useEffect(() => {
@@ -131,14 +475,14 @@ const DuaCard = memo(function DuaCard({
             <div className="flex items-center gap-1.5 flex-wrap">
               {isDuaOfDay && <Star className="w-3.5 h-3.5 text-[var(--accent)] fill-[var(--accent)]" />}
               <span
-                className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-full border"
+                className={`px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-full border ${contentLang === 'ur' ? 'font-urdu' : ''}`}
                 style={{
                   background: "var(--accent-soft)",
                   borderColor: "var(--accent)",
                   color: "var(--accent-text)",
                 }}
               >
-                {dua.category}
+                {strings.categories[dua.category] || dua.category}
               </span>
               <span
                 className="px-2 py-0.5 text-[11px] font-mono font-bold rounded-full border"
@@ -206,26 +550,26 @@ const DuaCard = memo(function DuaCard({
             <button
               type="button"
               onClick={() => setShowPronunciation((prev) => !prev)}
-              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all active:scale-95"
+              className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all active:scale-95 ${contentLang === 'ur' ? 'font-urdu' : ''}`}
               style={{
                 background: showPronunciation ? "var(--accent-soft)" : "var(--surface-2)",
                 borderColor: showPronunciation ? "var(--accent)" : "var(--border)",
                 color: showPronunciation ? "var(--accent-text)" : "var(--text-secondary)",
               }}
             >
-              {showPronunciation ? "▾ Pronunciation" : "▸ Pronunciation"}
+              {showPronunciation ? strings.pronunciationShow : strings.pronunciationHide}
             </button>
             <button
               type="button"
               onClick={() => setShowTranslation((prev) => !prev)}
-              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all active:scale-95"
+              className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all active:scale-95 ${contentLang === 'ur' ? 'font-urdu' : ''}`}
               style={{
                 background: showTranslation ? "var(--accent-soft)" : "var(--surface-2)",
                 borderColor: showTranslation ? "var(--accent)" : "var(--border)",
                 color: showTranslation ? "var(--accent-text)" : "var(--text-secondary)",
               }}
             >
-              {showTranslation ? "▾ Translation" : "▸ Translation"}
+              {showTranslation ? strings.translationShow : strings.translationHide}
             </button>
           </div>
 
@@ -279,7 +623,7 @@ const DuaCard = memo(function DuaCard({
                 {isComplete ? (
                   <Check className="w-3.5 h-3.5 shrink-0" />
                 ) : (
-                  <span className="text-[10px] text-[var(--accent-text)] font-semibold">+ Tap</span>
+                  <span className={`text-[10px] text-[var(--accent-text)] font-semibold ${contentLang === 'ur' ? 'font-urdu' : ''}`}>{strings.tap}</span>
                 )}
               </button>
 
@@ -320,6 +664,8 @@ const DuaCard = memo(function DuaCard({
 const Duas = memo(function Duas() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { contentLang, isRtl } = useContentLanguage();
+  const strings = useMemo(() => DUAS_I18N[contentLang] || DUAS_I18N.en, [contentLang]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -392,7 +738,7 @@ const Duas = memo(function Duas() {
   };
 
   return (
-    <div className="min-h-screen bg-background safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
+    <div className={`min-h-screen bg-background safe-top ${contentLang === 'ur' ? 'font-urdu' : ''}`} dir={isRtl ? 'rtl' : 'ltr'} style={{ paddingTop: 'calc(var(--safe-top) + 12px)' }}>
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
         {/* Header with Row 1 (Back + Title + Font Sizer) and Row 2 (Full-Width Language Bar) */}
         <div className="space-y-3">
@@ -404,14 +750,14 @@ const Duas = memo(function Duas() {
                 onClick={() => navigate("/")}
                 className="rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] shrink-0"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
               </Button>
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold text-[var(--text-primary)] font-serif italic tracking-tight truncate">
-                  Duas
+                <h1 className={`text-2xl font-bold text-[var(--text-primary)] tracking-tight truncate ${contentLang === 'ur' ? 'font-urdu' : 'font-serif italic'}`}>
+                  {strings.title}
                 </h1>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mt-0.5 truncate">
-                  {duasData.length} Supplications
+                  {duasData.length} {strings.supplications}
                 </p>
               </div>
             </div>
@@ -452,12 +798,12 @@ const Duas = memo(function Duas() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+          <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
           <Input
-            placeholder="Search duas, keywords, or references..."
+            placeholder={strings.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 rounded-xl border shadow-sm focus-visible:ring-[var(--accent)]"
+            className="pl-10 rtl:pl-4 rtl:pr-10 h-11 rounded-xl border shadow-sm focus-visible:ring-[var(--accent)]"
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
@@ -476,14 +822,14 @@ const Duas = memo(function Duas() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className="whitespace-nowrap text-xs px-3.5 py-1.5 rounded-full font-bold shadow-sm transition-all border active:scale-95"
+                  className={`whitespace-nowrap text-xs px-3.5 py-1.5 rounded-full font-bold shadow-sm transition-all border active:scale-95 ${contentLang === 'ur' ? 'font-urdu' : ''}`}
                   style={{
                     background: isSelected ? "var(--accent)" : "var(--surface)",
                     borderColor: isSelected ? "var(--accent)" : "var(--border)",
                     color: isSelected ? "var(--on-accent)" : "var(--text-secondary)",
                   }}
                 >
-                  {cat}
+                  {strings.categories[cat] || cat}
                 </button>
               );
             })}
@@ -493,8 +839,8 @@ const Duas = memo(function Duas() {
         {/* Results count & Filter toggle */}
         <div className="flex items-center justify-between">
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-            {filteredDuas.length} {filteredDuas.length === 1 ? "dua" : "duas"}
-            {searchQuery && ` matching "${searchQuery}"`}
+            {filteredDuas.length} {filteredDuas.length === 1 ? strings.duaSingle : strings.duaPlural}
+            {searchQuery && ` ${strings.matching} "${searchQuery}"`}
           </p>
           {favorites.length > 0 && (
             <Button
@@ -504,7 +850,7 @@ const Duas = memo(function Duas() {
               onClick={() => setSelectedCategory("All")}
             >
               <Heart className="w-3 h-3 fill-red-500 text-red-500" />
-              <span>{favorites.length} saved</span>
+              <span>{favorites.length} {strings.saved}</span>
             </Button>
           )}
         </div>
@@ -533,7 +879,7 @@ const Duas = memo(function Duas() {
             >
               <BookHeart className="w-12 h-12 mx-auto text-[var(--text-secondary)] opacity-40 mb-3" />
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-4">
-                No supplications found
+                {strings.noDuasFound}
               </p>
               <Button
                 variant="outline"
@@ -549,7 +895,7 @@ const Duas = memo(function Duas() {
                   setSelectedCategory("All");
                 }}
               >
-                Clear filters
+                {strings.clearFilters}
               </Button>
             </Card>
           ) : (

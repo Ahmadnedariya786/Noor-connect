@@ -17,7 +17,7 @@ const getGitCommit = (): string => {
   }
 };
 
-const APP_VERSION = process.env.npm_package_version ?? "2.2.1";
+const APP_VERSION = process.env.npm_package_version ?? "2.3.0";
 const BUILD_TIME = new Date().toISOString();
 const BUILD_COMMIT = getGitCommit();
 

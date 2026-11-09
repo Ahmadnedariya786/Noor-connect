@@ -441,24 +441,36 @@ export default function EbooksModern() {
   }
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border safe-top">
+      <header
+        className="sticky top-0 z-40 backdrop-blur-xl border-b safe-top"
+        style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)' }}
+      >
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                <LibraryBig className="w-4 h-4 text-primary-foreground" />
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                  color: 'var(--on-accent)',
+                }}
+              >
+                <LibraryBig className="w-4 h-4" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">Library</h1>
-                <p className="text-xs text-muted-foreground -mt-0.5">Islamic Literature</p>
+                <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Library</h1>
+                <p className="text-xs -mt-0.5" style={{ color: 'var(--text-secondary)' }}>Islamic Literature</p>
               </div>
             </div>
             
             <div className="flex items-center gap-1.5">
               {activeTab === 'browse' && (
-                <div className="flex items-center bg-muted rounded-lg p-0.5">
+                <div
+                  className="flex items-center rounded-lg p-0.5 border"
+                  style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+                >
                   <Button
                     size="sm"
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -487,17 +499,23 @@ export default function EbooksModern() {
           </div>
           
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
             <Input
               placeholder="Search books..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 h-10 bg-muted/50 border-0 rounded-xl focus-visible:ring-1"
+              className="pl-10 pr-10 h-10 border rounded-xl focus-visible:ring-1"
+              style={{
+                backgroundColor: 'var(--surface-2)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-primary)',
+              }}
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-muted flex items-center justify-center"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center border text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -515,21 +533,43 @@ export default function EbooksModern() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap border select-none ${
                 activeTab === tab.id 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:bg-muted'
+                  ? 'shadow-sm active:scale-95' 
+                  : 'hover:bg-[var(--surface-2)] active:scale-95'
               }`}
+              style={activeTab === tab.id ? {
+                background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                color: 'var(--on-accent)',
+                borderColor: 'var(--border)',
+                boxShadow: '0 2px 8px var(--accent-glow)',
+              } : {
+                backgroundColor: 'var(--surface)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-secondary)',
+              }}
             >
               <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
               {tab.id === 'saved' && bookmarks.length > 0 && (
-                <span className="ml-0.5 w-4 h-4 rounded-full bg-primary-foreground/20 text-xs flex items-center justify-center">
+                <span
+                  className="ml-0.5 w-4 h-4 rounded-full text-xs flex items-center justify-center font-bold"
+                  style={{
+                    backgroundColor: activeTab === tab.id ? 'var(--on-accent)' : 'var(--accent)',
+                    color: activeTab === tab.id ? 'var(--accent)' : 'var(--on-accent)',
+                  }}
+                >
                   {bookmarks.length}
                 </span>
               )}
               {tab.id === 'downloads' && (downloadedBooks.length + userBooks.length) > 0 && (
-                <span className="ml-0.5 w-4 h-4 rounded-full bg-primary-foreground/20 text-xs flex items-center justify-center">
+                <span
+                  className="ml-0.5 w-4 h-4 rounded-full text-xs flex items-center justify-center font-bold"
+                  style={{
+                    backgroundColor: activeTab === tab.id ? 'var(--on-accent)' : 'var(--accent)',
+                    color: activeTab === tab.id ? 'var(--accent)' : 'var(--on-accent)',
+                  }}
+                >
                   {downloadedBooks.length + userBooks.length}
                 </span>
               )}

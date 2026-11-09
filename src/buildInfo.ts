@@ -11,4 +11,4 @@ export const BUILD_COMMIT: string =
   (typeof __BUILD_COMMIT__ !== 'undefined' ? __BUILD_COMMIT__ : 'unknown');
 
 export const APP_VERSION: string =
-  (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.2.1');
+  (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.3.0');

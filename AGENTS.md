@@ -10,7 +10,7 @@ NOOR CONNECT is built for the Ummah with a strict **Zero-User-Impact Principle**
    - APK software updates (`Check now`, turbo 4-thread download, `Install`, and browser fallback on both the Home Update Banner and `Settings > About Noor Connect`) execute seamlessly in 1 tap without ever prompting for an owner key.
 2. **Stealth 5-Tap Owner Security Vault:**
    - The `OWNER SECURITY VAULT` card inside `Settings > About Noor Connect` is **100% invisible by default** to regular users.
-   - Access is strictly gated behind a hidden developer gesture: **tapping the `Version 2.2.1` badge 5 times within 3 seconds**.
+   - Access is strictly gated behind a hidden developer gesture: **tapping the `Version 2.3.0` badge 5 times within 3 seconds**.
    - When the owner taps `Lock Vault Now 🔒` or navigates away from the About screen, the vault immediately re-enters Stealth Mode.
    - Developer tools (`Re-run permission onboarding`, `Clear` diagnostics logs, `Test Capture`, and `Change Owner Secret Key`) remain protected by the Owner Master Key when intentionally accessed.
 

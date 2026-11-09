@@ -633,7 +633,7 @@ export const WidgetSettings: React.FC = () => {
                     {isSelected && <Check className="w-3.5 h-3.5 text-black stroke-[3]" />}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-bold truncate text-[var(--text-primary)]">
+                    <div className="text-xs font-bold leading-tight break-words text-[var(--text-primary)]">
                       {preset.name}
                     </div>
                   </div>

@@ -478,7 +478,7 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            {/* 3-Pill Live Status Strip */}
+            {/* 3-Pill Live Status Strip (NEVER ellipsize in the 3 hero summary chips) */}
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[var(--border)]">
               <div 
                 className="py-1.5 px-1 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
@@ -488,10 +488,10 @@ const Profile: React.FC = () => {
                 <span
                   className="font-bold text-[var(--accent-text)]"
                   style={{
-                    fontSize: '0.72rem',
+                    fontSize: '0.70rem',
                     fontWeight: 700,
                     lineHeight: 1.2,
-                    padding: '8px 6px',
+                    padding: '4px 2px',
                     textAlign: 'center',
                     wordBreak: 'break-word',
                   }}
@@ -500,20 +500,40 @@ const Profile: React.FC = () => {
                 </span>
               </div>
               <div 
-                className="py-1.5 px-2 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
+                className="py-1.5 px-1 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
                 style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
                 <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">{ui.podClock}</span>
-                <span className="text-[11px] font-bold text-[var(--accent-text)] truncate w-full">
+                <span
+                  className="font-bold text-[var(--accent-text)]"
+                  style={{
+                    fontSize: '0.70rem',
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    padding: '4px 2px',
+                    textAlign: 'center',
+                    wordBreak: 'break-word',
+                  }}
+                >
                   {asyncValues['clockStyle'] || 'Prayer Arc'}
                 </span>
               </div>
               <div 
-                className="py-1.5 px-2 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
+                className="py-1.5 px-1 rounded-xl border flex flex-col items-center justify-center text-center min-w-0"
                 style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
                 <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">{ui.podPersonalData}</span>
-                <span className="text-[11px] font-bold text-[var(--accent-text)] truncate w-full">
+                <span
+                  className="font-bold text-[var(--accent-text)]"
+                  style={{
+                    fontSize: '0.70rem',
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    padding: '4px 2px',
+                    textAlign: 'center',
+                    wordBreak: 'break-word',
+                  }}
+                >
                   {ui.podLocal}
                 </span>
               </div>
@@ -575,11 +595,10 @@ const Profile: React.FC = () => {
                           <div className="w-8 h-4 bg-[var(--surface-2)] rounded-full animate-pulse" />
                         ) : val !== null ? (
                           <span
-                            className="rounded-full font-semibold bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)] shrink-0 truncate max-w-[128px]"
-                            style={{ fontSize: '0.68rem', padding: '3px 8px', maxWidth: '128px', flexShrink: 0 }}
+                            className="settings-value-chip"
                             dir="ltr"
                           >
-                            <span style={{ unicodeBidi: 'isolate' }} className="truncate block max-w-[112px]">{val}</span>
+                            <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{val}</span>
                           </span>
                         ) : null
                       )}

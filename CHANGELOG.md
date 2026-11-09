@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.3.0] - 2026-11-09
+
+### 👑 6 Dual-Tone Royal Themes & 5 Logo Editions
+- **6 Royal Themes**: `Oxford Gold`, `Haramain Noir`, `Imperial Violet`, `Burgundy Velvet`, `Desert Scroll`, and `Royal Sapphire` with full 17 root CSS tokens and legacy `color-mix()` fallbacks.
+- **5 Logo Editions**: Gold, Emerald, Violet, Velvet, and Sapphire badges selectable across the app and dynamic app launcher icon.
+
+### 🕌 Smart Home Screen & Top Qaza Reminder
+- **Persistent Top Qaza Banner**: Prominent top makeup reminder banner synchronized bidirectionally with date-wise logs and aggregate counters.
+- **Collapsible Nafl Accordion**: Real-time evaluation of Ishraq, Chasht, and Awwabin voluntary windows with countdown badges.
+- **Authentic Makruh Engine**: Exact 3 prohibited windows (Sunrise +15m, Zawal -10m, Sunset -15m) with automatic dismissal at `:00s`.
+- **Worship & Fasting Journal**: Phase 2 tracker with 3-month consistency heatmap and streak counting.
+
+### 📖 Phase 3 Quran & Cloud E-Books Suite
+- **Balanced Knuth-Plass DP Mushaf**: Dynamic programming line packing for `7L`, `13L`, and `15L` layouts with anti-orphan rules, centered closing lines, and uniform readable font sizing.
+- **Synchronous In-Memory Cache**: 6-page memory prefetch sliding window ($N-2$ to $N+4$) for instant frame-1 rendering without loading flashes.
+- **Smart Khatmah & Multi-Tafsir**: Comprehensive Khatmah planner, 30 Juz hub, 47 authentic reciters, and 14+ authentic Tafsir sources with direct offline download CTA.
+- **Tafseer Anwar-ul-Bayan Cloud CDN Downloader**: 5-Volume Urdu Tafseer reader with multi-threaded chunk downloader, background resume, and in-memory byte cache.
+
+### 🛡️ Home Screen Widgets & Stealth Owner Security
+- **1-Tap Pin Widgets**: Interactive Tasbeeh widget, Next Prayer widget with accent resolution, and Quran Progress widget.
+- **Stealth 5-Tap Owner Security Vault**: Accessible strictly via 5 taps on the `Version 2.3.0` badge, SHA-256 salted verification, and zero plain-text key storage.
+- **Deep X-Ray Diagnostics**: 8/8 PASS engine covering storage, timers, alarms, geolocation, and theme integrity on `com.noorconnect.ummah`.
+
+### ✨ 20-Point Visual Consistency Sweep
+- Sequential page fade transitions without ghosting/crossfade bleed; instant 0ms unmount when Fluid Animations is off.
+- Themed custom bottom-sheet pickers for Zakat Calculator purity and currency replacing OS select dialogs.
+- 360px viewport budget guarantee: zero text clipping or mid-word ellipses across Settings hero chips, Home Qaza title, Smart Khatmah spiritual cards, Duas search placeholder, Mosque LED preview, and E-Books download byte fractions.
+- Full UI localization in Duas & Remedies across Urdu (`font-urdu` RTL), Gujarati, and Hindi.
+
 ## [2.2.1] - 2026-08-22
 
 ### 🆔 Package Identity & F-Droid Decoupling

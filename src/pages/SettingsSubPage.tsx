@@ -505,7 +505,7 @@ const SettingsSubPage: React.FC = () => {
     });
   };
 
-  // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.2.1 when unlocked)
+  // Stealth Owner Security Vault state (revealed via 5-tap on Version 2.3.0 when unlocked)
   const [isOwnerUnlocked, setIsOwnerUnlocked] = useState(() => isOwnerSessionUnlocked());
   const versionTapTimesRef = useRef<number[]>([]);
 
@@ -899,11 +899,11 @@ const SettingsSubPage: React.FC = () => {
           >
             <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
           </button>
-          <div className="flex-1">
-            <h1 className="text-base font-bold text-[var(--text-primary)] leading-tight">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-[var(--text-primary)] leading-tight truncate sm:whitespace-normal">
               {meta.title}
             </h1>
-            <p className="text-[11px] text-[var(--text-secondary)] bidi-plaintext" style={{ unicodeBidi: 'plaintext' }}>
+            <p className="text-[11px] text-[var(--text-secondary)] bidi-plaintext truncate sm:whitespace-normal" style={{ unicodeBidi: 'plaintext' }}>
               {meta.subtitle}
             </p>
           </div>
@@ -952,7 +952,7 @@ const SettingsSubPage: React.FC = () => {
                   <p className="text-xs text-[var(--text-secondary)] truncate">{appearanceStrings.appThemeSubtitle}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)] whitespace-nowrap shrink-0 inline-flex items-center">
+                  <span className="settings-value-chip">
                     {currentThemeName}
                   </span>
                   <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform shrink-0" />

@@ -73,7 +73,7 @@ export interface TranslationEdition {
 export const TRANSLATION_EDITIONS: TranslationEdition[] = [
   // English
   { id: 'en.sahih', name: "Sahih Int'l", lang: 'English' },
-  { id: 'en.khattab', name: 'Clear Quran (Khattab)', lang: 'English' },
+  { id: 'en.khattab', name: 'Clear Quran', lang: 'English' },
   { id: 'en.pickthall', name: 'Pickthall', lang: 'English' },
   { id: 'en.yusufali', name: 'Yusuf Ali', lang: 'English' },
   // Urdu (Jameel Noori Nastaliq)
@@ -1450,6 +1450,34 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                   <div className="py-8 flex items-center justify-center gap-2 text-xs text-[var(--text-secondary)]">
                     <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
                     <span>Loading authentic Tafsir commentary...</span>
+                  </div>
+                ) : tafsirText.includes('requires internet') || tafsirText.includes('reconnect or download') ? (
+                  <div className="py-6 px-4 text-center space-y-3">
+                    <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
+                      <Download className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-[var(--text-primary)]">Tafsir Offline</h4>
+                      <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-xs mx-auto">
+                        {tafsirText}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleDownloadTafsirOffline}
+                      disabled={isDownloadingOffline}
+                      className="rounded-full px-5 py-2 font-bold text-xs shadow-md"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                        color: 'var(--on-accent)',
+                      }}
+                    >
+                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      {isDownloadingOffline ? 'Downloading Pack...' : '⬇️ Download Offline Pack'}
+                    </Button>
+                    <p className="text-[11px] text-[var(--text-secondary)]">
+                      Or reconnect to the internet to read online
+                    </p>
                   </div>
                 ) : (
                   <div

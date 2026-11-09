@@ -1115,8 +1115,39 @@ const Tafsir = () => {
                 })}
               </div>
 
+              {/* Offline Error State */}
+              {!tafsirLoading && !currentSurahTafsir && (
+                <div className="text-center py-12 px-6 rounded-3xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)', color: 'var(--accent)' }}>
+                    <Download className="w-8 h-8" />
+                  </div>
+                  <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Tafsir Offline</h3>
+                  <p className="text-sm mt-2 max-w-sm mx-auto" style={{ color: 'var(--text-secondary)' }}>
+                    Failed to fetch commentary online. Download the offline pack for uninterrupted reading.
+                  </p>
+                  <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Button
+                      onClick={() => {
+                        if (selectedSurah) handleSurahSelect(selectedSurah);
+                      }}
+                      className="rounded-full px-6 py-2.5 font-bold text-xs shadow-md"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                        color: 'var(--on-accent)',
+                      }}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      ⬇️ Download Offline Pack
+                    </Button>
+                  </div>
+                  <p className="text-xs text-[var(--text-secondary)] mt-3">
+                    Or reconnect to the internet and try again.
+                  </p>
+                </div>
+              )}
+
               {/* No Results in Search */}
-              {!tafsirLoading && filteredTafsirs.length === 0 && (
+              {!tafsirLoading && currentSurahTafsir && filteredTafsirs.length === 0 && (
                 <div className="text-center py-12 px-6 rounded-3xl border border-dashed" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
                   <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)' }}>
                     <Search className="w-8 h-8" style={{ color: 'var(--text-secondary)' }} />
