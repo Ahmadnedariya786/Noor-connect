@@ -1122,17 +1122,15 @@ public class MainActivity extends BridgeActivity {
         dispatchDownloadProgress(0, 0, 0, 0.0, "cancelled", "Download cancelled");
     }
 
+    private static final String UPDATER_USER_AGENT = "NoorConnect-Updater/2.3.0";
+    private static final long DEFAULT_APK_EXPECTED_BYTES = 97832140L; // ~93.3 MB
+
     /**
-     * Download an APK using 4-connection parallel range downloading across a 4-thread pool.
-     * Follows HTTP 302 redirects to signed CDN URLs, uses large 256KB buffers, and
-     * calculates live transfer speed. Falls back to 256KB single stream or system DownloadManager.
+     * Resilient single-stream GET downloader following up to 8 redirects across domains.
+     * Supports 4x auto-resume with Range header, backoff retry, candidate fallback URLs,
+     * and pre-install size verification (> 15 MB).
      */
     public void downloadAndInstallApk(String apkUrl) {
-        if (apkUrl == null || apkUrl.trim().isEmpty()) {
-            dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Invalid download URL");
-            return;
-        }
-
         if (isDownloadingApk) {
             Log.w(TAG, "downloadAndInstallApk called while download is already in progress");
             return;
@@ -1151,354 +1149,222 @@ public class MainActivity extends BridgeActivity {
                     downloadDir.mkdirs();
                 }
 
-                File apkFile = new File(downloadDir, "noor-connect-update.apk");
-                if (apkFile.exists()) {
-                    apkFile.delete();
+                final File finalApkFile = new File(downloadDir, "noor-connect-update.apk");
+                final File stagingFile = new File(getCacheDir(), "noor-update-staging.apk");
+
+                // Candidate URLs to try in order
+                List<String> candidateUrls = new ArrayList<>();
+                if (apkUrl != null && !apkUrl.trim().isEmpty()) {
+                    candidateUrls.add(apkUrl.trim());
                 }
+                candidateUrls.add("https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk");
+                candidateUrls.add("https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk");
 
-                Log.i(TAG, "Starting native APK download from: " + apkUrl);
-                dispatchDownloadProgress(0, 0, 0, 0.0, "downloading", null);
+                Log.i(TAG, "Starting resilient OTA APK download pipeline with " + candidateUrls.size() + " candidates");
+                dispatchDownloadProgress(0, 0, 0, 0.0, "downloading", "Connecting to GitHub CDN...");
 
-                // Step A — Resolve Final Redirect URL & Content-Length
-                String currentUrl = apkUrl;
-                int redirects = 0;
-                String finalUrl = currentUrl;
-                long contentLength = -1;
+                boolean downloadSuccess = false;
 
-                while (redirects < 6 && !isDownloadCancelled) {
-                    URL url = new URL(currentUrl);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setInstanceFollowRedirects(false);
-                    conn.setConnectTimeout(15000);
-                    conn.setReadTimeout(30000);
-                    conn.setRequestProperty("User-Agent", CHROME_USER_AGENT);
-                    conn.setRequestProperty("Accept", "*/*");
-                    conn.setRequestProperty("Accept-Encoding", "identity");
-                    activeConnections.add(conn);
+                candidateLoop:
+                for (String candidateUrl : candidateUrls) {
+                    if (isDownloadCancelled) break;
 
-                    int responseCode = conn.getResponseCode();
-                    if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
-                            || responseCode == HttpURLConnection.HTTP_MOVED_TEMP
-                            || responseCode == HttpURLConnection.HTTP_SEE_OTHER
-                            || responseCode == 307
-                            || responseCode == 308) {
-                        String newUrl = conn.getHeaderField("Location");
-                        activeConnections.remove(conn);
-                        conn.disconnect();
-                        if (newUrl != null && !newUrl.isEmpty()) {
-                            currentUrl = newUrl;
-                            redirects++;
-                            continue;
+                    // 4 auto-resume retries with backoff per candidate
+                    final long[] backoffs = {1500L, 3000L, 4500L, 6000L};
+
+                    for (int attempt = 0; attempt <= 3; attempt++) {
+                        if (isDownloadCancelled) break candidateLoop;
+
+                        if (attempt > 0) {
+                            Log.i(TAG, "Retrying download (attempt " + (attempt + 1) + "/4) after backoff...");
+                            try {
+                                Thread.sleep(backoffs[attempt - 1]);
+                            } catch (InterruptedException e) {
+                                break candidateLoop;
+                            }
+                        }
+
+                        HttpURLConnection conn = null;
+                        InputStream in = null;
+                        FileOutputStream out = null;
+
+                        try {
+                            String targetUrl = candidateUrl;
+                            int redirects = 0;
+                            long existingBytes = stagingFile.exists() ? stagingFile.length() : 0;
+
+                            // Follow up to 8 redirects (301, 302, 303, 307, 308) across domains
+                            while (redirects < 8 && !isDownloadCancelled) {
+                                URL u = new URL(targetUrl);
+                                conn = (HttpURLConnection) u.openConnection();
+                                conn.setInstanceFollowRedirects(false);
+                                conn.setConnectTimeout(20000);
+                                conn.setReadTimeout(35000);
+                                conn.setRequestProperty("User-Agent", UPDATER_USER_AGENT);
+                                conn.setRequestProperty("Accept", "*/*");
+                                conn.setRequestProperty("Accept-Encoding", "identity");
+
+                                if (existingBytes > 0) {
+                                    conn.setRequestProperty("Range", "bytes=" + existingBytes + "-");
+                                }
+
+                                activeConnections.add(conn);
+
+                                int code = conn.getResponseCode();
+                                if (code == HttpURLConnection.HTTP_MOVED_PERM
+                                        || code == HttpURLConnection.HTTP_MOVED_TEMP
+                                        || code == HttpURLConnection.HTTP_SEE_OTHER
+                                        || code == 307
+                                        || code == 308) {
+                                    String location = conn.getHeaderField("Location");
+                                    activeConnections.remove(conn);
+                                    conn.disconnect();
+                                    if (location != null && !location.isEmpty()) {
+                                        targetUrl = location;
+                                        redirects++;
+                                        continue;
+                                    }
+                                }
+
+                                // Not a redirect; break out to stream payload
+                                break;
+                            }
+
+                            if (isDownloadCancelled || conn == null) {
+                                break candidateLoop;
+                            }
+
+                            int statusCode = conn.getResponseCode();
+                            boolean isPartial = (statusCode == 206);
+                            boolean isOk = (statusCode >= 200 && statusCode < 300);
+
+                            if (!isOk && !isPartial) {
+                                Log.w(TAG, "Candidate URL " + candidateUrl + " returned HTTP " + statusCode);
+                                activeConnections.remove(conn);
+                                conn.disconnect();
+                                if (statusCode == 404 || statusCode == 403) {
+                                    break; // break retry loop to try next candidate URL
+                                }
+                                continue; // retry same candidate after backoff
+                            }
+
+                            long totalBytes;
+                            if (isPartial) {
+                                long remaining = -1;
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    remaining = conn.getContentLengthLong();
+                                } else {
+                                    remaining = conn.getContentLength();
+                                }
+                                totalBytes = (remaining > 0) ? (existingBytes + remaining) : DEFAULT_APK_EXPECTED_BYTES;
+                                out = new FileOutputStream(stagingFile, true); // append
+                            } else {
+                                // Full download (either server didn't honor range or first attempt)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    totalBytes = conn.getContentLengthLong();
+                                } else {
+                                    totalBytes = conn.getContentLength();
+                                }
+                                if (totalBytes <= 0) {
+                                    totalBytes = DEFAULT_APK_EXPECTED_BYTES;
+                                }
+                                out = new FileOutputStream(stagingFile, false); // overwrite
+                                existingBytes = 0;
+                            }
+
+                            in = new BufferedInputStream(conn.getInputStream(), 262144);
+                            byte[] buffer = new byte[262144]; // 256 KB buffer
+                            long downloaded = existingBytes;
+                            long lastDispatchTime = System.currentTimeMillis();
+                            long lastBytes = downloaded;
+                            int read;
+
+                            while (!isDownloadCancelled && (read = in.read(buffer)) != -1) {
+                                out.write(buffer, 0, read);
+                                downloaded += read;
+
+                                long now = System.currentTimeMillis();
+                                if (now - lastDispatchTime > 250) {
+                                    long timeDelta = now - lastDispatchTime;
+                                    long bytesDelta = downloaded - lastBytes;
+                                    double speedMBps = (timeDelta > 0)
+                                            ? ((double) bytesDelta / (1024.0 * 1024.0)) / ((double) timeDelta / 1000.0)
+                                            : 0.0;
+                                    lastDispatchTime = now;
+                                    lastBytes = downloaded;
+
+                                    int percent = (totalBytes > 0)
+                                            ? Math.min(99, (int) ((downloaded * 100) / totalBytes))
+                                            : -1;
+                                    double downloadedMB = (double) downloaded / (1024.0 * 1024.0);
+                                    double totalMB = (totalBytes > 0) ? (double) totalBytes / (1024.0 * 1024.0) : 0;
+                                    dispatchDownloadProgress(percent, downloadedMB, totalMB, speedMBps, "downloading", null);
+                                }
+                            }
+
+                            out.flush();
+
+                            if (isDownloadCancelled) {
+                                break candidateLoop;
+                            }
+
+                            // Pre-install verification: file must be > 15 MB
+                            if (stagingFile.exists() && stagingFile.length() > 15_000_000) {
+                                Log.i(TAG, "OTA staging download verified successfully: " + stagingFile.length() + " bytes");
+                                downloadSuccess = true;
+                                break candidateLoop;
+                            } else {
+                                Log.w(TAG, "Downloaded file size incomplete: " + (stagingFile.exists() ? stagingFile.length() : 0) + " bytes (< 15 MB)");
+                            }
+
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Download attempt " + (attempt + 1) + " failed: " + t.getMessage());
+                        } finally {
+                            if (out != null) {
+                                try { out.close(); } catch (Throwable ignored) {}
+                            }
+                            if (in != null) {
+                                try { in.close(); } catch (Throwable ignored) {}
+                            }
+                            if (conn != null) {
+                                activeConnections.remove(conn);
+                                try { conn.disconnect(); } catch (Throwable ignored) {}
+                            }
                         }
                     }
-
-                    if (responseCode >= 200 && responseCode < 300) {
-                        finalUrl = currentUrl;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            contentLength = conn.getContentLengthLong();
-                        } else {
-                            contentLength = conn.getContentLength();
-                        }
-                    }
-                    activeConnections.remove(conn);
-                    conn.disconnect();
-                    break;
                 }
 
                 if (isDownloadCancelled) {
                     return;
                 }
 
-                // Step B — 4-Thread Parallel Chunk Download (with 256KB buffers)
-                boolean parallelSuccess = false;
-                if (contentLength >= 2 * 1024 * 1024) {
-                    try {
-                        parallelSuccess = downloadParallelChunks(finalUrl, apkFile, contentLength);
-                    } catch (Throwable t) {
-                        Log.w(TAG, "Parallel chunks failed: " + t.getMessage(), t);
-                        parallelSuccess = false;
+                if (downloadSuccess && stagingFile.exists() && stagingFile.length() > 15_000_000) {
+                    // Atomically move staging file to final destination
+                    if (finalApkFile.exists()) {
+                        finalApkFile.delete();
                     }
-                }
+                    boolean renamed = stagingFile.renameTo(finalApkFile);
+                    File installTarget = renamed ? finalApkFile : stagingFile;
 
-                if (isDownloadCancelled) {
-                    return;
-                }
-
-                // Fallback to high-buffer single stream if parallel was not supported or failed
-                if (!parallelSuccess) {
-                    Log.w(TAG, "Falling back to 256KB single stream download...");
-                    runSingleStreamDownload(finalUrl, apkFile, contentLength);
-                    return;
-                }
-
-                // Step C — Instant Auto-Install at 100%
-                if (!isDownloadCancelled && apkFile.exists() && apkFile.length() >= 1_000_000) {
-                    double finalMB = (double) apkFile.length() / (1024.0 * 1024.0);
-                    Log.i(TAG, "Native APK parallel download complete: " + apkFile.getAbsolutePath() + " (" + finalMB + " MB)");
-                    lastDownloadedApkFile = apkFile;
+                    double finalMB = (double) installTarget.length() / (1024.0 * 1024.0);
+                    Log.i(TAG, "Native APK download verified: " + installTarget.getAbsolutePath() + " (" + finalMB + " MB)");
+                    lastDownloadedApkFile = installTarget;
                     dispatchDownloadProgress(100, finalMB, finalMB, 0.0, "installing", null);
-                    launchApkInstallerIntent(apkFile);
-                } else if (!isDownloadCancelled) {
-                    throw new java.io.IOException("Downloaded APK file is incomplete (" + (apkFile.exists() ? apkFile.length() : 0) + " bytes)");
+                    launchApkInstallerIntent(installTarget);
+                } else {
+                    Log.e(TAG, "All OTA download attempts failed or file incomplete (< 15 MB)");
+                    dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Download failed. Tap to retry or open in browser.");
                 }
 
             } catch (Throwable t) {
                 if (!isDownloadCancelled) {
-                    Log.e(TAG, "Error downloading APK: " + t.getMessage(), t);
+                    Log.e(TAG, "Unhandled error in OTA downloader: " + t.getMessage(), t);
                     dispatchDownloadProgress(-1, 0, 0, 0.0, "error", t.getMessage() != null ? t.getMessage() : "Download failed");
                 }
             } finally {
                 isDownloadingApk = false;
             }
         }).start();
-    }
-
-    /**
-     * Download file using 4 parallel HTTP Range connections writing into pre-allocated RandomAccessFile
-     */
-    private boolean downloadParallelChunks(String finalUrl, File apkFile, long contentLength) {
-        RandomAccessFile raf = null;
-        ExecutorService executor = null;
-        try {
-            raf = new RandomAccessFile(apkFile, "rw");
-            raf.setLength(contentLength);
-            raf.close();
-            raf = null;
-
-            final int NUM_THREADS = 4;
-            long chunkSize = (contentLength + NUM_THREADS - 1) / NUM_THREADS;
-            executor = Executors.newFixedThreadPool(NUM_THREADS);
-            downloadExecutor = executor;
-
-            AtomicLong totalDownloaded = new AtomicLong(0);
-            AtomicBoolean hasError = new AtomicBoolean(false);
-            CountDownLatch latch = new CountDownLatch(NUM_THREADS);
-
-            for (int i = 0; i < NUM_THREADS; i++) {
-                final int chunkIndex = i;
-                final long chunkStart = i * chunkSize;
-                final long chunkEnd = Math.min(chunkStart + chunkSize - 1, contentLength - 1);
-
-                if (chunkStart > chunkEnd) {
-                    latch.countDown();
-                    continue;
-                }
-
-                executor.submit(() -> {
-                    HttpURLConnection conn = null;
-                    InputStream in = null;
-                    RandomAccessFile chunkRaf = null;
-                    try {
-                        if (isDownloadCancelled || hasError.get()) {
-                            return;
-                        }
-
-                        URL u = new URL(finalUrl);
-                        conn = (HttpURLConnection) u.openConnection();
-                        conn.setConnectTimeout(15000);
-                        conn.setReadTimeout(30000);
-                        conn.setRequestProperty("User-Agent", CHROME_USER_AGENT);
-                        conn.setRequestProperty("Accept", "*/*");
-                        conn.setRequestProperty("Accept-Encoding", "identity");
-                        conn.setRequestProperty("Range", "bytes=" + chunkStart + "-" + chunkEnd);
-                        activeConnections.add(conn);
-
-                        conn.connect();
-                        int code = conn.getResponseCode();
-                        if (code != 206) {
-                            throw new java.io.IOException("Chunk " + chunkIndex + " server did not honor Range: HTTP " + code);
-                        }
-
-                        in = new BufferedInputStream(conn.getInputStream(), 262144);
-                        chunkRaf = new RandomAccessFile(apkFile, "rw");
-                        chunkRaf.seek(chunkStart);
-
-                        byte[] buffer = new byte[262144]; // 256 KB buffer
-                        long chunkBytesRead = 0;
-                        long expectedBytes = chunkEnd - chunkStart + 1;
-                        int read;
-
-                        while (!isDownloadCancelled && !hasError.get() && (read = in.read(buffer)) != -1) {
-                            chunkRaf.write(buffer, 0, read);
-                            chunkBytesRead += read;
-                            totalDownloaded.addAndGet(read);
-                        }
-
-                        if (!isDownloadCancelled && !hasError.get() && chunkBytesRead != expectedBytes) {
-                            throw new java.io.IOException("Chunk " + chunkIndex + " read mismatch: " + chunkBytesRead + " vs " + expectedBytes);
-                        }
-                    } catch (Throwable t) {
-                        if (!isDownloadCancelled) {
-                            Log.w(TAG, "Chunk " + chunkIndex + " failed: " + t.getMessage());
-                            hasError.set(true);
-                        }
-                    } finally {
-                        if (chunkRaf != null) {
-                            try { chunkRaf.close(); } catch (Throwable ignored) { /* Handled RAF close */ }
-                        }
-                        if (in != null) {
-                            try { in.close(); } catch (Throwable ignored) { /* Handled stream close */ }
-                        }
-                        if (conn != null) {
-                            activeConnections.remove(conn);
-                            try { conn.disconnect(); } catch (Throwable ignored) { /* Handled connection close */ }
-                        }
-                        latch.countDown();
-                    }
-                });
-            }
-
-            long lastBytes = 0;
-            long lastTime = System.currentTimeMillis();
-
-            while (!latch.await(200, TimeUnit.MILLISECONDS)) {
-                if (isDownloadCancelled || hasError.get()) {
-                    break;
-                }
-                long now = System.currentTimeMillis();
-                long currentBytes = totalDownloaded.get();
-                long timeDelta = now - lastTime;
-                double speedMBps = 0.0;
-                if (timeDelta > 0) {
-                    long bytesDelta = currentBytes - lastBytes;
-                    speedMBps = ((double) bytesDelta / (1024.0 * 1024.0)) / ((double) timeDelta / 1000.0);
-                }
-                lastBytes = currentBytes;
-                lastTime = now;
-
-                int percent = (contentLength > 0) ? (int) ((currentBytes * 100) / contentLength) : -1;
-                double downloadedMB = (double) currentBytes / (1024.0 * 1024.0);
-                double totalMB = (contentLength > 0) ? (double) contentLength / (1024.0 * 1024.0) : 0;
-                dispatchDownloadProgress(percent, downloadedMB, totalMB, speedMBps, "downloading", null);
-            }
-
-            if (isDownloadCancelled) {
-                return false;
-            }
-
-            if (hasError.get()) {
-                return false;
-            }
-
-            return apkFile.exists() && apkFile.length() == contentLength;
-        } catch (Throwable t) {
-            Log.w(TAG, "downloadParallelChunks error: " + t.getMessage(), t);
-            return false;
-        } finally {
-            if (raf != null) {
-                try { raf.close(); } catch (Throwable ignored) { /* Handled RAF close */ }
-            }
-            if (executor != null) {
-                try { executor.shutdown(); } catch (Throwable ignored) { /* Handled executor shutdown */ }
-                downloadExecutor = null;
-            }
-        }
-    }
-
-    /**
-     * Fallback 256KB single stream download with Chrome User-Agent and real-time speed calculation
-     */
-    private void runSingleStreamDownload(String downloadUrl, File apkFile, long knownContentLength) {
-        if (isDownloadCancelled) return;
-        HttpURLConnection conn = null;
-        InputStream in = null;
-        FileOutputStream out = null;
-        try {
-            if (apkFile.exists()) {
-                apkFile.delete();
-            }
-            URL u = new URL(downloadUrl);
-            conn = (HttpURLConnection) u.openConnection();
-            conn.setInstanceFollowRedirects(true);
-            conn.setConnectTimeout(15000);
-            conn.setReadTimeout(30000);
-            conn.setRequestProperty("User-Agent", CHROME_USER_AGENT);
-            conn.setRequestProperty("Accept", "*/*");
-            conn.setRequestProperty("Accept-Encoding", "identity");
-            activeConnections.add(conn);
-            conn.connect();
-
-            int code = conn.getResponseCode();
-            if (code < 200 || code >= 300) {
-                throw new java.io.IOException("Single stream returned HTTP " + code);
-            }
-
-            long totalBytes = knownContentLength;
-            if (totalBytes <= 0) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    totalBytes = conn.getContentLengthLong();
-                } else {
-                    totalBytes = conn.getContentLength();
-                }
-            }
-
-            in = new BufferedInputStream(conn.getInputStream(), 262144);
-            out = new FileOutputStream(apkFile);
-            byte[] buffer = new byte[262144]; // 256 KB buffer
-            long downloaded = 0;
-            long lastDispatch = System.currentTimeMillis();
-            long lastBytes = 0;
-            int read;
-
-            while (!isDownloadCancelled && (read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-                downloaded += read;
-
-                long now = System.currentTimeMillis();
-                if (now - lastDispatch > 200) {
-                    long timeDelta = now - lastDispatch;
-                    long bytesDelta = downloaded - lastBytes;
-                    double speedMBps = (timeDelta > 0) ? ((double) bytesDelta / (1024.0 * 1024.0)) / ((double) timeDelta / 1000.0) : 0.0;
-                    lastDispatch = now;
-                    lastBytes = downloaded;
-
-                    int percent = (totalBytes > 0) ? (int) ((downloaded * 100) / totalBytes) : -1;
-                    double downloadedMB = (double) downloaded / (1024.0 * 1024.0);
-                    double totalMB = (totalBytes > 0) ? (double) totalBytes / (1024.0 * 1024.0) : 0;
-                    dispatchDownloadProgress(percent, downloadedMB, totalMB, speedMBps, "downloading", null);
-                }
-            }
-
-            out.flush();
-            out.close();
-            out = null;
-            in.close();
-            in = null;
-            activeConnections.remove(conn);
-            conn.disconnect();
-            conn = null;
-
-            if (isDownloadCancelled) {
-                return;
-            }
-
-            if (!apkFile.exists() || apkFile.length() < 1_000_000) {
-                throw new java.io.IOException("Single stream downloaded file is incomplete (" + (apkFile.exists() ? apkFile.length() : 0) + " bytes)");
-            }
-
-            double finalMB = (double) apkFile.length() / (1024.0 * 1024.0);
-            Log.i(TAG, "Native APK single stream download complete: " + apkFile.getAbsolutePath() + " (" + finalMB + " MB)");
-            lastDownloadedApkFile = apkFile;
-            dispatchDownloadProgress(100, finalMB, finalMB, 0.0, "installing", null);
-            launchApkInstallerIntent(apkFile);
-
-        } catch (Throwable t) {
-            if (!isDownloadCancelled) {
-                Log.e(TAG, "Single stream download failed, attempting DownloadManager fallback: " + t.getMessage(), t);
-                runDownloadManagerFallback(downloadUrl);
-            }
-        } finally {
-            if (out != null) {
-                try { out.close(); } catch (Throwable ignored) { /* Handled stream close */ }
-            }
-            if (in != null) {
-                try { in.close(); } catch (Throwable ignored) { /* Handled stream close */ }
-            }
-            if (conn != null) {
-                activeConnections.remove(conn);
-                try { conn.disconnect(); } catch (Throwable ignored) { /* Handled connection close */ }
-            }
-        }
     }
 
     /**

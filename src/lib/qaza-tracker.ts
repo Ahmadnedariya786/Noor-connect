@@ -495,6 +495,93 @@ export const addPendingDateQazaPrayer = (date: string, prayer: QazaPrayerName): 
   }
 };
 
+/**
+ * Atomically reconciles and saves draft prayer statuses for a specific date:
+ * - Diffs draftStatuses vs prevStatuses from noor_qaza_date_records_v1
+ * - Decrements qazaData.prayers[p] if prev === 'pending' and draft !== 'pending'
+ * - Increments qazaData.prayers[p] if prev !== 'pending' and draft === 'pending'
+ * - Records completed makeup in today's activity log if draft === 'completed'
+ * - Updates date record and removes the record if 0 prayers are pending (cleans up pending date pills)
+ * - Dispatches qaza-updated events
+ */
+export const saveDateRecordQaza = (
+  date: string,
+  draftStatuses: Record<QazaPrayerName, 'pending' | 'completed' | 'none'>
+): void => {
+  const records = getDateWiseQazaList();
+  const existingRecord = records.find((r) => r.date === date);
+  const prevStatuses: Record<QazaPrayerName, 'pending' | 'completed' | 'none'> = existingRecord
+    ? { ...existingRecord.prayers }
+    : { fajr: 'none', dhuhr: 'none', asr: 'none', maghrib: 'none', isha: 'none', witr: 'none' };
+
+  let prayers: Record<QazaPrayerName, number>;
+  try {
+    const data = localStorage.getItem(QAZA_STORAGE_KEY);
+    const parsed = data ? JSON.parse(data) : {};
+    prayers = {
+      fajr: Math.max(0, Number(parsed.fajr) || 0),
+      dhuhr: Math.max(0, Number(parsed.dhuhr) || 0),
+      asr: Math.max(0, Number(parsed.asr) || 0),
+      maghrib: Math.max(0, Number(parsed.maghrib) || 0),
+      isha: Math.max(0, Number(parsed.isha) || 0),
+      witr: Math.max(0, Number(parsed.witr) || 0),
+    };
+  } catch {
+    prayers = { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0, witr: 0 };
+  }
+
+  const prayerNames: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
+  let countModified = false;
+
+  for (const p of prayerNames) {
+    const prev = prevStatuses[p] || 'none';
+    const draft = draftStatuses[p] || 'none';
+
+    if (prev === 'pending' && draft !== 'pending') {
+      prayers[p] = Math.max(0, (prayers[p] || 0) - 1);
+      countModified = true;
+      if (draft === 'completed') {
+        addQazaHistoryEntry(p as PrayerName);
+      }
+    } else if (prev !== 'pending' && draft === 'pending') {
+      prayers[p] = (prayers[p] || 0) + 1;
+      countModified = true;
+    }
+  }
+
+  if (countModified) {
+    saveQazaPrayers(prayers);
+  }
+
+  // Update date records list: remove date record if 0 pending
+  const hasAnyPending = prayerNames.some((p) => draftStatuses[p] === 'pending');
+  let updatedRecords: DateWiseQazaRecord[];
+
+  if (!hasAnyPending) {
+    // 0 pending on this date -> remove record so date pill disappears immediately
+    updatedRecords = records.filter((r) => r.date !== date);
+  } else {
+    let rec = records.find((r) => r.date === date);
+    if (!rec) {
+      rec = {
+        id: `qaza_date_${date}`,
+        date,
+        hijriDate: formatHijriDate(date),
+        prayers: { ...draftStatuses },
+      };
+      records.push(rec);
+    } else {
+      rec.prayers = { ...draftStatuses };
+    }
+    updatedRecords = records;
+  }
+
+  saveDateWiseQazaList(updatedRecords);
+  window.dispatchEvent(new CustomEvent('qaza-updated'));
+  window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+  window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
+};
+
 export const toggleDatePrayerQaza = (date: string, prayer: QazaPrayerName): void => {
   const records = getDateWiseQazaList();
   let record = records.find((r) => r.date === date);

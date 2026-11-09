@@ -1328,6 +1328,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   justifyContent: 'space-between',
                   gap: '6px',
                   width: '100%',
+                  paddingLeft: '2px',
                   minWidth: 0,
                   marginTop: '4px',
                 }}

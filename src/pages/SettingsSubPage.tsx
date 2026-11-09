@@ -947,7 +947,7 @@ const SettingsSubPage: React.FC = () => {
                 role="button"
                 tabIndex={0}
               >
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
                   <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors truncate block">{appearanceStrings.appThemeTitle}</Label>
                   <p className="text-xs text-[var(--text-secondary)] truncate">{appearanceStrings.appThemeSubtitle}</p>
                 </div>
@@ -1953,7 +1953,9 @@ const SettingsSubPage: React.FC = () => {
                         <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
                         <p className="text-xs font-bold text-amber-500 dark:text-amber-400 truncate">
                           {apkDownloadProgress?.status === 'downloading'
-                            ? `Downloading... ${apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent + '%' : ''}`
+                            ? (apkDownloadProgress.downloadedMB <= 0 && apkDownloadProgress.percent <= 0
+                                ? 'Connecting to GitHub CDN...'
+                                : `Downloading... ${apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent + '%' : ''}`)
                             : apkDownloadProgress?.status === 'installing' || apkDownloadProgress?.status === 'completed'
                             ? '✓ Downloaded! Launching Installer...'
                             : apkDownloadProgress?.status === 'cancelled'
@@ -1965,7 +1967,9 @@ const SettingsSubPage: React.FC = () => {
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate">
                         {apkDownloadProgress?.status === 'downloading'
-                          ? `${apkDownloadProgress.downloadedMB.toFixed(1)} / ${apkDownloadProgress.totalMB > 0 ? apkDownloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(apkDownloadProgress.speedMBps)}`
+                          ? (apkDownloadProgress.downloadedMB <= 0 && apkDownloadProgress.percent <= 0
+                              ? 'Establishing secure stream...'
+                              : `${apkDownloadProgress.downloadedMB.toFixed(1)} / ${apkDownloadProgress.totalMB > 0 ? apkDownloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(apkDownloadProgress.speedMBps)}`)
                           : apkDownloadProgress?.status === 'cancelled'
                           ? 'Tap to restart download'
                           : apkDownloadProgress?.status === 'error'
@@ -2051,7 +2055,7 @@ const SettingsSubPage: React.FC = () => {
                       <div
                         className="h-full rounded-full transition-all duration-150"
                         style={{
-                          width: `${Math.max(5, Math.min(100, apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent : 15))}%`,
+                          width: `${Math.max(0, Math.min(100, apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent : 0))}%`,
                           background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
                           boxShadow: '0 0 10px var(--accent-glow)',
                         }}

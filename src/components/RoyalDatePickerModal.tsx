@@ -6,6 +6,7 @@ import {
   getDetailedHijriDate,
   getDateWiseQazaList,
   toggleDatePrayerQaza,
+  saveDateRecordQaza,
   type QazaPrayerName,
   type DateWiseQazaRecord,
 } from '@/lib/qaza-tracker';
@@ -165,7 +166,36 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
     }
   };
 
+  const [draftStatuses, setDraftStatuses] = useState<Record<QazaPrayerName, 'pending' | 'completed' | 'none'>>({
+    fajr: 'none',
+    dhuhr: 'none',
+    asr: 'none',
+    maghrib: 'none',
+    isha: 'none',
+    witr: 'none',
+  });
+
+  // Sync draft statuses from persisted date record whenever activeDate or dateRecords changes
+  useEffect(() => {
+    const rec = dateRecords.find((r) => r.date === activeDate);
+    setDraftStatuses(
+      rec
+        ? { ...rec.prayers }
+        : {
+            fajr: 'none',
+            dhuhr: 'none',
+            asr: 'none',
+            maghrib: 'none',
+            isha: 'none',
+            witr: 'none',
+          }
+    );
+  }, [activeDate, dateRecords]);
+
   const handleSelectPreset = (dateIso: string) => {
+    if (activeDate !== dateIso) {
+      saveDateRecordQaza(activeDate, draftStatuses);
+    }
     setActiveDate(dateIso);
     const parts = dateIso.split('-');
     if (parts.length === 3) {
@@ -176,6 +206,9 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
 
   const handleDayClick = (dateIso: string) => {
     if (dateIso > todayIso) return;
+    if (activeDate !== dateIso) {
+      saveDateRecordQaza(activeDate, draftStatuses);
+    }
     setActiveDate(dateIso);
   };
 
@@ -184,11 +217,20 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
   }, [dateRecords, activeDate]);
 
   const handleTogglePrayer = (prayerName: QazaPrayerName) => {
-    toggleDatePrayerQaza(activeDate, prayerName);
-    refreshRecords();
+    setDraftStatuses((prev) => {
+      const current = prev[prayerName] || 'none';
+      const next: 'pending' | 'completed' | 'none' =
+        current === 'none' ? 'pending' : current === 'pending' ? 'completed' : 'none';
+      return {
+        ...prev,
+        [prayerName]: next,
+      };
+    });
   };
 
   const handleSaveAndDone = () => {
+    saveDateRecordQaza(activeDate, draftStatuses);
+    refreshRecords();
     onSelectDate(activeDate);
     onClose();
   };
@@ -492,7 +534,7 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
 
           <div className="grid grid-cols-3 gap-1.5">
             {PRAYERS.map((p) => {
-              const status = currentRecord?.prayers[p.name] || 'none';
+              const status = draftStatuses[p.name] || 'none';
               const isPending = status === 'pending';
               const isCompleted = status === 'completed';
 

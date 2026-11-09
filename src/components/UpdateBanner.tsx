@@ -222,7 +222,9 @@ export const UpdateBanner: React.FC = () => {
               style={{ color: 'var(--accent-text)' }}
             >
               {isDownloading
-                ? `Downloading update... ${downloadProgress.percent >= 0 ? downloadProgress.percent + '%' : ''}`
+                ? (downloadProgress.downloadedMB <= 0 && downloadProgress.percent <= 0
+                    ? 'Connecting to GitHub CDN...'
+                    : `Downloading update... ${downloadProgress.percent >= 0 ? downloadProgress.percent + '%' : ''}`)
                 : isInstalledOrReady
                 ? '✓ Downloaded! Launching Installer...'
                 : isCancelled
@@ -233,7 +235,9 @@ export const UpdateBanner: React.FC = () => {
             </p>
             <p className="text-[11px] text-muted-foreground truncate pt-0.5">
               {isDownloading
-                ? `${downloadProgress.downloadedMB.toFixed(1)} / ${downloadProgress.totalMB > 0 ? downloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(downloadProgress.speedMBps)}`
+                ? (downloadProgress.downloadedMB <= 0 && downloadProgress.percent <= 0
+                    ? 'Establishing secure stream...'
+                    : `${downloadProgress.downloadedMB.toFixed(1)} / ${downloadProgress.totalMB > 0 ? downloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(downloadProgress.speedMBps)}`)
                 : isCancelled
                 ? 'Tap Install to restart download'
                 : isError

@@ -571,7 +571,7 @@ const Profile: React.FC = () => {
                       onClick={() => navigate(row.route, { replace: true })}
                       className="group flex items-center justify-between px-4 py-3.5 hover:bg-[var(--surface-2)] active:bg-[var(--surface-2)] transition-all duration-150 cursor-pointer"
                     >
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-3.5 min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
                         <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${row.gradient} border flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
                           <IconComponent className={`w-5 h-5 ${row.iconColor}`} />
                         </div>
@@ -598,7 +598,7 @@ const Profile: React.FC = () => {
                             className="settings-value-chip"
                             dir="ltr"
                           >
-                            <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{val}</span>
+                            <span style={{ unicodeBidi: 'isolate' }} className="whitespace-nowrap">{val}</span>
                           </span>
                         ) : null
                       )}

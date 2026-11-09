@@ -108,6 +108,7 @@ export interface NightlyReleaseInfo {
   htmlUrl: string;
   body?: string;
   sizeBytes?: number;
+  expectedBytes?: number;
 }
 
 export interface UpdateCheckResult {
@@ -120,6 +121,8 @@ export interface UpdateCheckResult {
   currentBuildCommit: string;
   remoteCommit?: string;
   latestApkUploadedAt?: string;
+  downloadUrl?: string;
+  expectedBytes?: number;
   release: NightlyReleaseInfo | null;
   lastChecked: number;
   fromCache: boolean;
@@ -246,10 +249,19 @@ export function isUpdateAvailable(
     commitSha?: string | null;
     publishedAt?: string | null;
     latestAssetUploadedAt?: string | null;
+    sizeBytes?: number;
+    expectedBytes?: number;
   } | null,
   local: { commitSha?: string | null; buildTime?: string | null }
 ): boolean {
   if (!release) return false;
+
+  // Pre-flight check: If asset size is known and <= 15 MB, candidate is still uploading or invalid
+  const effectiveSize = release.sizeBytes ?? release.expectedBytes;
+  if (typeof effectiveSize === 'number' && effectiveSize > 0 && effectiveSize <= 15_000_000) {
+    console.warn('[UpdateChecker] Candidate APK size <= 15 MB (' + effectiveSize + ' bytes). Build/upload in progress.');
+    return false;
+  }
 
   const installedCommit = local.commitSha || BUILD_COMMIT;
   const installedBuildTime = local.buildTime || BUILD_TIME;
@@ -498,11 +510,22 @@ async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyR
     let selectedApkAsset: { browser_download_url?: string; size?: number } | null = null;
 
     if (Array.isArray(data.assets)) {
-      const apkAssets = data.assets.filter((a: { name?: string }) =>
+      const apkAssets = data.assets.filter((a: { name?: string; state?: string; size?: number }) =>
         typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk')
       );
 
       for (const asset of apkAssets) {
+        // Pre-flight check: asset must be fully uploaded (state === 'uploaded' or undefined) and size > 15 MB
+        const isUploaded = !asset.state || asset.state === 'uploaded';
+        const isSufficientSize = typeof asset.size === 'number' ? asset.size > 15_000_000 : true;
+        if (!isUploaded || !isSufficientSize) {
+          console.warn('[UpdateChecker] Skipping incomplete or uploading asset:', asset.name, {
+            state: asset.state,
+            size: asset.size,
+          });
+          continue;
+        }
+
         const rawTime = asset.uploaded_at || asset.updated_at || asset.created_at;
         if (rawTime) {
           const timeMs = new Date(rawTime).getTime();
@@ -519,6 +542,9 @@ async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyR
           apkUrl = selectedApkAsset.browser_download_url;
         }
         sizeBytes = typeof selectedApkAsset.size === 'number' ? selectedApkAsset.size : undefined;
+      } else if (apkAssets.length > 0) {
+        console.warn('[UpdateChecker] Candidate APK is still uploading or <= 15 MB. Update not ready.');
+        return null;
       }
     }
 
@@ -532,6 +558,7 @@ async function fetchFromGitHubReleasesApi(signal: AbortSignal): Promise<NightlyR
       htmlUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/nightly`,
       body: data.body,
       sizeBytes,
+      expectedBytes: sizeBytes,
     };
   } catch (err: unknown) {
     if ((err as { name?: string })?.name === 'AbortError') throw err;
@@ -691,6 +718,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
           currentBuildCommit,
           remoteCommit: cached.release?.commitSha,
           latestApkUploadedAt: cached.release?.latestAssetUploadedAt || cached.release?.publishedAt,
+          downloadUrl: cached.release?.apkUrl,
+          expectedBytes: cached.release?.expectedBytes || cached.release?.sizeBytes,
           release: cached.release,
           lastChecked: cached.lastChecked,
           fromCache: true,
@@ -755,6 +784,8 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       currentBuildCommit,
       remoteCommit: releaseInfo.commitSha,
       latestApkUploadedAt: releaseInfo.latestAssetUploadedAt || releaseInfo.publishedAt,
+      downloadUrl: releaseInfo.apkUrl,
+      expectedBytes: releaseInfo.expectedBytes || releaseInfo.sizeBytes,
       release: releaseInfo,
       lastChecked: Date.now(),
       fromCache: false,

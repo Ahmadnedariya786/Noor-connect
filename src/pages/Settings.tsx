@@ -92,7 +92,7 @@ const Settings = () => {
             role="button"
             tabIndex={0}
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex items-center gap-3 min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
               <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
                 <Palette className="w-5 h-5 text-[var(--accent-text)]" />
               </div>
@@ -224,7 +224,7 @@ const Settings = () => {
               role="button"
               tabIndex={0}
             >
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
                 <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
                   <Clock className="w-5 h-5 text-[var(--accent-text)]" />
                 </div>
