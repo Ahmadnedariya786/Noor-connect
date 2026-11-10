@@ -1,43 +1,48 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Sparkles, Download, X, Check, ExternalLink, RotateCw } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Sparkles, Download, X, Check, ExternalLink, RotateCw, ShieldAlert } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import {
   checkNightlyUpdate,
   downloadAndInstallUpdate,
-  triggerPendingInstall,
   openExternalBrowserFallback,
-  cancelApkDownload,
-  formatDownloadSpeed,
-  formatReleaseDate,
-  formatCommit,
+  cancelOtaDownload,
+  installReadyApk,
+  subscribeOtaStatus,
   isBannerDismissed,
   dismissBanner,
   type UpdateCheckResult,
-  type ApkDownloadProgressDetail,
+  type OtaStatus,
 } from '@/lib/update-checker';
-import { BUILD_COMMIT } from '@/buildInfo';
+import { BUILD_COMMIT, APP_VERSION } from '@/buildInfo';
 
 const LAST_AUTO_CHECK_KEY = 'noor_last_auto_check';
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
-// In-memory guard to ensure auto-check runs exactly once per app launch on Home mount
 let autoCheckedThisLaunch = false;
 
 export const UpdateBanner: React.FC = () => {
   const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
   const [dismissed, setDismissed] = useState<boolean>(() => isBannerDismissed());
-  const [downloadProgress, setDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
+  const [otaStatus, setOtaStatus] = useState<OtaStatus>({
+    state: 'idle',
+    engine: 'none',
+    downloadedBytes: 0,
+    totalBytes: 0,
+    percent: 0,
+    speedMBps: 0,
+    error: '',
+    downloadedMB: 0,
+    totalMB: 0,
+  });
 
   const runSilentUpdateCheck = useCallback(async () => {
     try {
       localStorage.setItem(LAST_AUTO_CHECK_KEY, Date.now().toString());
-      // Silent cache-friendly update check for passive boot check (uses 10m smart cache)
       const res = await checkNightlyUpdate(false);
       if (res.hasUpdate && res.status === 'Update available') {
         const localCommit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || '';
         const remoteCommit = res.release?.commitSha || '';
-        // Verify release commit SHA differs from build commit
         if (remoteCommit && localCommit && remoteCommit.toLowerCase().startsWith(localCommit.toLowerCase())) {
           setUpdateInfo(null);
           return;
@@ -48,7 +53,7 @@ export const UpdateBanner: React.FC = () => {
         setUpdateInfo(null);
       }
     } catch {
-      // Handled silent background update check failure - no toast, no banner
+      // Handled silent background update check failure safely
       setUpdateInfo(null);
     }
   }, []);
@@ -75,7 +80,6 @@ export const UpdateBanner: React.FC = () => {
       }
     };
 
-    // Listen to native app resume
     let appStateHandle: { remove: () => void } | null = null;
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appStateChange', (state) => {
@@ -89,7 +93,6 @@ export const UpdateBanner: React.FC = () => {
       });
     }
 
-    // Listen to web document visibility change
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         handleResume();
@@ -97,7 +100,7 @@ export const UpdateBanner: React.FC = () => {
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // Also listen to any external check result (e.g. manual trigger in Settings)
+    // Listen to external check result (e.g. manual trigger in Settings)
     const handleUpdateResult = (e: CustomEvent<UpdateCheckResult>) => {
       if (isMounted && e.detail) {
         if (e.detail.hasUpdate && e.detail.status === 'Update available') {
@@ -108,22 +111,20 @@ export const UpdateBanner: React.FC = () => {
         }
       }
     };
-
-    // Listen to native APK download progress dispatched from MainActivity.java
-    const handleApkProgress = (e: CustomEvent<ApkDownloadProgressDetail>) => {
-      if (isMounted && e.detail) {
-        setDownloadProgress(e.detail);
-      }
-    };
-
     window.addEventListener('noor-update-check-result', handleUpdateResult as EventListener);
-    window.addEventListener('apkDownloadProgress', handleApkProgress as EventListener);
+
+    // Subscribe to unified OTA status (handles push events + 250ms polling)
+    const unsubscribeOta = subscribeOtaStatus((status) => {
+      if (isMounted) {
+        setOtaStatus(status);
+      }
+    });
 
     return () => {
       isMounted = false;
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('noor-update-check-result', handleUpdateResult as EventListener);
-      window.removeEventListener('apkDownloadProgress', handleApkProgress as EventListener);
+      unsubscribeOta();
       if (appStateHandle) {
         try {
           appStateHandle.remove();
@@ -138,27 +139,25 @@ export const UpdateBanner: React.FC = () => {
     return null;
   }
 
-  const handleInstall = (e?: React.MouseEvent) => {
+  const handleInstallAction = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (downloadProgress?.status === 'installing' || downloadProgress?.status === 'completed') {
-      triggerPendingInstall();
+
+    if (otaStatus.state === 'installing' || otaStatus.state === 'verifying') {
+      installReadyApk();
       return;
     }
-    downloadAndInstallUpdate(updateInfo.release?.apkUrl);
+    if (otaStatus.state === 'permission_required') {
+      installReadyApk();
+      return;
+    }
+
+    downloadAndInstallUpdate(updateInfo.release?.apkUrl, updateInfo.expectedBytes || updateInfo.release?.expectedBytes);
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (downloadProgress?.status === 'downloading') {
-      cancelApkDownload();
-      setDownloadProgress({
-        percent: 0,
-        downloadedMB: 0,
-        totalMB: 0,
-        speedMBps: 0,
-        status: 'cancelled',
-        message: 'Download cancelled',
-      });
+    if (otaStatus.state === 'downloading' || otaStatus.state === 'connecting') {
+      cancelOtaDownload();
       return;
     }
     dismissBanner();
@@ -167,31 +166,66 @@ export const UpdateBanner: React.FC = () => {
 
   const handleBrowserFallback = (e: React.MouseEvent) => {
     e.stopPropagation();
-    cancelApkDownload();
+    cancelOtaDownload();
     openExternalBrowserFallback(updateInfo.release?.apkUrl);
   };
 
-  const isDownloading = downloadProgress?.status === 'downloading';
-  const isInstalledOrReady = downloadProgress?.status === 'installing' || downloadProgress?.status === 'completed';
-  const isCancelled = downloadProgress?.status === 'cancelled';
-  const isError = downloadProgress?.status === 'error';
+  const state = otaStatus.state;
+  const isConnecting = state === 'connecting';
+  const isDownloading = state === 'downloading';
+  const isVerifying = state === 'verifying';
+  const isPermission = state === 'permission_required';
+  const isInstalling = state === 'installing';
+  const isCancelled = state === 'cancelled';
+  const isError = state === 'error';
+  const isIdle = state === 'idle';
 
-  const subtitle = updateInfo.release?.publishedAt
-    ? `Nightly build · ${formatReleaseDate(updateInfo.release.publishedAt)}`
-    : (updateInfo.release?.commitSha ? `Commit: ${formatCommit(updateInfo.release.commitSha)}` : 'Nightly build');
+  // Compute exact non-truncating banner copy (zero truncation at 360px budget)
+  let titleText = 'Update available';
+  let subtitleText = `Nightly v${(updateInfo.release?.tagName || '').replace(/^v/, '') || APP_VERSION || '2.3.0'}`;
+
+  if (isConnecting) {
+    titleText = 'Connecting...';
+    subtitleText = 'Starting download...';
+  } else if (isDownloading) {
+    if (otaStatus.totalBytes > 0) {
+      titleText = `Downloading • ${otaStatus.percent}%`;
+      const speedPart = otaStatus.speedMBps > 0 ? ` • ${otaStatus.speedMBps.toFixed(1)} MB/s` : '';
+      subtitleText = `${otaStatus.downloadedMB} / ${otaStatus.totalMB} MB${speedPart}`;
+    } else {
+      titleText = 'Downloading...';
+      const speedPart = otaStatus.speedMBps > 0 ? ` • ${otaStatus.speedMBps.toFixed(1)} MB/s` : '';
+      subtitleText = `${otaStatus.downloadedMB} MB${speedPart}`;
+    }
+  } else if (isVerifying) {
+    titleText = 'Verifying update...';
+    subtitleText = 'Checking file integrity';
+  } else if (isPermission) {
+    titleText = 'Permission needed';
+    subtitleText = 'Allow installs to continue';
+  } else if (isInstalling) {
+    titleText = 'Opening installer...';
+    subtitleText = 'Tap to install if closed';
+  } else if (isCancelled) {
+    titleText = 'Download paused';
+    subtitleText = 'Tap Retry to resume';
+  } else if (isError) {
+    titleText = 'Download failed';
+    subtitleText = 'Retry or use Browser';
+  }
 
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={handleInstall}
+      onClick={handleInstallAction}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleInstall();
+          handleInstallAction();
         }
       }}
-      className="relative overflow-hidden p-3.5 rounded-2xl border transition-all active:scale-[0.99] cursor-pointer flex flex-col gap-2.5 text-left animate-in fade-in slide-in-from-top-2 duration-300 select-none shadow-lg mb-3"
+      className="relative overflow-hidden p-3 rounded-2xl border transition-all active:scale-[0.99] cursor-pointer flex flex-col gap-2 text-left animate-in fade-in slide-in-from-top-2 duration-300 select-none shadow-lg mb-3"
       style={{
         background: 'linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%)',
         borderColor: 'var(--border)',
@@ -199,59 +233,49 @@ export const UpdateBanner: React.FC = () => {
       }}
       aria-label="Update available, tap to install"
     >
-      <div className="flex items-center justify-between gap-3 w-full">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center justify-between gap-2.5 w-full">
+        {/* Left: Icon + Compact Non-Truncating Copy */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
             style={{
-              background: isInstalledOrReady ? 'var(--success)' : 'var(--accent)',
+              background: isInstalling ? 'var(--success)' : isPermission ? 'var(--warning)' : 'var(--accent)',
               color: 'var(--on-accent)',
             }}
           >
-            {isInstalledOrReady ? (
+            {isInstalling ? (
               <Check className="w-4 h-4 stroke-[2.5]" />
-            ) : isDownloading ? (
+            ) : isPermission ? (
+              <ShieldAlert className="w-4 h-4 stroke-[2.5]" />
+            ) : isDownloading || isConnecting || isVerifying ? (
               <RotateCw className="w-4 h-4 animate-spin" />
             ) : (
               <Sparkles className="w-4 h-4 fill-current" />
             )}
           </div>
-          <div className="min-w-0">
+
+          <div className="min-w-0 flex-1">
             <p
               className="text-xs font-bold tracking-wide leading-tight truncate"
               style={{ color: 'var(--accent-text)' }}
             >
-              {isDownloading
-                ? (downloadProgress.downloadedMB <= 0 && downloadProgress.percent <= 0
-                    ? 'Connecting to GitHub CDN...'
-                    : `Downloading update... ${downloadProgress.percent >= 0 ? downloadProgress.percent + '%' : ''}`)
-                : isInstalledOrReady
-                ? '✓ Downloaded! Launching Installer...'
-                : isCancelled
-                ? 'Download cancelled'
-                : isError
-                ? 'Download failed'
-                : 'Update available'}
+              {titleText}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate pt-0.5">
-              {isDownloading
-                ? (downloadProgress.downloadedMB <= 0 && downloadProgress.percent <= 0
-                    ? 'Establishing secure stream...'
-                    : `${downloadProgress.downloadedMB.toFixed(1)} / ${downloadProgress.totalMB > 0 ? downloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(downloadProgress.speedMBps)}`)
-                : isCancelled
-                ? 'Tap Install to restart download'
-                : isError
-                ? (downloadProgress.message || 'Tap to retry')
-                : subtitle}
+            <p
+              className="text-[11px] text-muted-foreground truncate pt-0.5"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {subtitleText}
             </p>
           </div>
         </div>
 
+        {/* Right: Adaptive Compact Actions */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {isInstalledOrReady ? (
+          {isInstalling ? (
             <button
               type="button"
-              onClick={handleInstall}
+              onClick={handleInstallAction}
               className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm transition-transform active:scale-95"
               style={{
                 background: 'var(--accent)',
@@ -259,23 +283,46 @@ export const UpdateBanner: React.FC = () => {
               }}
             >
               <Download className="w-3 h-3" />
-              <span>Install Now</span>
+              <span>Tap to install APK</span>
             </button>
-          ) : isDownloading ? (
-            <div
-              className="px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold"
-              style={{
-                background: 'var(--accent-soft)',
-                color: 'var(--accent-text)',
-                border: '1px solid var(--border)',
-              }}
-            >
-              {downloadProgress.percent >= 0 ? `${downloadProgress.percent}%` : '...'}
-            </div>
-          ) : isError || isCancelled ? (
+          ) : isPermission ? (
             <button
               type="button"
-              onClick={handleInstall}
+              onClick={handleInstallAction}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm transition-transform active:scale-95"
+              style={{
+                background: 'var(--warning)',
+                color: '#000000',
+              }}
+            >
+              <span>Allow</span>
+            </button>
+          ) : isDownloading ? (
+            <div className="flex items-center gap-1">
+              <div
+                className="px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold"
+                style={{
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent-text)',
+                  border: '1px solid var(--border)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {otaStatus.totalBytes > 0 ? `${otaStatus.percent}%` : `${otaStatus.downloadedMB}M`}
+              </div>
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="p-1 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+                aria-label="Pause download"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : isCancelled || isError ? (
+            <button
+              type="button"
+              onClick={handleInstallAction}
               className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
               style={{
                 background: 'var(--accent-soft)',
@@ -300,14 +347,16 @@ export const UpdateBanner: React.FC = () => {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="p-1 text-muted-foreground/60 hover:text-foreground rounded-lg transition-colors"
-            aria-label={isDownloading ? 'Cancel download' : 'Dismiss update banner'}
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
+          {isIdle && (
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="p-1 text-muted-foreground/60 hover:text-foreground rounded-lg transition-colors"
+              aria-label="Dismiss update banner"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -317,7 +366,7 @@ export const UpdateBanner: React.FC = () => {
           <div
             className="h-full rounded-full transition-all duration-150"
             style={{
-              width: `${Math.max(5, Math.min(100, downloadProgress.percent >= 0 ? downloadProgress.percent : 15))}%`,
+              width: `${Math.max(5, Math.min(100, otaStatus.totalBytes > 0 ? otaStatus.percent : 15))}%`,
               background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
               boxShadow: '0 0 10px var(--accent-glow)',
             }}
@@ -325,10 +374,10 @@ export const UpdateBanner: React.FC = () => {
         </div>
       )}
 
-      {/* Secondary Browser Fallback Link */}
-      {(isDownloading || isInstalledOrReady || isCancelled || isError) && (
+      {/* Secondary Browser Fallback Link (Visible in every active/error state) */}
+      {!isIdle && (
         <div className="flex items-center justify-between pt-0.5 text-[10px] text-muted-foreground/80">
-          <span>Stuck or prompt dismissed?</span>
+          <span>{isError ? 'Stream failed' : 'Stuck or prompt closed?'}</span>
           <button
             type="button"
             onClick={handleBrowserFallback}
@@ -339,7 +388,6 @@ export const UpdateBanner: React.FC = () => {
           </button>
         </div>
       )}
-
     </div>
   );
 };

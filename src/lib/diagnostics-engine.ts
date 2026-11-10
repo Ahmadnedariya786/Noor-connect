@@ -23,6 +23,7 @@ import {
   ONBOARDING_PERMS_V2_KEY,
   healPermissionOnboardingFlags,
 } from '@/lib/onboarding-permissions';
+import { getOtaLogTail } from '@/lib/app-updater';
 
 export type DiagnosticCategory =
   | 'REACT_CRASH'
@@ -1456,6 +1457,22 @@ export async function generateAiDiagnosticReport(existingScan?: DeepHealthScanRe
   } else {
     crumbs.forEach((crumb, idx) => {
       md += `${idx + 1}. \`[${crumb.timestamp}]\` **[${crumb.type}]** ${crumb.message}\n`;
+    });
+    md += `\n`;
+  }
+
+  const otaLogs = getOtaLogTail(50);
+  md += `---\n\n`;
+  md += `## 4. IN-APP OTA UPDATE ENGINE EVENT LOG (${otaLogs.length} EVENTS)\n\n`;
+
+  if (otaLogs.length === 0) {
+    md += `*No OTA update events recorded in buffer.*\n\n`;
+  } else {
+    otaLogs.forEach((log, idx) => {
+      const codePart = log.errorCode ? ` [Error: ${log.errorCode}]` : '';
+      const bytesPart = log.bytes ? ` [Bytes: ${log.bytes}]` : '';
+      const enginePart = log.engine ? ` [Engine: ${log.engine}]` : '';
+      md += `${idx + 1}. \`[${log.timestamp}]\` **[${log.phase.toUpperCase()}]** State: \`${log.state}\`${enginePart}${bytesPart}${codePart}${log.message ? ` — ${log.message}` : ''}\n`;
     });
     md += `\n`;
   }

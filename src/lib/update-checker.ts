@@ -20,6 +20,35 @@
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
+import {
+  logOtaEvent,
+  startOtaDownload,
+  cancelOtaDownload,
+  installReadyApk,
+  getOtaLogTail,
+  clearOtaLogs,
+  subscribeOtaStatus,
+  type OtaPhase,
+  type OtaState,
+  type OtaEngine,
+  type OtaEvent,
+  type OtaStatus,
+} from './app-updater';
+
+export {
+  logOtaEvent,
+  startOtaDownload,
+  cancelOtaDownload,
+  installReadyApk,
+  getOtaLogTail,
+  clearOtaLogs,
+  subscribeOtaStatus,
+  type OtaPhase,
+  type OtaState,
+  type OtaEngine,
+  type OtaEvent,
+  type OtaStatus,
+};
 
 const GITHUB_REPO = 'Ahmadnedariya786/Noor-connect';
 const NIGHTLY_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/tags/nightly`;
@@ -142,10 +171,18 @@ declare global {
   interface Window {
     AndroidBridge?: {
       closeApp?: () => void;
-      downloadAndInstallApk?: (apkUrl: string) => void;
+      downloadAndInstallApk?: (apkUrl: string, expectedBytes?: number) => void;
+      startUpdateDownload?: (apkUrl: string, expectedBytes?: number) => void;
       cancelApkDownload?: () => void;
       installDownloadedApk?: () => void;
+      installReadyApk?: () => void;
+      getOtaStatusJson?: () => string;
       openExternalBrowser?: (url: string) => void;
+      setNativeThemeBg?: (hexColor: string) => void;
+      printTimetablePdf?: (jobName: string) => void;
+      sharePdf?: (filePath: string, shareTitle: string) => void;
+      requestPinWidget?: (widgetType: string) => boolean;
+      syncWidgetCustomization?: (jsonConfig: string) => void;
     };
   }
 }
@@ -345,17 +382,17 @@ function writeCache(release: NightlyReleaseInfo | null): void {
 
 /**
  * Initiate native APK download and install when running inside Android app with AndroidBridge.
+ * Uses Dual-Engine downloader with instant handoff, 250ms polling, and DownloadManager failover.
  * Falls back to true external browser Intent (not stuck Chrome Custom Tab), or web window.open.
  */
-export async function downloadAndInstallUpdate(apkUrl?: string): Promise<boolean> {
+export async function downloadAndInstallUpdate(apkUrl?: string, expectedBytes?: number): Promise<boolean> {
   const directApkUrl = resolveDirectApkUrl(apkUrl);
 
   try {
     // 1. Native Android Downloader via AndroidBridge (Bypasses Chrome Custom Tab completely)
-    if (typeof window !== 'undefined' && window.AndroidBridge?.downloadAndInstallApk) {
-      console.log('[UpdateChecker] Using native AndroidBridge.downloadAndInstallApk:', directApkUrl);
-      window.AndroidBridge.downloadAndInstallApk(directApkUrl);
-      return true;
+    if (typeof window !== 'undefined' && (window.AndroidBridge?.startUpdateDownload || window.AndroidBridge?.downloadAndInstallApk)) {
+      console.log('[UpdateChecker] Using native AndroidBridge dual-engine updater:', directApkUrl, 'expectedBytes:', expectedBytes);
+      return startOtaDownload(directApkUrl, expectedBytes || 0);
     }
 
     // 2. Android external browser intent fallback (avoids Chrome Custom Tab hang)
@@ -404,22 +441,14 @@ export async function downloadAndInstallUpdate(apkUrl?: string): Promise<boolean
  * Re-trigger installation of downloaded APK if user dismissed prompt
  */
 export function triggerPendingInstall(): void {
-  if (typeof window !== 'undefined' && window.AndroidBridge?.installDownloadedApk) {
-    window.AndroidBridge.installDownloadedApk();
-  }
+  installReadyApk();
 }
 
 /**
  * Abort active native in-app APK download and release background connections immediately.
  */
 export function cancelApkDownload(): void {
-  if (typeof window !== 'undefined' && window.AndroidBridge?.cancelApkDownload) {
-    try {
-      window.AndroidBridge.cancelApkDownload();
-    } catch {
-      // Handled AndroidBridge.cancelApkDownload fallback
-    }
-  }
+  cancelOtaDownload();
 }
 
 /**
@@ -791,6 +820,11 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
       fromCache: false,
     };
 
+    logOtaEvent('check', 'idle', {
+      bytes: checkResult.expectedBytes,
+      message: hasUpdate ? `Update available: ${releaseInfo.tagName || 'nightly'}` : 'Up to date',
+    });
+
     try {
       window.dispatchEvent(new CustomEvent('noor-update-check-result', { detail: checkResult }));
     } catch {
@@ -800,6 +834,11 @@ export async function checkNightlyUpdate(force = false): Promise<UpdateCheckResu
     return checkResult;
   } catch (err: unknown) {
     const message = formatUpdateError(err);
+
+    logOtaEvent('check', 'error', {
+      errorCode: 'E_CHECK_FAILED',
+      message,
+    });
 
     return {
       hasUpdate: false,

@@ -83,8 +83,15 @@ import {
   formatDateTime,
   formatCommit,
   formatUpdateError,
+  getOtaLogTail,
+  clearOtaLogs,
+  subscribeOtaStatus,
+  cancelOtaDownload,
+  installReadyApk,
   type UpdateCheckResult,
   type ApkDownloadProgressDetail,
+  type OtaEvent,
+  type OtaStatus,
 } from '@/lib/update-checker';
 import { BUILD_TIME, BUILD_COMMIT } from '@/buildInfo';
 import { NoorLogoCrest } from '@/components/NoorLogoCrest';
@@ -451,6 +458,19 @@ const SettingsSubPage: React.FC = () => {
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [apkDownloadProgress, setApkDownloadProgress] = useState<ApkDownloadProgressDetail | null>(null);
+  const [isOtaLogExpanded, setIsOtaLogExpanded] = useState(false);
+  const [otaLogEntries, setOtaLogEntries] = useState<OtaEvent[]>(() => getOtaLogTail());
+  const [otaStatus, setOtaStatus] = useState<OtaStatus>({
+    state: 'idle',
+    engine: 'none',
+    downloadedBytes: 0,
+    totalBytes: 0,
+    percent: 0,
+    speedMBps: 0,
+    error: '',
+    downloadedMB: 0,
+    totalMB: 0,
+  });
   const [logoEdition, setLogoEdition] = useState(() => getSelectedLogoEdition());
 
   useEffect(() => {
@@ -589,10 +609,20 @@ const SettingsSubPage: React.FC = () => {
     };
     window.addEventListener('apkDownloadProgress', handleApkProgress as EventListener);
 
+    const unsubOta = subscribeOtaStatus((status) => {
+      setOtaStatus(status);
+    });
+
+    const handleOtaEventLogged = () => {
+      setOtaLogEntries(getOtaLogTail());
+    };
+    window.addEventListener('noor-ota-event-logged', handleOtaEventLogged);
+
     if (sectionId === 'about') {
       const refreshData = () => {
         setDiagnosticEvents(getDiagnosticEntries());
         setFlightBreadcrumbs(getRecentBreadcrumbs());
+        setOtaLogEntries(getOtaLogTail());
       };
       refreshData();
       const unsubscribe = subscribeDiagnostics(refreshData);
@@ -621,12 +651,16 @@ const SettingsSubPage: React.FC = () => {
 
       return () => {
         unsubscribe();
+        unsubOta();
         window.removeEventListener('apkDownloadProgress', handleApkProgress as EventListener);
+        window.removeEventListener('noor-ota-event-logged', handleOtaEventLogged);
       };
     }
 
     return () => {
+      unsubOta();
       window.removeEventListener('apkDownloadProgress', handleApkProgress as EventListener);
+      window.removeEventListener('noor-ota-event-logged', handleOtaEventLogged);
     };
   }, [sectionId]);
 
@@ -1949,37 +1983,52 @@ const SettingsSubPage: React.FC = () => {
               {updateResult?.hasUpdate && updateResult.release && (
                 <div className="flex flex-col p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 gap-2.5">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="space-y-0.5 min-w-0">
+                    <div className="space-y-0.5 min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
                         <p className="text-xs font-bold text-amber-500 dark:text-amber-400 truncate">
-                          {apkDownloadProgress?.status === 'downloading'
-                            ? (apkDownloadProgress.downloadedMB <= 0 && apkDownloadProgress.percent <= 0
-                                ? 'Connecting to GitHub CDN...'
-                                : `Downloading... ${apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent + '%' : ''}`)
-                            : apkDownloadProgress?.status === 'installing' || apkDownloadProgress?.status === 'completed'
-                            ? '✓ Downloaded! Launching Installer...'
-                            : apkDownloadProgress?.status === 'cancelled'
-                            ? 'Download cancelled'
-                            : apkDownloadProgress?.status === 'error'
-                            ? 'Download Failed'
-                            : `Nightly Build (${formatReleaseDate(updateResult.release.publishedAt)})`}
+                          {otaStatus.state === 'connecting'
+                            ? 'Connecting...'
+                            : otaStatus.state === 'downloading'
+                            ? (otaStatus.totalBytes > 0 ? `Downloading • ${otaStatus.percent}%` : 'Downloading...')
+                            : otaStatus.state === 'verifying'
+                            ? 'Verifying update...'
+                            : otaStatus.state === 'permission_required'
+                            ? 'Permission needed'
+                            : otaStatus.state === 'installing'
+                            ? 'Opening installer...'
+                            : otaStatus.state === 'cancelled'
+                            ? 'Download paused'
+                            : otaStatus.state === 'error'
+                            ? 'Download failed'
+                            : 'Update available'}
                         </p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {apkDownloadProgress?.status === 'downloading'
-                          ? (apkDownloadProgress.downloadedMB <= 0 && apkDownloadProgress.percent <= 0
-                              ? 'Establishing secure stream...'
-                              : `${apkDownloadProgress.downloadedMB.toFixed(1)} / ${apkDownloadProgress.totalMB > 0 ? apkDownloadProgress.totalMB.toFixed(1) + ' MB' : '...'}${formatDownloadSpeed(apkDownloadProgress.speedMBps)}`)
-                          : apkDownloadProgress?.status === 'cancelled'
-                          ? 'Tap to restart download'
-                          : apkDownloadProgress?.status === 'error'
-                          ? (apkDownloadProgress.message || 'Tap to retry')
-                          : 'New updates available for download'}
+                      <p
+                        className="text-[11px] text-muted-foreground truncate"
+                        style={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {otaStatus.state === 'connecting'
+                          ? 'Starting download...'
+                          : otaStatus.state === 'downloading'
+                          ? (otaStatus.totalBytes > 0
+                              ? `${otaStatus.downloadedMB} / ${otaStatus.totalMB} MB${otaStatus.speedMBps > 0 ? ` • ${otaStatus.speedMBps.toFixed(1)} MB/s` : ''}`
+                              : `${otaStatus.downloadedMB} MB${otaStatus.speedMBps > 0 ? ` • ${otaStatus.speedMBps.toFixed(1)} MB/s` : ''}`)
+                          : otaStatus.state === 'verifying'
+                          ? 'Checking file integrity'
+                          : otaStatus.state === 'permission_required'
+                          ? 'Allow installs to continue'
+                          : otaStatus.state === 'installing'
+                          ? 'Tap to install if closed'
+                          : otaStatus.state === 'cancelled'
+                          ? 'Tap Retry to resume'
+                          : otaStatus.state === 'error'
+                          ? 'Retry or use Browser'
+                          : `Nightly v${(updateResult.release.tagName || '').replace(/^v/, '') || '2.3.0'}`}
                       </p>
                     </div>
 
-                    {apkDownloadProgress?.status === 'installing' || apkDownloadProgress?.status === 'completed' ? (
+                    {otaStatus.state === 'installing' || otaStatus.state === 'verifying' ? (
                       <Button
                         size="sm"
                         className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
@@ -1987,49 +2036,52 @@ const SettingsSubPage: React.FC = () => {
                           background: 'var(--accent)',
                           color: 'var(--on-accent)',
                         }}
-                        onClick={() => triggerPendingInstall()}
+                        onClick={() => installReadyApk()}
                       >
                         <Download className="w-3.5 h-3.5 mr-1" />
-                        Install Now
+                        Tap to install APK
                       </Button>
-                    ) : apkDownloadProgress?.status === 'downloading' ? (
+                    ) : otaStatus.state === 'permission_required' ? (
+                      <Button
+                        size="sm"
+                        className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
+                        style={{
+                          background: 'var(--warning)',
+                          color: '#000000',
+                        }}
+                        onClick={() => installReadyApk()}
+                      >
+                        Allow
+                      </Button>
+                    ) : otaStatus.state === 'downloading' || otaStatus.state === 'connecting' ? (
                       <div className="flex items-center gap-1.5 shrink-0">
                         <div
-                          className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold"
+                          className="px-2 py-0.5 rounded-lg text-xs font-mono font-bold"
                           style={{
                             background: 'var(--accent-soft)',
                             color: 'var(--accent-text)',
                             border: '1px solid var(--border)',
+                            fontVariantNumeric: 'tabular-nums',
                           }}
                         >
-                          {apkDownloadProgress.percent >= 0 ? `${apkDownloadProgress.percent}%` : '...'}
+                          {otaStatus.totalBytes > 0 ? `${otaStatus.percent}%` : `${otaStatus.downloadedMB}M`}
                         </div>
                         <Button
                           size="sm"
                           variant="ghost"
                           className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground"
-                          onClick={() => {
-                            cancelApkDownload();
-                            setApkDownloadProgress({
-                              percent: 0,
-                              downloadedMB: 0,
-                              totalMB: 0,
-                              speedMBps: 0,
-                              status: 'cancelled',
-                              message: 'Download cancelled',
-                            });
-                          }}
-                          aria-label="Cancel download"
+                          onClick={() => cancelOtaDownload()}
+                          aria-label="Pause download"
                         >
                           <X className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                    ) : apkDownloadProgress?.status === 'error' || apkDownloadProgress?.status === 'cancelled' ? (
+                    ) : otaStatus.state === 'error' || otaStatus.state === 'cancelled' ? (
                       <Button
                         size="sm"
                         variant="outline"
                         className="rounded-xl font-semibold text-xs h-8 px-3 shrink-0"
-                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
+                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl, updateResult.expectedBytes || updateResult.release?.expectedBytes)}
                       >
                         <RefreshCw className="w-3.5 h-3.5 mr-1" />
                         Retry
@@ -2042,7 +2094,7 @@ const SettingsSubPage: React.FC = () => {
                           background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)',
                           color: 'var(--on-accent)',
                         }}
-                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl)}
+                        onClick={() => downloadAndInstallUpdate(updateResult.release?.apkUrl, updateResult.expectedBytes || updateResult.release?.expectedBytes)}
                       >
                         <Download className="w-3.5 h-3.5 mr-1" />
                         Download update
@@ -2051,12 +2103,12 @@ const SettingsSubPage: React.FC = () => {
                   </div>
 
                   {/* Live glowing progress bar */}
-                  {apkDownloadProgress?.status === 'downloading' && (
+                  {(otaStatus.state === 'downloading' || otaStatus.state === 'connecting') && (
                     <div className="w-full h-1.5 rounded-full bg-black/20 dark:bg-white/10 overflow-hidden relative">
                       <div
                         className="h-full rounded-full transition-all duration-150"
                         style={{
-                          width: `${Math.max(0, Math.min(100, apkDownloadProgress.percent >= 0 ? apkDownloadProgress.percent : 0))}%`,
+                          width: `${Math.max(5, Math.min(100, otaStatus.totalBytes > 0 ? otaStatus.percent : 15))}%`,
                           background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
                           boxShadow: '0 0 10px var(--accent-glow)',
                         }}
@@ -2065,17 +2117,13 @@ const SettingsSubPage: React.FC = () => {
                   )}
 
                   {/* Secondary Browser Fallback Link */}
-                  {(apkDownloadProgress?.status === 'downloading' ||
-                    apkDownloadProgress?.status === 'installing' ||
-                    apkDownloadProgress?.status === 'completed' ||
-                    apkDownloadProgress?.status === 'cancelled' ||
-                    apkDownloadProgress?.status === 'error') && (
+                  {(otaStatus.state !== 'idle') && (
                     <div className="flex items-center justify-between pt-0.5 text-[10px] text-muted-foreground/80">
-                      <span>Stuck or dismissed?</span>
+                      <span>{otaStatus.state === 'error' ? 'Stream failed' : 'Stuck or prompt closed?'}</span>
                       <button
                         type="button"
                         onClick={() => {
-                          cancelApkDownload();
+                          cancelOtaDownload();
                           openExternalBrowserFallback(updateResult.release?.apkUrl);
                         }}
                         className="inline-flex items-center gap-1 text-[var(--accent-text)] hover:underline font-medium"
@@ -2414,6 +2462,28 @@ const SettingsSubPage: React.FC = () => {
                     <span className="truncate">Clear</span>
                   </button>
                 </div>
+
+                {/* Read-Only In-App OTA Update Event Log Toggle */}
+                <button
+                  type="button"
+                  className="w-full min-w-0 box-border inline-flex items-center justify-between p-2 rounded-xl bg-muted/20 hover:bg-muted/40 border border-border/50 text-left transition-colors mt-2"
+                  onClick={() => {
+                    setOtaLogEntries(getOtaLogTail());
+                    setIsOtaLogExpanded(!isOtaLogExpanded);
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Download className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">
+                      OTA Update Event Log ({otaLogEntries.length})
+                    </span>
+                  </div>
+                  {isOtaLogExpanded ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </button>
               </div>
 
               {/* Zero Crashes / Errors Empty State Banner */}
@@ -2682,6 +2752,73 @@ const SettingsSubPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* In-App OTA Update Event Log Inspector (Read-Only) */}
+              {isOtaLogExpanded && (
+                <div className="pt-2 border-t border-border/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      OTA Update Events ({otaLogEntries.length})
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">Ring buffer (last 50)</span>
+                  </div>
+                  {otaLogEntries.length === 0 ? (
+                    <div className="p-3 rounded-xl bg-muted/20 border border-border/40 text-center text-xs text-muted-foreground">
+                      No OTA update events recorded in buffer.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                      {otaLogEntries.map((log, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2 rounded-lg bg-muted/30 border border-border/40 flex flex-col gap-1 text-[10px] w-full max-w-full box-border"
+                          style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', maxWidth: '100%' }}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-mono text-muted-foreground shrink-0 text-[9px]">
+                                {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[9px] bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)] shrink-0 uppercase">
+                                {log.phase}
+                              </span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded font-mono font-bold text-[9px] shrink-0 ${
+                                  log.state === 'error'
+                                    ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                                    : log.state === 'cancelled'
+                                    ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                    : log.state === 'installing' || log.state === 'verifying'
+                                    ? 'bg-[var(--success)]/15 text-[var(--success)] border border-[var(--success)]/30'
+                                    : 'bg-muted/50 text-foreground border border-border/50'
+                                }`}
+                              >
+                                {log.state}
+                              </span>
+                            </div>
+                            {log.engine && log.engine !== 'none' && (
+                              <span className="text-[9px] font-mono text-muted-foreground shrink-0">
+                                [{log.engine}]
+                              </span>
+                            )}
+                          </div>
+                          {(log.message || log.errorCode || log.bytes) && (
+                            <p className="text-muted-foreground text-[10px] pl-0.5">
+                              {log.errorCode && (
+                                <span className="text-red-400 font-mono font-bold mr-1">[{log.errorCode}]</span>
+                              )}
+                              {log.bytes ? (
+                                <span className="font-mono mr-1">({(log.bytes / (1024 * 1024)).toFixed(1)} MB)</span>
+                              ) : null}
+                              {log.message || ''}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

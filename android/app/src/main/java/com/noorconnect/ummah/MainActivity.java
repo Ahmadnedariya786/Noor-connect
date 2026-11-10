@@ -13,9 +13,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -65,7 +67,7 @@ public class MainActivity extends BridgeActivity {
 
     // Standard Android Chrome User-Agent prevents GitHub CDN / Fastly rate-limiting and connection throttling
     private static final String CHROME_USER_AGENT =
-            "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
+            "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36";
 
     // Guard so setDataDirectorySuffix is called at most once per process lifetime
     private static boolean sDataDirectorySuffixSet = false;
@@ -74,15 +76,23 @@ public class MainActivity extends BridgeActivity {
     private final java.util.concurrent.atomic.AtomicBoolean isHandlingRendererCrash =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
-    // State for in-app native APK updater
+    // State for in-app native dual-engine OTA updater
     private volatile boolean isDownloadingApk = false;
-    private volatile boolean isDownloadCancelled = false;
-    private final List<HttpURLConnection> activeConnections = Collections.synchronizedList(new ArrayList<>());
-    private ExecutorService downloadExecutor = null;
-    private long activeDownloadManagerId = -1;
+    private volatile boolean isUserCancelled = false;
+    private volatile String otaState = "idle"; // idle, connecting, downloading, verifying, installing, permission_required, cancelled, error
+    private volatile String otaEngine = "stream"; // stream or system
+    private volatile long otaDownloadedBytes = 0L;
+    private volatile long otaTotalBytes = 0L;
+    private volatile int otaPercent = 0;
+    private volatile double otaSpeedMBps = 0.0;
+    private volatile String otaError = "";
+    private volatile File otaReadyApkFile = null;
+
+    private Thread activeStreamThread = null;
+    private volatile HttpURLConnection activeStreamConn = null;
+    private volatile long activeDownloadManagerId = -1L;
+    private Thread activeDmPollingThread = null;
     private BroadcastReceiver downloadManagerReceiver = null;
-    private File pendingApkFile = null;
-    private File lastDownloadedApkFile = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -177,8 +187,28 @@ public class MainActivity extends BridgeActivity {
                     }
 
                     @android.webkit.JavascriptInterface
+                    public String getOtaStatusJson() {
+                        return MainActivity.this.getOtaStatusJson();
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void startUpdateDownload(String apkUrl, long expectedBytes) {
+                        MainActivity.this.startUpdateDownload(apkUrl, expectedBytes);
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void startUpdateDownload(String apkUrl) {
+                        MainActivity.this.startUpdateDownload(apkUrl, 0L);
+                    }
+
+                    @android.webkit.JavascriptInterface
                     public void downloadAndInstallApk(String apkUrl) {
-                        MainActivity.this.downloadAndInstallApk(apkUrl);
+                        MainActivity.this.startUpdateDownload(apkUrl, 0L);
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void downloadAndInstallApk(String apkUrl, long expectedBytes) {
+                        MainActivity.this.startUpdateDownload(apkUrl, expectedBytes);
                     }
 
                     @android.webkit.JavascriptInterface
@@ -187,8 +217,13 @@ public class MainActivity extends BridgeActivity {
                     }
 
                     @android.webkit.JavascriptInterface
+                    public void installReadyApk() {
+                        MainActivity.this.installReadyApk();
+                    }
+
+                    @android.webkit.JavascriptInterface
                     public void installDownloadedApk() {
-                        MainActivity.this.installDownloadedApk();
+                        MainActivity.this.installReadyApk();
                     }
 
                     @android.webkit.JavascriptInterface
@@ -1055,427 +1090,506 @@ public class MainActivity extends BridgeActivity {
         }
 
         // Auto-resume APK installation if returning from "Install unknown apps" settings
-        if (pendingApkFile != null && pendingApkFile.exists()) {
+        if (otaReadyApkFile != null && otaReadyApkFile.exists()) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getPackageManager().canRequestPackageInstalls()) {
-                File toInstall = pendingApkFile;
-                pendingApkFile = null;
-                launchApkInstallerIntent(toInstall);
+                File toInstall = otaReadyApkFile;
+                launchPackageInstallerIntent(toInstall);
             }
         }
     }
 
     /**
-     * Abort any in-progress APK download immediately, close all active sockets,
-     * terminate the parallel thread pool, and cancel system DownloadManager if active.
+     * Pollable volatile state JSON synchronously returned to JS bridge
      */
-    public void cancelApkDownload() {
-        Log.i(TAG, "cancelApkDownload: aborting active download and closing sockets");
-        isDownloadCancelled = true;
-        isDownloadingApk = false;
-
-        // 1. Immediately disconnect all active HttpURLConnection sockets
-        synchronized (activeConnections) {
-            for (HttpURLConnection conn : activeConnections) {
-                try {
-                    conn.disconnect();
-                } catch (Throwable ignored) {
-                    // Handled connection disconnect
-                }
-            }
-            activeConnections.clear();
+    public String getOtaStatusJson() {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("state", otaState);
+            json.put("engine", otaEngine);
+            json.put("downloadedBytes", otaDownloadedBytes);
+            json.put("totalBytes", otaTotalBytes);
+            json.put("percent", otaPercent);
+            json.put("speedMBps", Math.round(otaSpeedMBps * 10.0) / 10.0);
+            json.put("error", otaError != null ? otaError : "");
+            return json.toString();
+        } catch (Throwable t) {
+            return "{\"state\":\"error\",\"engine\":\"none\",\"downloadedBytes\":0,\"totalBytes\":0,\"percent\":0,\"speedMBps\":0.0,\"error\":\"E_BRIDGE\"}";
         }
-
-        // 2. Shut down parallel worker threads immediately
-        if (downloadExecutor != null) {
-            try {
-                downloadExecutor.shutdownNow();
-            } catch (Throwable ignored) {
-                // Handled executor shutdown
-            }
-            downloadExecutor = null;
-        }
-
-        // 3. Cancel DownloadManager task if active
-        if (activeDownloadManagerId != -1) {
-            try {
-                DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                if (dm != null) {
-                    dm.remove(activeDownloadManagerId);
-                }
-            } catch (Throwable ignored) {
-                // Handled DownloadManager cancel
-            }
-            activeDownloadManagerId = -1;
-        }
-
-        // 4. Unregister DownloadManager receiver if active
-        if (downloadManagerReceiver != null) {
-            try {
-                unregisterReceiver(downloadManagerReceiver);
-            } catch (Throwable ignored) {
-                // Handled receiver unregister
-            }
-            downloadManagerReceiver = null;
-        }
-
-        // 5. Notify frontend of cancelled state
-        dispatchDownloadProgress(0, 0, 0, 0.0, "cancelled", "Download cancelled");
     }
 
-    private static final String UPDATER_USER_AGENT = "NoorConnect-Updater/2.3.0";
-    private static final long DEFAULT_APK_EXPECTED_BYTES = 97832140L; // ~93.3 MB
-
     /**
-     * Resilient single-stream GET downloader following up to 8 redirects across domains.
-     * Supports 4x auto-resume with Range header, backoff retry, candidate fallback URLs,
-     * and pre-install size verification (> 15 MB).
+     * Start Dual-Engine APK download (Engine A: Direct Stream, Engine B: DownloadManager failover)
      */
-    public void downloadAndInstallApk(String apkUrl) {
-        if (isDownloadingApk) {
-            Log.w(TAG, "downloadAndInstallApk called while download is already in progress");
+    public void startUpdateDownload(String apkUrl, long expectedBytes) {
+        if ("connecting".equals(otaState) || "downloading".equals(otaState) || "verifying".equals(otaState)) {
+            Log.w(TAG, "startUpdateDownload called while download is already in progress");
             return;
         }
 
+        final String targetApkUrl = (apkUrl != null && !apkUrl.trim().isEmpty())
+                ? apkUrl.trim()
+                : "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk";
+
         isDownloadingApk = true;
-        isDownloadCancelled = false;
+        isUserCancelled = false;
+        otaState = "connecting";
+        otaEngine = "stream";
+        otaDownloadedBytes = 0L;
+        otaPercent = 0;
+        otaSpeedMBps = 0.0;
+        otaError = "";
+        otaReadyApkFile = null;
+        // Honest total size: expectedBytes from caller if > 15MB, else 0
+        otaTotalBytes = (expectedBytes > 15_000_000L) ? expectedBytes : 0L;
+        dispatchDownloadProgress();
 
-        new Thread(() -> {
-            try {
-                File downloadDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
-                if (downloadDir == null) {
-                    downloadDir = getCacheDir();
-                }
-                if (!downloadDir.exists()) {
-                    downloadDir.mkdirs();
-                }
+        File storageDir = getExternalFilesDir(null);
+        if (storageDir == null) {
+            storageDir = getCacheDir();
+        }
+        if (!storageDir.exists()) {
+            storageDir.mkdirs();
+        }
+        final File targetApk = new File(storageDir, "noor-connect-update.apk");
+        if (targetApk.exists()) {
+            try { targetApk.delete(); } catch (Throwable ignored) {}
+        }
 
-                final File finalApkFile = new File(downloadDir, "noor-connect-update.apk");
-                final File stagingFile = new File(getCacheDir(), "noor-update-staging.apk");
+        activeStreamThread = new Thread(() -> {
+            runStreamEngine(targetApkUrl, expectedBytes, targetApk);
+        }, "noor-ota-stream");
+        activeStreamThread.start();
+    }
 
-                // Candidate URLs to try in order
-                List<String> candidateUrls = new ArrayList<>();
-                if (apkUrl != null && !apkUrl.trim().isEmpty()) {
-                    candidateUrls.add(apkUrl.trim());
-                }
-                candidateUrls.add("https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk");
-                candidateUrls.add("https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk");
+    /**
+     * Backward-compatible alias for downloadAndInstallApk
+     */
+    public void downloadAndInstallApk(String apkUrl) {
+        startUpdateDownload(apkUrl, 0L);
+    }
 
-                Log.i(TAG, "Starting resilient OTA APK download pipeline with " + candidateUrls.size() + " candidates");
-                dispatchDownloadProgress(0, 0, 0, 0.0, "downloading", "Connecting to GitHub CDN...");
+    /**
+     * Engine A: Direct single-stream downloader with 6-second first-byte watchdog
+     */
+    private void runStreamEngine(String apkUrl, long expectedBytes, File targetApk) {
+        long connectStartTime = System.currentTimeMillis();
+        String currentUrl = apkUrl;
+        HttpURLConnection conn = null;
+        InputStream in = null;
+        FileOutputStream out = null;
+        int redirects = 0;
+        boolean connected = false;
 
-                boolean downloadSuccess = false;
-
-                candidateLoop:
-                for (String candidateUrl : candidateUrls) {
-                    if (isDownloadCancelled) break;
-
-                    // 4 auto-resume retries with backoff per candidate
-                    final long[] backoffs = {1500L, 3000L, 4500L, 6000L};
-
-                    for (int attempt = 0; attempt <= 3; attempt++) {
-                        if (isDownloadCancelled) break candidateLoop;
-
-                        if (attempt > 0) {
-                            Log.i(TAG, "Retrying download (attempt " + (attempt + 1) + "/4) after backoff...");
-                            try {
-                                Thread.sleep(backoffs[attempt - 1]);
-                            } catch (InterruptedException e) {
-                                break candidateLoop;
-                            }
-                        }
-
-                        HttpURLConnection conn = null;
-                        InputStream in = null;
-                        FileOutputStream out = null;
-
-                        try {
-                            String targetUrl = candidateUrl;
-                            int redirects = 0;
-                            long existingBytes = stagingFile.exists() ? stagingFile.length() : 0;
-
-                            // Follow up to 8 redirects (301, 302, 303, 307, 308) across domains
-                            while (redirects < 8 && !isDownloadCancelled) {
-                                URL u = new URL(targetUrl);
-                                conn = (HttpURLConnection) u.openConnection();
-                                conn.setInstanceFollowRedirects(false);
-                                conn.setConnectTimeout(20000);
-                                conn.setReadTimeout(35000);
-                                conn.setRequestProperty("User-Agent", UPDATER_USER_AGENT);
-                                conn.setRequestProperty("Accept", "*/*");
-                                conn.setRequestProperty("Accept-Encoding", "identity");
-
-                                if (existingBytes > 0) {
-                                    conn.setRequestProperty("Range", "bytes=" + existingBytes + "-");
-                                }
-
-                                activeConnections.add(conn);
-
-                                int code = conn.getResponseCode();
-                                if (code == HttpURLConnection.HTTP_MOVED_PERM
-                                        || code == HttpURLConnection.HTTP_MOVED_TEMP
-                                        || code == HttpURLConnection.HTTP_SEE_OTHER
-                                        || code == 307
-                                        || code == 308) {
-                                    String location = conn.getHeaderField("Location");
-                                    activeConnections.remove(conn);
-                                    conn.disconnect();
-                                    if (location != null && !location.isEmpty()) {
-                                        targetUrl = location;
-                                        redirects++;
-                                        continue;
-                                    }
-                                }
-
-                                // Not a redirect; break out to stream payload
-                                break;
-                            }
-
-                            if (isDownloadCancelled || conn == null) {
-                                break candidateLoop;
-                            }
-
-                            int statusCode = conn.getResponseCode();
-                            boolean isPartial = (statusCode == 206);
-                            boolean isOk = (statusCode >= 200 && statusCode < 300);
-
-                            if (!isOk && !isPartial) {
-                                Log.w(TAG, "Candidate URL " + candidateUrl + " returned HTTP " + statusCode);
-                                activeConnections.remove(conn);
-                                conn.disconnect();
-                                if (statusCode == 404 || statusCode == 403) {
-                                    break; // break retry loop to try next candidate URL
-                                }
-                                continue; // retry same candidate after backoff
-                            }
-
-                            long totalBytes;
-                            if (isPartial) {
-                                long remaining = -1;
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    remaining = conn.getContentLengthLong();
-                                } else {
-                                    remaining = conn.getContentLength();
-                                }
-                                totalBytes = (remaining > 0) ? (existingBytes + remaining) : DEFAULT_APK_EXPECTED_BYTES;
-                                out = new FileOutputStream(stagingFile, true); // append
-                            } else {
-                                // Full download (either server didn't honor range or first attempt)
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    totalBytes = conn.getContentLengthLong();
-                                } else {
-                                    totalBytes = conn.getContentLength();
-                                }
-                                if (totalBytes <= 0) {
-                                    totalBytes = DEFAULT_APK_EXPECTED_BYTES;
-                                }
-                                out = new FileOutputStream(stagingFile, false); // overwrite
-                                existingBytes = 0;
-                            }
-
-                            in = new BufferedInputStream(conn.getInputStream(), 262144);
-                            byte[] buffer = new byte[262144]; // 256 KB buffer
-                            long downloaded = existingBytes;
-                            long lastDispatchTime = System.currentTimeMillis();
-                            long lastBytes = downloaded;
-                            int read;
-
-                            while (!isDownloadCancelled && (read = in.read(buffer)) != -1) {
-                                out.write(buffer, 0, read);
-                                downloaded += read;
-
-                                long now = System.currentTimeMillis();
-                                if (now - lastDispatchTime > 250) {
-                                    long timeDelta = now - lastDispatchTime;
-                                    long bytesDelta = downloaded - lastBytes;
-                                    double speedMBps = (timeDelta > 0)
-                                            ? ((double) bytesDelta / (1024.0 * 1024.0)) / ((double) timeDelta / 1000.0)
-                                            : 0.0;
-                                    lastDispatchTime = now;
-                                    lastBytes = downloaded;
-
-                                    int percent = (totalBytes > 0)
-                                            ? Math.min(99, (int) ((downloaded * 100) / totalBytes))
-                                            : -1;
-                                    double downloadedMB = (double) downloaded / (1024.0 * 1024.0);
-                                    double totalMB = (totalBytes > 0) ? (double) totalBytes / (1024.0 * 1024.0) : 0;
-                                    dispatchDownloadProgress(percent, downloadedMB, totalMB, speedMBps, "downloading", null);
-                                }
-                            }
-
-                            out.flush();
-
-                            if (isDownloadCancelled) {
-                                break candidateLoop;
-                            }
-
-                            // Pre-install verification: file must be > 15 MB
-                            if (stagingFile.exists() && stagingFile.length() > 15_000_000) {
-                                Log.i(TAG, "OTA staging download verified successfully: " + stagingFile.length() + " bytes");
-                                downloadSuccess = true;
-                                break candidateLoop;
-                            } else {
-                                Log.w(TAG, "Downloaded file size incomplete: " + (stagingFile.exists() ? stagingFile.length() : 0) + " bytes (< 15 MB)");
-                            }
-
-                        } catch (Throwable t) {
-                            Log.w(TAG, "Download attempt " + (attempt + 1) + " failed: " + t.getMessage());
-                        } finally {
-                            if (out != null) {
-                                try { out.close(); } catch (Throwable ignored) {}
-                            }
-                            if (in != null) {
-                                try { in.close(); } catch (Throwable ignored) {}
-                            }
-                            if (conn != null) {
-                                activeConnections.remove(conn);
-                                try { conn.disconnect(); } catch (Throwable ignored) {}
-                            }
-                        }
-                    }
-                }
-
-                if (isDownloadCancelled) {
+        try {
+            // Follow up to 8 HTTP 301/302/303/307/308 redirects manually
+            while (redirects < 8 && !isUserCancelled) {
+                if (System.currentTimeMillis() - connectStartTime > 6000) {
+                    Log.w(TAG, "Engine A: Redirect / connection negotiation exceeded 6s, failing over to Engine B");
+                    triggerFailoverToEngineB(apkUrl, expectedBytes, targetApk, "E_CONNECT_TIMEOUT");
                     return;
                 }
 
-                if (downloadSuccess && stagingFile.exists() && stagingFile.length() > 15_000_000) {
-                    // Atomically move staging file to final destination
-                    if (finalApkFile.exists()) {
-                        finalApkFile.delete();
+                URL u = new URL(currentUrl);
+                conn = (HttpURLConnection) u.openConnection();
+                activeStreamConn = conn;
+                conn.setInstanceFollowRedirects(false);
+                conn.setConnectTimeout(6000);
+                conn.setReadTimeout(8000);
+                // Send ONLY standard browser User-Agent and Accept headers; NO Range or Authorization
+                conn.setRequestProperty("User-Agent", CHROME_USER_AGENT);
+                conn.setRequestProperty("Accept", "*/*");
+
+                int code = conn.getResponseCode();
+                if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
+                    String location = conn.getHeaderField("Location");
+                    conn.disconnect();
+                    activeStreamConn = null;
+                    if (location != null && !location.isEmpty()) {
+                        currentUrl = new URL(new URL(currentUrl), location).toString();
+                        redirects++;
+                        continue;
                     }
-                    boolean renamed = stagingFile.renameTo(finalApkFile);
-                    File installTarget = renamed ? finalApkFile : stagingFile;
-
-                    double finalMB = (double) installTarget.length() / (1024.0 * 1024.0);
-                    Log.i(TAG, "Native APK download verified: " + installTarget.getAbsolutePath() + " (" + finalMB + " MB)");
-                    lastDownloadedApkFile = installTarget;
-                    dispatchDownloadProgress(100, finalMB, finalMB, 0.0, "installing", null);
-                    launchApkInstallerIntent(installTarget);
-                } else {
-                    Log.e(TAG, "All OTA download attempts failed or file incomplete (< 15 MB)");
-                    dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Download failed. Tap to retry or open in browser.");
                 }
 
-            } catch (Throwable t) {
-                if (!isDownloadCancelled) {
-                    Log.e(TAG, "Unhandled error in OTA downloader: " + t.getMessage(), t);
-                    dispatchDownloadProgress(-1, 0, 0, 0.0, "error", t.getMessage() != null ? t.getMessage() : "Download failed");
+                if (code >= 400) {
+                    Log.w(TAG, "Engine A: HTTP code " + code + ", failing over to Engine B");
+                    conn.disconnect();
+                    activeStreamConn = null;
+                    triggerFailoverToEngineB(apkUrl, expectedBytes, targetApk, "E_HTTP_" + code);
+                    return;
                 }
-            } finally {
-                isDownloadingApk = false;
+
+                connected = true;
+                break;
             }
-        }).start();
-    }
 
-    /**
-     * Fallback to native Android system DownloadManager
-     */
-    private void runDownloadManagerFallback(String downloadUrl) {
-        if (isDownloadCancelled) return;
-        try {
-            DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            if (dm == null) {
-                dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Download failed and DownloadManager unavailable");
+            if (isUserCancelled) return;
+            if (!connected || conn == null) {
+                triggerFailoverToEngineB(apkUrl, expectedBytes, targetApk, "E_CONNECT_FAIL");
                 return;
             }
 
-            Uri uri = Uri.parse(downloadUrl);
-            DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.setTitle("Noor Connect Update");
-            request.setDescription("Downloading latest update...");
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setMimeType("application/vnd.android.package-archive");
-            request.addRequestHeader("User-Agent", CHROME_USER_AGENT);
-            request.setDestinationInExternalFilesDir(this, android.os.Environment.DIRECTORY_DOWNLOADS, "noor-connect-update.apk");
-
-            // Clean up previous receiver if any
-            if (downloadManagerReceiver != null) {
-                try { unregisterReceiver(downloadManagerReceiver); } catch (Throwable ignored) { /* Handled cleanup */ }
+            // Honest total size: Content-Length if > 0, else expectedBytes if > 15MB, else 0
+            long contentLength = -1L;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                contentLength = conn.getContentLengthLong();
+            } else {
+                contentLength = conn.getContentLength();
             }
 
-            long downloadId = dm.enqueue(request);
+            if (contentLength > 0) {
+                otaTotalBytes = contentLength;
+            } else if (expectedBytes > 15_000_000L) {
+                otaTotalBytes = expectedBytes;
+            } else {
+                otaTotalBytes = 0L;
+            }
+
+            in = new BufferedInputStream(conn.getInputStream(), 131072);
+            out = new FileOutputStream(targetApk, false);
+            byte[] buffer = new byte[131072]; // 128 KB buffer
+
+            otaState = "downloading";
+            dispatchDownloadProgress();
+
+            long streamStartTime = System.currentTimeMillis();
+            long lastByteTime = System.currentTimeMillis();
+            long lastDispatchTime = System.currentTimeMillis();
+            long lastDispatchBytes = 0L;
+            long downloaded = 0L;
+            boolean gotFirst64KB = false;
+            int read;
+
+            while (!isUserCancelled && (read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+                downloaded += read;
+                otaDownloadedBytes = downloaded;
+                long now = System.currentTimeMillis();
+                lastByteTime = now;
+
+                if (!gotFirst64KB && downloaded >= 65536) {
+                    gotFirst64KB = true;
+                }
+
+                // Update downloadedBytes, percent, speed every 150ms
+                if (now - lastDispatchTime >= 150) {
+                    long timeDelta = now - lastDispatchTime;
+                    long bytesDelta = downloaded - lastDispatchBytes;
+                    otaSpeedMBps = (timeDelta > 0)
+                            ? ((double) bytesDelta / (1024.0 * 1024.0)) / ((double) timeDelta / 1000.0)
+                            : 0.0;
+                    if (otaTotalBytes > 0) {
+                        otaPercent = Math.min(99, (int) ((downloaded * 100) / otaTotalBytes));
+                    } else {
+                        otaPercent = 0;
+                    }
+                    lastDispatchTime = now;
+                    lastDispatchBytes = downloaded;
+                    dispatchDownloadProgress();
+                }
+
+                // 6-second first 64 KB watchdog
+                if (!gotFirst64KB && (now - streamStartTime > 6000)) {
+                    Log.w(TAG, "Engine A: No first 64KB within 6s, failing over to Engine B");
+                    try { out.close(); } catch (Throwable ignored) {}
+                    try { in.close(); } catch (Throwable ignored) {}
+                    conn.disconnect();
+                    activeStreamConn = null;
+                    triggerFailoverToEngineB(apkUrl, expectedBytes, targetApk, "E_FIRST_BYTE_TIMEOUT");
+                    return;
+                }
+
+                // 8-second mid-stream stall watchdog
+                if (gotFirst64KB && (now - lastByteTime > 8000)) {
+                    Log.w(TAG, "Engine A: Mid-stream stall > 8s without bytes, failing over to Engine B");
+                    try { out.close(); } catch (Throwable ignored) {}
+                    try { in.close(); } catch (Throwable ignored) {}
+                    conn.disconnect();
+                    activeStreamConn = null;
+                    triggerFailoverToEngineB(apkUrl, expectedBytes, targetApk, "E_STREAM_STALL");
+                    return;
+                }
+            }
+
+            out.flush();
+
+            if (isUserCancelled) return;
+
+            if (downloaded >= 15_000_000L) {
+                otaDownloadedBytes = downloaded;
+                if (otaTotalBytes <= 0) otaTotalBytes = downloaded;
+                otaPercent = 100;
+                dispatchDownloadProgress();
+                verifyAndInstall(targetApk, otaTotalBytes);
+            } else {
+                Log.w(TAG, "Engine A: Stream completed with < 15MB (" + downloaded + " bytes), failing over to Engine B");
+                try { out.close(); } catch (Throwable ignored) {}
+                try { in.close(); } catch (Throwable ignored) {}
+                conn.disconnect();
+                activeStreamConn = null;
+                triggerFailoverToEngineB(apkUrl, expectedBytes, targetApk, "E_STREAM_INCOMPLETE");
+            }
+
+        } catch (Throwable t) {
+            if (!isUserCancelled) {
+                Log.w(TAG, "Engine A stream exception: " + t.getMessage() + ", failing over to Engine B", t);
+                triggerFailoverToEngineB(apkUrl, expectedBytes, targetApk, "E_STREAM_" + t.getClass().getSimpleName());
+            }
+        } finally {
+            if (out != null) {
+                try { out.close(); } catch (Throwable ignored) {}
+            }
+            if (in != null) {
+                try { in.close(); } catch (Throwable ignored) {}
+            }
+            if (conn != null) {
+                try { conn.disconnect(); } catch (Throwable ignored) {}
+                activeStreamConn = null;
+            }
+        }
+    }
+
+    /**
+     * Automatic failover trigger to Engine B (DownloadManager)
+     */
+    private void triggerFailoverToEngineB(String apkUrl, long expectedBytes, File targetApk, String reason) {
+        if (isUserCancelled) return;
+        Log.i(TAG, "Failing over to Engine B (DownloadManager) due to: " + reason);
+
+        // Delete partial Engine A file before switching
+        if (targetApk != null && targetApk.exists()) {
+            try { targetApk.delete(); } catch (Throwable ignored) {}
+        }
+
+        otaEngine = "system";
+        otaState = "connecting";
+        otaDownloadedBytes = 0L;
+        otaPercent = 0;
+        otaSpeedMBps = 0.0;
+        if (expectedBytes > 15_000_000L) {
+            otaTotalBytes = expectedBytes;
+        }
+        dispatchDownloadProgress();
+
+        runDownloadManagerEngine(apkUrl, expectedBytes);
+    }
+
+    /**
+     * Engine B: Android OS DownloadManager with 200ms background polling
+     */
+    private void runDownloadManagerEngine(String apkUrl, long expectedBytes) {
+        if (isUserCancelled) return;
+
+        DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (dm == null) {
+            isDownloadingApk = false;
+            otaState = "error";
+            otaError = "E_DM_UNAVAILABLE";
+            dispatchDownloadProgress();
+            return;
+        }
+
+        final File dmDestFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "noor-connect-update.apk");
+        if (dmDestFile.exists()) {
+            try { dmDestFile.delete(); } catch (Throwable ignored) {}
+        }
+
+        try {
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
+            request.setTitle("Noor Connect Update");
+            request.setDescription("Downloading official update package...");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            request.setAllowedOverMetered(true);
+            request.setAllowedOverRoaming(true);
+            request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "noor-connect-update.apk");
+
+            final long downloadId = dm.enqueue(request);
             activeDownloadManagerId = downloadId;
 
-            downloadManagerReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                    if (id == activeDownloadManagerId) {
-                        try {
-                            context.unregisterReceiver(this);
-                        } catch (Throwable ignored) {
-                            // Handled unregister
-                        }
-                        downloadManagerReceiver = null;
-                        activeDownloadManagerId = -1;
-                        isDownloadingApk = false;
+            activeDmPollingThread = new Thread(() -> {
+                long lastPollTime = System.currentTimeMillis();
+                long lastPollBytes = 0L;
+                boolean polling = true;
 
-                        File downloadDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
-                        File apkFile = new File(downloadDir, "noor-connect-update.apk");
-                        if (apkFile.exists() && apkFile.length() > 1_000_000) {
-                            double finalMB = (double) apkFile.length() / (1024.0 * 1024.0);
-                            lastDownloadedApkFile = apkFile;
-                            dispatchDownloadProgress(100, finalMB, finalMB, 0.0, "installing", null);
-                            launchApkInstallerIntent(apkFile);
-                        } else {
-                            dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Download via system manager failed or incomplete");
+                while (polling && !isUserCancelled) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                    if (isUserCancelled) break;
+
+                    DownloadManager.Query query = new DownloadManager.Query().setFilterById(downloadId);
+                    Cursor cursor = null;
+                    try {
+                        cursor = dm.query(query);
+                        if (cursor != null && cursor.moveToFirst()) {
+                            int statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                            int downloadedIdx = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR);
+                            int totalIdx = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES);
+                            int reasonIdx = cursor.getColumnIndex(DownloadManager.COLUMN_REASON);
+
+                            int status = (statusIdx != -1) ? cursor.getInt(statusIdx) : -1;
+                            long downloaded = (downloadedIdx != -1) ? cursor.getLong(downloadedIdx) : 0L;
+                            long total = (totalIdx != -1) ? cursor.getLong(totalIdx) : 0L;
+                            int dmReason = (reasonIdx != -1) ? cursor.getInt(reasonIdx) : 0;
+
+                            if (total > 0) {
+                                otaTotalBytes = total;
+                            } else if (expectedBytes > 15_000_000L && otaTotalBytes <= 0) {
+                                otaTotalBytes = expectedBytes;
+                            }
+
+                            otaDownloadedBytes = downloaded;
+                            long now = System.currentTimeMillis();
+                            long timeDelta = now - lastPollTime;
+                            long bytesDelta = downloaded - lastPollBytes;
+                            if (timeDelta >= 200) {
+                                otaSpeedMBps = (timeDelta > 0)
+                                        ? ((double) bytesDelta / (1024.0 * 1024.0)) / ((double) timeDelta / 1000.0)
+                                        : 0.0;
+                                lastPollTime = now;
+                                lastPollBytes = downloaded;
+                            }
+
+                            if (status == DownloadManager.STATUS_RUNNING) {
+                                otaState = "downloading";
+                                if (otaTotalBytes > 0) {
+                                    otaPercent = Math.min(99, (int) ((downloaded * 100) / otaTotalBytes));
+                                } else {
+                                    otaPercent = 0;
+                                }
+                                dispatchDownloadProgress();
+                            } else if (status == DownloadManager.STATUS_PENDING) {
+                                otaState = "connecting";
+                                dispatchDownloadProgress();
+                            } else if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                                polling = false;
+                                isDownloadingApk = false;
+                                otaPercent = 100;
+                                otaDownloadedBytes = (total > 0) ? total : downloaded;
+                                if (otaTotalBytes <= 0) otaTotalBytes = otaDownloadedBytes;
+                                dispatchDownloadProgress();
+
+                                File readyFile = dmDestFile;
+                                if (!readyFile.exists() || readyFile.length() <= 15_000_000L) {
+                                    int uriIdx = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
+                                    if (uriIdx != -1) {
+                                        String uriStr = cursor.getString(uriIdx);
+                                        if (uriStr != null && uriStr.startsWith("file://")) {
+                                            readyFile = new File(Uri.parse(uriStr).getPath());
+                                        }
+                                    }
+                                }
+                                verifyAndInstall(readyFile, otaTotalBytes);
+                            } else if (status == DownloadManager.STATUS_FAILED) {
+                                polling = false;
+                                isDownloadingApk = false;
+                                otaState = "error";
+                                otaError = "E_DM_FAILED_" + dmReason;
+                                dispatchDownloadProgress();
+                            }
+                        }
+                    } catch (Throwable t) {
+                        Log.w(TAG, "Error polling DownloadManager", t);
+                    } finally {
+                        if (cursor != null) {
+                            try { cursor.close(); } catch (Throwable ignored) {}
                         }
                     }
                 }
-            };
+            }, "noor-ota-dm-poll");
+            activeDmPollingThread.start();
 
-            ContextCompat.registerReceiver(
-                    this,
-                    downloadManagerReceiver,
-                    new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                    ContextCompat.RECEIVER_EXPORTED
-            );
-
-            dispatchDownloadProgress(50, 0, 0, 0.0, "downloading", null);
         } catch (Throwable t) {
-            Log.e(TAG, "DownloadManager fallback failed", t);
-            dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Download failed: " + t.getMessage());
+            isDownloadingApk = false;
+            otaState = "error";
+            otaError = "E_DM_ENQUEUE_" + t.getClass().getSimpleName();
+            dispatchDownloadProgress();
         }
     }
 
     /**
-     * Manually trigger installation of previously downloaded update APK
+     * Integrity check before installation (state: verifying)
      */
-    public void installDownloadedApk() {
-        if (lastDownloadedApkFile != null && lastDownloadedApkFile.exists() && lastDownloadedApkFile.length() > 1_000_000) {
-            launchApkInstallerIntent(lastDownloadedApkFile);
+    private void verifyAndInstall(File apkFile, long expectedTotalBytes) {
+        if (isUserCancelled) return;
+        otaState = "verifying";
+        dispatchDownloadProgress();
+
+        // 1. File must exist and be > 15_000_000 bytes
+        if (apkFile == null || !apkFile.exists() || apkFile.length() <= 15_000_000L) {
+            Log.e(TAG, "Integrity check failed: file missing or size <= 15 MB");
+            if (apkFile != null && apkFile.exists()) {
+                try { apkFile.delete(); } catch (Throwable ignored) {}
+            }
+            otaState = "error";
+            otaError = "E_INTEGRITY";
+            dispatchDownloadProgress();
             return;
         }
-        File downloadDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
-        File fallback = (downloadDir != null) ? new File(downloadDir, "noor-connect-update.apk") : new File(getCacheDir(), "noor-connect-update.apk");
-        if (fallback.exists() && fallback.length() > 1_000_000) {
-            lastDownloadedApkFile = fallback;
-            launchApkInstallerIntent(fallback);
-        } else {
-            dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "No downloaded APK found to install");
+
+        // 2. If otaTotalBytes > 0 came from server, verify file length
+        if (expectedTotalBytes > 15_000_000L && Math.abs(apkFile.length() - expectedTotalBytes) > 1024L) {
+            Log.e(TAG, "Integrity check failed: length mismatch: " + apkFile.length() + " != " + expectedTotalBytes);
+            try { apkFile.delete(); } catch (Throwable ignored) {}
+            otaState = "error";
+            otaError = "E_INTEGRITY";
+            dispatchDownloadProgress();
+            return;
         }
+
+        otaReadyApkFile = apkFile;
+        triggerApkInstall(apkFile);
     }
 
     /**
-     * Launch the Android OS PackageInstaller Intent for an APK file
+     * Check unknown sources permission and launch package installer
      */
-    public void launchApkInstallerIntent(File apkFile) {
+    public void triggerApkInstall(File apkFile) {
         if (apkFile == null || !apkFile.exists()) {
-            Log.w(TAG, "launchApkInstallerIntent: APK file does not exist");
-            dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Downloaded APK file not found");
+            otaState = "error";
+            otaError = "E_APK_NOT_FOUND";
+            dispatchDownloadProgress();
+            return;
+        }
+
+        otaReadyApkFile = apkFile;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls()) {
+            otaState = "permission_required";
+            dispatchDownloadProgress();
+            Log.i(TAG, "REQUEST_INSTALL_PACKAGES not granted yet, launching unknown app sources settings");
+            try {
+                Intent settingsIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                settingsIntent.setData(Uri.parse("package:" + getPackageName()));
+                settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(settingsIntent);
+            } catch (Throwable t) {
+                Log.e(TAG, "Failed to launch unknown app sources settings", t);
+            }
+            return;
+        }
+
+        launchPackageInstallerIntent(apkFile);
+    }
+
+    /**
+     * Launch Android OS PackageInstaller Intent with FileProvider and clear top flags
+     */
+    public void launchPackageInstallerIntent(File apkFile) {
+        if (apkFile == null || !apkFile.exists()) {
+            otaState = "error";
+            otaError = "E_APK_NOT_FOUND";
+            dispatchDownloadProgress();
             return;
         }
 
         runOnUiThread(() -> {
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls()) {
-                    pendingApkFile = apkFile;
-                    Log.i(TAG, "REQUEST_INSTALL_PACKAGES not granted yet, opening unknown app sources settings");
-                    Intent settingsIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
-                    settingsIntent.setData(Uri.parse("package:" + getPackageName()));
-                    startActivity(settingsIntent);
-                    return;
-                }
+                otaState = "installing";
+                otaPercent = 100;
+                dispatchDownloadProgress();
 
                 Uri apkUri = androidx.core.content.FileProvider.getUriForFile(
                         this,
@@ -1485,15 +1599,98 @@ public class MainActivity extends BridgeActivity {
                 Log.i(TAG, "Launching PackageInstaller for APK: " + apkFile.getAbsolutePath() + " with URI: " + apkUri);
                 Intent installIntent = new Intent(Intent.ACTION_VIEW);
                 installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(installIntent);
-                double sizeMB = (double) apkFile.length() / (1024.0 * 1024.0);
-                dispatchDownloadProgress(100, sizeMB, sizeMB, 0.0, "completed", null);
             } catch (Throwable t) {
                 Log.e(TAG, "Failed to launch PackageInstaller intent", t);
-                dispatchDownloadProgress(-1, 0, 0, 0.0, "error", "Install error: " + t.getMessage());
+                otaState = "error";
+                otaError = "E_INSTALL_FAILED";
+                dispatchDownloadProgress();
             }
         });
+    }
+
+    /**
+     * Expose installReadyApk() so user can re-open installer if dismissed
+     */
+    public void installReadyApk() {
+        if (otaReadyApkFile != null && otaReadyApkFile.exists() && otaReadyApkFile.length() > 15_000_000L) {
+            launchPackageInstallerIntent(otaReadyApkFile);
+            return;
+        }
+        File dmFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "noor-connect-update.apk");
+        if (dmFile.exists() && dmFile.length() > 15_000_000L) {
+            otaReadyApkFile = dmFile;
+            launchPackageInstallerIntent(dmFile);
+            return;
+        }
+        File streamFile = new File(getExternalFilesDir(null) != null ? getExternalFilesDir(null) : getCacheDir(), "noor-connect-update.apk");
+        if (streamFile.exists() && streamFile.length() > 15_000_000L) {
+            otaReadyApkFile = streamFile;
+            launchPackageInstallerIntent(streamFile);
+            return;
+        }
+        otaState = "error";
+        otaError = "E_NO_APK_READY";
+        dispatchDownloadProgress();
+    }
+
+    /**
+     * Backward-compatible alias for installDownloadedApk()
+     */
+    public void installDownloadedApk() {
+        installReadyApk();
+    }
+
+    /**
+     * Real user cancel ONLY - stops active engine, deletes partial files, sets otaState = "cancelled"
+     */
+    public void cancelApkDownload() {
+        Log.i(TAG, "cancelApkDownload: real user cancel initiated");
+        isUserCancelled = true;
+        isDownloadingApk = false;
+        otaState = "cancelled";
+        otaPercent = 0;
+        otaSpeedMBps = 0.0;
+        dispatchDownloadProgress();
+
+        if (activeStreamConn != null) {
+            try {
+                activeStreamConn.disconnect();
+            } catch (Throwable ignored) {}
+            activeStreamConn = null;
+        }
+
+        if (activeStreamThread != null && activeStreamThread.isAlive()) {
+            try {
+                activeStreamThread.interrupt();
+            } catch (Throwable ignored) {}
+            activeStreamThread = null;
+        }
+
+        if (activeDownloadManagerId != -1L) {
+            try {
+                DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                if (dm != null) {
+                    dm.remove(activeDownloadManagerId);
+                }
+            } catch (Throwable ignored) {}
+            activeDownloadManagerId = -1L;
+        }
+
+        if (activeDmPollingThread != null && activeDmPollingThread.isAlive()) {
+            try {
+                activeDmPollingThread.interrupt();
+            } catch (Throwable ignored) {}
+            activeDmPollingThread = null;
+        }
+
+        try {
+            File dmFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "noor-connect-update.apk");
+            if (dmFile.exists()) dmFile.delete();
+            File streamFile = new File(getExternalFilesDir(null) != null ? getExternalFilesDir(null) : getCacheDir(), "noor-connect-update.apk");
+            if (streamFile.exists()) streamFile.delete();
+        } catch (Throwable ignored) {}
     }
 
     /**
@@ -1502,8 +1699,7 @@ public class MainActivity extends BridgeActivity {
      */
     public void openExternalBrowser(String url) {
         if (url == null || url.trim().isEmpty()) return;
-        // Instantly cancel any background download to guarantee 100% network bandwidth to browser
-        if (isDownloadingApk) {
+        if (isDownloadingApk || "downloading".equals(otaState) || "connecting".equals(otaState)) {
             cancelApkDownload();
         }
         runOnUiThread(() -> {
@@ -1520,24 +1716,36 @@ public class MainActivity extends BridgeActivity {
     /**
      * Dispatch live download and install progress events to the JS WebView
      */
-    private void dispatchDownloadProgress(int percent, double downloadedMB, double totalMB, String status, String errorMsg) {
-        dispatchDownloadProgress(percent, downloadedMB, totalMB, 0.0, status, errorMsg);
-    }
-
-    private void dispatchDownloadProgress(int percent, double downloadedMB, double totalMB, double speedMBps, String status, String errorMsg) {
+    private void dispatchDownloadProgress() {
         runOnUiThread(() -> {
             try {
                 WebView webView = (getBridge() != null) ? getBridge().getWebView() : null;
                 if (webView != null) {
                     JSONObject detail = new JSONObject();
-                    detail.put("percent", percent);
-                    detail.put("downloadedMB", Math.round(downloadedMB * 10.0) / 10.0);
-                    detail.put("totalMB", Math.round(totalMB * 10.0) / 10.0);
-                    detail.put("speedMBps", Math.round(speedMBps * 10.0) / 10.0);
-                    detail.put("status", status);
-                    if (errorMsg != null) {
-                        detail.put("message", errorMsg);
-                    }
+                    detail.put("percent", otaPercent);
+                    double dlMB = (double) otaDownloadedBytes / (1024.0 * 1024.0);
+                    double totMB = (otaTotalBytes > 0) ? (double) otaTotalBytes / (1024.0 * 1024.0) : 0.0;
+                    detail.put("downloadedMB", Math.round(dlMB * 10.0) / 10.0);
+                    detail.put("totalMB", Math.round(totMB * 10.0) / 10.0);
+                    detail.put("downloadedBytes", otaDownloadedBytes);
+                    detail.put("totalBytes", otaTotalBytes);
+                    detail.put("speedMBps", Math.round(otaSpeedMBps * 10.0) / 10.0);
+                    detail.put("state", otaState);
+                    detail.put("engine", otaEngine);
+                    detail.put("error", otaError != null ? otaError : "");
+
+                    String legacyStatus = "downloading";
+                    if ("idle".equals(otaState)) legacyStatus = "idle";
+                    else if ("connecting".equals(otaState)) legacyStatus = "downloading";
+                    else if ("downloading".equals(otaState)) legacyStatus = "downloading";
+                    else if ("verifying".equals(otaState)) legacyStatus = "verifying";
+                    else if ("installing".equals(otaState)) legacyStatus = "installing";
+                    else if ("permission_required".equals(otaState)) legacyStatus = "permission_required";
+                    else if ("cancelled".equals(otaState)) legacyStatus = "cancelled";
+                    else if ("error".equals(otaState)) legacyStatus = "error";
+                    detail.put("status", legacyStatus);
+                    detail.put("message", otaError != null && !otaError.isEmpty() ? otaError : null);
+
                     String script = "window.dispatchEvent(new CustomEvent('apkDownloadProgress', { detail: " + detail.toString() + " }));";
                     webView.evaluateJavascript(script, null);
                 }
