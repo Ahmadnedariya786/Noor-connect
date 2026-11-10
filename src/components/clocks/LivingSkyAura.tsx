@@ -56,9 +56,9 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
         >
           <defs>
             <linearGradient id="dawnGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#FB923C" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#F43F5E" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="var(--accent-2)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="transparent" stopOpacity="0.0" />
             </linearGradient>
             <radialGradient id="morningStarGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
@@ -109,10 +109,9 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
         >
           <defs>
             <linearGradient id="twilightGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#EA580C" stopOpacity="0.9" />
-              <stop offset="35%" stopColor="#9333EA" stopOpacity="0.5" />
-              <stop offset="80%" stopColor="#1E1B4B" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#0F172A" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="var(--accent-2)" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="var(--accent)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="transparent" stopOpacity="0.0" />
             </linearGradient>
           </defs>
           <rect width="400" height="240" fill="url(#twilightGrad)" />
@@ -131,20 +130,20 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
         >
           <defs>
             <radialGradient id="nightNebula" cx="75%" cy="30%" r="60%">
-              <stop offset="0%" stopColor="#4338CA" stopOpacity="0.5" />
-              <stop offset="60%" stopColor="#1E1B4B" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#030712" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="var(--accent-2)" stopOpacity="0.35" />
+              <stop offset="60%" stopColor="var(--surface-2)" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="transparent" stopOpacity="0.0" />
             </radialGradient>
           </defs>
           <rect width="400" height="240" fill="url(#nightNebula)" />
 
           {/* Twinkling Stars */}
           <circle cx="65" cy="45" r="1.5" fill="#FFFFFF" opacity="0.8" className="animate-pulse" />
-          <circle cx="120" cy="70" r="1" fill="#E0E7FF" opacity="0.6" />
+          <circle cx="120" cy="70" r="1" fill="var(--text-secondary)" opacity="0.6" />
           <circle cx="175" cy="35" r="2" fill="#FFFFFF" opacity="0.9" className="animate-ping" style={{ animationDuration: '4s' }} />
-          <circle cx="230" cy="85" r="1.2" fill="#C7D2FE" opacity="0.7" />
+          <circle cx="230" cy="85" r="1.2" fill="var(--accent-text)" opacity="0.7" />
           <circle cx="340" cy="65" r="1.5" fill="#FFFFFF" opacity="0.85" />
-          <circle cx="295" cy="110" r="1" fill="#E0E7FF" opacity="0.5" />
+          <circle cx="295" cy="110" r="1" fill="var(--text-secondary)" opacity="0.5" />
 
           {/* Crescent Moon */}
           <path

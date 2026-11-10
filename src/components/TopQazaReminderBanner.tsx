@@ -143,22 +143,23 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
     >
       {/* ── Row 1: Header + Quick Nav (Zero mid-title ellipsis) ── */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 shrink-0" style={{ flexShrink: 0 }}>
           <span className="relative flex h-2 w-2 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
           </span>
           <span
-            className="leading-tight truncate"
+            className="leading-tight"
             style={{
               fontSize: '0.72rem',
               fontWeight: 800,
               color: 'var(--accent-text)',
               letterSpacing: '0.01em',
               whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
-            🕌 QAZA REMINDER • {totalPendingQaza} Pending
+            🕌 QAZA • {totalPendingQaza} PENDING
           </span>
         </div>
 

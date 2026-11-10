@@ -1086,7 +1086,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-amber-500 shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shrink-0">
                     <Coins className="w-4 h-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1612,7 +1612,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                 className="w-full p-4 flex items-center justify-between gap-2 text-left hover:bg-[var(--surface-2)] transition-colors"
               >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)] flex items-center justify-center shrink-0">
                     <Scale className="w-4 h-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1642,7 +1642,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {livestockResult?.isZakatable && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-500 whitespace-nowrap">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] whitespace-nowrap">
                       Zakat Due
                     </span>
                   )}
@@ -1965,7 +1965,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                   </div>
                 )}
                 {livestockResult?.isZakatable && (
-                  <div className="text-xs font-bold text-amber-500 pt-1 whitespace-nowrap">
+                  <div className="text-xs font-bold text-[var(--accent-text)] pt-1 whitespace-nowrap">
                     🐑 Livestock Zakat: {livestockResult.dueText}
                   </div>
                 )}

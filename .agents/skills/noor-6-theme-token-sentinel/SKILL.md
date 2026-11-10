@@ -20,14 +20,14 @@ Activate this skill whenever any of the following files are inspected or modifie
 ## 2. Enforced Rules & Invariants
 
 ### A. The 7 Royal Themes Canon
-The application features 7 Royal Themes:
-1. **`oxford-gold` (`Oxford Gold`):** Classic Midnight & Gold (`#080B14`, `#14213D`, `#D4AF37`, `#FFD34D`).
-2. **`kiswah-noir` (`Haramain Noir`):** Obsidian Silk & 24K Gold (`#080705`, `#18140E`, `#EAB308`, `#D97706`).
-3. **`imperial-violet` (`Imperial Violet`):** Royal Plum & Warm Gold (`#1F0035`, `#390040`, `#C7940E`, `#E5B83C`).
+The application features 7 Royal Themes with unified Sukoon low-glare velvet architecture:
+1. **`oxford-gold` (`Oxford Gold`):** Midnight Velvet & Satin Gold (`#060911`, `#0F1729`, `#DCA349`, `#B87F28`).
+2. **`kiswah-noir` (`Haramain Noir`):** Obsidian Graphite & Satin Silver (`#060608`, `#12131A`, `#A8B3C7`, `#7E8B9F`).
+3. **`imperial-violet` (`Imperial Violet`):** Obsidian Plum & Satin Orchid (`#0B0514`, `#180C2B`, `#C582F0`, `#9333EA`).
 4. **`burgundy-velvet` (`Burgundy Velvet`):** Deep Onyx & Crimson (`#0B0B0B`, `#241012`, `#C24552`, `#E0707E`).
-5. **`desert-scroll` (`Desert Scroll`):** Royal Arabian Oud (`#150E07`, `#25180E`, `#C88A3A`, `#DFC090`).
-6. **`istanbul-sapphire` (`Royal Sapphire`):** Deep Sapphire & Cyan (`#030B14`, `#06182B`, `#22D3EE`, `#7DD3FC`).
-7. **`madinah-emerald` (`Madinah Emerald`):** Royal Forest Velvet & Cream Sand (`#061712`, `#0A211A`, `#E8D5B0`, `#EFDDB9`).
+5. **`desert-scroll` (`Desert Scroll`):** Obsidian Mocha & Terracotta (`#100806`, `#21110D`, `#E58A4E`, `#C46830`).
+6. **`istanbul-sapphire` (`Royal Sapphire`):** Obsidian Sapphire & Periwinkle (`#050912`, `#0C1629`, `#6A9AF2`, `#3B6FD4`).
+7. **`madinah-emerald` (`Madinah Emerald`):** Obsidian Pine & Satin Jade (`#040D09`, `#0A1F17`, `#45B88C`, `#2E946D`).
 
 ### B. Mandatory 17 CSS Root Tokens
 Every theme definition in `src/index.css` (under `[data-theme="..."]`) and in `src/lib/theme-engine.ts` (`APP_THEMES`) **MUST** define all 17 core tokens:
