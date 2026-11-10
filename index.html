@@ -7,16 +7,7 @@
     (function () {
       try {
         var savedTheme = localStorage.getItem('noor-theme') || localStorage.getItem('noor_theme') || localStorage.getItem('theme') || 'oxford-gold';
-        if (savedTheme === 'madinah-emerald') {
-          savedTheme = 'kiswah-noir';
-          try {
-            localStorage.setItem('noor-theme', 'kiswah-noir');
-            localStorage.setItem('noor_theme', 'kiswah-noir');
-          } catch (e) {
-            // Safe storage fallback
-          }
-        }
-        var valid = ['oxford-gold', 'kiswah-noir', 'istanbul-sapphire', 'imperial-violet', 'burgundy-velvet', 'desert-scroll'];
+        var valid = ['oxford-gold', 'kiswah-noir', 'istanbul-sapphire', 'imperial-violet', 'burgundy-velvet', 'desert-scroll', 'madinah-emerald'];
         if (valid.indexOf(savedTheme) === -1) savedTheme = 'oxford-gold';
         document.documentElement.setAttribute('data-theme', savedTheme);
         document.documentElement.className = 'dark ' + savedTheme + ' splash-active';
@@ -265,6 +256,23 @@
       --card-sheen-line: rgba(255, 214, 150, 0.16);
       --text-primary: #F8EEDC;
       --text-secondary: #D6BC96;
+    }
+    [data-theme="madinah-emerald"], .madinah-emerald {
+      --bg-base: #061712;
+      --bg-elev: #0A211A;
+      --surface: #0E2E24;
+      --surface-2: #143B2E;
+      --border: rgba(232, 213, 176, 0.26);
+      --accent: #E8D5B0;
+      --accent-2: #C9B08A;
+      --accent-text: #EFDDB9;
+      --on-accent: #0A211A;
+      --accent-soft: rgba(232, 213, 176, 0.14);
+      --accent-glow: rgba(232, 213, 176, 0.30);
+      --card-sheen: linear-gradient(135deg, rgba(248, 235, 214, 0.12) 0%, rgba(13, 59, 46, 0.05) 60%);
+      --card-sheen-line: rgba(248, 235, 214, 0.18);
+      --text-primary: #F6F1E4;
+      --text-secondary: #A8C4B4;
     }
 
     html, body {

@@ -471,6 +471,45 @@
     --ring: 29 74% 56%;
   }
 
+  [data-theme="madinah-emerald"] {
+    --bg-base: #061712;
+    --bg-elev: #0A211A;
+    --surface: #0E2E24;
+    --surface-2: #143B2E;
+    --border: rgba(232, 213, 176, 0.26);
+    --accent: #E8D5B0;
+    --accent-text: #EFDDB9;
+    --on-accent: #0A211A;
+    --accent-soft: rgba(232, 213, 176, 0.14);
+    --accent-glow: rgba(232, 213, 176, 0.30);
+    --accent-2: #C9B08A;
+    --text-primary: #F6F1E4;
+    --text-secondary: #A8C4B4;
+    --success: #86EFAC;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(248, 235, 214, 0.12) 0%, rgba(13, 59, 46, 0.05) 60%);
+    --card-sheen-line: rgba(248, 235, 214, 0.18);
+
+    --background: 160 48% 6%;
+    --foreground: 43 55% 93%;
+    --card: 162 53% 12%;
+    --card-foreground: 43 55% 93%;
+    --popover: 162 53% 12%;
+    --popover-foreground: 43 55% 93%;
+    --primary: 40 56% 80%;
+    --primary-foreground: 163 53% 8%;
+    --primary-glow: 40 56% 80%;
+    --secondary: 161 49% 15%;
+    --secondary-foreground: 43 55% 93%;
+    --muted: 161 49% 15%;
+    --muted-foreground: 145 19% 71%;
+    --destructive: 352 95% 71%;
+    --destructive-foreground: 0 0% 100%;
+    --input: 161 49% 15%;
+    --ring: 40 56% 80%;
+  }
+
   .dark {
     /* Azimuth-Inspired Warm Islamic Theme - Dark Mode */
     --background: 222 15% 9%; /* Deep dark navy #0F1117 */

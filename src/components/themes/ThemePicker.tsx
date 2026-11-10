@@ -42,7 +42,7 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
         </div>
       </div>
 
-      {/* 2-Column Grid of 6 Preview Cards (Symmetrical 3x2 Grid) */}
+      {/* 2-Column Grid of 7 Preview Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {themes.map((theme) => {
           const isSelected = currentTheme === theme.id;

@@ -46,8 +46,8 @@ When modifying or reviewing Noor Connect code, automatically trigger and enforce
    - Strict APK update filtering (only releases with `.apk` assets; never asset-only releases like `ebooks-library-v1`).
    - Exact alarm permission handling for uninterrupted Adhan notifications.
 
-4. **[6 Royal Themes & 17 CSS Token Auditor](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-6-theme-token-sentinel/SKILL.md):**
-   - All 6 Royal Themes (`kiswah-noir`, `istanbul-sapphire`, `oxford-gold`, `imperial-violet`, `burgundy-velvet`, `desert-scroll`) must define all 17 root tokens.
+4. **[7 Royal Themes & 17 CSS Token Auditor](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-6-theme-token-sentinel/SKILL.md):**
+   - All 7 Royal Themes (`kiswah-noir`, `istanbul-sapphire`, `oxford-gold`, `imperial-violet`, `burgundy-velvet`, `desert-scroll`, `madinah-emerald`) must define all 17 root tokens.
    - Every `color-mix()` CSS declaration must be preceded by a plain CSS fallback rule.
 
 5. **[Authentic Prayer, Makruh Waqt, Nafl & Qaza Sync Guard](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-islamic-fiqh-timing-guard/SKILL.md):**

@@ -169,6 +169,32 @@ export const THEMES: Record<ThemeId, AppTheme> = {
       '--danger': '#F87171',
     },
   },
+  'madinah-emerald': {
+    id: 'madinah-emerald',
+    name: 'Madinah Emerald',
+    subtitle: 'Royal forest velvet & cream sand',
+    description: 'Deep forest velvet surfaces with warm cream-sand accents and sage mist secondary text.',
+    tokens: {
+      '--bg-base': '#061712',
+      '--bg-elev': '#0A211A',
+      '--surface': '#0E2E24',
+      '--surface-2': '#143B2E',
+      '--border': 'rgba(232, 213, 176, 0.26)',
+      '--accent': '#E8D5B0',
+      '--accent-2': '#C9B08A',
+      '--accent-text': '#EFDDB9',
+      '--on-accent': '#0A211A',
+      '--accent-soft': 'rgba(232, 213, 176, 0.14)',
+      '--accent-glow': 'rgba(232, 213, 176, 0.30)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(248, 235, 214, 0.12) 0%, rgba(13, 59, 46, 0.05) 60%)',
+      '--card-sheen-line': 'rgba(248, 235, 214, 0.18)',
+      '--text-primary': '#F6F1E4',
+      '--text-secondary': '#A8C4B4',
+      '--success': '#86EFAC',
+      '--warning': '#FBBF24',
+      '--danger': '#FB7185',
+    },
+  },
 };
 
 export const APP_THEMES: AppTheme[] = [
@@ -178,26 +204,17 @@ export const APP_THEMES: AppTheme[] = [
   THEMES['burgundy-velvet'],
   THEMES['desert-scroll'],
   THEMES['istanbul-sapphire'],
+  THEMES['madinah-emerald'],
 ];
 
 const VALID_THEME_IDS = new Set<ThemeId>(APP_THEMES.map((t) => t.id));
 
 /**
  * Returns the currently persisted theme ID or the default 'oxford-gold'.
- * Includes safe migration from legacy 'madinah-emerald' to flagship 'kiswah-noir'.
  */
 export function getTheme(): ThemeId {
   try {
     const val = localStorage.getItem(ALT_THEME_STORAGE_KEY) || localStorage.getItem(THEME_STORAGE_KEY) || localStorage.getItem(LEGACY_THEME_KEY);
-    if (val === 'madinah-emerald') {
-      try {
-        localStorage.setItem(ALT_THEME_STORAGE_KEY, 'kiswah-noir');
-        localStorage.setItem(THEME_STORAGE_KEY, 'kiswah-noir');
-      } catch {
-        // Safe localStorage write fallback
-      }
-      return 'kiswah-noir';
-    }
     if (val && VALID_THEME_IDS.has(val as ThemeId)) {
       return val as ThemeId;
     }
@@ -277,6 +294,7 @@ export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
   'burgundy-velvet': '#0B0B0B',
   'desert-scroll': '#150E07',
   'istanbul-sapphire': '#030B14',
+  'madinah-emerald': '#061712',
 };
 
 /**

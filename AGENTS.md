@@ -32,7 +32,7 @@ Any AI coding assistant, agentic workflow, third-party developer, or automated s
    - The 5-attempt threshold followed by a 60-second cooldown timer and `[SECURITY_WARN]` logging in the Deep X-Ray Diagnostics engine must be preserved at all times.
 
 4. **Protected Subsystems Guarantee:**
-   - Keep 4-thread parallel turbo APK downloader (`MainActivity.java`), permission onboarding, Qibla compass, Prayer calculation math, Splash screen, 6 Clocks, Deep X-Ray Diagnostics (`8/8 PASS`), and all 6 themes intact.
+   - Keep 4-thread parallel turbo APK downloader (`MainActivity.java`), permission onboarding, Qibla compass, Prayer calculation math, Splash screen, 6 Clocks, Deep X-Ray Diagnostics (`8/8 PASS`), and all 7 themes intact.
 
 ---
 
@@ -62,7 +62,7 @@ In addition to standard EGM review workflows, five specialized Noor Connect doma
    - **Exact Alarm & Doze Mode Safety:** Preserves exact alarm scheduling for timely Adhan audio playback.
 
 4. **[`noor-6-theme-token-sentinel`](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-6-theme-token-sentinel/SKILL.md):**
-   - **Complete 17 Root Tokens:** Mandates all 17 root CSS tokens across all 6 Royal Themes (`kiswah-noir`, `istanbul-sapphire`, `oxford-gold`, `imperial-violet`, `burgundy-velvet`, `desert-scroll`).
+   - **Complete 17 Root Tokens:** Mandates all 17 root CSS tokens across all 7 Royal Themes (`kiswah-noir`, `istanbul-sapphire`, `oxford-gold`, `imperial-violet`, `burgundy-velvet`, `desert-scroll`, `madinah-emerald`).
    - **Plain CSS Fallback:** Requires a standard CSS fallback declaration immediately prior to every `color-mix()` rule for legacy Android WebView compatibility.
 
 5. **[`noor-islamic-fiqh-timing-guard`](file:///c:/Users/DELL/Noor-connect/.agents/skills/noor-islamic-fiqh-timing-guard/SKILL.md):**

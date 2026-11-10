@@ -4,7 +4,8 @@ export type ThemeId =
   | 'istanbul-sapphire'
   | 'imperial-violet'
   | 'burgundy-velvet'
-  | 'desert-scroll';
+  | 'desert-scroll'
+  | 'madinah-emerald';
 
 export interface ThemeTokens {
   '--bg-base': string;

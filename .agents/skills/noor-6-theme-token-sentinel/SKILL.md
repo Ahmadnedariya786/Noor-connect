@@ -1,9 +1,9 @@
 ---
 name: noor-6-theme-token-sentinel
-description: Audits and enforces the 6 Royal Themes and complete 17 CSS root tokens across Noor Connect, ensuring cross-theme visual harmony and color-mix fallbacks.
+description: Audits and enforces the 7 Royal Themes and complete 17 CSS root tokens across Noor Connect, ensuring cross-theme visual harmony and color-mix fallbacks.
 ---
 
-# 6 Royal Themes & 17 CSS Root Token Auditor
+# 7 Royal Themes & 17 CSS Root Token Auditor
 
 This domain skill enforces design system integrity, CSS custom property definitions, and theme color-mix fallbacks across Noor Connect.
 
@@ -19,16 +19,15 @@ Activate this skill whenever any of the following files are inspected or modifie
 
 ## 2. Enforced Rules & Invariants
 
-### A. The 6 Royal Themes Canon
-The application features exactly 6 Royal Themes in a symmetrical 3×2 selector grid:
+### A. The 7 Royal Themes Canon
+The application features 7 Royal Themes:
 1. **`oxford-gold` (`Oxford Gold`):** Classic Midnight & Gold (`#080B14`, `#14213D`, `#D4AF37`, `#FFD34D`).
 2. **`kiswah-noir` (`Haramain Noir`):** Obsidian Silk & 24K Gold (`#080705`, `#18140E`, `#EAB308`, `#D97706`).
 3. **`imperial-violet` (`Imperial Violet`):** Royal Plum & Warm Gold (`#1F0035`, `#390040`, `#C7940E`, `#E5B83C`).
 4. **`burgundy-velvet` (`Burgundy Velvet`):** Deep Onyx & Crimson (`#0B0B0B`, `#241012`, `#C24552`, `#E0707E`).
-5. **`desert-scroll` (`Desert Scroll`):** Royal Arabian Oud (`#110A06`, `#25170E`, `#F59E0B`, `#EA580C`).
-6. **`istanbul-sapphire` (`Royal Sapphire`):** Deep Sapphire & Gold (`#051020`, `#0F2444`, `#F59E0B`, `#38BDF8`).
-
-*(Note: `madinah-emerald` is permanently deprecated; any legacy storage reference automatically migrates to `kiswah-noir`).*
+5. **`desert-scroll` (`Desert Scroll`):** Royal Arabian Oud (`#150E07`, `#25180E`, `#C88A3A`, `#DFC090`).
+6. **`istanbul-sapphire` (`Royal Sapphire`):** Deep Sapphire & Cyan (`#030B14`, `#06182B`, `#22D3EE`, `#7DD3FC`).
+7. **`madinah-emerald` (`Madinah Emerald`):** Royal Forest Velvet & Cream Sand (`#061712`, `#0A211A`, `#E8D5B0`, `#EFDDB9`).
 
 ### B. Mandatory 17 CSS Root Tokens
 Every theme definition in `src/index.css` (under `[data-theme="..."]`) and in `src/lib/theme-engine.ts` (`APP_THEMES`) **MUST** define all 17 core tokens:
@@ -67,7 +66,6 @@ Every theme definition in `src/index.css` (under `[data-theme="..."]`) and in `s
      ```
 
 ## 3. Pre-Commit Verification Checklist
-- [ ] Token completeness: Verify all 17 root tokens are present in all 6 themes in `src/index.css` and `src/lib/theme-engine.ts`.
-- [ ] Deprecation check: Ensure zero lingering references to `madinah-emerald` in active selectors.
+- [ ] Token completeness: Verify all 17 root tokens are present in all 7 themes in `src/index.css` and `src/lib/theme-engine.ts`.
 - [ ] Color-mix fallback check: Verify each `color-mix()` declaration is immediately preceded by a static CSS fallback.
-- [ ] Symmetrical grid: Confirm `ThemePicker.tsx` renders the 3×2 grid cleanly without text truncation on subtitles.
+- [ ] Grid integrity: Confirm `ThemePicker.tsx` renders all 7 theme preview cards cleanly without text truncation on subtitles.
