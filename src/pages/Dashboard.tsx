@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { EidCelebrationOverlay } from "@/components/EidCelebrationOverlay";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import { getTodayPrayers, togglePrayer, resolvePrayerTimes, checkStreakReset, type PrayerName, type DailyPrayers } from "@/lib/salah-tracker";
-import { syncMissedPrayersToQaza, syncUnmarkedDailySalahToQaza, syncPrayerCompletionToQaza } from "@/lib/qaza-tracker";
+import { syncMissedPrayersToQaza, syncUnmarkedDailySalahToQaza, syncPrayerCompletionToQaza, getLocalDateIso } from "@/lib/qaza-tracker";
 import { BatteryOptimizationDialog } from "@/components/BatteryOptimizationDialog";
 import { FeatureCards } from "@/components/DashboardFeatureCards";
 
@@ -669,8 +669,7 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
     const resolvedTimes = resolvePrayerTimes();
     const result = togglePrayer(pKey, resolvedTimes || undefined);
     if (result.success && result.completed) {
-      const now = new Date();
-      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const todayIso = getLocalDateIso();
       syncPrayerCompletionToQaza(todayIso, pKey);
     }
     toast({

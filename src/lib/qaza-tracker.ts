@@ -9,6 +9,34 @@ export type QazaPrayerName = PrayerName | 'witr';
 
 export const QAZA_DATE_RECORDS_KEY = 'noor_qaza_date_records_v1';
 export const QAZA_AUTOSYNC_SLOTS_KEY = 'noor_qaza_autosynced_slots_v1';
+export const QAZA_LAST_ROLLOVER_DATE_KEY = 'noor_qaza_last_rollover_date_v1';
+export const QAZA_BACKUP_PRE_ROLLOVER_KEY = 'noor_qaza_backup_pre_rollover_v1';
+export const QAZA_ROLLOVER_CLEANUP_KEY = 'noor_qaza_cleanup_premature_v2';
+
+/**
+ * Builds local YYYY-MM-DD string from local date parts (never UTC toISOString).
+ * Protects Indian timezones (00:00 - 05:30) and all international timezones.
+ */
+export const getLocalDateIso = (d: Date = new Date()): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+export const getYesterdayIso = (todayIso: string): string => {
+  const [y, m, d] = todayIso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  date.setDate(date.getDate() - 1);
+  return getLocalDateIso(date);
+};
+
+export const getNextDayIso = (dateIso: string): string => {
+  const [y, m, d] = dateIso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  date.setDate(date.getDate() + 1);
+  return getLocalDateIso(date);
+};
 
 export interface DateWiseQazaRecord {
   id: string;
@@ -16,6 +44,7 @@ export interface DateWiseQazaRecord {
   hijriDate?: string;
   prayers: Record<QazaPrayerName, 'pending' | 'completed' | 'none'>;
   note?: string;
+  source?: 'auto' | 'manual';
 }
 
 /**
@@ -475,6 +504,7 @@ export const addPendingDateQazaPrayer = (date: string, prayer: QazaPrayerName): 
       id: `qaza_date_${date}`,
       date,
       hijriDate: formatHijriDate(date),
+      source: 'manual',
       prayers: {
         fajr: 'none',
         dhuhr: 'none',
@@ -489,6 +519,7 @@ export const addPendingDateQazaPrayer = (date: string, prayer: QazaPrayerName): 
 
   if (record.prayers[prayer] !== 'pending') {
     record.prayers[prayer] = 'pending';
+    record.source = 'manual';
     saveDateWiseQazaList(records);
     window.dispatchEvent(new CustomEvent('qaza-date-updated'));
     window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
@@ -567,11 +598,13 @@ export const saveDateRecordQaza = (
         id: `qaza_date_${date}`,
         date,
         hijriDate: formatHijriDate(date),
+        source: 'manual',
         prayers: { ...draftStatuses },
       };
       records.push(rec);
     } else {
       rec.prayers = { ...draftStatuses };
+      rec.source = 'manual';
     }
     updatedRecords = records;
   }
@@ -681,36 +714,286 @@ export const deleteDateQazaRecord = (date: string): void => {
   window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
 };
 
-// ── Automatic Daily Salah -> Date-Wise Qaza Auto-Sync Engine ──
+// ── Automatic Daily Salah -> Date-Wise Qaza Rollover Engine ──
 
-export const getAutosyncedSlots = (): Set<string> => {
-  try {
-    const raw = localStorage.getItem(QAZA_AUTOSYNC_SLOTS_KEY);
-    if (!raw) return new Set<string>();
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? new Set(parsed) : new Set();
-  } catch {
-    return new Set<string>();
+export interface RolloverOptions {
+  records: DateWiseQazaRecord[];
+  trackedDays: Record<string, DailyPrayers>;
+  todayIso: string;
+  currentTime: Date;
+  nextDayFajrTime?: Date | null;
+  lastRolloverDate?: string | null;
+  includeWitr?: boolean;
+}
+
+export interface RolloverResult {
+  records: DateWiseQazaRecord[];
+  newLastRolloverDate: string;
+  addedCountByPrayer: Record<QazaPrayerName, number>;
+  totalAdded: number;
+  processedDates: string[];
+}
+
+/**
+ * Pure, clock-injected Rollover Engine (Fiqh Timing Guard):
+ * - Unticked prayers of day D move to Qaza ONLY after day D has fully ended.
+ * - Same-day prayers (dateIso >= todayIso) are NEVER auto-added to Qaza.
+ * - Fajr, Dhuhr, Asr, Maghrib of day D roll over once local time passes end of day D (start of D+1).
+ * - Isha and Witr of day D roll over ONLY after next day's Fajr has started.
+ * - Processes all skipped days from day after lastRolloverDate up to yesterday.
+ * - First run with no pointer: initializes pointer to yesterday without backfilling history.
+ * - Idempotent: running repeatedly never double counts or overwrites completed/manual records.
+ */
+export function rolloverUntickedPrayers(options: RolloverOptions): RolloverResult {
+  const {
+    records: initialRecords,
+    trackedDays,
+    todayIso,
+    currentTime,
+    nextDayFajrTime,
+    lastRolloverDate,
+    includeWitr = true,
+  } = options;
+
+  const records = JSON.parse(JSON.stringify(initialRecords)) as DateWiseQazaRecord[];
+  const yesterdayIso = getYesterdayIso(todayIso);
+  const addedCountByPrayer: Record<QazaPrayerName, number> = {
+    fajr: 0,
+    dhuhr: 0,
+    asr: 0,
+    maghrib: 0,
+    isha: 0,
+    witr: 0,
+  };
+  let totalAdded = 0;
+  const processedDates: string[] = [];
+
+  // First run with no pointer (fresh install or upgrade): initialize to yesterday, 0 backfill
+  if (!lastRolloverDate) {
+    return {
+      records,
+      newLastRolloverDate: yesterdayIso,
+      addedCountByPrayer,
+      totalAdded: 0,
+      processedDates: [],
+    };
   }
-};
 
-export const saveAutosyncedSlots = (slots: Set<string>): void => {
+  // Iterate days from (lastRolloverDate + 1) up to yesterdayIso
+  let cursor = getNextDayIso(lastRolloverDate);
+  let newLastRollover = lastRolloverDate;
+
+  while (cursor <= yesterdayIso) {
+    const isYesterday = (cursor === yesterdayIso);
+    processedDates.push(cursor);
+
+    // Daytime prayers (Fajr, Dhuhr, Asr, Maghrib) of day D roll over once D has ended (start of D+1).
+    const daytimeEligible = true;
+
+    // Isha and Witr of day D roll over only after the next day's Fajr has started.
+    let ishaWitrEligible = false;
+    if (!isYesterday) {
+      ishaWitrEligible = true;
+    } else {
+      const fajrCutoff = nextDayFajrTime ? new Date(nextDayFajrTime) : (() => {
+        const [ty, tm, td] = todayIso.split('-').map(Number);
+        return new Date(ty, tm - 1, td, 5, 0, 0); // 05:00 AM local fallback if prayer times unavailable
+      })();
+
+      if (currentTime >= fajrCutoff) {
+        ishaWitrEligible = true;
+      }
+    }
+
+    const dayData = trackedDays[cursor] || {
+      date: cursor,
+      fajr: false,
+      dhuhr: false,
+      asr: false,
+      maghrib: false,
+      isha: false,
+    };
+
+    const eligiblePrayers: QazaPrayerName[] = [];
+    if (daytimeEligible) {
+      eligiblePrayers.push('fajr', 'dhuhr', 'asr', 'maghrib');
+    }
+    if (ishaWitrEligible) {
+      eligiblePrayers.push('isha');
+      if (includeWitr) eligiblePrayers.push('witr');
+    }
+
+    let rec = records.find((r) => r.date === cursor);
+    if (!rec) {
+      rec = {
+        id: `qaza_date_${cursor}`,
+        date: cursor,
+        hijriDate: formatHijriDate(cursor),
+        source: 'auto',
+        prayers: { fajr: 'none', dhuhr: 'none', asr: 'none', maghrib: 'none', isha: 'none', witr: 'none' },
+      };
+      records.push(rec);
+    }
+
+    let ishaMissed = false;
+    for (const p of eligiblePrayers) {
+      let isCompleted = false;
+      if (p === 'witr') {
+        isCompleted = !ishaMissed;
+      } else {
+        isCompleted = dayData[p] === true;
+        if (p === 'isha' && !isCompleted) {
+          ishaMissed = true;
+        }
+      }
+
+      if (!isCompleted) {
+        // Only set pending if not already pending or completed, and never overwrite manual edits
+        if (!rec.prayers[p] || rec.prayers[p] === 'none') {
+          rec.prayers[p] = 'pending';
+          if (!rec.source) rec.source = 'auto';
+          addedCountByPrayer[p]++;
+          totalAdded++;
+        }
+      }
+    }
+
+    if (daytimeEligible && ishaWitrEligible) {
+      newLastRollover = cursor;
+    }
+
+    cursor = getNextDayIso(cursor);
+  }
+
+  return {
+    records,
+    newLastRolloverDate: newLastRollover,
+    addedCountByPrayer,
+    totalAdded,
+    processedDates,
+  };
+}
+
+/**
+ * Data-Safe Cleanup of Premature Same-Day Entries (One-time migration):
+ * - Backs up records & qazaData to 'noor_qaza_backup_pre_rollover_v1'
+ * - For todayIso and any future date, removes pending entries if source === 'auto'
+ *   or legacy entries unticked in today's log matching the old auto-sync pattern
+ * - Decrements counts by DELTA only (Math.max(0, count - 1))
+ * - Preserves bulk baseline counts and manual entries
+ */
+export const cleanupPrematureSameDayEntries = (): {
+  migrated: boolean;
+  backupKey: string;
+  removedEntries: { date: string; prayer: QazaPrayerName }[];
+  keptEntries: { date: string; prayer: QazaPrayerName; reason: string }[];
+  countDeltas: Record<QazaPrayerName, number>;
+} => {
+  const result = {
+    migrated: false,
+    backupKey: QAZA_BACKUP_PRE_ROLLOVER_KEY,
+    removedEntries: [] as { date: string; prayer: QazaPrayerName }[],
+    keptEntries: [] as { date: string; prayer: QazaPrayerName; reason: string }[],
+    countDeltas: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0, witr: 0 } as Record<QazaPrayerName, number>,
+  };
+
   try {
-    const arr = Array.from(slots).slice(-300);
-    safeSetLocalStorageItem(QAZA_AUTOSYNC_SLOTS_KEY, JSON.stringify(arr));
+    if (localStorage.getItem(QAZA_ROLLOVER_CLEANUP_KEY) === 'v1') {
+      return result;
+    }
+
+    const records = getDateWiseQazaListInternal();
+    const prayers = getQazaPrayers();
+    let trackedDays: Record<string, DailyPrayers> = {};
+    try {
+      const rawSalah = localStorage.getItem('salah-tracker');
+      if (rawSalah) trackedDays = JSON.parse(rawSalah);
+    } catch {
+      trackedDays = {};
+    }
+
+    // 1. Save data-safe backup before any mutations
+    safeSetLocalStorageItem(
+      QAZA_BACKUP_PRE_ROLLOVER_KEY,
+      JSON.stringify({
+        records,
+        prayers,
+        trackedDays,
+        timestamp: new Date().toISOString(),
+      })
+    );
+
+    const todayIso = getLocalDateIso();
+    const prayerNames: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
+    let modified = false;
+
+    for (const rec of records) {
+      if (rec.date >= todayIso) {
+        for (const p of prayerNames) {
+          if (rec.prayers && rec.prayers[p] === 'pending') {
+            if (rec.source === 'auto') {
+              rec.prayers[p] = 'none';
+              prayers[p] = Math.max(0, (prayers[p] || 0) - 1);
+              result.removedEntries.push({ date: rec.date, prayer: p });
+              result.countDeltas[p] = (result.countDeltas[p] || 0) + 1;
+              modified = true;
+            } else if (rec.source === 'manual') {
+              result.keptEntries.push({
+                date: rec.date,
+                prayer: p,
+                reason: "Explicitly created by user in Qaza Planner (source === 'manual')",
+              });
+            } else {
+              // Legacy entry without source field: check if unticked in today's daily log
+              const isUnticked = !trackedDays[rec.date]?.[p as PrayerName];
+              if (isUnticked) {
+                rec.prayers[p] = 'none';
+                prayers[p] = Math.max(0, (prayers[p] || 0) - 1);
+                result.removedEntries.push({ date: rec.date, prayer: p });
+                result.countDeltas[p] = (result.countDeltas[p] || 0) + 1;
+                modified = true;
+              } else {
+                result.keptEntries.push({
+                  date: rec.date,
+                  prayer: p,
+                  reason: 'Ambiguous legacy entry without source; safely preserved',
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Clean up empty date records
+    const cleanedRecords = records.filter((r) => {
+      const hasPendingOrCompleted = prayerNames.some(
+        (p) => r.prayers && (r.prayers[p] === 'pending' || r.prayers[p] === 'completed')
+      );
+      return hasPendingOrCompleted || r.source === 'manual';
+    });
+
+    if (modified || cleanedRecords.length !== records.length) {
+      saveDateWiseQazaList(cleanedRecords);
+      saveQazaPrayers(prayers);
+      window.dispatchEvent(new CustomEvent('qaza-updated'));
+      window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+      window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
+    }
+
+    safeSetLocalStorageItem(QAZA_ROLLOVER_CLEANUP_KEY, 'v1');
+    result.migrated = true;
+    return result;
   } catch (err) {
-    console.warn('Failed to save autosynced Qaza slots:', err);
+    console.warn('Failed to cleanup premature same-day Qaza entries:', err);
+    return result;
   }
 };
 
 /**
- * Synchronizes unmarked Daily Salah prayers into Date-Wise Qaza.
- * - Today: past Sunrise for Fajr, past Asr for Dhuhr, past Maghrib for Asr, past Isha for Maghrib.
- * - Past 7 days: uncompleted Fard prayers + Witr (if Isha missed).
- * - Menstrual mode check: pauses and bypasses when active.
- * - Ledger key prevents double-counting or re-adding once marked completed.
+ * Executes the stateful Qaza Rollover in application runtime.
  */
-export const syncUnmarkedDailySalahToQaza = (
+export const executeQazaRollover = (
   customPrayerTimes?: Record<string, { start: Date; end: Date }>
 ): void => {
   try {
@@ -723,36 +1006,14 @@ export const syncUnmarkedDailySalahToQaza = (
       return;
     }
 
+    // 2. Perform one-time premature cleanup if not yet run
+    cleanupPrematureSameDayEntries();
+
     const now = new Date();
-    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const autosyncedSlots = getAutosyncedSlots();
-    const records = getDateWiseQazaList();
-    let recordsChanged = false;
-    let prayersChanged = false;
+    const todayIso = getLocalDateIso(now);
+    const lastRolloverDate = localStorage.getItem(QAZA_LAST_ROLLOVER_DATE_KEY);
 
-    const getOrCreateRecord = (dateStr: string): DateWiseQazaRecord => {
-      let rec = records.find((r) => r.date === dateStr);
-      if (!rec) {
-        rec = {
-          id: `qaza_date_${dateStr}`,
-          date: dateStr,
-          hijriDate: formatHijriDate(dateStr),
-          prayers: {
-            fajr: 'none',
-            dhuhr: 'none',
-            asr: 'none',
-            maghrib: 'none',
-            isha: 'none',
-            witr: 'none',
-          },
-        };
-        records.push(rec);
-        recordsChanged = true;
-      }
-      return rec;
-    };
-
-    // Load salah-tracker days
+    // Load tracked days
     let trackedDays: Record<string, DailyPrayers> = {};
     try {
       const rawSalah = localStorage.getItem('salah-tracker');
@@ -761,142 +1022,136 @@ export const syncUnmarkedDailySalahToQaza = (
       trackedDays = {};
     }
 
-    // A. Today's Passed Prayers
+    // Read next-day Fajr from prayer times module (read-only)
     const times = customPrayerTimes || resolvePrayerTimes();
-    if (times) {
-      const todayRecord = trackedDays[todayIso] || {
-        date: todayIso,
-        fajr: false,
-        dhuhr: false,
-        asr: false,
-        maghrib: false,
-        isha: false,
-      };
+    const todayFajrTime = times?.fajr?.start || null;
 
-      const todayChecks: { prayer: PrayerName; isPassed: boolean }[] = [
-        { prayer: 'fajr', isPassed: times.fajr ? now > times.fajr.end : false },
-        { prayer: 'dhuhr', isPassed: times.dhuhr ? now > times.dhuhr.end : false },
-        { prayer: 'asr', isPassed: times.asr ? now > times.asr.end : false },
-        { prayer: 'maghrib', isPassed: times.maghrib ? now > times.maghrib.end : false },
-        { prayer: 'isha', isPassed: times.isha ? now > times.isha.end : false },
-      ];
+    const currentRecords = getDateWiseQazaListInternal();
+    const rollover = rolloverUntickedPrayers({
+      records: currentRecords,
+      trackedDays,
+      todayIso,
+      currentTime: now,
+      nextDayFajrTime: todayFajrTime,
+      lastRolloverDate,
+      includeWitr: true,
+    });
 
-      for (const { prayer, isPassed } of todayChecks) {
-        if (!isPassed) continue;
-        const isCompleted = todayRecord[prayer] === true;
-        const slotKey = `${todayIso}:${prayer}`;
+    // Update last rollover pointer
+    safeSetLocalStorageItem(QAZA_LAST_ROLLOVER_DATE_KEY, rollover.newLastRolloverDate);
 
-        if (!isCompleted && !autosyncedSlots.has(slotKey)) {
-          const rec = getOrCreateRecord(todayIso);
-          if (rec.prayers[prayer] !== 'completed' && rec.prayers[prayer] !== 'pending') {
-            rec.prayers[prayer] = 'pending';
-            addQazaPrayer(prayer, 1);
-            autosyncedSlots.add(slotKey);
-            recordsChanged = true;
-            prayersChanged = true;
-          }
-        }
-      }
-    }
+    // If new prayers were rolled over, update records and increment general Qaza by delta
+    if (rollover.totalAdded > 0) {
+      saveDateWiseQazaList(rollover.records);
 
-    // B. Past Days (up to 7 days back)
-    const syncStartDate = localStorage.getItem('noor_qaza_autosync_start_date');
-
-    for (let i = 1; i <= 7; i++) {
-      const pastD = new Date();
-      pastD.setDate(pastD.getDate() - i);
-      const pastIso = `${pastD.getFullYear()}-${String(pastD.getMonth() + 1).padStart(2, '0')}-${String(pastD.getDate()).padStart(2, '0')}`;
-
-      // If user reset Qaza and set a start date, skip dates before that reset date
-      if (syncStartDate && pastIso < syncStartDate) {
-        continue;
-      }
-
-      const dayData = trackedDays[pastIso];
-      const fardPrayers: PrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      let ishaMissed = false;
-
-      for (const p of fardPrayers) {
-        const isCompleted = dayData ? dayData[p] === true : false;
-        const slotKey = `${pastIso}:${p}`;
-
-        if (p === 'isha' && !isCompleted) {
-          ishaMissed = true;
-        }
-
-        if (!isCompleted && !autosyncedSlots.has(slotKey)) {
-          const rec = getOrCreateRecord(pastIso);
-          if (rec.prayers[p] !== 'completed' && rec.prayers[p] !== 'pending') {
-            rec.prayers[p] = 'pending';
-            addQazaPrayer(p, 1);
-            autosyncedSlots.add(slotKey);
-            recordsChanged = true;
-            prayersChanged = true;
-          }
-        }
-      }
-
-      // If Isha was missed on that past date, also auto-sync Witr
-      if (ishaMissed) {
-        const witrSlotKey = `${pastIso}:witr`;
-        if (!autosyncedSlots.has(witrSlotKey)) {
-          const rec = getOrCreateRecord(pastIso);
-          if (rec.prayers.witr !== 'completed' && rec.prayers.witr !== 'pending') {
-            rec.prayers.witr = 'pending';
-            addQazaPrayer('witr', 1);
-            autosyncedSlots.add(witrSlotKey);
-            recordsChanged = true;
-            prayersChanged = true;
-          }
-        }
-      }
-    }
-
-    if (recordsChanged || prayersChanged) {
-      saveAutosyncedSlots(autosyncedSlots);
-      if (recordsChanged) {
-        saveDateWiseQazaList(records);
-      }
-      window.dispatchEvent(new CustomEvent('qaza-updated'));
-      window.dispatchEvent(new CustomEvent('qaza-date-updated'));
-      window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
-    }
-  } catch (err) {
-    console.warn('Error in syncUnmarkedDailySalahToQaza:', err);
-  }
-};
-
-/**
- * Bidirectional helper: when a prayer is marked completed in Daily Salah,
- * automatically clear any pending Qaza record for that date without recording extra history entries.
- */
-export const syncPrayerCompletionToQaza = (date: string, prayer: QazaPrayerName): void => {
-  try {
-    const records = getDateWiseQazaList();
-    const record = records.find((r) => r.date === date);
-    if (!record) return;
-
-    if (record.prayers[prayer] === 'pending') {
-      record.prayers[prayer] = 'completed';
       const prayers = getQazaPrayers();
-      prayers[prayer] = Math.max(0, (prayers[prayer] || 0) - 1);
+      for (const p of (['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'] as QazaPrayerName[])) {
+        if (rollover.addedCountByPrayer[p] > 0) {
+          prayers[p] = (Number(prayers[p]) || 0) + rollover.addedCountByPrayer[p];
+        }
+      }
       saveQazaPrayers(prayers);
-      saveDateWiseQazaList(records);
+
       window.dispatchEvent(new CustomEvent('qaza-updated'));
       window.dispatchEvent(new CustomEvent('qaza-date-updated'));
       window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
     }
   } catch (err) {
-    console.warn('Error syncing prayer completion to Qaza:', err);
+    console.warn('Error in executeQazaRollover:', err);
   }
 };
 
 /**
- * Legacy compatibility alias for syncUnmarkedDailySalahToQaza
+ * Initializes listeners for the Qaza Rollover Engine:
+ * - App startup execution
+ * - App resume via visibilitychange
+ * - Light 60-second timer while app remains open
  */
+let rolloverListenersRegistered = false;
+
+export const initQazaRolloverListeners = (): void => {
+  if (typeof window === 'undefined' || rolloverListenersRegistered) return;
+  rolloverListenersRegistered = true;
+
+  // 1. Initial run on startup
+  executeQazaRollover();
+
+  // 2. Visibility change listener (app resume)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      executeQazaRollover();
+    }
+  });
+
+  // 3. Periodic 60-second check for overnight rollover
+  setInterval(() => {
+    executeQazaRollover();
+  }, 60 * 1000);
+};
+
+/**
+ * Backward-compatible entry points:
+ * Calls the safe rollover engine instead of prematurely pushing today's prayers into Qaza.
+ */
+export const syncUnmarkedDailySalahToQaza = (
+  customPrayerTimes?: Record<string, { start: Date; end: Date }>
+): void => {
+  executeQazaRollover(customPrayerTimes);
+};
+
 export const syncMissedPrayersToQaza = (
   _todayPrayers?: Record<string, boolean>,
   prayerTimes?: Record<string, { start: Date; end: Date }>
 ): void => {
-  syncUnmarkedDailySalahToQaza(prayerTimes);
+  executeQazaRollover(prayerTimes);
 };
+
+/**
+ * Ticking on Home/SalahTracker:
+ * When a user ticks a previously-unticked prayer on day D (today) or a past day,
+ * if that prayer had an auto-generated pending entry in `noor_qaza_date_records_v1`,
+ * clear that pending entry. If that auto-generated entry had also incremented
+ * `qazaData.prayers[p]`, decrement it by `Math.max(0, count - 1)` (delta-only).
+ * - Do not touch records marked `source: 'manual'`.
+ * - Emit `window.dispatchEvent(new Event('qaza-updated'))` so the Qaza badge, Qaza page,
+ *   and reminder banner update immediately.
+ */
+export function syncPrayerCompletionToQaza(dateIso: string, prayer: QazaPrayerName): void {
+  try {
+    const records = getDateWiseQazaList();
+    const recIndex = records.findIndex((r) => r.date === dateIso);
+    if (recIndex === -1) return;
+
+    const rec = records[recIndex];
+    if (rec.prayers && rec.prayers[prayer] === 'pending') {
+      // Only clear if source is 'auto' (or unspecified legacy auto). Never clear manual entries!
+      if (rec.source === 'manual') {
+        return;
+      }
+
+      delete rec.prayers[prayer];
+
+      // Decrement aggregate count delta-only
+      const prayers = getQazaPrayers();
+      const currentCount = Number(prayers[prayer]) || 0;
+      prayers[prayer] = Math.max(0, currentCount - 1);
+      saveQazaPrayers(prayers);
+
+      // If no pending prayers remain, remove the record
+      const remainingPending = Object.values(rec.prayers).some((s) => s === 'pending');
+      if (!remainingPending) {
+        records.splice(recIndex, 1);
+      } else {
+        records[recIndex] = rec;
+      }
+      saveDateWiseQazaList(records);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('qaza-updated'));
+        window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
+      }
+    }
+  } catch (err) {
+    console.warn('[QAZA_TICK_SYNC_WARN] Failed to sync prayer completion to Qaza:', err);
+  }
+}
