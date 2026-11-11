@@ -251,24 +251,24 @@
   }
 
   [data-theme="oxford-gold"] {
-    --bg-base: #060911;
-    --bg-elev: #0A0F1C;
-    --surface: #0F1729;
-    --surface-2: #152038;
-    --border: #283A5E;
-    --accent: #DCA349;
-    --accent-text: #F2C97D;
-    --on-accent: #060911;
-    --accent-soft: rgba(220, 163, 73, 0.16);
-    --accent-glow: rgba(242, 201, 125, 0.28);
-    --accent-2: #B87F28;
+    --bg-base: #050914;
+    --bg-elev: #091124;
+    --surface: #0F1B36;
+    --surface-2: #16274C;
+    --border: rgba(245,184,46,0.30);
+    --accent: #F5B82E;
+    --accent-text: #FDE047;
+    --on-accent: #050914;
+    --accent-soft: rgba(245,184,46,0.16);
+    --accent-glow: rgba(245,184,46,0.34);
+    --accent-2: #D97706;
     --text-primary: #F8FAFC;
-    --text-secondary: #9EB0C9;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --card-sheen: linear-gradient(135deg, rgba(220, 163, 73, 0.13) 0%, rgba(184, 127, 40, 0.04) 60%);
-    --card-sheen-line: rgba(242, 201, 125, 0.18);
+    --text-secondary: #98B4D8;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(245,184,46,0.15) 0%, rgba(56,189,248,0.05) 60%);
+    --card-sheen-line: rgba(253,224,71,0.25);
 
     /* Signature Tokens - Oxford Gold (Scholar's Library) */
     --sig-radius: 18px;
@@ -281,51 +281,51 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 224 48% 5%;
+    --background: 224 60% 4%;
     --foreground: 210 40% 98%;
-    --card: 222 46% 11%;
+    --card: 222 56% 14%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 46% 11%;
+    --popover: 222 56% 14%;
     --popover-foreground: 210 40% 98%;
-    --primary: 37 67% 57%;
-    --primary-foreground: 224 48% 5%;
-    --primary-glow: 37 67% 57%;
-    --secondary: 221 45% 15%;
+    --primary: 41 91% 57%;
+    --primary-foreground: 224 60% 4%;
+    --primary-glow: 41 91% 57%;
+    --secondary: 220 55% 19%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 221 45% 15%;
-    --muted-foreground: 215 29% 70%;
+    --muted: 220 55% 19%;
+    --muted-foreground: 214 47% 72%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 221 45% 15%;
-    --ring: 37 67% 57%;
+    --input: 220 55% 19%;
+    --ring: 41 91% 57%;
   }
 
   [data-theme="kiswah-noir"],
   [data-theme="haramain-noir"] {
-    --bg-base: #060608;
-    --bg-elev: #0B0C10;
-    --surface: #12131A;
-    --surface-2: #191B24;
-    --border: #2E3346;
-    --accent: #A8B3C7;
-    --accent-text: #DAE2F0;
-    --on-accent: #060608;
-    --accent-soft: rgba(168, 179, 199, 0.16);
-    --accent-glow: rgba(218, 226, 240, 0.28);
-    --accent-2: #7E8B9F;
-    --text-primary: #F5F7FA;
-    --text-secondary: #9AA3B5;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --card-sheen: linear-gradient(135deg, rgba(218, 226, 240, 0.12) 0%, rgba(126, 139, 159, 0.04) 60%);
-    --card-sheen-line: rgba(218, 226, 240, 0.18);
+    --bg-base: #040406;
+    --bg-elev: #0A0A0E;
+    --surface: #111117;
+    --surface-2: #191922;
+    --border: rgba(229,184,75,0.30);
+    --accent: #E5B84B;
+    --accent-text: #FAD980;
+    --on-accent: #040406;
+    --accent-soft: rgba(229,184,75,0.18);
+    --accent-glow: rgba(229,184,75,0.36);
+    --accent-2: #D4AF37;
+    --text-primary: #FAF9F5;
+    --text-secondary: #B8B5AA;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(229,184,75,0.14) 0%, rgba(250,217,128,0.05) 60%);
+    --card-sheen-line: rgba(250,217,128,0.24);
 
     /* Signature Tokens - Kiswah Noir (Kiswa Carbon) */
     --sig-radius: 12px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 16px rgba(0, 0, 0, 0.6);
-    --sig-thread: #C9A45C;
+    --sig-thread: #E5B84B;
     --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M18 4L32 18 18 32 4 18Z' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8' transform='rotate(45 18 18)'/%3E%3Ccircle cx='18' cy='18' r='1.5' fill='black'/%3E%3Cpath d='M0 8L8 0M36 8L28 0M0 28L8 36M36 28L28 36' stroke='black' stroke-width='1' stroke-dasharray='2 2'/%3E%3C/svg%3E");
     --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='32' viewBox='0 0 240 32'%3E%3Cline x1='0' y1='2' x2='240' y2='2' stroke='black' stroke-width='1.5'/%3E%3Cline x1='0' y1='30' x2='240' y2='30' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M0 16l15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='15' cy='16' r='2' fill='black'/%3E%3Ccircle cx='45' cy='16' r='2' fill='black'/%3E%3Ccircle cx='75' cy='16' r='2' fill='black'/%3E%3Ccircle cx='105' cy='16' r='2' fill='black'/%3E%3Ccircle cx='135' cy='16' r='2' fill='black'/%3E%3Ccircle cx='165' cy='16' r='2' fill='black'/%3E%3Ccircle cx='195' cy='16' r='2' fill='black'/%3E%3Ccircle cx='225' cy='16' r='2' fill='black'/%3E%3C/svg%3E");
     --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -333,50 +333,50 @@
     --sig-head-transform: uppercase;
     --sig-head-style: normal;
 
-    --background: 240 14% 3%;
-    --foreground: 216 33% 97%;
-    --card: 233 18% 9%;
-    --card-foreground: 216 33% 97%;
-    --popover: 233 18% 9%;
-    --popover-foreground: 216 33% 97%;
-    --primary: 219 22% 72%;
-    --primary-foreground: 240 14% 3%;
-    --primary-glow: 219 22% 72%;
-    --secondary: 229 18% 12%;
-    --secondary-foreground: 216 33% 97%;
-    --muted: 229 18% 12%;
-    --muted-foreground: 221 16% 66%;
+    --background: 240 20% 2%;
+    --foreground: 45 30% 97%;
+    --card: 240 15% 7%;
+    --card-foreground: 45 30% 97%;
+    --popover: 240 15% 7%;
+    --popover-foreground: 45 30% 97%;
+    --primary: 42 76% 59%;
+    --primary-foreground: 240 20% 2%;
+    --primary-glow: 42 76% 59%;
+    --secondary: 240 15% 12%;
+    --secondary-foreground: 45 30% 97%;
+    --muted: 240 15% 12%;
+    --muted-foreground: 45 9% 69%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 229 18% 12%;
-    --ring: 219 22% 72%;
+    --input: 240 15% 12%;
+    --ring: 42 76% 59%;
   }
 
   [data-theme="istanbul-sapphire"],
   [data-theme="royal-sapphire"] {
-    --bg-base: #050912;
-    --bg-elev: #08101E;
-    --surface: #0C1629;
-    --surface-2: #12203A;
-    --border: #233D6B;
-    --accent: #6A9AF2;
-    --accent-text: #A8C7FF;
-    --on-accent: #050912;
-    --accent-soft: rgba(91, 141, 239, 0.17);
-    --accent-glow: rgba(168, 199, 255, 0.30);
-    --accent-2: #3B6FD4;
-    --text-primary: #F2F7FF;
-    --text-secondary: #9DB4D8;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --card-sheen: linear-gradient(135deg, rgba(91, 141, 239, 0.14) 0%, rgba(59, 111, 212, 0.04) 60%);
-    --card-sheen-line: rgba(168, 199, 255, 0.18);
+    --bg-base: #030814;
+    --bg-elev: #061024;
+    --surface: #0A1938;
+    --surface-2: #10244D;
+    --border: rgba(232,185,82,0.30);
+    --accent: #E8B952;
+    --accent-text: #F7D488;
+    --on-accent: #030814;
+    --accent-soft: rgba(232,185,82,0.18);
+    --accent-glow: rgba(232,185,82,0.36);
+    --accent-2: #38BDF8;
+    --text-primary: #F4F7FC;
+    --text-secondary: #9BB0CE;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(232,185,82,0.15) 0%, rgba(56,189,248,0.06) 60%);
+    --card-sheen-line: rgba(247,212,136,0.24);
 
     /* Signature Tokens - Istanbul Sapphire (Iznik Tide) */
     --sig-radius: 20px;
     --sig-border: 1px solid var(--border);
-    --sig-glow: 0 8px 32px -4px rgba(0, 0, 0, 0.5), 0 0 28px 2px var(--accent-glow), inset 0 1px 0 rgba(168, 199, 255, 0.35);
+    --sig-glow: 0 8px 32px -4px rgba(0, 0, 0, 0.5), 0 0 28px 2px var(--accent-glow), inset 0 1px 0 rgba(247, 212, 136, 0.35);
     --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M0 18c6-6 12-6 18 0s12 6 18 0M0 9c6-6 12-6 18 0s12 6 18 0M0 27c6-6 12-6 18 0s12 6 18 0' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M9 0c0 9 9 9 9 18m9-18c0 9 9 9 9 18' fill='none' stroke='black' stroke-width='0.8'/%3E%3C/svg%3E");
     --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Cpath d='M-60 30c25-45 60-45 80-20 15 18 10 35-5 35-12 0-18-10-15-20 4-15 25-25 45-10' fill='none' stroke='black' stroke-width='2.5'/%3E%3Cpath d='M-60 10c20-35 50-35 70-15' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='15' cy='5' r='4' fill='black'/%3E%3Ccircle cx='35' cy='15' r='3' fill='black'/%3E%3Ccircle cx='48' cy='30' r='2.5' fill='black'/%3E%3C/g%3E%3C/svg%3E");
     --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -384,49 +384,49 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 222 57% 5%;
-    --foreground: 216 100% 97%;
-    --card: 219 55% 10%;
-    --card-foreground: 216 100% 97%;
-    --popover: 219 55% 10%;
-    --popover-foreground: 216 100% 97%;
-    --primary: 219 82% 68%;
-    --primary-foreground: 222 57% 5%;
-    --primary-glow: 219 82% 68%;
-    --secondary: 219 53% 15%;
-    --secondary-foreground: 216 100% 97%;
-    --muted: 219 53% 15%;
-    --muted-foreground: 217 45% 73%;
+    --background: 223 73% 4%;
+    --foreground: 218 50% 97%;
+    --card: 220 70% 13%;
+    --card-foreground: 218 50% 97%;
+    --popover: 220 70% 13%;
+    --popover-foreground: 218 50% 97%;
+    --primary: 41 76% 61%;
+    --primary-foreground: 223 73% 4%;
+    --primary-glow: 41 76% 61%;
+    --secondary: 220 66% 18%;
+    --secondary-foreground: 218 50% 97%;
+    --muted: 220 66% 18%;
+    --muted-foreground: 216 35% 71%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 219 53% 15%;
-    --ring: 219 82% 68%;
+    --input: 220 66% 18%;
+    --ring: 41 76% 61%;
   }
 
   [data-theme="imperial-violet"] {
-    --bg-base: #0B0514;
-    --bg-elev: #11081F;
-    --surface: #180C2B;
-    --surface-2: #22123B;
-    --border: #3D2166;
-    --accent: #C582F0;
-    --accent-text: #E2B6FF;
-    --on-accent: #0B0514;
-    --accent-soft: rgba(184, 101, 230, 0.17);
-    --accent-glow: rgba(226, 182, 255, 0.30);
-    --accent-2: #9333EA;
-    --text-primary: #FAF5FF;
-    --text-secondary: #C8A8E0;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --card-sheen: linear-gradient(135deg, rgba(184, 101, 230, 0.14) 0%, rgba(147, 51, 234, 0.04) 60%);
-    --card-sheen-line: rgba(226, 182, 255, 0.18);
+    --bg-base: #0B0414;
+    --bg-elev: #120720;
+    --surface: #1B0B2E;
+    --surface-2: #261040;
+    --border: rgba(240,185,90,0.30);
+    --accent: #F0B95A;
+    --accent-text: #FAD48E;
+    --on-accent: #0B0414;
+    --accent-soft: rgba(240,185,90,0.18);
+    --accent-glow: rgba(240,185,90,0.36);
+    --accent-2: #A855F7;
+    --text-primary: #FAF5FC;
+    --text-secondary: #CBB2D9;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(240,185,90,0.15) 0%, rgba(168,85,247,0.06) 60%);
+    --card-sheen-line: rgba(250,212,142,0.24);
 
     /* Signature Tokens - Imperial Violet (Ottoman Tulip Jewel) */
     --sig-radius: 22px;
     --sig-border: 1px solid var(--border);
-    --sig-glow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 12px 2px var(--accent-glow), inset 0 1px 0 rgba(226, 182, 255, 0.35), inset 0 -1px 0 rgba(11, 5, 20, 0.6);
+    --sig-glow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 12px 2px var(--accent-glow), inset 0 1px 0 rgba(250, 212, 142, 0.35), inset 0 -1px 0 rgba(11, 4, 20, 0.6);
     --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2' transform='rotate(45 24 24)'/%3E%3Ccircle cx='24' cy='24' r='2' fill='black'/%3E%3Cpath d='M6 38c6-14 18-20 32-24-4 8-10 16-22 22z' fill='black' opacity='0.35'/%3E%3Cpath d='M42 10c-6 14-18 20-32 24 4-8 10-16 22-22z' fill='black' opacity='0.35'/%3E%3Ccircle cx='0' cy='0' r='2' fill='black'/%3E%3Ccircle cx='48' cy='0' r='2' fill='black'/%3E%3Ccircle cx='0' cy='48' r='2' fill='black'/%3E%3Ccircle cx='48' cy='48' r='2' fill='black'/%3E%3C/svg%3E");
     --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Ccircle r='66' fill='none' stroke='black' stroke-width='1.5' stroke-dasharray='3 3'/%3E%3Crect x='-26' y='-26' width='52' height='52' fill='none' stroke='black' stroke-width='2.2'/%3E%3Crect x='-26' y='-26' width='52' height='52' fill='none' stroke='black' stroke-width='2.2' transform='rotate(45)'/%3E%3Ccircle r='14' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle r='4' fill='black'/%3E%3Cpath d='M-36 45c-20-25-24-55-10-85 18 22 18 52 10 85z' fill='black'/%3E%3Cpath d='M36 45c20-25 24-55 10-85-18 22-18 52-10 85z' fill='black'/%3E%3C/g%3E%3C/svg%3E");
     --sig-head-family: Georgia, 'Times New Roman', serif;
@@ -434,23 +434,23 @@
     --sig-head-transform: none;
     --sig-head-style: italic;
 
-    --background: 264 60% 5%;
-    --foreground: 270 100% 98%;
-    --card: 263 56% 11%;
-    --card-foreground: 270 100% 98%;
-    --popover: 263 56% 11%;
-    --popover-foreground: 270 100% 98%;
-    --primary: 277 81% 73%;
-    --primary-foreground: 264 60% 5%;
-    --primary-glow: 277 81% 73%;
-    --secondary: 263 53% 15%;
-    --secondary-foreground: 270 100% 98%;
-    --muted: 263 53% 15%;
-    --muted-foreground: 274 47% 77%;
+    --background: 270 67% 4%;
+    --foreground: 285 45% 98%;
+    --card: 269 61% 11%;
+    --card-foreground: 285 45% 98%;
+    --popover: 269 61% 11%;
+    --popover-foreground: 285 45% 98%;
+    --primary: 38 82% 65%;
+    --primary-foreground: 270 67% 4%;
+    --primary-glow: 38 82% 65%;
+    --secondary: 268 60% 16%;
+    --secondary-foreground: 285 45% 98%;
+    --muted: 268 60% 16%;
+    --muted-foreground: 277 34% 77%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 263 53% 15%;
-    --ring: 277 81% 73%;
+    --input: 268 60% 16%;
+    --ring: 38 82% 65%;
   }
 
   [data-theme="burgundy-velvet"] {
@@ -466,6 +466,7 @@
     --accent-soft: rgba(139,13,26,0.22);
     --accent-glow: rgba(194,69,82,0.35);
     --card-sheen: rgba(224,112,126,0.05);
+    --card-sheen-line: rgba(244, 162, 176, 0.24);
 
     /* Signature Tokens - Burgundy Velvet (Velvet Rose) */
     --sig-radius: 24px;
@@ -503,24 +504,24 @@
   }
 
   [data-theme="desert-scroll"] {
-    --bg-base: #100806;
-    --bg-elev: #170C09;
-    --surface: #21110D;
-    --surface-2: #2C1812;
-    --border: #4D2B20;
-    --accent: #E58A4E;
-    --accent-text: #F8BF95;
-    --on-accent: #100806;
-    --accent-soft: rgba(229, 138, 78, 0.17);
-    --accent-glow: rgba(248, 191, 149, 0.30);
-    --accent-2: #C46830;
-    --text-primary: #FFF6F2;
-    --text-secondary: #D4ADA0;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --card-sheen: linear-gradient(135deg, rgba(229, 138, 78, 0.14) 0%, rgba(196, 104, 48, 0.04) 60%);
-    --card-sheen-line: rgba(248, 191, 149, 0.18);
+    --bg-base: #100703;
+    --bg-elev: #180C06;
+    --surface: #22120A;
+    --surface-2: #2E1A10;
+    --border: rgba(245,158,11,0.30);
+    --accent: #F59E0B;
+    --accent-text: #FCD34D;
+    --on-accent: #100703;
+    --accent-soft: rgba(245,158,11,0.18);
+    --accent-glow: rgba(245,158,11,0.36);
+    --accent-2: #EA580C;
+    --text-primary: #FFF7ED;
+    --text-secondary: #D4B29E;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(234,88,12,0.06) 60%);
+    --card-sheen-line: rgba(252,211,77,0.24);
 
     /* Signature Tokens - Desert Scroll (Manuscript Mocha) */
     --sig-radius: 28px 28px 18px 18px;
@@ -533,44 +534,44 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 12 45% 4%;
-    --foreground: 17 100% 97%;
-    --card: 12 43% 9%;
-    --card-foreground: 17 100% 97%;
-    --popover: 12 43% 9%;
-    --popover-foreground: 17 100% 97%;
-    --primary: 24 76% 60%;
-    --primary-foreground: 12 45% 4%;
-    --primary-glow: 24 76% 60%;
-    --secondary: 14 42% 12%;
-    --secondary-foreground: 17 100% 97%;
-    --muted: 14 42% 12%;
-    --muted-foreground: 15 39% 73%;
+    --background: 24 68% 4%;
+    --foreground: 33 100% 96%;
+    --card: 21 54% 9%;
+    --card-foreground: 33 100% 96%;
+    --popover: 21 54% 9%;
+    --popover-foreground: 33 100% 96%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 24 68% 4%;
+    --primary-glow: 38 92% 50%;
+    --secondary: 20 48% 12%;
+    --secondary-foreground: 33 100% 96%;
+    --muted: 20 48% 12%;
+    --muted-foreground: 23 41% 73%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 14 42% 12%;
-    --ring: 24 76% 60%;
+    --input: 20 48% 12%;
+    --ring: 38 92% 50%;
   }
 
   [data-theme="madinah-emerald"] {
-    --bg-base: #040D09;
-    --bg-elev: #071510;
-    --surface: #0A1F17;
-    --surface-2: #102B20;
-    --border: #1E4D3A;
-    --accent: #45B88C;
-    --accent-text: #9AE6C8;
-    --on-accent: #040D09;
-    --accent-soft: rgba(69, 184, 140, 0.17);
-    --accent-glow: rgba(154, 230, 200, 0.28);
-    --accent-2: #2E946D;
-    --text-primary: #F2FBF7;
-    --text-secondary: #9AC4B3;
-    --success: #A3E635;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --card-sheen: linear-gradient(135deg, rgba(69, 184, 140, 0.14) 0%, rgba(46, 148, 109, 0.04) 60%);
-    --card-sheen-line: rgba(154, 230, 200, 0.18);
+    --bg-base: #030C07;
+    --bg-elev: #06160E;
+    --surface: #0A2216;
+    --surface-2: #103020;
+    --border: rgba(232,201,136,0.30);
+    --accent: #E8C988;
+    --accent-text: #F7E2B8;
+    --on-accent: #030C07;
+    --accent-soft: rgba(232,201,136,0.18);
+    --accent-glow: rgba(232,201,136,0.36);
+    --accent-2: #10B981;
+    --text-primary: #F4FAF6;
+    --text-secondary: #9ED1B8;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(232,201,136,0.14) 0%, rgba(16,185,129,0.06) 60%);
+    --card-sheen-line: rgba(247,226,184,0.24);
 
     /* Signature Tokens - Madinah Emerald (Madinah Garden) */
     --sig-radius: 26px;
@@ -583,23 +584,23 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 153 53% 3%;
-    --foreground: 153 64% 97%;
-    --card: 157 51% 8%;
-    --card-foreground: 153 64% 97%;
-    --popover: 157 51% 8%;
-    --popover-foreground: 153 64% 97%;
-    --primary: 157 46% 50%;
-    --primary-foreground: 153 53% 3%;
-    --primary-glow: 157 46% 50%;
-    --secondary: 156 46% 12%;
-    --secondary-foreground: 153 64% 97%;
-    --muted: 156 46% 12%;
-    --muted-foreground: 156 26% 69%;
+    --background: 147 60% 3%;
+    --foreground: 144 43% 97%;
+    --card: 151 54% 9%;
+    --card-foreground: 144 43% 97%;
+    --popover: 151 54% 9%;
+    --popover-foreground: 144 43% 97%;
+    --primary: 41 68% 72%;
+    --primary-foreground: 147 60% 3%;
+    --primary-glow: 41 68% 72%;
+    --secondary: 150 50% 13%;
+    --secondary-foreground: 144 43% 97%;
+    --muted: 150 50% 13%;
+    --muted-foreground: 152 35% 72%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 156 46% 12%;
-    --ring: 157 46% 50%;
+    --input: 150 50% 13%;
+    --ring: 41 68% 72%;
   }
 
   .dark {
@@ -876,6 +877,19 @@
     transform: translateZ(0);
   }
 
+  /* Top Celestial Ambient Aura (Part 2A item 1) */
+  .theme-top-aura {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 340px;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(ellipse 95% 65% at 50% -10%, var(--accent-soft), transparent 75%);
+    transform: translateZ(0);
+  }
+
   /* App Shell Fixed Theme Signature Pattern Layer */
   .theme-app-pattern {
     position: fixed;
@@ -904,11 +918,13 @@
     opacity: 0.04 !important; /* <= 0.05 cap */
   }
 
-  /* Theme Signature Cards & Containers */
+  /* Theme Signature Cards & Containers with 3D Velvet-Glass Depth */
   .theme-card {
     border-radius: var(--sig-radius, 18px);
     border: var(--sig-border, 1px solid var(--border));
-    box-shadow: var(--sig-glow, 0 8px 24px rgba(0,0,0,0.35));
+    box-shadow: inset 0 1px 0 0 var(--card-sheen-line, rgba(255, 255, 255, 0.1)),
+                0 10px 28px -6px rgba(0, 0, 0, 0.58),
+                var(--sig-glow, 0 8px 24px rgba(0,0,0,0.35));
     transition: all 0.3s ease;
   }
 
@@ -917,8 +933,27 @@
     overflow: hidden;
     border-radius: var(--sig-radius, 26px);
     border: var(--sig-border, 1px solid var(--border));
-    box-shadow: var(--sig-glow, 0 10px 30px rgba(0,0,0,0.4));
+    box-shadow: inset 0 1px 0 0 var(--card-sheen-line, rgba(255, 255, 255, 0.15)),
+                0 12px 32px -6px rgba(0, 0, 0, 0.65),
+                var(--sig-glow, 0 10px 30px rgba(0,0,0,0.4));
     transition: border-radius 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Lighter depth for repeated list rows */
+  .theme-list-row {
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Primary action buttons & active badges with soft glow (Part 2A item 3) */
+  .btn-primary-gradient {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: var(--on-accent);
+    box-shadow: 0 4px 16px -2px var(--accent-glow);
+  }
+
+  [data-theme="kiswah-noir"] .btn-primary-gradient,
+  [data-theme="haramain-noir"] .btn-primary-gradient {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
   }
 
   /* Hero Card Inner Vignette for jewel depth (Part 2 item 3) */

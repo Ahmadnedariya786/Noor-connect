@@ -840,7 +840,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                 <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1">
                   <div className="w-full">
                     <span
-                      className="text-amber-600 dark:text-amber-400 block whitespace-nowrap"
+                      className="text-[var(--accent-text)] block whitespace-nowrap"
                       style={{ fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.04em" }}
                     >
                       {ui.fineGold24k}
@@ -1907,7 +1907,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                     </div>
                   </div>
                 ) : netZakatableWealth > 0 ? (
-                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 text-amber-600 dark:text-amber-400">
+                  <div className="p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)]/30 space-y-1.5 text-[var(--accent-text)]">
                     <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>{ui.belowNisab}</span>
@@ -1918,7 +1918,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                     {/* Progress Bar towards Nisab */}
                     <div className="w-full bg-[var(--surface-2)] h-2 rounded-full overflow-hidden mt-1 border border-[var(--border)]">
                       <div
-                        className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                        className="bg-[var(--accent)] h-full rounded-full transition-all duration-500"
                         style={{ width: `${percentOfNisab}%` }}
                       />
                     </div>

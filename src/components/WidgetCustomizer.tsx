@@ -50,9 +50,9 @@ const getWidgetIcon = (id: string, className = "w-5 h-5") => {
 const getCategoryColor = (category: string) => {
   switch (category) {
     case "essential":
-      return "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800";
+      return "bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent)]/30";
     case "premium":
-      return "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800";
+      return "bg-[var(--surface-2)] text-[var(--accent)] border-[var(--border)]";
     default:
       return "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]";
   }
@@ -150,7 +150,7 @@ function ActiveWidgetCard({ widget, onToggle, onPreview }: ActiveCardProps) {
           </div>
           <div className="shrink-0 flex items-center gap-2">
             {isEssential ? (
-              <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-none">
+              <Badge variant="secondary" className="text-xs bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border)]">
                 Pinned
               </Badge>
             ) : (
