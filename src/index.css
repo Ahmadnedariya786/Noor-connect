@@ -106,6 +106,17 @@
     --warning: #FCA311;
     --danger: #E07A7A;
 
+    /* Default Theme Signature Fallbacks */
+    --sig-radius: 18px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: 0 8px 28px -4px rgba(0, 0, 0, 0.45), 0 0 24px var(--accent-glow);
+    --sig-pattern: none;
+    --sig-motif: none;
+    --sig-head-family: Georgia, 'Times New Roman', serif;
+    --sig-head-tracking: normal;
+    --sig-head-transform: none;
+    --sig-head-style: normal;
+
     --background: 222 51% 6%;
     --foreground: 0 0% 100%;
     --card: 222 51% 16%;
@@ -259,6 +270,17 @@
     --card-sheen: linear-gradient(135deg, rgba(220, 163, 73, 0.13) 0%, rgba(184, 127, 40, 0.04) 60%);
     --card-sheen-line: rgba(242, 201, 125, 0.18);
 
+    /* Signature Tokens - Oxford Gold (Scholar's Library) */
+    --sig-radius: 18px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: 0 8px 28px -4px rgba(0, 0, 0, 0.45), 0 0 24px var(--accent-glow), inset 0 0 0 1px var(--accent-soft);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M24 0l4 10 10-4-4 10 10 4-10 4 4 10-10-4-4 10-4-10-10 4 4-10-10-4 10-4-4-10 10 4z' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='24' cy='24' r='3.5' fill='black'/%3E%3Cpath d='M0 0l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2zM48 0l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2zM0 48l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2zM48 48l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2z' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg transform='translate(80,80)'%3E%3Ccircle r='72' fill='none' stroke='black' stroke-width='2'/%3E%3Ccircle r='66' fill='none' stroke='black' stroke-width='1' stroke-dasharray='3 3'/%3E%3Crect x='-38' y='-38' width='76' height='76' fill='none' stroke='black' stroke-width='2.5'/%3E%3Crect x='-38' y='-38' width='76' height='76' fill='none' stroke='black' stroke-width='2.5' transform='rotate(45)'/%3E%3Ccircle r='26' fill='none' stroke='black' stroke-width='2'/%3E%3Ccircle r='8' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-head-family: Georgia, 'Times New Roman', serif;
+    --sig-head-tracking: normal;
+    --sig-head-transform: none;
+    --sig-head-style: normal;
+
     --background: 224 48% 5%;
     --foreground: 210 40% 98%;
     --card: 222 46% 11%;
@@ -298,6 +320,17 @@
     --danger: #EF4444;
     --card-sheen: linear-gradient(135deg, rgba(218, 226, 240, 0.12) 0%, rgba(126, 139, 159, 0.04) 60%);
     --card-sheen-line: rgba(218, 226, 240, 0.18);
+
+    /* Signature Tokens - Kiswah Noir (Kiswa Carbon) */
+    --sig-radius: 12px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M0 0l12 12M12 0l12 12M0 12l12 12M12 12l12 12' stroke='black' stroke-width='2'/%3E%3Cpath d='M6 0l-6 6M18 0l-18 18M24 6L6 24M24 18l-6 6' stroke='black' stroke-width='1.2'/%3E%3Crect x='2' y='2' width='8' height='8' fill='black' opacity='0.2'/%3E%3Crect x='14' y='14' width='8' height='8' fill='black' opacity='0.2'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='32' viewBox='0 0 240 32'%3E%3Cline x1='0' y1='2' x2='240' y2='2' stroke='black' stroke-width='1.5'/%3E%3Cline x1='0' y1='30' x2='240' y2='30' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M0 16l15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='15' cy='16' r='2' fill='black'/%3E%3Ccircle cx='45' cy='16' r='2' fill='black'/%3E%3Ccircle cx='75' cy='16' r='2' fill='black'/%3E%3Ccircle cx='105' cy='16' r='2' fill='black'/%3E%3Ccircle cx='135' cy='16' r='2' fill='black'/%3E%3Ccircle cx='165' cy='16' r='2' fill='black'/%3E%3Ccircle cx='195' cy='16' r='2' fill='black'/%3E%3Ccircle cx='225' cy='16' r='2' fill='black'/%3E%3C/svg%3E");
+    --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --sig-head-tracking: 0.14em;
+    --sig-head-transform: uppercase;
+    --sig-head-style: normal;
 
     --background: 240 14% 3%;
     --foreground: 216 33% 97%;
@@ -339,6 +372,17 @@
     --card-sheen: linear-gradient(135deg, rgba(91, 141, 239, 0.14) 0%, rgba(59, 111, 212, 0.04) 60%);
     --card-sheen-line: rgba(168, 199, 255, 0.18);
 
+    /* Signature Tokens - Istanbul Sapphire (Iznik Tide) */
+    --sig-radius: 20px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: 0 8px 32px -4px rgba(0, 0, 0, 0.5), 0 0 28px 2px var(--accent-glow), inset 0 1px 0 rgba(168, 199, 255, 0.35);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M0 18c6-6 12-6 18 0s12 6 18 0M0 9c6-6 12-6 18 0s12 6 18 0M0 27c6-6 12-6 18 0s12 6 18 0' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M9 0c0 9 9 9 9 18m9-18c0 9 9 9 9 18' fill='none' stroke='black' stroke-width='0.8'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Cpath d='M-60 30c25-45 60-45 80-20 15 18 10 35-5 35-12 0-18-10-15-20 4-15 25-25 45-10' fill='none' stroke='black' stroke-width='2.5'/%3E%3Cpath d='M-60 10c20-35 50-35 70-15' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='15' cy='5' r='4' fill='black'/%3E%3Ccircle cx='35' cy='15' r='3' fill='black'/%3E%3Ccircle cx='48' cy='30' r='2.5' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --sig-head-tracking: 0.02em;
+    --sig-head-transform: none;
+    --sig-head-style: normal;
+
     --background: 222 57% 5%;
     --foreground: 216 100% 97%;
     --card: 219 55% 10%;
@@ -378,6 +422,17 @@
     --card-sheen: linear-gradient(135deg, rgba(184, 101, 230, 0.14) 0%, rgba(147, 51, 234, 0.04) 60%);
     --card-sheen-line: rgba(226, 182, 255, 0.18);
 
+    /* Signature Tokens - Imperial Violet (Ottoman Tulip Jewel) */
+    --sig-radius: 22px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 12px 2px var(--accent-glow), inset 0 1px 0 rgba(226, 182, 255, 0.35), inset 0 -1px 0 rgba(11, 5, 20, 0.6);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M18 6c-3 5-6 9-6 13a6 6 0 0012 0c0-4-3-8-6-13z' fill='black'/%3E%3Cpath d='M18 7c0 5-2 9-2 12m2-12c0 5 2 9 2 12' stroke='black' stroke-width='0.8'/%3E%3Cpath d='M13 25c-3 3-5 7-5 7m15-7c3 3 5 7 5 7' stroke='black' stroke-width='1.2'/%3E%3Ccircle cx='18' cy='34' r='1.5' fill='black'/%3E%3Ccircle cx='0' cy='18' r='1.5' fill='black'/%3E%3Ccircle cx='36' cy='18' r='1.5' fill='black'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg transform='translate(70,70)'%3E%3Cpath d='M0-50c-15 25-25 45-25 65 0 25 15 35 25 35s25-10 25-35c0-20-10-40-25-65z' fill='black'/%3E%3Cpath d='M0-50c0 30-10 45-10 65m10-65c0 30 10 45 10 65' stroke='white' stroke-width='1.5'/%3E%3Cpath d='M-15 40c-20 8-30 20-35 30m45-30c20 8 30 20 35 30' stroke='black' stroke-width='2.5'/%3E%3Ccircle cx='0' cy='58' r='4' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-head-family: Georgia, 'Times New Roman', serif;
+    --sig-head-tracking: normal;
+    --sig-head-transform: none;
+    --sig-head-style: italic;
+
     --background: 264 60% 5%;
     --foreground: 270 100% 98%;
     --card: 263 56% 11%;
@@ -410,6 +465,17 @@
     --accent-soft: rgba(139,13,26,0.22);
     --accent-glow: rgba(194,69,82,0.35);
     --card-sheen: rgba(224,112,126,0.05);
+
+    /* Signature Tokens - Burgundy Velvet (Velvet Rose) */
+    --sig-radius: 24px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: 0 6px 24px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='4' cy='4' r='1.2' fill='black'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='black'/%3E%3Ccircle cx='20' cy='20' r='1.8' fill='black'/%3E%3Ccircle cx='28' cy='28' r='1.4' fill='black'/%3E%3Ccircle cx='20' cy='4' r='1.3' fill='black'/%3E%3Ccircle cx='28' cy='12' r='1.5' fill='black'/%3E%3Ccircle cx='4' cy='20' r='1.5' fill='black'/%3E%3Ccircle cx='12' cy='28' r='1.3' fill='black'/%3E%3Cpath d='M0 32L32 0' stroke='black' stroke-width='0.8' stroke-dasharray='3 3'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Ccircle r='68' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle r='62' fill='none' stroke='black' stroke-width='1' stroke-dasharray='2 3'/%3E%3Cpath d='M0-40c20 0 35 15 35 35s-15 35-35 35-35-15-35-35c0-10 5-20 12-26' fill='none' stroke='black' stroke-width='2.2'/%3E%3Cpath d='M-15-20c15-10 30-5 35 10s-5 25-20 25-25-10-25-20' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle r='6' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-head-family: Georgia, 'Times New Roman', serif;
+    --sig-head-tracking: normal;
+    --sig-head-transform: none;
+    --sig-head-style: normal;
     --text-primary: #F5F2ED;
     --text-secondary: #C9BEB9;
     --success: #8FD6A8;
@@ -455,6 +521,17 @@
     --card-sheen: linear-gradient(135deg, rgba(229, 138, 78, 0.14) 0%, rgba(196, 104, 48, 0.04) 60%);
     --card-sheen-line: rgba(248, 191, 149, 0.18);
 
+    /* Signature Tokens - Desert Scroll (Manuscript Mocha) */
+    --sig-radius: 28px 28px 18px 18px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: 0 4px 18px -2px rgba(0, 0, 0, 0.5), 0 0 10px 1px var(--accent-glow);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='3' cy='7' r='0.9' fill='black'/%3E%3Ccircle cx='15' cy='4' r='1.1' fill='black'/%3E%3Ccircle cx='27' cy='9' r='0.9' fill='black'/%3E%3Ccircle cx='8' cy='19' r='1.2' fill='black'/%3E%3Ccircle cx='22' cy='16' r='0.8' fill='black'/%3E%3Ccircle cx='6' cy='29' r='1' fill='black'/%3E%3Ccircle cx='18' cy='26' r='0.9' fill='black'/%3E%3Ccircle cx='29' cy='27' r='1.1' fill='black'/%3E%3Cpath d='M16 11v10M11 16h10' stroke='black' stroke-width='0.6' stroke-dasharray='1 3'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg transform='translate(70,70)'%3E%3Cpath d='M-45 60V0c0-25 20-45 45-45s45 20 45 45v60' fill='none' stroke='black' stroke-width='2.5'/%3E%3Cpath d='M-35 60V5c0-19 16-35 35-35s35 16 35 35v55' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cline x1='-55' y1='60' x2='55' y2='60' stroke='black' stroke-width='3'/%3E%3Cpath d='M0-45l5-12h-10z' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-head-family: Georgia, 'Times New Roman', serif;
+    --sig-head-tracking: 0.01em;
+    --sig-head-transform: none;
+    --sig-head-style: normal;
+
     --background: 12 45% 4%;
     --foreground: 17 100% 97%;
     --card: 12 43% 9%;
@@ -493,6 +570,17 @@
     --danger: #EF4444;
     --card-sheen: linear-gradient(135deg, rgba(69, 184, 140, 0.14) 0%, rgba(46, 148, 109, 0.04) 60%);
     --card-sheen-line: rgba(154, 230, 200, 0.18);
+
+    /* Signature Tokens - Madinah Emerald (Madinah Garden) */
+    --sig-radius: 26px;
+    --sig-border: 1.5px solid var(--border);
+    --sig-glow: 0 6px 26px -4px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20 0L40 20 20 40 0 20z' fill='none' stroke='black' stroke-width='1.2'/%3E%3Cpath d='M20 6c3 5 3 9 0 14-3-5-3-9 0-14zM20 20c3 5 3 9 0 14-3-5-3-9 0-14z' fill='black'/%3E%3Cpath d='M6 20c5-3 9-3 14 0-5 3-9 3-14 0zM20 20c5-3 9-3 14 0-5 3-9 3-14 0z' fill='black'/%3E%3Ccircle cx='20' cy='20' r='2' fill='black'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Cpath d='M0-45c-22 0-38 20-38 45h76c0-25-16-45-38-45z' fill='black'/%3E%3Cline x1='0' y1='-45' x2='0' y2='-55' stroke='black' stroke-width='2.5'/%3E%3Ccircle cx='0' cy='-57' r='2.5' fill='black'/%3E%3Crect x='-42' y='0' width='84' height='12' fill='black'/%3E%3Cpath d='M-48 10c-15-20-25-45-20-60 12 10 20 28 22 45m92 15c15-20 25-45 20-60-12 10-20 28-22 45' fill='none' stroke='black' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-head-family: Georgia, 'Times New Roman', serif;
+    --sig-head-tracking: 0.01em;
+    --sig-head-transform: none;
+    --sig-head-style: normal;
 
     --background: 153 53% 3%;
     --foreground: 153 64% 97%;
@@ -769,6 +857,157 @@
     background-color: var(--surface-2) !important;
     color: var(--accent-text) !important;
     border: 1px solid var(--border) !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  /* App Shell Fixed Theme Signature Pattern Layer */
+  .theme-app-pattern {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.035; /* <= 0.05 cap on bg-base */
+    background-color: var(--accent);
+    -webkit-mask-image: var(--sig-pattern);
+    mask-image: var(--sig-pattern);
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+    -webkit-mask-size: auto;
+    mask-size: auto;
+    transform: translateZ(0); /* GPU composite */
+  }
+
+  /* Theme Signature Cards & Containers */
+  .theme-card {
+    border-radius: var(--sig-radius, 18px);
+    border: var(--sig-border, 1px solid var(--border));
+    box-shadow: var(--sig-glow, 0 8px 24px rgba(0,0,0,0.35));
+    transition: all 0.3s ease;
+  }
+
+  .theme-hero-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--sig-radius, 26px);
+    border: var(--sig-border, 1px solid var(--border));
+    box-shadow: var(--sig-glow, 0 10px 30px rgba(0,0,0,0.4));
+    transition: border-radius 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Card-level pattern on Hero card (opacity <= 0.07 cap) */
+  .theme-hero-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.05;
+    background-color: var(--accent);
+    -webkit-mask-image: var(--sig-pattern);
+    mask-image: var(--sig-pattern);
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+    -webkit-mask-size: auto;
+    mask-size: auto;
+  }
+
+  /* Watermark Motif on Hero card (opacity 0.06 to 0.08) */
+  .theme-hero-card::after {
+    content: "";
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    width: 170px;
+    height: 170px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.07;
+    background-color: var(--accent);
+    -webkit-mask-image: var(--sig-motif);
+    mask-image: var(--sig-motif);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    mask-position: center;
+  }
+
+  /* Kiswa Noir Hero Motif: Thin embroidered band motif across top */
+  [data-theme="kiswah-noir"] .theme-hero-card::after,
+  [data-theme="haramain-noir"] .theme-hero-card::after {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: 24px;
+    -webkit-mask-size: 240px 24px;
+    mask-size: 240px 24px;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+    -webkit-mask-position: top center;
+    mask-position: top center;
+    opacity: 0.08;
+  }
+
+  /* Desert Scroll: Mihrab-arch card tops */
+  [data-theme="desert-scroll"] .theme-hero-card {
+    border-radius: 28px 28px 18px 18px !important;
+  }
+
+  /* Display Heading Signature Utility - Applies theme signature typography to Latin-script UI headings */
+  .font-display-signature {
+    font-family: var(--sig-head-family, inherit);
+    letter-spacing: var(--sig-head-tracking, normal);
+    text-transform: var(--sig-head-transform, none);
+    font-style: var(--sig-head-style, normal);
+  }
+
+  /* Kiswah Noir Active Tab and Focus Safety (High contrast without glow) */
+  [data-theme="kiswah-noir"] :focus-visible,
+  [data-theme="haramain-noir"] :focus-visible {
+    outline: 2px solid var(--accent) !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Arabic & RTL Typography Safety Guard ──
+     CRITICAL: Spacing, italicizing, or transforming brokenly disconnects cursive Arabic/Urdu glyphs.
+     Hard-reset all heading modifications inside Arabic, Urdu, Quran, and RTL contexts. */
+  :lang(ar) .font-display-signature,
+  :lang(ur) .font-display-signature,
+  [dir="rtl"] .font-display-signature,
+  .font-arabic,
+  .font-amiri,
+  .font-urdu,
+  .font-quran,
+  .quran-arabic,
+  .quran-text,
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] h5,
+  [dir="rtl"] h6,
+  :lang(ar) h1,
+  :lang(ar) h2,
+  :lang(ar) h3,
+  :lang(ar) h4,
+  :lang(ar) h5,
+  :lang(ar) h6,
+  :lang(ur) h1,
+  :lang(ur) h2,
+  :lang(ur) h3,
+  :lang(ur) h4,
+  :lang(ur) h5,
+  :lang(ur) h6 {
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    font-style: normal !important;
   }
 
   /* Enhanced Reduced Motion Support */
@@ -2411,15 +2650,23 @@ html[lang="ur"] [data-quran-arabic="true"],
   touch-action: pan-y !important;
 }
 
-/* ── Qaza Pending & Blinking Alerts ── */
+/* ── Qaza Pending & Blinking Alerts (Theme-Reactive System) ── */
 @keyframes qazaPulseBlink {
   0%, 100% {
-    border-color: #F59E0B;
-    box-shadow: 0 0 16px 2px rgba(245, 158, 11, 0.48), inset 0 0 14px rgba(245, 158, 11, 0.18);
+    /* Plain CSS Fallback for older WebViews */
+    border-color: var(--accent);
+    box-shadow: 0 0 14px 2px var(--accent-glow), inset 0 0 12px var(--accent-soft);
+    /* Modern color-mix enhancement */
+    border-color: color-mix(in srgb, var(--accent) 85%, var(--accent-text) 15%);
+    box-shadow: 0 0 14px 2px var(--accent-glow), inset 0 0 12px var(--accent-soft);
   }
   50% {
-    border-color: #EF4444;
-    box-shadow: 0 0 18px 3px rgba(239, 68, 68, 0.52), inset 0 0 16px rgba(239, 68, 68, 0.22);
+    /* Plain CSS Fallback for older WebViews */
+    border-color: var(--accent-text);
+    box-shadow: 0 0 22px 4px var(--accent-glow), inset 0 0 16px var(--accent-soft);
+    /* Modern color-mix enhancement */
+    border-color: color-mix(in srgb, var(--accent-text) 85%, var(--accent) 15%);
+    box-shadow: 0 0 22px 4px var(--accent-glow), inset 0 0 16px var(--accent-soft);
   }
 }
 

@@ -26,6 +26,29 @@ export interface ThemeTokens {
   '--success': string;
   '--warning': string;
   '--danger': string;
+
+  /* Theme Signature Tokens (Structural Identity Beyond Color) */
+  '--sig-radius'?: string;
+  '--sig-border'?: string;
+  '--sig-glow'?: string;
+  '--sig-pattern'?: string;
+  '--sig-motif'?: string;
+  '--sig-head-family'?: string;
+  '--sig-head-tracking'?: string;
+  '--sig-head-transform'?: string;
+  '--sig-head-style'?: string;
+}
+
+export interface ThemeSignature {
+  radius: string;
+  border: string;
+  glow: string;
+  pattern: string;
+  motif: string;
+  headingFamily: string;
+  headingTracking: string;
+  headingTransform: string;
+  headingStyle: string;
 }
 
 export interface AppTheme {
@@ -34,4 +57,5 @@ export interface AppTheme {
   subtitle: string;
   description: string;
   tokens: ThemeTokens;
+  signature?: ThemeSignature;
 }

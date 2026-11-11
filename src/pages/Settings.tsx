@@ -88,7 +88,8 @@ const Settings = () => {
           
           <div 
             onClick={() => navigate('/settings/app-theme', { replace: true })}
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--accent)]/40 transition-all"
+            className="bg-[var(--surface)] border border-[var(--border)] p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--accent)]/40 transition-all theme-card"
+            style={{ borderRadius: 'var(--sig-radius, 28px)' }}
             role="button"
             tabIndex={0}
           >
@@ -97,12 +98,22 @@ const Settings = () => {
                 <Palette className="w-5 h-5 text-[var(--accent-text)]" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate">App Theme</h3>
+                <h3 className="font-bold text-[var(--text-primary)] font-display-signature text-base sm:text-lg truncate">App Theme</h3>
                 <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Choose full-app color theme</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0 ml-2">
-              <span className="settings-value-chip">
+              <span
+                className="settings-value-chip"
+                style={{
+                  backgroundColor: 'var(--surface-2)',
+                  position: 'relative',
+                  zIndex: 2,
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                  maxWidth: 'none',
+                }}
+              >
                 {theme?.name || 'Oxford Gold'}
               </span>
               <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />

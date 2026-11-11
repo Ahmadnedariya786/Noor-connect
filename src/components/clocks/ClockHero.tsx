@@ -100,7 +100,15 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
   const makruhState = evaluateMakruhState(prayers || [], now, normalizedTimeFormat);
 
   return (
-    <div className="w-full flex flex-col justify-center items-center relative overflow-hidden rounded-[26px]" key="clock-hero-wrapper">
+    <div
+      className="w-full flex flex-col justify-center items-center relative overflow-hidden theme-hero-card"
+      style={{
+        borderRadius: 'var(--sig-radius, 26px)',
+        border: 'var(--sig-border, 1px solid var(--border))',
+        boxShadow: 'var(--sig-glow, 0 10px 30px rgba(0,0,0,0.4))',
+      }}
+      key="clock-hero-wrapper"
+    >
       <LivingSkyAura nextPrayerName={nextPrayer?.name} currentHour={now.getHours()} />
       <div className="relative z-10 w-full flex flex-col justify-center items-center">
         <ClockRenderer

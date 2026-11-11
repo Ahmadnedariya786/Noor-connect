@@ -6,12 +6,14 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-[var(--border)] text-[var(--text-primary)] shadow-[var(--card-premium-shadow)] transition-all duration-300 hover:shadow-[var(--card-premium-shadow-hover)]",
+      "text-[var(--text-primary)] transition-all duration-300",
       className
     )}
     style={{
+      borderRadius: 'var(--sig-radius, 18px)',
+      border: 'var(--sig-border, 1px solid var(--border))',
+      boxShadow: 'var(--sig-glow, 0 10px 30px rgba(0,0,0,0.35))',
       background: 'linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%)',
-      boxShadow: 'inset 0 1px 0 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)',
       ...style,
     }}
     {...props}
@@ -27,8 +29,19 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight", className)} {...props} />
+  ({ className, style, ...props }, ref) => (
+    <h3
+      ref={ref}
+      className={cn("text-2xl font-semibold leading-none font-display-signature", className)}
+      style={{
+        fontFamily: 'var(--sig-head-family, inherit)',
+        letterSpacing: 'var(--sig-head-tracking, normal)',
+        textTransform: 'var(--sig-head-transform, none)' as any,
+        fontStyle: 'var(--sig-head-style, normal)',
+        ...style,
+      }}
+      {...props}
+    />
   ),
 );
 CardTitle.displayName = "CardTitle";

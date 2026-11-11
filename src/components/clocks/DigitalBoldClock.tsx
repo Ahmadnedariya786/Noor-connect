@@ -80,17 +80,27 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
           />
         )}
 
-        {/* Faint Islamic Geometric Rub el Hizb Center-Background Watermark (opacity: 0.04) */}
+        {/* Per-Theme Signature Watermark Motif (opacity: 0.06 to 0.08) */}
         <div
           className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-          style={{ opacity: 0.04 }}
           aria-hidden="true"
         >
-          <svg width={isStaticPreview ? "90" : "180"} height={isStaticPreview ? "90" : "180"} viewBox="0 0 100 100" fill="none">
-            <rect x="25" y="25" width="50" height="50" stroke="var(--accent)" strokeWidth="1.5" />
-            <rect x="25" y="25" width="50" height="50" stroke="var(--accent)" strokeWidth="1.5" transform="rotate(45 50 50)" />
-            <circle cx="50" cy="50" r="18" stroke="var(--accent)" strokeWidth="1" />
-          </svg>
+          <div
+            style={{
+              width: isStaticPreview ? '80px' : '160px',
+              height: isStaticPreview ? '80px' : '160px',
+              backgroundColor: 'var(--accent)',
+              opacity: 0.07,
+              WebkitMaskImage: 'var(--sig-motif)',
+              maskImage: 'var(--sig-motif)',
+              WebkitMaskSize: 'contain',
+              maskSize: 'contain',
+              WebkitMaskRepeat: 'no-repeat',
+              maskRepeat: 'no-repeat',
+              WebkitMaskPosition: 'center',
+              maskPosition: 'center',
+            }}
+          />
         </div>
 
         {/* ── Main Single-Row Luxury Horology Layout (1000588780.jpg Fix) ── */}

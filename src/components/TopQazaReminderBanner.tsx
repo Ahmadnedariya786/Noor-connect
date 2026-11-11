@@ -133,8 +133,9 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
 
   return (
     <div
-      className="w-full qaza-pending-blink rounded-2xl border transition-all duration-300 select-none overflow-hidden"
+      className="w-full qaza-pending-blink border transition-all duration-300 select-none overflow-hidden theme-card"
       style={{
+        borderRadius: 'var(--sig-radius, 16px)',
         background: 'var(--surface-2)',
         borderColor: 'var(--accent)',
         padding: '10px 12px',

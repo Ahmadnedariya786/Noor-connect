@@ -411,7 +411,9 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
       <LazyMotionWrapper>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <TilawahProvider>
-            <div className="flex flex-col min-h-screen overflow-x-hidden">
+            <div className="flex flex-col min-h-screen overflow-x-hidden relative">
+              {/* Fixed Single App-Shell Theme Signature Pattern Layer */}
+              <div className="theme-app-pattern" aria-hidden="true" />
               <PrayerReminderBanner />
               <GlobalTilawahBar />
               <div className="flex-shrink-0">

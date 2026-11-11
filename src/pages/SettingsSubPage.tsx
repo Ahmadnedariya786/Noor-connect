@@ -987,7 +987,17 @@ const SettingsSubPage: React.FC = () => {
                   <p className="text-xs text-[var(--text-secondary)] truncate">{appearanceStrings.appThemeSubtitle}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="settings-value-chip">
+                  <span
+                    className="settings-value-chip"
+                    style={{
+                      backgroundColor: 'var(--surface-2)',
+                      position: 'relative',
+                      zIndex: 2,
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                      maxWidth: 'none',
+                    }}
+                  >
                     {currentThemeName}
                   </span>
                   <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform shrink-0" />
