@@ -36,6 +36,7 @@ import { recordBreadcrumb } from "@/lib/diagnostics-engine";
 import { TilawahProvider, useTilawah } from "@/contexts/TilawahContext";
 import { GlobalTilawahBar } from "@/components/GlobalTilawahBar";
 import { TilawahPlayerModal } from "@/components/Quran/TilawahPlayerModal";
+import { initQazaRolloverListeners } from "@/lib/qaza-tracker";
 
 /**
  * RouteBreadcrumbTracker — automatically logs timestamped breadcrumbs on every route change.
@@ -194,6 +195,26 @@ const QisasReader = lazy(() => import("./pages/QisasReader"));
 const MonthlyTimetable = lazy(() => import("./pages/MonthlyTimetable"));
 const WidgetSettings = lazy(() => import("./pages/WidgetSettings"));
 
+/**
+ * Preload heavy secondary routes during browser idle time so first tap never waits.
+ */
+function preloadRouteChunks() {
+  if (typeof window === 'undefined') return;
+  const idleCallback = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1200));
+  idleCallback(() => {
+    // Secondary route chunks preloaded in background without delaying initial paint
+    import("./pages/SettingsSubPage").catch(() => {});
+    import("./pages/SettingsThemePage").catch(() => {});
+    import("./pages/QazaPage").catch(() => {});
+    import("./pages/Tasbeeh").catch(() => {});
+    import("./pages/Duas").catch(() => {});
+    import("./pages/Hadith").catch(() => {});
+    import("./pages/EbooksModern").catch(() => {});
+    import("./pages/PrayerStats").catch(() => {});
+    import("./pages/QuranReader").catch(() => {});
+  });
+}
+
 function AppRoutes() {
   const location = useLocation();
   const { animationEnabled } = useSettings();
@@ -203,13 +224,10 @@ function AppRoutes() {
   useEffect(() => {
     const resetScroll = () => {
       window.scrollTo(0, 0);
-      // Only reset the main scroll container instead of querySelectorAll('.overflow-y-auto')
-      // which forces a layout query across the whole DOM on every navigation.
       const scrollContainer = document.getElementById("main-content");
       if (scrollContainer) scrollContainer.scrollTop = 0;
     };
     resetScroll();
-    // A single deferred reset handles containers that mount after navigation.
     const id = requestAnimationFrame(resetScroll);
     return () => cancelAnimationFrame(id);
   }, [location.pathname]);
@@ -217,19 +235,19 @@ function AppRoutes() {
   return (
     <Suspense fallback={
       <div
-        className="flex items-center justify-center min-h-screen"
+        className="w-full min-h-[60vh] flex flex-col items-center justify-center p-6 space-y-4"
         style={{ background: 'var(--bg-base)' }}
       >
-        <div className="relative z-10 flex flex-col items-center gap-6">
+        <div className="relative z-10 flex flex-col items-center gap-3">
           <div
-            className="animate-spin rounded-full h-12 w-12 border-[3px]"
+            className="animate-spin rounded-full h-8 w-8 border-[2.5px]"
             style={{
               borderColor: 'var(--surface-2)',
               borderTopColor: 'var(--accent)',
             }}
           />
           <p
-            className="text-sm font-semibold tracking-widest uppercase"
+            className="text-xs font-semibold tracking-wider uppercase opacity-80"
             style={{ color: 'var(--accent-text)' }}
           >
             {t('loading')}
@@ -237,14 +255,14 @@ function AppRoutes() {
         </div>
       </div>
     }>
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence initial={false}>
         {animationEnabled ? (
           <m.div
             key={location.pathname}
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 0.85 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.12, ease: "easeOut" }}
+            transition={{ duration: 0.08, ease: "easeOut" }}
             className="w-full h-full page-transition-wrapper"
             style={{ backgroundColor: 'var(--bg-base)' }}
           >
@@ -414,6 +432,8 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
             <div className="flex flex-col min-h-screen overflow-x-hidden relative">
               {/* Fixed Single App-Shell Theme Signature Pattern Layer */}
               <div className="theme-app-pattern sig-pattern-layer" aria-hidden="true" />
+              {/* Fixed App-Shell Celestial Top Ambient Aura */}
+              <div className="theme-top-aura" aria-hidden="true" />
               <PrayerReminderBanner />
               <GlobalTilawahBar />
               <div className="flex-shrink-0">
@@ -459,6 +479,12 @@ function AppShell() {
   useAutoBackup();
   // Push Quran-progress + tasbeeh state to native widgets when they change
   useWidgetSync();
+
+  // Initialize Qaza next-day rollover engine and lifecycle listeners
+  useEffect(() => {
+    initQazaRolloverListeners();
+    preloadRouteChunks();
+  }, []);
 
   // Sync native Android window and WebView background color immediately on startup
   useEffect(() => {
