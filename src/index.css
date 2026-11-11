@@ -274,8 +274,8 @@
     --sig-radius: 18px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 8px 28px -4px rgba(0, 0, 0, 0.45), 0 0 24px var(--accent-glow), inset 0 0 0 1px var(--accent-soft);
-    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M24 0l4 10 10-4-4 10 10 4-10 4 4 10-10-4-4 10-4-10-10 4 4-10-10-4 10-4-4-10 10 4z' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='24' cy='24' r='3.5' fill='black'/%3E%3Cpath d='M0 0l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2zM48 0l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2zM0 48l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2zM48 48l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2z' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E");
-    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg transform='translate(80,80)'%3E%3Ccircle r='72' fill='none' stroke='black' stroke-width='2'/%3E%3Ccircle r='66' fill='none' stroke='black' stroke-width='1' stroke-dasharray='3 3'/%3E%3Crect x='-38' y='-38' width='76' height='76' fill='none' stroke='black' stroke-width='2.5'/%3E%3Crect x='-38' y='-38' width='76' height='76' fill='none' stroke='black' stroke-width='2.5' transform='rotate(45)'/%3E%3Ccircle r='26' fill='none' stroke='black' stroke-width='2'/%3E%3Ccircle r='8' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect x='16' y='16' width='16' height='16' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='16' y='16' width='16' height='16' fill='none' stroke='black' stroke-width='1.2' transform='rotate(45 24 24)'/%3E%3Ccircle cx='24' cy='24' r='2' fill='black'/%3E%3Crect x='-8' y='-8' width='16' height='16' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='-8' y='-8' width='16' height='16' fill='none' stroke='black' stroke-width='1' transform='rotate(45 0 0)'/%3E%3Crect x='40' y='-8' width='16' height='16' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='40' y='-8' width='16' height='16' fill='none' stroke='black' stroke-width='1' transform='rotate(45 48 0)'/%3E%3Crect x='-8' y='40' width='16' height='16' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='-8' y='40' width='16' height='16' fill='none' stroke='black' stroke-width='1' transform='rotate(45 0 48)'/%3E%3Crect x='40' y='40' width='16' height='16' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='40' y='40' width='16' height='16' fill='none' stroke='black' stroke-width='1' transform='rotate(45 48 48)'/%3E%3Cpath d='M24 0L27 3 24 6 21 3ZM24 48L27 45 24 42 21 45ZM0 24L3 27 6 24 3 21ZM48 24L45 27 42 24 45 21Z' fill='black'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg transform='translate(80,80)'%3E%3Ccircle r='72' fill='none' stroke='black' stroke-width='2'/%3E%3Ccircle r='65' fill='none' stroke='black' stroke-width='1' stroke-dasharray='3 3'/%3E%3Crect x='-38' y='-38' width='76' height='76' fill='none' stroke='black' stroke-width='2.5'/%3E%3Crect x='-38' y='-38' width='76' height='76' fill='none' stroke='black' stroke-width='2.5' transform='rotate(45)'/%3E%3Ccircle r='24' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle r='6' fill='black'/%3E%3Ccircle cx='0' cy='-54' r='2.5' fill='black'/%3E%3Ccircle cx='0' cy='54' r='2.5' fill='black'/%3E%3Ccircle cx='-54' cy='0' r='2.5' fill='black'/%3E%3Ccircle cx='54' cy='0' r='2.5' fill='black'/%3E%3Ccircle cx='-38' cy='-38' r='2.5' fill='black'/%3E%3Ccircle cx='38' cy='-38' r='2.5' fill='black'/%3E%3Ccircle cx='-38' cy='38' r='2.5' fill='black'/%3E%3Ccircle cx='38' cy='38' r='2.5' fill='black'/%3E%3C/g%3E%3C/svg%3E");
     --sig-head-family: Georgia, 'Times New Roman', serif;
     --sig-head-tracking: normal;
     --sig-head-transform: none;
@@ -325,7 +325,8 @@
     --sig-radius: 12px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 16px rgba(0, 0, 0, 0.6);
-    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M0 0l12 12M12 0l12 12M0 12l12 12M12 12l12 12' stroke='black' stroke-width='2'/%3E%3Cpath d='M6 0l-6 6M18 0l-18 18M24 6L6 24M24 18l-6 6' stroke='black' stroke-width='1.2'/%3E%3Crect x='2' y='2' width='8' height='8' fill='black' opacity='0.2'/%3E%3Crect x='14' y='14' width='8' height='8' fill='black' opacity='0.2'/%3E%3C/svg%3E");
+    --sig-thread: #C9A45C;
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M18 4L32 18 18 32 4 18Z' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8' transform='rotate(45 18 18)'/%3E%3Ccircle cx='18' cy='18' r='1.5' fill='black'/%3E%3Cpath d='M0 8L8 0M36 8L28 0M0 28L8 36M36 28L28 36' stroke='black' stroke-width='1' stroke-dasharray='2 2'/%3E%3C/svg%3E");
     --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='32' viewBox='0 0 240 32'%3E%3Cline x1='0' y1='2' x2='240' y2='2' stroke='black' stroke-width='1.5'/%3E%3Cline x1='0' y1='30' x2='240' y2='30' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M0 16l15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='15' cy='16' r='2' fill='black'/%3E%3Ccircle cx='45' cy='16' r='2' fill='black'/%3E%3Ccircle cx='75' cy='16' r='2' fill='black'/%3E%3Ccircle cx='105' cy='16' r='2' fill='black'/%3E%3Ccircle cx='135' cy='16' r='2' fill='black'/%3E%3Ccircle cx='165' cy='16' r='2' fill='black'/%3E%3Ccircle cx='195' cy='16' r='2' fill='black'/%3E%3Ccircle cx='225' cy='16' r='2' fill='black'/%3E%3C/svg%3E");
     --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --sig-head-tracking: 0.14em;
@@ -426,8 +427,8 @@
     --sig-radius: 22px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 12px 2px var(--accent-glow), inset 0 1px 0 rgba(226, 182, 255, 0.35), inset 0 -1px 0 rgba(11, 5, 20, 0.6);
-    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M18 6c-3 5-6 9-6 13a6 6 0 0012 0c0-4-3-8-6-13z' fill='black'/%3E%3Cpath d='M18 7c0 5-2 9-2 12m2-12c0 5 2 9 2 12' stroke='black' stroke-width='0.8'/%3E%3Cpath d='M13 25c-3 3-5 7-5 7m15-7c3 3 5 7 5 7' stroke='black' stroke-width='1.2'/%3E%3Ccircle cx='18' cy='34' r='1.5' fill='black'/%3E%3Ccircle cx='0' cy='18' r='1.5' fill='black'/%3E%3Ccircle cx='36' cy='18' r='1.5' fill='black'/%3E%3C/svg%3E");
-    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg transform='translate(70,70)'%3E%3Cpath d='M0-50c-15 25-25 45-25 65 0 25 15 35 25 35s25-10 25-35c0-20-10-40-25-65z' fill='black'/%3E%3Cpath d='M0-50c0 30-10 45-10 65m10-65c0 30 10 45 10 65' stroke='white' stroke-width='1.5'/%3E%3Cpath d='M-15 40c-20 8-30 20-35 30m45-30c20 8 30 20 35 30' stroke='black' stroke-width='2.5'/%3E%3Ccircle cx='0' cy='58' r='4' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2' transform='rotate(45 24 24)'/%3E%3Ccircle cx='24' cy='24' r='2' fill='black'/%3E%3Cpath d='M6 38c6-14 18-20 32-24-4 8-10 16-22 22z' fill='black' opacity='0.35'/%3E%3Cpath d='M42 10c-6 14-18 20-32 24 4-8 10-16 22-22z' fill='black' opacity='0.35'/%3E%3Ccircle cx='0' cy='0' r='2' fill='black'/%3E%3Ccircle cx='48' cy='0' r='2' fill='black'/%3E%3Ccircle cx='0' cy='48' r='2' fill='black'/%3E%3Ccircle cx='48' cy='48' r='2' fill='black'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Ccircle r='66' fill='none' stroke='black' stroke-width='1.5' stroke-dasharray='3 3'/%3E%3Crect x='-26' y='-26' width='52' height='52' fill='none' stroke='black' stroke-width='2.2'/%3E%3Crect x='-26' y='-26' width='52' height='52' fill='none' stroke='black' stroke-width='2.2' transform='rotate(45)'/%3E%3Ccircle r='14' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle r='4' fill='black'/%3E%3Cpath d='M-36 45c-20-25-24-55-10-85 18 22 18 52 10 85z' fill='black'/%3E%3Cpath d='M36 45c20-25 24-55 10-85-18 22-18 52-10 85z' fill='black'/%3E%3C/g%3E%3C/svg%3E");
     --sig-head-family: Georgia, 'Times New Roman', serif;
     --sig-head-tracking: normal;
     --sig-head-transform: none;
@@ -525,7 +526,7 @@
     --sig-radius: 28px 28px 18px 18px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 18px -2px rgba(0, 0, 0, 0.5), 0 0 10px 1px var(--accent-glow);
-    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='3' cy='7' r='0.9' fill='black'/%3E%3Ccircle cx='15' cy='4' r='1.1' fill='black'/%3E%3Ccircle cx='27' cy='9' r='0.9' fill='black'/%3E%3Ccircle cx='8' cy='19' r='1.2' fill='black'/%3E%3Ccircle cx='22' cy='16' r='0.8' fill='black'/%3E%3Ccircle cx='6' cy='29' r='1' fill='black'/%3E%3Ccircle cx='18' cy='26' r='0.9' fill='black'/%3E%3Ccircle cx='29' cy='27' r='1.1' fill='black'/%3E%3Cpath d='M16 11v10M11 16h10' stroke='black' stroke-width='0.6' stroke-dasharray='1 3'/%3E%3C/svg%3E");
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='3' cy='7' r='0.9' fill='black'/%3E%3Ccircle cx='15' cy='4' r='1.1' fill='black'/%3E%3Ccircle cx='27' cy='9' r='0.9' fill='black'/%3E%3Ccircle cx='8' cy='19' r='1.2' fill='black'/%3E%3Ccircle cx='22' cy='16' r='0.8' fill='black'/%3E%3Ccircle cx='6' cy='29' r='1' fill='black'/%3E%3Ccircle cx='18' cy='26' r='0.9' fill='black'/%3E%3Ccircle cx='29' cy='27' r='1.1' fill='black'/%3E%3Cpath d='M0 24C8 20, 16 28, 32 8' stroke='black' stroke-width='0.7' fill='none' stroke-dasharray='2 3'/%3E%3C/svg%3E");
     --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg transform='translate(70,70)'%3E%3Cpath d='M-45 60V0c0-25 20-45 45-45s45 20 45 45v60' fill='none' stroke='black' stroke-width='2.5'/%3E%3Cpath d='M-35 60V5c0-19 16-35 35-35s35 16 35 35v55' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cline x1='-55' y1='60' x2='55' y2='60' stroke='black' stroke-width='3'/%3E%3Cpath d='M0-45l5-12h-10z' fill='black'/%3E%3C/g%3E%3C/svg%3E");
     --sig-head-family: Georgia, 'Times New Roman', serif;
     --sig-head-tracking: 0.01em;
@@ -575,8 +576,8 @@
     --sig-radius: 26px;
     --sig-border: 1.5px solid var(--border);
     --sig-glow: 0 6px 26px -4px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow);
-    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20 0L40 20 20 40 0 20z' fill='none' stroke='black' stroke-width='1.2'/%3E%3Cpath d='M20 6c3 5 3 9 0 14-3-5-3-9 0-14zM20 20c3 5 3 9 0 14-3-5-3-9 0-14z' fill='black'/%3E%3Cpath d='M6 20c5-3 9-3 14 0-5 3-9 3-14 0zM20 20c5-3 9-3 14 0-5 3-9 3-14 0z' fill='black'/%3E%3Ccircle cx='20' cy='20' r='2' fill='black'/%3E%3C/svg%3E");
-    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Cpath d='M0-45c-22 0-38 20-38 45h76c0-25-16-45-38-45z' fill='black'/%3E%3Cline x1='0' y1='-45' x2='0' y2='-55' stroke='black' stroke-width='2.5'/%3E%3Ccircle cx='0' cy='-57' r='2.5' fill='black'/%3E%3Crect x='-42' y='0' width='84' height='12' fill='black'/%3E%3Cpath d='M-48 10c-15-20-25-45-20-60 12 10 20 28 22 45m92 15c15-20 25-45 20-60-12 10-20 28-22 45' fill='none' stroke='black' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='48' viewBox='0 0 40 48'%3E%3Cpath d='M0 48C0 28, 10 16, 20 16C30 16, 40 28, 40 48' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M-20 24C-20 4, -10 -8, 0 -8C10 -8, 20 4, 20 24' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M20 24C20 4, 30 -8, 40 -8C50 -8, 60 4, 60 24' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M20 48V32M20 44c-3-2-6-3-8-2m8 2c3-2 6-3 8-2M20 38c-2-2-5-3-7-2m7 2c2-2 5-3 7-2' stroke='black' stroke-width='0.9' fill='none'/%3E%3Cpath d='M0 24V8M0 20c-3-2-6-3-8-2m8 2c3-2 6-3 8-2' stroke='black' stroke-width='0.9' fill='none'/%3E%3Cpath d='M40 24V8M40 20c-3-2-6-3-8-2m8 2c3-2 6-3 8-2' stroke='black' stroke-width='0.9' fill='none'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg transform='translate(80,80)'%3E%3Cpath d='M-28 35C-28 10, -18 -15, 0 -24C18 -15, 28 10, 28 35Z' fill='black'/%3E%3Cline x1='0' y1='-24' x2='0' y2='-34' stroke='black' stroke-width='2'/%3E%3Ccircle cx='0' cy='-36' r='2' fill='black'/%3E%3Crect x='-54' y='-15' width='6' height='50' fill='black'/%3E%3Cpath d='M-55 -15L-51 -28 -47 -15Z' fill='black'/%3E%3Crect x='48' y='-15' width='6' height='50' fill='black'/%3E%3Cpath d='M47 -15L51 -28 55 -15Z' fill='black'/%3E%3Cpath d='M-65 42c22-8 44-8 65-2 21-6 43-6 65 2' fill='none' stroke='black' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E");
     --sig-head-family: Georgia, 'Times New Roman', serif;
     --sig-head-tracking: 0.01em;
     --sig-head-transform: none;
@@ -861,6 +862,20 @@
     z-index: 2 !important;
   }
 
+  /* ── Guarded Signature Layers (Part 1 item 4, 5 & Part 2) ── */
+  .sig-pattern-layer {
+    pointer-events: none;
+    opacity: 0.035; /* <= 0.05 cap on bg-base */
+    background-color: var(--accent);
+    -webkit-mask-image: var(--sig-pattern);
+    mask-image: var(--sig-pattern);
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+    -webkit-mask-size: auto;
+    mask-size: auto;
+    transform: translateZ(0);
+  }
+
   /* App Shell Fixed Theme Signature Pattern Layer */
   .theme-app-pattern {
     position: fixed;
@@ -880,6 +895,15 @@
     transform: translateZ(0); /* GPU composite */
   }
 
+  /* Kiswah Noir Base Pattern: warm gold thread color */
+  [data-theme="kiswah-noir"] .theme-app-pattern,
+  [data-theme="haramain-noir"] .theme-app-pattern,
+  [data-theme="kiswah-noir"] .sig-pattern-layer,
+  [data-theme="haramain-noir"] .sig-pattern-layer {
+    background-color: var(--sig-thread, #C9A45C) !important;
+    opacity: 0.04 !important; /* <= 0.05 cap */
+  }
+
   /* Theme Signature Cards & Containers */
   .theme-card {
     border-radius: var(--sig-radius, 18px);
@@ -897,14 +921,23 @@
     transition: border-radius 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
   }
 
-  /* Card-level pattern on Hero card (opacity <= 0.07 cap) */
-  .theme-hero-card::before {
-    content: "";
+  /* Hero Card Inner Vignette for jewel depth (Part 2 item 3) */
+  .hero-inner-vignette {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 1;
-    opacity: 0.05;
+    background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, var(--bg-elev) 100%);
+    opacity: 0.65;
+  }
+
+  /* Hero-card pattern layer (opacity <= 0.07 cap) */
+  .hero-pattern-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.05; /* <= 0.07 cap on hero card */
     background-color: var(--accent);
     -webkit-mask-image: var(--sig-pattern);
     mask-image: var(--sig-pattern);
@@ -914,49 +947,86 @@
     mask-size: auto;
   }
 
-  /* Watermark Motif on Hero card (opacity 0.06 to 0.08) */
-  .theme-hero-card::after {
-    content: "";
+  /* Macro Motif Watermark Container with Edge Radial Fade (Part 2 items 1 & 2) */
+  .sig-motif-vignette {
     position: absolute;
-    right: -10px;
-    bottom: -10px;
-    width: 170px;
-    height: 170px;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
-    z-index: 2;
-    opacity: 0.07;
+    overflow: hidden;
+    z-index: 1;
+    -webkit-mask-image: radial-gradient(circle at center, black 35%, transparent 75%);
+    mask-image: radial-gradient(circle at center, black 35%, transparent 75%);
+  }
+
+  /* Macro Motif Layer (opacity 0.07 to 0.09) */
+  .sig-motif-layer {
+    pointer-events: none;
+    opacity: 0.08; /* <= 0.09 cap */
     background-color: var(--accent);
     -webkit-mask-image: var(--sig-motif);
     mask-image: var(--sig-motif);
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
     -webkit-mask-size: contain;
     mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
     -webkit-mask-position: center;
     mask-position: center;
   }
 
-  /* Kiswa Noir Hero Motif: Thin embroidered band motif across top */
-  [data-theme="kiswah-noir"] .theme-hero-card::after,
-  [data-theme="haramain-noir"] .theme-hero-card::after {
+  /* Kiswa Noir Hero Motif: Gold-embroidery band motif across TOP edge (Part 1 item 4a) */
+  .kiswa-hero-band {
+    display: none;
+  }
+  [data-theme="kiswah-noir"] .kiswa-hero-band,
+  [data-theme="haramain-noir"] .kiswa-hero-band {
+    display: block !important;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: auto;
-    width: 100%;
-    height: 24px;
-    -webkit-mask-size: 240px 24px;
-    mask-size: 240px 24px;
+    height: 28px;
+    pointer-events: none;
+    z-index: 2;
+    background-color: var(--sig-thread, #C9A45C);
+    opacity: 0.35;
+    -webkit-mask-image: var(--sig-motif);
+    mask-image: var(--sig-motif);
+    -webkit-mask-size: 80px 28px;
+    mask-size: 80px 28px;
     -webkit-mask-repeat: repeat-x;
     mask-repeat: repeat-x;
     -webkit-mask-position: top center;
     mask-position: top center;
-    opacity: 0.08;
+  }
+
+  /* Kiswah Noir Gold Thread Shimmer Line on Card Tops (Zero Glow, Part 1 item 4c) */
+  [data-theme="kiswah-noir"] .theme-card,
+  [data-theme="haramain-noir"] .theme-card,
+  [data-theme="kiswah-noir"] .theme-hero-card,
+  [data-theme="haramain-noir"] .theme-hero-card {
+    border-top: 1px solid var(--sig-thread, #C9A45C) !important;
   }
 
   /* Desert Scroll: Mihrab-arch card tops */
   [data-theme="desert-scroll"] .theme-hero-card {
     border-radius: 28px 28px 18px 18px !important;
+  }
+
+  /* ── Graceful Degradation / WebView Safety Guard (Part 1 item 6) ──
+     If neither mask-image nor -webkit-mask-image is supported, hide all pattern/motif layers
+     so unmasked solid tinted rectangles are never rendered. */
+  @supports not ((mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000))) {
+    .sig-pattern-layer,
+    .sig-motif-layer,
+    .theme-app-pattern,
+    .sig-motif-vignette,
+    .hero-pattern-layer,
+    .kiswa-hero-band {
+      display: none !important;
+    }
   }
 
   /* Display Heading Signature Utility - Applies theme signature typography to Latin-script UI headings */

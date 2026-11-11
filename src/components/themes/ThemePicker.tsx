@@ -125,26 +125,52 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   style={{
                     borderRadius: theme.signature ? theme.signature.radius : '10px',
                     border: theme.signature ? theme.signature.border : `1px solid ${theme.tokens['--border']}`,
+                    borderTopColor: theme.tokens['--sig-thread'] || undefined,
                     boxShadow: theme.signature ? theme.signature.glow : (theme.tokens['--card-sheen-line']
                       ? `inset 0 1px 0 ${theme.tokens['--card-sheen-line']}, 0 4px 14px rgba(0,0,0,0.35)`
                       : `inset 0 1px 0 ${theme.tokens['--card-sheen']}, 0 4px 14px rgba(0,0,0,0.35)`),
                     background: theme.tokens['--surface'],
                   }}
                 >
-                  {/* Tiny Theme Signature Motif Watermark */}
+                  {/* Tiny Theme Signature Motif Watermark with Guarded Layer Class */}
                   {theme.tokens['--sig-motif'] && (
                     <div
-                      className="absolute right-0.5 bottom-0.5 w-10 h-10 pointer-events-none select-none opacity-20"
+                      className="sig-motif-layer pointer-events-none select-none"
                       style={{
-                        backgroundColor: theme.tokens['--accent'],
-                        WebkitMaskImage: theme.tokens['--sig-motif'],
-                        maskImage: theme.tokens['--sig-motif'],
-                        WebkitMaskSize: 'contain',
-                        maskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat',
-                        maskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center',
-                        maskPosition: 'center',
+                        position: 'absolute',
+                        ...(theme.id === 'kiswah-noir'
+                          ? {
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: '10px',
+                              backgroundColor: theme.tokens['--sig-thread'] || theme.tokens['--accent'],
+                              opacity: 0.35,
+                              WebkitMaskImage: theme.tokens['--sig-motif'],
+                              maskImage: theme.tokens['--sig-motif'],
+                              WebkitMaskSize: '36px 10px',
+                              maskSize: '36px 10px',
+                              WebkitMaskRepeat: 'repeat-x',
+                              maskRepeat: 'repeat-x',
+                              WebkitMaskPosition: 'top center',
+                              maskPosition: 'top center',
+                            }
+                          : {
+                              right: '2px',
+                              bottom: '2px',
+                              width: '36px',
+                              height: '36px',
+                              backgroundColor: theme.tokens['--accent'],
+                              opacity: 0.18,
+                              WebkitMaskImage: theme.tokens['--sig-motif'],
+                              maskImage: theme.tokens['--sig-motif'],
+                              WebkitMaskSize: 'contain',
+                              maskSize: 'contain',
+                              WebkitMaskRepeat: 'no-repeat',
+                              maskRepeat: 'no-repeat',
+                              WebkitMaskPosition: 'center',
+                              maskPosition: 'center',
+                            }),
                       }}
                       aria-hidden="true"
                     />

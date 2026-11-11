@@ -413,7 +413,7 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
           <TilawahProvider>
             <div className="flex flex-col min-h-screen overflow-x-hidden relative">
               {/* Fixed Single App-Shell Theme Signature Pattern Layer */}
-              <div className="theme-app-pattern" aria-hidden="true" />
+              <div className="theme-app-pattern sig-pattern-layer" aria-hidden="true" />
               <PrayerReminderBanner />
               <GlobalTilawahBar />
               <div className="flex-shrink-0">

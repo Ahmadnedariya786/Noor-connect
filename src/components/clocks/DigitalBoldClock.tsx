@@ -80,28 +80,21 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
           />
         )}
 
-        {/* Per-Theme Signature Watermark Motif (opacity: 0.06 to 0.08) */}
-        <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-          aria-hidden="true"
-        >
+        {/* Per-Theme Signature Watermark Motif for Static Previews (Guarded Layer) */}
+        {isStaticPreview && (
           <div
-            style={{
-              width: isStaticPreview ? '80px' : '160px',
-              height: isStaticPreview ? '80px' : '160px',
-              backgroundColor: 'var(--accent)',
-              opacity: 0.07,
-              WebkitMaskImage: 'var(--sig-motif)',
-              maskImage: 'var(--sig-motif)',
-              WebkitMaskSize: 'contain',
-              maskSize: 'contain',
-              WebkitMaskRepeat: 'no-repeat',
-              maskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center',
-              maskPosition: 'center',
-            }}
-          />
-        </div>
+            className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
+            aria-hidden="true"
+          >
+            <div
+              className="sig-motif-layer"
+              style={{
+                width: '80px',
+                height: '80px',
+              }}
+            />
+          </div>
+        )}
 
         {/* ── Main Single-Row Luxury Horology Layout (1000588780.jpg Fix) ── */}
         <div

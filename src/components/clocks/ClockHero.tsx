@@ -109,6 +109,22 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
       }}
       key="clock-hero-wrapper"
     >
+      {/* Hero card inner vignette for jewel depth (Part 2 item 3) */}
+      <div className="hero-inner-vignette" aria-hidden="true" />
+      {/* Card-level pattern on Hero card (Part 2 item 1, opacity <= 0.07 cap) */}
+      <div className="hero-pattern-layer sig-pattern-layer" aria-hidden="true" />
+      {/* Macro motif watermark with outer radial vignette fade (Part 2 items 1 & 2) */}
+      <div className="sig-motif-vignette" aria-hidden="true">
+        <div
+          className="sig-motif-layer"
+          style={{
+            width: '210px',
+            height: '210px',
+          }}
+        />
+      </div>
+      {/* Kiswa Noir top gold-embroidery band (Part 1 item 4a) */}
+      <div className="kiswa-hero-band" aria-hidden="true" />
       <LivingSkyAura nextPrayerName={nextPrayer?.name} currentHour={now.getHours()} />
       <div className="relative z-10 w-full flex flex-col justify-center items-center">
         <ClockRenderer

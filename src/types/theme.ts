@@ -33,6 +33,7 @@ export interface ThemeTokens {
   '--sig-glow'?: string;
   '--sig-pattern'?: string;
   '--sig-motif'?: string;
+  '--sig-thread'?: string;
   '--sig-head-family'?: string;
   '--sig-head-tracking'?: string;
   '--sig-head-transform'?: string;

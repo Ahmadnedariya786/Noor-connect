@@ -65,7 +65,34 @@ Every theme definition in `src/index.css` (under `[data-theme="..."]`) and in `s
      background-color: color-mix(in srgb, var(--surface-2) 90%, var(--accent) 10%);
      ```
 
+### D. Sharia-Safe Islamic Geometry Canon & Forbidden Motifs (Permanent)
+Never render in any theme pattern, motif, preview card, or decorative layer:
+1. **Forbidden Geometry:**
+   - Six-pointed hexagrams (two overlapping triangles)
+   - Standalone cross or plus motifs
+   - Fleur-de-lis
+   - Gothic or church window arches
+   - Trefoil or trinity shapes
+   - Literal Quranic or Ayah text as decorative background (respect risk under UI elements)
+2. **Allowed Vocabulary:**
+   - 8-pointed khatam stars (two overlapping SQUARES rotated 45 degrees)
+   - Rub el Hizb medallions
+   - Girih strapwork
+   - Mihrab pointed arches
+   - Arabesque vines
+   - Sazm leaves (Ottoman saz style)
+   - Ottoman lale (tulip) drawn correctly
+   - Palm fronds
+   - Mosque dome and minaret silhouettes
+   - Crescent
+   - Fanous lantern
+   - Abstract Kiswa embroidery medallions (strictly no readable text)
+3. **Tiling Invariant:**
+   - The rule applies strictly to the **TILED RESULT**, not only to a single tile.
+   - When a tile repeats, the seams and intersections must never form a plus/cross, hexagram, or fleur silhouette.
+
 ## 3. Pre-Commit Verification Checklist
 - [ ] Token completeness: Verify all 17 root tokens are present in all 7 themes in `src/index.css` and `src/lib/theme-engine.ts`.
 - [ ] Color-mix fallback check: Verify each `color-mix()` declaration is immediately preceded by a static CSS fallback.
+- [ ] Sharia-safe geometry audit: Confirm all decorative patterns, motifs, and preview cards adhere to the Sharia-Safe Islamic Geometry Canon with zero forbidden shapes (at tile and seam levels).
 - [ ] Grid integrity: Confirm `ThemePicker.tsx` renders all 7 theme preview cards cleanly without text truncation on subtitles.
