@@ -7,7 +7,10 @@ export const SettingsThemePage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-24">
+    <div
+      className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-32"
+      style={{ paddingBottom: '120px' }}
+    >
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] px-4 py-3 flex items-center gap-3">
         <button

@@ -302,30 +302,30 @@
 
   [data-theme="kiswah-noir"],
   [data-theme="haramain-noir"] {
-    --bg-base: #040406;
-    --bg-elev: #0A0A0E;
-    --surface: #111117;
-    --surface-2: #191922;
-    --border: rgba(229,184,75,0.30);
-    --accent: #E5B84B;
-    --accent-text: #FAD980;
-    --on-accent: #040406;
-    --accent-soft: rgba(229,184,75,0.18);
-    --accent-glow: rgba(229,184,75,0.36);
-    --accent-2: #D4AF37;
-    --text-primary: #FAF9F5;
-    --text-secondary: #B8B5AA;
+    --bg-base: #000000;
+    --bg-elev: #08080B;
+    --surface: #101015;
+    --surface-2: #181820;
+    --border: rgba(226, 232, 240, 0.26);
+    --accent: #E5A572;
+    --accent-text: #F7CBA4;
+    --on-accent: #050507;
+    --accent-soft: rgba(229, 165, 114, 0.16);
+    --accent-glow: rgba(229, 165, 114, 0.34);
+    --accent-2: #C27A44;
+    --text-primary: #F8FAFC;
+    --text-secondary: #A1A8B8;
     --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: linear-gradient(135deg, rgba(229,184,75,0.14) 0%, rgba(250,217,128,0.05) 60%);
-    --card-sheen-line: rgba(250,217,128,0.24);
+    --card-sheen: linear-gradient(135deg, rgba(229, 165, 114, 0.15) 0%, rgba(226, 232, 240, 0.05) 60%);
+    --card-sheen-line: rgba(247, 203, 164, 0.25);
 
     /* Signature Tokens - Kiswah Noir (Kiswa Carbon) */
     --sig-radius: 12px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 16px rgba(0, 0, 0, 0.6);
-    --sig-thread: #E5B84B;
+    --sig-thread: #E5A572;
     --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M18 4L32 18 18 32 4 18Z' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8' transform='rotate(45 18 18)'/%3E%3Ccircle cx='18' cy='18' r='1.5' fill='black'/%3E%3Cpath d='M0 8L8 0M36 8L28 0M0 28L8 36M36 28L28 36' stroke='black' stroke-width='1' stroke-dasharray='2 2'/%3E%3C/svg%3E");
     --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='32' viewBox='0 0 240 32'%3E%3Cline x1='0' y1='2' x2='240' y2='2' stroke='black' stroke-width='1.5'/%3E%3Cline x1='0' y1='30' x2='240' y2='30' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M0 16l15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='15' cy='16' r='2' fill='black'/%3E%3Ccircle cx='45' cy='16' r='2' fill='black'/%3E%3Ccircle cx='75' cy='16' r='2' fill='black'/%3E%3Ccircle cx='105' cy='16' r='2' fill='black'/%3E%3Ccircle cx='135' cy='16' r='2' fill='black'/%3E%3Ccircle cx='165' cy='16' r='2' fill='black'/%3E%3Ccircle cx='195' cy='16' r='2' fill='black'/%3E%3Ccircle cx='225' cy='16' r='2' fill='black'/%3E%3C/svg%3E");
     --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -333,23 +333,23 @@
     --sig-head-transform: uppercase;
     --sig-head-style: normal;
 
-    --background: 240 20% 2%;
-    --foreground: 45 30% 97%;
-    --card: 240 15% 7%;
-    --card-foreground: 45 30% 97%;
-    --popover: 240 15% 7%;
-    --popover-foreground: 45 30% 97%;
-    --primary: 42 76% 59%;
-    --primary-foreground: 240 20% 2%;
-    --primary-glow: 42 76% 59%;
-    --secondary: 240 15% 12%;
-    --secondary-foreground: 45 30% 97%;
-    --muted: 240 15% 12%;
-    --muted-foreground: 45 9% 69%;
+    --background: 0 0% 0%;
+    --foreground: 210 40% 98%;
+    --card: 240 14% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 14% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 26 68% 67%;
+    --primary-foreground: 240 17% 2%;
+    --primary-glow: 26 68% 67%;
+    --secondary: 240 14% 11%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 240 14% 11%;
+    --muted-foreground: 220 14% 68%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 240 15% 12%;
-    --ring: 42 76% 59%;
+    --input: 240 14% 11%;
+    --ring: 26 68% 67%;
   }
 
   [data-theme="istanbul-sapphire"],
@@ -832,11 +832,36 @@
     -webkit-tap-highlight-color: transparent !important;
   }
 
-  /* Item 1: Sequential Page/Tab Transition (Zero Simultaneous Ghosting) */
+  /* Item 1: Instant Page/Tab Transition (Zero Blank Screen Flash) */
   .page-transition-wrapper {
     width: 100%;
     min-height: 100%;
     background-color: var(--bg-base);
+  }
+
+  @keyframes pageEnterInstant {
+    from {
+      opacity: 0.96;
+      transform: translateZ(0);
+    }
+    to {
+      opacity: 1;
+      transform: translateZ(0);
+    }
+  }
+
+  .animate-page-enter {
+    animation: pageEnterInstant 100ms ease-out forwards;
+  }
+
+  /* Toast Viewport 360px Mobile Containment (Part 4) */
+  [data-radix-toast-viewport],
+  .toaster[data-sonner-toaster] {
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+    box-sizing: border-box !important;
   }
 
   /* Unified App-Wide Settings Value Chip (Zero Truncation / Zero Clipping) */
@@ -909,12 +934,12 @@
     transform: translateZ(0); /* GPU composite */
   }
 
-  /* Kiswah Noir Base Pattern: warm gold thread color */
+  /* Kiswah Noir Base Pattern: warm rose-champagne thread color */
   [data-theme="kiswah-noir"] .theme-app-pattern,
   [data-theme="haramain-noir"] .theme-app-pattern,
   [data-theme="kiswah-noir"] .sig-pattern-layer,
   [data-theme="haramain-noir"] .sig-pattern-layer {
-    background-color: var(--sig-thread, #C9A45C) !important;
+    background-color: var(--sig-thread, #E5A572) !important;
     opacity: 0.04 !important; /* <= 0.05 cap */
   }
 
@@ -1025,7 +1050,7 @@
     height: 28px;
     pointer-events: none;
     z-index: 2;
-    background-color: var(--sig-thread, #C9A45C);
+    background-color: var(--sig-thread, #E5A572);
     opacity: 0.35;
     -webkit-mask-image: var(--sig-motif);
     mask-image: var(--sig-motif);
@@ -1037,12 +1062,12 @@
     mask-position: top center;
   }
 
-  /* Kiswah Noir Gold Thread Shimmer Line on Card Tops (Zero Glow, Part 1 item 4c) */
+  /* Kiswah Noir Rose-Champagne Thread Shimmer Line on Card Tops (Zero Glow, Part 1 item 4c) */
   [data-theme="kiswah-noir"] .theme-card,
   [data-theme="haramain-noir"] .theme-card,
   [data-theme="kiswah-noir"] .theme-hero-card,
   [data-theme="haramain-noir"] .theme-hero-card {
-    border-top: 1px solid var(--sig-thread, #C9A45C) !important;
+    border-top: 1px solid var(--sig-thread, #E5A572) !important;
   }
 
   /* Desert Scroll: Mihrab-arch card tops */

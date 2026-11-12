@@ -60,7 +60,7 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                 }
               }}
               className={cn(
-                "group relative flex flex-col justify-between overflow-hidden transition-all duration-200 cursor-pointer select-none text-left p-2.5 sm:p-3",
+                "group relative flex flex-col justify-between overflow-hidden transition-all duration-200 cursor-pointer select-none text-left p-2.5 sm:p-3 h-auto min-h-full",
                 "backdrop-blur-sm",
                 isSelected
                   ? "border border-[var(--accent)] ring-1 ring-[var(--accent)]"
@@ -69,6 +69,11 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
               style={{
                 borderRadius: theme.signature ? theme.signature.radius : '16px',
                 padding: '10px 10px',
+                height: 'auto',
+                minHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
                 background: isSelected
                   ? 'linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 100%)'
                   : 'linear-gradient(180deg, var(--surface) 0%, var(--bg-base) 100%)',
@@ -105,14 +110,14 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                 )}
               </div>
 
-              {/* Row 2: Full-Width Subtitle (Zero Truncation) */}
-              <p className="text-[10px] text-[var(--text-secondary)] font-medium mb-2.5 w-full leading-tight">
+              {/* Row 2: Full-Width Subtitle (Concise 2-line max string with zero truncation) */}
+              <p className="text-[10px] text-[var(--text-secondary)] font-medium mb-2.5 w-full leading-tight min-h-[26px] line-clamp-2">
                 {theme.subtitle}
               </p>
 
               {/* Static Mini Dashboard Mock: bg gradient + sample card with per-theme signature silhouette, border & motif */}
               <div
-                className="w-full overflow-hidden p-2 sm:p-2.5 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] pointer-events-none border"
+                className="w-full overflow-hidden p-2 sm:p-2.5 flex flex-col justify-between min-h-[115px] sm:min-h-[120px] pointer-events-none border"
                 style={{
                   borderRadius: theme.signature ? theme.signature.radius : '12px',
                   background: `radial-gradient(ellipse 100% 60% at 50% -10%, ${theme.tokens['--accent-soft']} 0%, transparent 70%), linear-gradient(180deg, ${theme.tokens['--bg-base']} 0%, ${theme.tokens['--bg-elev']} 100%)`,
@@ -121,14 +126,14 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
               >
                 {/* Sample Card consuming Theme Signature properties */}
                 <div
-                  className="p-2 flex flex-col justify-between flex-1 relative overflow-hidden"
+                  className="p-2 flex flex-col justify-between flex-1 relative overflow-hidden min-h-[96px]"
                   style={{
                     borderRadius: theme.signature ? theme.signature.radius : '10px',
-                    border: theme.signature ? theme.signature.border : `1px solid ${theme.tokens['--border']}`,
-                    borderTopColor: theme.tokens['--sig-thread'] || undefined,
-                    boxShadow: theme.signature ? theme.signature.glow : (theme.tokens['--card-sheen-line']
+                    border: `1px solid ${theme.tokens['--border']}`,
+                    borderTop: `1px solid ${theme.tokens['--sig-thread'] || theme.tokens['--accent']}`,
+                    boxShadow: theme.tokens['--card-sheen-line']
                       ? `inset 0 1px 0 ${theme.tokens['--card-sheen-line']}, 0 4px 14px rgba(0,0,0,0.35)`
-                      : `inset 0 1px 0 ${theme.tokens['--card-sheen']}, 0 4px 14px rgba(0,0,0,0.35)`),
+                      : `inset 0 1px 0 ${theme.tokens['--card-sheen']}, 0 4px 14px rgba(0,0,0,0.35)`,
                     background: theme.tokens['--surface'],
                   }}
                 >

@@ -120,7 +120,7 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'oxford-gold': {
     id: 'oxford-gold',
     name: 'Oxford Gold',
-    subtitle: 'Sovereign Midnight Navy & Radiant 24K Gold',
+    subtitle: 'Sovereign Navy & 24K Gold',
     description: 'Prestigious midnight scholarly navy surfaces bathed in radiant 24K celestial gold lattice.',
     signature: THEME_SIGNATURES['oxford-gold'],
     tokens: {
@@ -156,29 +156,29 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'kiswah-noir': {
     id: 'kiswah-noir',
     name: 'Haramain Noir',
-    subtitle: 'Kaaba Kiswah OLED Black Silk, 24K Gold & Platinum',
-    description: 'Ultra-deep obsidian silk with 24K gold thread accents, fine platinum sheen, and authentic Kiswa belt cartouche.',
+    subtitle: 'OLED Black, Platinum & Rose-Gold',
+    description: 'Ultra-deep #000000 OLED black surfaces framed by brushed platinum-silver and warm rose-champagne accents.',
     signature: THEME_SIGNATURES['kiswah-noir'],
     tokens: {
-      '--bg-base': '#040406',
-      '--bg-elev': '#0A0A0E',
-      '--surface': '#111117',
-      '--surface-2': '#191922',
-      '--border': 'rgba(229,184,75,0.30)',
-      '--accent': '#E5B84B',
-      '--accent-2': '#C49228',
-      '--accent-text': '#FFE082',
-      '--on-accent': '#040406',
-      '--accent-soft': 'rgba(229,184,75,0.16)',
-      '--accent-glow': 'rgba(229,184,75,0.34)',
-      '--card-sheen': 'linear-gradient(135deg, rgba(229,184,75,0.15) 0%, rgba(255,255,255,0.04) 60%)',
-      '--card-sheen-line': 'rgba(255,224,130,0.25)',
-      '--text-primary': '#FAF8F5',
-      '--text-secondary': '#B0B5C0',
-      '--success': '#10B981',
-      '--warning': '#F59E0B',
-      '--danger': '#EF4444',
-      '--sig-thread': '#C9A45C',
+      '--bg-base': '#000000',
+      '--bg-elev': '#08080B',
+      '--surface': '#101015',
+      '--surface-2': '#181820',
+      '--border': 'rgba(226, 232, 240, 0.26)',
+      '--accent': '#E5A572',
+      '--accent-2': '#C27A44',
+      '--accent-text': '#F7CBA4',
+      '--on-accent': '#050507',
+      '--accent-soft': 'rgba(229, 165, 114, 0.16)',
+      '--accent-glow': 'rgba(229, 165, 114, 0.34)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(229, 165, 114, 0.15) 0%, rgba(226, 232, 240, 0.05) 60%)',
+      '--card-sheen-line': 'rgba(247, 203, 164, 0.25)',
+      '--text-primary': '#F8FAFC',
+      '--text-secondary': '#A1A8B8',
+      '--success': '#34D399',
+      '--warning': '#FBBF24',
+      '--danger': '#FB7185',
+      '--sig-thread': '#E5A572',
       '--sig-radius': THEME_SIGNATURES['kiswah-noir'].radius,
       '--sig-border': THEME_SIGNATURES['kiswah-noir'].border,
       '--sig-glow': THEME_SIGNATURES['kiswah-noir'].glow,
@@ -193,7 +193,7 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'imperial-violet': {
     id: 'imperial-violet',
     name: 'Imperial Violet',
-    subtitle: 'Royal Amethyst Velvet, Electric Orchid & Rose-Champagne',
+    subtitle: 'Amethyst Velvet & Electric Orchid',
     description: 'Opulent Ottoman palace amethyst velvet surfaces illuminated by electric orchid and rose-champagne accents.',
     signature: THEME_SIGNATURES['imperial-violet'],
     tokens: {
@@ -229,7 +229,7 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'burgundy-velvet': {
     id: 'burgundy-velvet',
     name: 'Burgundy Velvet',
-    subtitle: 'Deep Onyx & Crimson',
+    subtitle: 'Deep Onyx & Satin Crimson',
     description: 'Deep onyx and dark wine surfaces with passionate ruby-coral highlights.',
     signature: THEME_SIGNATURES['burgundy-velvet'],
     tokens: {
@@ -265,7 +265,7 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'desert-scroll': {
     id: 'desert-scroll',
     name: 'Desert Scroll',
-    subtitle: 'Royal Arabian Oud, Burnished Copper & Mamluk Amber',
+    subtitle: 'Arabian Oud & Burnished Copper',
     description: 'Aged manuscript vellum textures layered with burnished Arabian copper and rich Mamluk amber glow.',
     signature: THEME_SIGNATURES['desert-scroll'],
     tokens: {
@@ -301,7 +301,7 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'istanbul-sapphire': {
     id: 'istanbul-sapphire',
     name: 'Royal Sapphire',
-    subtitle: 'Abyssal Bosphorus Sapphire & Crystalline Ice-Cyan',
+    subtitle: 'Abyssal Sapphire & Ice-Cyan',
     description: 'Abyssal Bosphorus waters paired with crystalline ice-cyan highlights and Iznik ceramic waves.',
     signature: THEME_SIGNATURES['istanbul-sapphire'],
     tokens: {
@@ -337,7 +337,7 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'madinah-emerald': {
     id: 'madinah-emerald',
     name: 'Madinah Emerald',
-    subtitle: 'Rawdah Sanctuary Emerald Velvet & Chandelier Cream-Gold',
+    subtitle: 'Rawdah Emerald & Cream-Gold',
     description: 'Sacred Rawdah emerald surfaces adorned with chandelier cream-gold accents and palm-frond ogive lattices.',
     signature: THEME_SIGNATURES['madinah-emerald'],
     tokens: {
@@ -464,7 +464,7 @@ export function applyThemeToDOM(themeId: ThemeId): void {
 
 export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
   'oxford-gold': '#050914',
-  'kiswah-noir': '#040406',
+  'kiswah-noir': '#000000',
   'imperial-violet': '#0B0414',
   'burgundy-velvet': '#0B0B0B',
   'desert-scroll': '#100703',
