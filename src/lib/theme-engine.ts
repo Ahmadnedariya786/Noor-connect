@@ -156,29 +156,29 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'kiswah-noir': {
     id: 'kiswah-noir',
     name: 'Haramain Noir',
-    subtitle: 'OLED Black, Platinum & Rose-Gold',
-    description: 'Ultra-deep #000000 OLED black surfaces framed by brushed platinum-silver and warm rose-champagne accents.',
+    subtitle: 'OLED Pitch-Black, Liquid Platinum & White-Champagne',
+    description: 'Ultra-deep #000000 OLED pitch-black surfaces framed by liquid platinum and white-champagne accents.',
     signature: THEME_SIGNATURES['kiswah-noir'],
     tokens: {
       '--bg-base': '#000000',
       '--bg-elev': '#08080B',
-      '--surface': '#101015',
-      '--surface-2': '#181820',
-      '--border': 'rgba(226, 232, 240, 0.26)',
-      '--accent': '#E5A572',
-      '--accent-2': '#C27A44',
-      '--accent-text': '#F7CBA4',
+      '--surface': '#101016',
+      '--surface-2': '#181922',
+      '--border': 'rgba(239,230,213,0.28)',
+      '--accent': '#EFE6D5',
+      '--accent-2': '#C8B89A',
+      '--accent-text': '#FFF8EB',
       '--on-accent': '#050507',
-      '--accent-soft': 'rgba(229, 165, 114, 0.16)',
-      '--accent-glow': 'rgba(229, 165, 114, 0.34)',
-      '--card-sheen': 'linear-gradient(135deg, rgba(229, 165, 114, 0.15) 0%, rgba(226, 232, 240, 0.05) 60%)',
-      '--card-sheen-line': 'rgba(247, 203, 164, 0.25)',
+      '--accent-soft': 'rgba(239,230,213,0.14)',
+      '--accent-glow': 'rgba(239,230,213,0.30)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(239,230,213,0.12) 0%, rgba(255,255,255,0.03) 60%)',
+      '--card-sheen-line': 'rgba(255,248,235,0.22)',
       '--text-primary': '#F8FAFC',
       '--text-secondary': '#A1A8B8',
       '--success': '#34D399',
       '--warning': '#FBBF24',
       '--danger': '#FB7185',
-      '--sig-thread': '#E5A572',
+      '--sig-thread': '#EFE6D5',
       '--sig-radius': THEME_SIGNATURES['kiswah-noir'].radius,
       '--sig-border': THEME_SIGNATURES['kiswah-noir'].border,
       '--sig-glow': THEME_SIGNATURES['kiswah-noir'].glow,
@@ -193,23 +193,23 @@ export const THEMES: Record<ThemeId, AppTheme> = {
   'imperial-violet': {
     id: 'imperial-violet',
     name: 'Imperial Violet',
-    subtitle: 'Amethyst Velvet & Electric Orchid',
-    description: 'Opulent Ottoman palace amethyst velvet surfaces illuminated by electric orchid and rose-champagne accents.',
+    subtitle: 'Royal Amethyst Velvet & Jewel Orchid',
+    description: 'Royal amethyst velvet surfaces illuminated by jewel orchid and rose-champagne accents.',
     signature: THEME_SIGNATURES['imperial-violet'],
     tokens: {
-      '--bg-base': '#090414',
-      '--bg-elev': '#110824',
-      '--surface': '#180C32',
-      '--surface-2': '#231246',
-      '--border': 'rgba(192,132,252,0.32)',
-      '--accent': '#D946EF',
-      '--accent-2': '#9333EA',
-      '--accent-text': '#F5D0FE',
-      '--on-accent': '#090414',
-      '--accent-soft': 'rgba(217,70,239,0.17)',
-      '--accent-glow': 'rgba(217,70,239,0.34)',
-      '--card-sheen': 'linear-gradient(135deg, rgba(217,70,239,0.16) 0%, rgba(147,51,234,0.06) 60%)',
-      '--card-sheen-line': 'rgba(245,208,254,0.24)',
+      '--bg-base': '#080312',
+      '--bg-elev': '#0E0620',
+      '--surface': '#15092B',
+      '--surface-2': '#1F0F3D',
+      '--border': 'rgba(192,102,246,0.32)',
+      '--accent': '#C066F6',
+      '--accent-2': '#A44EF0',
+      '--accent-text': '#F3D1FF',
+      '--on-accent': '#080312',
+      '--accent-soft': 'rgba(192,102,246,0.17)',
+      '--accent-glow': 'rgba(192,102,246,0.34)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(192,102,246,0.16) 0%, rgba(139,53,214,0.06) 60%)',
+      '--card-sheen-line': 'rgba(243,209,255,0.25)',
       '--text-primary': '#FAF5FF',
       '--text-secondary': '#C8B2F0',
       '--success': '#34D399',
@@ -451,25 +451,27 @@ export function applyThemeToDOM(themeId: ThemeId): void {
     }
   }
 
-  // 5. Synchronize native Android window & WebView background color to eliminate cold-start navy flash
+  // 5. Synchronize native Android window & WebView background color to eliminate cold-start navy flash (deferred for instant frame paint)
   const bgHex = THEME_BG_HEX_MAP[validId] || '#000000';
   if (typeof window !== 'undefined') {
-    try {
-      (window as any).AndroidBridge?.setNativeThemeBg?.(bgHex);
-    } catch {
-      // Safe fallback when AndroidBridge is unavailable
-    }
+    setTimeout(() => {
+      try {
+        (window as any).AndroidBridge?.setNativeThemeBg?.(bgHex);
+      } catch {
+        // Safe fallback when AndroidBridge is unavailable
+      }
+    }, 0);
   }
 }
 
 export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
   'oxford-gold': '#050914',
   'kiswah-noir': '#000000',
-  'imperial-violet': '#0B0414',
+  'imperial-violet': '#080312',
   'burgundy-velvet': '#0B0B0B',
-  'desert-scroll': '#100703',
-  'istanbul-sapphire': '#030814',
-  'madinah-emerald': '#030C07',
+  'desert-scroll': '#100804',
+  'istanbul-sapphire': '#030B16',
+  'madinah-emerald': '#04120C',
 };
 
 /**
