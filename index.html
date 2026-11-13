@@ -92,7 +92,7 @@
   <meta name="theme-color" content="#150D2E" />
   <!-- Content Security Policy: Self-contained for F-Droid with Google Fonts for Arabic Typography -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; script-src-attr 'none'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https: blob: http://localhost; connect-src 'self' https: wss: http: blob:; media-src 'self' https: blob: http:; frame-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-attr 'none'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https: blob: http://localhost; connect-src 'self' https: wss: http: blob:; media-src 'self' https: blob: http:; frame-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Noor Connect - Your Islamic Companion</title>
   <meta name="description"
     content="Noor Connect - Prayer times, Qur'an, Qibla, Tasbeeh, and Daily Hadith. Your complete Islamic companion app.">
@@ -391,6 +391,113 @@
   <!-- Static pre-React splash element: clean minimal dark background (#090D16) removed immediately upon React render to eliminate mid-splash double-logo jump -->
   <div id="initial-splash" class="static-splash" aria-hidden="true" style="position:fixed;inset:0;width:100vw;height:100dvh;background:#090D16;z-index:2147483647;pointer-events:all;"></div>
   <div id="root"></div>
+
+  <!-- Permanent HTML-Level Boot Watchdog: Prevents black screen freezes if JS mount throws or halts -->
+  <script>
+    (function () {
+      var bootError = null;
+      window.addEventListener('error', function (e) {
+        if (!bootError) {
+          bootError = (e && e.message) ? e.message : 'Script execution error';
+        }
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        if (!bootError) {
+          bootError = (e && e.reason && (e.reason.message || e.reason)) ? String(e.reason.message || e.reason) : 'Unhandled promise rejection';
+        }
+      });
+
+      setTimeout(function () {
+        var root = document.getElementById('root');
+        var splash = document.getElementById('initial-splash');
+        var isRootEmpty = !root || root.childElementCount === 0 || root.innerHTML.trim() === '';
+
+        if (isRootEmpty) {
+          if (splash) {
+            try { splash.remove(); } catch (e) {}
+          }
+          document.documentElement.classList.remove('splash-active');
+          document.body.classList.remove('splash-active');
+          document.documentElement.style.overflow = 'auto';
+          document.body.style.overflow = 'auto';
+          document.documentElement.style.touchAction = 'auto';
+          document.body.style.touchAction = 'auto';
+
+          if (root) {
+            root.style.minHeight = '100vh';
+            root.style.width = '100vw';
+            root.style.display = 'flex';
+            root.style.flexDirection = 'column';
+            root.style.alignItems = 'center';
+            root.style.justifyContent = 'center';
+            root.style.backgroundColor = '#050914';
+            root.style.color = '#F8FAFC';
+            root.style.padding = '24px 16px';
+            root.style.boxSizing = 'border-box';
+            root.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+            var errHtml = bootError
+              ? '<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:12px;margin:16px 0;text-align:left;max-height:100px;overflow-y:auto;font-family:monospace;font-size:11px;color:#FCA5A5;word-break:break-word;">' + bootError + '</div>'
+              : '';
+
+            root.innerHTML = [
+              '<div style="max-width:400px;width:100%;text-align:center;background:#0E1424;padding:28px 20px;border-radius:24px;border:1px solid rgba(226,232,240,0.16);box-shadow:0 16px 40px rgba(0,0,0,0.7);box-sizing:border-box;">',
+                '<div style="width:54px;height:54px;border-radius:50%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#F87171;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;">🌙</div>',
+                '<h2 style="font-size:19px;font-weight:800;margin:0 0 8px;color:#F8FAFC;">Noor Connect Recovery</h2>',
+                '<p style="font-size:13px;color:#94A3B8;margin:0 0 16px;line-height:1.5;">The app is taking longer than usual to start or encountered a boot hitch. Your Qur\'an and Qaza data are safe.</p>',
+                errHtml,
+                '<div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">',
+                  '<button id="boot-watchdog-reload" style="width:100%;padding:13px;border-radius:14px;border:none;background:#C8B89A;color:#050914;font-weight:800;font-size:14px;cursor:pointer;">🔄 Reload App</button>',
+                  '<button id="boot-watchdog-reset" style="width:100%;padding:13px;border-radius:14px;border:1px solid rgba(226,232,240,0.22);background:rgba(255,255,255,0.04);color:#E2E8F0;font-weight:700;font-size:14px;cursor:pointer;">🧹 Reset Cache & Reload</button>',
+                '</div>',
+              '</div>'
+            ].join('');
+
+            var reloadBtn = document.getElementById('boot-watchdog-reload');
+            if (reloadBtn) {
+              reloadBtn.onclick = function () { window.location.reload(); };
+            }
+
+            var resetBtn = document.getElementById('boot-watchdog-reset');
+            if (resetBtn) {
+              resetBtn.onclick = function () {
+                try {
+                  var preserve = ['qaza', 'quran', 'theme', 'user_location', 'location', 'tasbeeh', 'hadith', 'owner', 'mushaf'];
+                  if (typeof localStorage !== 'undefined') {
+                    var toDelete = [];
+                    for (var i = 0; i < localStorage.length; i++) {
+                      var key = localStorage.key(i);
+                      if (key) {
+                        var keep = false;
+                        var lk = key.toLowerCase();
+                        for (var p = 0; p < preserve.length; p++) {
+                          if (lk.indexOf(preserve[p]) !== -1) { keep = true; break; }
+                        }
+                        if (!keep) toDelete.push(key);
+                      }
+                    }
+                    for (var d = 0; d < toDelete.length; d++) {
+                      localStorage.removeItem(toDelete[d]);
+                    }
+                  }
+                  if (typeof sessionStorage !== 'undefined') {
+                    sessionStorage.clear();
+                  }
+                  if (window.caches) {
+                    window.caches.keys().then(function (names) {
+                      names.forEach(function (n) { window.caches.delete(n); });
+                    });
+                  }
+                } catch (e) {}
+                window.location.reload();
+              };
+            }
+          }
+        }
+      }, 2500);
+    })();
+  </script>
+
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

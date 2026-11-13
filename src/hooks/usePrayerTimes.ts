@@ -89,6 +89,16 @@ function getLocalDatePartKey(d: Date = new Date()): string {
 }
 
 function computeWithEnd(times: PrayerTimes): PrayerTimesWithEnd {
+  if (!times?.fajr || isNaN(times.fajr.getTime())) {
+    return {
+      fajr: { start: new Date(), end: new Date() },
+      sunrise: { start: new Date(), end: new Date() },
+      dhuhr: { start: new Date(), end: new Date() },
+      asr: { start: new Date(), end: new Date() },
+      maghrib: { start: new Date(), end: new Date() },
+      isha: { start: new Date(), end: new Date() },
+    };
+  }
   const nextFajr = new Date(times.fajr.getTime() + 24 * 3600 * 1000);
   return {
     fajr: { start: times.fajr, end: times.sunrise },
@@ -97,11 +107,11 @@ function computeWithEnd(times: PrayerTimes): PrayerTimesWithEnd {
     asr: { start: times.asr, end: times.maghrib },
     maghrib: { start: times.maghrib, end: times.isha },
     isha: { start: times.isha, end: nextFajr },
-    imsak: times.imsak ? { start: times.imsak, end: times.fajr } : undefined,
-    ishraq: times.ishraq ? { start: times.ishraq, end: new Date(times.ishraq.getTime() + 20 * 60000) } : undefined,
-    duha: times.duha ? { start: times.duha, end: new Date(times.dhuhr.getTime() - 10 * 60000) } : undefined,
-    tahajjud: times.tahajjud ? { start: times.tahajjud, end: nextFajr } : undefined,
-    midnight: times.midnight ? { start: times.midnight, end: nextFajr } : undefined,
+    imsak: times.imsak && !isNaN(times.imsak.getTime()) ? { start: times.imsak, end: times.fajr } : undefined,
+    ishraq: times.ishraq && !isNaN(times.ishraq.getTime()) ? { start: times.ishraq, end: new Date(times.ishraq.getTime() + 20 * 60000) } : undefined,
+    duha: times.duha && !isNaN(times.duha.getTime()) && times.dhuhr && !isNaN(times.dhuhr.getTime()) ? { start: times.duha, end: new Date(times.dhuhr.getTime() - 10 * 60000) } : undefined,
+    tahajjud: times.tahajjud && !isNaN(times.tahajjud.getTime()) ? { start: times.tahajjud, end: nextFajr } : undefined,
+    midnight: times.midnight && !isNaN(times.midnight.getTime()) ? { start: times.midnight, end: nextFajr } : undefined,
   };
 }
 
@@ -120,21 +130,36 @@ function resolveInitialPrayerTimes(): InitialPrayerState {
     const stored = localStorage.getItem('cached_prayer_times');
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed && parsed.fajr && parsed.dhuhr) {
+      if (parsed && typeof parsed === 'object' && parsed.fajr && parsed.dhuhr) {
         const fajrDate = new Date(parsed.fajr);
-        if (getLocalDatePartKey(fajrDate) === todayKey) {
+        const sunriseDate = parsed.sunrise ? new Date(parsed.sunrise) : null;
+        const dhuhrDate = new Date(parsed.dhuhr);
+        const asrDate = parsed.asr ? new Date(parsed.asr) : null;
+        const maghribDate = parsed.maghrib ? new Date(parsed.maghrib) : null;
+        const ishaDate = parsed.isha ? new Date(parsed.isha) : null;
+
+        const allValid =
+          !isNaN(fajrDate.getTime()) &&
+          sunriseDate && !isNaN(sunriseDate.getTime()) &&
+          !isNaN(dhuhrDate.getTime()) &&
+          asrDate && !isNaN(asrDate.getTime()) &&
+          maghribDate && !isNaN(maghribDate.getTime()) &&
+          ishaDate && !isNaN(ishaDate.getTime());
+
+        if (allValid && getLocalDatePartKey(fajrDate) === todayKey) {
+          const midnightDate = parsed.midnight ? new Date(parsed.midnight) : new Date(maghribDate!.getTime() + 4 * 3600 * 1000);
           const hydrated: PrayerTimes = {
             fajr: fajrDate,
-            sunrise: new Date(parsed.sunrise),
-            dhuhr: new Date(parsed.dhuhr),
-            asr: new Date(parsed.asr),
-            maghrib: new Date(parsed.maghrib),
-            isha: new Date(parsed.isha),
-            midnight: new Date(parsed.midnight),
-            imsak: parsed.imsak ? new Date(parsed.imsak) : undefined,
-            ishraq: parsed.ishraq ? new Date(parsed.ishraq) : undefined,
-            duha: parsed.duha ? new Date(parsed.duha) : undefined,
-            tahajjud: parsed.tahajjud ? new Date(parsed.tahajjud) : undefined,
+            sunrise: sunriseDate!,
+            dhuhr: dhuhrDate,
+            asr: asrDate!,
+            maghrib: maghribDate!,
+            isha: ishaDate!,
+            midnight: !isNaN(midnightDate.getTime()) ? midnightDate : new Date(maghribDate!.getTime() + 4 * 3600 * 1000),
+            imsak: parsed.imsak && !isNaN(new Date(parsed.imsak).getTime()) ? new Date(parsed.imsak) : undefined,
+            ishraq: parsed.ishraq && !isNaN(new Date(parsed.ishraq).getTime()) ? new Date(parsed.ishraq) : undefined,
+            duha: parsed.duha && !isNaN(new Date(parsed.duha).getTime()) ? new Date(parsed.duha) : undefined,
+            tahajjud: parsed.tahajjud && !isNaN(new Date(parsed.tahajjud).getTime()) ? new Date(parsed.tahajjud) : undefined,
           };
           return {
             prayerTimes: hydrated,
@@ -145,8 +170,8 @@ function resolveInitialPrayerTimes(): InitialPrayerState {
         }
       }
     }
-  } catch {
-    // Safe storage parse fallback
+  } catch (err) {
+    console.warn('[BootGuard] Failed to parse cached_prayer_times:', err);
   }
 
   // 2. Otherwise compute today's times using SAVED coordinates, calculation method and madhab
@@ -154,17 +179,17 @@ function resolveInitialPrayerTimes(): InitialPrayerState {
     const storedLoc = localStorage.getItem(LOCATION_STORAGE_KEY);
     if (storedLoc) {
       const parsed = JSON.parse(storedLoc);
-      if (typeof parsed?.latitude === 'number' && typeof parsed?.longitude === 'number') {
+      if (parsed && typeof parsed === 'object' && Number.isFinite(parsed.latitude) && Number.isFinite(parsed.longitude)) {
         const today = new Date();
         const times = calculatePrayerTimes(parsed.latitude, parsed.longitude, today);
         const offsets = getPrayerMinuteOffsets();
 
-        const fajr = applyOffsetToDate(times.fajr, offsets.fajr);
-        const sunrise = applyOffsetToDate(times.sunrise, offsets.sunrise);
-        const dhuhr = applyOffsetToDate(times.dhuhr, offsets.dhuhr);
-        const asr = applyOffsetToDate(times.asr, offsets.asr);
-        const maghrib = applyOffsetToDate(times.maghrib, offsets.maghrib);
-        const isha = applyOffsetToDate(times.isha, offsets.isha);
+        const fajr = applyOffsetToDate(times.fajr, 'fajr', offsets);
+        const sunrise = applyOffsetToDate(times.sunrise, 'sunrise', offsets);
+        const dhuhr = applyOffsetToDate(times.dhuhr, 'dhuhr', offsets);
+        const asr = applyOffsetToDate(times.asr, 'asr', offsets);
+        const maghrib = applyOffsetToDate(times.maghrib, 'maghrib', offsets);
+        const isha = applyOffsetToDate(times.isha, 'isha', offsets);
 
         const nextFajr = new Date(fajr.getTime() + 24 * 3600 * 1000);
         const midnight = new Date(maghrib.getTime() + (nextFajr.getTime() - maghrib.getTime()) / 2);
@@ -193,8 +218,8 @@ function resolveInitialPrayerTimes(): InitialPrayerState {
         };
       }
     }
-  } catch {
-    // Safe calculation parse fallback
+  } catch (err) {
+    console.warn('[BootGuard] Offline calculation startup hydration fallback:', err);
   }
 
   // 3. Only if there is no saved location at all (first ever launch), keep loading state

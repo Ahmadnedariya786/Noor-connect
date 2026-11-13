@@ -66,19 +66,19 @@ function computeTodayOfflineDashboardPrayersSync(): PrayerTime[] {
       return [];
     }
     const loc = loadStoredLocation();
-    if (!loc || typeof loc.latitude !== 'number' || typeof loc.longitude !== 'number') {
+    if (!loc || typeof loc.latitude !== 'number' || typeof loc.longitude !== 'number' || isNaN(loc.latitude) || isNaN(loc.longitude)) {
       return [];
     }
     const today = new Date();
     const times = calculatePrayerTimes(loc.latitude, loc.longitude, today);
     const offsets = getPrayerMinuteOffsets();
 
-    const fajr = applyOffsetToDate(times.fajr, offsets.fajr);
-    const sunrise = applyOffsetToDate(times.sunrise, offsets.sunrise);
-    const dhuhr = applyOffsetToDate(times.dhuhr, offsets.dhuhr);
-    const asr = applyOffsetToDate(times.asr, offsets.asr);
-    const maghrib = applyOffsetToDate(times.maghrib, offsets.maghrib);
-    const isha = applyOffsetToDate(times.isha, offsets.isha);
+    const fajr = applyOffsetToDate(times.fajr, 'fajr', offsets);
+    const sunrise = applyOffsetToDate(times.sunrise, 'sunrise', offsets);
+    const dhuhr = applyOffsetToDate(times.dhuhr, 'dhuhr', offsets);
+    const asr = applyOffsetToDate(times.asr, 'asr', offsets);
+    const maghrib = applyOffsetToDate(times.maghrib, 'maghrib', offsets);
+    const isha = applyOffsetToDate(times.isha, 'isha', offsets);
 
     const list: PrayerTime[] = [
       { name: "Fajr", time: formatPrayerTime(fajr, '12h'), date: fajr },
@@ -90,7 +90,8 @@ function computeTodayOfflineDashboardPrayersSync(): PrayerTime[] {
     ];
     cachedDashboardPrayers = list;
     return list;
-  } catch {
+  } catch (err) {
+    console.warn('[DashboardBootGuard] computeTodayOfflineDashboardPrayersSync failed:', err);
     return [];
   }
 }
@@ -102,7 +103,7 @@ function computeTodayOfflineNextPrayerSync(): { name: string; time: string; targ
       : computeTodayOfflineDashboardPrayersSync();
 
     const now = new Date();
-    const upcoming = todayPrayers.find(p => p.date && p.date.getTime() > now.getTime());
+    const upcoming = todayPrayers.find(p => p.date instanceof Date && !isNaN(p.date.getTime()) && p.date.getTime() > now.getTime());
     if (upcoming && upcoming.date) {
       const displayName = getPrayerDisplayName(upcoming.name, upcoming.date);
       cachedNextPrayerName = displayName;
@@ -112,7 +113,7 @@ function computeTodayOfflineNextPrayerSync(): { name: string; time: string; targ
     }
 
     const fajr = todayPrayers.find(p => p.name?.toLowerCase() === 'fajr');
-    if (fajr && fajr.date) {
+    if (fajr && fajr.date instanceof Date && !isNaN(fajr.date.getTime())) {
       const tomorrowFajr = new Date(fajr.date.getTime() + 24 * 3600 * 1000);
       const displayName = getPrayerDisplayName('Fajr', tomorrowFajr);
       cachedNextPrayerName = displayName;
@@ -120,8 +121,8 @@ function computeTodayOfflineNextPrayerSync(): { name: string; time: string; targ
       cachedTargetTime = tomorrowFajr;
       return { name: displayName, time: fajr.time, targetTime: tomorrowFajr };
     }
-  } catch {
-    // Safe calculation fallback
+  } catch (err) {
+    console.warn('[DashboardBootGuard] computeTodayOfflineNextPrayerSync failed:', err);
   }
   return { name: "", time: "", targetTime: null };
 }
@@ -141,18 +142,18 @@ function getInitialCachedPrayers(): PrayerTime[] {
       if (Array.isArray(parsed) && parsed.length >= 5) {
         const fajrEntry = parsed.find(p => p.name?.toLowerCase() === 'fajr');
         const fajrDate = fajrEntry?.date ? new Date(fajrEntry.date) : null;
-        if (fajrDate && getLocalDatePartKey(fajrDate) === todayKey) {
+        if (fajrDate && !isNaN(fajrDate.getTime()) && getLocalDatePartKey(fajrDate) === todayKey) {
           const hydrated = parsed.map(p => ({
             ...p,
-            date: p.date ? new Date(p.date) : undefined,
+            date: p.date && !isNaN(new Date(p.date).getTime()) ? new Date(p.date) : undefined,
           }));
           cachedDashboardPrayers = hydrated;
           return hydrated;
         }
       }
     }
-  } catch {
-    // Safe storage parse fallback
+  } catch (err) {
+    console.warn('[DashboardBootGuard] getInitialCachedPrayers parse fallback:', err);
   }
   // Stale or missing prayers from yesterday: calculate today's offline astronomical prayer times synchronously!
   return computeTodayOfflineDashboardPrayersSync();
@@ -172,7 +173,7 @@ function getInitialNextPrayer(): { name: string; time: string; targetTime: Date 
       const parsed = JSON.parse(stored);
       if (parsed?.name && parsed?.time && parsed.time !== '--:--' && parsed.targetTime) {
         const targetDate = new Date(parsed.targetTime);
-        if (getLocalDatePartKey(targetDate) === todayKey && targetDate.getTime() > now.getTime()) {
+        if (!isNaN(targetDate.getTime()) && getLocalDatePartKey(targetDate) === todayKey && targetDate.getTime() > now.getTime()) {
           cachedNextPrayerName = parsed.name;
           cachedNextPrayerTime = parsed.time;
           cachedTargetTime = targetDate;
@@ -180,8 +181,8 @@ function getInitialNextPrayer(): { name: string; time: string; targetTime: Date 
         }
       }
     }
-  } catch {
-    // Safe storage parse fallback
+  } catch (err) {
+    console.warn('[DashboardBootGuard] getInitialNextPrayer parse fallback:', err);
   }
   // Stale or past targetTime: synchronously compute today's next prayer on frame 1!
   return computeTodayOfflineNextPrayerSync();
@@ -192,12 +193,12 @@ function getInitialSuhoorIftaar(): { suhoorTime: string; suhoorLabel: string; if
     const stored = localStorage.getItem('noor_cached_suhoor_iftaar');
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed?.suhoorTime && parsed?.iftaarTime) {
+      if (parsed && typeof parsed === 'object' && parsed.suhoorTime && parsed.iftaarTime) {
         return parsed;
       }
     }
-  } catch {
-    // Ignore parse error
+  } catch (err) {
+    console.warn('[DashboardBootGuard] getInitialSuhoorIftaar parse fallback:', err);
   }
   return undefined;
 }

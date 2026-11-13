@@ -538,36 +538,50 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
       // Candidate 2: Upcoming prayer start times
       if (Array.isArray(displayedPrayers)) {
         for (const p of displayedPrayers) {
-          if (p.date instanceof Date && p.date.getTime() > nowMs) {
+          if (p?.date instanceof Date && !isNaN(p.date.getTime()) && p.date.getTime() > nowMs) {
             candidates.push(p.date.getTime() + 50);
           }
         }
       }
 
       // Candidate 3: Makruh windows start and end
-      const currentMakruh = evaluateMakruhState(displayedPrayers, currentDate, tf);
-      if (currentMakruh.activeWindow) {
-        candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
-      }
-      for (const w of currentMakruh.allWindows) {
-        if (w.start.getTime() > nowMs) {
-          candidates.push(w.start.getTime() + 50);
+      try {
+        const currentMakruh = evaluateMakruhState(displayedPrayers, currentDate, tf);
+        if (currentMakruh?.activeWindow?.end instanceof Date && !isNaN(currentMakruh.activeWindow.end.getTime())) {
+          candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
         }
+        if (Array.isArray(currentMakruh?.allWindows)) {
+          for (const w of currentMakruh.allWindows) {
+            if (w?.start instanceof Date && !isNaN(w.start.getTime()) && w.start.getTime() > nowMs) {
+              candidates.push(w.start.getTime() + 50);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[PrayerTimesSection] Makruh boundary evaluation fallback:', err);
       }
 
       // Candidate 4: Nafl windows start and end
-      const currentNafl = evaluateNaflPrayers(displayedPrayers, currentDate, tf);
-      if (currentNafl.activeNafl) {
-        candidates.push(currentNafl.activeNafl.end.getTime() + 50);
-      }
-      for (const n of currentNafl.prayers) {
-        if (n.start.getTime() > nowMs) {
-          candidates.push(n.start.getTime() + 50);
+      try {
+        const currentNafl = evaluateNaflPrayers(displayedPrayers, currentDate, tf);
+        if (currentNafl?.activeNafl?.end instanceof Date && !isNaN(currentNafl.activeNafl.end.getTime())) {
+          candidates.push(currentNafl.activeNafl.end.getTime() + 50);
         }
+        if (Array.isArray(currentNafl?.prayers)) {
+          for (const n of currentNafl.prayers) {
+            if (n?.start instanceof Date && !isNaN(n.start.getTime()) && n.start.getTime() > nowMs) {
+              candidates.push(n.start.getTime() + 50);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[PrayerTimesSection] Nafl boundary evaluation fallback:', err);
       }
 
-      const earliestTarget = Math.min(...candidates);
-      const delay = Math.max(100, earliestTarget - nowMs);
+      const validCandidates = candidates.filter((c) => Number.isFinite(c) && c > nowMs);
+      const earliestTarget = validCandidates.length > 0 ? Math.min(...validCandidates) : nextMinuteMs;
+      const rawDelay = earliestTarget - nowMs;
+      const delay = Number.isFinite(rawDelay) ? Math.max(1000, rawDelay) : 60000;
 
       timerId = setTimeout(() => {
         setBoundaryKey((k) => k + 1);

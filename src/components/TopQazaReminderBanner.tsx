@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -85,20 +85,30 @@ export const TopQazaReminderBannerComponent: React.FC<TopQazaReminderBannerProps
     const now = new Date();
     const nowMs = now.getTime();
     const normalizedFmt: '12h' | '24h' = timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
-    const currentMakruh = evaluateMakruhState(prayers || [], now, normalizedFmt);
-
     const candidates: number[] = [];
-    if (currentMakruh.activeWindow) {
-      candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
-    }
-    for (const w of currentMakruh.allWindows) {
-      if (w.start.getTime() > nowMs) {
-        candidates.push(w.start.getTime() + 50);
+
+    try {
+      const currentMakruh = evaluateMakruhState(prayers || [], now, normalizedFmt);
+      if (currentMakruh?.activeWindow?.end instanceof Date && !isNaN(currentMakruh.activeWindow.end.getTime())) {
+        candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
       }
+      if (Array.isArray(currentMakruh?.allWindows)) {
+        for (const w of currentMakruh.allWindows) {
+          if (w?.start instanceof Date && !isNaN(w.start.getTime()) && w.start.getTime() > nowMs) {
+            candidates.push(w.start.getTime() + 50);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[TopQazaReminderBanner] Makruh boundary evaluation fallback:', err);
     }
     candidates.push(nowMs + 3600000); // 1-hour failsafe
 
-    const delay = Math.max(100, Math.min(...candidates) - nowMs);
+    const validCandidates = candidates.filter((c) => Number.isFinite(c) && c > nowMs);
+    const earliest = validCandidates.length > 0 ? Math.min(...validCandidates) : (nowMs + 3600000);
+    const rawDelay = earliest - nowMs;
+    const delay = Number.isFinite(rawDelay) ? Math.max(1000, rawDelay) : 60000;
+
     timerId = setTimeout(() => {
       setBoundaryKey((k) => k + 1);
     }, delay);

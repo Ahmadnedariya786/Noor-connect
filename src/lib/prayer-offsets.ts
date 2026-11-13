@@ -77,24 +77,47 @@ function clampOffset(val: number): number {
 }
 
 /**
- * Adjust a Date object by minutes for a specific prayer
+ * Adjust a Date object by minutes for a specific prayer or directly by minute offset.
+ * Defensively accepts both prayerName ('fajr') and raw minute offset number (e.g. 2).
  */
-export function applyOffsetToDate(date: Date, prayerName: string, offsets?: PrayerMinuteOffsets): Date {
-  if (!date || isNaN(date.getTime())) return date;
-  const currentOffsets = offsets || getPrayerMinuteOffsets();
-  const lower = prayerName.toLowerCase().trim();
-  let key: keyof PrayerMinuteOffsets | null = null;
-  if (lower.includes('fajr')) key = 'fajr';
-  else if (lower.includes('sunrise')) key = 'sunrise';
-  else if (lower.includes('dhuhr') || lower.includes('jummah') || lower.includes('jumu')) key = 'dhuhr';
-  else if (lower.includes('asr')) key = 'asr';
-  else if (lower.includes('maghrib')) key = 'maghrib';
-  else if (lower.includes('isha')) key = 'isha';
+export function applyOffsetToDate(
+  date: Date,
+  prayerNameOrMinutes: string | number,
+  offsets?: PrayerMinuteOffsets
+): Date {
+  try {
+    if (!date || isNaN(date.getTime())) return date;
 
-  if (!key) return date;
-  const minutes = currentOffsets[key] || 0;
-  if (minutes === 0) return date;
-  return new Date(date.getTime() + minutes * 60000);
+    // Direct minute number branch
+    if (typeof prayerNameOrMinutes === 'number') {
+      if (isNaN(prayerNameOrMinutes) || prayerNameOrMinutes === 0) return date;
+      const clamped = clampOffset(prayerNameOrMinutes);
+      return new Date(date.getTime() + clamped * 60000);
+    }
+
+    // String prayer name branch
+    if (typeof prayerNameOrMinutes === 'string') {
+      const currentOffsets = offsets || getPrayerMinuteOffsets();
+      const lower = prayerNameOrMinutes.toLowerCase().trim();
+      let key: keyof PrayerMinuteOffsets | null = null;
+      if (lower.includes('fajr')) key = 'fajr';
+      else if (lower.includes('sunrise')) key = 'sunrise';
+      else if (lower.includes('dhuhr') || lower.includes('jummah') || lower.includes('jumu')) key = 'dhuhr';
+      else if (lower.includes('asr')) key = 'asr';
+      else if (lower.includes('maghrib')) key = 'maghrib';
+      else if (lower.includes('isha')) key = 'isha';
+
+      if (!key) return date;
+      const minutes = currentOffsets[key] || 0;
+      if (minutes === 0) return date;
+      return new Date(date.getTime() + minutes * 60000);
+    }
+
+    return date;
+  } catch (error) {
+    console.warn('[PrayerOffsets] Failed to apply offset to date:', error);
+    return date;
+  }
 }
 
 /**

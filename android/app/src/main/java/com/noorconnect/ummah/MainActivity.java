@@ -21,6 +21,7 @@ import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.webkit.ConsoleMessage;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -52,6 +53,7 @@ import org.json.JSONObject;
 
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebChromeClient;
 import com.getcapacitor.BridgeWebViewClient;
 import com.getcapacitor.WebViewListener;
 import com.noorconnect.ummah.widgets.WidgetBridge;
@@ -114,7 +116,7 @@ public class MainActivity extends BridgeActivity {
 
         // Apply persisted native theme background color immediately to eliminate cold-start flash
         try {
-            String bgHex = getSharedPreferences("noor_native_theme", MODE_PRIVATE).getString("bg_hex", "#070709");
+            String bgHex = getSharedPreferences("noor_native_theme", MODE_PRIVATE).getString("bg_hex", "#050914");
             final int color = android.graphics.Color.parseColor(bgHex);
             getWindow().getDecorView().setBackgroundColor(color);
             getWindow().setStatusBarColor(color);
@@ -139,11 +141,36 @@ public class MainActivity extends BridgeActivity {
         WebView webView = (this.getBridge() != null) ? this.getBridge().getWebView() : null;
         if (webView != null) {
             try {
-                String bgHex = getSharedPreferences("noor_native_theme", MODE_PRIVATE).getString("bg_hex", "#070709");
+                String bgHex = getSharedPreferences("noor_native_theme", MODE_PRIVATE).getString("bg_hex", "#050914");
                 final int color = android.graphics.Color.parseColor(bgHex);
                 webView.setBackgroundColor(color);
             } catch (Exception ignored) {
                 // Ignore invalid color strings safely
+            }
+            try {
+                Bridge bridge = getBridge();
+                if (bridge != null) {
+                    webView.setWebChromeClient(new BridgeWebChromeClient(bridge) {
+                        @Override
+                        public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                            if (consoleMessage != null) {
+                                String msg = consoleMessage.message() + " ["
+                                        + consoleMessage.sourceId() + ":"
+                                        + consoleMessage.lineNumber() + "]";
+                                if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
+                                    Log.e("WebViewConsole", msg);
+                                } else if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.WARNING) {
+                                    Log.w("WebViewConsole", msg);
+                                } else {
+                                    Log.d("WebViewConsole", msg);
+                                }
+                            }
+                            return super.onConsoleMessage(consoleMessage);
+                        }
+                    });
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to set BridgeWebChromeClient with console logging", t);
             }
             try {
                 webView.getSettings().setMediaPlaybackRequiresUserGesture(false);

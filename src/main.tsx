@@ -68,6 +68,7 @@ whenIdle(() => {
 });
 
 import { LanguageProvider } from "@/contexts/LanguageContext-new";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Capacitor } from "@capacitor/core";
 
@@ -78,11 +79,13 @@ try {
   if (rootElement) {
     createRoot(rootElement).render(
       <StrictMode>
-        <ErrorBoundary>
-          <LanguageProvider>
-            <App />
-          </LanguageProvider>
-        </ErrorBoundary>
+        <AppErrorBoundary>
+          <ErrorBoundary>
+            <LanguageProvider>
+              <App />
+            </LanguageProvider>
+          </ErrorBoundary>
+        </AppErrorBoundary>
       </StrictMode>
     );
 

@@ -129,25 +129,33 @@ export const ClockHero: React.FC<ClockHeroProps> = memo(({
       // Candidate 2: Next upcoming prayer start
       if (Array.isArray(prayers)) {
         for (const p of prayers) {
-          if (p.date instanceof Date && p.date.getTime() > nowMs) {
+          if (p?.date instanceof Date && !isNaN(p.date.getTime()) && p.date.getTime() > nowMs) {
             candidates.push(p.date.getTime() + 50);
           }
         }
       }
 
       // Candidate 3: Makruh window boundaries
-      const currentMakruh = evaluateMakruhState(prayers || [], now, normalizedTimeFormat);
-      if (currentMakruh.activeWindow) {
-        candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
-      }
-      for (const w of currentMakruh.allWindows) {
-        if (w.start.getTime() > nowMs) {
-          candidates.push(w.start.getTime() + 50);
+      try {
+        const currentMakruh = evaluateMakruhState(prayers || [], now, normalizedTimeFormat);
+        if (currentMakruh?.activeWindow?.end instanceof Date && !isNaN(currentMakruh.activeWindow.end.getTime())) {
+          candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
         }
+        if (Array.isArray(currentMakruh?.allWindows)) {
+          for (const w of currentMakruh.allWindows) {
+            if (w?.start instanceof Date && !isNaN(w.start.getTime()) && w.start.getTime() > nowMs) {
+              candidates.push(w.start.getTime() + 50);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[ClockHero] Makruh boundary evaluation fallback:', err);
       }
 
-      const earliest = Math.min(...candidates);
-      const delay = Math.max(100, earliest - nowMs);
+      const validCandidates = candidates.filter((c) => Number.isFinite(c) && c > nowMs);
+      const earliest = validCandidates.length > 0 ? Math.min(...validCandidates) : nextMinuteMs;
+      const rawDelay = earliest - nowMs;
+      const delay = Number.isFinite(rawDelay) ? Math.max(1000, rawDelay) : 60000;
 
       timerId = setTimeout(() => {
         setBoundaryKey(k => k + 1);
