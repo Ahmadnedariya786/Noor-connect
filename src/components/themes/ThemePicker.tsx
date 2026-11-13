@@ -18,14 +18,18 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
   const { toast } = useToast();
 
   const handleSelect = (themeId: ThemeId, themeName: string) => {
+    // Synchronous DOM + storage update in current frame
     setTheme(themeId);
     if (onSelected) {
       onSelected(themeId);
     }
-    toast({
-      title: 'Theme Applied',
-      description: `${themeName} is now active.`,
-    });
+    // Defer toast and non-critical work
+    setTimeout(() => {
+      toast({
+        title: 'Theme Applied',
+        description: `${themeName} is now active.`,
+      });
+    }, 0);
   };
 
   return (
@@ -182,10 +186,26 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                   )}
 
                   {/* Card Header Line (NEXT badge + countdown) */}
-                  <div className="flex items-center justify-between mb-1 gap-1 relative z-10">
+                  <div
+                    className="mb-1 relative z-10"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '4px',
+                      width: '100%',
+                      minWidth: 0,
+                    }}
+                  >
                     <span
-                      className="text-[7.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0"
+                      className="rounded-full uppercase"
                       style={{
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        overflow: 'visible',
+                        fontSize: '0.56rem',
+                        fontWeight: 800,
+                        padding: '2px 6px',
                         background: `linear-gradient(135deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
                         color: theme.tokens['--on-accent'],
                         boxShadow: `0 1px 4px ${theme.tokens['--accent-glow']}`,
@@ -194,8 +214,15 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
                       NEXT
                     </span>
                     <span
-                      className="text-[7.5px] font-mono px-1 py-0.5 rounded font-bold shrink-0"
+                      className="font-mono rounded font-bold"
                       style={{
+                        minWidth: 0,
+                        flexShrink: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: '0.56rem',
+                        padding: '2px 4px',
                         background: theme.tokens['--accent-soft'],
                         color: theme.tokens['--accent-text'],
                       }}
