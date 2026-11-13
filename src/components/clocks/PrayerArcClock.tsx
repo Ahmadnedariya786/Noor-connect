@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { type ClockProps } from '@/types/clock';
 import { cn } from '@/lib/utils';
 import { getPrayerDisplayName } from '@/lib/prayer-utils';
+import { useClockSecondTick } from './useClockSecondTick';
 
 function parseTimeTo12hAngle(timeStr?: string, dateObj?: Date | null): number {
   if (dateObj instanceof Date && !isNaN(dateObj.getTime())) {
@@ -48,9 +49,10 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
   previousPrayer,
   isStaticPreview = false,
 }) => {
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
+  const liveNow = useClockSecondTick(isStaticPreview, now);
+  const hours = liveNow.getHours();
+  const minutes = liveNow.getMinutes();
+  const seconds = liveNow.getSeconds();
 
   const hourAngle = ((hours % 12) + minutes / 60 + (isStaticPreview ? 0 : seconds / 3600)) * 30;
   const minuteAngle = (minutes + (isStaticPreview ? 0 : seconds / 60)) * 6;
@@ -98,20 +100,21 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
   const startBadge = useMemo(() => polarToCartesian(center, center, arcRadius, startAngle), [center, arcRadius, startAngle]);
   const endBadge = useMemo(() => polarToCartesian(center, center, arcRadius, endAngle), [center, arcRadius, endAngle]);
 
-  // Countdown string
+  // Countdown string with minute resolution
+  const minuteTimestamp = Math.floor(liveNow.getTime() / 60000) * 60000;
   const countdownText = useMemo(() => {
     if (isStaticPreview) return 'In 1h 45m';
     if (!nextPrayer.targetTime) return 'Approaching';
-    const diff = nextPrayer.targetTime.getTime() - now.getTime();
+    const diff = nextPrayer.targetTime.getTime() - minuteTimestamp;
     if (diff <= 0) return 'Due now';
     const h = Math.floor(diff / (1000 * 60 * 60));
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return h > 0 ? `In ${h}h ${m}m` : `In ${m}m`;
-  }, [now, nextPrayer.targetTime, isStaticPreview]);
+  }, [minuteTimestamp, nextPrayer.targetTime, isStaticPreview]);
 
   const prayerDisplayName = useMemo(() => {
-    return getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime || now) || 'Next';
-  }, [nextPrayer.name, nextPrayer.targetTime, now]);
+    return getPrayerDisplayName(nextPrayer.name, nextPrayer.targetTime || new Date(minuteTimestamp)) || 'Next';
+  }, [nextPrayer.name, nextPrayer.targetTime, minuteTimestamp]);
 
   // 60 Chapter Ring ticks
   const chapterTicks = useMemo(() => {

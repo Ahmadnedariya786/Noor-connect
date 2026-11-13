@@ -97,6 +97,344 @@ interface PremiumDashboardProps {
   toast: any;
 }
 
+interface DailySalahCardProps {
+  widgetId: string;
+  prayers: PrayerTime[];
+  todayWorship: ReturnType<typeof getDayWorshipLog>;
+  ui: any;
+  isRTL: boolean;
+  onNavigateToSalahTracker: () => void;
+  onNavigateToStats: () => void;
+  motionProps: (props: any) => any;
+}
+
+const DailySalahCard = memo(function DailySalahCard({
+  widgetId,
+  prayers,
+  todayWorship,
+  ui,
+  isRTL,
+  onNavigateToSalahTracker,
+  onNavigateToStats,
+  motionProps,
+}: DailySalahCardProps) {
+  const validPrayers = prayers.filter(p => (p.originalName || p.name) !== 'Sunrise');
+  const completedCount = validPrayers.filter(p => p.isCompleted).length;
+
+  return (
+    <m.div
+      key={widgetId}
+      {...motionProps({
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.2, ease: 'easeOut' }
+      })}
+      className="p-5 rounded-[22px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md relative overflow-hidden"
+      style={{
+        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
+      }}
+    >
+      <div className="flex items-center justify-between gap-2 mb-2" style={{ whiteSpace: 'nowrap' }}>
+        <div className="shrink-0">
+          <h3
+            className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {ui.dailySalah}
+          </h3>
+          <div
+            className="w-6 h-[3px] rounded-full mt-1.5"
+            style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
+          />
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0" style={{ whiteSpace: 'nowrap' }}>
+          <button
+            type="button"
+            onClick={onNavigateToSalahTracker}
+            className="px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
+            style={{
+              background: 'var(--accent-soft)',
+              color: 'var(--accent-text)',
+              borderColor: 'var(--accent)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span>{ui.journal} {isRTL ? '←' : '→'}</span>
+          </button>
+          <div
+            className="px-2.5 py-1 rounded-full text-xs font-bold"
+            style={{
+              background: 'var(--surface-2)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span dir="ltr" className="inline-block tabular-nums">{completedCount} / 5</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 5-Segment Horizontal Progress Bar */}
+      <div className="grid grid-cols-5 gap-1.5 mb-4">
+        {[0, 1, 2, 3, 4].map((idx) => {
+          const isFilled = idx < completedCount;
+          return (
+            <div
+              key={idx}
+              className="h-1.5 rounded-full overflow-hidden transition-all duration-300"
+              style={{
+                background: isFilled
+                  ? 'linear-gradient(90deg, var(--accent), var(--accent-2))'
+                  : 'var(--surface-2)',
+                border: isFilled ? 'none' : '1px solid var(--border)',
+                boxShadow: isFilled ? '0 0 8px var(--accent-glow)' : 'none',
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* 5 Prayer Vertical Glass Pods */}
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+          gap: '6px',
+        }}
+      >
+        {validPrayers.map((prayer) => {
+          const displayName = getPrayerDisplayName(prayer.originalName || prayer.name, prayer.date || new Date());
+          return (
+            <button
+              key={`tracker-${prayer.name}`}
+              type="button"
+              onClick={() => prayer.onCheckIn?.()}
+              className="flex flex-col items-center justify-between gap-2 rounded-[14px] transition-all duration-300 group relative"
+              style={{
+                minWidth: 0,
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '10px 2px',
+                ...(prayer.isCompleted ? {
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--accent)',
+                  boxShadow: '0 0 14px var(--accent-glow)',
+                } : {
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                }),
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 relative shrink-0"
+                style={prayer.isCompleted
+                  ? { background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 0 10px var(--accent-glow)' }
+                  : { background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+              >
+                {prayer.isCompleted ? (
+                  <Check className="w-5 h-5 stroke-[2.8]" />
+                ) : (
+                  prayer.icon
+                )}
+                {prayer.isCompleted && (
+                  <span
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{
+                      background: 'var(--accent)',
+                      border: '1.5px solid var(--surface-2)',
+                      boxShadow: '0 0 6px var(--accent-glow)',
+                    }}
+                  >
+                    <Check className="w-2.5 h-2.5 stroke-[3] text-[var(--on-accent)]" />
+                  </span>
+                )}
+              </div>
+              <span
+                className="font-semibold text-center"
+                style={{
+                  fontSize: 'clamp(0.64rem, 2.6vw, 0.70rem)',
+                  fontWeight: 600,
+                  letterSpacing: '-0.01em',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  color: prayer.isCompleted ? 'var(--accent-text)' : 'var(--text-secondary)',
+                }}
+              >
+                {displayName}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Compact Live Status Chips for Sunnah Rawatib & Fasting */}
+      {(() => {
+        const sunnahCount =
+          (todayWorship.sunnah?.fajr || 0) +
+          (todayWorship.sunnah?.dhuhr || 0) +
+          (todayWorship.sunnah?.asr || 0) +
+          (todayWorship.sunnah?.maghrib || 0) +
+          (todayWorship.sunnah?.isha || 0);
+        const isFasted = todayWorship.fasted;
+        return (
+          <div
+            className="mt-3 pt-3 border-t border-[var(--border)]"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '8px',
+            }}
+          >
+            <button
+              type="button"
+              onClick={onNavigateToSalahTracker}
+              className="rounded-xl border flex items-center justify-between transition-all hover:border-[var(--accent)] active:scale-98"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: 'var(--border)',
+                fontSize: '0.72rem',
+                whiteSpace: 'nowrap',
+                padding: '7px 10px',
+              }}
+            >
+              <span className="font-semibold text-[var(--text-primary)]">
+                ✦ {ui.sunnah} <span dir="ltr" className="inline-block tabular-nums">{sunnahCount} / 12</span>
+              </span>
+              <span className="text-[var(--accent-text)] font-bold text-xs ml-1">
+                {isRTL ? '←' : '→'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onNavigateToSalahTracker}
+              className="rounded-xl border flex items-center justify-between transition-all hover:border-[var(--accent)] active:scale-98"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: isFasted ? 'var(--accent)' : 'var(--border)',
+                fontSize: '0.72rem',
+                whiteSpace: 'nowrap',
+                padding: '7px 10px',
+              }}
+            >
+              <span
+                className={`font-semibold ${isFasted ? 'text-emerald-400' : 'text-[var(--text-primary)]'
+                  }`}
+              >
+                {isFasted ? `🌕 ${ui.fastKept} ✓` : `🌕 ${ui.fastLog} ${isRTL ? '←' : '→'}`}
+              </span>
+            </button>
+          </div>
+        );
+      })()}
+
+      {/* Unified 7-Day Weekly Progress Mini-Pill Bar */}
+      {(() => {
+        const history = getPrayerHistory(7);
+        const todayStr = new Date().toDateString();
+        const daysData = [...history].reverse().map((day) => {
+          const dt = new Date(day.date);
+          const isToday = dt.toDateString() === todayStr;
+          const rawDay = dt.toLocaleDateString('en-US', { weekday: 'short' });
+          const dayLabel = rawDay.slice(0, 3);
+          const count = [day.fajr, day.dhuhr, day.asr, day.maghrib, day.isha].filter(Boolean).length;
+          return { dayLabel, count, isToday, dateStr: day.date };
+        });
+
+        return (
+          <div className="mt-3 pt-3 border-t border-[var(--border)]">
+            <div className="flex items-center justify-between mb-2">
+              <span
+                className="font-bold tracking-wider uppercase truncate"
+                style={{
+                  fontSize: '0.68rem',
+                  color: 'var(--text-secondary)',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                7-DAY SALAH PROGRESS
+              </span>
+              <button
+                type="button"
+                onClick={onNavigateToStats}
+                className="text-[10px] font-bold text-[var(--accent-text)] hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>Stats</span>
+                <span>{isRTL ? '←' : '→'}</span>
+              </button>
+            </div>
+
+            <div
+              className="grid grid-cols-7 gap-1"
+              style={{ width: '100%', boxSizing: 'border-box' }}
+            >
+              {daysData.map((d, i) => (
+                <button
+                  key={d.dateStr || i}
+                  type="button"
+                  onClick={onNavigateToStats}
+                  className="flex flex-col items-center justify-between py-1.5 px-0.5 rounded-xl border transition-all active:scale-95 cursor-pointer"
+                  style={{
+                    background: d.isToday ? 'var(--accent-soft)' : 'var(--surface-2)',
+                    borderColor: d.isToday
+                      ? 'var(--accent)'
+                      : d.count === 5
+                        ? 'rgba(16, 185, 129, 0.4)'
+                        : 'var(--border)',
+                    boxShadow: d.isToday ? '0 0 10px var(--accent-glow)' : 'none',
+                    minWidth: 0,
+                  }}
+                  title={`${d.dayLabel}: ${d.count}/5 prayed`}
+                >
+                  <span
+                    className="font-bold text-[9px] truncate"
+                    style={{
+                      color: d.isToday ? 'var(--accent-text)' : 'var(--text-secondary)',
+                    }}
+                  >
+                    {d.dayLabel}
+                  </span>
+
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center my-0.5 font-bold tabular-nums"
+                    style={{
+                      fontSize: '9px',
+                      background: d.count === 5
+                        ? 'var(--accent)'
+                        : d.count > 0
+                          ? 'var(--surface)'
+                          : 'rgba(255, 255, 255, 0.05)',
+                      color: d.count === 5
+                        ? 'var(--on-accent)'
+                        : d.count > 0
+                          ? 'var(--text-primary)'
+                          : 'var(--text-secondary)',
+                      border: d.count === 5 ? 'none' : '1px solid var(--border)',
+                    }}
+                  >
+                    {d.count}
+                  </div>
+
+                  <span
+                    className="text-[8px] font-semibold tabular-nums"
+                    style={{
+                      color: d.count === 5 ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      opacity: 0.8,
+                    }}
+                  >
+                    /5
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+    </m.div>
+  );
+});
+
 function PremiumDashboardInner({
   hijriDate,
   nextPrayer,
@@ -142,11 +480,15 @@ function PremiumDashboardInner({
     if (!prayers || prayers.length === 0) return;
 
     const FARD_PRAYERS = ['fajr', 'dhuhr', 'jummah', 'asr', 'maghrib', 'isha'];
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+    let isCancelled = false;
 
     const checkDueNow = () => {
+      if (isCancelled) return;
       const now = new Date();
       const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      let nextUpcomingDelayMs = 60000;
 
       for (const p of prayers) {
         const rawName = (p.originalName || p.name || '').trim();
@@ -184,13 +526,34 @@ function PremiumDashboardInner({
             }
             break;
           }
+        } else if (prayerSec > nowSec) {
+          const diffMs = (prayerSec - nowSec) * 1000 - now.getMilliseconds();
+          if (diffMs > 0 && diffMs < nextUpcomingDelayMs) {
+            nextUpcomingDelayMs = diffMs;
+          }
         }
       }
+
+      // Schedule next check for exact next prayer start (or next minute boundary)
+      const delay = Math.max(500, Math.min(nextUpcomingDelayMs, 60000));
+      timerId = setTimeout(checkDueNow, delay);
     };
 
     checkDueNow();
-    const intervalId = setInterval(checkDueNow, 1000);
-    return () => clearInterval(intervalId);
+
+    const handleResume = () => {
+      checkDueNow();
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) handleResume();
+    });
+
+    return () => {
+      isCancelled = true;
+      if (timerId !== null) clearTimeout(timerId);
+      document.removeEventListener('visibilitychange', handleResume);
+    };
   }, [prayers]);
 
   const qiblaBearing = React.useMemo(() => {
@@ -230,7 +593,7 @@ function PremiumDashboardInner({
     setWidgets(prevWidgets => {
       const ramadanWidget = prevWidgets.find(w => w.id === 'ramadan');
       if (ramadanWidget) {
-        return prevWidgets.map(w => 
+        return prevWidgets.map(w =>
           w.id === 'ramadan' ? { ...w, visible: isRamadan } : w
         );
       }
@@ -294,20 +657,20 @@ function PremiumDashboardInner({
 
   const isFirstMountRef = React.useRef(!hasHomeEntranceCompleted());
   const shouldAnimateEntrance = animationEnabled && tier !== 'low' && tier !== 'minimal' && isFirstMountRef.current;
-  const motionProps = (props: any) => shouldAnimateEntrance ? props : {};
+  const motionProps = React.useCallback((props: any) => shouldAnimateEntrance ? props : {}, [shouldAnimateEntrance]);
+
+  const handleNavigateToSalahTracker = React.useCallback(() => {
+    navigate('/services/salah-tracker');
+  }, [navigate]);
+
+  const handleNavigateToStats = React.useCallback(() => {
+    navigate('/prayer-stats');
+  }, [navigate]);
 
   return (
     <div
       className="min-h-screen flex flex-col bg-background text-foreground relative overflow-x-hidden"
     >
-      {/* ── Ambient Top Radial Aura across all 7 themes ── */}
-      <div
-        className="pointer-events-none absolute top-0 left-0 right-0 h-[380px] z-0 select-none"
-        style={{
-          background: 'radial-gradient(circle at 50% 0%, var(--accent-soft) 0%, transparent 65%)',
-        }}
-        aria-hidden="true"
-      />
       {/* Manual Location Dialog */}
       {showManualLocationDialog && (
         <div
@@ -568,320 +931,18 @@ function PremiumDashboardInner({
                 }
 
                 case 'salah-tracker': {
-                  const validPrayers = prayers.filter(p => (p.originalName || p.name) !== 'Sunrise');
-                  const completedCount = validPrayers.filter(p => p.isCompleted).length;
                   return (
-                    <m.div
+                    <DailySalahCard
                       key={widget.id}
-                      {...motionProps({
-                        initial: { opacity: 0, y: 8 },
-                        animate: { opacity: 1, y: 0 },
-                        transition: { duration: 0.2, ease: 'easeOut' }
-                      })}
-                      className="p-5 rounded-[22px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md relative overflow-hidden"
-                      style={{
-                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
-                      }}
-                    >
-                      <div className="flex items-center justify-between gap-2 mb-2" style={{ whiteSpace: 'nowrap' }}>
-                        <div className="shrink-0">
-                          <h3
-                            className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]"
-                            style={{ whiteSpace: 'nowrap' }}
-                          >
-                            {ui.dailySalah}
-                          </h3>
-                          <div
-                            className="w-6 h-[3px] rounded-full mt-1.5"
-                            style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
-                          />
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0" style={{ whiteSpace: 'nowrap' }}>
-                          <button
-                            type="button"
-                            onClick={() => navigate('/services/salah-tracker')}
-                            className="px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
-                            style={{
-                              background: 'var(--accent-soft)',
-                              color: 'var(--accent-text)',
-                              borderColor: 'var(--accent)',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <span>{ui.journal} {isRTL ? '←' : '→'}</span>
-                          </button>
-                          <div
-                            className="px-2.5 py-1 rounded-full text-xs font-bold"
-                            style={{
-                              background: 'var(--surface-2)',
-                              color: 'var(--text-primary)',
-                              border: '1px solid var(--border)',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <span dir="ltr" className="inline-block tabular-nums">{completedCount} / 5</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 5-Segment Horizontal Progress Bar */}
-                      <div className="grid grid-cols-5 gap-1.5 mb-4">
-                        {[0, 1, 2, 3, 4].map((idx) => {
-                          const isFilled = idx < completedCount;
-                          return (
-                            <div
-                              key={idx}
-                              className="h-1.5 rounded-full overflow-hidden transition-all duration-300"
-                              style={{
-                                background: isFilled
-                                  ? 'linear-gradient(90deg, var(--accent), var(--accent-2))'
-                                  : 'var(--surface-2)',
-                                border: isFilled ? 'none' : '1px solid var(--border)',
-                                boxShadow: isFilled ? '0 0 8px var(--accent-glow)' : 'none',
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-
-                      {/* 5 Prayer Vertical Glass Pods */}
-                      <div
-                        className="grid"
-                        style={{
-                          gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-                          gap: '6px',
-                        }}
-                      >
-                        {validPrayers.map((prayer) => {
-                          const displayName = getPrayerDisplayName(prayer.originalName || prayer.name, prayer.date || new Date());
-                          return (
-                            <button
-                              key={`tracker-${prayer.name}`}
-                              type="button"
-                              onClick={() => prayer.onCheckIn?.()}
-                              className="flex flex-col items-center justify-between gap-2 rounded-[14px] transition-all duration-300 group relative"
-                              style={{
-                                minWidth: 0,
-                                width: '100%',
-                                boxSizing: 'border-box',
-                                padding: '10px 2px',
-                                ...(prayer.isCompleted ? {
-                                  background: 'var(--surface-2)',
-                                  border: '1px solid var(--accent)',
-                                  boxShadow: '0 0 14px var(--accent-glow)',
-                                } : {
-                                  background: 'var(--surface-2)',
-                                  border: '1px solid var(--border)',
-                                }),
-                              }}
-                            >
-                              <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 relative shrink-0"
-                                style={prayer.isCompleted
-                                  ? { background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 0 10px var(--accent-glow)' }
-                                  : { background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                              >
-                                {prayer.isCompleted ? (
-                                  <Check className="w-5 h-5 stroke-[2.8]" />
-                                ) : (
-                                  prayer.icon
-                                )}
-                                {prayer.isCompleted && (
-                                  <span
-                                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
-                                    style={{
-                                      background: 'var(--accent)',
-                                      border: '1.5px solid var(--surface-2)',
-                                      boxShadow: '0 0 6px var(--accent-glow)',
-                                    }}
-                                  >
-                                    <Check className="w-2.5 h-2.5 stroke-[3] text-[var(--on-accent)]" />
-                                  </span>
-                                )}
-                              </div>
-                              <span
-                                className="font-semibold text-center"
-                                style={{
-                                  fontSize: 'clamp(0.64rem, 2.6vw, 0.70rem)',
-                                  fontWeight: 600,
-                                  letterSpacing: '-0.01em',
-                                  whiteSpace: 'nowrap',
-                                  textAlign: 'center',
-                                  color: prayer.isCompleted ? 'var(--accent-text)' : 'var(--text-secondary)',
-                                }}
-                              >
-                                {displayName}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Compact Live Status Chips for Sunnah Rawatib & Fasting */}
-                      {(() => {
-                        const sunnahCount =
-                          (todayWorship.sunnah?.fajr || 0) +
-                          (todayWorship.sunnah?.dhuhr || 0) +
-                          (todayWorship.sunnah?.asr || 0) +
-                          (todayWorship.sunnah?.maghrib || 0) +
-                          (todayWorship.sunnah?.isha || 0);
-                        const isFasted = todayWorship.fasted;
-                        return (
-                          <div
-                            className="mt-3 pt-3 border-t border-[var(--border)]"
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 1fr',
-                              gap: '8px',
-                            }}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => navigate('/services/salah-tracker')}
-                              className="rounded-xl border flex items-center justify-between transition-all hover:border-[var(--accent)] active:scale-98"
-                              style={{
-                                background: 'var(--surface-2)',
-                                borderColor: 'var(--border)',
-                                fontSize: '0.72rem',
-                                whiteSpace: 'nowrap',
-                                padding: '7px 10px',
-                              }}
-                            >
-                              <span className="font-semibold text-[var(--text-primary)]">
-                                ✦ {ui.sunnah} <span dir="ltr" className="inline-block tabular-nums">{sunnahCount} / 12</span>
-                              </span>
-                              <span className="text-[var(--accent-text)] font-bold text-xs ml-1">
-                                {isRTL ? '←' : '→'}
-                              </span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => navigate('/services/salah-tracker')}
-                              className="rounded-xl border flex items-center justify-between transition-all hover:border-[var(--accent)] active:scale-98"
-                              style={{
-                                background: 'var(--surface-2)',
-                                borderColor: isFasted ? 'var(--accent)' : 'var(--border)',
-                                fontSize: '0.72rem',
-                                whiteSpace: 'nowrap',
-                                padding: '7px 10px',
-                              }}
-                            >
-                              <span
-                                className={`font-semibold ${
-                                  isFasted ? 'text-emerald-400' : 'text-[var(--text-primary)]'
-                                }`}
-                              >
-                                {isFasted ? `🌕 ${ui.fastKept} ✓` : `🌕 ${ui.fastLog} ${isRTL ? '←' : '→'}`}
-                              </span>
-                            </button>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Unified 7-Day Weekly Progress Mini-Pill Bar */}
-                      {(() => {
-                        const history = getPrayerHistory(7);
-                        const todayStr = new Date().toDateString();
-                        const daysData = [...history].reverse().map((day) => {
-                          const dt = new Date(day.date);
-                          const isToday = dt.toDateString() === todayStr;
-                          const rawDay = dt.toLocaleDateString('en-US', { weekday: 'short' });
-                          const dayLabel = rawDay.slice(0, 3);
-                          const count = [day.fajr, day.dhuhr, day.asr, day.maghrib, day.isha].filter(Boolean).length;
-                          return { dayLabel, count, isToday, dateStr: day.date };
-                        });
-
-                        return (
-                          <div className="mt-3 pt-3 border-t border-[var(--border)]">
-                            <div className="flex items-center justify-between mb-2">
-                              <span
-                                className="font-bold tracking-wider uppercase truncate"
-                                style={{
-                                  fontSize: '0.68rem',
-                                  color: 'var(--text-secondary)',
-                                  letterSpacing: '0.04em',
-                                }}
-                              >
-                                7-DAY SALAH PROGRESS
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => navigate('/prayer-stats')}
-                                className="text-[10px] font-bold text-[var(--accent-text)] hover:underline flex items-center gap-0.5 cursor-pointer"
-                              >
-                                <span>Stats</span>
-                                <span>{isRTL ? '←' : '→'}</span>
-                              </button>
-                            </div>
-
-                            <div
-                              className="grid grid-cols-7 gap-1"
-                              style={{ width: '100%', boxSizing: 'border-box' }}
-                            >
-                              {daysData.map((d, i) => (
-                                <button
-                                  key={d.dateStr || i}
-                                  type="button"
-                                  onClick={() => navigate('/prayer-stats')}
-                                  className="flex flex-col items-center justify-between py-1.5 px-0.5 rounded-xl border transition-all active:scale-95 cursor-pointer"
-                                  style={{
-                                    background: d.isToday ? 'var(--accent-soft)' : 'var(--surface-2)',
-                                    borderColor: d.isToday
-                                      ? 'var(--accent)'
-                                      : d.count === 5
-                                      ? 'rgba(16, 185, 129, 0.4)'
-                                      : 'var(--border)',
-                                    boxShadow: d.isToday ? '0 0 10px var(--accent-glow)' : 'none',
-                                    minWidth: 0,
-                                  }}
-                                  title={`${d.dayLabel}: ${d.count}/5 prayed`}
-                                >
-                                  <span
-                                    className="font-bold text-[9px] truncate"
-                                    style={{
-                                      color: d.isToday ? 'var(--accent-text)' : 'var(--text-secondary)',
-                                    }}
-                                  >
-                                    {d.dayLabel}
-                                  </span>
-
-                                  <div
-                                    className="w-5 h-5 rounded-full flex items-center justify-center my-0.5 font-bold tabular-nums"
-                                    style={{
-                                      fontSize: '9px',
-                                      background: d.count === 5
-                                        ? 'var(--accent)'
-                                        : d.count > 0
-                                        ? 'var(--surface)'
-                                        : 'rgba(255, 255, 255, 0.05)',
-                                      color: d.count === 5
-                                        ? 'var(--on-accent)'
-                                        : d.count > 0
-                                        ? 'var(--text-primary)'
-                                        : 'var(--text-secondary)',
-                                      border: d.count === 5 ? 'none' : '1px solid var(--border)',
-                                    }}
-                                  >
-                                    {d.count}
-                                  </div>
-
-                                  <span
-                                    className="text-[8px] font-semibold tabular-nums"
-                                    style={{
-                                      color: d.count === 5 ? 'var(--accent-text)' : 'var(--text-secondary)',
-                                      opacity: 0.8,
-                                    }}
-                                  >
-                                    /5
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </m.div>
+                      widgetId={widget.id}
+                      prayers={prayers}
+                      todayWorship={todayWorship}
+                      ui={ui}
+                      isRTL={isRTL}
+                      onNavigateToSalahTracker={handleNavigateToSalahTracker}
+                      onNavigateToStats={handleNavigateToStats}
+                      motionProps={motionProps}
+                    />
                   );
                 }
 

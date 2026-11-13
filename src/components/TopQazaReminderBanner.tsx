@@ -38,7 +38,7 @@ function formatPillDate(dateStr: string): string {
   }
 }
 
-export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
+export const TopQazaReminderBannerComponent: React.FC<TopQazaReminderBannerProps> = ({
   prayers,
   timeFormat = '12h',
 }) => {
@@ -48,7 +48,7 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
   const [stats, setStats] = useState(() => getQazaStats());
   const [dateRecords, setDateRecords] = useState<DateWiseQazaRecord[]>(() => getDateWiseQazaList());
   const [rotationIdx, setRotationIdx] = useState(0);
-  const [now, setNow] = useState<Date>(() => new Date());
+  const [boundaryKey, setBoundaryKey] = useState(0);
 
   const refreshData = useCallback(() => {
     setStats(getQazaStats());
@@ -70,21 +70,48 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
     };
   }, [refreshData]);
 
-  // Rotate reminder message every 10 seconds and tick clock every 5 seconds for makruh check
+  // Rotate reminder message every 10 seconds without forcing clock re-renders
   useEffect(() => {
     const interval = setInterval(() => {
       setRotationIdx((prev) => (prev + 1) % 2);
-      setNow(new Date());
     }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Makruh time calculation
+  // Makruh time calculation updated on boundaries
+  useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+    const now = new Date();
+    const nowMs = now.getTime();
+    const normalizedFmt: '12h' | '24h' = timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
+    const currentMakruh = evaluateMakruhState(prayers || [], now, normalizedFmt);
+
+    const candidates: number[] = [];
+    if (currentMakruh.activeWindow) {
+      candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
+    }
+    for (const w of currentMakruh.allWindows) {
+      if (w.start.getTime() > nowMs) {
+        candidates.push(w.start.getTime() + 50);
+      }
+    }
+    candidates.push(nowMs + 3600000); // 1-hour failsafe
+
+    const delay = Math.max(100, Math.min(...candidates) - nowMs);
+    timerId = setTimeout(() => {
+      setBoundaryKey((k) => k + 1);
+    }, delay);
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [prayers, timeFormat, boundaryKey]);
+
   const makruhState = useMemo(() => {
     const normalizedFmt: '12h' | '24h' = timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
-    return evaluateMakruhState(prayers || [], now, normalizedFmt);
-  }, [prayers, now, timeFormat]);
+    return evaluateMakruhState(prayers || [], new Date(), normalizedFmt);
+  }, [prayers, timeFormat, boundaryKey]);
 
   const totalPendingQaza = stats.total;
 
@@ -315,4 +342,5 @@ export const TopQazaReminderBanner: React.FC<TopQazaReminderBannerProps> = ({
   );
 };
 
+export const TopQazaReminderBanner = memo(TopQazaReminderBannerComponent);
 export default TopQazaReminderBanner;

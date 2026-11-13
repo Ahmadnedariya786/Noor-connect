@@ -2,23 +2,26 @@ import React, { useMemo } from 'react';
 import { type ClockProps } from '@/types/clock';
 import { getMoonPhase, getMoonSvgPath } from '@/utils/moonPhase';
 import { cn } from '@/lib/utils';
+import { useClockSecondTick } from './useClockSecondTick';
 
 export const CrescentMoonClock: React.FC<ClockProps> = ({
   now,
   hijriDate,
   isStaticPreview = false,
 }) => {
+  const liveNow = useClockSecondTick(isStaticPreview, now);
   // Hand rotation calculations
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
+  const hours = liveNow.getHours();
+  const minutes = liveNow.getMinutes();
+  const seconds = liveNow.getSeconds();
 
   const hourAngle = ((hours % 12) + minutes / 60 + (isStaticPreview ? 0 : seconds / 3600)) * 30;
   const minuteAngle = (minutes + (isStaticPreview ? 0 : seconds / 60)) * 6;
   const secondAngle = seconds * 6;
 
-  // Real-time Moon phase computation
-  const moonInfo = useMemo(() => getMoonPhase(now), [now]);
+  // Real-time Moon phase computation (changes daily)
+  const dayKey = `${liveNow.getFullYear()}-${liveNow.getMonth()}-${liveNow.getDate()}`;
+  const moonInfo = useMemo(() => getMoonPhase(liveNow), [dayKey]);
 
   // ViewBox: 240 x 240
   const center = 120;

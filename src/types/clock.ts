@@ -15,7 +15,7 @@ export interface ClockPrayerInfo {
 }
 
 export interface ClockProps {
-  now: Date;
+  now?: Date;
   timeFormat: '12h' | '24h';
   hijriDate: string;
   nextPrayer: {

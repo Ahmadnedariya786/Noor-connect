@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { type ClockProps } from '@/types/clock';
 import { cn } from '@/lib/utils';
 import { getPrayerDisplayName } from '@/lib/prayer-utils';
+import { useClockSecondTick } from './useClockSecondTick';
 
 export const MosqueLedClock: React.FC<ClockProps> = ({
   now,
@@ -10,12 +11,13 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
   nextPrayer,
   isStaticPreview = false,
 }) => {
+  const liveNow = useClockSecondTick(isStaticPreview, now);
   const is12 = timeFormat === '12h';
 
   // Digits formatting
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
+  const hours = liveNow.getHours();
+  const minutes = liveNow.getMinutes();
+  const seconds = liveNow.getSeconds();
 
   const displayHours = is12
     ? String(hours % 12 || 12).padStart(2, '0')
@@ -24,27 +26,27 @@ export const MosqueLedClock: React.FC<ClockProps> = ({
   const displaySeconds = String(seconds).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
 
-  // Compute live countdown string
+  // Compute live countdown string with minute resolution
+  const minuteTimestamp = Math.floor(liveNow.getTime() / 60000) * 60000;
   const countdownText = useMemo(() => {
     if (isStaticPreview) return 'IN 2h 15m';
     if (!nextPrayer?.targetTime) return 'APPROACHING';
 
-    const diff = nextPrayer.targetTime.getTime() - now.getTime();
+    const diff = nextPrayer.targetTime.getTime() - minuteTimestamp;
     if (diff <= 0) return 'DUE NOW';
 
     const h = Math.floor(diff / (1000 * 60 * 60));
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((diff % (1000 * 60)) / 1000);
 
     if (h > 0) {
-      return `IN ${h}h ${m}m ${s}s`;
+      return `IN ${h}h ${m}m`;
     }
-    return `IN ${m}m ${s}s`;
-  }, [now, nextPrayer?.targetTime, isStaticPreview]);
+    return `IN ${m}m`;
+  }, [minuteTimestamp, nextPrayer?.targetTime, isStaticPreview]);
 
   const prayerName = useMemo(() => {
-    return (getPrayerDisplayName(nextPrayer?.name, nextPrayer?.targetTime || now) || 'PRAYER').toUpperCase();
-  }, [nextPrayer?.name, nextPrayer?.targetTime, now]);
+    return (getPrayerDisplayName(nextPrayer?.name, nextPrayer?.targetTime || new Date(minuteTimestamp)) || 'PRAYER').toUpperCase();
+  }, [nextPrayer?.name, nextPrayer?.targetTime, minuteTimestamp]);
 
   return (
     <div

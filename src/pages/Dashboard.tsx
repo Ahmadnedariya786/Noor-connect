@@ -38,6 +38,7 @@ import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { getPrayerDisplayName, isMatchingPrayer } from "@/lib/prayer-utils";
 import { calculatePrayerTimes, formatPrayerTime } from "@/lib/prayer-calculator";
 import { loadStoredLocation } from "@/lib/location-state";
+import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 
 import { hasHomeEntranceCompleted, markHomeEntranceCompleted } from "@/lib/home-entrance";
 import { getPrayerMinuteOffsets, applyOffsetsToTimings, applyOffsetToDate, PRAYER_OFFSETS_CHANGED_EVENT } from "@/lib/prayer-offsets";
@@ -50,9 +51,24 @@ let cachedTargetTime: Date | null = null;
 let cachedRawTimings: AladhanPrayerTime | null = null;
 let cachedOffsetsFingerprint: string = "";
 
+function getLocalDatePartKey(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function computeTodayOfflineDashboardPrayersSync(): PrayerTime[] {
   try {
+    const storedLoc = localStorage.getItem(LOCATION_STORAGE_KEY);
+    if (!storedLoc) {
+      // First ever launch with no saved location: keep loading state
+      return [];
+    }
     const loc = loadStoredLocation();
+    if (!loc || typeof loc.latitude !== 'number' || typeof loc.longitude !== 'number') {
+      return [];
+    }
     const today = new Date();
     const times = calculatePrayerTimes(loc.latitude, loc.longitude, today);
     const offsets = getPrayerMinuteOffsets();
@@ -111,9 +127,10 @@ function computeTodayOfflineNextPrayerSync(): { name: string; time: string; targ
 }
 
 function getInitialCachedPrayers(): PrayerTime[] {
+  const todayKey = getLocalDatePartKey(new Date());
   if (cachedDashboardPrayers.length > 0) {
     const first = cachedDashboardPrayers[0];
-    if (first?.date && first.date.toDateString() === new Date().toDateString()) {
+    if (first?.date && getLocalDatePartKey(first.date) === todayKey) {
       return cachedDashboardPrayers;
     }
   }
@@ -124,7 +141,7 @@ function getInitialCachedPrayers(): PrayerTime[] {
       if (Array.isArray(parsed) && parsed.length >= 5) {
         const fajrEntry = parsed.find(p => p.name?.toLowerCase() === 'fajr');
         const fajrDate = fajrEntry?.date ? new Date(fajrEntry.date) : null;
-        if (fajrDate && fajrDate.toDateString() === new Date().toDateString()) {
+        if (fajrDate && getLocalDatePartKey(fajrDate) === todayKey) {
           const hydrated = parsed.map(p => ({
             ...p,
             date: p.date ? new Date(p.date) : undefined,
@@ -142,9 +159,10 @@ function getInitialCachedPrayers(): PrayerTime[] {
 }
 
 function getInitialNextPrayer(): { name: string; time: string; targetTime: Date | null } {
+  const now = new Date();
+  const todayKey = getLocalDatePartKey(now);
   if (cachedNextPrayerName && cachedNextPrayerTime && cachedTargetTime) {
-    const now = new Date();
-    if (cachedTargetTime.getTime() > now.getTime() && cachedTargetTime.toDateString() === now.toDateString()) {
+    if (cachedTargetTime.getTime() > now.getTime() && getLocalDatePartKey(cachedTargetTime) === todayKey) {
       return { name: cachedNextPrayerName, time: cachedNextPrayerTime, targetTime: cachedTargetTime };
     }
   }
@@ -154,8 +172,7 @@ function getInitialNextPrayer(): { name: string; time: string; targetTime: Date 
       const parsed = JSON.parse(stored);
       if (parsed?.name && parsed?.time && parsed.time !== '--:--' && parsed.targetTime) {
         const targetDate = new Date(parsed.targetTime);
-        const now = new Date();
-        if (targetDate.toDateString() === now.toDateString() && targetDate.getTime() > now.getTime()) {
+        if (getLocalDatePartKey(targetDate) === todayKey && targetDate.getTime() > now.getTime()) {
           cachedNextPrayerName = parsed.name;
           cachedNextPrayerTime = parsed.time;
           cachedTargetTime = targetDate;
@@ -376,14 +393,17 @@ export default function Dashboard() {
         { name: "Isha", time: formatTimeFromAPI(timings.Isha), date: parseTimeToDate(timings.Isha) },
       ];
 
+      const isPrayersDiff = prayers.length !== prayerList.length || prayerList.some((p, i) => p.name !== prayers[i]?.name || p.time !== prayers[i]?.time);
+      if (isPrayersDiff) {
+        setPrayers(prayerList);
+      }
       cachedDashboardPrayers = prayerList;
-      setPrayers(prayerList);
 
       // Suhoor & Iftaar times derived strictly from calculation output per Guard 1
       const sTime = timings.Imsak ? formatTimeFromAPI(timings.Imsak) : formatTimeFromAPI(timings.Fajr);
       const sLabel = "Suhoor";
       const iTime = formatTimeFromAPI(timings.Maghrib);
-      setSuhoorIftaar({
+      setSuhoorIftaar(prev => (prev?.suhoorTime === sTime && prev?.iftaarTime === iTime) ? prev : {
         suhoorTime: sTime,
         suhoorLabel: sLabel,
         iftaarTime: iTime,
@@ -395,15 +415,19 @@ export default function Dashboard() {
       if (nextEvent) {
         const displayName = getPrayerDisplayName(nextEvent.name, nextEvent.targetDate);
         cachedNextPrayerName = displayName;
-        setNextPrayerName(displayName);
+        if (nextPrayerName !== displayName) {
+          setNextPrayerName(displayName);
+        }
         const formattedTime = nextEvent.targetDate
           ? formatTime(nextEvent.targetDate, timeFormat)
           : (nextEvent.time ? formatTimeFromAPI(nextEvent.time) : "--:--");
         cachedNextPrayerTime = formattedTime;
-        setNextPrayerTime(formattedTime);
+        if (nextPrayerTime !== formattedTime) {
+          setNextPrayerTime(formattedTime);
+        }
         if (nextEvent.targetDate) {
           cachedTargetTime = nextEvent.targetDate;
-          setTargetTime(nextEvent.targetDate);
+          setTargetTime(prev => (!prev || prev.getTime() !== nextEvent.targetDate!.getTime()) ? nextEvent.targetDate! : prev);
         }
       }
 

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { getPrayerDisplayName } from '@/lib/prayer-utils';
 import { useLanguage } from '@/contexts/LanguageContext-new';
 import { getLocalizedPrayerName, formatLocalizedCountdown } from '@/lib/home-prayer-i18n';
+import { useClockSecondTick } from './useClockSecondTick';
 
 export const DigitalBoldClock: React.FC<ClockProps> = ({
   now,
@@ -13,10 +14,11 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
   isStaticPreview = false,
 }) => {
   const { language } = useLanguage();
+  const liveNow = useClockSecondTick(isStaticPreview, now);
   const is12 = timeFormat === '12h';
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
+  const hours = liveNow.getHours();
+  const minutes = liveNow.getMinutes();
+  const seconds = liveNow.getSeconds();
 
   const displayHours = is12
     ? String(hours % 12 || 12).padStart(2, '0')
@@ -25,18 +27,19 @@ export const DigitalBoldClock: React.FC<ClockProps> = ({
   const displaySeconds = String(seconds).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
 
-  // Live countdown string for mini status pill, fully localized
+  // Live countdown string for mini status pill with minute resolution
+  const minuteTimestamp = Math.floor(liveNow.getTime() / 60000) * 60000;
   const countdownText = useMemo(() => {
     if (isStaticPreview) return formatLocalizedCountdown(2 * 3600 * 1000 + 22 * 60 * 1000, language);
     if (!nextPrayer?.targetTime) return '';
-    const diff = nextPrayer.targetTime.getTime() - now.getTime();
+    const diff = nextPrayer.targetTime.getTime() - minuteTimestamp;
     return formatLocalizedCountdown(diff, language);
-  }, [now, nextPrayer?.targetTime, isStaticPreview, language]);
+  }, [minuteTimestamp, nextPrayer?.targetTime, isStaticPreview, language]);
 
   const prayerName = useMemo(() => {
-    const raw = getPrayerDisplayName(nextPrayer?.name, nextPrayer?.targetTime || now) || 'Next';
+    const raw = getPrayerDisplayName(nextPrayer?.name, nextPrayer?.targetTime || new Date(minuteTimestamp)) || 'Next';
     return getLocalizedPrayerName(raw, language);
-  }, [nextPrayer?.name, nextPrayer?.targetTime, now, language]);
+  }, [nextPrayer?.name, nextPrayer?.targetTime, minuteTimestamp, language]);
 
   // Normalized progress (0 to 1)
   const prayerProgress = useMemo(() => {

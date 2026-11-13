@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useTransition } from "react";
+import { useEffect, useState, useMemo, useTransition, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Sparkles, History, ChevronRight, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,81 @@ interface Surah {
   numberOfAyahs: number;
   revelationType: string;
 }
+
+interface SurahRowItemProps {
+  surah: Surah;
+  isNavigating: boolean;
+  navigatingDisabled: boolean;
+  onSelect: (surahNumber: number) => void;
+  loadingLabel: string;
+}
+
+const SurahRowItem = memo(function SurahRowItem({
+  surah,
+  isNavigating,
+  navigatingDisabled,
+  onSelect,
+  loadingLabel,
+}: SurahRowItemProps) {
+  const handleClick = useCallback(() => {
+    onSelect(surah.number);
+  }, [onSelect, surah.number]);
+
+  return (
+    <div
+      className="surah-list-item animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
+      style={{ animationDelay: `${Math.min(surah.number * 20, 300)}ms` }}
+    >
+      <button
+        onClick={handleClick}
+        disabled={navigatingDisabled}
+        className="w-full flex items-center p-4 bg-[var(--surface)] border border-[var(--border)] rounded-2xl hover:bg-[var(--surface-2)] hover:border-[var(--accent)]/30 transition-all duration-300 group active:scale-[0.98] text-left shadow-sm relative overflow-hidden"
+      >
+        {/* Loading State Overlay */}
+        {isNavigating && (
+          <div className="absolute inset-0 bg-[var(--bg-base)]/70 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-2">
+            <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin shadow-lg" />
+            <span className="text-xs font-bold text-[var(--accent-text)] tracking-widest uppercase animate-pulse">{loadingLabel}</span>
+          </div>
+        )}
+
+        {/* Number Plate - Premium Style */}
+        <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
+          <div className="absolute inset-0 bg-[var(--accent)]/10 rotate-45 rounded-lg group-hover:rotate-[135deg] transition-transform duration-700" />
+          <div className="absolute inset-1 bg-[var(--accent)]/15 rotate-12 rounded-md" />
+          <span className="relative z-10 font-bold text-[var(--accent-text)] text-xs tracking-tighter">{surah.number}</span>
+        </div>
+
+        <div className="ms-4 flex-1 flex items-center justify-between gap-3 min-w-0">
+          {/* Start Side: English Name & Info */}
+          <div className="flex flex-col items-start gap-1 min-w-0 flex-1">
+            <h3 className="font-bold text-base tracking-tight text-[var(--text-primary)] truncate w-full text-left">
+              {surah.englishName}
+            </h3>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-wider truncate w-full text-left">
+              {surah.englishNameTranslation}
+            </p>
+            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+              <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--accent)]/20 text-[9px] font-bold uppercase tracking-widest text-[var(--accent-text)] shrink-0">
+                {surah.revelationType}
+              </span>
+              <span className="text-[9px] text-[var(--text-secondary)] font-bold uppercase tracking-[0.2em] shrink-0">
+                {surah.numberOfAyahs} Ayahs
+              </span>
+            </div>
+          </div>
+          
+          {/* End Side: Arabic Name */}
+          <div className="flex flex-col items-end text-right shrink-0 ms-2">
+            <p className="font-arabic text-3xl text-[var(--accent-text)] drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">
+              {surah.name}
+            </p>
+          </div>
+        </div>
+      </button>
+    </div>
+  );
+});
 
 const Quran = () => {
   const navigate = useNavigate();
@@ -69,6 +144,16 @@ const Quran = () => {
   const [lastRead, setLastRead] = useState<{ number: number; name: string } | null>(null);
   const [navigatingTo, setNavigatingTo] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const handleSelectSurah = useCallback((surahNumber: number) => {
+    setNavigatingTo(surahNumber);
+    // Force a small delay so the loading spinner paints immediately before the heavy transition
+    setTimeout(() => {
+      startTransition(() => {
+        navigate(`/quran/surah-${surahNumber}`, { replace: true });
+      });
+    }, 50);
+  }, [navigate]);
 
   useEffect(() => {
     const saved = localStorage.getItem('quran-last-read');
@@ -267,67 +352,14 @@ const Quran = () => {
             ) : (
               <div className="space-y-3">
                 {filteredSurahs.map((surah) => (
-                  <div
+                  <SurahRowItem
                     key={surah.number}
-                    className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
-                    style={{ animationDelay: `${Math.min(surah.number * 20, 300)}ms` }}
-                  >
-                    <button
-                      onClick={() => {
-                        setNavigatingTo(surah.number);
-                        // Force a small delay so the loading spinner paints immediately before the heavy transition
-                        setTimeout(() => {
-                          startTransition(() => {
-                            navigate(`/quran/surah-${surah.number}`, { replace: true });
-                          });
-                        }, 50);
-                      }}
-                      disabled={navigatingTo !== null}
-                      className="w-full flex items-center p-4 bg-[var(--surface)] border border-[var(--border)] rounded-2xl hover:bg-[var(--surface-2)] hover:border-[var(--accent)]/30 transition-all duration-300 group active:scale-[0.98] text-left shadow-sm relative overflow-hidden"
-                    >
-                      {/* Loading State Overlay */}
-                      {navigatingTo === surah.number && (
-                        <div className="absolute inset-0 bg-[var(--bg-base)]/70 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-2">
-                          <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin shadow-lg" />
-                          <span className="text-xs font-bold text-[var(--accent-text)] tracking-widest uppercase animate-pulse">{ti18n('loading') || 'Loading...'}</span>
-                        </div>
-                      )}
-
-                      {/* Number Plate - Premium Style */}
-                      <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
-                        <div className="absolute inset-0 bg-[var(--accent)]/10 rotate-45 rounded-lg group-hover:rotate-[135deg] transition-transform duration-700" />
-                        <div className="absolute inset-1 bg-[var(--accent)]/15 rotate-12 rounded-md" />
-                        <span className="relative z-10 font-bold text-[var(--accent-text)] text-xs tracking-tighter">{surah.number}</span>
-                      </div>
-
-                      <div className="ms-4 flex-1 flex items-center justify-between gap-3 min-w-0">
-                        {/* Start Side: English Name & Info */}
-                        <div className="flex flex-col items-start gap-1 min-w-0 flex-1">
-                          <h3 className="font-bold text-base tracking-tight text-[var(--text-primary)] truncate w-full text-left">
-                            {surah.englishName}
-                          </h3>
-                          <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-wider truncate w-full text-left">
-                            {surah.englishNameTranslation}
-                          </p>
-                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                            <span className="px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--accent)]/20 text-[9px] font-bold uppercase tracking-widest text-[var(--accent-text)] shrink-0">
-                              {surah.revelationType}
-                            </span>
-                            <span className="text-[9px] text-[var(--text-secondary)] font-bold uppercase tracking-[0.2em] shrink-0">
-                              {surah.numberOfAyahs} Ayahs
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* End Side: Arabic Name */}
-                        <div className="flex flex-col items-end text-right shrink-0 ms-2">
-                          <p className="font-arabic text-3xl text-[var(--accent-text)] drop-shadow-sm leading-none group-hover:scale-105 transition-transform duration-500">
-                            {surah.name}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
+                    surah={surah}
+                    isNavigating={navigatingTo === surah.number}
+                    navigatingDisabled={navigatingTo !== null}
+                    onSelect={handleSelectSurah}
+                    loadingLabel={ti18n('loading') || 'Loading...'}
+                  />
                 ))}
               </div>
             )}

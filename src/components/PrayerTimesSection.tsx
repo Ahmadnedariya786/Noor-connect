@@ -15,8 +15,10 @@ import {
 } from '@/lib/home-prayer-i18n';
 import type { LanguageCode } from '@/lib/language-config';
 import { cn } from '@/lib/utils';
-import { evaluateMakruhState } from '@/lib/makruh-times';
+import { evaluateMakruhState, formatCountdownRemaining, type MakruhWindowInfo } from '@/lib/makruh-times';
 import { evaluateNaflPrayers } from '@/lib/nafl-prayers';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 export interface PrayerItem {
   name: string;
@@ -284,18 +286,138 @@ function useCountdownText(targetTime?: Date | null, lang: LanguageCode = 'en'): 
       return;
     }
 
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const update = () => {
       const diff = targetTime.getTime() - Date.now();
       setText(formatLocalizedCountdown(diff, lang));
     };
 
     update();
-    const timerId = setInterval(update, 5000);
-    return () => clearInterval(timerId);
+
+    // Align to the next minute boundary, then tick once per minute
+    const now = new Date();
+    const delayToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 50;
+
+    timeoutId = setTimeout(() => {
+      update();
+      intervalId = setInterval(update, 60000);
+    }, delayToNextMinute);
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        update();
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
   }, [targetTime, lang]);
 
   return text;
 }
+
+const MakruhCountdownText: React.FC<{ activeWindow: MakruhWindowInfo }> = memo(({ activeWindow }) => {
+  const [formatted, setFormatted] = useState(() => {
+    const d = new Date();
+    const nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+    return formatCountdownRemaining(Math.max(0, activeWindow.endSecondsOfDay - nowSec));
+  });
+
+  useEffect(() => {
+    let timerId: ReturnType<typeof setInterval> | null = null;
+    const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const d = new Date();
+      const nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+      setFormatted(formatCountdownRemaining(Math.max(0, activeWindow.endSecondsOfDay - nowSec)));
+    };
+
+    tick();
+    timerId = setInterval(tick, 1000);
+
+    const handleVisibility = () => {
+      if (!document.hidden) tick();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      if (timerId !== null) clearInterval(timerId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [activeWindow.endSecondsOfDay]);
+
+  return <span dir="ltr">{formatted}</span>;
+});
+
+MakruhCountdownText.displayName = 'MakruhCountdownText';
+
+const MakruhRowCountdownBadge: React.FC<{ activeWindow: MakruhWindowInfo }> = memo(({ activeWindow }) => {
+  const [text, setText] = useState(() => {
+    const d = new Date();
+    const nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+    const rem = Math.max(0, activeWindow.endSecondsOfDay - nowSec);
+    return rem >= 60 ? `${Math.ceil(rem / 60)}m` : `${Math.max(1, rem)}s`;
+  });
+
+  useEffect(() => {
+    let timerId: ReturnType<typeof setInterval> | null = null;
+    const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const d = new Date();
+      const nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+      const rem = Math.max(0, activeWindow.endSecondsOfDay - nowSec);
+      setText(rem >= 60 ? `${Math.ceil(rem / 60)}m` : `${Math.max(1, rem)}s`);
+    };
+
+    tick();
+    timerId = setInterval(tick, 1000);
+
+    const handleVisibility = () => {
+      if (!document.hidden) tick();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      if (timerId !== null) clearInterval(timerId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [activeWindow.endSecondsOfDay]);
+
+  return (
+    <span
+      style={{
+        fontSize: '0.58rem',
+        fontWeight: 800,
+        padding: '2px 6px',
+        borderRadius: '9999px',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        background: 'rgba(239, 68, 68, 0.30)',
+        border: '1px solid #EF4444',
+        color: '#FEE2E2',
+        boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3.5px',
+      }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
+      <span>MAKRUH • {text}</span>
+    </span>
+  );
+});
+
+MakruhRowCountdownBadge.displayName = 'MakruhRowCountdownBadge';
 
 export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   nextPrayer,
@@ -391,79 +513,109 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     ];
   }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat, refreshKey]);
 
-  // Real-time intelligent ticker:
-  // - When a Makruh or Nafl window is active: ticks every 1 second for smooth countdown
-  // - When idle: checks boundaries every 1 second, but only updates state on minute change or boundary crossing
-  const [now, setNow] = useState<Date>(() => new Date());
-  const activeTrackerRef = useRef<{ wasActive: boolean; lastMinute: number }>({
-    wasActive: false,
-    lastMinute: new Date().getMinutes(),
-  });
+  // Exact Next-Boundary Scheduler (Part 1A item 4):
+  // Derives the state from existing prayer times and schedules ONE timeout for the exact next boundary:
+  // (next prayer start, the end of a Makruh window, or next minute change, whichever is first).
+  // Reschedules after each fire, on resume, and on device time / timezone change.
+  const [boundaryKey, setBoundaryKey] = useState<number>(0);
+  const tf: '12h' | '24h' = timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
 
   useEffect(() => {
-    let intervalId: ReturnType<typeof setInterval> | null = null;
-    const tf = timeFormat === '24' || timeFormat === '24h' ? '24h' : '12h';
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+    let isCancelled = false;
 
-    const checkAndTick = () => {
+    const scheduleNext = () => {
+      if (isCancelled) return;
       if (typeof document !== 'undefined' && document.hidden) return;
+
       const currentDate = new Date();
-      const currentMin = currentDate.getMinutes();
+      const nowMs = currentDate.getTime();
 
-      // If user is browsing another date offset, only tick once a minute
-      if (selectedDateOffset !== 0) {
-        if (currentMin !== activeTrackerRef.current.lastMinute) {
-          activeTrackerRef.current.lastMinute = currentMin;
-          setNow(currentDate);
+      // Candidate 1: Next minute boundary (+50ms safety buffer)
+      const nextMinuteMs = nowMs + ((60 - currentDate.getSeconds()) * 1000 - currentDate.getMilliseconds() + 50);
+      const candidates: number[] = [nextMinuteMs];
+
+      // Candidate 2: Upcoming prayer start times
+      if (Array.isArray(displayedPrayers)) {
+        for (const p of displayedPrayers) {
+          if (p.date instanceof Date && p.date.getTime() > nowMs) {
+            candidates.push(p.date.getTime() + 50);
+          }
         }
-        return;
       }
 
-      // Check current Makruh & Nafl activity
+      // Candidate 3: Makruh windows start and end
       const currentMakruh = evaluateMakruhState(displayedPrayers, currentDate, tf);
+      if (currentMakruh.activeWindow) {
+        candidates.push(currentMakruh.activeWindow.end.getTime() + 50);
+      }
+      for (const w of currentMakruh.allWindows) {
+        if (w.start.getTime() > nowMs) {
+          candidates.push(w.start.getTime() + 50);
+        }
+      }
+
+      // Candidate 4: Nafl windows start and end
       const currentNafl = evaluateNaflPrayers(displayedPrayers, currentDate, tf);
-      const isAnyActive = Boolean(currentMakruh.isMakruhNow || currentNafl.hasActiveNafl);
-
-      if (isAnyActive) {
-        // Active countdown visible: update state every second
-        activeTrackerRef.current.wasActive = true;
-        activeTrackerRef.current.lastMinute = currentMin;
-        setNow(currentDate);
-      } else if (activeTrackerRef.current.wasActive) {
-        // Just transitioned from active to inactive: update immediately to dismiss alert
-        activeTrackerRef.current.wasActive = false;
-        activeTrackerRef.current.lastMinute = currentMin;
-        setNow(currentDate);
-      } else if (currentMin !== activeTrackerRef.current.lastMinute) {
-        // Normal idle minute tick
-        activeTrackerRef.current.lastMinute = currentMin;
-        setNow(currentDate);
+      if (currentNafl.activeNafl) {
+        candidates.push(currentNafl.activeNafl.end.getTime() + 50);
       }
+      for (const n of currentNafl.prayers) {
+        if (n.start.getTime() > nowMs) {
+          candidates.push(n.start.getTime() + 50);
+        }
+      }
+
+      const earliestTarget = Math.min(...candidates);
+      const delay = Math.max(100, earliestTarget - nowMs);
+
+      timerId = setTimeout(() => {
+        setBoundaryKey((k) => k + 1);
+      }, delay);
     };
 
-    const startTicker = () => {
-      if (intervalId !== null) return;
-      intervalId = setInterval(checkAndTick, 1000);
+    scheduleNext();
+
+    const handleResume = () => {
+      setBoundaryKey((k) => k + 1);
     };
-    const stopTicker = () => {
-      if (intervalId !== null) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-    };
+
     const handleVisibilityChange = () => {
-      if (document.hidden) stopTicker();
-      else {
-        checkAndTick();
-        startTicker();
+      if (!document.hidden) handleResume();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    let appStateHandle: { remove: () => void } | null = null;
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appStateChange', (state) => {
+        if (state.isActive) handleResume();
+      }).then((handle) => {
+        appStateHandle = handle;
+      }).catch(() => {
+        // Safe listener fallback
+      });
+    }
+
+    window.addEventListener('timeupdate', handleResume);
+    window.addEventListener('timezonechange', handleResume);
+
+    return () => {
+      isCancelled = true;
+      if (timerId !== null) clearTimeout(timerId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('timeupdate', handleResume);
+      window.removeEventListener('timezonechange', handleResume);
+      if (appStateHandle) {
+        try {
+          appStateHandle.remove();
+        } catch {
+          // Safe removal fallback
+        }
       }
     };
-    startTicker();
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      stopTicker();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [displayedPrayers, selectedDateOffset, timeFormat]);
+  }, [displayedPrayers, selectedDateOffset, tf, boundaryKey]);
+
+  const now = useMemo(() => new Date(), [boundaryKey]);
 
   const makruhState = useMemo(() => {
     return evaluateMakruhState(
@@ -1017,7 +1169,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
               }}
             >
               <span>Ends in</span>
-              <span dir="ltr">{makruhState.remainingFormatted}</span>
+              <MakruhCountdownText activeWindow={makruhState.activeWindow} />
             </div>
           </div>
 
@@ -1173,33 +1325,9 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 >
                   {localizedName}
                 </span>
-                {isMakruhRow && (() => {
-                  const makruhCompactCountdown = makruhState.remainingSeconds >= 60
-                    ? `${Math.ceil(makruhState.remainingSeconds / 60)}m`
-                    : `${Math.max(1, makruhState.remainingSeconds)}s`;
-                  return (
-                    <span
-                      style={{
-                        fontSize: '0.58rem',
-                        fontWeight: 800,
-                        padding: '2px 6px',
-                        borderRadius: '9999px',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                        background: 'rgba(239, 68, 68, 0.30)',
-                        border: '1px solid #EF4444',
-                        color: '#FEE2E2',
-                        boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '3.5px',
-                      }}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
-                      <span>MAKRUH • {makruhCompactCountdown}</span>
-                    </span>
-                  );
-                })()}
+                {isMakruhRow && makruhState.activeWindow && (
+                  <MakruhRowCountdownBadge activeWindow={makruhState.activeWindow} />
+                )}
               </div>
 
               {/* Row Right Side: Formatted Time + Notification Bell Button */}

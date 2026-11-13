@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { type ClockProps } from '@/types/clock';
 import { cn } from '@/lib/utils';
+import { useClockSecondTick } from './useClockSecondTick';
 
 // Arabic-Indic Numerals for 12, 1, 2, ..., 11
 const ARABIC_INDIC_NUMERALS: Record<number, string> = {
@@ -23,9 +24,10 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
   hijriDate,
   isStaticPreview = false,
 }) => {
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
+  const liveNow = useClockSecondTick(isStaticPreview, now);
+  const hours = liveNow.getHours();
+  const minutes = liveNow.getMinutes();
+  const seconds = liveNow.getSeconds();
 
   const hourAngle = ((hours % 12) + minutes / 60 + (isStaticPreview ? 0 : seconds / 3600)) * 30;
   const minuteAngle = (minutes + (isStaticPreview ? 0 : seconds / 60)) * 6;

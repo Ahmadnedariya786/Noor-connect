@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { type ClockProps } from '@/types/clock';
 import { cn } from '@/lib/utils';
+import { useClockSecondTick } from './useClockSecondTick';
 
 export const HourWedgeClock: React.FC<ClockProps> = ({
   now,
@@ -8,10 +9,11 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
   hijriDate,
   isStaticPreview = false,
 }) => {
+  const liveNow = useClockSecondTick(isStaticPreview, now);
   const is12 = timeFormat === '12h';
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
+  const hours = liveNow.getHours();
+  const minutes = liveNow.getMinutes();
+  const seconds = liveNow.getSeconds();
 
   // 12-hour dial geometry: 30 degrees per hour
   const hour12 = hours % 12;

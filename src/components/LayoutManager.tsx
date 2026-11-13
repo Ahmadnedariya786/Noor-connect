@@ -14,11 +14,13 @@ export function LayoutManager({ children }: LayoutManagerProps) {
 
   return (
     <main
-      className="flex-1 min-h-0 overflow-y-auto interactive-layer"
+      className="flex-1 min-h-0 overflow-y-auto interactive-layer relative"
       style={{ paddingBottom: 'calc(120px + var(--tilawah-dock-space, 0px))' }}
       id="main-content"
       role="main"
     >
+      {/* Non-fixed top aura that scrolls naturally with page content */}
+      <div className="theme-top-aura" aria-hidden="true" />
       {children}
     </main>
   );

@@ -902,17 +902,23 @@
     transform: translateZ(0);
   }
 
-  /* Top Celestial Ambient Aura (Part 2A item 1) */
+  /* Top Celestial Ambient Aura (scrolling with content inside container) */
   .theme-top-aura {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 340px;
+    height: 280px;
     pointer-events: none;
     z-index: 0;
+    contain: paint;
     background: radial-gradient(ellipse 95% 65% at 50% -10%, var(--accent-soft), transparent 75%);
-    transform: translateZ(0);
+  }
+
+  /* Surah list content-visibility optimization */
+  .surah-list-item {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 88px;
   }
 
   /* App Shell Fixed Theme Signature Pattern Layer */
@@ -2811,16 +2817,20 @@ html[lang="ur"] [data-quran-arabic="true"],
   }
 }
 
-.qaza-pending-blink {
-  animation: qazaPulseBlink 1.3s infinite ease-in-out !important;
-}
-
+.qaza-pending-blink,
 .qaza-badge-blink {
-  animation: qazaPulseBlink 1.3s infinite ease-in-out !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 16px 2px var(--accent-glow), inset 0 0 12px var(--accent-soft) !important;
 }
 
 .qaza-dot-blink {
   animation: qazaDotBlink 0.9s infinite ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qaza-dot-blink {
+    animation: none !important;
+  }
 }
 
 /* ── Sunnah Surahs Continuous Blinking & Highlight ── */
