@@ -243,7 +243,7 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="royal-date-picker-title"
-      className="fixed inset-0 z-[99995] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99995] flex items-center justify-center p-3 sm:p-4 select-none"
       style={{
         position: 'fixed',
         inset: 0,
@@ -252,13 +252,12 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
-        background: 'rgba(0, 0, 0, 0.82)',
-        backdropFilter: 'blur(6px)',
+        backgroundColor: 'rgba(2, 4, 10, 0.84)',
       }}
       onClick={onClose}
     >
       <div
-        className="w-full rounded-[20px] border border-[var(--border)] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
+        className="w-full rounded-[20px] border border-[var(--border)] overflow-hidden shadow-2xl transition-colors"
         style={{
           width: '100%',
           maxWidth: '348px',
@@ -269,6 +268,8 @@ export const RoyalDatePickerModal: React.FC<RoyalDatePickerModalProps> = ({
           borderRadius: '20px',
           background: 'var(--bg-elev)',
           border: '1.5px solid var(--border)',
+          zIndex: 10000,
+          transform: 'translateZ(0)',
           boxSizing: 'border-box',
           boxShadow: '0 24px 48px rgba(0, 0, 0, 0.85), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
           display: 'flex',

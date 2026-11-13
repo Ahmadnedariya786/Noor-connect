@@ -302,54 +302,54 @@
 
   [data-theme="kiswah-noir"],
   [data-theme="haramain-noir"] {
-    --bg-base: #000000;
-    --bg-elev: #08080B;
-    --surface: #101015;
-    --surface-2: #181820;
-    --border: rgba(226, 232, 240, 0.26);
-    --accent: #E5A572;
-    --accent-text: #F7CBA4;
-    --on-accent: #050507;
-    --accent-soft: rgba(229, 165, 114, 0.16);
-    --accent-glow: rgba(229, 165, 114, 0.34);
-    --accent-2: #C27A44;
-    --text-primary: #F8FAFC;
-    --text-secondary: #A1A8B8;
+    --bg-base: #070709;
+    --bg-elev: #0D0D12;
+    --surface: #14141C;
+    --surface-2: #1D1D28;
+    --border: rgba(212, 175, 55, 0.28);
+    --accent: #D4AF37;
+    --accent-text: #F3E5AB;
+    --on-accent: #070709;
+    --accent-soft: rgba(212, 175, 55, 0.16);
+    --accent-glow: rgba(212, 175, 55, 0.32);
+    --accent-2: #AA8220;
+    --text-primary: #FAF8F5;
+    --text-secondary: #B0B3C0;
     --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: linear-gradient(135deg, rgba(229, 165, 114, 0.15) 0%, rgba(226, 232, 240, 0.05) 60%);
-    --card-sheen-line: rgba(247, 203, 164, 0.25);
+    --card-sheen: rgba(212, 175, 55, 0.08);
+    --card-sheen-line: rgba(243, 229, 171, 0.22);
 
-    /* Signature Tokens - Kiswah Noir (Kiswa Carbon) */
-    --sig-radius: 12px;
+    /* Signature Tokens - Kiswah Noir (Kaaba Obsidian Velvet & 24K Gold) */
+    --sig-radius: 14px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 16px rgba(0, 0, 0, 0.6);
-    --sig-thread: #E5A572;
+    --sig-thread: #D4AF37;
     --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M18 4L32 18 18 32 4 18Z' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8' transform='rotate(45 18 18)'/%3E%3Ccircle cx='18' cy='18' r='1.5' fill='black'/%3E%3Cpath d='M0 8L8 0M36 8L28 0M0 28L8 36M36 28L28 36' stroke='black' stroke-width='1' stroke-dasharray='2 2'/%3E%3C/svg%3E");
-    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='32' viewBox='0 0 240 32'%3E%3Cline x1='0' y1='2' x2='240' y2='2' stroke='black' stroke-width='1.5'/%3E%3Cline x1='0' y1='30' x2='240' y2='30' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M0 16l15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='15' cy='16' r='2' fill='black'/%3E%3Ccircle cx='45' cy='16' r='2' fill='black'/%3E%3Ccircle cx='75' cy='16' r='2' fill='black'/%3E%3Ccircle cx='105' cy='16' r='2' fill='black'/%3E%3Ccircle cx='135' cy='16' r='2' fill='black'/%3E%3Ccircle cx='165' cy='16' r='2' fill='black'/%3E%3Ccircle cx='195' cy='16' r='2' fill='black'/%3E%3Ccircle cx='225' cy='16' r='2' fill='black'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='32' viewBox='0 0 240 32'%3E%3Cline x1='0' y1='2' x2='240' y2='2' stroke='black' stroke-width='1.5'/%3Cline x1='0' y1='30' x2='240' y2='30' stroke='black' stroke-width='1.5'/%3Cpath d='M0 16l15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='15' cy='16' r='2' fill='black'/%3E%3Ccircle cx='45' cy='16' r='2' fill='black'/%3E%3Ccircle cx='75' cy='16' r='2' fill='black'/%3E%3Ccircle cx='105' cy='16' r='2' fill='black'/%3E%3Ccircle cx='135' cy='16' r='2' fill='black'/%3E%3Ccircle cx='165' cy='16' r='2' fill='black'/%3E%3Ccircle cx='195' cy='16' r='2' fill='black'/%3E%3Ccircle cx='225' cy='16' r='2' fill='black'/%3E%3C/svg%3E");
     --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --sig-head-tracking: 0.14em;
     --sig-head-transform: uppercase;
     --sig-head-style: normal;
 
-    --background: 0 0% 0%;
-    --foreground: 210 40% 98%;
-    --card: 240 14% 7%;
-    --card-foreground: 210 40% 98%;
-    --popover: 240 14% 7%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 26 68% 67%;
-    --primary-foreground: 240 17% 2%;
-    --primary-glow: 26 68% 67%;
-    --secondary: 240 14% 11%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 240 14% 11%;
-    --muted-foreground: 220 14% 68%;
+    --background: 240 13% 2%;
+    --foreground: 36 24% 97%;
+    --card: 240 17% 10%;
+    --card-foreground: 36 24% 97%;
+    --popover: 240 17% 10%;
+    --popover-foreground: 36 24% 97%;
+    --primary: 46 65% 52%;
+    --primary-foreground: 240 13% 2%;
+    --primary-glow: 46 65% 52%;
+    --secondary: 240 16% 14%;
+    --secondary-foreground: 36 24% 97%;
+    --muted: 240 16% 14%;
+    --muted-foreground: 230 10% 72%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 240 14% 11%;
-    --ring: 26 68% 67%;
+    --input: 240 16% 14%;
+    --ring: 46 65% 52%;
   }
 
   [data-theme="istanbul-sapphire"],
@@ -504,26 +504,26 @@
   }
 
   [data-theme="desert-scroll"] {
-    --bg-base: #100703;
-    --bg-elev: #180C06;
-    --surface: #22120A;
-    --surface-2: #2E1A10;
-    --border: rgba(245,158,11,0.30);
-    --accent: #F59E0B;
-    --accent-text: #FCD34D;
-    --on-accent: #100703;
-    --accent-soft: rgba(245,158,11,0.18);
-    --accent-glow: rgba(245,158,11,0.36);
-    --accent-2: #EA580C;
-    --text-primary: #FFF7ED;
-    --text-secondary: #D4B29E;
+    --bg-base: #0E0805;
+    --bg-elev: #160E09;
+    --surface: #21140C;
+    --surface-2: #2D1C11;
+    --border: rgba(229, 154, 60, 0.30);
+    --accent: #E59A3C;
+    --accent-text: #FFD485;
+    --on-accent: #0E0805;
+    --accent-soft: rgba(229, 154, 60, 0.17);
+    --accent-glow: rgba(229, 154, 60, 0.32);
+    --accent-2: #C4701E;
+    --text-primary: #FDF6EC;
+    --text-secondary: #D4B595;
     --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(234,88,12,0.06) 60%);
-    --card-sheen-line: rgba(252,211,77,0.24);
+    --card-sheen: rgba(229, 154, 60, 0.08);
+    --card-sheen-line: rgba(255, 212, 133, 0.22);
 
-    /* Signature Tokens - Desert Scroll (Manuscript Mocha) */
+    /* Signature Tokens - Desert Scroll (Roasted Espresso & Honey Amber) */
     --sig-radius: 28px 28px 18px 18px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 18px -2px rgba(0, 0, 0, 0.5), 0 0 10px 1px var(--accent-glow);
@@ -534,23 +534,23 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 24 68% 4%;
-    --foreground: 33 100% 96%;
-    --card: 21 54% 9%;
-    --card-foreground: 33 100% 96%;
-    --popover: 21 54% 9%;
-    --popover-foreground: 33 100% 96%;
-    --primary: 38 92% 50%;
-    --primary-foreground: 24 68% 4%;
-    --primary-glow: 38 92% 50%;
-    --secondary: 20 48% 12%;
-    --secondary-foreground: 33 100% 96%;
-    --muted: 20 48% 12%;
-    --muted-foreground: 23 41% 73%;
+    --background: 20 47% 4%;
+    --foreground: 35 77% 96%;
+    --card: 24 46% 9%;
+    --card-foreground: 35 77% 96%;
+    --popover: 24 46% 9%;
+    --popover-foreground: 35 77% 96%;
+    --primary: 34 78% 57%;
+    --primary-foreground: 20 47% 4%;
+    --primary-glow: 34 78% 57%;
+    --secondary: 25 45% 12%;
+    --secondary-foreground: 35 77% 96%;
+    --muted: 25 45% 12%;
+    --muted-foreground: 31 43% 71%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 20 48% 12%;
-    --ring: 38 92% 50%;
+    --input: 25 45% 12%;
+    --ring: 34 78% 57%;
   }
 
   [data-theme="madinah-emerald"] {
@@ -945,28 +945,26 @@
   [data-theme="haramain-noir"] .theme-app-pattern,
   [data-theme="kiswah-noir"] .sig-pattern-layer,
   [data-theme="haramain-noir"] .sig-pattern-layer {
-    background-color: var(--sig-thread, #E5A572) !important;
+    background-color: var(--sig-thread, #D4AF37) !important;
     opacity: 0.04 !important; /* <= 0.05 cap */
   }
 
   /* Theme Signature Cards & Containers with 3D Velvet-Glass Depth */
   .theme-card {
+    background-color: var(--surface);
     border-radius: var(--sig-radius, 18px);
     border: var(--sig-border, 1px solid var(--border));
-    box-shadow: inset 0 1px 0 0 var(--card-sheen-line, rgba(255, 255, 255, 0.1)),
-                0 10px 28px -6px rgba(0, 0, 0, 0.58),
-                var(--sig-glow, 0 8px 24px rgba(0,0,0,0.35));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     transition: all 0.3s ease;
   }
 
   .theme-hero-card {
+    background-color: var(--surface);
     position: relative;
     overflow: hidden;
     border-radius: var(--sig-radius, 26px);
     border: var(--sig-border, 1px solid var(--border));
-    box-shadow: inset 0 1px 0 0 var(--card-sheen-line, rgba(255, 255, 255, 0.15)),
-                0 12px 32px -6px rgba(0, 0, 0, 0.65),
-                var(--sig-glow, 0 10px 30px rgba(0,0,0,0.4));
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.40);
     transition: border-radius 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
   }
 
@@ -1056,7 +1054,7 @@
     height: 28px;
     pointer-events: none;
     z-index: 2;
-    background-color: var(--sig-thread, #E5A572);
+    background-color: var(--sig-thread, #D4AF37);
     opacity: 0.35;
     -webkit-mask-image: var(--sig-motif);
     mask-image: var(--sig-motif);
@@ -1073,7 +1071,7 @@
   [data-theme="haramain-noir"] .theme-card,
   [data-theme="kiswah-noir"] .theme-hero-card,
   [data-theme="haramain-noir"] .theme-hero-card {
-    border-top: 1px solid var(--sig-thread, #E5A572) !important;
+    border-top: 1px solid var(--sig-thread, #D4AF37) !important;
   }
 
   /* Desert Scroll: Mihrab-arch card tops */
@@ -1160,8 +1158,8 @@
   /* Enhanced Premium Glassmorphism Utilities */
   .glass {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     /* transform/opacity only — animating filter or box-shadow repaints on
@@ -1171,8 +1169,8 @@
 
   .glass-gold {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border: 1px solid var(--glass-gold);
     box-shadow: 
       var(--glass-shadow),
@@ -1181,8 +1179,8 @@
 
   .glass-dark {
     background: hsl(0 0% 0% / 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border: 1px solid hsl(0 0% 100% / 0.1);
     box-shadow: 0 8px 32px hsl(0 0% 0% / 0.3);
     transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
@@ -1190,8 +1188,8 @@
 
   .glass-card {
     background: linear-gradient(135deg, hsl(0 0% 100% / 0.1), hsl(0 0% 100% / 0.05));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border: 1px solid hsl(0 0% 100% / 0.2);
     border-radius: 24px;
     box-shadow: 
@@ -1203,8 +1201,8 @@
 
   .glass-card-gold {
     background: linear-gradient(135deg, hsl(0 0% 100% / 0.1), hsl(0 0% 100% / 0.05));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border: var(--islamic-gold-border);
     border-radius: 24px;
     box-shadow: 
@@ -1935,8 +1933,8 @@
   }
   
   .blur-medium {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   @media (prefers-reduced-motion: reduce) {

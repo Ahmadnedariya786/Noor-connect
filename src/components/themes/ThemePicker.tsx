@@ -65,7 +65,6 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
               }}
               className={cn(
                 "group relative flex flex-col justify-between overflow-hidden transition-all duration-200 cursor-pointer select-none text-left p-2.5 sm:p-3 h-auto min-h-full",
-                "backdrop-blur-sm",
                 isSelected
                   ? "border border-[var(--accent)] ring-1 ring-[var(--accent)]"
                   : "border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] active:scale-[0.98]"

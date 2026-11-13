@@ -361,63 +361,33 @@ const MakruhCountdownText: React.FC<{ activeWindow: MakruhWindowInfo }> = memo((
 
 MakruhCountdownText.displayName = 'MakruhCountdownText';
 
-const MakruhRowCountdownBadge: React.FC<{ activeWindow: MakruhWindowInfo }> = memo(({ activeWindow }) => {
-  const [text, setText] = useState(() => {
-    const d = new Date();
-    const nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
-    const rem = Math.max(0, activeWindow.endSecondsOfDay - nowSec);
-    return rem >= 60 ? `${Math.ceil(rem / 60)}m` : `${Math.max(1, rem)}s`;
-  });
-
-  useEffect(() => {
-    let timerId: ReturnType<typeof setInterval> | null = null;
-    const tick = () => {
-      if (typeof document !== 'undefined' && document.hidden) return;
-      const d = new Date();
-      const nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
-      const rem = Math.max(0, activeWindow.endSecondsOfDay - nowSec);
-      setText(rem >= 60 ? `${Math.ceil(rem / 60)}m` : `${Math.max(1, rem)}s`);
-    };
-
-    tick();
-    timerId = setInterval(tick, 1000);
-
-    const handleVisibility = () => {
-      if (!document.hidden) tick();
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      if (timerId !== null) clearInterval(timerId);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [activeWindow.endSecondsOfDay]);
-
+const MakruhRowBadge: React.FC = memo(() => {
   return (
     <span
       style={{
-        fontSize: '0.58rem',
+        fontSize: '0.60rem',
         fontWeight: 800,
         padding: '2px 6px',
         borderRadius: '9999px',
         whiteSpace: 'nowrap',
         flexShrink: 0,
-        background: 'rgba(239, 68, 68, 0.30)',
+        background: 'rgba(239, 68, 68, 0.28)',
         border: '1px solid #EF4444',
         color: '#FEE2E2',
-        boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
+        boxShadow: '0 0 8px rgba(239, 68, 68, 0.40)',
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '3.5px',
+        gap: '4px',
+        position: 'static',
       }}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E1E] makruh-red-dot-blink shrink-0" />
-      <span>MAKRUH • {text}</span>
+      <span>MAKRUH</span>
     </span>
   );
 });
 
-MakruhRowCountdownBadge.displayName = 'MakruhRowCountdownBadge';
+MakruhRowBadge.displayName = 'MakruhRowBadge';
 
 export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   nextPrayer,
@@ -881,6 +851,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   letterSpacing: '0.06em',
                   lineHeight: 1.2,
                   display: 'inline-block',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 {ui.next}
@@ -1322,7 +1294,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: isMakruhRow ? '6px' : '8px',
+                  gap: '8px',
                   minWidth: 0,
                   flex: '1 1 auto',
                 }}
@@ -1340,7 +1312,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   {localizedName}
                 </span>
                 {isMakruhRow && makruhState.activeWindow && (
-                  <MakruhRowCountdownBadge activeWindow={makruhState.activeWindow} />
+                  <MakruhRowBadge />
                 )}
               </div>
 
@@ -1349,7 +1321,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: '10px',
                   flexShrink: 0,
                 }}
               >

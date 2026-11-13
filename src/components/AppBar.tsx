@@ -28,8 +28,6 @@ export function AppBar({
       style={{
         paddingTop: 'calc(var(--safe-top) + 6px)',
         background: transparent ? 'transparent' : 'var(--bg-base)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
         borderBottom: '1px solid var(--border)',
       }}
     >

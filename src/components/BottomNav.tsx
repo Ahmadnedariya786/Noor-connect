@@ -1,28 +1,13 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { BookOpen, Settings as SettingsIcon, Compass, LayoutGrid, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
-import { memo, useEffect, useState } from "react";
+import { memo } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 
 const BottomNav = memo(function BottomNav() {
   const { t } = useLanguage();
   const { animationEnabled } = useSettings();
   const location = useLocation();
-
-  const [noBlur, setNoBlur] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    const tier = document.documentElement.dataset.animationTier;
-    return tier === 'minimal' || tier === 'low' || document.documentElement.classList.contains('reduce-blur');
-  });
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const tier = (e as CustomEvent<{ shouldDisableBackdropBlur: boolean }>).detail;
-      setNoBlur(!!tier.shouldDisableBackdropBlur);
-    };
-    window.addEventListener('animation-tier-changed', handler);
-    return () => window.removeEventListener('animation-tier-changed', handler);
-  }, []);
 
   // Hide global nav on routes that have their own bottom navigation
   if (location.pathname.startsWith('/noor-cycle') || /^\/quran\/.+/.test(location.pathname)) {
@@ -52,15 +37,11 @@ const BottomNav = memo(function BottomNav() {
         className="w-full max-w-sm pointer-events-auto flex flex-row items-center justify-between h-[64px] px-2 rounded-[26px]"
         style={{
           borderRadius: '26px',
-          background: (!animationEnabled || noBlur)
-            ? 'var(--bg-elev)'
-            : (typeof CSS !== 'undefined' && CSS.supports?.('color', 'color-mix(in srgb, red 50%, blue)'))
-            ? 'color-mix(in srgb, var(--bg-elev) 90%, transparent)'
-            : 'var(--bg-elev)',
-          backdropFilter: (!animationEnabled || noBlur) ? 'none' : 'blur(16px)',
-          WebkitBackdropFilter: (!animationEnabled || noBlur) ? 'none' : 'blur(16px)',
+          background: 'var(--bg-elev)',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
           border: '1px solid var(--border)',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.55), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
           overflow: 'hidden',
           boxSizing: 'border-box',
         }}

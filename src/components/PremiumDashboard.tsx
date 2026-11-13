@@ -1,4 +1,5 @@
 import React, { useState, useEffect, memo, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { m } from "framer-motion";
 import { Bell, MapPin, ChevronRight, Activity, Compass, X, Check } from "lucide-react";
 import { Capacitor } from '@capacitor/core';
@@ -671,10 +672,23 @@ function PremiumDashboardInner({
     <div
       className="min-h-screen flex flex-col bg-background text-foreground relative overflow-x-hidden"
     >
-      {/* Manual Location Dialog */}
-      {showManualLocationDialog && (
+      {/* Manual Location Dialog (Portaled to document.body, zero GPU blur) */}
+      {showManualLocationDialog && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 select-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="manual-location-dialog-title"
+          className="fixed inset-0 z-[99995] flex items-center justify-center p-4 select-none"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99995,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            backgroundColor: 'rgba(2, 4, 10, 0.84)',
+          }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               handleCloseModal();
@@ -686,13 +700,22 @@ function PremiumDashboardInner({
             }
           }}
         >
-          <m.div
-            {...motionProps({ initial: { opacity: 0, scale: 0.95 }, animate: { opacity: 1, scale: 1 } })}
+          <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] shadow-2xl rounded-[32px] transition-colors"
+            className="w-full max-w-[380px] max-h-[88vh] flex flex-col overflow-hidden text-[var(--text-primary)] shadow-2xl rounded-[28px] transition-colors"
+            style={{
+              backgroundColor: 'var(--bg-elev)',
+              border: '1px solid var(--border)',
+              zIndex: 10000,
+              transform: 'translateZ(0)',
+              maxHeight: '88vh',
+              width: '100%',
+              maxWidth: '380px',
+              overflowY: 'auto',
+            }}
           >
             <div
-              className="p-6 overflow-y-auto overscroll-contain"
+              className="p-5 sm:p-6 overflow-y-auto overscroll-contain"
               style={{
                 overscrollBehavior: 'contain',
                 WebkitOverflowScrolling: 'touch',
@@ -700,8 +723,8 @@ function PremiumDashboardInner({
               }}
               onTouchMove={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-black text-[var(--text-primary)]">Set Location</h3>
+              <div className="flex items-center justify-between mb-5">
+                <h3 id="manual-location-dialog-title" className="text-lg sm:text-xl font-black text-[var(--text-primary)]">Set Location</h3>
                 <button
                   type="button"
                   onClick={handleCloseModal}
@@ -825,8 +848,9 @@ function PremiumDashboardInner({
                 </Button>
               </div>
             </div>
-          </m.div>
-        </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Content */}

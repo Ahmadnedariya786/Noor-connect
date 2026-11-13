@@ -93,7 +93,14 @@ class CdpClient {
     this.exceptions = [];
     this.consoleErrors = [];
     await this.send('Page.navigate', { url });
-    await delay(1200);
+    // Dynamically poll until #root has rendered content or up to 6s
+    for (let i = 0; i < 30; i++) {
+      await delay(200);
+      try {
+        const len = await this.evaluate('document.getElementById("root")?.innerHTML.length || 0');
+        if (len > 200) break;
+      } catch {}
+    }
   }
 
   close() {
@@ -106,21 +113,22 @@ class CdpClient {
 async function runTests() {
   console.log('--- Starting Noor Connect Headless Production Verification ---');
 
-  // 1. Start Vite preview
+  // 1. Start Vite preview directly with node
   console.log(`[1/5] Starting 'vite preview' on port ${PREVIEW_PORT}...`);
-  const preview = spawn('npx.cmd', ['vite', 'preview', '--port', String(PREVIEW_PORT), '--strictPort'], {
+  const viteBin = path.join(__dirname, '..', 'node_modules', 'vite', 'bin', 'vite.js');
+  const preview = spawn(process.execPath, [viteBin, 'preview', '--port', String(PREVIEW_PORT), '--strictPort'], {
     stdio: 'pipe',
-    shell: true,
   });
 
+  preview.stdout.on('data', (d) => process.stdout.write(`[Preview OUT] ${d}`));
   preview.stderr.on('data', (d) => process.stderr.write(`[Preview ERR] ${d}`));
 
   // Wait for preview server to be available
   let previewReady = false;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 40; i++) {
     try {
       await new Promise((resolve, reject) => {
-        const req = http.get(`http://localhost:${PREVIEW_PORT}/`, (res) => {
+        const req = http.get(`http://127.0.0.1:${PREVIEW_PORT}/`, (res) => {
           if (res.statusCode === 200) resolve();
           else reject(new Error(`Status ${res.statusCode}`));
         });
@@ -188,19 +196,21 @@ async function runTests() {
     // TEST CASE 1: Fresh Clean Install (Empty localStorage)
     // -------------------------------------------------------------
     console.log('\n--- Test Case 1: Fresh Clean Install (Empty Storage) ---');
-    await client.navigate(`http://localhost:${PREVIEW_PORT}/`);
+    await client.navigate(`http://127.0.0.1:${PREVIEW_PORT}/`);
     await client.evaluate('localStorage.clear(); sessionStorage.clear();');
     const startT1 = Date.now();
-    await client.navigate(`http://localhost:${PREVIEW_PORT}/`);
+    await client.navigate(`http://127.0.0.1:${PREVIEW_PORT}/`);
     const t1Duration = Date.now() - startT1;
 
-    const t1RootLength = await client.evaluate('document.getElementById("root")?.innerHTML.length || 0');
-    const t1ChildCount = await client.evaluate('document.getElementById("root")?.childElementCount || 0');
+    const t1RawHtml = await client.evaluate('(() => { const r = document.getElementById("root"); return r ? r.innerHTML : ""; })()');
+    const t1RootLength = t1RawHtml ? t1RawHtml.length : 0;
+    const t1ChildCount = await client.evaluate('(() => { const r = document.getElementById("root"); return r ? r.childElementCount : 0; })()');
     const t1Exceptions = client.exceptions.length;
     const t1Errors = client.consoleErrors.length;
 
     console.log(`  Render time: ${t1Duration}ms`);
     console.log(`  #root child elements: ${t1ChildCount}, innerHTML length: ${t1RootLength}`);
+    console.log(`  Debug HTML snippet:`, t1RawHtml ? t1RawHtml.slice(0, 120) : 'EMPTY');
     console.log(`  Uncaught exceptions: ${t1Exceptions}, Console errors: ${t1Errors}`);
     if (t1Exceptions > 0) {
       console.log('  EXCEPTION DETAILS:', JSON.stringify(client.exceptions, null, 2));
@@ -254,7 +264,7 @@ async function runTests() {
     `);
 
     const startT2 = Date.now();
-    await client.navigate(`http://localhost:${PREVIEW_PORT}/`);
+    await client.navigate(`http://127.0.0.1:${PREVIEW_PORT}/`);
     const t2Duration = Date.now() - startT2;
 
     const t2RootLength = await client.evaluate('document.getElementById("root")?.innerHTML.length || 0');
@@ -289,7 +299,7 @@ async function runTests() {
 
     for (const theme of themes) {
       await client.evaluate(`localStorage.setItem('noor_theme', '${theme}');`);
-      await client.navigate(`http://localhost:${PREVIEW_PORT}/`);
+      await client.navigate(`http://127.0.0.1:${PREVIEW_PORT}/`);
       const applied = await client.evaluate('document.documentElement.getAttribute("data-theme")');
       const errCount = client.exceptions.length;
       if (errCount > 0 || applied !== theme) {
