@@ -5,7 +5,8 @@ export type ThemeId =
   | 'imperial-violet'
   | 'burgundy-velvet'
   | 'desert-scroll'
-  | 'madinah-emerald';
+  | 'madinah-emerald'
+  | 'persian-indigo';
 
 export interface ThemeTokens {
   '--bg-base': string;

@@ -144,6 +144,7 @@ export const THEME_HEX_MAP: Record<string, string> = {
   'desert-scroll': '#100806',
   'istanbul-sapphire': '#050912',
   'madinah-emerald': '#040D09',
+  'persian-indigo': '#0B0724',
 };
 
 export function getActiveThemeHex(): string {

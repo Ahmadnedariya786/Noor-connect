@@ -634,6 +634,56 @@
     --ring: 41 68% 72%;
   }
 
+  [data-theme="persian-indigo"] {
+    --bg-base: #0B0724;
+    --bg-elev: #120C33;
+    --surface: #1A1242;
+    --surface-2: #241A52;
+    --border: rgba(247,247,255,0.22);
+    --accent: #F7F7FF;
+    --accent-text: #E4E4FF;
+    --on-accent: #27187D;
+    --accent-soft: rgba(247,247,255,0.14);
+    --accent-glow: rgba(184,196,255,0.30);
+    --accent-2: #B8C4FF;
+    --text-primary: #F7F7FF;
+    --text-secondary: #A9A6D9;
+    --success: #6EE7A0;
+    --warning: #FBBF24;
+    --danger: #FB7185;
+    --card-sheen: linear-gradient(135deg, rgba(247,247,255,0.12) 0%, rgba(184,196,255,0.04) 60%);
+    --card-sheen-line: rgba(247,247,255,0.16);
+
+    /* Signature Tokens - Persian Indigo (Midnight Indigo Velvet & Moonlight) */
+    --sig-radius: 20px;
+    --sig-border: 1px solid var(--border);
+    --sig-glow: inset 0 1px 0 var(--card-sheen-line), 0 4px 16px var(--accent-glow);
+    --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2' transform='rotate(45 24 24)'/%3E%3Ccircle cx='24' cy='24' r='2' fill='black'/%3E%3Crect x='-7' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='-7' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 0 0)'/%3E%3Crect x='41' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='41' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 48 0)'/%3E%3Crect x='-7' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='-7' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 0 48)'/%3E%3Crect x='41' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='41' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 48 48)'/%3E%3Ccircle cx='24' cy='6' r='1.2' fill='black'/%3E%3Ccircle cx='24' cy='42' r='1.2' fill='black'/%3E%3Ccircle cx='6' cy='24' r='1.2' fill='black'/%3E%3Ccircle cx='42' cy='24' r='1.2' fill='black'/%3E%3Ccircle cx='12' cy='12' r='0.8' fill='black'/%3E%3Ccircle cx='36' cy='12' r='0.8' fill='black'/%3E%3Ccircle cx='12' cy='36' r='0.8' fill='black'/%3E%3Ccircle cx='36' cy='36' r='0.8' fill='black'/%3E%3C/svg%3E");
+    --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg transform='translate(80,80)'%3E%3Ccircle r='72' fill='none' stroke='black' stroke-width='1.5' stroke-dasharray='3 4'/%3E%3Cpath d='M-15 -48 A 52 52 0 1 0 42 32 A 42 42 0 1 1 -15 -48 Z' fill='black'/%3E%3Cg transform='translate(16,-12)'%3E%3Crect x='-14' y='-14' width='28' height='28' fill='none' stroke='black' stroke-width='2'/%3E%3Crect x='-14' y='-14' width='28' height='28' fill='none' stroke='black' stroke-width='2' transform='rotate(45)'/%3E%3Ccircle r='3.5' fill='black'/%3E%3C/g%3E%3Ccircle cx='-45' cy='-25' r='1.8' fill='black'/%3E%3Ccircle cx='-35' cy='45' r='2' fill='black'/%3E%3Ccircle cx='48' cy='-28' r='1.6' fill='black'/%3E%3Ccircle cx='35' cy='50' r='1.8' fill='black'/%3E%3Ccircle cx='0' cy='-62' r='2.2' fill='black'/%3E%3C/g%3E%3C/svg%3E");
+    --sig-head-family: Georgia, 'Times New Roman', serif;
+    --sig-head-tracking: normal;
+    --sig-head-transform: none;
+    --sig-head-style: normal;
+
+    --background: 248 68% 9%;
+    --foreground: 240 100% 98%;
+    --card: 250 57% 16%;
+    --card-foreground: 240 100% 98%;
+    --popover: 250 57% 16%;
+    --popover-foreground: 240 100% 98%;
+    --primary: 240 100% 98%;
+    --primary-foreground: 249 68% 29%;
+    --primary-glow: 231 100% 86%;
+    --secondary: 251 52% 21%;
+    --secondary-foreground: 240 100% 98%;
+    --muted: 251 52% 21%;
+    --muted-foreground: 244 41% 75%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --input: 251 52% 21%;
+    --ring: 231 100% 86%;
+  }
+
   .dark {
     /* Azimuth-Inspired Warm Islamic Theme - Dark Mode */
     --background: 222 15% 9%; /* Deep dark navy #0F1117 */

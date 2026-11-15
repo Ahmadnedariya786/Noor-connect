@@ -1,9 +1,9 @@
 ---
 name: noor-6-theme-token-sentinel
-description: Audits and enforces the 7 Royal Themes and complete 17 CSS root tokens across Noor Connect, ensuring cross-theme visual harmony and color-mix fallbacks.
+description: Audits and enforces the 8 Royal Themes and complete 17 CSS root tokens across Noor Connect, ensuring cross-theme visual harmony and color-mix fallbacks.
 ---
 
-# 7 Royal Themes & 17 CSS Root Token Auditor
+# 8 Royal Themes & 17 CSS Root Token Auditor
 
 This domain skill enforces design system integrity, CSS custom property definitions, and theme color-mix fallbacks across Noor Connect.
 
@@ -19,8 +19,8 @@ Activate this skill whenever any of the following files are inspected or modifie
 
 ## 2. Enforced Rules & Invariants
 
-### A. The 7 Royal Themes Canon
-The application features 7 Royal Themes with unified Sukoon low-glare velvet architecture:
+### A. The 8 Royal Themes Canon
+The application features 8 Royal Themes with unified Sukoon low-glare velvet architecture:
 1. **`oxford-gold` (`Oxford Gold`):** Midnight Velvet & Satin Gold (`#060911`, `#0F1729`, `#DCA349`, `#B87F28`).
 2. **`kiswah-noir` (`Haramain Noir`):** Obsidian Graphite & Satin Silver (`#060608`, `#12131A`, `#A8B3C7`, `#7E8B9F`).
 3. **`imperial-violet` (`Imperial Violet`):** Obsidian Plum & Satin Orchid (`#0B0514`, `#180C2B`, `#C582F0`, `#9333EA`).
@@ -28,6 +28,7 @@ The application features 7 Royal Themes with unified Sukoon low-glare velvet arc
 5. **`desert-scroll` (`Desert Scroll`):** Obsidian Mocha & Terracotta (`#100806`, `#21110D`, `#E58A4E`, `#C46830`).
 6. **`istanbul-sapphire` (`Royal Sapphire`):** Obsidian Sapphire & Periwinkle (`#050912`, `#0C1629`, `#6A9AF2`, `#3B6FD4`).
 7. **`madinah-emerald` (`Madinah Emerald`):** Obsidian Pine & Satin Jade (`#040D09`, `#0A1F17`, `#45B88C`, `#2E946D`).
+8. **`persian-indigo` (`Persian Indigo`):** Midnight Indigo Velvet & Moonlight Signature (`#0B0724`, `#1A1242`, `#F7F7FF`, `#27187D`, `#B8C4FF`).
 
 ### B. Mandatory 17 CSS Root Tokens
 Every theme definition in `src/index.css` (under `[data-theme="..."]`) and in `src/lib/theme-engine.ts` (`APP_THEMES`) **MUST** define all 17 core tokens:
@@ -92,7 +93,7 @@ Never render in any theme pattern, motif, preview card, or decorative layer:
    - When a tile repeats, the seams and intersections must never form a plus/cross, hexagram, or fleur silhouette.
 
 ## 3. Pre-Commit Verification Checklist
-- [ ] Token completeness: Verify all 17 root tokens are present in all 7 themes in `src/index.css` and `src/lib/theme-engine.ts`.
+- [ ] Token completeness: Verify all 17 root tokens are present in all 8 themes in `src/index.css` and `src/lib/theme-engine.ts`.
 - [ ] Color-mix fallback check: Verify each `color-mix()` declaration is immediately preceded by a static CSS fallback.
 - [ ] Sharia-safe geometry audit: Confirm all decorative patterns, motifs, and preview cards adhere to the Sharia-Safe Islamic Geometry Canon with zero forbidden shapes (at tile and seam levels).
-- [ ] Grid integrity: Confirm `ThemePicker.tsx` renders all 7 theme preview cards cleanly without text truncation on subtitles.
+- [ ] Grid integrity: Confirm `ThemePicker.tsx` renders all 8 theme preview cards cleanly without text truncation on subtitles.

@@ -24,6 +24,7 @@ export const SIGNATURE_PATTERNS: Record<ThemeId, string> = {
   'desert-scroll': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='3' cy='7' r='0.9' fill='black'/%3E%3Ccircle cx='15' cy='4' r='1.1' fill='black'/%3E%3Ccircle cx='27' cy='9' r='0.9' fill='black'/%3E%3Ccircle cx='8' cy='19' r='1.2' fill='black'/%3E%3Ccircle cx='22' cy='16' r='0.8' fill='black'/%3E%3Ccircle cx='6' cy='29' r='1' fill='black'/%3E%3Ccircle cx='18' cy='26' r='0.9' fill='black'/%3E%3Ccircle cx='29' cy='27' r='1.1' fill='black'/%3E%3Cpath d='M0 24C8 20, 16 28, 32 8' stroke='black' stroke-width='0.7' fill='none' stroke-dasharray='2 3'/%3E%3C/svg%3E")`,
   'istanbul-sapphire': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M0 18c6-6 12-6 18 0s12 6 18 0M0 9c6-6 12-6 18 0s12 6 18 0M0 27c6-6 12-6 18 0s12 6 18 0' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M9 0c0 9 9 9 9 18m9-18c0 9 9 9 9 18' fill='none' stroke='black' stroke-width='0.8'/%3E%3C/svg%3E")`,
   'madinah-emerald': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='48' viewBox='0 0 40 48'%3E%3Cpath d='M0 48C0 28, 10 16, 20 16C30 16, 40 28, 40 48' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M-20 24C-20 4, -10 -8, 0 -8C10 -8, 20 4, 20 24' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M20 24C20 4, 30 -8, 40 -8C50 -8, 60 4, 60 24' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M20 48V32M20 44c-3-2-6-3-8-2m8 2c3-2 6-3 8-2M20 38c-2-2-5-3-7-2m7 2c2-2 5-3 7-2' stroke='black' stroke-width='0.9' fill='none'/%3E%3Cpath d='M0 24V8M0 20c-3-2-6-3-8-2m8 2c3-2 6-3 8-2' stroke='black' stroke-width='0.9' fill='none'/%3E%3Cpath d='M40 24V8M40 20c-3-2-6-3-8-2m8 2c3-2 6-3 8-2' stroke='black' stroke-width='0.9' fill='none'/%3E%3C/svg%3E")`,
+  'persian-indigo': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='17' y='17' width='14' height='14' fill='none' stroke='black' stroke-width='1.2' transform='rotate(45 24 24)'/%3E%3Ccircle cx='24' cy='24' r='2' fill='black'/%3E%3Crect x='-7' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='-7' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 0 0)'/%3E%3Crect x='41' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='41' y='-7' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 48 0)'/%3E%3Crect x='-7' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='-7' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 0 48)'/%3E%3Crect x='41' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='41' y='41' width='14' height='14' fill='none' stroke='black' stroke-width='1' transform='rotate(45 48 48)'/%3E%3Ccircle cx='24' cy='6' r='1.2' fill='black'/%3E%3Ccircle cx='24' cy='42' r='1.2' fill='black'/%3E%3Ccircle cx='6' cy='24' r='1.2' fill='black'/%3E%3Ccircle cx='42' cy='24' r='1.2' fill='black'/%3E%3Ccircle cx='12' cy='12' r='0.8' fill='black'/%3E%3Ccircle cx='36' cy='12' r='0.8' fill='black'/%3E%3Ccircle cx='12' cy='36' r='0.8' fill='black'/%3E%3Ccircle cx='36' cy='36' r='0.8' fill='black'/%3E%3C/svg%3E")`,
 };
 
 export const SIGNATURE_MOTIFS: Record<ThemeId, string> = {
@@ -34,6 +35,7 @@ export const SIGNATURE_MOTIFS: Record<ThemeId, string> = {
   'desert-scroll': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg transform='translate(70,70)'%3E%3Cpath d='M-45 60V0c0-25 20-45 45-45s45 20 45 45v60' fill='none' stroke='black' stroke-width='2.5'/%3E%3Cpath d='M-35 60V5c0-19 16-35 35-35s35 16 35 35v55' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cline x1='-55' y1='60' x2='55' y2='60' stroke='black' stroke-width='3'/%3E%3Cpath d='M0-45l5-12h-10z' fill='black'/%3E%3C/g%3E%3C/svg%3E")`,
   'istanbul-sapphire': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg transform='translate(75,75)'%3E%3Cpath d='M-60 30c25-45 60-45 80-20 15 18 10 35-5 35-12 0-18-10-15-20 4-15 25-25 45-10' fill='none' stroke='black' stroke-width='2.5'/%3E%3Cpath d='M-60 10c20-35 50-35 70-15' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='15' cy='5' r='4' fill='black'/%3E%3Ccircle cx='35' cy='15' r='3' fill='black'/%3E%3Ccircle cx='48' cy='30' r='2.5' fill='black'/%3E%3C/g%3E%3C/svg%3E")`,
   'madinah-emerald': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg transform='translate(80,80)'%3E%3Cpath d='M-28 35C-28 10, -18 -15, 0 -24C18 -15, 28 10, 28 35Z' fill='black'/%3E%3Cline x1='0' y1='-24' x2='0' y2='-34' stroke='black' stroke-width='2'/%3E%3Ccircle cx='0' cy='-36' r='2' fill='black'/%3E%3Crect x='-54' y='-15' width='6' height='50' fill='black'/%3E%3Cpath d='M-55 -15L-51 -28 -47 -15Z' fill='black'/%3E%3Crect x='48' y='-15' width='6' height='50' fill='black'/%3E%3Cpath d='M47 -15L51 -28 55 -15Z' fill='black'/%3E%3Cpath d='M-65 42c22-8 44-8 65-2 21-6 43-6 65 2' fill='none' stroke='black' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E")`,
+  'persian-indigo': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg transform='translate(80,80)'%3E%3Ccircle r='72' fill='none' stroke='black' stroke-width='1.5' stroke-dasharray='3 4'/%3E%3Cpath d='M-15 -48 A 52 52 0 1 0 42 32 A 42 42 0 1 1 -15 -48 Z' fill='black'/%3E%3Cg transform='translate(16,-12)'%3E%3Crect x='-14' y='-14' width='28' height='28' fill='none' stroke='black' stroke-width='2'/%3E%3Crect x='-14' y='-14' width='28' height='28' fill='none' stroke='black' stroke-width='2' transform='rotate(45)'/%3E%3Ccircle r='3.5' fill='black'/%3E%3C/g%3E%3Ccircle cx='-45' cy='-25' r='1.8' fill='black'/%3E%3Ccircle cx='-35' cy='45' r='2' fill='black'/%3E%3Ccircle cx='48' cy='-28' r='1.6' fill='black'/%3E%3Ccircle cx='35' cy='50' r='1.8' fill='black'/%3E%3Ccircle cx='0' cy='-62' r='2.2' fill='black'/%3E%3C/g%3E%3C/svg%3E")`,
 };
 
 export const THEME_SIGNATURES: Record<ThemeId, ThemeSignature> = {
@@ -111,6 +113,17 @@ export const THEME_SIGNATURES: Record<ThemeId, ThemeSignature> = {
     motif: SIGNATURE_MOTIFS['madinah-emerald'],
     headingFamily: "Georgia, 'Times New Roman', serif",
     headingTracking: '0.01em',
+    headingTransform: 'none',
+    headingStyle: 'normal',
+  },
+  'persian-indigo': {
+    radius: '20px',
+    border: '1px solid var(--border)',
+    glow: 'inset 0 1px 0 var(--card-sheen-line), 0 4px 16px var(--accent-glow)',
+    pattern: SIGNATURE_PATTERNS['persian-indigo'],
+    motif: SIGNATURE_MOTIFS['persian-indigo'],
+    headingFamily: "Georgia, 'Times New Roman', serif",
+    headingTracking: 'normal',
     headingTransform: 'none',
     headingStyle: 'normal',
   },
@@ -370,6 +383,42 @@ export const THEMES: Record<ThemeId, AppTheme> = {
       '--sig-head-style': THEME_SIGNATURES['madinah-emerald'].headingStyle,
     },
   },
+  'persian-indigo': {
+    id: 'persian-indigo',
+    name: 'Persian Indigo',
+    subtitle: 'Midnight Indigo Velvet & Moonlight Signature',
+    description: 'Luminous ghost-white moonlight over deep Persian indigo velvet, crowned with celestial 8-point khatam geometry.',
+    signature: THEME_SIGNATURES['persian-indigo'],
+    tokens: {
+      '--bg-base': '#0B0724',
+      '--bg-elev': '#120C33',
+      '--surface': '#1A1242',
+      '--surface-2': '#241A52',
+      '--border': 'rgba(247,247,255,0.22)',
+      '--accent': '#F7F7FF',
+      '--accent-2': '#B8C4FF',
+      '--accent-text': '#E4E4FF',
+      '--on-accent': '#27187D',
+      '--accent-soft': 'rgba(247,247,255,0.14)',
+      '--accent-glow': 'rgba(184,196,255,0.30)',
+      '--card-sheen': 'linear-gradient(135deg, rgba(247,247,255,0.12) 0%, rgba(184,196,255,0.04) 60%)',
+      '--card-sheen-line': 'rgba(247,247,255,0.16)',
+      '--text-primary': '#F7F7FF',
+      '--text-secondary': '#A9A6D9',
+      '--success': '#6EE7A0',
+      '--warning': '#FBBF24',
+      '--danger': '#FB7185',
+      '--sig-radius': THEME_SIGNATURES['persian-indigo'].radius,
+      '--sig-border': THEME_SIGNATURES['persian-indigo'].border,
+      '--sig-glow': THEME_SIGNATURES['persian-indigo'].glow,
+      '--sig-pattern': THEME_SIGNATURES['persian-indigo'].pattern,
+      '--sig-motif': THEME_SIGNATURES['persian-indigo'].motif,
+      '--sig-head-family': THEME_SIGNATURES['persian-indigo'].headingFamily,
+      '--sig-head-tracking': THEME_SIGNATURES['persian-indigo'].headingTracking,
+      '--sig-head-transform': THEME_SIGNATURES['persian-indigo'].headingTransform,
+      '--sig-head-style': THEME_SIGNATURES['persian-indigo'].headingStyle,
+    },
+  },
 };
 
 export const APP_THEMES: AppTheme[] = [
@@ -380,6 +429,7 @@ export const APP_THEMES: AppTheme[] = [
   THEMES['desert-scroll'],
   THEMES['istanbul-sapphire'],
   THEMES['madinah-emerald'],
+  THEMES['persian-indigo'],
 ];
 
 const VALID_THEME_IDS = new Set<ThemeId>(APP_THEMES.map((t) => t.id));
@@ -496,6 +546,7 @@ export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
   'desert-scroll': '#100804',
   'istanbul-sapphire': '#030B16',
   'madinah-emerald': '#04120C',
+  'persian-indigo': '#0B0724',
 };
 
 /**
