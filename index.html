@@ -31,6 +31,16 @@
           document.head.appendChild(greetStyle);
         }
 
+        // Check user startup animations/lite mode preference before first paint
+        var animPref = localStorage.getItem('animations_enabled');
+        if (animPref === 'false') {
+          document.documentElement.classList.add('no-animations');
+          document.documentElement.setAttribute('data-animations', 'off');
+        } else if (animPref === 'true') {
+          document.documentElement.classList.remove('no-animations');
+          document.documentElement.setAttribute('data-animations', 'on');
+        }
+
         // Allow tap-to-dismiss on initial splash immediately
         function dismissInitialSplash() {
           try {

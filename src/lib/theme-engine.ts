@@ -400,7 +400,7 @@ export function getTheme(): ThemeId {
 }
 
 /**
- * Applies all 15 theme tokens and DOM attributes immediately.
+ * Applies all 17 theme tokens and DOM attributes immediately.
  * Keeps 'dark' permanently active on <html> so Tailwind dark: variants always work.
  * Forces native status bar to LightContent unconditionally.
  */
@@ -411,57 +411,81 @@ export function applyThemeToDOM(themeId: ThemeId): void {
   const theme = THEMES[validId] || THEMES[DEFAULT_THEME_ID];
   const root = document.documentElement;
 
-  // 1. Maintain permanent dark class on root for Tailwind dark: variants
-  if (!root.classList.contains('dark')) {
-    root.classList.add('dark');
-  }
+  // Add .theme-switching guard to prevent transition storms across the DOM
+  root.classList.add('theme-switching');
 
-  // 2. Set theme data attribute and class
-  root.setAttribute('data-theme', validId);
-  APP_THEMES.forEach((t) => {
-    if (t.id === validId) {
-      root.classList.add(t.id);
+  try {
+    // 1. Maintain permanent dark class on root for Tailwind dark: variants
+    if (!root.classList.contains('dark')) {
+      root.classList.add('dark');
+    }
+
+    // 2. Set theme data attribute and class synchronously
+    root.setAttribute('data-theme', validId);
+    APP_THEMES.forEach((t) => {
+      if (t.id === validId) {
+        root.classList.add(t.id);
+      } else {
+        root.classList.remove(t.id);
+      }
+    });
+
+    // 3. Write all theme CSS custom properties directly onto document root
+    (Object.keys(theme.tokens) as Array<keyof ThemeTokens>).forEach((token) => {
+      const val = theme.tokens[token];
+      if (val !== undefined) {
+        root.style.setProperty(token, val);
+      }
+    });
+
+    if (theme.tokens['--card-sheen-line']) {
+      root.style.setProperty('--card-sheen-line', theme.tokens['--card-sheen-line']);
     } else {
-      root.classList.remove(t.id);
+      root.style.removeProperty('--card-sheen-line');
     }
-  });
 
-  // 3. Write all theme CSS custom properties directly onto document root
-  (Object.keys(theme.tokens) as Array<keyof ThemeTokens>).forEach((token) => {
-    const val = theme.tokens[token];
-    if (val !== undefined) {
-      root.style.setProperty(token, val);
+    // 4. Update meta theme-color synchronously in the same frame
+    const bgHex = THEME_BG_HEX_MAP[validId] || theme.tokens['--bg-base'] || '#000000';
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', bgHex);
     }
-  });
-
-  if (theme.tokens['--card-sheen-line']) {
-    root.style.setProperty('--card-sheen-line', theme.tokens['--card-sheen-line']);
-  } else {
-    root.style.removeProperty('--card-sheen-line');
-  }
-
-  // 4. Force status bar to LightContent (Style.Dark) unconditionally since all 5 themes are dark-based
-  if (Capacitor.isNativePlatform()) {
-    try {
-      StatusBar.setStyle({ style: Style.Dark }).catch(() => {
-        // Safe fallback on unsupported platforms
+  } finally {
+    // Remove .theme-switching guard after two requestAnimationFrame frames
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          root.classList.remove('theme-switching');
+        });
       });
-    } catch {
-      // Safe fallback when native status bar is unavailable
+    } else {
+      setTimeout(() => {
+        root.classList.remove('theme-switching');
+      }, 32);
     }
   }
 
-  // 5. Synchronize native Android window & WebView background color to eliminate cold-start navy flash (deferred for instant frame paint)
-  const bgHex = THEME_BG_HEX_MAP[validId] || '#000000';
-  if (typeof window !== 'undefined') {
-    setTimeout(() => {
+  // 5. Defer native status bar and Android Bridge background sync off the tap frame
+  const bgHex = THEME_BG_HEX_MAP[validId] || theme.tokens['--bg-base'] || '#000000';
+  setTimeout(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        StatusBar.setStyle({ style: Style.Dark }).catch((err) => {
+          console.warn('Native status bar style set failed:', err);
+        });
+      } catch (err) {
+        console.warn('StatusBar API unavailable:', err);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
       try {
         (window as any).AndroidBridge?.setNativeThemeBg?.(bgHex);
-      } catch {
-        // Safe fallback when AndroidBridge is unavailable
+      } catch (err) {
+        console.warn('AndroidBridge setNativeThemeBg failed:', err);
       }
-    }, 0);
-  }
+    }
+  }, 0);
 }
 
 export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
@@ -485,16 +509,20 @@ export function setTheme(newThemeId: ThemeId): void {
     localStorage.setItem(THEME_STORAGE_KEY, validId);
     // Ignore and remove legacy theme mode to avoid conflicting states
     localStorage.removeItem(LEGACY_THEME_KEY);
-  } catch {
-    // Continue silently on storage write failure
+  } catch (err) {
+    console.warn('Failed to write theme to localStorage:', err);
   }
 
   applyThemeToDOM(validId);
-  recordBreadcrumb('THEME_CHANGE', `Theme set to: ${validId}`);
 
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(THEME_CHANGED_EVENT, { detail: validId }));
-  }
+  // Defer breadcrumbs and global event dispatch off the tap frame
+  setTimeout(() => {
+    recordBreadcrumb('THEME_CHANGE', `Theme set to: ${validId}`);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(THEME_CHANGED_EVENT, { detail: validId }));
+    }
+  }, 0);
 }
 
 /**

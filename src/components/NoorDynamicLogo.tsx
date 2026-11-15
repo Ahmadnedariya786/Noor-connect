@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId, useMemo } from 'react';
+import React, { useState, useEffect, useId, useMemo, memo, useCallback } from 'react';
 
 /**
  * NOOR CONNECT — 5-EDITION LIVING ISLAMIC EMBLEM ENGINE (<NoorDynamicLogo />)
@@ -20,6 +20,7 @@ export interface NoorDynamicLogoProps {
   className?: string;
   showBadge?: boolean;
   onClick?: () => void;
+  noFilters?: boolean;
 }
 
 export interface LogoEditionMeta {
@@ -399,7 +400,7 @@ const SIZE_MAP: Record<NoorLogoSize, number> = {
 // ─── SVG VECTOR GRAPHICS FOR THE 5 SACRED EDITIONS ───
 
 // Shared SVG Definitions (Gradients & Filters)
-const SvgDefs: React.FC<{ prefix: string }> = ({ prefix }) => (
+const SvgDefs: React.FC<{ prefix: string; noFilters?: boolean }> = ({ prefix, noFilters = false }) => (
   <defs>
     {/* 24K Burnished Gold Primary Gradient */}
     <linearGradient id={`${prefix}-gold-primary`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -440,15 +441,19 @@ const SvgDefs: React.FC<{ prefix: string }> = ({ prefix }) => (
       <stop offset="100%" stopColor="#6B4E08" stopOpacity="0" />
     </radialGradient>
 
-    {/* Metallic Drop Shadows */}
-    <filter id={`${prefix}-glow`} x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#D4AF37" floodOpacity="0.55" />
-    </filter>
+    {/* Metallic Drop Shadows — excluded when noFilters is true for zero GPU overhead */}
+    {!noFilters && (
+      <>
+        <filter id={`${prefix}-glow`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#D4AF37" floodOpacity="0.55" />
+        </filter>
 
-    <filter id={`${prefix}-deep-shadow`} x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.65" />
-      <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#D4AF37" floodOpacity="0.35" />
-    </filter>
+        <filter id={`${prefix}-deep-shadow`} x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.65" />
+          <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#D4AF37" floodOpacity="0.35" />
+        </filter>
+      </>
+    )}
   </defs>
 );
 
@@ -946,6 +951,7 @@ export const NoorDynamicLogo: React.FC<NoorDynamicLogoProps> = ({
   className = '',
   showBadge = false,
   onClick,
+  noFilters = false,
 }) => {
   const reactId = useId().replace(/:/g, '');
   const prefix = `noor-logo-${reactId}`;
@@ -1038,9 +1044,9 @@ export const NoorDynamicLogo: React.FC<NoorDynamicLogoProps> = ({
         viewBox="0 0 200 200"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="overflow-visible pointer-events-none drop-shadow-md"
+        className={`overflow-visible pointer-events-none ${noFilters ? '' : 'drop-shadow-md'}`}
       >
-        <SvgDefs prefix={prefix} />
+        <SvgDefs prefix={prefix} noFilters={noFilters} />
         {renderedVector}
       </svg>
 
@@ -1068,6 +1074,86 @@ export interface NoorLogoVisualPickerProps {
   onSelect?: (edition: NoorLogoEditionId) => void;
 }
 
+interface LogoEditionCardProps {
+  editionId: NoorLogoEditionId;
+  isActive: boolean;
+  onSelect: (editionId: NoorLogoEditionId) => void;
+}
+
+export const LogoEditionCard = memo<LogoEditionCardProps>(({
+  editionId,
+  isActive,
+  onSelect,
+}) => {
+  const ed = NOOR_LOGO_EDITIONS[editionId];
+
+  const handleClick = () => {
+    onSelect(editionId);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`group relative flex flex-col items-center justify-between rounded-xl border select-none min-w-0 cursor-pointer ${
+        isActive
+          ? 'border-[var(--accent)] ring-1 ring-[var(--accent)] bg-[var(--accent-soft)]'
+          : 'border-[var(--border)] hover:border-[var(--accent)]/40 bg-[var(--surface-2)]/60 hover:bg-[var(--surface-2)] opacity-85 hover:opacity-100'
+      }`}
+      style={{
+        contentVisibility: 'auto',
+        containIntrinsicSize: 'auto 74px',
+        padding: '10px 6px',
+        minWidth: 0,
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        position: 'relative',
+        transition: 'border-color 0.15s ease, background-color 0.15s ease',
+        boxShadow: isActive ? '0 2px 8px rgba(0, 0, 0, 0.25)' : 'none',
+      }}
+      title={`${ed.name} (Tap to set as App & Launcher Icon)`}
+      aria-label={`Select ${ed.name}`}
+    >
+      {/* Active Checkmark Badge */}
+      {isActive && (
+        <div
+          className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center shadow-sm z-10"
+          style={{ background: 'var(--accent)', color: 'var(--on-accent, #000)' }}
+        >
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+
+      <div
+        className="flex items-center justify-center pointer-events-none shrink-0 my-0.5 mx-auto"
+        style={{ width: '38px', height: '38px', maxWidth: '100%', overflow: 'hidden' }}
+      >
+        <NoorDynamicLogo edition={editionId} customSize={36} animated={false} noFilters={true} />
+      </div>
+
+      <span
+        style={{
+          fontSize: '0.68rem',
+          lineHeight: 1.25,
+          fontWeight: 700,
+          textAlign: 'center',
+          display: 'block',
+          width: '100%',
+          whiteSpace: 'normal',
+          wordBreak: 'keep-all',
+          color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
+        }}
+      >
+        {ed.cardTitle || ed.shortLabel?.replace('\n', ' ') || ed.shortName}
+      </span>
+    </button>
+  );
+});
+
+LogoEditionCard.displayName = 'LogoEditionCard';
+
 export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
   className = '',
   onSelect,
@@ -1088,76 +1174,25 @@ export const NoorLogoVisualPicker: React.FC<NoorLogoVisualPickerProps> = ({
     };
   }, []);
 
-  const handlePick = (edition: NoorLogoEditionId) => {
+  const handlePick = useCallback((edition: NoorLogoEditionId) => {
     setSelected(edition);
     setSelectedLogoEdition(edition);
     if (onSelect) {
       onSelect(edition);
     }
-  };
+  }, [onSelect]);
 
   return (
     <div className={`space-y-2 select-none w-full ${className}`}>
       <div className="grid grid-cols-3 gap-2.5 w-full">
-        {NOOR_LOGO_EDITIONS.map((ed) => {
-          const isCurrent = selected === ed.id;
-          return (
-            <button
-              key={ed.id}
-              type="button"
-              onClick={() => handlePick(ed.id)}
-              className={`group relative flex flex-col items-center justify-between rounded-xl border transition-all duration-200 select-none min-w-0 ${
-                isCurrent
-                  ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40 bg-[var(--accent-soft)] shadow-md scale-[1.02]'
-                  : 'border-[var(--border)] hover:border-[var(--accent)]/40 bg-[var(--surface-2)]/60 hover:bg-[var(--surface-2)] opacity-85 hover:opacity-100'
-              }`}
-              style={{
-                padding: '10px 6px',
-                minWidth: 0,
-                maxWidth: '100%',
-                boxSizing: 'border-box',
-                position: 'relative',
-              }}
-              title={`${ed.name} (Tap to set as App & Launcher Icon)`}
-              aria-label={`Select ${ed.name}`}
-            >
-              {/* Active Checkmark Badge — strictly inside boundaries (zero negative offsets) */}
-              {isCurrent && (
-                <div
-                  className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center shadow z-10"
-                  style={{ background: 'var(--accent)', color: 'var(--on-accent, #000)' }}
-                >
-                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              )}
-
-              <div
-                className="flex items-center justify-center pointer-events-none shrink-0 my-0.5 mx-auto"
-                style={{ width: '38px', height: '38px', maxWidth: '100%', overflow: 'hidden' }}
-              >
-                <NoorDynamicLogo edition={ed.id} customSize={36} animated={false} />
-              </div>
-
-              <span
-                style={{
-                  fontSize: '0.68rem',
-                  lineHeight: 1.25,
-                  fontWeight: 700,
-                  textAlign: 'center',
-                  display: 'block',
-                  width: '100%',
-                  whiteSpace: 'normal',
-                  wordBreak: 'keep-all',
-                  color: isCurrent ? 'var(--accent-text)' : 'var(--text-secondary)',
-                }}
-              >
-                {ed.cardTitle || ed.shortLabel?.replace('\n', ' ') || ed.shortName}
-              </span>
-            </button>
-          );
-        })}
+        {NOOR_LOGO_EDITIONS.map((ed) => (
+          <LogoEditionCard
+            key={ed.id}
+            editionId={ed.id}
+            isActive={selected === ed.id}
+            onSelect={handlePick}
+          />
+        ))}
       </div>
     </div>
   );

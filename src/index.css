@@ -69,10 +69,41 @@
     background: var(--card);
   }
 
+  /* Theme Switching Guard — Suppress transition storms during theme changes (transitions only) */
+  html.theme-switching,
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition: none !important;
+  }
+
   [data-animations="off"] *,
   .no-animations * {
     transition: none !important;
     animation: none !important;
+  }
+
+  /* Lite Mode: When Fluid Animations is OFF, hide decorative patterns and flatten card depth */
+  html[data-animations="off"] .sig-pattern-layer,
+  html[data-animations="off"] .sig-motif-layer,
+  html[data-animations="off"] .theme-app-pattern,
+  html[data-animations="off"] .hero-pattern-layer,
+  html[data-animations="off"] .sig-motif-vignette,
+  html[data-animations="off"] .kiswa-hero-band,
+  .no-animations .sig-pattern-layer,
+  .no-animations .sig-motif-layer,
+  .no-animations .theme-app-pattern,
+  .no-animations .hero-pattern-layer,
+  .no-animations .sig-motif-vignette,
+  .no-animations .kiswa-hero-band {
+    display: none !important;
+  }
+
+  html[data-animations="off"] .theme-card,
+  html[data-animations="off"] .theme-hero-card,
+  .no-animations .theme-card,
+  .no-animations .theme-hero-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
   }
 
   html,
