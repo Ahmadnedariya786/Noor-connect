@@ -69,7 +69,7 @@ export const ThemePreviewCard = memo<ThemePreviewCardProps>(({
       <div className="flex items-center justify-between mb-1 w-full min-w-0" style={{ gap: '4px' }}>
         <h3
           className={cn(
-            "leading-snug whitespace-nowrap",
+            "leading-snug whitespace-nowrap truncate min-w-0 flex-1",
             isActive ? "text-[var(--accent-text)]" : "text-[var(--text-primary)] group-hover:text-[var(--accent-text)]"
           )}
           style={{
@@ -77,6 +77,8 @@ export const ThemePreviewCard = memo<ThemePreviewCardProps>(({
             fontWeight: 800,
             letterSpacing: '-0.01em',
             whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
         >
           {theme.name}

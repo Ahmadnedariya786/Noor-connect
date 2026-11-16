@@ -945,19 +945,18 @@
     box-sizing: border-box !important;
   }
 
-  /* Unified App-Wide Settings Value Chip (Zero Truncation / Zero Clipping) */
+  /* Unified App-Wide Settings Value Chip (Adaptive 2-Line Row Layout) */
   .settings-value-chip {
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     width: auto !important;
-    min-width: fit-content !important;
-    max-width: none !important;
-    font-size: 0.72rem !important;
+    max-width: 135px !important;
+    font-size: 0.68rem !important;
     font-weight: 700 !important;
-    padding: 4px 10px !important;
+    padding: 2px 8px !important;
     border-radius: 9999px !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -967,6 +966,7 @@
     border: 1px solid var(--border) !important;
     position: relative !important;
     z-index: 2 !important;
+    line-height: 1.25 !important;
   }
 
   /* ── Guarded Signature Layers (Part 1 item 4, 5 & Part 2) ── */

@@ -20,9 +20,9 @@ export const SettingsThemePage: React.FC = () => {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div>
-          <h1 className="text-base font-bold text-[var(--text-primary)] font-display-signature">App Theme</h1>
-          <p className="text-xs text-[var(--text-secondary)]">Choose your full-app color theme</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base font-bold text-[var(--text-primary)] font-display-signature truncate">App Theme</h1>
+          <p className="text-xs text-[var(--text-secondary)] truncate">Choose your full-app color theme</p>
         </div>
       </div>
 

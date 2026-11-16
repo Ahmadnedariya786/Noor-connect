@@ -977,31 +977,28 @@ const SettingsSubPage: React.FC = () => {
 
             <Card className="p-4 space-y-4 rounded-2xl" style={{ paddingBottom: '20px', overflow: 'visible', maxHeight: 'none' }}>
               <div
-                className="flex items-center justify-between py-1 cursor-pointer group gap-2 w-full"
+                className="flex items-center justify-between py-1 cursor-pointer group gap-2.5 w-full"
                 onClick={() => navigate('/settings/app-theme', { replace: true })}
                 role="button"
                 tabIndex={0}
               >
-                <div className="min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
-                  <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors truncate block">{appearanceStrings.appThemeTitle}</Label>
-                  <p className="text-xs text-[var(--text-secondary)] truncate">{appearanceStrings.appThemeSubtitle}</p>
+                <div className="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
+                  <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
+                    <Label className="text-sm font-bold cursor-pointer group-hover:text-[var(--accent-text)] transition-colors truncate block">
+                      {appearanceStrings.appThemeTitle}
+                    </Label>
+                    <span
+                      className="settings-value-chip shrink-0"
+                      dir="ltr"
+                    >
+                      <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{currentThemeName}</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--text-secondary)] truncate block w-full leading-tight">
+                    {appearanceStrings.appThemeSubtitle}
+                  </p>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span
-                    className="settings-value-chip"
-                    style={{
-                      backgroundColor: 'var(--surface-2)',
-                      position: 'relative',
-                      zIndex: 2,
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                      maxWidth: 'none',
-                    }}
-                  >
-                    {currentThemeName}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                </div>
+                <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform shrink-0 opacity-55" />
               </div>
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
@@ -1880,7 +1877,7 @@ const SettingsSubPage: React.FC = () => {
                     const next = cycleLogoEdition();
                     setLogoEdition(next);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border active:scale-95 transition-all shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border active:scale-95 transition-all shadow-sm max-w-full"
                   style={{
                     background: 'var(--accent-soft)',
                     borderColor: 'var(--border)',
@@ -1888,8 +1885,8 @@ const SettingsSubPage: React.FC = () => {
                   }}
                   title="Switch between the 5 living sacred logo editions"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-                  <span>Switch Logo Style ({logoEdition + 1}/5) • {NOOR_LOGO_EDITIONS[logoEdition]?.fullTitle || NOOR_LOGO_EDITIONS[logoEdition]?.shortName}</span>
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                  <span className="truncate">Switch Logo ({logoEdition + 1}/5) • {NOOR_LOGO_EDITIONS[logoEdition]?.shortName}</span>
                 </button>
               </div>
 

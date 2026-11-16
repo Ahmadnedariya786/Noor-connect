@@ -88,36 +88,59 @@ const Settings = () => {
           
           <div 
             onClick={() => navigate('/settings/app-theme', { replace: true })}
-            className="bg-[var(--surface)] border border-[var(--border)] p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--accent)]/40 transition-all theme-card"
-            style={{ borderRadius: 'var(--sig-radius, 28px)' }}
+            className="bg-[var(--surface)] border border-[var(--border)] flex items-center justify-between cursor-pointer hover:border-[var(--accent)]/40 transition-all theme-card"
+            style={{
+              borderRadius: 'var(--sig-radius, 28px)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '11px',
+              padding: '12px 14px',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
             role="button"
             tabIndex={0}
           >
-            <div className="flex items-center gap-3 min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
-              <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
-                <Palette className="w-5 h-5 text-[var(--accent-text)]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-[var(--text-primary)] font-display-signature text-base sm:text-lg truncate">App Theme</h3>
-                <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Choose full-app color theme</p>
-              </div>
+            <div
+              className="rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0"
+              style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '10px' }}
+            >
+              <Palette className="w-4 h-4 text-[var(--accent-text)]" />
             </div>
-            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-              <span
-                className="settings-value-chip"
+            <div
+              className="min-w-0 flex-1 flex flex-col justify-center"
+              style={{
+                flex: '1 1 0%',
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: '3px',
+              }}
+            >
+              <div
+                className="flex items-center justify-between gap-1.5 w-full min-w-0"
                 style={{
-                  backgroundColor: 'var(--surface-2)',
-                  position: 'relative',
-                  zIndex: 2,
-                  flexShrink: 0,
-                  whiteSpace: 'nowrap',
-                  maxWidth: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '6px',
+                  width: '100%',
+                  minWidth: 0,
                 }}
               >
-                {theme?.name || 'Oxford Gold'}
-              </span>
-              <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
+                <h3 className="font-bold text-[var(--text-primary)] font-display-signature text-sm truncate">
+                  App Theme
+                </h3>
+                <span className="settings-value-chip shrink-0" dir="ltr">
+                  <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{theme?.name || 'Oxford Gold'}</span>
+                </span>
+              </div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] truncate block w-full leading-tight">
+                Choose full-app color theme
+              </p>
             </div>
+            <ChevronRight className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-55 shrink-0" />
           </div>
         </section>
 
@@ -231,25 +254,58 @@ const Settings = () => {
             {/* Row: Clock Style Picker */}
             <div
               onClick={() => setShowClockModal(true)}
-              className="p-4 sm:p-5 flex items-center justify-between border-t border-[var(--border)] gap-3 cursor-pointer group hover:bg-[var(--surface-2)] transition-colors"
+              className="flex items-center justify-between border-t border-[var(--border)] cursor-pointer group hover:bg-[var(--surface-2)] transition-colors"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '11px',
+                padding: '12px 14px',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
               role="button"
               tabIndex={0}
             >
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
-                <div className="w-10 h-10 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5 text-[var(--accent-text)]" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-base sm:text-lg truncate group-hover:text-[var(--accent-text)] transition-colors">Clock Style</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-0.5 truncate">Choose home screen clock design</p>
-                </div>
+              <div
+                className="rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center shrink-0"
+                style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '10px' }}
+              >
+                <Clock className="w-4 h-4 text-[var(--accent-text)]" />
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="settings-value-chip">
-                  {currentClockStyleName}
-                </span>
-                <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform" />
+              <div
+                className="min-w-0 flex-1 flex flex-col justify-center"
+                style={{
+                  flex: '1 1 0%',
+                  minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  gap: '3px',
+                }}
+              >
+                <div
+                  className="flex items-center justify-between gap-1.5 w-full min-w-0"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '6px',
+                    width: '100%',
+                    minWidth: 0,
+                  }}
+                >
+                  <h3 className="font-bold text-[var(--text-primary)] font-serif italic text-sm truncate group-hover:text-[var(--accent-text)] transition-colors">
+                    Clock Style
+                  </h3>
+                  <span className="settings-value-chip shrink-0" dir="ltr">
+                    <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{currentClockStyleName}</span>
+                  </span>
+                </div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] truncate block w-full leading-tight">
+                  Choose home screen clock design
+                </p>
               </div>
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--text-secondary)] group-hover:translate-x-0.5 transition-transform opacity-55 shrink-0" />
             </div>
           </div>
         </section>

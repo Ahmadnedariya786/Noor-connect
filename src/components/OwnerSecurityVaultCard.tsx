@@ -199,49 +199,76 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
         boxShadow: isUnlocked ? '0 0 20px var(--accent-glow)' : 'none',
       }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className="p-1 rounded-lg"
-            style={{
-              background: isUnlocked ? 'var(--accent-soft)' : 'var(--surface-2)',
-              color: isUnlocked ? 'var(--accent-text)' : 'var(--text-secondary)',
-            }}
-          >
-            <Shield className="w-4 h-4" />
-          </div>
-          <div>
-            <Label className="text-xs font-bold uppercase tracking-wider block" style={{ color: 'var(--text-secondary)' }}>
+      {/* ── 2-Line Full-Width Header ── */}
+      <div className="space-y-1 w-full min-w-0">
+        {/* Header Row 1: Title (left) + Status Badge (right) */}
+        <div className="flex items-center justify-between gap-2 w-full min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div
+              className="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+              style={{
+                width: '28px',
+                height: '28px',
+                background: isUnlocked ? 'var(--accent-soft)' : 'var(--surface-2)',
+                color: isUnlocked ? 'var(--accent-text)' : 'var(--text-secondary)',
+              }}
+            >
+              <Shield className="w-3.5 h-3.5" />
+            </div>
+            <Label
+              className="font-extrabold uppercase tracking-wider block truncate text-[var(--text-primary)]"
+              style={{
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                letterSpacing: '0.05em',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
               Owner Security Vault
             </Label>
-            <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-              SHA-256 cryptographic owner authorization & lock
-            </span>
+          </div>
+
+          {/* Status Badge */}
+          <div
+            className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1 border shrink-0"
+            style={{
+              fontSize: '0.68rem',
+              background: isUnlocked ? 'rgba(34, 197, 94, 0.12)' : 'var(--accent-soft)',
+              borderColor: isUnlocked ? 'rgba(34, 197, 94, 0.3)' : 'var(--border)',
+              color: isUnlocked ? 'var(--success)' : 'var(--accent-text)',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            {isUnlocked ? (
+              <>
+                <Unlock className="w-3 h-3 shrink-0" />
+                <span className="whitespace-nowrap">Unlocked ({formatSessionTime(remainingSec)})</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3 h-3 shrink-0" />
+                <span className="whitespace-nowrap">Locked</span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Status Badge */}
-        <div
-          className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1 border"
+        {/* Header Row 2: Full-width Subtitle */}
+        <span
+          className="block truncate w-full text-[var(--text-secondary)]"
           style={{
-            background: isUnlocked ? 'rgba(34, 197, 94, 0.12)' : 'var(--accent-soft)',
-            borderColor: isUnlocked ? 'rgba(34, 197, 94, 0.3)' : 'var(--border)',
-            color: isUnlocked ? 'var(--success)' : 'var(--accent-text)',
+            fontSize: '0.70rem',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            lineHeight: 1.25,
           }}
         >
-          {isUnlocked ? (
-            <>
-              <Unlock className="w-3 h-3 shrink-0" />
-              <span className="whitespace-nowrap">Unlocked ({formatSessionTime(remainingSec)})</span>
-            </>
-          ) : (
-            <>
-              <Lock className="w-3 h-3 shrink-0" />
-              <span className="whitespace-nowrap">Locked</span>
-            </>
-          )}
-        </div>
+          SHA-256 cryptographic owner authorization & lock
+        </span>
       </div>
 
       {/* Vault Status Overview */}

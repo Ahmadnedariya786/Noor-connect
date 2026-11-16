@@ -103,14 +103,14 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
                 <div className="min-w-0 flex-1">
                   <h3
                     className={cn(
-                      "text-xs sm:text-sm font-bold tracking-tight leading-snug",
+                      "text-xs sm:text-sm font-bold tracking-tight leading-snug truncate",
                       isSelected ? "text-[var(--accent-text)]" : "text-[var(--text-primary)]"
                     )}
                     style={{ color: isSelected ? 'var(--accent-text)' : undefined }}
                   >
                     {style.name}
                   </h3>
-                  <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1">
+                  <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1 truncate">
                     {style.subtitle}
                   </p>
                 </div>

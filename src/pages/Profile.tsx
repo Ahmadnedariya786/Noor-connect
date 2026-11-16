@@ -569,42 +569,114 @@ const Profile: React.FC = () => {
                     <div
                       key={row.id}
                       onClick={() => navigate(row.route, { replace: true })}
-                      className="group flex items-center justify-between px-4 py-3.5 hover:bg-[var(--surface-2)] active:bg-[var(--surface-2)] transition-all duration-150 cursor-pointer"
+                      className="group flex items-center justify-between hover:bg-[var(--surface-2)] active:bg-[var(--surface-2)] transition-all duration-150 cursor-pointer"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '11px',
+                        padding: '12px 14px',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                      }}
                     >
-                      <div className="flex items-center gap-3.5 min-w-0" style={{ flex: '1 1 0%', minWidth: 0, paddingRight: '8px' }}>
-                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${row.gradient} border flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
-                          <IconComponent className={`w-5 h-5 ${row.iconColor}`} />
+                      {/* Left Icon: 36px fixed */}
+                      <div
+                        className={`rounded-xl bg-gradient-to-br ${row.gradient} border flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105`}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '10px',
+                        }}
+                      >
+                        <IconComponent className={`w-4 h-4 ${row.iconColor}`} />
+                      </div>
+
+                      {/* Middle Content Column: spans remaining full width (228px–252px) */}
+                      <div
+                        className="min-w-0 flex-1 flex flex-col justify-center"
+                        style={{
+                          flex: '1 1 0%',
+                          minWidth: 0,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          gap: '3px',
+                        }}
+                      >
+                        {/* Line 1: Title (left) + Value Pill (right) */}
+                        <div
+                          className="flex items-center justify-between gap-1.5 w-full min-w-0"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '6px',
+                            width: '100%',
+                            minWidth: 0,
+                          }}
+                        >
+                          <span
+                            className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate block leading-tight"
+                            style={{
+                              fontSize: '0.84rem',
+                              fontWeight: 700,
+                              lineHeight: 1.2,
+                              color: 'var(--text-primary)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {row.title}
+                          </span>
+
+                          {hasAsyncKey && (
+                            val === undefined ? (
+                              <div className="w-7 h-3.5 bg-[var(--surface-2)] rounded-full animate-pulse shrink-0" />
+                            ) : val !== null ? (
+                              <span
+                                className="settings-value-chip shrink-0"
+                                dir="ltr"
+                              >
+                                <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{val}</span>
+                              </span>
+                            ) : null
+                          )}
                         </div>
 
-                        <div className="min-w-0 flex-1 pe-2">
-                          <div className="text-[14px] font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors leading-tight">
-                            {row.title}
-                          </div>
-                          <div
-                            className="font-normal text-[var(--text-secondary)] mt-0.5 bidi-plaintext"
-                            style={{ fontSize: '0.70rem', unicodeBidi: 'plaintext', whiteSpace: 'normal', lineHeight: 1.35 }}
-                          >
-                            {row.subtitle}
-                          </div>
+                        {/* Line 2: Subtitle spanning the full 100% width */}
+                        <div
+                          className="font-normal text-[var(--text-secondary)] bidi-plaintext truncate block w-full leading-tight"
+                          style={{
+                            fontSize: '0.70rem',
+                            color: 'var(--text-secondary)',
+                            unicodeBidi: 'plaintext',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: '100%',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {row.subtitle}
                         </div>
                       </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0 ms-2">
-                      {hasAsyncKey && (
-                        val === undefined ? (
-                          <div className="w-8 h-4 bg-[var(--surface-2)] rounded-full animate-pulse" />
-                        ) : val !== null ? (
-                          <span
-                            className="settings-value-chip"
-                            dir="ltr"
-                          >
-                            <span style={{ unicodeBidi: 'isolate' }} className="whitespace-nowrap">{val}</span>
-                          </span>
-                        ) : null
-                      )}
-                      <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] opacity-50 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all rtl:rotate-180" />
+                      {/* Far-Right Chevron */}
+                      <ChevronRight
+                        className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-50 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all rtl:rotate-180 shrink-0"
+                        style={{
+                          width: '14px',
+                          height: '14px',
+                          flexShrink: 0,
+                          opacity: 0.55,
+                        }}
+                      />
                     </div>
-                  </div>
                 );
               })}
             </div>
