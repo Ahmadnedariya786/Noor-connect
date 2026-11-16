@@ -90,7 +90,7 @@ try {
 
     for (const sourceFile of program.getSourceFiles()) {
       const fileName = sourceFile.fileName.replace(/\\/g, '/');
-      if (!fileName.includes('/src/')) continue;
+      if (!(fileName.startsWith('src/') || fileName.includes('/src/'))) continue;
       if (fileName.includes('/node_modules/') || fileName.endsWith('.d.ts')) continue;
 
       const fileDiags = [

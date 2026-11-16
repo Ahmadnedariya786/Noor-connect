@@ -25,7 +25,7 @@ import { TopQazaReminderBanner } from "@/components/TopQazaReminderBanner";
 import { hasHomeEntranceCompleted } from "@/lib/home-entrance";
 import { PrayerTimesSection } from "@/components/PrayerTimesSection";
 import { getDayWorshipLog, formatDateKey } from "@/lib/worship-log";
-import { getPrayerHistory } from "@/lib/salah-tracker";
+import { getPrayerHistory, getTodayPrayers, type DailyPrayers } from "@/lib/salah-tracker";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { triggerInAppPrayerAlert } from "@/components/PrayerReminderBanner";
 import { parseTimeToSeconds } from "@/lib/makruh-times";
@@ -490,7 +490,13 @@ function PremiumDashboardInner({
       const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       let nextUpcomingDelayMs = 60000;
-      const currentPrayers = getTodayPrayers();
+      let currentPrayers: DailyPrayers | Record<string, boolean> = {};
+      try {
+        currentPrayers = typeof getTodayPrayers === 'function' ? getTodayPrayers() : {};
+      } catch (err) {
+        console.warn('Error reading today prayers for banner auto-trigger:', err);
+        currentPrayers = {};
+      }
 
       for (const p of prayers) {
         const rawName = (p.originalName || p.name || '').trim();
