@@ -83,7 +83,7 @@ export const ClockStylePicker: React.FC<ClockStylePickerProps> = ({
               }}
               className={cn(
                 "group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 cursor-pointer select-none text-left p-3 sm:p-3.5",
-                "border backdrop-blur-sm",
+                "border",
                 isSelected
                   ? "ring-1 shadow-lg"
                   : "hover:bg-[var(--surface-2)] active:scale-[0.98]"

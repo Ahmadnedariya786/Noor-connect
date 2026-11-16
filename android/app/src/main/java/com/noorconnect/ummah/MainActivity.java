@@ -1821,6 +1821,17 @@ public class MainActivity extends BridgeActivity {
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
+
+                // High importance channel for Prayer Hadith Background Notifications
+                NotificationChannel hadithChannel = new NotificationChannel(
+                        "noor_prayer_hadith_alerts_v2",
+                        "Prayer Hadith Alerts",
+                        NotificationManager.IMPORTANCE_HIGH);
+                hadithChannel.setDescription("Authentic prayer time alerts and daily Hadith guidance for all 5 prayers");
+                hadithChannel.enableLights(true);
+                hadithChannel.enableVibration(true);
+                hadithChannel.setShowBadge(true);
+                manager.createNotificationChannel(hadithChannel);
             }
         }
     }

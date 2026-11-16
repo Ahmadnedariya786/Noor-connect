@@ -13,6 +13,7 @@ import { adhanService, type AdhanConfig } from './adhan-service';
 import { PRAYER_QUOTES } from './prayer-quotes';
 import { getPrayerDisplayName } from './prayer-utils';
 import { calculatePrayerTimes } from './prayer-calculator';
+import { getPrayerHadith } from './prayer-hadith-i18n';
 
 // Task 2: Use SW registration for more robust "Native" notifications
 let swRegistration: ServiceWorkerRegistration | null = null;
@@ -171,6 +172,31 @@ export class LocalNotificationManager {
   }
 
   /**
+   * Ensure high-importance notification channel exists on Android 8.0+
+   */
+  async ensureHadithChannel(): Promise<string> {
+    const channelId = 'noor_prayer_hadith_alerts_v2';
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await LocalNotifications.createChannel({
+          id: channelId,
+          name: 'Prayer Hadith Alerts',
+          description: 'Authentic prayer time alerts and daily Hadith guidance for all 5 prayers',
+          importance: 5,
+          visibility: 1,
+          sound: 'default',
+          vibration: true,
+          lights: true,
+          lightColor: '#D4AF37',
+        });
+      } catch (e) {
+        console.warn('Could not create prayer hadith notification channel:', e);
+      }
+    }
+    return channelId;
+  }
+
+  /**
    * Initialize the local notifications service (without requesting permissions)
    */
   async initialize(): Promise<boolean> {
@@ -182,6 +208,7 @@ export class LocalNotificationManager {
         return false;
       }
 
+      await this.ensureHadithChannel();
       this.isInitialized = true;
       return true;
     } catch (error) {
@@ -323,11 +350,19 @@ export class LocalNotificationManager {
           }
 
           const notificationId = this.getNotificationId(prayerName, prayerDate);
-          const message = getPrayerNotificationMessage(prayerName, cleaned);
+          const hadithData = getPrayerHadith(prayerName);
+          const time12h = format12HourTime(cleaned);
+          const title = `🕌 ${prayerName} • ${time12h}`;
+          const body = `${hadithData.arabic} — ${hadithData.translation} (${hadithData.reference})`;
+          const largeBody = `🕌 Hayya 'alas-Salah — Time for ${prayerName} (${time12h})\n${hadithData.arabic}\n${hadithData.translation}\n— ${hadithData.reference} • ${hadithData.rakah}`;
+
           const notification: LocalNotificationSchema = {
             id: notificationId,
-            title: message.title,
-            body: message.body,
+            title,
+            body,
+            largeBody,
+            summaryText: `${prayerName} Prayer • Noor Connect`,
+            channelId: 'noor_prayer_hadith_alerts_v2',
             schedule: {
               at: prayerDate,
               allowWhileIdle: true,
@@ -339,7 +374,9 @@ export class LocalNotificationManager {
             iconColor: '#D4AF37',
             extra: {
               prayerName,
+              prayerKey: prayerName.toLowerCase(),
               prayerTime: cleaned,
+              time12h,
               type: 'prayer_reminder',
               location: locationData,
               scheduledDate: targetDate.toISOString(),
@@ -349,8 +386,8 @@ export class LocalNotificationManager {
           notifications.push(notification);
           this.scheduledNotifications.set(notificationId, {
             id: notificationId,
-            title: message.title,
-            body: message.body,
+            title,
+            body,
             scheduleTime: prayerDate,
             prayerName,
           });

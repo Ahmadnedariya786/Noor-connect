@@ -122,8 +122,22 @@ interface InitialPrayerState {
   isLoading: boolean;
 }
 
+// Module-level in-memory cache to guarantee < 2ms instant dashboard hydration across route switches
+let memoryCachedPrayerState: InitialPrayerState | null = null;
+let memoryCachedDateKey: string = '';
+
+export function invalidatePrayerTimesMemoryCache(): void {
+  memoryCachedPrayerState = null;
+  memoryCachedDateKey = '';
+}
+
 function resolveInitialPrayerTimes(): InitialPrayerState {
   const todayKey = getLocalDatePartKey(new Date());
+
+  // 0. Check fast in-memory cache first (0ms, 0 JSON.parse, 0 localStorage)
+  if (memoryCachedPrayerState && memoryCachedDateKey === todayKey && memoryCachedPrayerState.prayerTimes) {
+    return memoryCachedPrayerState;
+  }
 
   // 1. Check cached prayer times for TODAY (local date)
   try {
@@ -161,12 +175,15 @@ function resolveInitialPrayerTimes(): InitialPrayerState {
             duha: parsed.duha && !isNaN(new Date(parsed.duha).getTime()) ? new Date(parsed.duha) : undefined,
             tahajjud: parsed.tahajjud && !isNaN(new Date(parsed.tahajjud).getTime()) ? new Date(parsed.tahajjud) : undefined,
           };
-          return {
+          const state: InitialPrayerState = {
             prayerTimes: hydrated,
             prayerTimesWithEnd: computeWithEnd(hydrated),
             source: 'cache',
             isLoading: false,
           };
+          memoryCachedPrayerState = state;
+          memoryCachedDateKey = todayKey;
+          return state;
         }
       }
     }
@@ -210,12 +227,15 @@ function resolveInitialPrayerTimes(): InitialPrayerState {
           tahajjud,
         };
 
-        return {
+        const state: InitialPrayerState = {
           prayerTimes: offlineTimes,
           prayerTimesWithEnd: computeWithEnd(offlineTimes),
           source: 'offline-calc',
           isLoading: false,
         };
+        memoryCachedPrayerState = state;
+        memoryCachedDateKey = todayKey;
+        return state;
       }
     }
   } catch (err) {
@@ -529,6 +549,13 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       }
       setSource('online');
       setIsLoading(false);
+      memoryCachedPrayerState = {
+        prayerTimes: times,
+        prayerTimesWithEnd: withEnd,
+        source: 'online',
+        isLoading: false,
+      };
+      memoryCachedDateKey = getLocalDatePartKey(times.fajr);
       try {
         localStorage.setItem('cached_prayer_times', JSON.stringify(times));
       } catch {
@@ -808,6 +835,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
   // Listen for prayer method changes
   useEffect(() => {
     const handleMethodChange = () => {
+      invalidatePrayerTimesMemoryCache();
       // Reset cache key to force update
       // Reset both cache refs to force re-fetch and re-schedule after method change
       lastFetchSignatureRef.current = null;
@@ -825,6 +853,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
   // Listen for madhab changes
   useEffect(() => {
     const handleMadhabChange = () => {
+      invalidatePrayerTimesMemoryCache();
       // Reset cache key to force update
       // Reset both cache refs to force re-fetch and re-schedule after madhab change
       lastFetchSignatureRef.current = null;
@@ -843,6 +872,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
   // Listen for prayer minute offsets and live data refresh
   useEffect(() => {
     const handleOffsetsChange = () => {
+      invalidatePrayerTimesMemoryCache();
       lastFetchSignatureRef.current = null;
       previousNotificationSignatureRef.current = null;
       if (location) {

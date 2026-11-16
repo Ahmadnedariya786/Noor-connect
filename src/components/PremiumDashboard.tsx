@@ -45,7 +45,7 @@ const DhikrReminder = lazy(() => import("@/components/DhikrReminder"));
 const QuranRadio = lazy(() => import("@/components/QuranRadio").then(m => ({ default: m.QuranRadio })));
 const MoodSelector = lazy(() => import("@/components/MoodSelector").then(m => ({ default: m.MoodSelector })));
 
-const WidgetFallback = () => <div className="h-40 w-full rounded-2xl bg-card/40 animate-pulse border border-border/40 backdrop-blur-sm" />;
+const WidgetFallback = () => <div className="h-40 w-full rounded-2xl bg-card/40 animate-pulse border border-border/40" />;
 
 
 interface PrayerTime {
@@ -130,7 +130,7 @@ const DailySalahCard = memo(function DailySalahCard({
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.2, ease: 'easeOut' }
       })}
-      className="p-5 rounded-[22px] bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md relative overflow-hidden"
+      className="p-5 rounded-[22px] bg-[var(--surface)] border border-[var(--border)] relative overflow-hidden"
       style={{
         boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
       }}
@@ -490,6 +490,7 @@ function PremiumDashboardInner({
       const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       let nextUpcomingDelayMs = 60000;
+      const currentPrayers = getTodayPrayers();
 
       for (const p of prayers) {
         const rawName = (p.originalName || p.name || '').trim();
@@ -499,15 +500,20 @@ function PremiumDashboardInner({
         const prayerSec = parseTimeToSeconds(p.date || p.time);
         if (prayerSec === null) continue;
 
-        // Check if current time is within the first 60 seconds of this prayer entry
-        if (nowSec >= prayerSec && nowSec < prayerSec + 60) {
-          const canonicalName = lower === 'jummah' ? 'Dhuhr' : rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+        const canonicalName = lower === 'jummah' ? 'Dhuhr' : rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+        const pKey = lower === 'jummah' ? 'dhuhr' : (lower as 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha');
+        const isAlreadyPrayed = currentPrayers && currentPrayers[pKey];
+
+        // Active 45-minute window: 0 to 2700 seconds after prayer start
+        const isInActiveWindow = nowSec >= prayerSec && nowSec < prayerSec + 2700;
+
+        if (isInActiveWindow && !isAlreadyPrayed) {
           const triggerKey = `${todayIso}:${canonicalName}`;
-
+          const dismissedSession = sessionStorage.getItem(`noor_hadith_modal_dismissed_${todayIso}_${canonicalName}`);
+          const dismissedLocal = localStorage.getItem(`noor_hadith_modal_dismissed_${todayIso}_${canonicalName}`);
           const lastTriggeredSession = sessionStorage.getItem('noor_last_auto_triggered_prayer');
-          const lastTriggeredLocal = localStorage.getItem('noor_last_auto_triggered_prayer');
 
-          if (lastTriggeredSession !== triggerKey && lastTriggeredLocal !== triggerKey) {
+          if (dismissedSession !== 'true' && dismissedLocal !== 'true' && lastTriggeredSession !== triggerKey) {
             try {
               sessionStorage.setItem('noor_last_auto_triggered_prayer', triggerKey);
               localStorage.setItem('noor_last_auto_triggered_prayer', triggerKey);

@@ -128,11 +128,50 @@ const AYAH_STORAGE_KEY = "enhanced-daily-ayah";
 const LAST_UPDATE_KEY = "ayah-last-update";
 const AYAH_BOOKMARKS_KEY = "daily-ayah-bookmarks";
 
+// In-memory module-level cache for instant frame-1 render
+let memoryCachedDailyAyah: Ayah | null = null;
+let memoryCachedDailyAyahDate: string = '';
+
+function resolveImmediateDailyAyah(): Ayah {
+  const today = new Date().toDateString();
+  if (memoryCachedDailyAyah && memoryCachedDailyAyahDate === today) {
+    return memoryCachedDailyAyah;
+  }
+  try {
+    const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY);
+    const storedAyah = localStorage.getItem(AYAH_STORAGE_KEY);
+    if (lastUpdate === today && storedAyah) {
+      const parsed = JSON.parse(storedAyah);
+      memoryCachedDailyAyah = parsed;
+      memoryCachedDailyAyahDate = today;
+      return parsed;
+    }
+  } catch {
+    // Safe storage fallback
+  }
+
+  const dayOfYear = Math.floor(
+    (new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const index = dayOfYear % ayahCollection.length;
+  const selectedAyah = ayahCollection[index] || ayahCollection[0];
+  try {
+    localStorage.setItem(AYAH_STORAGE_KEY, JSON.stringify(selectedAyah));
+    localStorage.setItem('daily-ayah-cache', JSON.stringify(selectedAyah));
+    localStorage.setItem(LAST_UPDATE_KEY, today);
+  } catch {
+    // Safe storage fallback
+  }
+  memoryCachedDailyAyah = selectedAyah;
+  memoryCachedDailyAyahDate = today;
+  return selectedAyah;
+}
+
 export function EnhancedDailyAyah() {
   const navigate = useNavigate();
   const { ui } = useLanguage();
-  const [ayah, setAyah] = useState<Ayah | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [ayah, setAyah] = useState<Ayah>(() => resolveImmediateDailyAyah());
+  const [loading, setLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isTranslationExpanded, setIsTranslationExpanded] = useState(false);
   const [isReflectionExpanded, setIsReflectionExpanded] = useState(false);

@@ -167,16 +167,6 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
               <stop offset="0%" stopColor="var(--accent)" />
               <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
-            {!isStaticPreview && (
-              <>
-                <filter id="arcGlow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="var(--accent-glow)" floodOpacity="0.85" />
-                </filter>
-                <filter id="arcHandShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.7" />
-                </filter>
-              </>
-            )}
           </defs>
 
           {/* ── Layer 1: Outer Double Bezel Rings ── */}
@@ -258,7 +248,6 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
               stroke="url(#prayerArcGold)"
               strokeWidth="8"
               strokeLinecap="round"
-              filter={!isStaticPreview ? "url(#arcGlow)" : undefined}
             />
           )}
 
@@ -299,7 +288,7 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
           </g>
 
           {/* ── Layer 4 (TOP): Watch Hands + Center Jewel Cap (100% Unobstructed 360° Sweep) ── */}
-          <g id="prayer-arc-hands" filter={!isStaticPreview ? "url(#arcHandShadow)" : undefined}>
+          <g id="prayer-arc-hands">
             {/* Tapered Hour Hand */}
             <g
               style={{
@@ -469,7 +458,6 @@ export const PrayerArcClock: React.FC<ClockProps> = ({
                 background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                filter: 'drop-shadow(0 0 10px var(--accent-glow))',
               }}
             >
               {(hijriDate || '')

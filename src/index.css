@@ -282,24 +282,24 @@
   }
 
   [data-theme="oxford-gold"] {
-    --bg-base: #050914;
-    --bg-elev: #091124;
-    --surface: #0F1B36;
-    --surface-2: #16274C;
-    --border: rgba(245,184,46,0.30);
-    --accent: #F5B82E;
-    --accent-text: #FDE047;
-    --on-accent: #050914;
-    --accent-soft: rgba(245,184,46,0.16);
-    --accent-glow: rgba(245,184,46,0.34);
-    --accent-2: #D97706;
+    --bg-base: #02081F;
+    --bg-elev: #030D30;
+    --surface: #04123F;
+    --surface-2: #0A1E5C;
+    --border: rgba(254, 196, 11, 0.30);
+    --accent: #FEC40B;
+    --accent-text: #FFE066;
+    --on-accent: #02081F;
+    --accent-soft: rgba(254, 196, 11, 0.16);
+    --accent-glow: rgba(254, 196, 11, 0.34);
+    --accent-2: #E5A500;
     --text-primary: #F8FAFC;
-    --text-secondary: #98B4D8;
+    --text-secondary: #9EB4E0;
     --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: linear-gradient(135deg, rgba(245,184,46,0.15) 0%, rgba(56,189,248,0.05) 60%);
-    --card-sheen-line: rgba(253,224,71,0.25);
+    --card-sheen: rgba(254, 196, 11, 0.08);
+    --card-sheen-line: rgba(254, 196, 11, 0.24);
 
     /* Signature Tokens - Oxford Gold (Scholar's Library) */
     --sig-radius: 18px;
@@ -312,51 +312,51 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 224 60% 4%;
+    --background: 228 88% 7%;
     --foreground: 210 40% 98%;
-    --card: 222 56% 14%;
+    --card: 226 83% 13%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 56% 14%;
+    --popover: 226 83% 13%;
     --popover-foreground: 210 40% 98%;
-    --primary: 41 91% 57%;
-    --primary-foreground: 224 60% 4%;
-    --primary-glow: 41 91% 57%;
-    --secondary: 220 55% 19%;
+    --primary: 46 99% 52%;
+    --primary-foreground: 228 88% 7%;
+    --primary-glow: 46 99% 52%;
+    --secondary: 225 80% 20%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 220 55% 19%;
-    --muted-foreground: 214 47% 72%;
+    --muted: 225 80% 20%;
+    --muted-foreground: 220 54% 75%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 220 55% 19%;
-    --ring: 41 91% 57%;
+    --input: 225 80% 20%;
+    --ring: 46 99% 52%;
   }
 
   [data-theme="kiswah-noir"],
   [data-theme="haramain-noir"] {
-    --bg-base: #070709;
-    --bg-elev: #0D0D12;
-    --surface: #14141C;
-    --surface-2: #1D1D28;
-    --border: rgba(212, 175, 55, 0.28);
-    --accent: #D4AF37;
-    --accent-text: #F3E5AB;
-    --on-accent: #070709;
-    --accent-soft: rgba(212, 175, 55, 0.16);
-    --accent-glow: rgba(212, 175, 55, 0.32);
-    --accent-2: #AA8220;
-    --text-primary: #FAF8F5;
-    --text-secondary: #B0B3C0;
+    --bg-base: #080911;
+    --bg-elev: #0D0E1A;
+    --surface: #131424;
+    --surface-2: #1C1C2E;
+    --border: rgba(16, 232, 194, 0.28);
+    --accent: #10E8C2;
+    --accent-text: #72FFEA;
+    --on-accent: #06080E;
+    --accent-soft: rgba(16, 232, 194, 0.15);
+    --accent-glow: rgba(16, 232, 194, 0.32);
+    --accent-2: #0891B2;
+    --text-primary: #F7F7FF;
+    --text-secondary: #A3A8C2;
     --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: rgba(212, 175, 55, 0.08);
-    --card-sheen-line: rgba(243, 229, 171, 0.22);
+    --card-sheen: rgba(16, 232, 194, 0.07);
+    --card-sheen-line: rgba(114, 255, 234, 0.22);
 
     /* Signature Tokens - Kiswah Noir (Kaaba Obsidian Velvet & 24K Gold) */
     --sig-radius: 14px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 16px rgba(0, 0, 0, 0.6);
-    --sig-thread: #D4AF37;
+    --sig-thread: #10E8C2;
     --sig-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M18 4L32 18 18 32 4 18Z' fill='none' stroke='black' stroke-width='1.2'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8'/%3E%3Crect x='13' y='13' width='10' height='10' fill='none' stroke='black' stroke-width='0.8' transform='rotate(45 18 18)'/%3E%3Ccircle cx='18' cy='18' r='1.5' fill='black'/%3E%3Cpath d='M0 8L8 0M36 8L28 0M0 28L8 36M36 28L28 36' stroke='black' stroke-width='1' stroke-dasharray='2 2'/%3E%3C/svg%3E");
     --sig-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='32' viewBox='0 0 240 32'%3E%3Cline x1='0' y1='2' x2='240' y2='2' stroke='black' stroke-width='1.5'/%3Cline x1='0' y1='30' x2='240' y2='30' stroke='black' stroke-width='1.5'/%3Cpath d='M0 16l15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10 15-10 15 10' fill='none' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='15' cy='16' r='2' fill='black'/%3E%3Ccircle cx='45' cy='16' r='2' fill='black'/%3E%3Ccircle cx='75' cy='16' r='2' fill='black'/%3E%3Ccircle cx='105' cy='16' r='2' fill='black'/%3E%3Ccircle cx='135' cy='16' r='2' fill='black'/%3E%3Ccircle cx='165' cy='16' r='2' fill='black'/%3E%3Ccircle cx='195' cy='16' r='2' fill='black'/%3E%3Ccircle cx='225' cy='16' r='2' fill='black'/%3E%3C/svg%3E");
     --sig-head-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -364,23 +364,23 @@
     --sig-head-transform: uppercase;
     --sig-head-style: normal;
 
-    --background: 240 13% 2%;
-    --foreground: 36 24% 97%;
-    --card: 240 17% 10%;
-    --card-foreground: 36 24% 97%;
-    --popover: 240 17% 10%;
-    --popover-foreground: 36 24% 97%;
-    --primary: 46 65% 52%;
-    --primary-foreground: 240 13% 2%;
-    --primary-glow: 46 65% 52%;
-    --secondary: 240 16% 14%;
-    --secondary-foreground: 36 24% 97%;
-    --muted: 240 16% 14%;
-    --muted-foreground: 230 10% 72%;
+    --background: 233 36% 5%;
+    --foreground: 240 100% 98%;
+    --card: 236 30% 11%;
+    --card-foreground: 240 100% 98%;
+    --popover: 236 30% 11%;
+    --popover-foreground: 240 100% 98%;
+    --primary: 169 88% 49%;
+    --primary-foreground: 225 40% 4%;
+    --primary-glow: 169 88% 49%;
+    --secondary: 240 24% 15%;
+    --secondary-foreground: 240 100% 98%;
+    --muted: 240 24% 15%;
+    --muted-foreground: 230 18% 70%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 240 16% 14%;
-    --ring: 46 65% 52%;
+    --input: 240 24% 15%;
+    --ring: 169 88% 49%;
   }
 
   [data-theme="istanbul-sapphire"],
@@ -535,26 +535,26 @@
   }
 
   [data-theme="desert-scroll"] {
-    --bg-base: #0E0805;
-    --bg-elev: #160E09;
-    --surface: #21140C;
-    --surface-2: #2D1C11;
-    --border: rgba(229, 154, 60, 0.30);
-    --accent: #E59A3C;
-    --accent-text: #FFD485;
-    --on-accent: #0E0805;
-    --accent-soft: rgba(229, 154, 60, 0.17);
-    --accent-glow: rgba(229, 154, 60, 0.32);
-    --accent-2: #C4701E;
-    --text-primary: #FDF6EC;
-    --text-secondary: #D4B595;
+    --bg-base: #160302;
+    --bg-elev: #220503;
+    --surface: #330805;
+    --surface-2: #4A0B07;
+    --border: rgba(255, 99, 50, 0.32);
+    --accent: #FF6332;
+    --accent-text: #FFA88A;
+    --on-accent: #160302;
+    --accent-soft: rgba(255, 99, 50, 0.17);
+    --accent-glow: rgba(255, 99, 50, 0.34);
+    --accent-2: #E03E1A;
+    --text-primary: #FFF5F0;
+    --text-secondary: #E0ADA0;
     --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: rgba(229, 154, 60, 0.08);
-    --card-sheen-line: rgba(255, 212, 133, 0.22);
+    --card-sheen: rgba(255, 99, 50, 0.08);
+    --card-sheen-line: rgba(255, 168, 138, 0.24);
 
-    /* Signature Tokens - Desert Scroll (Roasted Espresso & Honey Amber) */
+    /* Signature Tokens - Desert Scroll (Royal Terracotta & Sunset Coral) */
     --sig-radius: 28px 28px 18px 18px;
     --sig-border: 1px solid var(--border);
     --sig-glow: 0 4px 18px -2px rgba(0, 0, 0, 0.5), 0 0 10px 1px var(--accent-glow);
@@ -565,44 +565,44 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 20 47% 4%;
-    --foreground: 35 77% 96%;
-    --card: 24 46% 9%;
-    --card-foreground: 35 77% 96%;
-    --popover: 24 46% 9%;
-    --popover-foreground: 35 77% 96%;
-    --primary: 34 78% 57%;
-    --primary-foreground: 20 47% 4%;
-    --primary-glow: 34 78% 57%;
-    --secondary: 25 45% 12%;
-    --secondary-foreground: 35 77% 96%;
-    --muted: 25 45% 12%;
-    --muted-foreground: 31 43% 71%;
+    --background: 4 84% 5%;
+    --foreground: 20 100% 97%;
+    --card: 4 82% 11%;
+    --card-foreground: 20 100% 97%;
+    --popover: 4 82% 11%;
+    --popover-foreground: 20 100% 97%;
+    --primary: 14 100% 60%;
+    --primary-foreground: 4 84% 5%;
+    --primary-glow: 14 100% 60%;
+    --secondary: 4 83% 16%;
+    --secondary-foreground: 20 100% 97%;
+    --muted: 4 83% 16%;
+    --muted-foreground: 12 51% 75%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 25 45% 12%;
-    --ring: 34 78% 57%;
+    --input: 4 83% 16%;
+    --ring: 14 100% 60%;
   }
 
   [data-theme="madinah-emerald"] {
-    --bg-base: #030C07;
-    --bg-elev: #06160E;
-    --surface: #0A2216;
-    --surface-2: #103020;
-    --border: rgba(232,201,136,0.30);
-    --accent: #E8C988;
-    --accent-text: #F7E2B8;
-    --on-accent: #030C07;
-    --accent-soft: rgba(232,201,136,0.18);
-    --accent-glow: rgba(232,201,136,0.36);
-    --accent-2: #10B981;
-    --text-primary: #F4FAF6;
-    --text-secondary: #9ED1B8;
+    --bg-base: #071417;
+    --bg-elev: #0D1E22;
+    --surface: #152B30;
+    --surface-2: #203D43;
+    --border: rgba(184, 245, 118, 0.28);
+    --accent: #B8F576;
+    --accent-text: #D9FFB3;
+    --on-accent: #071417;
+    --accent-soft: rgba(184, 245, 118, 0.16);
+    --accent-glow: rgba(184, 245, 118, 0.30);
+    --accent-2: #84CC16;
+    --text-primary: #F4FBF7;
+    --text-secondary: #A3C6BE;
     --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: linear-gradient(135deg, rgba(232,201,136,0.14) 0%, rgba(16,185,129,0.06) 60%);
-    --card-sheen-line: rgba(247,226,184,0.24);
+    --card-sheen: rgba(184, 245, 118, 0.08);
+    --card-sheen-line: rgba(217, 255, 179, 0.22);
 
     /* Signature Tokens - Madinah Emerald (Madinah Garden) */
     --sig-radius: 26px;
@@ -615,44 +615,44 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 147 60% 3%;
-    --foreground: 144 43% 97%;
-    --card: 151 54% 9%;
-    --card-foreground: 144 43% 97%;
-    --popover: 151 54% 9%;
-    --popover-foreground: 144 43% 97%;
-    --primary: 41 68% 72%;
-    --primary-foreground: 147 60% 3%;
-    --primary-glow: 41 68% 72%;
-    --secondary: 150 50% 13%;
-    --secondary-foreground: 144 43% 97%;
-    --muted: 150 50% 13%;
-    --muted-foreground: 152 35% 72%;
+    --background: 191 54% 6%;
+    --foreground: 150 45% 97%;
+    --card: 191 39% 14%;
+    --card-foreground: 150 45% 97%;
+    --popover: 191 39% 14%;
+    --popover-foreground: 150 45% 97%;
+    --primary: 88 88% 71%;
+    --primary-foreground: 191 54% 6%;
+    --primary-glow: 88 88% 71%;
+    --secondary: 190 35% 19%;
+    --secondary-foreground: 150 45% 97%;
+    --muted: 190 35% 19%;
+    --muted-foreground: 167 23% 71%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 150 50% 13%;
-    --ring: 41 68% 72%;
+    --input: 190 35% 19%;
+    --ring: 88 88% 71%;
   }
 
   [data-theme="persian-indigo"] {
-    --bg-base: #0B0724;
-    --bg-elev: #120C33;
-    --surface: #1A1242;
-    --surface-2: #241A52;
-    --border: rgba(247,247,255,0.22);
-    --accent: #F7F7FF;
-    --accent-text: #E4E4FF;
-    --on-accent: #27187D;
-    --accent-soft: rgba(247,247,255,0.14);
-    --accent-glow: rgba(184,196,255,0.30);
-    --accent-2: #B8C4FF;
+    --bg-base: #08051A;
+    --bg-elev: #0E0926;
+    --surface: #160F3A;
+    --surface-2: #27187D;
+    --border: rgba(167, 139, 250, 0.34);
+    --accent: #9B8AFB;
+    --accent-text: #E0D7FF;
+    --on-accent: #08051A;
+    --accent-soft: rgba(155, 138, 251, 0.18);
+    --accent-glow: rgba(155, 138, 251, 0.35);
+    --accent-2: #6D5AE6;
     --text-primary: #F7F7FF;
-    --text-secondary: #A9A6D9;
-    --success: #6EE7A0;
+    --text-secondary: #B8B2E6;
+    --success: #34D399;
     --warning: #FBBF24;
     --danger: #FB7185;
-    --card-sheen: linear-gradient(135deg, rgba(247,247,255,0.12) 0%, rgba(184,196,255,0.04) 60%);
-    --card-sheen-line: rgba(247,247,255,0.16);
+    --card-sheen: rgba(155, 138, 251, 0.08);
+    --card-sheen-line: rgba(247, 247, 255, 0.24);
 
     /* Signature Tokens - Persian Indigo (Midnight Indigo Velvet & Moonlight) */
     --sig-radius: 20px;
@@ -665,23 +665,23 @@
     --sig-head-transform: none;
     --sig-head-style: normal;
 
-    --background: 248 68% 9%;
+    --background: 251 57% 6%;
     --foreground: 240 100% 98%;
-    --card: 250 57% 16%;
+    --card: 250 48% 15%;
     --card-foreground: 240 100% 98%;
-    --popover: 250 57% 16%;
+    --popover: 250 48% 15%;
     --popover-foreground: 240 100% 98%;
-    --primary: 240 100% 98%;
-    --primary-foreground: 249 68% 29%;
-    --primary-glow: 231 100% 86%;
-    --secondary: 251 52% 21%;
+    --primary: 249 94% 76%;
+    --primary-foreground: 251 57% 6%;
+    --primary-glow: 249 94% 76%;
+    --secondary: 248 68% 29%;
     --secondary-foreground: 240 100% 98%;
-    --muted: 251 52% 21%;
-    --muted-foreground: 244 41% 75%;
+    --muted: 248 68% 29%;
+    --muted-foreground: 247 47% 80%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --input: 251 52% 21%;
-    --ring: 231 100% 86%;
+    --input: 248 68% 29%;
+    --ring: 249 94% 76%;
   }
 
   .dark {
@@ -1245,7 +1245,7 @@
     box-shadow: var(--glass-shadow);
     /* transform/opacity only — animating filter or box-shadow repaints on
        every frame and churns the GPU on budget Android WebViews */
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .glass-gold {
@@ -1264,7 +1264,7 @@
     -webkit-backdrop-filter: none;
     border: 1px solid hsl(0 0% 100% / 0.1);
     box-shadow: 0 8px 32px hsl(0 0% 0% / 0.3);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .glass-card {
@@ -1277,7 +1277,7 @@
       0 4px 24px hsl(0 0% 0% / 0.1),
       0 1px 2px hsl(0 0% 0% / 0.05),
       inset 0 1px 0 hsl(0 0% 100% / 0.1);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .glass-card-gold {
@@ -1290,7 +1290,7 @@
       0 4px 24px hsl(0 0% 0% / 0.1),
       0 1px 2px hsl(0 0% 0% / 0.05),
       inset 0 1px 0 var(--islamic-gold-glow);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   /* Enhanced Premium Card Styles */
@@ -1303,7 +1303,7 @@
     background: hsl(var(--card));
     border-radius: 20px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 28px -8px rgba(0, 0, 0, 0.55);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     position: relative;
     overflow: hidden;
   }
@@ -1342,7 +1342,7 @@
     box-shadow: 
       var(--card-premium-shadow),
       var(--islamic-gold-shimmer);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     position: relative;
     overflow: hidden;
   }
@@ -1378,7 +1378,7 @@
     border-radius: 14px;
     font-weight: 600;
     letter-spacing: 0.01em;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     box-shadow: 
       0 2px 8px hsl(var(--primary) / 0.3),
       0 1px 2px hsl(0 0% 0% / 0.1);
@@ -1420,7 +1420,7 @@
     border-radius: 14px;
     font-weight: 600;
     letter-spacing: 0.01em;
-    transition: transform var(--animation-normal) var(--spring-gold), opacity var(--animation-normal) var(--spring-gold), color var(--animation-normal) var(--spring-gold), background-color var(--animation-normal) var(--spring-gold), border-color var(--animation-normal) var(--spring-gold), box-shadow var(--animation-normal) var(--spring-gold), filter var(--animation-normal) var(--spring-gold);
+    transition: transform var(--animation-normal) var(--spring-gold), opacity var(--animation-normal) var(--spring-gold);
     box-shadow: 
       0 2px 8px hsl(var(--islamic-gold) / 0.3),
       0 1px 2px hsl(0 0% 0% / 0.1);
@@ -1463,7 +1463,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .text-gradient-gold:hover {
@@ -1476,7 +1476,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .text-gradient-islamic:hover {
@@ -1489,13 +1489,13 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   /* Enhanced Glow Effects */
   .glow-gold {
     box-shadow: 0 0 20px hsl(45 100% 50% / 0.4), 0 0 40px hsl(45 100% 50% / 0.2);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .glow-gold:hover {
@@ -1505,7 +1505,7 @@
 
   .glow-soft {
     box-shadow: 0 4px 20px hsl(var(--primary) / 0.15);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .glow-soft:hover {
@@ -1515,7 +1515,7 @@
 
   .glow-islamic {
     box-shadow: 0 0 30px hsl(var(--islamic-gold) / 0.4), 0 0 60px hsl(var(--islamic-gold) / 0.2);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .glow-islamic:hover {
@@ -1525,7 +1525,7 @@
 
   .glow-elegant {
     box-shadow: 0 0 25px hsl(0 0% 0% / 0.3), 0 0 50px hsl(45 100% 50% / 0.2);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   /* Enhanced Premium Divider */
@@ -1539,7 +1539,7 @@
       hsl(var(--primary) / 0.3),
       transparent
     );
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .divider-premium:hover {
@@ -1564,7 +1564,7 @@
       hsl(45 100% 50% / 0.3),
       transparent
     );
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .divider-gold:hover {
@@ -1589,7 +1589,7 @@
       hsl(var(--islamic-gold) / 0.3),
       transparent
     );
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .divider-islamic:hover {
@@ -1611,7 +1611,7 @@
     background: hsl(var(--foreground) / 0.2);
     border-radius: 100px;
     margin: 8px auto;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .nav-indicator:hover {
@@ -1625,7 +1625,7 @@
     background: linear-gradient(90deg, hsl(45 100% 50% / 0.2), hsl(45 100% 50% / 0.4), hsl(45 100% 50% / 0.2));
     border-radius: 100px;
     margin: 8px auto;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .nav-indicator-gold:hover {
@@ -1639,7 +1639,7 @@
     background: linear-gradient(90deg, hsl(var(--islamic-gold) / 0.2), hsl(var(--islamic-gold) / 0.4), hsl(var(--islamic-gold) / 0.2));
     border-radius: 100px;
     margin: 8px auto;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .nav-indicator-islamic:hover {
@@ -1658,7 +1658,7 @@
     background-size: 200% 100%;
     animation: shimmer-slide var(--animation-normal) infinite;
     border-radius: 12px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .skeleton-premium-gold {
@@ -1671,7 +1671,7 @@
     background-size: 200% 100%;
     animation: shimmer-slide var(--animation-normal) infinite;
     border-radius: 12px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .skeleton-premium-islamic {
@@ -1684,7 +1684,7 @@
     background-size: 200% 100%;
     animation: shimmer-slide var(--animation-normal) infinite;
     border-radius: 12px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   /* Enhanced Floating Action Button Style */
@@ -1696,7 +1696,7 @@
     box-shadow: 
       0 4px 12px hsl(45 100% 50% / 0.4),
       0 8px 24px hsl(0 0% 0% / 0.2);
-    transition: transform var(--animation-normal) var(--spring-bounce), opacity var(--animation-normal) var(--spring-bounce), color var(--animation-normal) var(--spring-bounce), background-color var(--animation-normal) var(--spring-bounce), border-color var(--animation-normal) var(--spring-bounce), box-shadow var(--animation-normal) var(--spring-bounce), filter var(--animation-normal) var(--spring-bounce);
+    transition: transform var(--animation-normal) var(--spring-bounce), opacity var(--animation-normal) var(--spring-bounce);
     position: relative;
     overflow: hidden;
   }
@@ -1736,7 +1736,7 @@
     box-shadow: 
       0 4px 12px hsl(45 100% 50% / 0.4),
       0 8px 24px hsl(0 0% 0% / 0.2);
-    transition: transform var(--animation-normal) var(--spring-bounce), opacity var(--animation-normal) var(--spring-bounce), color var(--animation-normal) var(--spring-bounce), background-color var(--animation-normal) var(--spring-bounce), border-color var(--animation-normal) var(--spring-bounce), box-shadow var(--animation-normal) var(--spring-bounce), filter var(--animation-normal) var(--spring-bounce);
+    transition: transform var(--animation-normal) var(--spring-bounce), opacity var(--animation-normal) var(--spring-bounce);
     position: relative;
     overflow: hidden;
   }
@@ -1776,7 +1776,7 @@
     box-shadow: 
       0 4px 12px hsl(var(--islamic-gold) / 0.4),
       0 8px 24px hsl(0 0% 0% / 0.2);
-    transition: transform var(--animation-normal) var(--spring-bounce), opacity var(--animation-normal) var(--spring-bounce), color var(--animation-normal) var(--spring-bounce), background-color var(--animation-normal) var(--spring-bounce), border-color var(--animation-normal) var(--spring-bounce), box-shadow var(--animation-normal) var(--spring-bounce), filter var(--animation-normal) var(--spring-bounce);
+    transition: transform var(--animation-normal) var(--spring-bounce), opacity var(--animation-normal) var(--spring-bounce);
     position: relative;
     overflow: hidden;
   }
@@ -1820,7 +1820,7 @@
     font-weight: 600;
     color: hsl(var(--primary));
     backdrop-filter: blur(8px);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .badge-premium:hover {
@@ -1847,7 +1847,7 @@
     font-weight: 600;
     color: hsl(45 100% 50%);
     backdrop-filter: blur(8px);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .badge-premium-gold:hover {
@@ -1874,7 +1874,7 @@
     font-weight: 600;
     color: hsl(var(--islamic-gold));
     backdrop-filter: blur(8px);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .badge-premium-islamic:hover {
@@ -1892,7 +1892,7 @@
   .scrollbar-premium::-webkit-scrollbar {
     width: 6px;
     height: 6px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .scrollbar-premium::-webkit-scrollbar-track {
@@ -1902,7 +1902,7 @@
   .scrollbar-premium::-webkit-scrollbar-thumb {
     background: hsl(var(--muted) / 0.5);
     border-radius: 100px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .scrollbar-premium::-webkit-scrollbar-thumb:hover {
@@ -2110,7 +2110,7 @@
   .touch-feedback {
     position: relative;
     overflow: hidden;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .touch-feedback::after {
@@ -2145,7 +2145,7 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .section-header::before {
@@ -2154,7 +2154,7 @@
     height: 20px;
     background: var(--gradient-gold);
     border-radius: 100px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .section-header:hover::before {
@@ -2168,7 +2168,7 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .section-header-gold::before {
@@ -2177,7 +2177,7 @@
     height: 20px;
     background: var(--gradient-gold);
     border-radius: 100px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .section-header-gold:hover::before {
@@ -2191,7 +2191,7 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .section-header-islamic::before {
@@ -2200,7 +2200,7 @@
     height: 20px;
     background: var(--islamic-gold-gradient);
     border-radius: 100px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .section-header-islamic:hover::before {
@@ -2214,7 +2214,7 @@
     border: 1px solid hsl(var(--border));
     border-radius: 14px;
     padding: 12px 16px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     box-shadow: inset 0 2px 4px hsl(0 0% 0% / 0.02);
     position: relative;
     overflow: hidden;
@@ -2257,7 +2257,7 @@
     border: 1px solid hsl(45 100% 50% / 0.3);
     border-radius: 14px;
     padding: 12px 16px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     box-shadow: inset 0 2px 4px hsl(0 0% 0% / 0.02);
     position: relative;
     overflow: hidden;
@@ -2300,7 +2300,7 @@
     border: 1px solid hsl(var(--islamic-gold) / 0.3);
     border-radius: 14px;
     padding: 12px 16px;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     box-shadow: inset 0 2px 4px hsl(0 0% 0% / 0.02);
     position: relative;
     overflow: hidden;
@@ -2342,7 +2342,7 @@
     background: hsl(var(--card));
     border-radius: 24px 24px 0 0;
     box-shadow: 0 -4px 24px hsl(0 0% 0% / 0.1);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     position: relative;
     overflow: hidden;
   }
@@ -2373,7 +2373,7 @@
     background: hsl(var(--card));
     border-radius: 24px 24px 0 0;
     box-shadow: 0 -4px 24px hsl(0 0% 0% / 0.1);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     position: relative;
     overflow: hidden;
   }
@@ -2404,7 +2404,7 @@
     background: hsl(var(--card));
     border-radius: 24px 24px 0 0;
     box-shadow: 0 -4px 24px hsl(0 0% 0% / 0.1);
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
     position: relative;
     overflow: hidden;
   }
@@ -2438,7 +2438,7 @@
     border-radius: 100px;
     position: relative;
     cursor: pointer;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .toggle-premium::after {
@@ -2482,7 +2482,7 @@
     border-radius: 100px;
     position: relative;
     cursor: pointer;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .toggle-premium-gold::after {
@@ -2526,7 +2526,7 @@
     border-radius: 100px;
     position: relative;
     cursor: pointer;
-    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth), color var(--animation-normal) var(--spring-smooth), background-color var(--animation-normal) var(--spring-smooth), border-color var(--animation-normal) var(--spring-smooth), box-shadow var(--animation-normal) var(--spring-smooth), filter var(--animation-normal) var(--spring-smooth);
+    transition: transform var(--animation-normal) var(--spring-smooth), opacity var(--animation-normal) var(--spring-smooth);
   }
 
   .toggle-premium-islamic::after {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Check, VolumeX, Sparkles } from 'lucide-react';
+import { X, Check, VolumeX } from 'lucide-react';
 import { NoorDynamicLogo, getSelectedLogoEdition } from '@/components/NoorDynamicLogo';
 import {
   PRAYER_ALARM_CONTROL_EVENT,
@@ -17,6 +17,8 @@ import {
   type PrayerHadithLang,
 } from '@/lib/prayer-hadith-i18n';
 import { toast } from 'sonner';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 
 export const PRAYER_BANNER_ALERT_EVENT = 'noor-in-app-prayer-alert';
 
@@ -43,6 +45,11 @@ const PRAYER_DETAILS: Record<
     arabic: 'الظُّهْر',
     rakah: '4 Sunnah • 4 Fardh • 2 Sunnah • 2 Nafl (12 Rak\'ah)',
     default12h: '12:30 PM',
+  },
+  Jummah: {
+    arabic: 'الجُمُعَة',
+    rakah: '4 Sunnah • 2 Fardh • 4 Sunnah • 2 Sunnah • 2 Nafl (14 Rak\'ah)',
+    default12h: '01:15 PM',
   },
   Asr: {
     arabic: 'العَصْر',
@@ -131,10 +138,29 @@ export const PrayerReminderBanner: React.FC = () => {
     window.addEventListener(PRAYER_ALARM_STATE_EVENT, handleAdhanState);
     window.addEventListener(PRAYER_HADITH_LANG_EVENT, handleHadithLangChange);
 
+    // 4. Native Android background notification action listener
+    let notificationListenerPromise: Promise<any> | null = null;
+    if (Capacitor.isNativePlatform()) {
+      try {
+        notificationListenerPromise = LocalNotifications.addListener(
+          'localNotificationActionPerformed',
+          (action) => {
+            const extra = action.notification?.extra;
+            const pName = extra?.prayerName || extra?.prayerKey || 'Fajr';
+            const pTime = extra?.time12h || extra?.prayerTime;
+            triggerInAppPrayerAlert(pName, pTime);
+          }
+        );
+      } catch (nativeErr) {
+        console.warn('Failed to register notification action listener:', nativeErr);
+      }
+    }
+
     return () => {
       window.removeEventListener(PRAYER_BANNER_ALERT_EVENT, handleAlert);
       window.removeEventListener(PRAYER_ALARM_STATE_EVENT, handleAdhanState);
       window.removeEventListener(PRAYER_HADITH_LANG_EVENT, handleHadithLangChange);
+      notificationListenerPromise?.then((h) => h?.remove?.()).catch(() => {});
     };
   }, []);
 
@@ -144,22 +170,36 @@ export const PrayerReminderBanner: React.FC = () => {
     setPrayerHadithLang(lang);
   }, []);
 
+  const recordModalDismissed = useCallback((pName: string) => {
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    try {
+      sessionStorage.setItem(`noor_hadith_modal_dismissed_${todayIso}_${pName}`, 'true');
+      localStorage.setItem(`noor_hadith_modal_dismissed_${todayIso}_${pName}`, 'true');
+    } catch {
+      // Safe storage fallback
+    }
+  }, []);
+
   const handleDismiss = useCallback(() => {
     void hapticService.trigger('light');
+    recordModalDismissed(prayerName);
     setIsVisible(false);
-  }, []);
+  }, [prayerName, recordModalDismissed]);
 
   const handleStopAdhan = useCallback(() => {
     void hapticService.trigger('medium');
+    recordModalDismissed(prayerName);
     window.dispatchEvent(
       new CustomEvent(PRAYER_ALARM_CONTROL_EVENT, { detail: { action: 'stop' } })
     );
     setIsPlayingAdhan(false);
     setIsVisible(false);
-  }, []);
+  }, [prayerName, recordModalDismissed]);
 
   const handleMarkPrayed = useCallback(() => {
     void hapticService.trigger('success');
+    recordModalDismissed(prayerName);
     const pKey = prayerName.toLowerCase() as 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
     if (['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].includes(pKey)) {
       try {
@@ -180,7 +220,7 @@ export const PrayerReminderBanner: React.FC = () => {
     toast.success(`${prayerName} prayer recorded!`, {
       description: 'May Allah accept your prayer and grant you barakah.',
     });
-  }, [prayerName, isPlayingAdhan]);
+  }, [prayerName, isPlayingAdhan, recordModalDismissed]);
 
   if (!isVisible) return null;
 
@@ -201,7 +241,7 @@ export const PrayerReminderBanner: React.FC = () => {
       }}
     >
       <div
-        className="max-w-md mx-auto pointer-events-auto rounded-2xl p-3.5 sm:p-4 border backdrop-blur-xl relative overflow-hidden transition-all duration-300"
+        className="max-w-md mx-auto pointer-events-auto rounded-2xl p-3.5 sm:p-4 border relative overflow-hidden transition-all duration-300"
         style={{
           background: 'var(--surface)',
           borderColor: 'var(--accent)',
@@ -241,7 +281,7 @@ export const PrayerReminderBanner: React.FC = () => {
                   {prayerName} Prayer
                 </span>
                 <span
-                  className="px-2 py-0.5 rounded-md text-[11px] font-bold font-mono tracking-wide border"
+                  className="px-2 py-0.5 rounded-md text-[11px] font-bold font-mono tracking-wide border shrink-0"
                   style={{
                     background: 'var(--surface-2)',
                     borderColor: 'var(--border)',
@@ -252,15 +292,15 @@ export const PrayerReminderBanner: React.FC = () => {
                 </span>
               </div>
 
-              {/* Calligraphic Arabic Badge */}
-              <div className="flex items-center gap-2 mt-0.5">
+              {/* Calligraphic Arabic Badge & Rakah Details */}
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span
-                  className="font-arabic font-bold text-sm leading-none"
+                  className="font-arabic font-bold text-sm leading-none shrink-0"
                   style={{ color: 'var(--accent)' }}
                 >
                   {details.arabic}
                 </span>
-                <span className="text-[11px] text-[var(--text-secondary)] font-medium truncate">
+                <span className="text-[11px] text-[var(--text-secondary)] font-medium leading-tight">
                   {details.rakah}
                 </span>
               </div>
@@ -290,7 +330,7 @@ export const PrayerReminderBanner: React.FC = () => {
             background: 'var(--surface-2)',
           }}
         >
-          {/* Top Bar: Arabic Matn (Left) + 3-Pill Language Switcher (Right) */}
+          {/* Top Bar: Arabic Matn (Left) + 4-Pill Language Switcher (Right) */}
           <div className="flex items-center justify-between gap-2">
             <span
               className="font-arabic font-bold text-xs leading-none shrink-0"
@@ -299,7 +339,7 @@ export const PrayerReminderBanner: React.FC = () => {
               {hadithData.arabic}
             </span>
 
-            {/* Compact 3-Pill Switcher [ اردو | EN | ગુજ ] */}
+            {/* Compact 4-Pill Switcher [ اردو | EN | ગુજ | हिं ] */}
             <div
               className="flex items-center p-0.5 rounded-lg border shrink-0"
               style={{
@@ -315,13 +355,12 @@ export const PrayerReminderBanner: React.FC = () => {
                     type="button"
                     onClick={() => handleHadithLangSwitch(opt.id)}
                     aria-label={`Switch Hadith translation to ${opt.label}`}
-                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
-                      isActive
-                        ? 'bg-[var(--accent)] text-[var(--on-accent, #000)] shadow-xs scale-[1.02]'
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                    }`}
+                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
                     style={{
-                      fontFamily: opt.id === 'ur' ? 'var(--font-urdu), serif' : undefined,
+                      fontFamily: (opt.id === 'ur' || opt.id === 'hi') ? 'var(--font-urdu), serif' : undefined,
+                      backgroundColor: isActive ? 'var(--accent)' : 'transparent',
+                      color: isActive ? 'var(--on-accent)' : 'var(--text-secondary)',
+                      boxShadow: isActive ? '0 1px 2px rgba(0,0,0,0.2)' : 'none',
                     }}
                   >
                     {opt.pillLabel}
@@ -334,17 +373,23 @@ export const PrayerReminderBanner: React.FC = () => {
           {/* Localized Hadith Translation Text */}
           <p
             style={{
-              fontFamily: hadithLang === 'ur' ? 'var(--font-urdu), serif' : undefined,
+              fontFamily: (hadithLang === 'ur' || hadithLang === 'hi') ? 'var(--font-urdu), serif' : undefined,
               direction: hadithLang === 'ur' ? 'rtl' : 'ltr',
               textAlign: hadithLang === 'ur' ? 'right' : 'left',
-              fontSize: hadithLang === 'ur' ? '0.96rem' : '0.84rem',
-              lineHeight: hadithLang === 'ur' ? 2.05 : hadithLang === 'gu' ? 1.65 : 1.55,
+              fontSize: hadithLang === 'ur' ? '0.94rem' : '0.84rem',
+              lineHeight: hadithLang === 'ur' ? 1.95 : hadithLang === 'gu' ? 1.6 : 1.5,
               fontStyle: hadithLang === 'en' ? 'italic' : 'normal',
               color: 'var(--text-primary)',
             }}
           >
             {hadithData.translation}
           </p>
+
+          {/* Hadith Reference */}
+          <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] pt-1 border-t border-[var(--border)]/40">
+            <span className="font-medium">{hadithData.reference}</span>
+            <span className="font-semibold text-[var(--accent)]">{details.rakah}</span>
+          </div>
         </div>
 
         {/* ── ACTION BUTTONS: Mark Prayed & Stop Adhan ── */}
@@ -355,7 +400,7 @@ export const PrayerReminderBanner: React.FC = () => {
             className="flex-1 py-1.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
             style={{
               background: 'var(--accent)',
-              color: 'var(--on-accent, #000)',
+              color: 'var(--on-accent)',
             }}
           >
             <Check className="w-3.5 h-3.5 stroke-[2.5]" />

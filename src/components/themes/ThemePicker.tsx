@@ -138,9 +138,7 @@ export const ThemePreviewCard = memo<ThemePreviewCardProps>(({
                 fontSize: '0.54rem',
                 fontWeight: 800,
                 padding: '1px 5px',
-                background: theme.id === 'persian-indigo'
-                  ? theme.tokens['--accent']
-                  : `linear-gradient(135deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
+                background: `linear-gradient(135deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
                 color: theme.tokens['--on-accent'],
                 boxShadow: theme.id === 'kiswah-noir' ? 'none' : `0 1px 4px ${theme.tokens['--accent-glow']}`,
               }}
@@ -201,9 +199,7 @@ export const ThemePreviewCard = memo<ThemePreviewCardProps>(({
             <span
               className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0"
               style={{
-                background: theme.id === 'persian-indigo'
-                  ? theme.tokens['--accent']
-                  : `linear-gradient(135deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
+                background: `linear-gradient(135deg, ${theme.tokens['--accent']} 0%, ${theme.tokens['--accent-2']} 100%)`,
                 color: theme.tokens['--on-accent'],
                 boxShadow: theme.id === 'kiswah-noir' ? 'none' : `0 2px 8px ${theme.tokens['--accent-glow']}`,
               }}

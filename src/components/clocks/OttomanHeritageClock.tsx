@@ -113,11 +113,6 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
               <stop offset="0%" stopColor="var(--accent)" />
               <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
-            {!isStaticPreview && (
-              <filter id="ottomanHandShadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.75" />
-              </filter>
-            )}
           </defs>
 
           {/* ── Layer 1: Inner Accent Bezel Ring ── */}
@@ -181,9 +176,6 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
                 fontWeight="bold"
                 fontSize="17.5"
                 fill="var(--accent-text)"
-                style={{
-                  textShadow: '0 0 6px var(--accent-glow)',
-                }}
               >
                 {arabic}
               </text>
@@ -198,7 +190,7 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
           ))}
 
           {/* ── Layer 5 (TOP): Watchmaker Hands + Center Jewel Cap ── */}
-          <g id="ottoman-hands" filter={!isStaticPreview ? "url(#ottomanHandShadow)" : undefined}>
+          <g id="ottoman-hands">
             {/* Tapered Sword Hour Hand with Luminous Spine */}
             <g
               style={{
@@ -305,7 +297,6 @@ export const OttomanHeritageClock: React.FC<ClockProps> = ({
               background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 0 10px var(--accent-glow))',
             }}
           >
             {hijriDate

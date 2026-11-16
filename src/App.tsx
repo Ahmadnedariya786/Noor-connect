@@ -152,6 +152,7 @@ import Qibla from "./pages/Qibla";
 import Services from "./pages/Services";
 import Profile from "./pages/Profile";
 import SettingsSubPage from "./pages/SettingsSubPage";
+import SettingsThemePage from "./pages/SettingsThemePage";
 import ZakatCalculator from "./pages/ZakatCalculator";
 import PrayerReminderBanner from "@/components/PrayerReminderBanner";
 
@@ -233,7 +234,7 @@ function AppRoutes() {
   }, [location.pathname]);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div className="w-full min-h-screen" style={{ backgroundColor: 'var(--bg-base)' }} />}>
       <div
         key={location.pathname}
         className={`w-full h-full page-transition-wrapper ${animationEnabled ? "animate-page-enter" : ""}`}
@@ -302,6 +303,8 @@ function AppRoutes() {
           <Route path="/support" element={<Navigate to="/settings/about" replace />} />
           <Route path="/donate" element={<Navigate to="/settings/about" replace />} />
           <Route path="/settings" element={<Navigate to="/profile" replace />} />
+          <Route path="/settings/theme" element={<SettingsThemePage />} />
+          <Route path="/settings/app-theme" element={<SettingsThemePage />} />
           <Route path="/settings/personal" element={<ZakatCalculator />} />
           <Route path="/settings/zakat" element={<ZakatCalculator />} />
           <Route path="/settings/widgets" element={<WidgetSettings />} />
@@ -328,7 +331,7 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
       <LazyMotionWrapper>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <TilawahProvider>
-            <div className="flex flex-col min-h-screen overflow-x-hidden relative">
+            <div className="flex flex-col min-h-screen overflow-x-hidden relative" style={{ backgroundColor: 'var(--bg-base)' }}>
               {/* Fixed Single App-Shell Theme Signature Pattern Layer */}
               <div className="theme-app-pattern sig-pattern-layer" aria-hidden="true" />
               <PrayerReminderBanner />

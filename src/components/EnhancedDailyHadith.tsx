@@ -162,12 +162,49 @@ const LAST_UPDATE_KEY = "hadith-last-update";
 
 // In-memory cache for imported hadith collections so we don't re-read on every render
 let cachedCollectionsHadith: EnhancedHadith | null = null;
+let memoryCachedDailyHadith: Hadith | null = null;
+let memoryCachedDailyHadithDate: string = '';
+
+function resolveImmediateDailyHadith(): Hadith {
+  const today = new Date().toDateString();
+  if (memoryCachedDailyHadith && memoryCachedDailyHadithDate === today) {
+    return memoryCachedDailyHadith;
+  }
+  try {
+    const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY);
+    const storedHadith = localStorage.getItem(HADITH_STORAGE_KEY);
+    if (lastUpdate === today && storedHadith) {
+      const parsed = JSON.parse(storedHadith);
+      memoryCachedDailyHadith = parsed;
+      memoryCachedDailyHadithDate = today;
+      return parsed;
+    }
+  } catch {
+    // Safe storage fallback
+  }
+
+  const dayOfYear = Math.floor(
+    (new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const index = dayOfYear % hadithCollection.length;
+  const selectedHadith = hadithCollection[index] || hadithCollection[0];
+  try {
+    localStorage.setItem(HADITH_STORAGE_KEY, JSON.stringify(selectedHadith));
+    localStorage.setItem('daily-hadith-cache', JSON.stringify(selectedHadith));
+    localStorage.setItem(LAST_UPDATE_KEY, today);
+  } catch {
+    // Safe storage fallback
+  }
+  memoryCachedDailyHadith = selectedHadith;
+  memoryCachedDailyHadithDate = today;
+  return selectedHadith;
+}
 
 export function EnhancedDailyHadith() {
   const navigate = useNavigate();
   const { t, ui } = useLanguage();
-  const [hadith, setHadith] = useState<Hadith | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [hadith, setHadith] = useState<Hadith>(() => resolveImmediateDailyHadith());
+  const [loading, setLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();

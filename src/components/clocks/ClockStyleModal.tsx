@@ -12,7 +12,7 @@ export const ClockStyleModal: React.FC<ClockStyleModalProps> = ({ open, onClose 
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -27,7 +27,7 @@ export const ClockStyleModal: React.FC<ClockStyleModalProps> = ({ open, onClose 
       >
         {/* Modal Header */}
         <div
-          className="flex items-center justify-between px-5 py-4 backdrop-blur-md"
+          className="flex items-center justify-between px-5 py-4"
           style={{ borderBottom: '1px solid var(--border)' }}
         >
           <div>

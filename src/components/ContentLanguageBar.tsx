@@ -48,7 +48,7 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
         fullWidth
           ? 'grid grid-cols-4 w-full gap-1.5 p-1 rounded-2xl'
           : 'inline-flex items-center gap-1.5 p-1 rounded-full'
-      } border border-[var(--border)] backdrop-blur-md select-none transition-all ${className}`}
+      } border border-[var(--border)] select-none transition-all ${className}`}
       style={{
         background: 'var(--surface-2)',
         boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',

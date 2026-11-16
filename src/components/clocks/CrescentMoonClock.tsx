@@ -102,11 +102,6 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
               <stop offset="0%" stopColor="var(--text-primary)" />
               <stop offset="100%" stopColor="var(--accent-text)" />
             </linearGradient>
-            {!isStaticPreview && (
-              <filter id="crescentHandShadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.75" />
-              </filter>
-            )}
           </defs>
 
           {/* ── Layer 1: Inner Accent Bezel Ring ── */}
@@ -200,12 +195,11 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
             <path
               d={getMoonSvgPath(moonInfo.phase, moonRadius)}
               fill="url(#moonGlow)"
-              filter={!isStaticPreview ? "drop-shadow(0 0 3px var(--accent-glow))" : undefined}
             />
           </g>
 
           {/* ── Layer 4 (TOP): Watchmaker Hands + Center Jewel Cap ── */}
-          <g id="crescent-hands" filter={!isStaticPreview ? "url(#crescentHandShadow)" : undefined}>
+          <g id="crescent-hands">
             {/* Tapered Sword Hour Hand with Luminous Spine */}
             <g
               style={{
@@ -314,7 +308,6 @@ export const CrescentMoonClock: React.FC<ClockProps> = ({
                 background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                filter: 'drop-shadow(0 0 10px var(--accent-glow))',
               }}
             >
               {hijriDate

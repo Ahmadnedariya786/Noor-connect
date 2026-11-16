@@ -150,7 +150,6 @@ export const LivingSkyAura: React.FC<LivingSkyAuraProps> = ({
             d="M 315 35 A 12 12 0 1 0 327 56 A 15 15 0 0 1 315 35 Z"
             fill="var(--accent-text)"
             fillOpacity="0.85"
-            style={{ filter: 'drop-shadow(0 0 6px var(--accent-glow))' }}
           />
         </svg>
       )}

@@ -63,17 +63,39 @@ export interface QazaStats {
   byPrayer: Record<QazaPrayerName, number>;
 }
 
+// Module-level in-memory cache for fast instant stats returns without repeated JSON parsing
+let memoryCachedQazaStats: QazaStats | null = null;
+let memoryCachedDateRecords: DateWiseQazaRecord[] | null = null;
+
+export const invalidateQazaMemoryCache = (): void => {
+  memoryCachedQazaStats = null;
+  memoryCachedDateRecords = null;
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('qaza-updated', invalidateQazaMemoryCache);
+  window.addEventListener('noor-qaza-updated', invalidateQazaMemoryCache);
+  window.addEventListener('qaza-date-updated', invalidateQazaMemoryCache);
+  window.addEventListener('storage', (e) => {
+    if (e.key === QAZA_STORAGE_KEY || e.key === QAZA_DATE_RECORDS_KEY) {
+      invalidateQazaMemoryCache();
+    }
+  });
+}
+
 // ── Two-Way Reconciliation Helper ────────────────────────────
 
 /**
  * Reads date records internally without triggering recursive loops.
  */
 const getDateWiseQazaListInternal = (): DateWiseQazaRecord[] => {
+  if (memoryCachedDateRecords) return memoryCachedDateRecords;
   try {
     const raw = localStorage.getItem(QAZA_DATE_RECORDS_KEY);
     if (!raw) return [];
     const list: DateWiseQazaRecord[] = JSON.parse(raw);
-    return Array.isArray(list) ? list : [];
+    memoryCachedDateRecords = Array.isArray(list) ? list : [];
+    return memoryCachedDateRecords;
   } catch {
     return [];
   }
@@ -136,6 +158,7 @@ export const getQazaPrayers = (): Record<QazaPrayerName, number> => {
 
 // Save Qaza prayers
 const saveQazaPrayers = (prayers: Record<QazaPrayerName, number>): void => {
+  invalidateQazaMemoryCache();
   safeSetLocalStorageItem(QAZA_STORAGE_KEY, JSON.stringify(prayers));
 };
 
@@ -201,12 +224,15 @@ export const setQazaCount = (prayer: QazaPrayerName, count: number): void => {
 
 // Get Qaza stats
 export const getQazaStats = (): QazaStats => {
+  if (memoryCachedQazaStats) return memoryCachedQazaStats;
   const prayers = reconcileQazaWithDateRecords();
   const total = Object.values(prayers).reduce((sum, count) => sum + count, 0);
-  return {
+  const stats: QazaStats = {
     total,
     byPrayer: prayers,
   };
+  memoryCachedQazaStats = stats;
+  return stats;
 };
 
 // Clear all Qaza and reset all date-wise logs
@@ -487,6 +513,7 @@ export const getDateWiseQazaList = (): DateWiseQazaRecord[] => {
 };
 
 export const saveDateWiseQazaList = (records: DateWiseQazaRecord[]): void => {
+  invalidateQazaMemoryCache();
   try {
     const capped = records.slice(0, 365);
     safeSetLocalStorageItem(QAZA_DATE_RECORDS_KEY, JSON.stringify(capped));

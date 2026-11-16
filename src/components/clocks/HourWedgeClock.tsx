@@ -140,17 +140,6 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
               <stop offset="0%" stopColor="var(--accent)" />
               <stop offset="100%" stopColor="var(--accent-2)" />
             </linearGradient>
-
-            {!isStaticPreview && (
-              <>
-                <filter id="wedgeHandShadow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.8" />
-                </filter>
-                <filter id="wedgeBorderGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="var(--accent-glow)" floodOpacity="0.75" />
-                </filter>
-              </>
-            )}
           </defs>
 
           {/* ── LAYER 1 (BOTTOM): Bezel Rings ── */}
@@ -190,7 +179,6 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
               stroke="var(--accent)"
               strokeWidth="1.5"
               strokeLinejoin="round"
-              filter={!isStaticPreview ? "url(#wedgeBorderGlow)" : undefined}
             />
 
             {/* Progressive elapsed wedge filled with the bright accent gradient */}
@@ -221,7 +209,6 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
                 fontFamily="'Impact', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Trebuchet MS', sans-serif"
                 style={{
                   letterSpacing: '-0.02em',
-                  filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75))',
                 }}
               >
                 {wedgeLabel}
@@ -260,7 +247,6 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
           {/* ── LAYER 4 (TOP — MUST BE LAST IN SVG): Watch Hands + Center Jewel Cap ── */}
           <g
             id="hands-layer"
-            filter={!isStaticPreview ? "url(#wedgeHandShadow)" : undefined}
             style={{
               position: 'relative',
               zIndex: 10,
@@ -415,7 +401,6 @@ export const HourWedgeClock: React.FC<ClockProps> = ({
               background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 0 10px var(--accent-glow))',
             }}
           >
             {hijriDate

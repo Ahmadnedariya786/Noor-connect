@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Moon, Sun, Sunset, Cloud, CloudMoon, Bell, Compass, LayoutGrid, Settings as SettingsIcon, Wallet, Calendar, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppBar } from "@/components/AppBar";
-const DailyAyah = lazy(() => import("@/components/EnhancedDailyAyah").then(module => ({ default: module.EnhancedDailyAyah })));
-const DailyHadith = lazy(() => import("@/components/EnhancedDailyHadith").then(module => ({ default: module.EnhancedDailyHadith })));
+import { EnhancedDailyAyah as DailyAyah } from "@/components/EnhancedDailyAyah";
+import { EnhancedDailyHadith as DailyHadith } from "@/components/EnhancedDailyHadith";
 import { PremiumDashboard } from "@/components/PremiumDashboard";
 import { LocationSearch } from "@/components/LocationSearch";
 import { LayoutManager } from "@/components/LayoutManager";
@@ -234,14 +234,14 @@ export default function Dashboard() {
   const [suhoorIftaar, setSuhoorIftaar] = useState<typeof initialSuhoor>(() => initialSuhoor);
   const { toast } = useToast();
 
-  // Memoized prayer icons
+  // Memoized prayer icons - themed with var(--accent-text) for 100% contrast across all 8 themes
   const prayerIcons = useMemo((): Record<string, React.ReactNode> => ({
-    Fajr: <Moon className="w-5 h-5 text-indigo-400" />,
-    Sunrise: <Sun className="w-5 h-5 text-amber-300" />,
-    Dhuhr: <Sun className="w-5 h-5 text-amber-400" />,
-    Asr: <Cloud className="w-5 h-5 text-blue-400" />,
-    Maghrib: <Sunset className="w-5 h-5 text-orange-400" />,
-    Isha: <CloudMoon className="w-5 h-5 text-purple-400" />,
+    Fajr: <Moon className="w-5 h-5 text-[var(--accent-text)]" />,
+    Sunrise: <Sun className="w-5 h-5 text-[var(--accent-text)]" />,
+    Dhuhr: <Sun className="w-5 h-5 text-[var(--accent-text)]" />,
+    Asr: <Cloud className="w-5 h-5 text-[var(--accent-text)]" />,
+    Maghrib: <Sunset className="w-5 h-5 text-[var(--accent-text)]" />,
+    Isha: <CloudMoon className="w-5 h-5 text-[var(--accent-text)]" />,
   }), []);
 
   // Global location state
