@@ -77,56 +77,56 @@ export const SCENE_DEFINITIONS: SceneDefinition[] = [
   },
   {
     id: 'kiswah-gold',
-    name: 'Kiswah & Gold',
+    name: 'Kiswah Gold',
     subtitle: 'Obsidian fabric & 24K gold filigree',
     icon: '🕋',
     previewGradient: 'linear-gradient(135deg, #09090b 0%, #1c1917 50%, #dca349 100%)',
   },
   {
     id: 'rawdah-emerald',
-    name: 'Rawdah Sanctuary',
+    name: 'Rawdah Green',
     subtitle: 'Obsidian pine & Green Dome silhouette',
     icon: '🕌',
     previewGradient: 'linear-gradient(135deg, #02140b 0%, #063b22 50%, #45b88c 100%)',
   },
   {
     id: 'cosmic-nebula',
-    name: 'Cosmic Nebula',
+    name: 'Cosmic Night',
     subtitle: 'Deep starfield & violet nebula waves',
     icon: '✨',
     previewGradient: 'linear-gradient(135deg, #02040a 0%, #4c1d95 50%, #0e7490 100%)',
   },
   {
     id: 'burgundy-velvet',
-    name: 'Burgundy Mihrab',
+    name: 'Royal Mihrab',
     subtitle: 'Deep onyx velvet & ornate pointed arch',
     icon: '🏮',
     previewGradient: 'linear-gradient(135deg, #0c0507 0%, #3b0813 50%, #c24552 100%)',
   },
   {
     id: 'bosphorus-mist',
-    name: 'Bosphorus Mist',
+    name: 'Bosphorus',
     subtitle: 'Deep sapphire ocean & rolling mist',
     icon: '🌫️',
     previewGradient: 'linear-gradient(135deg, #020b1e 0%, #0a2550 50%, #6a9af2 100%)',
   },
   {
     id: 'dawn-glow',
-    name: 'Honey Dawn Glow',
+    name: 'Plum & Dawn',
     subtitle: 'Midnight plum & amber horizon light',
     icon: '🌅',
     previewGradient: 'linear-gradient(135deg, #140727 0%, #4c1d95 50%, #f59e0b 100%)',
   },
   {
     id: 'persian-arch',
-    name: 'Persian Indigo',
+    name: 'Persian Arch',
     subtitle: 'Midnight indigo & celestial arch',
     icon: '🏛️',
     previewGradient: 'linear-gradient(135deg, #08061d 0%, #1a1242 50%, #b8c4ff 100%)',
   },
   {
     id: 'mushaf-parchment',
-    name: 'Mushaf Parchment',
+    name: 'Parchment',
     subtitle: 'Minimalist antique vellum & gold rule',
     icon: '📜',
     previewGradient: 'linear-gradient(135deg, #14110e 0%, #231c15 50%, #b87f28 100%)',
@@ -140,17 +140,17 @@ export const ASPECT_RATIO_PRESETS: Record<
   '9:16': {
     video: { width: 720, height: 1280 },
     image: { width: 1080, height: 1920 },
-    label: '9:16 Reel / Story',
+    label: '9:16 Reel',
   },
   '1:1': {
     video: { width: 720, height: 720 },
     image: { width: 1080, height: 1080 },
-    label: '1:1 Square Post',
+    label: '1:1 Square',
   },
   '16:9': {
     video: { width: 1280, height: 720 },
     image: { width: 1920, height: 1080 },
-    label: '16:9 Landscape',
+    label: '16:9 Wide',
   },
 };
 
@@ -181,6 +181,8 @@ export async function ensureFontsReady(): Promise<void> {
       document.fonts.load('700 40px "Amiri"'),
       document.fonts.load('400 28px "Scheherazade New"'),
       document.fonts.load('400 28px "Noto Nastaliq Urdu"'),
+      document.fonts.load('600 22px "Noto Sans Devanagari"'),
+      document.fonts.load('600 22px "Noto Sans Gujarati"'),
       document.fonts.load('600 20px system-ui'),
     ]);
     await document.fonts.ready;
@@ -391,12 +393,12 @@ export function drawProceduralScene(
         ctx.fill();
       }
 
-      // Glowing Full Moon
+      // Glowing Full Moon (positioned high in sky to prevent collision with typography)
       const mx = w * 0.5;
-      const my = h * 0.22;
-      const mr = Math.min(w, h) * 0.085;
+      const my = (w > h ? 0.25 : 0.27) * h;
+      const mr = Math.min(w, h) * (w > h ? 0.075 : 0.085);
 
-      const moonGlow = ctx.createRadialGradient(mx, my, mr * 0.8, mx, my, mr * 2.8);
+      const moonGlow = ctx.createRadialGradient(mx, my, 0, mx, my, mr * 2.8);
       moonGlow.addColorStop(0, 'rgba(224, 242, 254, 0.45)');
       moonGlow.addColorStop(0.5, 'rgba(186, 230, 253, 0.15)');
       moonGlow.addColorStop(1, 'rgba(186, 230, 253, 0)');
@@ -405,8 +407,8 @@ export function drawProceduralScene(
       ctx.arc(mx, my, mr * 2.8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Moon Body
-      const moonBody = ctx.createRadialGradient(mx - mr * 0.2, my - mr * 0.2, mr * 0.1, mx, my, mr);
+      // Moon Body (soft radial shading from center 0, no dark center spot)
+      const moonBody = ctx.createRadialGradient(mx - mr * 0.15, my - mr * 0.15, 0, mx, my, mr);
       moonBody.addColorStop(0, '#FFFFFF');
       moonBody.addColorStop(0.8, '#F1F5F9');
       moonBody.addColorStop(1, '#CBD5E1');
@@ -449,17 +451,27 @@ export function drawProceduralScene(
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, w, h * 0.65);
 
-      // Sun on Horizon
-      const sunY = h * 0.56;
-      const sunR = Math.min(w, h) * 0.12;
-      const sunGrad = ctx.createRadialGradient(w * 0.5, sunY, sunR * 0.2, w * 0.5, sunY, sunR * 2.2);
+      // Sun on Horizon (placed high in sky to prevent collision with Arabic & subtitles)
+      const sunY = (w > h ? 0.25 : 0.27) * h;
+      const sunR = Math.min(w, h) * (w > h ? 0.09 : 0.10);
+      const sunGrad = ctx.createRadialGradient(w * 0.5, sunY, 0, w * 0.5, sunY, sunR * 2.2);
       sunGrad.addColorStop(0, '#FFFBEB');
       sunGrad.addColorStop(0.3, '#FEF08A');
-      sunGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.4)');
+      sunGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.45)');
       sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
       ctx.fillStyle = sunGrad;
       ctx.beginPath();
       ctx.arc(w * 0.5, sunY, sunR * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sun Body (pure radial glow from 0, zero black/dark center dot)
+      const sunBody = ctx.createRadialGradient(w * 0.5, sunY, 0, w * 0.5, sunY, sunR);
+      sunBody.addColorStop(0, '#FFFFFF');
+      sunBody.addColorStop(0.5, '#FEF08A');
+      sunBody.addColorStop(1, '#F59E0B');
+      ctx.fillStyle = sunBody;
+      ctx.beginPath();
+      ctx.arc(w * 0.5, sunY, sunR, 0, Math.PI * 2);
       ctx.fill();
 
       // Dune 1 (Back)
@@ -912,8 +924,20 @@ export function prerenderAyahOffscreenCanvas(params: {
   const maxTextWidth = Math.round(width * 0.84);
   const isLandscape = width > height;
 
+  // Translation font stack & language helpers
+  const isUrdu = subtitleLang === 'ur';
+  const isHindi = subtitleLang === 'hi';
+  const isGujarati = subtitleLang === 'gu';
+
+  const getTransFont = (size: number) => {
+    if (isUrdu) return `400 ${size + 3}px "Noto Nastaliq Urdu", serif`;
+    if (isHindi) return `600 ${size}px "Noto Sans Devanagari", system-ui, sans-serif`;
+    if (isGujarati) return `600 ${size}px "Noto Sans Gujarati", system-ui, sans-serif`;
+    return `500 ${size}px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif`;
+  };
+
   // Calculate dynamic font size based on text length and canvas dimensions
-  let arabicFontSize = isLandscape ? 38 : width < 800 ? 42 : 52;
+  let arabicFontSize = isLandscape ? 36 : width < 800 ? 40 : 50;
   if (arabicContent.length > 200) arabicFontSize = Math.round(arabicFontSize * 0.72);
   else if (arabicContent.length > 120) arabicFontSize = Math.round(arabicFontSize * 0.82);
 
@@ -922,29 +946,77 @@ export function prerenderAyahOffscreenCanvas(params: {
   ctx.direction = 'rtl';
   ctx.font = `700 ${arabicFontSize}px "Amiri", "Scheherazade New", serif`;
 
-  const arabicLines = wrapCanvasText(ctx, arabicContent, maxTextWidth);
-  const arabicLineHeight = Math.round(arabicFontSize * 1.85);
-  const totalArabicBlockHeight = arabicLines.length * arabicLineHeight;
+  let arabicLines = wrapCanvasText(ctx, arabicContent, maxTextWidth);
+  let arabicLineHeight = Math.round(arabicFontSize * 1.85);
+  let totalArabicBlockHeight = arabicLines.length * arabicLineHeight;
 
   // Translation lines
   let transLines: string[] = [];
-  const transFontSize = isLandscape ? 17 : width < 800 ? 19 : 23;
-  const isUrdu = subtitleLang === 'ur';
+  let transFontSize = isLandscape ? 17 : width < 800 ? 19 : 23;
 
   if (subtitleLang !== 'none' && ayah.translation) {
     ctx.direction = isUrdu ? 'rtl' : 'ltr';
-    ctx.font = isUrdu
-      ? `400 ${transFontSize + 3}px "Noto Nastaliq Urdu", serif`
-      : `500 ${transFontSize}px system-ui, -apple-system, sans-serif`;
+    ctx.font = getTransFont(transFontSize);
     transLines = wrapCanvasText(ctx, ayah.translation, maxTextWidth);
   }
 
-  const transLineHeight = Math.round(transFontSize * 1.6);
-  const totalTransBlockHeight = transLines.length * transLineHeight;
+  let transLineHeight = Math.round(transFontSize * 1.6);
+  let totalTransBlockHeight = transLines.length * transLineHeight;
+
+  // Minimum vertical gap between Arabic block and Subtitle block
+  const gapBetweenArabicAndTrans = Math.max(38, Math.round(height * 0.055));
+  const medallionHeight = Math.round(arabicFontSize * 0.45);
+
+  let combinedHeight =
+    totalArabicBlockHeight +
+    medallionHeight +
+    (transLines.length > 0 ? totalTransBlockHeight + gapBetweenArabicAndTrans : 16);
+
+  // Dynamic proportional downscaling if content exceeds available height budget
+  const maxBudgetHeight = Math.round(height * (isLandscape ? 0.60 : 0.65));
+  if (combinedHeight > maxBudgetHeight) {
+    const scale = maxBudgetHeight / combinedHeight;
+    arabicFontSize = Math.max(22, Math.round(arabicFontSize * scale));
+    arabicLineHeight = Math.round(arabicFontSize * 1.85);
+    ctx.font = `700 ${arabicFontSize}px "Amiri", "Scheherazade New", serif`;
+    arabicLines = wrapCanvasText(ctx, arabicContent, maxTextWidth);
+    totalArabicBlockHeight = arabicLines.length * arabicLineHeight;
+
+    transFontSize = Math.max(13, Math.round(transFontSize * scale));
+    transLineHeight = Math.round(transFontSize * 1.55);
+    if (transLines.length > 0) {
+      ctx.font = getTransFont(transFontSize);
+      transLines = wrapCanvasText(ctx, ayah.translation!, maxTextWidth);
+      totalTransBlockHeight = transLines.length * transLineHeight;
+    }
+
+    combinedHeight =
+      totalArabicBlockHeight +
+      Math.round(arabicFontSize * 0.45) +
+      (transLines.length > 0 ? totalTransBlockHeight + Math.round(gapBetweenArabicAndTrans * scale) : 16);
+  }
 
   // Compute centered Y coordinate
-  const combinedHeight = totalArabicBlockHeight + (transLines.length > 0 ? totalTransBlockHeight + 36 : 0);
-  const centerY = Math.round(height * 0.48);
+  const centerY = Math.round(height * 0.50);
+
+  // Draw soft glass-scrim behind typography for AAA contrast
+  const padX = Math.round(width * 0.04);
+  const padY = Math.round(height * 0.025);
+  const scrimW = Math.min(width * 0.94, maxTextWidth + padX * 2);
+  const scrimH = combinedHeight + padY * 2;
+  const scrimX = (width - scrimW) * 0.5;
+  const scrimY = centerY - Math.round(scrimH * 0.5);
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(4, 8, 16, 0.48)';
+  ctx.beginPath();
+  ctx.roundRect(scrimX, scrimY, scrimW, scrimH, 20);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(220, 163, 73, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
   let curY = centerY - Math.round(combinedHeight * 0.5) + arabicFontSize;
 
   // Draw Arabic Lines with rich glow
@@ -961,19 +1033,17 @@ export function prerenderAyahOffscreenCanvas(params: {
   }
 
   // Draw Ayah End Medallion directly beneath Arabic block
-  curY += 10;
-  drawKhatamMedallion(ctx, width * 0.5, curY, Math.round(arabicFontSize * 0.45), String(ayah.ayahNumber));
-  curY += Math.round(arabicFontSize * 0.6) + 20;
+  curY += 8;
+  drawKhatamMedallion(ctx, width * 0.5, curY, Math.round(arabicFontSize * 0.42), String(ayah.ayahNumber));
+  curY += Math.round(arabicFontSize * 0.42) + gapBetweenArabicAndTrans;
 
   // Draw Translation Lines
   if (transLines.length > 0) {
     ctx.shadowBlur = 6;
     ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillStyle = 'rgba(241, 245, 249, 0.92)';
+    ctx.fillStyle = 'rgba(241, 245, 249, 0.94)';
     ctx.direction = isUrdu ? 'rtl' : 'ltr';
-    ctx.font = isUrdu
-      ? `400 ${transFontSize + 3}px "Noto Nastaliq Urdu", serif`
-      : `500 ${transFontSize}px system-ui, -apple-system, sans-serif`;
+    ctx.font = getTransFont(transFontSize);
 
     for (const tLine of transLines) {
       ctx.fillText(tLine, width * 0.5, curY);

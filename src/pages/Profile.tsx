@@ -13,7 +13,6 @@ import {
   Info,
   Mail,
   ArrowLeft,
-  Settings as SettingsIcon,
   Sparkles,
   CheckCircle2,
   Lock,
@@ -257,7 +256,7 @@ function getCalcMethodDisplay(val: string | null): string | null {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { t, ui, isRTL } = useLanguage();
+  const { ui } = useLanguage();
   const groups = useMemo(() => getSettingsGroups(ui), [ui]);
   const [asyncValues, setAsyncValues] = useState<Record<string, string | null>>(() => {
     const initial: Record<string, string | null> = {};
@@ -620,9 +619,9 @@ const Profile: React.FC = () => {
                           }}
                         >
                           <span
-                            className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate block leading-tight"
+                            className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate block leading-tight shrink min-w-0"
                             style={{
-                              fontSize: '0.84rem',
+                              fontSize: '0.80rem',
                               fontWeight: 700,
                               lineHeight: 1.2,
                               color: 'var(--text-primary)',
@@ -639,7 +638,7 @@ const Profile: React.FC = () => {
                               <div className="w-7 h-3.5 bg-[var(--surface-2)] rounded-full animate-pulse shrink-0" />
                             ) : val !== null ? (
                               <span
-                                className="settings-value-chip shrink-0"
+                                className="settings-value-chip shrink-0 !max-w-[85px] !px-1.5 !py-0.5 !text-[10px]"
                                 dir="ltr"
                               >
                                 <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{val}</span>

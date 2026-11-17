@@ -185,77 +185,141 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
       // 3. For any missing verses in the range fromAyah..toAyah, fetch from storage / API
       for (let a = fromAyah; a <= toAyah; a++) {
         const cacheKey = `noor_clip_verse_${surahNumber}_${a}`;
+        let uthmani = newCache[a]?.textUthmani || '';
+        let transMap: Record<string, string> = { ...(newCache[a]?.translations || {}) };
+
         try {
           const stored = localStorage.getItem(cacheKey);
           if (stored) {
             const parsed = JSON.parse(stored);
             if (parsed?.textUthmani) {
-              newCache[a] = parsed;
-              continue;
+              uthmani = parsed.textUthmani;
+              transMap = { ...(parsed.translations || {}), ...transMap };
             }
           }
         } catch {
           // Safe storage parse
         }
 
-        // Fetch missing online
-        if (!newCache[a]?.textUthmani || (subtitleLang !== 'none' && !newCache[a]?.translations?.[subtitleLang])) {
+        // Check if full offline translation pack exists from AyahStudySheet
+        if (subtitleLang !== 'none' && !transMap[subtitleLang]) {
+          const offlinePackKey =
+            subtitleLang === 'gu'
+              ? `noor_offline_trans_gu.omari_${surahNumber}`
+              : subtitleLang === 'hi'
+              ? `noor_offline_trans_hi.hindi_${surahNumber}`
+              : subtitleLang === 'ur'
+              ? `noor_offline_trans_ur.jalandhry_${surahNumber}`
+              : `noor_offline_trans_en.sahih_${surahNumber}`;
           try {
-            const alquranUrl = `https://api.alquran.cloud/v1/ayah/${surahNumber}:${a}/editions/quran-uthmani,en.sahih,ur.jalandhry,hi.hindi`;
-            const gujaratiUrl = `https://quranenc.com/api/v1/translation/aya/gujarati_omari/${surahNumber}/${a}`;
-
-            const [alRes, guRes] = await Promise.allSettled([
-              fetch(alquranUrl, { signal: AbortSignal.timeout(3500) }),
-              fetch(gujaratiUrl, { signal: AbortSignal.timeout(3500) }),
-            ]);
-
-            let uthmani = newCache[a]?.textUthmani || '';
-            const transMap: Record<string, string> = { ...(newCache[a]?.translations || {}) };
-
-            if (alRes.status === 'fulfilled' && alRes.value.ok) {
-              const data = await alRes.value.json();
-              if (data?.data && Array.isArray(data.data)) {
-                data.data.forEach((item: { edition?: { identifier?: string }; text?: string }) => {
-                  const id = item?.edition?.identifier;
-                  if (id === 'quran-uthmani' && item.text) uthmani = item.text;
-                  else if (id === 'en.sahih' && item.text) transMap.en = item.text;
-                  else if (id === 'ur.jalandhry' && item.text) transMap.ur = item.text;
-                  else if (id === 'hi.hindi' && item.text) transMap.hi = item.text;
-                });
+            const pack = localStorage.getItem(offlinePackKey);
+            if (pack) {
+              const packData = JSON.parse(pack);
+              if (packData && packData[a]) {
+                transMap[subtitleLang] = packData[a];
               }
             }
+          } catch {
+            // Safe offline pack parse
+          }
+        }
 
-            if (guRes.status === 'fulfilled' && guRes.value.ok) {
-              try {
-                const guData = await guRes.value.json();
-                const rawGu = guData?.result?.translation || '';
-                const cleanGu = rawGu.replace(/^[૦-૯0-9]+\.\s*/, '').trim();
-                if (cleanGu) transMap.gu = cleanGu;
-              } catch {
-                // Handled gujarati parse
-              }
+        // If we have both uthmani text and the required subtitle translation (or subtitles are none), we're done with this ayah!
+        if (uthmani && (subtitleLang === 'none' || Boolean(transMap[subtitleLang]))) {
+          newCache[a] = { textUthmani: uthmani, translations: transMap };
+          continue;
+        }
+
+        // Fetch missing online
+        try {
+          const alquranUrl = `https://api.alquran.cloud/v1/ayah/${surahNumber}:${a}/editions/quran-uthmani,en.sahih,ur.jalandhry,hi.hindi`;
+          const gujaratiUrl = `https://quranenc.com/api/v1/translation/aya/gujarati_omari/${surahNumber}/${a}`;
+
+          const [alRes, guRes] = await Promise.allSettled([
+            fetch(alquranUrl, { signal: AbortSignal.timeout(4000) }),
+            fetch(gujaratiUrl, { signal: AbortSignal.timeout(4000) }),
+          ]);
+
+          if (alRes.status === 'fulfilled' && alRes.value.ok) {
+            const data = await alRes.value.json();
+            if (data?.data && Array.isArray(data.data)) {
+              data.data.forEach((item: { edition?: { identifier?: string }; text?: string }) => {
+                const id = item?.edition?.identifier;
+                if (id === 'quran-uthmani' && item.text) uthmani = item.text;
+                else if (id === 'en.sahih' && item.text) transMap.en = item.text;
+                else if (id === 'ur.jalandhry' && item.text) transMap.ur = item.text;
+                else if (id === 'hi.hindi' && item.text) transMap.hi = item.text;
+              });
             }
+          }
 
-            if (!uthmani) {
-              uthmani = `سورة ${surahNameArabic} - آية ${a}`;
-            }
-
-            const record = { textUthmani: uthmani, translations: transMap };
-            newCache[a] = record;
-
+          if (guRes.status === 'fulfilled' && guRes.value.ok) {
             try {
-              localStorage.setItem(cacheKey, JSON.stringify(record));
+              const guData = await guRes.value.json();
+              const rawGu = guData?.result?.translation || '';
+              const cleanGu = rawGu.replace(/^[૦-૯0-9]+\.\s*/, '').trim();
+              if (cleanGu) transMap.gu = cleanGu;
             } catch {
-              // Safe localStorage save
+              // Handled gujarati parse
             }
-          } catch (fetchErr) {
-            console.warn(`[QuranClipStudio] Fetch notice for ${surahNumber}:${a}`, fetchErr);
-            if (!newCache[a]) {
-              newCache[a] = {
-                textUthmani: `سورة ${surahNameArabic} - آية ${a}`,
-                translations: { en: `Surah ${surahNameEnglish} - Ayah ${a}` },
-              };
+          }
+
+          // Gujarati CDN fallback if QuranEnc fails
+          if (subtitleLang === 'gu' && !transMap.gu) {
+            try {
+              const cdnRes = await fetch(
+                `https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/guj-rabila/chapters/${surahNumber}.json`,
+                { signal: AbortSignal.timeout(3000) }
+              );
+              if (cdnRes.ok) {
+                const cdnData = await cdnRes.json();
+                const v = cdnData?.chapter?.find((item: { verse: number; text: string }) => item.verse === a);
+                if (v?.text) {
+                  transMap.gu = v.text.replace(/^[૦-૯0-9]+\.\s*/, '').trim();
+                }
+              }
+            } catch {
+              // Safe CDN catch
             }
+          }
+
+          // Hindi CDN fallback if AlQuran fails
+          if (subtitleLang === 'hi' && !transMap.hi) {
+            try {
+              const cdnRes = await fetch(
+                `https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/hin-muhammadfarooqk/${surahNumber}/${a}.json`,
+                { signal: AbortSignal.timeout(3000) }
+              );
+              if (cdnRes.ok) {
+                const cdnData = await cdnRes.json();
+                if (cdnData?.text) {
+                  transMap.hi = cdnData.text.trim();
+                }
+              }
+            } catch {
+              // Safe CDN catch
+            }
+          }
+
+          if (!uthmani) {
+            uthmani = `سورة ${surahNameArabic} - آية ${a}`;
+          }
+
+          const record = { textUthmani: uthmani, translations: transMap };
+          newCache[a] = record;
+
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(record));
+          } catch {
+            // Safe localStorage save
+          }
+        } catch (fetchErr) {
+          console.warn(`[QuranClipStudio] Fetch notice for ${surahNumber}:${a}`, fetchErr);
+          if (!newCache[a]) {
+            newCache[a] = {
+              textUthmani: uthmani || `سورة ${surahNameArabic} - آية ${a}`,
+              translations: transMap,
+            };
           }
         }
       }
@@ -695,11 +759,11 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                 autoPlay
                 loop
                 playsInline
-                className="w-full max-h-56 object-contain mx-auto"
+                className="w-full max-h-[220px] object-contain mx-auto bg-black"
               />
             ) : (
               <div
-                className={`w-full flex items-center justify-center max-h-56 ${
+                className={`w-full flex items-center justify-center max-h-[220px] ${
                   aspectRatio === '9:16'
                     ? 'aspect-[9/16]'
                     : aspectRatio === '1:1'
@@ -709,7 +773,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
               >
                 <canvas
                   ref={previewCanvasRef}
-                  className="w-full h-full object-contain max-h-56"
+                  className="w-full h-full object-contain max-h-[220px]"
                 />
               </div>
             )}
@@ -745,30 +809,30 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
 
             <div className="grid grid-cols-2 gap-2">
               {/* From Ayah */}
-              <div className="p-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[var(--text-secondary)]">From Ayah</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={isGenerating || fromAyah <= 1}
-                      onClick={() => handleFromAyahChange(fromAyah - 1)}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="text-xs font-bold text-[var(--text-primary)] min-w-[20px] text-center font-mono">
-                      {fromAyah}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={isGenerating || fromAyah >= toAyah}
-                      onClick={() => handleFromAyahChange(fromAyah + 1)}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
+              <div className="p-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] flex flex-col gap-1 min-w-0">
+                <div className="text-[10px] font-bold tracking-wider text-[var(--text-secondary)] uppercase text-center">
+                  FROM AYAH
+                </div>
+                <div className="flex items-center justify-center gap-2 py-0.5">
+                  <button
+                    type="button"
+                    disabled={isGenerating || fromAyah <= 1}
+                    onClick={() => handleFromAyahChange(fromAyah - 1)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-sm font-bold text-[var(--text-primary)] min-w-[28px] text-center font-mono">
+                    {fromAyah}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isGenerating || fromAyah >= toAyah}
+                    onClick={() => handleFromAyahChange(fromAyah + 1)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
                 {/* 1-Line RTL Arabic opening snippet preview */}
@@ -781,37 +845,37 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                     textOverflow: 'ellipsis',
                     color: 'var(--accent-text)',
                   }}
-                  className="font-arabic pt-0.5"
+                  className="font-arabic pt-0.5 text-center"
                 >
                   {fromSnippet}
                 </div>
               </div>
 
               {/* To Ayah */}
-              <div className="p-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[var(--text-secondary)]">To Ayah</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={isGenerating || toAyah <= fromAyah}
-                      onClick={() => handleToAyahChange(toAyah - 1)}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="text-xs font-bold text-[var(--text-primary)] min-w-[20px] text-center font-mono">
-                      {toAyah}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={isGenerating || toAyah >= Math.min(totalAyahsInSurah, fromAyah + 9)}
-                      onClick={() => handleToAyahChange(toAyah + 1)}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
+              <div className="p-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] flex flex-col gap-1 min-w-0">
+                <div className="text-[10px] font-bold tracking-wider text-[var(--text-secondary)] uppercase text-center">
+                  TO AYAH
+                </div>
+                <div className="flex items-center justify-center gap-2 py-0.5">
+                  <button
+                    type="button"
+                    disabled={isGenerating || toAyah <= fromAyah}
+                    onClick={() => handleToAyahChange(toAyah - 1)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-sm font-bold text-[var(--text-primary)] min-w-[28px] text-center font-mono">
+                    {toAyah}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isGenerating || toAyah >= Math.min(totalAyahsInSurah, fromAyah + 9)}
+                    onClick={() => handleToAyahChange(toAyah + 1)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] disabled:opacity-30 active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
                 {/* 1-Line RTL Arabic opening snippet preview */}
@@ -824,7 +888,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                     textOverflow: 'ellipsis',
                     color: 'var(--accent-text)',
                   }}
-                  className="font-arabic pt-0.5"
+                  className="font-arabic pt-0.5 text-center"
                 >
                   {toSnippet}
                 </div>
@@ -863,32 +927,39 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
             </div>
 
             {/* Subtitle Selector */}
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
-              <span className="text-[11px] font-semibold text-[var(--text-secondary)] shrink-0">
-                Subtitles:
-              </span>
-              {(
-                [
-                  { id: 'none', label: 'Arabic Only' },
-                  { id: 'en', label: '+ English' },
-                  { id: 'ur', label: '+ Urdu' },
-                  { id: 'hi', label: '+ Hindi' },
-                  { id: 'gu', label: '+ Gujarati' },
-                ] as const
-              ).map((sub) => (
-                <button
-                  key={sub.id}
-                  type="button"
-                  onClick={() => setSubtitleLang(sub.id)}
-                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold shrink-0 border transition-all ${
-                    subtitleLang === sub.id
-                      ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)] shadow-sm'
-                      : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                  }`}
-                >
-                  {sub.label}
-                </button>
-              ))}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-[var(--text-secondary)]">Subtitles:</span>
+                {isLoadingVerses && subtitleLang !== 'none' && !versesData[fromAyah]?.translations?.[subtitleLang] && (
+                  <span className="text-[10px] text-[var(--accent-text)] animate-pulse">
+                    Loading {subtitleLang === 'gu' ? 'Gujarati' : subtitleLang === 'hi' ? 'Hindi' : subtitleLang === 'ur' ? 'Urdu' : 'English'}...
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-5 gap-1.5">
+                {(
+                  [
+                    { id: 'none', label: 'Arabic Only' },
+                    { id: 'en', label: 'English' },
+                    { id: 'ur', label: 'Urdu' },
+                    { id: 'hi', label: 'Hindi' },
+                    { id: 'gu', label: 'Gujarati' },
+                  ] as const
+                ).map((sub) => (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    onClick={() => setSubtitleLang(sub.id)}
+                    className={`py-1.5 px-1 rounded-xl text-[11px] font-bold text-center border transition-all truncate ${
+                      subtitleLang === sub.id
+                        ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                        : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

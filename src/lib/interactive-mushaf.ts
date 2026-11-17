@@ -827,6 +827,19 @@ export async function fetchMushafPage(
       return data;
     }
   } catch (err) {
+    // If request was aborted (e.g. user navigated away or component unmounted), don't warn or fallback
+    const isAbort =
+      (err instanceof DOMException && err.name === 'AbortError') ||
+      (err instanceof Error && (err.name === 'AbortError' || err.message.toLowerCase().includes('abort')));
+
+    if (isAbort) {
+      if (cachedVerses && cachedVerses.length > 0) {
+        registerVersesForPage(pageNumber, cachedVerses);
+        return buildPageData(pageNumber, cachedVerses, cachedTajweed, false);
+      }
+      return buildOfflineFallbackPage(pageNumber);
+    }
+
     // Network offline or timeout - proceed to cached/fallback
     console.warn(`[Mushaf] Online fetch failed for page ${pageNumber}, trying CDN fallback:`, err);
     try {

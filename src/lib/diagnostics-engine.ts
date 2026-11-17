@@ -814,6 +814,17 @@ export function initDiagnosticsEngine(): void {
         }
       }
 
+      // Ignore benign route-change or unmount AbortErrors
+      const lowerMsg = message.toLowerCase();
+      if (
+        (reason instanceof DOMException && reason.name === 'AbortError') ||
+        (reason instanceof Error && reason.name === 'AbortError') ||
+        lowerMsg.includes('aborterror') ||
+        lowerMsg.includes('signal is aborted')
+      ) {
+        return;
+      }
+
       recordDiagnosticEvent({
         category: 'PROMISE_REJECTION',
         message,
@@ -841,11 +852,13 @@ export function initDiagnosticsEngine(): void {
       try {
         const msg = args.map(stringifyConsoleArg).join(' ');
         const lower = msg.toLowerCase();
-        // Don't record internal diagnostics logs or benign DOM/IDB event probe errors
+        // Don't record internal diagnostics logs, benign DOM/IDB event probe errors, or route-change aborts
         if (
           !msg.includes('[NOOR_DIAGNOSTICS]') &&
           !lower.includes('istrusted') &&
           !lower.includes('indexeddb error') &&
+          !lower.includes('aborterror') &&
+          !lower.includes('signal is aborted') &&
           !lower.includes('/services/qaza-tracker') &&
           !lower.includes('/qaza-tracker')
         ) {
@@ -887,8 +900,13 @@ export function initDiagnosticsEngine(): void {
           msg.includes('reduced-motion') ||
           msg.includes('motion.dev');
         const isSplashHandoffNotice = msg.includes('Splash handoff');
+        const isAbortWarning =
+          msg.includes('AbortError') ||
+          msg.includes('aborted without reason') ||
+          msg.includes('signal is aborted') ||
+          msg.includes('[Mushaf] Online fetch failed');
 
-        if (!isInternalDiagnostics && !isReducedMotionWarning && !isSplashHandoffNotice) {
+        if (!isInternalDiagnostics && !isReducedMotionWarning && !isSplashHandoffNotice && !isAbortWarning) {
           recordDiagnosticEvent({
             category: 'CONSOLE_WARN',
             message: msg,
