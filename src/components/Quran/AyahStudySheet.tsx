@@ -41,6 +41,7 @@ import {
   CheckCircle2,
   FileText,
   Trash2,
+  Film,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -50,6 +51,7 @@ interface AyahStudySheetProps {
   surahNumber: number;
   initialAyah?: number;
   currentPage?: number;
+  onOpenClipStudio?: (surah: number, ayah: number) => void;
 }
 
 export type StudyTab = 'translation' | 'tafsir' | 'hifz' | 'notes';
@@ -279,6 +281,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
   surahNumber,
   initialAyah = 1,
   currentPage = 1,
+  onOpenClipStudio,
 }) => {
   const { toast } = useToast();
   const { playAyah, startHifzLoop, stopHifzLoop, hifzConfig } = useTilawah();
@@ -1114,6 +1117,22 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Share</span>
               </Button>
+
+              {onOpenClipStudio && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    onOpenClipStudio(surahNumber, activeAyah);
+                  }}
+                  className="h-8 rounded-xl text-xs font-bold gap-1 text-[var(--accent-text)] hover:text-[var(--text-primary)]"
+                  title="Open Clip Studio"
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  <span>Clip Studio</span>
+                </Button>
+              )}
             </div>
           </div>
 

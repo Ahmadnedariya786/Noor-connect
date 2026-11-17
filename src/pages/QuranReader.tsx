@@ -18,8 +18,10 @@ import {
   Moon,
   Image as ImageIcon,
   LayoutGrid,
+  Film,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { QuranClipStudioModal } from '@/components/QuranClipStudioModal';
 import { PlaybackOptionsDrawer } from '@/components/Quran/PlaybackOptionsDrawer';
 import { QuranGuideModal } from '@/components/Quran/QuranGuideModal';
 import { quranService } from '@/lib/quran-service';
@@ -99,6 +101,19 @@ export default function QuranReader() {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [studyInitialAyah, setStudyInitialAyah] = useState(1);
   const [studySurah, setStudySurah] = useState(routeSurahId);
+
+  // Noor Clip Studio state
+  const [showClipStudio, setShowClipStudio] = useState(false);
+  const [clipStudioSurah, setClipStudioSurah] = useState(routeSurahId);
+  const [clipStudioAyah, setClipStudioAyah] = useState(1);
+
+  const handleOpenClipStudio = (sNum?: number, aNum?: number) => {
+    const s = sNum || surahNum;
+    const a = aNum || 1;
+    setClipStudioSurah(s);
+    setClipStudioAyah(a);
+    setShowClipStudio(true);
+  };
 
   // Tajweed toggle
   const [showTajweed, setShowTajweed] = useState<boolean>(() => {
@@ -670,6 +685,28 @@ export default function QuranReader() {
                 <BookOpen style={{ width: '17px', height: '17px' }} />
               </button>
 
+              {/* Clip Studio Button: 36x36 circular button matching Guide, Study & Sliders */}
+              <button
+                type="button"
+                onClick={() => handleOpenClipStudio(surahOnPage, currentAyah || 1)}
+                title="🎬 Clip Studio — Quran Reel & Image Generator"
+                aria-label="Clip Studio"
+                className="hover:border-[var(--accent)] transition-all shadow-sm active:scale-95 select-none"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--accent-text)',
+                }}
+              >
+                <Film style={{ width: '16px', height: '16px' }} />
+              </button>
+
               {/* Audio Drawer & Tilawah Options Button */}
               <button
                 type="button"
@@ -936,6 +973,7 @@ export default function QuranReader() {
               onSubPage7LChange={handleSubPage7LChange}
               onStep7Line={(direction) => (direction === 'prev' ? handlePrevPage() : handleNextPage())}
               onOpenStudySheet={handleOpenStudySheet}
+              onOpenClipStudio={handleOpenClipStudio}
               onPageTurnRequest={handlePageTurnRequest}
               onPageLoaded={handlePageLoaded}
             />
@@ -999,6 +1037,17 @@ export default function QuranReader() {
                             title="Study & Tafsir for this Ayah"
                           >
                             <BookOpen className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Clip Studio — Reel & Image Generator */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenClipStudio(v.surah_number, v.verse_number)}
+                            className="p-1.5 rounded-xl border border-[var(--border)] hover:border-[var(--accent)] bg-[var(--surface-2)] text-[var(--accent-text)] transition-all active:scale-95"
+                            title="🎬 Clip Studio — Reel & Image Generator"
+                            aria-label="Clip Studio"
+                          >
+                            <Film className="w-3.5 h-3.5" />
                           </button>
 
                           {/* Copy Ayah */}
@@ -1296,7 +1345,28 @@ export default function QuranReader() {
           surahNumber={studySurah}
           initialAyah={studyInitialAyah}
           currentPage={mushafPageNumber}
+          onOpenClipStudio={handleOpenClipStudio}
         />
+
+        {/* Noor Clip Studio — Reel & Image Card Generator (Portaled to document.body) */}
+        {showClipStudio && (
+          <QuranClipStudioModal
+            isOpen={showClipStudio}
+            onClose={() => setShowClipStudio(false)}
+            surahNumber={clipStudioSurah}
+            surahNameArabic={quranService.getSurahInfo(clipStudioSurah)?.name || ''}
+            surahNameEnglish={
+              quranService.getSurahInfo(clipStudioSurah)?.englishName || `Surah ${clipStudioSurah}`
+            }
+            totalAyahsInSurah={quranService.getSurahInfo(clipStudioSurah)?.numberOfAyahs || 7}
+            fromAyah={clipStudioAyah}
+            toAyah={clipStudioAyah}
+            initialVerses={currentPageData?.verses?.map((v) => ({
+              verse_number: v.verse_number,
+              text_uthmani: v.text_uthmani,
+            }))}
+          />
+        )}
 
         {/* Quran Features Onboarding & Quick-Start Guide */}
         <QuranGuideModal

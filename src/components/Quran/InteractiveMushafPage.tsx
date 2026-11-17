@@ -28,7 +28,7 @@ import {
   getActiveWordPosition,
   type WordSegment,
 } from '@/lib/word-timings';
-import { Volume2, BookOpen, X, Sparkles, Loader2 } from 'lucide-react';
+import { Volume2, BookOpen, X, Sparkles, Loader2, Film } from 'lucide-react';
 import { MushafSurahPages, type MushafReadingMode } from './MushafSurahPages';
 
 export type InteractiveMushafSurface = 'jewel' | 'parchment' | 'paper' | 'night' | 'classic';
@@ -44,6 +44,7 @@ interface InteractiveMushafPageProps {
   onSubPage7LChange?: (subPage: number, totalParts: number) => void;
   onStep7Line?: (direction: 'prev' | 'next') => void;
   onOpenStudySheet: (surah: number, ayah: number) => void;
+  onOpenClipStudio?: (surah: number, ayah: number) => void;
   onPageTurnRequest?: (newPage: number) => void;
   onPageLoaded?: (data: InteractivePageData) => void;
 }
@@ -312,6 +313,7 @@ function InteractiveMushafPageComponent({
   onSubPage7LChange,
   onStep7Line,
   onOpenStudySheet,
+  onOpenClipStudio,
   onPageTurnRequest,
   onPageLoaded,
 }: InteractiveMushafPageProps) {
@@ -1718,6 +1720,25 @@ function InteractiveMushafPageComponent({
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>📚 Tafsir & Hifz ({selectedWord.surahNumber}:{selectedWord.verseNumber})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const s = selectedWord.surahNumber;
+                  const a = selectedWord.verseNumber;
+                  setSelectedWord(null);
+                  onOpenClipStudio?.(s, a);
+                }}
+                className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                style={{
+                  background: 'var(--surface-2)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--accent-text)',
+                }}
+              >
+                <Film className="w-3.5 h-3.5" />
+                <span>🎬 Clip Studio ({selectedWord.surahNumber}:{selectedWord.verseNumber})</span>
               </button>
             </div>
           </div>
