@@ -42,6 +42,7 @@ import {
 import { QURAN_RECITERS, getReciterById } from '@/lib/quran-reciters';
 import { useTilawah } from '@/contexts/TilawahContext';
 import { memoryPageCache } from '@/lib/interactive-mushaf';
+import { resolveSceneJourney } from '@/lib/ayah-meaning-scene-engine';
 
 export interface QuranClipStudioModalProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
 
   // Creator Controls
   const [aspectRatio, setAspectRatio] = useState<AspectRatioType>('9:16');
-  const [sceneId, setSceneId] = useState<SceneId>('moonlit-ocean');
+  const [sceneId, setSceneId] = useState<SceneId>('auto-meaning');
   const [withTashkeel, setWithTashkeel] = useState<boolean>(true);
   const [subtitleLang, setSubtitleLang] = useState<'none' | 'en' | 'ur' | 'hi' | 'gu'>('en');
 
@@ -403,7 +404,12 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     );
   }, [qariSearch]);
 
-  // Live Canvas Preview Animation Loop
+  // Semantic Ayah-Meaning Scene Journey
+  const sceneJourney = useMemo(() => {
+    return resolveSceneJourney(selectedAyahsList, surahNumber);
+  }, [selectedAyahsList, surahNumber]);
+
+  // Live Canvas Preview Animation Loop (with 700ms Scene Cross-Fade & Ayah Cycling)
   useEffect(() => {
     const canvas = previewCanvasRef.current;
     if (!canvas) return;
@@ -421,38 +427,84 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     const startTime = performance.now();
     let isRunning = true;
 
-    // Offscreen cached preview for the first selected ayah
-    const firstAyahData: ClipAyahData = selectedAyahsList[0] || {
-      ayahNumber: fromAyah,
-      textUthmani: versesData[fromAyah]?.textUthmani || 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-      translation: subtitleLang !== 'none' ? versesData[fromAyah]?.translations?.[subtitleLang] : undefined,
-      surahNumber,
-    };
+    // Pre-render offscreen text canvases for each ayah in the selected range
+    const targetAyahs =
+      selectedAyahsList.length > 0
+        ? selectedAyahsList
+        : [
+            {
+              ayahNumber: fromAyah,
+              textUthmani: versesData[fromAyah]?.textUthmani || 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+              translation:
+                subtitleLang !== 'none' ? versesData[fromAyah]?.translations?.[subtitleLang] : undefined,
+              surahNumber,
+            },
+          ];
 
-    const offscreen = prerenderAyahOffscreenCanvas({
-      width: dims.width,
-      height: dims.height,
-      ayah: firstAyahData,
-      surahNameArabic,
-      surahNameEnglish,
-      withTashkeel,
-      subtitleLang,
-    });
+    const offscreens = targetAyahs.map((ayah) =>
+      prerenderAyahOffscreenCanvas({
+        width: dims.width,
+        height: dims.height,
+        ayah,
+        surahNameArabic,
+        surahNameEnglish,
+        withTashkeel,
+        subtitleLang,
+      })
+    );
 
     const loop = (now: number) => {
       if (!isRunning) return;
 
       const elapsedSec = isPreviewPlaying ? (now - startTime) / 1000 : 0;
 
-      // 1. Draw procedural background
-      drawProceduralScene(ctx, sceneId, dims.width, dims.height, elapsedSec);
+      if (sceneId === 'auto-meaning' && targetAyahs.length > 0) {
+        // Dynamic Semantic Scene Journey with 700ms cross-fade per Ayah
+        const ayahDuration = 4.5; // 4.5 seconds preview cycle per ayah
+        const totalDuration = targetAyahs.length * ayahDuration;
+        const loopTime = elapsedSec % totalDuration;
+        const activeIdx = Math.min(targetAyahs.length - 1, Math.floor(loopTime / ayahDuration));
+        const timeInAyah = loopTime % ayahDuration;
 
-      // 2. Draw cached offscreen text layer
-      ctx.drawImage(offscreen, 0, 0);
+        const currStep = sceneJourney[activeIdx] || { sceneId: 'kiswah-gold', label: 'Sanctuary' };
+        const prevIdx = (activeIdx - 1 + targetAyahs.length) % targetAyahs.length;
+        const prevStep = sceneJourney[prevIdx] || currStep;
 
-      // 3. Draw overlay watermark & progress
-      const simulatedProgress = (elapsedSec % 15) / 15;
-      drawClipOverlay(ctx, dims.width, dims.height, activeTab === 'video' ? simulatedProgress : 1.0);
+        // 700ms smooth cubic ease cross-fade
+        if (timeInAyah < 0.7 && targetAyahs.length > 1) {
+          const norm = timeInAyah / 0.7;
+          const ease = norm * norm * (3 - 2 * norm);
+
+          drawProceduralScene(ctx, prevStep.sceneId, dims.width, dims.height, elapsedSec);
+          ctx.save();
+          ctx.globalAlpha = ease;
+          drawProceduralScene(ctx, currStep.sceneId, dims.width, dims.height, elapsedSec);
+          ctx.restore();
+        } else {
+          drawProceduralScene(ctx, currStep.sceneId, dims.width, dims.height, elapsedSec);
+        }
+
+        // 0.25s Calligraphy text fade-in
+        const textAlpha = Math.min(1.0, timeInAyah / 0.25);
+        ctx.save();
+        ctx.globalAlpha = textAlpha;
+        if (offscreens[activeIdx]) {
+          ctx.drawImage(offscreens[activeIdx], 0, 0);
+        }
+        ctx.restore();
+
+        // Overlay watermark & timeline progress
+        const simulatedProgress = loopTime / totalDuration;
+        drawClipOverlay(ctx, dims.width, dims.height, activeTab === 'video' ? simulatedProgress : 1.0);
+      } else {
+        // Single static scene
+        drawProceduralScene(ctx, sceneId, dims.width, dims.height, elapsedSec);
+        if (offscreens[0]) {
+          ctx.drawImage(offscreens[0], 0, 0);
+        }
+        const simulatedProgress = (elapsedSec % 15) / 15;
+        drawClipOverlay(ctx, dims.width, dims.height, activeTab === 'video' ? simulatedProgress : 1.0);
+      }
 
       if (isPreviewPlaying) {
         animFrameRef.current = requestAnimationFrame(loop);
@@ -476,6 +528,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     surahNameArabic,
     surahNameEnglish,
     selectedAyahsList,
+    sceneJourney,
     versesData,
     isPreviewPlaying,
     activeTab,
@@ -939,7 +992,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
               <div className="grid grid-cols-5 gap-1.5">
                 {(
                   [
-                    { id: 'none', label: 'Arabic Only' },
+                    { id: 'none', label: 'Arabic' },
                     { id: 'en', label: 'English' },
                     { id: 'ur', label: 'Urdu' },
                     { id: 'hi', label: 'Hindi' },
@@ -950,11 +1003,12 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                     key={sub.id}
                     type="button"
                     onClick={() => setSubtitleLang(sub.id)}
-                    className={`py-1.5 px-1 rounded-xl text-[11px] font-bold text-center border transition-all truncate ${
+                    className={`rounded-xl font-bold text-center border transition-all ${
                       subtitleLang === sub.id
                         ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                         : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
+                    style={{ fontSize: '0.68rem', padding: '5px 4px', whiteSpace: 'nowrap' }}
                   >
                     {sub.label}
                   </button>
@@ -1073,14 +1127,16 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
             </div>
           </div>
 
-          {/* 7. 10 BUILT-IN PROCEDURAL LUXURY & NATURE CANVAS SCENES */}
+          {/* 7. 12 BUILT-IN PROCEDURAL LUXURY & NATURE CANVAS SCENES */}
           <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-[var(--text-secondary)]">
                 Procedural Canvas Theme:
               </span>
               <span className="text-[11px] text-[var(--accent-text)] font-semibold truncate">
-                {SCENE_DEFINITIONS.find((s) => s.id === sceneId)?.name}
+                {sceneId === 'auto-meaning'
+                  ? 'Auto Meaning Sync'
+                  : SCENE_DEFINITIONS.find((s) => s.id === sceneId)?.name}
               </span>
             </div>
 
@@ -1095,11 +1151,12 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                       setSceneId(scene.id);
                       setVideoResult(null);
                     }}
-                    className={`p-1 rounded-2xl border transition-all shrink-0 flex flex-col items-center gap-1 w-20 ${
+                    className={`p-1 rounded-2xl border transition-all shrink-0 flex flex-col items-center gap-1 ${
                       isSel
                         ? 'border-[var(--accent)] shadow-md ring-1 ring-[var(--accent)] bg-[var(--surface-2)]'
                         : 'border-[var(--border)] hover:border-[var(--accent)]/50 bg-[var(--surface)]'
                     }`}
+                    style={{ width: '86px', minWidth: '86px', flexShrink: 0 }}
                   >
                     <div
                       className="w-16 h-12 rounded-xl flex items-center justify-center text-lg shadow-inner relative overflow-hidden"
@@ -1112,13 +1169,45 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] font-bold text-[var(--text-primary)] truncate max-w-full text-center">
+                    <span
+                      className="font-bold text-[var(--text-primary)] text-center"
+                      style={{ fontSize: '0.62rem', whiteSpace: 'nowrap', overflow: 'visible' }}
+                    >
                       {scene.name}
                     </span>
                   </button>
                 );
               })}
             </div>
+
+            {/* Dynamic Auto Scene Journey Ribbon */}
+            {sceneId === 'auto-meaning' && (
+              <div className="p-2.5 rounded-2xl border border-[var(--accent)]/30 bg-[var(--surface-2)] space-y-1.5 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-[var(--accent-text)] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                    Auto Scene Journey ({sceneJourney.length} {sceneJourney.length === 1 ? 'Ayah' : 'Ayahs'}):
+                  </span>
+                  <span className="text-[10px] text-[var(--text-secondary)] font-medium">
+                    700ms dynamic cross-fade
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none">
+                  {sceneJourney.map((step, idx) => (
+                    <React.Fragment key={step.ayahNumber}>
+                      <div className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[10px]">
+                        <span className="font-bold text-[var(--text-primary)]">v.{step.ayahNumber}</span>
+                        <span className="text-[var(--text-secondary)]">•</span>
+                        <span className="text-[var(--accent-text)] font-semibold whitespace-nowrap">{step.label}</span>
+                      </div>
+                      {idx < sceneJourney.length - 1 && (
+                        <span className="text-[var(--text-secondary)] text-[10px] shrink-0">→</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 8. GENERATION PROGRESS BAR */}

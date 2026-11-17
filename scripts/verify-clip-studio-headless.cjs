@@ -244,8 +244,12 @@ async function runClipStudioTests() {
     // TEST 2: SETTINGS HUB 360PX LABELS WITHOUT "..." TRUNCATION
     // -------------------------------------------------------------
     console.log('\n--- TEST 2: Settings Hub (Profile) Labels on 360px Viewport ---');
-    await client.evaluate('window.history.pushState({}, "", "/profile"); window.dispatchEvent(new PopStateEvent("popstate"));');
-    await delay(1200);
+    await client.evaluate(`
+      localStorage.setItem('noor_theme', 'persian-indigo');
+      localStorage.setItem('clock_style', 'ottoman');
+    `);
+    await client.navigate(`http://127.0.0.1:${PREVIEW_PORT}/profile`);
+    await delay(1500);
 
     const settingsLabels = await client.evaluate(`
       (() => {
@@ -279,7 +283,28 @@ async function runClipStudioTests() {
     if (zakatRow && zakatRow.isEllipsized) {
       throw new Error(`TEST 2 FAILED: "Zakat & Nisab" is truncated with ellipsis! (${zakatRow.scrollWidth}px > ${zakatRow.clientWidth}px)`);
     }
-    console.log('  ✓ PASS: "Theme & Appearance" and "Zakat & Nisab" render with ZERO ellipsis!');
+
+    const valueChips = await client.evaluate(`
+      (() => {
+        const chips = Array.from(document.querySelectorAll('.settings-value-chip'));
+        return chips.map(c => ({
+          text: c.textContent?.trim(),
+          isEllipsized: c.scrollWidth > c.clientWidth,
+          scrollWidth: c.scrollWidth,
+          clientWidth: c.clientWidth
+        }));
+      })()
+    `);
+    console.log('  Settings Value Chips:', valueChips);
+    const themeChip = valueChips.find(c => c.text?.includes('Persian Indigo'));
+    const clockChip = valueChips.find(c => c.text?.includes('Ottoman Heritage'));
+    if (themeChip && themeChip.isEllipsized) {
+      throw new Error(`TEST 2 FAILED: "Persian Indigo" value chip is truncated!`);
+    }
+    if (clockChip && clockChip.isEllipsized) {
+      throw new Error(`TEST 2 FAILED: "Ottoman Heritage" value chip is truncated!`);
+    }
+    console.log('  ✓ PASS: "Theme & Appearance", "Persian Indigo", and "Ottoman Heritage" render with ZERO ellipsis!');
 
     // -------------------------------------------------------------
     // TEST 3: NOOR CLIP STUDIO MODAL CONTROLS & TRANSLATIONS
@@ -325,11 +350,15 @@ async function runClipStudioTests() {
         const hasWide = labels.some(l => l === '16:9 Wide');
 
         // Check subtitle buttons
-        const hasArabicOnly = labels.some(l => l === 'Arabic Only');
+        const hasArabic = labels.some(l => l === 'Arabic');
         const hasEnglish = labels.some(l => l === 'English');
         const hasUrdu = labels.some(l => l === 'Urdu');
         const hasHindi = labels.some(l => l === 'Hindi');
         const hasGujarati = labels.some(l => l === 'Gujarati');
+
+        // Check Auto Meaning theme preset and journey
+        const hasAutoSync = labels.some(l => l.includes('Auto Sync'));
+        const hasJourney = labels.some(l => l.includes('Auto Scene Journey'));
 
         return {
           hasModal,
@@ -338,11 +367,13 @@ async function runClipStudioTests() {
           hasReel,
           hasSquare,
           hasWide,
-          hasArabicOnly,
+          hasArabic,
           hasEnglish,
           hasUrdu,
           hasHindi,
           hasGujarati,
+          hasAutoSync,
+          hasJourney,
         };
       })()
     `);
@@ -357,10 +388,16 @@ async function runClipStudioTests() {
     if (!modalInfo.hasReel || !modalInfo.hasSquare || !modalInfo.hasWide) {
       throw new Error('TEST 3 FAILED: Aspect ratio presets truncated! Expected "9:16 Reel", "1:1 Square", "16:9 Wide"');
     }
-    if (!modalInfo.hasHindi || !modalInfo.hasGujarati) {
-      throw new Error('TEST 3 FAILED: Subtitle pills for Hindi/Gujarati missing!');
+    if (!modalInfo.hasArabic || !modalInfo.hasHindi || !modalInfo.hasGujarati) {
+      throw new Error('TEST 3 FAILED: Subtitle pills for Arabic/Hindi/Gujarati missing!');
     }
-    console.log('  ✓ PASS: Stepper labels, aspect ratio pills, and subtitle selector verified without truncation!');
+    if (!modalInfo.hasAutoSync) {
+      throw new Error('TEST 3 FAILED: "✨ Auto Sync" preset button missing!');
+    }
+    if (!modalInfo.hasJourney) {
+      throw new Error('TEST 3 FAILED: "Auto Scene Journey" dynamic strip missing!');
+    }
+    console.log('  ✓ PASS: Stepper labels, aspect ratio pills, subtitle selector, and Auto Scene Journey verified!');
 
     // -------------------------------------------------------------
     // TEST 4: HINDI & GUJARATI TRANSLATION SELECTION IN LIVE PREVIEW

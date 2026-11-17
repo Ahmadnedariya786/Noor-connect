@@ -33,6 +33,8 @@ export interface ClipAyahData {
   surahNumber: number;
 }
 
+import { resolveSceneForAyah, resolveSceneJourney } from './ayah-meaning-scene-engine';
+
 export interface ClipAyahTimelineItem {
   ayahNumber: number;
   audioBuffer: AudioBuffer;
@@ -41,6 +43,7 @@ export interface ClipAyahTimelineItem {
 }
 
 export type SceneId =
+  | 'auto-meaning'
   | 'moonlit-ocean'
   | 'desert-sunset'
   | 'kiswah-gold'
@@ -50,7 +53,8 @@ export type SceneId =
   | 'bosphorus-mist'
   | 'dawn-glow'
   | 'persian-arch'
-  | 'mushaf-parchment';
+  | 'mushaf-parchment'
+  | 'ember-horizon';
 
 export interface SceneDefinition {
   id: SceneId;
@@ -62,15 +66,22 @@ export interface SceneDefinition {
 
 export const SCENE_DEFINITIONS: SceneDefinition[] = [
   {
+    id: 'auto-meaning',
+    name: '✨ Auto Sync',
+    subtitle: 'Auto Meaning Sync',
+    icon: '✨',
+    previewGradient: 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 35%, #059669 70%, #d97706 100%)',
+  },
+  {
     id: 'moonlit-ocean',
-    name: 'Moonlit Ocean',
+    name: 'Ocean Night',
     subtitle: 'Dark waves & full moon reflections',
     icon: '🌊',
     previewGradient: 'linear-gradient(135deg, #030712 0%, #0a192f 50%, #1e293b 100%)',
   },
   {
     id: 'desert-sunset',
-    name: 'Desert Sunset',
+    name: 'Sunset Dune',
     subtitle: 'Golden dunes & warm sunset horizon',
     icon: '🏜️',
     previewGradient: 'linear-gradient(135deg, #1a0928 0%, #7c2d12 50%, #f59e0b 100%)',
@@ -84,16 +95,16 @@ export const SCENE_DEFINITIONS: SceneDefinition[] = [
   },
   {
     id: 'rawdah-emerald',
-    name: 'Rawdah Green',
+    name: 'Rawdah Dome',
     subtitle: 'Obsidian pine & Green Dome silhouette',
     icon: '🕌',
     previewGradient: 'linear-gradient(135deg, #02140b 0%, #063b22 50%, #45b88c 100%)',
   },
   {
     id: 'cosmic-nebula',
-    name: 'Cosmic Night',
+    name: 'Cosmic Sky',
     subtitle: 'Deep starfield & violet nebula waves',
-    icon: '✨',
+    icon: '🌌',
     previewGradient: 'linear-gradient(135deg, #02040a 0%, #4c1d95 50%, #0e7490 100%)',
   },
   {
@@ -105,14 +116,14 @@ export const SCENE_DEFINITIONS: SceneDefinition[] = [
   },
   {
     id: 'bosphorus-mist',
-    name: 'Bosphorus',
+    name: 'Sapphire Sea',
     subtitle: 'Deep sapphire ocean & rolling mist',
     icon: '🌫️',
     previewGradient: 'linear-gradient(135deg, #020b1e 0%, #0a2550 50%, #6a9af2 100%)',
   },
   {
     id: 'dawn-glow',
-    name: 'Plum & Dawn',
+    name: 'Plum Dawn',
     subtitle: 'Midnight plum & amber horizon light',
     icon: '🌅',
     previewGradient: 'linear-gradient(135deg, #140727 0%, #4c1d95 50%, #f59e0b 100%)',
@@ -130,6 +141,13 @@ export const SCENE_DEFINITIONS: SceneDefinition[] = [
     subtitle: 'Minimalist antique vellum & gold rule',
     icon: '📜',
     previewGradient: 'linear-gradient(135deg, #14110e 0%, #231c15 50%, #b87f28 100%)',
+  },
+  {
+    id: 'ember-horizon',
+    name: 'Ember Warning',
+    subtitle: 'Deep obsidian night & rising glowing embers',
+    icon: '🔥',
+    previewGradient: 'linear-gradient(135deg, #100202 0%, #450a0a 50%, #ea580c 100%)',
   },
 ];
 
@@ -843,6 +861,89 @@ export function drawProceduralScene(
       drawKhatamMedallion(ctx, w - bPad - 5, h - bPad - 5, roSize, '', '#B87F28');
       break;
     }
+
+    case 'ember-horizon': {
+      // 11. Warning / Ember Horizon (Obsidian-Crimson Night & Rising Glowing Embers)
+      const emberSky = ctx.createLinearGradient(0, 0, 0, h);
+      emberSky.addColorStop(0, '#0c0203');
+      emberSky.addColorStop(0.5, '#1e0507');
+      emberSky.addColorStop(0.85, '#450a0a');
+      emberSky.addColorStop(1, '#7f1d1d');
+      ctx.fillStyle = emberSky;
+      ctx.fillRect(0, 0, w, h);
+
+      // Low molten horizon glow
+      const horizonGlow = ctx.createRadialGradient(w * 0.5, h * 0.95, 0, w * 0.5, h * 0.95, w * 0.65);
+      horizonGlow.addColorStop(0, 'rgba(234, 88, 12, 0.45)');
+      horizonGlow.addColorStop(0.5, 'rgba(185, 28, 28, 0.25)');
+      horizonGlow.addColorStop(1, 'rgba(69, 10, 10, 0)');
+      ctx.fillStyle = horizonGlow;
+      ctx.fillRect(0, h * 0.5, w, h * 0.5);
+
+      // Rising glowing ember sparks (dignified, soft, floating upwards)
+      for (let i = 0; i < 40; i++) {
+        const seed = i * 491.7;
+        const driftSpeed = 35 + (i % 5) * 15;
+        const sparkY = h - ((timeSec * driftSpeed + seed) % (h * 0.9));
+        const sparkX = ((Math.sin(timeSec * 1.5 + seed) * 0.15 + (seed % 1)) * w);
+        const sparkRadius = (i % 4 === 0 ? 2.2 : 1.2);
+        const alpha = 0.25 + 0.55 * Math.sin(timeSec * 2.5 + i);
+
+        ctx.fillStyle = `rgba(251, 146, 60, ${Math.max(0.1, alpha)})`;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, sparkRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (i % 3 === 0) {
+          ctx.fillStyle = `rgba(254, 215, 170, ${Math.max(0.15, alpha * 0.8)})`;
+          ctx.beginPath();
+          ctx.arc(sparkX, sparkY, sparkRadius * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      break;
+    }
+
+    case 'auto-meaning': {
+      // 12. Standalone Celestial Aurora / Multi-Hue Dawn (for Auto Meaning preview)
+      const auroraGrad = ctx.createLinearGradient(0, 0, 0, h);
+      auroraGrad.addColorStop(0, '#020617');
+      auroraGrad.addColorStop(0.35, '#1e1b4b');
+      auroraGrad.addColorStop(0.65, '#064e3b');
+      auroraGrad.addColorStop(0.85, '#78350f');
+      auroraGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = auroraGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Shimmering celestial waves
+      for (let i = 0; i < 3; i++) {
+        const waveY = h * (0.35 + i * 0.15);
+        const grad = ctx.createRadialGradient(
+          w * (0.3 + 0.4 * Math.sin(timeSec * 0.8 + i)),
+          waveY,
+          0,
+          w * 0.5,
+          waveY,
+          w * 0.6
+        );
+        grad.addColorStop(0, i === 0 ? 'rgba(168, 85, 247, 0.22)' : i === 1 ? 'rgba(16, 185, 129, 0.20)' : 'rgba(245, 158, 11, 0.18)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      // Starlight field
+      for (let i = 0; i < 30; i++) {
+        const sx = ((i * 383.1) % w);
+        const sy = ((i * 197.3) % (h * 0.6));
+        const alpha = 0.2 + 0.5 * Math.sin(timeSec * 2 + i);
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.1, alpha)})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, i % 2 === 0 ? 1.5 : 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
   }
 
   // Dark central vignette to ensure 100% text legibility across all scenes
@@ -1250,8 +1351,18 @@ export async function renderAyahImageCard(params: {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not create canvas context');
 
-  // 1. Draw Selected Procedural Scene at time = 0
-  drawProceduralScene(ctx, params.sceneId, dims.width, dims.height, 0);
+  // 1. Draw Selected Procedural Scene (dynamically resolved if auto-meaning) at time = 0
+  let targetSceneId = params.sceneId;
+  if (targetSceneId === 'auto-meaning') {
+    const res = resolveSceneForAyah(
+      params.ayah.textUthmani,
+      params.ayah.translation || '',
+      params.surahNumber,
+      params.ayah.ayahNumber
+    );
+    targetSceneId = res.sceneId;
+  }
+  drawProceduralScene(ctx, targetSceneId, dims.width, dims.height, 0);
 
   // 2. Pre-render Ayah Content onto offscreen canvas and draw
   const offscreen = prerenderAyahOffscreenCanvas({
@@ -1375,16 +1486,32 @@ export async function renderRecitationVideoClip(params: {
 
   // 4. SAFEGUARD 4 — Compute Deterministic Timeline (Capped at 60s)
   let accumulatedTime = 0;
-  const timeline: ClipAyahTimelineItem[] = [];
+  interface ExtendedTimelineItem extends ClipAyahTimelineItem {
+    resolvedSceneId: SceneId;
+  }
+  const timeline: ExtendedTimelineItem[] = [];
+
+  const sceneJourney = resolveSceneJourney(
+    ayahs.map((a) => ({
+      ayahNumber: a.ayahNumber,
+      textUthmani: a.textUthmani,
+      translation: a.translation,
+    })),
+    surahNumber
+  );
+  const sceneMap = new Map<number, SceneId>();
+  sceneJourney.forEach((sj) => sceneMap.set(sj.ayahNumber, sj.sceneId));
 
   for (const item of audioItems) {
     if (accumulatedTime >= 60) break;
     const dur = Math.min(item.duration, 60 - accumulatedTime);
+    const itemSceneId = sceneId === 'auto-meaning' ? (sceneMap.get(item.ayahNumber) || 'kiswah-gold') : sceneId;
     timeline.push({
       ayahNumber: item.ayahNumber,
       audioBuffer: item.audioBuffer,
       startTime: accumulatedTime,
       endTime: accumulatedTime + dur,
+      resolvedSceneId: itemSceneId,
     });
     accumulatedTime += dur;
   }
@@ -1491,17 +1618,45 @@ export async function renderRecitationVideoClip(params: {
       }
 
       const visualElapsed = Math.max(0, elapsed);
-      const activeTimelineItem =
-        timeline.find((t) => visualElapsed >= t.startTime && visualElapsed < t.endTime) ||
-        timeline[timeline.length - 1];
+      const activeIndex = timeline.findIndex(
+        (t) => visualElapsed >= t.startTime && visualElapsed < t.endTime
+      );
+      const safeIndex = activeIndex >= 0 ? activeIndex : timeline.length - 1;
+      const activeTimelineItem = timeline[safeIndex];
 
-      // Draw Procedural Background (< 1.5ms)
-      drawProceduralScene(ctx, sceneId, dims.width, dims.height, visualElapsed);
+      const timeInAyah = visualElapsed - activeTimelineItem.startTime;
+      const currScene = activeTimelineItem.resolvedSceneId;
 
-      // Draw Pre-rendered Active Ayah Bitmap (< 0.3ms)
+      // 700ms Scene Cross-Fade during Ayah transitions
+      if (safeIndex > 0 && timeInAyah < 0.70) {
+        const prevScene = timeline[safeIndex - 1].resolvedSceneId;
+        if (prevScene !== currScene) {
+          drawProceduralScene(ctx, prevScene, dims.width, dims.height, visualElapsed);
+          const crossProgress = timeInAyah / 0.70;
+          const easeAlpha =
+            crossProgress < 0.5
+              ? 4 * crossProgress * crossProgress * crossProgress
+              : 1 - Math.pow(-2 * crossProgress + 2, 3) / 2;
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, Math.min(1, easeAlpha));
+          drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed);
+          ctx.restore();
+        } else {
+          drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed);
+        }
+      } else {
+        drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed);
+      }
+
+      // Draw Pre-rendered Active Ayah Bitmap with 0.25s boundary fade
       const cachedBmp = cachedAyahBitmaps.get(activeTimelineItem.ayahNumber);
       if (cachedBmp) {
+        const textAlpha = Math.min(1.0, timeInAyah / 0.25);
+        ctx.save();
+        ctx.globalAlpha = textAlpha;
         ctx.drawImage(cachedBmp, 0, 0);
+        ctx.restore();
       }
 
       // Draw Progress Bar + Watermark (< 0.2ms)

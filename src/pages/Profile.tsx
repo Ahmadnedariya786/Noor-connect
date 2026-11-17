@@ -619,15 +619,13 @@ const Profile: React.FC = () => {
                           }}
                         >
                           <span
-                            className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors truncate block leading-tight shrink min-w-0"
+                            className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors block leading-tight shrink min-w-0"
                             style={{
-                              fontSize: '0.80rem',
+                              fontSize: '0.78rem',
                               fontWeight: 700,
                               lineHeight: 1.2,
                               color: 'var(--text-primary)',
                               whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
                             }}
                           >
                             {row.title}
@@ -638,10 +636,17 @@ const Profile: React.FC = () => {
                               <div className="w-7 h-3.5 bg-[var(--surface-2)] rounded-full animate-pulse shrink-0" />
                             ) : val !== null ? (
                               <span
-                                className="settings-value-chip shrink-0 !max-w-[85px] !px-1.5 !py-0.5 !text-[10px]"
+                                className="settings-value-chip shrink-0 !max-w-none !px-[7px] !py-[2px] !text-[0.62rem]"
+                                style={{
+                                  maxWidth: 'none',
+                                  fontSize: '0.62rem',
+                                  padding: '2px 7px',
+                                  whiteSpace: 'nowrap',
+                                  flexShrink: 0,
+                                }}
                                 dir="ltr"
                               >
-                                <span style={{ unicodeBidi: 'isolate' }} className="truncate block">{val}</span>
+                                <span style={{ unicodeBidi: 'isolate' }} className="block whitespace-nowrap">{val}</span>
                               </span>
                             ) : null
                           )}
