@@ -74,42 +74,36 @@ export function getSurahAndAyahFromGlobal(globalAyah: number): { surah: number; 
 }
 
 /**
- * Set of reciters natively hosted on Islamic Network 128kbps CDN
+ * Set of reciters verified and natively hosted on Islamic Network 128kbps CDN
+ * (Excludes reciters returning 403 on Islamic Network such as Ghamdi, Sudais, Basit)
  */
 const ISLAMIC_NETWORK_HOSTED_IDS = new Set([
   'ar.alafasy',
   'ar.husary',
-  'ar.abdulbasitmurattal',
-  'ar.abdurrahmaansudais',
   'ar.mahermuaiqly',
-  'ar.saadalghamdi',
   'ar.hudhaify',
   'ar.ahmedajamy',
   'ar.shaatree',
-  'ar.aymansowaid',
-  'ar.minshawimurattal',
-  'ar.abdullahbasfar',
 ]);
 
 /**
  * Return primary audio URL:
- * If reciter is natively hosted on Islamic Network, use fast CDN;
- * otherwise use EveryAyah directly as primary to prevent any 404 delays!
+ * EveryAyah CDN is the primary authentic source for verse recitation with BunnyCDN CORS headers.
  */
 export function getPrimaryAyahAudioUrl(reciterId: string, surah: number, ayah: number): string {
   const reciter = getReciterById(reciterId);
-  const effectiveId = reciter.id;
   const everyAyahDir = reciter.everyAyahDir;
+  const sStr = String(surah).padStart(3, '0');
+  const aStr = String(ayah).padStart(3, '0');
 
+  if (everyAyahDir) {
+    return `https://everyayah.com/data/${everyAyahDir}/${sStr}${aStr}.mp3`;
+  }
+
+  const effectiveId = reciter.id;
   if (ISLAMIC_NETWORK_HOSTED_IDS.has(effectiveId)) {
     const globalAyah = getGlobalAyahNumber(surah, ayah);
     return `https://cdn.islamic.network/quran/audio/128/${effectiveId}/${globalAyah}.mp3`;
-  }
-
-  if (everyAyahDir) {
-    const sStr = String(surah).padStart(3, '0');
-    const aStr = String(ayah).padStart(3, '0');
-    return `https://everyayah.com/data/${everyAyahDir}/${sStr}${aStr}.mp3`;
   }
 
   const globalAyah = getGlobalAyahNumber(surah, ayah);
@@ -117,10 +111,52 @@ export function getPrimaryAyahAudioUrl(reciterId: string, surah: number, ayah: n
 }
 
 /**
- * Return secondary audio URL (EveryAyah CDN fallback)
+ * Return secondary audio URL (EveryAyah mirror or Islamic Network CDN)
+ * Safely accepts either an everyAyahDir or reciterId.
  */
-export function getSecondaryAyahAudioUrl(everyAyahDir: string, surah: number, ayah: number): string {
+export function getSecondaryAyahAudioUrl(everyAyahDirOrReciterId: string, surah: number, ayah: number): string {
+  const reciter = getReciterById(everyAyahDirOrReciterId);
+  const dir = reciter?.everyAyahDir || everyAyahDirOrReciterId;
   const sStr = String(surah).padStart(3, '0');
   const aStr = String(ayah).padStart(3, '0');
-  return `https://everyayah.com/data/${everyAyahDir}/${sStr}${aStr}.mp3`;
+
+  if (reciter && ISLAMIC_NETWORK_HOSTED_IDS.has(reciter.id)) {
+    const globalAyah = getGlobalAyahNumber(surah, ayah);
+    return `https://cdn.islamic.network/quran/audio/128/${reciter.id}/${globalAyah}.mp3`;
+  }
+
+  return `https://www.everyayah.com/data/${dir}/${sStr}${aStr}.mp3`;
+}
+
+/**
+ * Multi-Tier CDN Candidate URLs Chain:
+ * 1. EveryAyah Primary CDN
+ * 2. EveryAyah Mirror CDN
+ * 3. Islamic Network CDN (if verified)
+ * 4. Reliable Emergency Fallback (Mishary Alafasy)
+ */
+export function getCandidateAudioUrls(reciterId: string, surah: number, ayah: number): string[] {
+  const reciter = getReciterById(reciterId);
+  const sStr = String(surah).padStart(3, '0');
+  const aStr = String(ayah).padStart(3, '0');
+  const globalAyah = getGlobalAyahNumber(surah, ayah);
+  const urls: string[] = [];
+
+  const dir = reciter.everyAyahDir;
+  if (dir) {
+    urls.push(`https://everyayah.com/data/${dir}/${sStr}${aStr}.mp3`);
+    urls.push(`https://www.everyayah.com/data/${dir}/${sStr}${aStr}.mp3`);
+  }
+
+  if (ISLAMIC_NETWORK_HOSTED_IDS.has(reciter.id)) {
+    urls.push(`https://cdn.islamic.network/quran/audio/128/${reciter.id}/${globalAyah}.mp3`);
+  }
+
+  // Emergency reciter fallback (Alafasy)
+  if (reciter.id !== 'ar.alafasy') {
+    urls.push(`https://everyayah.com/data/Alafasy_128kbps/${sStr}${aStr}.mp3`);
+    urls.push(`https://cdn.islamic.network/quran/audio/128/ar.alafasy/${globalAyah}.mp3`);
+  }
+
+  return urls;
 }

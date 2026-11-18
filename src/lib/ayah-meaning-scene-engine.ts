@@ -33,6 +33,8 @@ export interface VisualSegment {
   sceneId: SceneId;
   label: string;
   icon: string;
+  arabicClause?: string;     // Active clause Arabic text for this segment
+  translationClause?: string;// Active clause translated text for this segment
 }
 
 export interface AyahSceneResolution {
@@ -301,16 +303,38 @@ export function resolveSceneForAyah(
     }
   }
 
-  // 2. SURAH AN-NUR 24:35 — The Verse of Light (Ayat an-Nur)
-  if (surahNumber === 24 && ayahNumber === 35) {
-    return {
-      ayahNumber,
-      sceneId: 'heavens-earth-rays',
-      moodLabel: 'Heavens & Noor',
-      icon: '🌅',
-      category: 'Divine Light',
-      matchedKeyword: 'الله نور السماوات والارض',
-    };
+  // 2. SURAH AN-NUR (24) — Exact Thematic Routing & Legal/Mercy Safeguards
+  if (surahNumber === 24) {
+    if (ayahNumber >= 2 && ayahNumber <= 4) {
+      return {
+        ayahNumber,
+        sceneId: 'cosmic-scale',
+        moodLabel: 'Cosmic Scale',
+        icon: '⚖️',
+        category: 'Justice & Moral Law',
+        matchedKeyword: 'شهداء جلدة الحق',
+      };
+    }
+    if (ayahNumber === 5) {
+      return {
+        ayahNumber,
+        sceneId: 'heavens-earth-rays',
+        moodLabel: 'Sanctuary Mercy',
+        icon: '🌅',
+        category: 'Divine Mercy & Repentance',
+        matchedKeyword: 'غفور رحيم',
+      };
+    }
+    if (ayahNumber === 35) {
+      return {
+        ayahNumber,
+        sceneId: 'heavens-earth-rays',
+        moodLabel: 'Heavens & Noor',
+        icon: '🌅',
+        category: 'Divine Light',
+        matchedKeyword: 'الله نور السماوات والارض',
+      };
+    }
   }
 
   // 3. SURAH AR-RAHMAN (55:1–25) — Autonomous Cinematic Reel Director
@@ -407,12 +431,14 @@ export function resolveSceneForAyah(
     }
   }
 
-  // 4. PRIORITY 1 — SUN & MOON ORBIT & ASTRONOMICAL HARMONY
+  // 4. PRIORITY 1 — SUN & MOON ORBIT & ASTRONOMICAL HARMONY (Regex Word-Boundary Enforced)
   const sunMoonAr = [
     'شمس وقمر',
     'شمس والقمر',
     'الشمس والقمر',
+    'الشمس',
     'شمس',
+    'القمر',
     'قمر',
     'حسبان',
     'فلك يسبحون',
@@ -420,20 +446,9 @@ export function resolveSceneForAyah(
     'سراجا وهاجا',
     'ضياء ونورا',
   ];
-  const sunMoonEn = [
-    'sun and moon',
-    'sun and the moon',
-    'sun',
-    'moon',
-    'orbit',
-    'orbits',
-    'swimming in an orbit',
-    'phases of the moon',
-    'solar',
-    'lunar',
-  ];
+  const arTokens = ar.split(/\s+/);
   for (const w of sunMoonAr) {
-    if (ar.includes(w)) {
+    if (w.includes(' ') ? ar.includes(w) : arTokens.includes(w)) {
       return {
         ayahNumber,
         sceneId: 'sun-moon-orbit',
@@ -444,17 +459,16 @@ export function resolveSceneForAyah(
       };
     }
   }
-  for (const w of sunMoonEn) {
-    if (en.includes(w)) {
-      return {
-        ayahNumber,
-        sceneId: 'sun-moon-orbit',
-        moodLabel: 'Sun & Moon Orbit',
-        icon: '🌗',
-        category: 'Cosmic Harmony',
-        matchedKeyword: w,
-      };
-    }
+  const SUN_MOON_EN_REGEX = /\b(sun\s+and\s+(?:the\s+)?moon|sun|moon|orbit|orbits|swimming in an orbit|phases of the moon|solar|lunar)\b/i;
+  if (SUN_MOON_EN_REGEX.test(translationEn)) {
+    return {
+      ayahNumber,
+      sceneId: 'sun-moon-orbit',
+      moodLabel: 'Sun & Moon Orbit',
+      icon: '🌗',
+      category: 'Cosmic Harmony',
+      matchedKeyword: 'celestial-orbit',
+    };
   }
 
   // 5. PRIORITY 2 — THE WISE QURAN & SCRIPTURE
@@ -1063,9 +1077,45 @@ export function resolveSceneForAyah(
 }
 
 /**
+ * Proportional Translation Clause Slicer:
+ * Gracefully divides any translation (English, Urdu, Hindi, Gujarati) across N visual segments.
+ */
+export function splitTranslationIntoClauses(fullTranslation: string, count: number): string[] {
+  if (!fullTranslation || count <= 1) return [fullTranslation || ''];
+  const sentences = fullTranslation
+    .split(/([.;!?।\n]+|\s+--\s+)/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 2);
+
+  if (sentences.length >= count) {
+    const result: string[] = [];
+    const chunkSize = Math.ceil(sentences.length / count);
+    for (let i = 0; i < count; i++) {
+      const slice = sentences.slice(i * chunkSize, (i + 1) * chunkSize).join(' ');
+      result.push(slice || fullTranslation);
+    }
+    return result;
+  }
+
+  // Fallback: Split by word count proportionately
+  const words = fullTranslation.trim().split(/\s+/);
+  if (words.length <= count) {
+    return Array(count).fill(fullTranslation);
+  }
+  const result: string[] = [];
+  const wordsPerSeg = Math.ceil(words.length / count);
+  for (let i = 0; i < count; i++) {
+    const chunk = words.slice(i * wordsPerSeg, (i + 1) * wordsPerSeg).join(' ');
+    result.push(chunk || words.slice(-wordsPerSeg).join(' '));
+  }
+  return result;
+}
+
+/**
  * Sub-Ayah Phrase Choreography (video_2.mp4 signature feature):
- * Whenever an Ayah contains multiple distinct visual clauses (e.g. Surah An-Nur 24:35),
- * or when duration is long (> 7s), this splits the verse into 1 to 4 timed visual segments.
+ * Whenever an Ayah contains multiple distinct visual clauses (e.g. Surah An-Nur 24:35 & Ayat al-Kursi 2:255),
+ * or when duration is long (> 7s), this splits the verse into 1 to 5 timed visual segments.
+ * Each segment contains only its matching Arabic and translation clause in large readable type.
  */
 export function resolveAyahVisualTimeline(
   ayahTextArabic: string,
@@ -1076,8 +1126,79 @@ export function resolveAyahVisualTimeline(
 ): VisualSegment[] {
   const safeDur = Math.max(1.0, durationSec);
 
-  // 1. SURAH AN-NUR 24:35 — 4 distinct timed scenes
+  // 1. SURAH AN-NUR 24:35 — 5 distinct timed scenes & clause-by-clause choreography (@sufariq style)
   if (surahNumber === 24 && ayahNumber === 35) {
+    const transClauses = splitTranslationIntoClauses(
+      translationEn ||
+        'Allah is the Light of the heavens and the earth. The example of His light is like a niche within which is a lamp. The lamp is within glass, the glass as if it were a pearly star. Lit from a blessed olive tree, neither east nor west, whose oil would almost glow even if untouched by fire. Light upon light. Allah guides to His light whom He wills.',
+      5
+    );
+    return [
+      {
+        startRatio: 0.00,
+        endRatio: 0.18,
+        startTime: 0.00,
+        endTime: safeDur * 0.18,
+        sceneId: 'heavens-earth-rays',
+        label: 'Heavens & Noor',
+        icon: '🌅',
+        arabicClause: 'اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ',
+        translationClause: transClauses[0] || 'Allah is the Light of the heavens and the earth.',
+      },
+      {
+        startRatio: 0.18,
+        endRatio: 0.38,
+        startTime: safeDur * 0.18,
+        endTime: safeDur * 0.38,
+        sceneId: 'niche-lamp',
+        label: 'Mishkat Lamp',
+        icon: '🏮',
+        arabicClause: 'مَثَلُ نُورِهِ كَمِشْكَاةٍ فِيهَا مِصْبَاحٌ',
+        translationClause: transClauses[1] || 'The example of His light is like a niche within which is a lamp,',
+      },
+      {
+        startRatio: 0.38,
+        endRatio: 0.58,
+        startTime: safeDur * 0.38,
+        endTime: safeDur * 0.58,
+        sceneId: 'glass-orb-lamp',
+        label: 'Crystal Orb',
+        icon: '🔮',
+        arabicClause: 'الْمِصْبَاحُ فِي زُجَاجَةٍ ۖ الزُّجَاجَةُ كَأَنَّهَا كَوْكَبٌ دُرِّيٌّ',
+        translationClause: transClauses[2] || 'the lamp is within glass, the glass as if it were a pearly star,',
+      },
+      {
+        startRatio: 0.58,
+        endRatio: 0.78,
+        startTime: safeDur * 0.58,
+        endTime: safeDur * 0.78,
+        sceneId: 'pearly-star',
+        label: 'Pearly Star',
+        icon: '⭐',
+        arabicClause: 'يُوقَدُ مِن شَجَرَةٍ مُّبَارَكَةٍ زَيْتُونَةٍ لَّا شَرْقِيَّةٍ وَلَا غَرْبِيَّةٍ يَكَادُ زَيْتُهَا يُضِيءُ وَلَوْ لَمْ تَمْسَسْهُ نَارٌ',
+        translationClause: transClauses[3] || 'lit from a blessed olive tree, whose oil would almost glow even if untouched by fire.',
+      },
+      {
+        startRatio: 0.78,
+        endRatio: 1.00,
+        startTime: safeDur * 0.78,
+        endTime: safeDur,
+        sceneId: 'heavens-earth-rays',
+        label: 'Light Upon Light',
+        icon: '✨',
+        arabicClause: 'نُّورٌ عَلَىٰ نُورٍ ۗ يَهْدِي اللَّهُ لِنُورِهِ مَن يَشَاءُ ۚ وَيَضْرِبُ اللَّهُ الْأَمْثَالَ لِلنَّاسِ ۗ وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ',
+        translationClause: transClauses[4] || 'Light upon light. Allah guides to His light whom He wills.',
+      },
+    ];
+  }
+
+  // 2. SURAH AL-BAQARAH 2:255 (Ayat al-Kursi) — 4 distinct timed scenes & clauses
+  if (surahNumber === 2 && ayahNumber === 255) {
+    const transClauses = splitTranslationIntoClauses(
+      translationEn ||
+        'Allah - there is no deity except Him, the Ever-Living, the Sustainer of all existence. Neither drowsiness overtakes Him nor sleep. To Him belongs whatever is in the heavens and whatever is on the earth. Who is it that can intercede with Him except by His permission? He knows what is before them and what will be after them. His Kursi extends over the heavens and the earth.',
+      4
+    );
     return [
       {
         startRatio: 0.00,
@@ -1085,74 +1206,95 @@ export function resolveAyahVisualTimeline(
         startTime: 0.00,
         endTime: safeDur * 0.25,
         sceneId: 'heavens-earth-rays',
-        label: 'Heavens & Noor',
+        label: 'The Ever-Living',
         icon: '🌅',
+        arabicClause: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ',
+        translationClause: transClauses[0] || 'Allah - there is no deity except Him, the Ever-Living, the Sustainer of all existence.',
       },
       {
         startRatio: 0.25,
         endRatio: 0.50,
         startTime: safeDur * 0.25,
         endTime: safeDur * 0.50,
-        sceneId: 'niche-lamp',
-        label: 'Mishkat Lamp',
-        icon: '🏮',
+        sceneId: 'celestial-creation',
+        label: 'Sovereignty of Heavens',
+        icon: '✨',
+        arabicClause: 'لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ',
+        translationClause: transClauses[1] || 'To Him belongs whatever is in the heavens and whatever is on the earth.',
       },
       {
         startRatio: 0.50,
         endRatio: 0.75,
         startTime: safeDur * 0.50,
         endTime: safeDur * 0.75,
-        sceneId: 'glass-orb-lamp',
-        label: 'Crystal Orb',
-        icon: '🔮',
+        sceneId: 'cosmic-scale',
+        label: 'All-Encompassing Knowledge',
+        icon: '⚖️',
+        arabicClause: 'يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ',
+        translationClause: transClauses[2] || 'He knows what is before them and what will be after them.',
       },
       {
         startRatio: 0.75,
         endRatio: 1.00,
         startTime: safeDur * 0.75,
         endTime: safeDur,
-        sceneId: 'pearly-star',
-        label: 'Pearly Star',
-        icon: '⭐',
+        sceneId: 'heavens-earth-rays',
+        label: 'Throne of Majesty',
+        icon: '🌅',
+        arabicClause: 'وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ',
+        translationClause: transClauses[3] || 'His Kursi extends over the heavens and the earth, and their preservation tires Him not.',
       },
     ];
   }
 
-  // 2. SURAH AL-WAQI'AH (56:1–3) — Single cohesive scenes per Ayah
-  // 3. Multi-Clause splitting for long verses (> 8s) with distinct sentence boundaries
-  if (safeDur >= 8.5) {
+  // 3. Multi-Clause splitting for long verses (> 8.5s or > 140 chars)
+  if (safeDur >= 8.5 || ayahTextArabic.length > 140) {
     const ar = cleanArabicForMatching(ayahTextArabic);
-    // Check if verse has a clear midpoint clause (e.g. then, or, while)
-    if (ar.includes(' ثم ') || ar.includes(' وان ') || ar.includes(' فان ') || translationEn.includes('; ') || translationEn.includes('. ')) {
-      // Split into 2 halves
-      const firstHalfAr = ayahTextArabic.slice(0, Math.floor(ayahTextArabic.length * 0.5));
-      const secondHalfAr = ayahTextArabic.slice(Math.floor(ayahTextArabic.length * 0.5));
-      const res1 = resolveSceneForAyah(firstHalfAr, translationEn, surahNumber, ayahNumber);
-      const res2 = resolveSceneForAyah(secondHalfAr, translationEn, surahNumber, ayahNumber);
-
-      if (res1.sceneId !== res2.sceneId) {
-        return [
-          {
-            startRatio: 0.00,
-            endRatio: 0.50,
-            startTime: 0.00,
-            endTime: safeDur * 0.50,
-            sceneId: res1.sceneId,
-            label: res1.moodLabel,
-            icon: res1.icon,
-          },
-          {
-            startRatio: 0.50,
-            endRatio: 1.00,
-            startTime: safeDur * 0.50,
-            endTime: safeDur,
-            sceneId: res2.sceneId,
-            label: res2.moodLabel,
-            icon: res2.icon,
-          },
-        ];
+    // Find midpoint pause mark or clause connector
+    const midTokens = [' ۚ ', ' ۖ ', ' ۗ ', ' ثم ', ' وان ', ' فان '];
+    let splitIdx = -1;
+    for (const tok of midTokens) {
+      const idx = ayahTextArabic.indexOf(tok);
+      if (idx > 25 && idx < ayahTextArabic.length - 25) {
+        splitIdx = idx + tok.length;
+        break;
       }
     }
+    if (splitIdx === -1) {
+      splitIdx = Math.floor(ayahTextArabic.length * 0.5);
+    }
+
+    const firstHalfAr = ayahTextArabic.slice(0, splitIdx).trim();
+    const secondHalfAr = ayahTextArabic.slice(splitIdx).trim();
+    const transParts = splitTranslationIntoClauses(translationEn, 2);
+
+    const res1 = resolveSceneForAyah(firstHalfAr, transParts[0], surahNumber, ayahNumber);
+    const res2 = resolveSceneForAyah(secondHalfAr, transParts[1], surahNumber, ayahNumber);
+
+    return [
+      {
+        startRatio: 0.00,
+        endRatio: 0.50,
+        startTime: 0.00,
+        endTime: safeDur * 0.50,
+        sceneId: res1.sceneId,
+        label: res1.moodLabel,
+        icon: res1.icon,
+        arabicClause: firstHalfAr,
+        translationClause: transParts[0],
+      },
+      {
+        startRatio: 0.50,
+        endRatio: 1.00,
+        startTime: safeDur * 0.50,
+        endTime: safeDur,
+        sceneId: res2.sceneId,
+        label: res2.moodLabel,
+        icon: res2.icon,
+        arabicClause: secondHalfAr,
+        translationClause: transParts[1],
+      },
+    ];
   }
 
   // Default: 1 unified segment for the Ayah
@@ -1166,6 +1308,8 @@ export function resolveAyahVisualTimeline(
       sceneId: singleRes.sceneId,
       label: singleRes.moodLabel,
       icon: singleRes.icon,
+      arabicClause: ayahTextArabic,
+      translationClause: translationEn,
     },
   ];
 }

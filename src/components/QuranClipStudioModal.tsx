@@ -439,7 +439,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     const startTime = performance.now();
     let isRunning = true;
 
-    // Pre-render offscreen text canvases for each ayah in the selected range
+    // Pre-render offscreen text canvases for each ayah & sub-segment in the selected range
     const targetAyahs =
       selectedAyahsList.length > 0
         ? selectedAyahsList
@@ -453,8 +453,11 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
             },
           ];
 
-    const offscreens = targetAyahs.map((ayah) =>
-      prerenderAyahOffscreenCanvas({
+    const offscreens: HTMLCanvasElement[] = [];
+    const segmentOffscreens = new Map<string, HTMLCanvasElement>();
+
+    targetAyahs.forEach((ayah, aIdx) => {
+      const baseOff = prerenderAyahOffscreenCanvas({
         width: dims.width,
         height: dims.height,
         ayah,
@@ -462,8 +465,26 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
         surahNameEnglish,
         withTashkeel,
         subtitleLang,
-      })
-    );
+      });
+      offscreens.push(baseOff);
+
+      const journey = sceneJourney[aIdx];
+      const subs = journey?.subTimeline || [];
+      subs.forEach((sub, sIdx) => {
+        const segOff = prerenderAyahOffscreenCanvas({
+          width: dims.width,
+          height: dims.height,
+          ayah,
+          surahNameArabic,
+          surahNameEnglish,
+          withTashkeel,
+          subtitleLang,
+          clauseArabic: sub.arabicClause,
+          clauseTranslation: sub.translationClause,
+        });
+        segmentOffscreens.set(`${ayah.ayahNumber}_${sIdx}`, segOff);
+      });
+    });
 
     const loop = (now: number) => {
       if (!isRunning) return;
@@ -489,12 +510,14 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
         let prevSceneId: SceneId = activeSceneId;
         let segmentFade = 1.0;
         let zoomScale = 1.0 + 0.08 * ayahRatio;
+        let currentSegIdx = -1;
 
         if (subTimeline) {
           const segIdx = subTimeline.findIndex(
             (s) => ayahRatio >= s.startRatio && ayahRatio < s.endRatio
           );
-          const currentSeg = segIdx >= 0 ? subTimeline[segIdx] : subTimeline[subTimeline.length - 1];
+          currentSegIdx = segIdx >= 0 ? segIdx : subTimeline.length - 1;
+          const currentSeg = subTimeline[currentSegIdx];
           activeSceneId = currentSeg.sceneId;
 
           const segDuration = Math.max(0.01, currentSeg.endRatio - currentSeg.startRatio);
@@ -502,11 +525,11 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
           zoomScale = 1.0 + 0.08 * timeInSegRatio;
 
           const segElapsedSec = timeInSegRatio * (segDuration * ayahDuration);
-          if (segIdx > 0 && segElapsedSec < 0.5) {
-            prevSceneId = subTimeline[segIdx - 1].sceneId;
+          if (currentSegIdx > 0 && segElapsedSec < 0.5) {
+            prevSceneId = subTimeline[currentSegIdx - 1].sceneId;
             const norm = segElapsedSec / 0.5;
             segmentFade = norm * norm * (3 - 2 * norm);
-          } else if (segIdx === 0 && timeInAyah < 0.5 && targetAyahs.length > 1) {
+          } else if (currentSegIdx === 0 && timeInAyah < 0.5 && targetAyahs.length > 1) {
             const prevIdx = (activeIdx - 1 + targetAyahs.length) % targetAyahs.length;
             const prevJ = sceneJourney[prevIdx];
             const prevSub = prevJ?.subTimeline;
@@ -541,12 +564,16 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
           drawProceduralScene(ctx, activeSceneId, dims.width, dims.height, elapsedSec, zoomScale);
         }
 
-        // 0.25s Calligraphy text fade-in
+        // 0.25s Calligraphy text fade-in & active clause rendering
         const textAlpha = Math.min(1.0, timeInAyah / 0.25);
         ctx.save();
         ctx.globalAlpha = textAlpha;
-        if (offscreens[activeIdx]) {
-          ctx.drawImage(offscreens[activeIdx], 0, 0);
+        const activeSegBmp =
+          (subTimeline && currentSegIdx >= 0
+            ? segmentOffscreens.get(`${targetAyahs[activeIdx]?.ayahNumber}_${currentSegIdx}`)
+            : null) || offscreens[activeIdx];
+        if (activeSegBmp) {
+          ctx.drawImage(activeSegBmp, 0, 0);
         }
         ctx.restore();
 
@@ -633,11 +660,11 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
       });
 
       toast.success('Quran Recitation Reel generated successfully!');
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
+    } catch (err: any) {
+      if ((err instanceof DOMException && err.name === 'AbortError') || err?.name === 'AbortError') {
         toast.info('Video generation cancelled.');
       } else {
-        console.error('[QuranClipStudio] Video generation error:', err);
+        console.warn('[QuranClipStudio] Video generation notice:', err);
         const msg = err instanceof Error ? err.message : 'Unknown generation failure';
         toast.error(`Video generation failed: ${msg}`);
       }
@@ -1334,26 +1361,44 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 py-0.5">
-                  {sceneJourney.map((step, idx) => (
-                    <React.Fragment key={step.ayahNumber}>
-                      <div
-                        style={{
-                          whiteSpace: 'nowrap',
-                          flexShrink: 0,
-                          maxWidth: 'none',
-                          padding: '4px 10px',
-                          fontSize: '0.68rem',
-                        }}
-                        className="flex items-center gap-1.5 rounded-xl bg-[var(--surface)] border border-[var(--border)]"
-                      >
-                        <span className="font-bold text-[var(--text-primary)]">Ayah {step.ayahNumber}:</span>
-                        <span className="text-[var(--accent-text)] font-semibold">{step.icon} {step.moodLabel}</span>
-                      </div>
-                      {idx < sceneJourney.length - 1 && (
-                        <span className="text-[var(--text-secondary)] text-[11px] shrink-0 font-bold">→</span>
-                      )}
-                    </React.Fragment>
-                  ))}
+                  {sceneJourney.map((step, idx) => {
+                    const hasSubTimeline = step.subTimeline && step.subTimeline.length > 1;
+                    return (
+                      <React.Fragment key={step.ayahNumber}>
+                        <div
+                          style={{
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            maxWidth: 'none',
+                            padding: '4px 10px',
+                            fontSize: '0.68rem',
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl bg-[var(--surface)] border border-[var(--border)]"
+                        >
+                          <span className="font-bold text-[var(--text-primary)]">Ayah {step.ayahNumber}:</span>
+                          {hasSubTimeline ? (
+                            <div className="inline-flex items-center gap-1">
+                              {step.subTimeline!.map((sub, sIdx) => (
+                                <React.Fragment key={sIdx}>
+                                  <span className="text-[var(--accent-text)] font-semibold">
+                                    {sub.icon} {sub.label}
+                                  </span>
+                                  {sIdx < step.subTimeline!.length - 1 && (
+                                    <span className="text-[var(--text-secondary)] text-[10px] shrink-0 font-bold">→</span>
+                                  )}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-[var(--accent-text)] font-semibold">{step.icon} {step.moodLabel}</span>
+                          )}
+                        </div>
+                        {idx < sceneJourney.length - 1 && (
+                          <span className="text-[var(--text-secondary)] text-[11px] shrink-0 font-bold">→</span>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               </div>
             )}

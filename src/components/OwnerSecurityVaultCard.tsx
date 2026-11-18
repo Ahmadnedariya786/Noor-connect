@@ -216,25 +216,23 @@ export const OwnerSecurityVaultCard: React.FC<OwnerSecurityVaultCardProps> = ({
               <Shield className="w-3.5 h-3.5" />
             </div>
             <Label
-              className="font-extrabold uppercase tracking-wider block truncate text-[var(--text-primary)]"
+              className="font-extrabold uppercase tracking-wider block shrink-0 text-[var(--text-primary)]"
               style={{
-                fontSize: '0.78rem',
+                fontSize: '0.72rem',
                 fontWeight: 800,
-                letterSpacing: '0.05em',
+                letterSpacing: '0.04em',
                 whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
             >
-              Owner Security Vault
+              Owner Vault
             </Label>
           </div>
 
           {/* Status Badge */}
           <div
-            className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1 border shrink-0"
+            className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1 border shrink-0"
             style={{
-              fontSize: '0.68rem',
+              fontSize: '0.62rem',
               background: isUnlocked ? 'rgba(34, 197, 94, 0.12)' : 'var(--accent-soft)',
               borderColor: isUnlocked ? 'rgba(34, 197, 94, 0.3)' : 'var(--border)',
               color: isUnlocked ? 'var(--success)' : 'var(--accent-text)',

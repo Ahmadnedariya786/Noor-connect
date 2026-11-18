@@ -23,7 +23,11 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { OFFLINE_AUDIO_CACHE_NAME } from '@/lib/offline-audio';
-import { getPrimaryAyahAudioUrl, getSecondaryAyahAudioUrl } from '@/lib/tilawah-data';
+import {
+  getPrimaryAyahAudioUrl,
+  getSecondaryAyahAudioUrl,
+  getCandidateAudioUrls,
+} from '@/lib/tilawah-data';
 
 export type AspectRatioType = '9:16' | '1:1' | '16:9';
 
@@ -293,7 +297,8 @@ export async function ensureFontsReady(): Promise<boolean> {
 }
 
 /**
- * SAFEGUARD 2 — CORS-Safe Audio Fetching & Main-Thread Yielding
+ * SAFEGUARD 2 — CORS-Safe Multi-Tier Audio Fetching & Main-Thread Yielding
+ * 4-Tier CDN Chain: Offline Cache -> EveryAyah Primary -> EveryAyah Mirror / Islamic Network -> Fallback Reciter (Alafasy)
  */
 export async function fetchAyahAudioBuffer(
   reciterId: string,
@@ -302,53 +307,88 @@ export async function fetchAyahAudioBuffer(
   audioContext: AudioContext,
   signal?: AbortSignal
 ): Promise<AudioBuffer> {
-  const primaryUrl = getPrimaryAyahAudioUrl(reciterId, surahNumber, ayahNumber);
-  const secondaryUrl = getSecondaryAyahAudioUrl(reciterId, surahNumber, ayahNumber);
-
+  const candidateUrls = getCandidateAudioUrls(reciterId, surahNumber, ayahNumber);
   let arrayBuffer: ArrayBuffer | null = null;
 
   // 1. Check Offline Audio CacheStorage first
   if (typeof caches !== 'undefined') {
     try {
       const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
-      const cachedRes = await cache.match(primaryUrl);
-      if (cachedRes && cachedRes.ok) {
-        arrayBuffer = await cachedRes.arrayBuffer();
+      for (const url of candidateUrls) {
+        const cachedRes = await cache.match(url);
+        if (cachedRes && cachedRes.ok) {
+          const buf = await cachedRes.arrayBuffer();
+          if (buf && buf.byteLength > 1000) {
+            arrayBuffer = buf;
+            break;
+          }
+        }
       }
     } catch {
       // Continue to network fetch
     }
   }
 
-  // 2. Network fetch primary URL with CORS safety
+  // 2. Multi-tier Network fetch with CORS safety & 7000ms timeout per candidate
   if (!arrayBuffer) {
-    try {
-      const res = await fetch(primaryUrl, { mode: 'cors', signal });
-      if (res.ok) {
-        arrayBuffer = await res.arrayBuffer();
-        if (typeof caches !== 'undefined') {
-          try {
-            const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
-            cache.put(primaryUrl, new Response(arrayBuffer.slice(0), { headers: res.headers })).catch(() => {});
-          } catch (_cacheErr) {
-            // Handled cache store notice
+    for (const url of candidateUrls) {
+      if (signal?.aborted) {
+        throw new DOMException('Aborted by user', 'AbortError');
+      }
+
+      const timeoutController = new AbortController();
+      const timeoutId = setTimeout(() => {
+        try {
+          timeoutController.abort();
+        } catch (_abortErr) {
+          // Handled abort timeout
+        }
+      }, 7000);
+
+      const abortHandler = () => {
+        try {
+          timeoutController.abort();
+        } catch (_abortErr) {
+          // Handled abort cleanup
+        }
+      };
+      if (signal) {
+        signal.addEventListener('abort', abortHandler, { once: true });
+      }
+
+      try {
+        const res = await fetch(url, { mode: 'cors', signal: timeoutController.signal });
+        clearTimeout(timeoutId);
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler);
+        }
+
+        if (res.ok && res.status === 200) {
+          const buf = await res.arrayBuffer();
+          if (buf && buf.byteLength > 1000) {
+            arrayBuffer = buf;
+            // Cache successfully downloaded audio in offline cache
+            if (typeof caches !== 'undefined') {
+              try {
+                const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
+                cache.put(url, new Response(buf.slice(0), { headers: res.headers })).catch(() => {});
+              } catch {
+                // Ignore cache put failure
+              }
+            }
+            break;
           }
         }
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler);
+        }
+        if (signal?.aborted || (err?.name === 'AbortError' && signal?.aborted)) {
+          throw new DOMException('Aborted by user', 'AbortError');
+        }
+        // Non-fatal tier failure: silently try next CDN candidate
       }
-    } catch (err: any) {
-      if (err?.name === 'AbortError') throw err;
-    }
-  }
-
-  // 3. Fallback to secondary CDN
-  if (!arrayBuffer) {
-    try {
-      const res2 = await fetch(secondaryUrl, { mode: 'cors', signal });
-      if (res2.ok) {
-        arrayBuffer = await res2.arrayBuffer();
-      }
-    } catch (err: any) {
-      if (err?.name === 'AbortError') throw err;
     }
   }
 
@@ -356,7 +396,7 @@ export async function fetchAyahAudioBuffer(
     throw new Error(`Failed to load audio for ${surahNumber}:${ayahNumber}`);
   }
 
-  // 4. Decode in AudioContext with 10ms yield to prevent UI freeze
+  // 3. Decode in AudioContext with 10ms yield to prevent UI freeze
   await new Promise((resolve) => setTimeout(resolve, 10));
   return await audioContext.decodeAudioData(arrayBuffer);
 }
@@ -919,11 +959,12 @@ export function drawProceduralScene(
     }
 
     case 'straight-path': {
-      // 6. Sirat al-Mustaqim / Guided Road (Surah Ya-Sin 36:3-4)
+      // 6. Sirat al-Mustaqim / Serene Twilight Sanctuary Valley (Surah Ya-Sin 36:3-4)
       const pGrad = ctx.createLinearGradient(0, 0, 0, h);
-      pGrad.addColorStop(0, '#030712');
-      pGrad.addColorStop(0.38, '#1e1b4b');
-      pGrad.addColorStop(0.72, '#78350f');
+      pGrad.addColorStop(0, '#020617');
+      pGrad.addColorStop(0.35, '#0f172a');
+      pGrad.addColorStop(0.62, '#1e1b4b');
+      pGrad.addColorStop(0.82, '#451a03');
       pGrad.addColorStop(1, '#09090b');
       ctx.fillStyle = pGrad;
       ctx.fillRect(0, 0, w, h);
@@ -936,128 +977,165 @@ export function drawProceduralScene(
       const portalY = h * 0.52;
       const ampPulse = 1.0 + Math.min(1.0, audioAmplitude * 1.5);
 
-      // Layer 1: Distant Twilight Mountain Ridge with atmospheric haze
+      // Layer 1: Distant Twilight Mountain Peaks against the Dawn Glow
       ctx.fillStyle = '#0f172a';
       ctx.beginPath();
       ctx.moveTo(0, h);
-      ctx.lineTo(0, portalY - 10);
-      ctx.lineTo(w * 0.22, portalY - 45);
-      ctx.lineTo(w * 0.42, portalY - 20);
-      ctx.lineTo(w * 0.58, portalY - 35);
-      ctx.lineTo(w * 0.78, portalY - 15);
-      ctx.lineTo(w, portalY - 40);
+      ctx.lineTo(0, portalY - 12);
+      ctx.lineTo(w * 0.18, portalY - 48);
+      ctx.lineTo(w * 0.38, portalY - 22);
+      ctx.lineTo(cx, portalY - 42);
+      ctx.lineTo(w * 0.62, portalY - 24);
+      ctx.lineTo(w * 0.82, portalY - 50);
+      ctx.lineTo(w, portalY - 15);
       ctx.lineTo(w, h);
       ctx.closePath();
       ctx.fill();
 
-      // Layer 2: Midground Rolling Mountain Range with golden edge
+      // Layer 2: Midground Rolling Mountain Ridge with Subtle Warm Edge
       ctx.fillStyle = '#1e1b4b';
       ctx.beginPath();
       ctx.moveTo(0, h);
-      ctx.lineTo(0, portalY + 25);
-      ctx.quadraticCurveTo(w * 0.25, portalY - 15, cx, portalY + 10);
-      ctx.quadraticCurveTo(w * 0.75, portalY - 15, w, portalY + 25);
+      ctx.lineTo(0, portalY + 20);
+      ctx.quadraticCurveTo(w * 0.25, portalY - 18, cx, portalY + 8);
+      ctx.quadraticCurveTo(w * 0.75, portalY - 18, w, portalY + 20);
       ctx.lineTo(w, h);
       ctx.closePath();
       ctx.fill();
 
-      // Layer 3: Foreground Rocky Slopes
-      ctx.fillStyle = '#09090b';
+      // Layer 3: Left & Right Valley Slopes framing the serene horizon
+      ctx.fillStyle = '#111827';
       ctx.beginPath();
       ctx.moveTo(0, h);
-      ctx.lineTo(0, portalY + 45);
-      ctx.quadraticCurveTo(w * 0.22, portalY + 30, cx - 18, portalY + 12);
-      ctx.lineTo(cx - 8, portalY + 6);
-      ctx.lineTo(cx - 24, h);
+      ctx.lineTo(0, portalY + 40);
+      ctx.quadraticCurveTo(w * 0.28, portalY + 32, cx - 35, portalY + 12);
+      ctx.quadraticCurveTo(cx - 15, portalY + 28, cx - 60, h);
       ctx.closePath();
       ctx.fill();
 
       ctx.beginPath();
       ctx.moveTo(w, h);
-      ctx.lineTo(w, portalY + 45);
-      ctx.quadraticCurveTo(w * 0.78, portalY + 30, cx + 18, portalY + 12);
-      ctx.lineTo(cx + 8, portalY + 6);
-      ctx.lineTo(cx + 24, h);
+      ctx.lineTo(w, portalY + 40);
+      ctx.quadraticCurveTo(w * 0.72, portalY + 32, cx + 35, portalY + 12);
+      ctx.quadraticCurveTo(cx + 15, portalY + 28, cx + 60, h);
       ctx.closePath();
       ctx.fill();
 
-      // 3D Perspective Glowing Golden-Mist Pathway with feathered edges
-      const roadGrad = ctx.createLinearGradient(0, h, 0, portalY);
-      roadGrad.addColorStop(0, '#f59e0b');
-      roadGrad.addColorStop(0.55, '#fde047');
-      roadGrad.addColorStop(1, '#ffffff');
+      // Layer 4: Translucent Soft Golden Mist River (Max Alpha 0.22 — Zero Flat Yellow Road Cone)
+      const mistGrad = ctx.createLinearGradient(0, h, 0, portalY);
+      mistGrad.addColorStop(0, 'rgba(253, 224, 71, 0.22)');
+      mistGrad.addColorStop(0.45, 'rgba(251, 191, 36, 0.16)');
+      mistGrad.addColorStop(0.85, 'rgba(245, 158, 11, 0.08)');
+      mistGrad.addColorStop(1, 'rgba(254, 240, 138, 0.0)');
 
       ctx.save();
-      ctx.shadowColor = 'rgba(253, 224, 71, 0.75)';
-      ctx.shadowBlur = Math.round(24 * ampPulse);
-      ctx.fillStyle = roadGrad;
+      ctx.shadowColor = 'rgba(253, 224, 71, 0.35)';
+      ctx.shadowBlur = Math.round(18 * ampPulse);
+      ctx.fillStyle = mistGrad;
+
+      // Organic curved river of celestial light
+      const waveOffset1 = Math.sin(timeSec * 0.6) * 12;
+      const waveOffset2 = Math.cos(timeSec * 0.5) * 16;
       ctx.beginPath();
-      ctx.moveTo(cx - 6, portalY);
-      ctx.lineTo(cx + 6, portalY);
-      ctx.lineTo(cx + w * 0.36, h);
-      ctx.lineTo(cx - w * 0.36, h);
+      ctx.moveTo(cx - 6, portalY + 2);
+      ctx.bezierCurveTo(
+        cx - 24 + waveOffset1, portalY + (h - portalY) * 0.35,
+        cx - 65 + waveOffset2, portalY + (h - portalY) * 0.7,
+        cx - w * 0.32, h
+      );
+      ctx.lineTo(cx + w * 0.32, h);
+      ctx.bezierCurveTo(
+        cx + 65 + waveOffset2, portalY + (h - portalY) * 0.7,
+        cx + 24 + waveOffset1, portalY + (h - portalY) * 0.35,
+        cx + 6, portalY + 2
+      );
       ctx.closePath();
       ctx.fill();
       ctx.restore();
 
-      // Core intense white-gold beam of the path
-      const coreGrad = ctx.createLinearGradient(0, h, 0, portalY);
-      coreGrad.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
-      coreGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.95)');
-      coreGrad.addColorStop(1, '#ffffff');
-      ctx.fillStyle = coreGrad;
+      // Inner Luminous Shimmer Stream (Soft ethereal core, max alpha 0.18)
+      const shimmerGrad = ctx.createLinearGradient(0, h, 0, portalY);
+      shimmerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+      shimmerGrad.addColorStop(0.6, 'rgba(254, 240, 138, 0.12)');
+      shimmerGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+      ctx.fillStyle = shimmerGrad;
       ctx.beginPath();
-      ctx.moveTo(cx - 2, portalY);
-      ctx.lineTo(cx + 2, portalY);
-      ctx.lineTo(cx + w * 0.12, h);
-      ctx.lineTo(cx - w * 0.12, h);
+      ctx.moveTo(cx - 2, portalY + 2);
+      ctx.quadraticCurveTo(cx - 16, portalY + (h - portalY) * 0.5, cx - w * 0.10, h);
+      ctx.lineTo(cx + w * 0.10, h);
+      ctx.quadraticCurveTo(cx + 16, portalY + (h - portalY) * 0.5, cx + 2, portalY + 2);
       ctx.closePath();
       ctx.fill();
 
-      // Perspective dashed guidance beacons along path
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.5;
-      for (let s = 0; s < 7; s++) {
-        const segProgress = s / 6;
-        const curY = portalY + Math.pow(segProgress, 2.0) * (h - portalY);
-        const nextY = portalY + Math.pow((s + 0.45) / 6, 2.0) * (h - portalY);
-        ctx.beginPath();
-        ctx.moveTo(cx, curY);
-        ctx.lineTo(cx, nextY);
-        ctx.stroke();
-      }
-
-      // Rising Golden Stardust along the road
-      for (let i = 0; i < 22; i++) {
-        const prog = (timeSec * 0.25 + i * 0.045) % 1.0;
+      // Rising Golden Embers floating upward from the river toward the guiding star
+      for (let i = 0; i < 20; i++) {
+        const prog = (timeSec * 0.22 + i * 0.05) % 1.0;
         const sy = h - prog * (h - portalY);
-        const spread = (1 - prog) * w * 0.32;
-        const sx = cx + Math.sin(i * 4.3 + timeSec) * spread;
-        const starAlpha = Math.sin(prog * Math.PI) * 0.85;
-        ctx.fillStyle = `rgba(253, 224, 71, ${starAlpha})`;
+        const spread = (1 - prog * 0.7) * w * 0.22;
+        const sx = cx + Math.sin(i * 3.7 + timeSec * 0.8) * spread;
+        const emberAlpha = Math.sin(prog * Math.PI) * 0.65;
+        ctx.fillStyle = `rgba(253, 224, 71, ${emberAlpha})`;
         ctx.beginPath();
-        ctx.arc(sx, sy, (i % 2 === 0 ? 2.5 : 1.5) * ampPulse, 0, Math.PI * 2);
+        ctx.arc(sx, sy, (i % 2 === 0 ? 2.0 : 1.2) * ampPulse, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Radiant Arched Portal / Sun at Horizon with Volumetric Rays
-      const pRadius = Math.round(95 * ampPulse);
+      // Soft Volumetric Dawn Glow at Horizon
+      const pRadius = Math.round(85 * ampPulse);
       const pGlow = ctx.createRadialGradient(cx, portalY, 0, cx, portalY, pRadius);
-      pGlow.addColorStop(0, '#ffffff');
-      pGlow.addColorStop(0.35, 'rgba(253, 224, 71, 0.92)');
-      pGlow.addColorStop(0.7, 'rgba(245, 158, 11, 0.45)');
+      pGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      pGlow.addColorStop(0.28, 'rgba(253, 224, 71, 0.75)');
+      pGlow.addColorStop(0.65, 'rgba(245, 158, 11, 0.25)');
       pGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
       ctx.fillStyle = pGlow;
       ctx.beginPath();
       ctx.arc(cx, portalY, pRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Golden horizon arch rim
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.lineWidth = 2.5;
+      // Horizontal Lens Glint Flare Line at Horizon
+      const glintW = Math.round(110 * ampPulse);
+      const glintGrad = ctx.createLinearGradient(cx - glintW, portalY, cx + glintW, portalY);
+      glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      glintGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.85)');
+      glintGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = glintGrad;
+      ctx.fillRect(cx - glintW, portalY - 1, glintW * 2, 2);
+
+      // Majestic 8-Point Islamic Guiding Compass Star at Horizon
+      ctx.save();
+      ctx.translate(cx, portalY);
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(253, 224, 71, 0.9)';
+      ctx.shadowBlur = Math.round(14 * ampPulse);
+
+      const rPrimary = Math.round(36 * ampPulse);
+      const rSecondary = Math.round(20 * ampPulse);
+      const rInner = Math.round(5.5 * ampPulse);
+
+      // Draw 8-point compass star
       ctx.beginPath();
-      ctx.arc(cx, portalY, 32 * ampPulse, Math.PI, 0);
-      ctx.stroke();
+      for (let pt = 0; pt < 16; pt++) {
+        const angle = (pt * Math.PI) / 8 - Math.PI / 2;
+        let dist = rInner;
+        if (pt % 4 === 0) {
+          dist = rPrimary; // Cardinal points (N, S, E, W)
+        } else if (pt % 2 === 0) {
+          dist = rSecondary; // Intercardinal points (NE, SE, SW, NW)
+        }
+        const px = Math.cos(angle) * dist;
+        const py = Math.sin(angle) * dist;
+        if (pt === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Star Center Gem Core
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.round(3.5 * ampPulse), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
       ctx.restore();
       break;
@@ -2175,6 +2253,8 @@ export function prerenderAyahOffscreenCanvas(params: {
   surahNameEnglish: string;
   withTashkeel: boolean;
   subtitleLang: string;
+  clauseArabic?: string;
+  clauseTranslation?: string;
 }): HTMLCanvasElement {
   const {
     width,
@@ -2183,6 +2263,8 @@ export function prerenderAyahOffscreenCanvas(params: {
     surahNameArabic,
     withTashkeel,
     subtitleLang,
+    clauseArabic,
+    clauseTranslation,
   } = params;
 
   const offscreen = document.createElement('canvas');
@@ -2244,12 +2326,13 @@ export function prerenderAyahOffscreenCanvas(params: {
   }
   ctx.restore();
 
-  // 2. Arabic Ayah & Translation
-  const cleanAyahText = stripLeadingBismillah(ayah.textUthmani, ayah.surahNumber, ayah.ayahNumber);
+  // 2. Arabic Ayah & Translation (Sub-Ayah Clause-Aware for High Legibility)
+  const sourceArabic = clauseArabic || ayah.textUthmani;
+  const cleanAyahText = stripLeadingBismillah(sourceArabic, ayah.surahNumber, ayah.ayahNumber);
   const arabicTextRaw = withTashkeel ? cleanAyahText : stripTashkeel(cleanAyahText);
   const arabicContent = arabicTextRaw || 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
 
-  let arabicFontSize = isLandscape ? 28 : width < 800 ? 32 : 40;
+  let arabicFontSize = isLandscape ? 30 : width < 800 ? 34 : 42;
   if (arabicContent.length > 200) arabicFontSize = Math.round(arabicFontSize * 0.72);
   else if (arabicContent.length > 120) arabicFontSize = Math.round(arabicFontSize * 0.82);
 
@@ -2263,12 +2346,13 @@ export function prerenderAyahOffscreenCanvas(params: {
   let totalArabicHeight = arabicLines.length * arabicLineHeight;
 
   let transLines: string[] = [];
-  let transFontSize = isLandscape ? 14 : width < 800 ? 16 : 19;
+  let transFontSize = isLandscape ? 15 : width < 800 ? 17 : 20;
 
-  if (subtitleLang !== 'none' && ayah.translation) {
+  const sourceTrans = clauseTranslation || ayah.translation;
+  if (subtitleLang !== 'none' && sourceTrans) {
     ctx.direction = isUrdu ? 'rtl' : 'ltr';
     ctx.font = getTransFont(transFontSize);
-    transLines = wrapCanvasText(ctx, ayah.translation, maxTextWidth);
+    transLines = wrapCanvasText(ctx, sourceTrans, maxTextWidth);
   }
 
   let transLineHeight = Math.round(transFontSize * 1.45);
@@ -2291,7 +2375,7 @@ export function prerenderAyahOffscreenCanvas(params: {
     transLineHeight = Math.round(transFontSize * 1.45);
     if (transLines.length > 0) {
       ctx.font = getTransFont(transFontSize);
-      transLines = wrapCanvasText(ctx, ayah.translation!, maxTextWidth);
+      transLines = wrapCanvasText(ctx, sourceTrans!, maxTextWidth);
       totalTransHeight = transLines.length * transLineHeight;
     }
   }
@@ -2667,13 +2751,22 @@ export async function renderRecitationVideoClip(params: {
 
   const totalDuration = accumulatedTime;
 
-  // 5. Pre-Render Offscreen Canvases for Each Ayah
+  // 5. Pre-Render Offscreen Canvases for Each Ayah & Sub-Timeline Segment
   onProgress?.({ stage: 'rendering', percent: 48, statusText: 'Pre-rendering Calligraphy Stages...' });
   const dims = ASPECT_RATIO_PRESETS[aspectRatio].video;
 
   const cachedAyahBitmaps = new Map<number, HTMLCanvasElement>();
-  for (const a of ayahs) {
-    const off = prerenderAyahOffscreenCanvas({
+  const cachedSegmentBitmaps = new Map<string, HTMLCanvasElement>();
+
+  for (const item of timeline) {
+    const a = ayahs.find((x) => x.ayahNumber === item.ayahNumber) || {
+      ayahNumber: item.ayahNumber,
+      textUthmani: '',
+      translation: '',
+      surahNumber,
+    };
+
+    const baseOff = prerenderAyahOffscreenCanvas({
       width: dims.width,
       height: dims.height,
       ayah: a,
@@ -2682,7 +2775,23 @@ export async function renderRecitationVideoClip(params: {
       withTashkeel,
       subtitleLang,
     });
-    cachedAyahBitmaps.set(a.ayahNumber, off);
+    cachedAyahBitmaps.set(a.ayahNumber, baseOff);
+
+    const subSegments = item.subTimeline || [];
+    subSegments.forEach((seg, sIdx) => {
+      const segOff = prerenderAyahOffscreenCanvas({
+        width: dims.width,
+        height: dims.height,
+        ayah: a,
+        surahNameArabic,
+        surahNameEnglish,
+        withTashkeel,
+        subtitleLang,
+        clauseArabic: seg.arabicClause,
+        clauseTranslation: seg.translationClause,
+      });
+      cachedSegmentBitmaps.set(`${item.ayahNumber}_${sIdx}`, segOff);
+    });
   }
 
   // 6. Setup Rendering Canvas & CaptureStream (30 FPS)
@@ -2865,21 +2974,36 @@ export async function renderRecitationVideoClip(params: {
         drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale, audioAmp);
       }
 
-      // Draw Pre-rendered Active Ayah Bitmap with 0.6s Cinematic Reveal (translateY 14px -> 0px + alpha 0 -> 1)
-      const cachedBmp = cachedAyahBitmaps.get(activeTimelineItem.ayahNumber);
-      if (cachedBmp) {
-        const revealProgress = Math.min(1.0, timeInAyah / 0.60);
+      // Draw Pre-rendered Active Clause Bitmap with 0.45s Cinematic Reveal & Segment Transitions
+      const activeSegBmp =
+        cachedSegmentBitmaps.get(`${activeTimelineItem.ayahNumber}_${safeSegIndex}`) ||
+        cachedAyahBitmaps.get(activeTimelineItem.ayahNumber);
+
+      if (activeSegBmp) {
+        const revealTime = safeSegIndex > 0 ? timeInSeg : timeInAyah;
+        const revealProgress = Math.min(1.0, revealTime / 0.45);
         const ease = 1 - Math.pow(1 - revealProgress, 3);
-        const translateY = Math.round(14 * (1 - ease));
-        const textAlpha = ease;
+        const translateY = Math.round(10 * (1 - ease));
+
+        // Sub-segment cross-fade if transitioning from previous clause
+        if (safeSegIndex > 0 && timeInSeg < 0.35) {
+          const prevSegBmp = cachedSegmentBitmaps.get(`${activeTimelineItem.ayahNumber}_${safeSegIndex - 1}`);
+          if (prevSegBmp) {
+            const crossFade = timeInSeg / 0.35;
+            ctx.save();
+            ctx.globalAlpha = 1.0 - crossFade;
+            ctx.drawImage(prevSegBmp, 0, 0);
+            ctx.restore();
+          }
+        }
 
         ctx.save();
-        ctx.globalAlpha = textAlpha;
-        ctx.drawImage(cachedBmp, 0, translateY);
+        ctx.globalAlpha = ease;
+        ctx.drawImage(activeSegBmp, 0, translateY);
 
-        // Golden light sweep across active verse during reveal (first 0.7s)
-        if (timeInAyah < 0.70) {
-          const sweepX = (timeInAyah / 0.70) * (dims.width + 240) - 120;
+        // Golden light sweep across active clause during reveal
+        if (revealTime < 0.65) {
+          const sweepX = (revealTime / 0.65) * (dims.width + 240) - 120;
           const sweepGrad = ctx.createLinearGradient(sweepX - 80, 0, sweepX + 80, 0);
           sweepGrad.addColorStop(0, 'rgba(253, 224, 71, 0)');
           sweepGrad.addColorStop(0.5, 'rgba(253, 224, 71, 0.22)');
