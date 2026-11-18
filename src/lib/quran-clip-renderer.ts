@@ -50,6 +50,7 @@ import {
   stripLeadingBismillah,
   type VisualSegment,
 } from './ayah-meaning-scene-engine';
+import { beginHeavyOperation, endHeavyOperation } from './diagnostics-engine';
 
 export interface ClipAyahTimelineItem {
   ayahNumber: number;
@@ -2255,7 +2256,9 @@ export function prerenderAyahOffscreenCanvas(params: {
   subtitleLang: string;
   clauseArabic?: string;
   clauseTranslation?: string;
-}): HTMLCanvasElement {
+},
+  targetCanvas?: HTMLCanvasElement
+): HTMLCanvasElement {
   const {
     width,
     height,
@@ -2267,11 +2270,12 @@ export function prerenderAyahOffscreenCanvas(params: {
     clauseTranslation,
   } = params;
 
-  const offscreen = document.createElement('canvas');
+  const offscreen = targetCanvas || document.createElement('canvas');
   offscreen.width = width;
   offscreen.height = height;
   const ctx = offscreen.getContext('2d');
   if (!ctx) return offscreen;
+  ctx.clearRect(0, 0, width, height);
 
   const isLandscape = width > height;
   const maxTextWidth = Math.round(width * (isLandscape ? 0.72 : 0.86));
@@ -2795,6 +2799,14 @@ export async function renderRecitationVideoClip(params: {
     throw new Error('No Ayahs selected for video generation');
   }
 
+  // Crash-recovery breadcrumb registration
+  beginHeavyOperation('ClipStudioVideoRender', {
+    surahNumber,
+    ayahCount: ayahs.length,
+    aspectRatio,
+    reciterId,
+  });
+
   // 1. SAFEGUARD 1 — Font Readiness Gate
   onProgress?.({ stage: 'fonts', percent: 5, statusText: 'Verifying Calligraphy Fonts...' });
   await ensureFontsReady();
@@ -2915,48 +2927,19 @@ export async function renderRecitationVideoClip(params: {
 
   const totalDuration = accumulatedTime;
 
-  // 5. Pre-Render Offscreen Canvases for Each Ayah & Sub-Timeline Segment
-  onProgress?.({ stage: 'rendering', percent: 48, statusText: 'Pre-rendering Calligraphy Stages...' });
+  // 5. Setup Rendering Canvases with Reusable Text Layer (Prevents GPU VRAM exhaustion & OOM crashes)
+  onProgress?.({ stage: 'rendering', percent: 48, statusText: 'Initializing HD Canvas Pipeline...' });
   const dims = ASPECT_RATIO_PRESETS[aspectRatio].video;
 
-  const cachedAyahBitmaps = new Map<number, HTMLCanvasElement>();
-  const cachedSegmentBitmaps = new Map<string, HTMLCanvasElement>();
+  const textLayerCanvas = document.createElement('canvas');
+  textLayerCanvas.width = dims.width;
+  textLayerCanvas.height = dims.height;
 
-  for (const item of timeline) {
-    const a = ayahs.find((x) => x.ayahNumber === item.ayahNumber) || {
-      ayahNumber: item.ayahNumber,
-      textUthmani: '',
-      translation: '',
-      surahNumber,
-    };
-
-    const baseOff = prerenderAyahOffscreenCanvas({
-      width: dims.width,
-      height: dims.height,
-      ayah: a,
-      surahNameArabic,
-      surahNameEnglish,
-      withTashkeel,
-      subtitleLang,
-    });
-    cachedAyahBitmaps.set(a.ayahNumber, baseOff);
-
-    const subSegments = item.subTimeline || [];
-    subSegments.forEach((seg, sIdx) => {
-      const segOff = prerenderAyahOffscreenCanvas({
-        width: dims.width,
-        height: dims.height,
-        ayah: a,
-        surahNameArabic,
-        surahNameEnglish,
-        withTashkeel,
-        subtitleLang,
-        clauseArabic: seg.arabicClause,
-        clauseTranslation: seg.translationClause,
-      });
-      cachedSegmentBitmaps.set(`${item.ayahNumber}_${sIdx}`, segOff);
-    });
-  }
+  const prevTextLayerCanvas = document.createElement('canvas');
+  prevTextLayerCanvas.width = dims.width;
+  prevTextLayerCanvas.height = dims.height;
+  let hasPrevText = false;
+  let lastRenderedSegKey = '';
 
   // 6. Setup Rendering Canvas & CaptureStream (30 FPS)
   const renderCanvas = document.createElement('canvas');
@@ -2965,6 +2948,7 @@ export async function renderRecitationVideoClip(params: {
   const ctx = renderCanvas.getContext('2d');
   if (!ctx) {
     audioContext.close().catch(() => {});
+    endHeavyOperation();
     throw new Error('Failed to create render canvas 2D context');
   }
 
@@ -2982,6 +2966,7 @@ export async function renderRecitationVideoClip(params: {
 
   if (!canvasStream) {
     audioContext.close().catch(() => {});
+    endHeavyOperation();
     throw new Error('Canvas captureStream is not supported in this browser environment');
   }
 
@@ -3008,13 +2993,69 @@ export async function renderRecitationVideoClip(params: {
 
   recorder.start(100);
 
+  // Hardware Stream & Audio Cleanup Helper
+  let dryGain: GainNode | null = null;
+  let wetGain: GainNode | null = null;
+  let filter: BiquadFilterNode | null = null;
+  let delay: DelayNode | null = null;
+  let feedback: GainNode | null = null;
+  let masterGain: GainNode | null = null;
+  let masterCompressor: DynamicsCompressorNode | null = null;
+
+  const cleanupHardwareStreams = () => {
+    try {
+      combinedStream?.getTracks().forEach((t) => t.stop());
+    } catch (_tErr) {
+      // Stream track already released
+    }
+    try {
+      canvasStream?.getTracks().forEach((t) => t.stop());
+    } catch (_cErr) {
+      // Canvas stream track already released
+    }
+    try {
+      streamDest?.stream?.getTracks().forEach((t) => t.stop());
+    } catch (_sErr) {
+      // Audio stream track already released
+    }
+    try {
+      masterGain?.disconnect();
+      masterCompressor?.disconnect();
+      dryGain?.disconnect();
+      wetGain?.disconnect();
+      filter?.disconnect();
+      delay?.disconnect();
+      feedback?.disconnect();
+    } catch (_dErr) {
+      // Audio nodes already disconnected
+    }
+    try {
+      renderCanvas.width = 1;
+      renderCanvas.height = 1;
+      textLayerCanvas.width = 1;
+      textLayerCanvas.height = 1;
+      prevTextLayerCanvas.width = 1;
+      prevTextLayerCanvas.height = 1;
+    } catch (_wErr) {
+      // Canvas dimensions already shrunk
+    }
+  };
+
   // SAFEGUARD 4 — Schedule AudioBufferSourceNodes on AudioContext Timeline
-  // WebAudio Mastering Chain with Haramain Reverb & 0.25s Fade-In / 0.45s Fade-Out
+  // Lightweight Zero-CPU Delay/Filter Reverb Network + DynamicsCompressorNode
   const startAudioTime = audioContext.currentTime + 0.05; // 50ms buffer lead-in
   const activeSources: AudioBufferSourceNode[] = [];
 
-  const masterGain = audioContext.createGain();
-  masterGain.connect(streamDest);
+  masterCompressor = audioContext.createDynamicsCompressor();
+  masterCompressor.threshold.value = -12;
+  masterCompressor.knee.value = 30;
+  masterCompressor.ratio.value = 4;
+  masterCompressor.attack.value = 0.003;
+  masterCompressor.release.value = 0.25;
+  masterCompressor.connect(streamDest);
+
+  masterGain = audioContext.createGain();
+  masterGain.connect(masterCompressor);
 
   // Audio Analyser for dynamic visual pulsing (< 0.1ms overhead)
   const analyser = audioContext.createAnalyser();
@@ -3026,26 +3067,33 @@ export async function renderRecitationVideoClip(params: {
   masterGain.gain.setValueAtTime(0.0001, startAudioTime);
   masterGain.gain.exponentialRampToValueAtTime(1.0, startAudioTime + 0.25);
 
-  // Fade-out 0.45s at end
+  // Fade-out 0.45s at end (+0.15s tail room)
   const fadeOutStart = Math.max(startAudioTime + 0.25, startAudioTime + totalDuration - 0.45);
   masterGain.gain.setValueAtTime(1.0, fadeOutStart);
-  masterGain.gain.exponentialRampToValueAtTime(0.0001, startAudioTime + totalDuration);
-
-  let dryGain: GainNode;
-  let wetGain: GainNode;
-  let convolver: ConvolverNode | null = null;
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, startAudioTime + totalDuration + 0.15);
 
   if (audioMastering === 'haramain') {
-    convolver = audioContext.createConvolver();
-    convolver.buffer = createHaramainImpulseResponse(audioContext, 1.8, 2.4);
-
     dryGain = audioContext.createGain();
-    dryGain.gain.value = 0.78;
+    dryGain.gain.value = 0.85;
     dryGain.connect(masterGain);
+
+    filter = audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 2800;
+
+    delay = audioContext.createDelay(1.0);
+    delay.delayTime.value = 0.11;
+
+    feedback = audioContext.createGain();
+    feedback.gain.value = 0.26;
 
     wetGain = audioContext.createGain();
     wetGain.gain.value = 0.22;
-    convolver.connect(wetGain);
+
+    filter.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(wetGain);
     wetGain.connect(masterGain);
   } else {
     dryGain = audioContext.createGain();
@@ -3057,8 +3105,8 @@ export async function renderRecitationVideoClip(params: {
     const src = audioContext.createBufferSource();
     src.buffer = item.audioBuffer;
     src.connect(dryGain);
-    if (convolver) {
-      src.connect(convolver);
+    if (filter) {
+      src.connect(filter);
     }
     src.start(startAudioTime + item.startTime);
     activeSources.push(src);
@@ -3073,11 +3121,12 @@ export async function renderRecitationVideoClip(params: {
       const currentAudioTime = audioContext.currentTime;
       const elapsed = currentAudioTime - startAudioTime;
 
-      if (elapsed >= totalDuration) {
+      // 1:1 Timeline Lock: Render full timeline + 0.15s tail room for acoustic decay
+      if (elapsed >= totalDuration + 0.15) {
         break;
       }
 
-      const visualElapsed = Math.max(0, elapsed);
+      const visualElapsed = Math.max(0, Math.min(totalDuration, elapsed));
       const activeIndex = timeline.findIndex(
         (t) => visualElapsed >= t.startTime && visualElapsed < t.endTime
       );
@@ -3138,47 +3187,74 @@ export async function renderRecitationVideoClip(params: {
         drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale, audioAmp);
       }
 
-      // Draw Pre-rendered Active Clause Bitmap with 0.45s Cinematic Reveal & Segment Transitions
-      const activeSegBmp =
-        cachedSegmentBitmaps.get(`${activeTimelineItem.ayahNumber}_${safeSegIndex}`) ||
-        cachedAyahBitmaps.get(activeTimelineItem.ayahNumber);
-
-      if (activeSegBmp) {
-        const revealTime = safeSegIndex > 0 ? timeInSeg : timeInAyah;
-        const revealProgress = Math.min(1.0, revealTime / 0.45);
-        const ease = 1 - Math.pow(1 - revealProgress, 3);
-        const translateY = Math.round(10 * (1 - ease));
-
-        // Sub-segment cross-fade if transitioning from previous clause
-        if (safeSegIndex > 0 && timeInSeg < 0.35) {
-          const prevSegBmp = cachedSegmentBitmaps.get(`${activeTimelineItem.ayahNumber}_${safeSegIndex - 1}`);
-          if (prevSegBmp) {
-            const crossFade = timeInSeg / 0.35;
-            ctx.save();
-            ctx.globalAlpha = 1.0 - crossFade;
-            ctx.drawImage(prevSegBmp, 0, 0);
-            ctx.restore();
+      // Render Active Clause onto Reusable Text Layer Canvas
+      const currentSegKey = `${activeTimelineItem.ayahNumber}_${safeSegIndex}`;
+      if (currentSegKey !== lastRenderedSegKey) {
+        if (lastRenderedSegKey !== '') {
+          const prevCtx = prevTextLayerCanvas.getContext('2d');
+          if (prevCtx) {
+            prevCtx.clearRect(0, 0, dims.width, dims.height);
+            prevCtx.drawImage(textLayerCanvas, 0, 0);
+            hasPrevText = true;
           }
         }
 
+        const a = ayahs.find((x) => x.ayahNumber === activeTimelineItem.ayahNumber) || {
+          ayahNumber: activeTimelineItem.ayahNumber,
+          textUthmani: '',
+          translation: '',
+          surahNumber,
+        };
+
+        prerenderAyahOffscreenCanvas(
+          {
+            width: dims.width,
+            height: dims.height,
+            ayah: a,
+            surahNameArabic,
+            surahNameEnglish,
+            withTashkeel,
+            subtitleLang,
+            clauseArabic: activeSeg?.arabicClause,
+            clauseTranslation: activeSeg?.translationClause,
+          },
+          textLayerCanvas
+        );
+
+        lastRenderedSegKey = currentSegKey;
+      }
+
+      const revealTime = safeSegIndex > 0 ? timeInSeg : timeInAyah;
+      const revealProgress = Math.min(1.0, revealTime / 0.45);
+      const ease = 1 - Math.pow(1 - revealProgress, 3);
+      const translateY = Math.round(10 * (1 - ease));
+
+      // Sub-segment cross-fade if transitioning from previous clause
+      if (safeSegIndex > 0 && timeInSeg < 0.35 && hasPrevText) {
+        const crossFade = timeInSeg / 0.35;
         ctx.save();
-        ctx.globalAlpha = ease;
-        ctx.drawImage(activeSegBmp, 0, translateY);
-
-        // Golden light sweep across active clause during reveal
-        if (revealTime < 0.65) {
-          const sweepX = (revealTime / 0.65) * (dims.width + 240) - 120;
-          const sweepGrad = ctx.createLinearGradient(sweepX - 80, 0, sweepX + 80, 0);
-          sweepGrad.addColorStop(0, 'rgba(253, 224, 71, 0)');
-          sweepGrad.addColorStop(0.5, 'rgba(253, 224, 71, 0.22)');
-          sweepGrad.addColorStop(1, 'rgba(253, 224, 71, 0)');
-          ctx.globalCompositeOperation = 'screen';
-          ctx.fillStyle = sweepGrad;
-          ctx.fillRect(0, Math.round(dims.height * 0.08), dims.width, Math.round(dims.height * 0.28));
-        }
-
+        ctx.globalAlpha = 1.0 - crossFade;
+        ctx.drawImage(prevTextLayerCanvas, 0, 0);
         ctx.restore();
       }
+
+      ctx.save();
+      ctx.globalAlpha = ease;
+      ctx.drawImage(textLayerCanvas, 0, translateY);
+
+      // Golden light sweep across active clause during reveal
+      if (revealTime < 0.65) {
+        const sweepX = (revealTime / 0.65) * (dims.width + 240) - 120;
+        const sweepGrad = ctx.createLinearGradient(sweepX - 80, 0, sweepX + 80, 0);
+        sweepGrad.addColorStop(0, 'rgba(253, 224, 71, 0)');
+        sweepGrad.addColorStop(0.5, 'rgba(253, 224, 71, 0.22)');
+        sweepGrad.addColorStop(1, 'rgba(253, 224, 71, 0)');
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = sweepGrad;
+        ctx.fillRect(0, Math.round(dims.height * 0.08), dims.width, Math.round(dims.height * 0.28));
+      }
+
+      ctx.restore();
 
       // Draw Golden Frame + Progress Bar + Watermark (< 0.2ms)
       const clipProgress = totalDuration > 0 ? visualElapsed / totalDuration : 0;
@@ -3203,19 +3279,24 @@ export async function renderRecitationVideoClip(params: {
     for (const s of activeSources) {
       try {
         s.stop();
+        s.disconnect();
       } catch (_stopErr) {
         // Source already terminated
       }
     }
+    cleanupHardwareStreams();
+    endHeavyOperation();
   }
 
   if (signal?.aborted) {
+    cleanupHardwareStreams();
     recorder.stop();
     audioContext.close().catch(() => {});
     throw new DOMException('Aborted by user', 'AbortError');
   }
 
   if (contextLostOccurred) {
+    cleanupHardwareStreams();
     recorder.stop();
     audioContext.close().catch(() => {});
     throw new Error('GPU Canvas Context Reset during rendering.');
@@ -3228,12 +3309,17 @@ export async function renderRecitationVideoClip(params: {
     recorder.onstop = () => {
       try {
         const finalBlob = new Blob(recordedChunks, { type: selectedMime });
+        cleanupHardwareStreams();
         resolve(finalBlob);
       } catch (e) {
+        cleanupHardwareStreams();
         reject(e);
       }
     };
-    recorder.onerror = (e) => reject(e);
+    recorder.onerror = (e) => {
+      cleanupHardwareStreams();
+      reject(e);
+    };
     recorder.stop();
   });
 

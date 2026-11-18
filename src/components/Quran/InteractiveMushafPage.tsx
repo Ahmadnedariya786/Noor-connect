@@ -2,6 +2,7 @@
 // Features: Jewel Ink, Tajweed Colors, Word-by-Word Jewel Popover, Live Recitation Sync & Audio Auto-Follow
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   fetchMushafPage,
   prefetchAdjacentMushafPages,
@@ -1634,116 +1635,127 @@ function InteractiveMushafPageComponent({
         )}
       </div>
 
-      {/* FLOATING WORD-BY-WORD JEWEL POPOVER */}
-      {selectedWord && selectedWord.rect && (
-        <div
-          className="fixed z-[9990] animate-in fade-in zoom-in-95 duration-150"
-          style={{
-            top: Math.max(12, Math.min(window.innerHeight - 200, selectedWord.rect.top - 120)),
-            left: Math.max(16, Math.min(window.innerWidth - 280, selectedWord.rect.left - 100)),
-            width: '270px',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
+      {/* FLOATING WORD-BY-WORD JEWEL POPOVER (CENTERED MODAL) */}
+      {selectedWord &&
+        createPortal(
           <div
-            className="p-3.5 rounded-2xl border shadow-2xl backdrop-blur-md"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-150"
             style={{
-              background: 'var(--surface)',
-              borderColor: 'var(--accent)',
-              boxShadow: '0 12px 36px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
+              background: 'rgba(2, 4, 10, 0.78)',
+              backdropFilter: 'blur(4px)',
             }}
+            onClick={() => setSelectedWord(null)}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-[var(--accent-text)] uppercase tracking-wider">
-                Word-by-Word Study
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedWord(null)}
-                className="p-1 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Vocalized Arabic Word */}
             <div
-              className="text-center font-arabic text-2xl font-bold text-[var(--text-primary)] my-1"
-              dir="rtl"
+              className="w-full max-w-[330px] m-auto relative p-3.5 rounded-2xl border shadow-2xl backdrop-blur-md animate-in zoom-in-95 duration-150"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--accent)',
+                boxShadow:
+                  '0 12px 36px rgba(0,0,0,0.45), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
+              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {selectedWord.word.text_uthmani}
-            </div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-[var(--accent-text)] uppercase tracking-wider">
+                  Word-by-Word Study
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedWord(null)}
+                  className="p-1 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            {/* Transliteration */}
-            {selectedWord.word.transliteration?.text && (
-              <p className="text-center text-xs font-semibold text-[var(--accent-text)] italic mb-1">
-                {selectedWord.word.transliteration.text}
+              {/* Vocalized Arabic Word */}
+              <div
+                className="text-center font-arabic text-2xl font-bold text-[var(--text-primary)] my-1"
+                dir="rtl"
+              >
+                {selectedWord.word.text_uthmani}
+              </div>
+
+              {/* Transliteration */}
+              {selectedWord.word.transliteration?.text && (
+                <p className="text-center text-xs font-semibold text-[var(--accent-text)] italic mb-1">
+                  {selectedWord.word.transliteration.text}
+                </p>
+              )}
+
+              {/* English Word Meaning */}
+              <p className="text-center text-xs font-bold text-[var(--text-primary)] mb-3">
+                "{selectedWord.word.translation?.text || 'Meaning loading...'}"
               </p>
-            )}
 
-            {/* English Word Meaning */}
-            <p className="text-center text-xs font-bold text-[var(--text-primary)] mb-3">
-              "{selectedWord.word.translation?.text || 'Meaning loading...'}"
-            </p>
+              {/* Action Buttons: 1-Tap Hear Word Audio + Tafsir & Hifz */}
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  disabled={!selectedWord.word.audio_url || playingWordAudio}
+                  onClick={() => handlePlayWordAudio(selectedWord.word.audio_url)}
+                  className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <Volume2
+                    className={`w-3.5 h-3.5 ${
+                      playingWordAudio ? 'animate-pulse text-[var(--accent)]' : ''
+                    }`}
+                  />
+                  <span>{playingWordAudio ? 'Playing...' : 'Hear Word'}</span>
+                </button>
 
-            {/* Action Buttons: 1-Tap Hear Word Audio + Tafsir & Hifz */}
-            <div className="flex flex-col gap-1.5">
-              <button
-                type="button"
-                disabled={!selectedWord.word.audio_url || playingWordAudio}
-                onClick={() => handlePlayWordAudio(selectedWord.word.audio_url)}
-                className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
-                style={{
-                  background: 'var(--surface-2)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                <Volume2 className={`w-3.5 h-3.5 ${playingWordAudio ? 'animate-pulse text-[var(--accent)]' : ''}`} />
-                <span>{playingWordAudio ? 'Playing...' : 'Hear Word'}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const s = selectedWord.surahNumber;
+                    const a = selectedWord.verseNumber;
+                    setSelectedWord(null);
+                    onOpenStudySheet(s, a);
+                  }}
+                  className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                  style={{
+                    background: 'var(--accent)',
+                    borderColor: 'var(--accent)',
+                    color: 'var(--on-accent)',
+                  }}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>
+                    📚 Tafsir & Hifz ({selectedWord.surahNumber}:{selectedWord.verseNumber})
+                  </span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  const s = selectedWord.surahNumber;
-                  const a = selectedWord.verseNumber;
-                  setSelectedWord(null);
-                  onOpenStudySheet(s, a);
-                }}
-                className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                style={{
-                  background: 'var(--accent)',
-                  borderColor: 'var(--accent)',
-                  color: 'var(--on-accent)',
-                }}
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>📚 Tafsir & Hifz ({selectedWord.surahNumber}:{selectedWord.verseNumber})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const s = selectedWord.surahNumber;
-                  const a = selectedWord.verseNumber;
-                  setSelectedWord(null);
-                  onOpenClipStudio?.(s, a);
-                }}
-                className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                style={{
-                  background: 'var(--surface-2)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--accent-text)',
-                }}
-              >
-                <Film className="w-3.5 h-3.5" />
-                <span>🎬 Clip Studio ({selectedWord.surahNumber}:{selectedWord.verseNumber})</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const s = selectedWord.surahNumber;
+                    const a = selectedWord.verseNumber;
+                    setSelectedWord(null);
+                    onOpenClipStudio?.(s, a);
+                  }}
+                  className="w-full py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--accent-text)',
+                  }}
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  <span>
+                    🎬 Clip Studio ({selectedWord.surahNumber}:{selectedWord.verseNumber})
+                  </span>
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* TAJWEED RULES LEGEND MODAL */}
       {showLegend && (

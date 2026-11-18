@@ -125,6 +125,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
   // Live Canvas Preview
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const scrollBodyRef = useRef<HTMLDivElement | null>(null);
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(true);
 
   // Sync initial props on change
@@ -468,6 +469,9 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
 
   // Live Canvas Preview Animation Loop (with 700ms Scene Cross-Fade & Ayah Cycling)
   useEffect(() => {
+    // PAUSE PREVIEW rAF DURING VIDEO GENERATION OR PLAYBACK (Saves GPU & CPU memory)
+    if (isGenerating || videoResult) return;
+
     const canvas = previewCanvasRef.current;
     if (!canvas) return;
 
@@ -664,6 +668,8 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     versesData,
     isPreviewPlaying,
     activeTab,
+    isGenerating,
+    videoResult,
   ]);
 
   // Video Generation Trigger
@@ -695,6 +701,14 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
         },
       });
 
+      if (videoResult?.url) {
+        try {
+          URL.revokeObjectURL(videoResult.url);
+        } catch (_revokeErr) {
+          // Object URL already revoked or invalid
+        }
+      }
+
       const videoUrl = URL.createObjectURL(result.blob);
       setVideoResult({
         blob: result.blob,
@@ -703,6 +717,11 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
         extension: result.extension,
         duration: result.duration,
       });
+
+      // Auto-scroll modal to top so user sees the finished video immediately
+      setTimeout(() => {
+        scrollBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 50);
 
       toast.success('Quran Recitation Reel generated successfully!');
     } catch (err: any) {
@@ -947,7 +966,11 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
         </div>
 
         {/* SCROLLABLE BODY */}
-        <div className="overflow-y-auto overflow-x-hidden flex-1 p-3 sm:p-4 space-y-4 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
+        <div
+          ref={scrollBodyRef}
+          className="overflow-y-auto overflow-x-hidden flex-1 p-3 sm:p-4 space-y-4 w-full max-w-full"
+          style={{ boxSizing: 'border-box' }}
+        >
           {/* 1. MODE SWITCHER TABS (TOP ROW) */}
           <div className="grid grid-cols-2 p-1 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] shrink-0">
             <button

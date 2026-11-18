@@ -337,7 +337,61 @@ export function resolveSceneForAyah(
     }
   }
 
-  // 3. SURAH AR-RAHMAN (55:1–25) — Autonomous Cinematic Reel Director
+  // 3a. SURAH TA-HA (20:1–5) — Autonomous Cinematic Reel Director
+  if (surahNumber === 20) {
+    if (ayahNumber === 1) {
+      return {
+        ayahNumber,
+        sceneId: 'pearly-star',
+        moodLabel: 'Pearly Star',
+        icon: '🌟',
+        category: 'Sacred Letters & Radiance',
+        matchedKeyword: 'طه',
+      };
+    }
+    if (ayahNumber === 2) {
+      return {
+        ayahNumber,
+        sceneId: 'illuminated-quran',
+        moodLabel: 'Wise Quran',
+        icon: '📖',
+        category: 'Divine Scripture',
+        matchedKeyword: 'القرآن لتشقى',
+      };
+    }
+    if (ayahNumber === 3) {
+      return {
+        ayahNumber,
+        sceneId: 'niche-lamp',
+        moodLabel: 'Mishkat Lamp',
+        icon: '🏮',
+        category: 'Divine Guidance & Niche',
+        matchedKeyword: 'تذكرة لمن يخشى',
+      };
+    }
+    if (ayahNumber === 4) {
+      return {
+        ayahNumber,
+        sceneId: 'heavens-earth-rays',
+        moodLabel: 'Heavens & Noor',
+        icon: '🌅',
+        category: 'Creation & Heavens',
+        matchedKeyword: 'خلق الأرض والسماوات العلى',
+      };
+    }
+    if (ayahNumber === 5) {
+      return {
+        ayahNumber,
+        sceneId: 'persian-arch',
+        moodLabel: 'Celestial Arch',
+        icon: '🌌',
+        category: 'Divine Throne & Grandeur',
+        matchedKeyword: 'الرحمن على العرش استوى',
+      };
+    }
+  }
+
+  // 3b. SURAH AR-RAHMAN (55:1–25) — Autonomous Cinematic Reel Director
   if (surahNumber === 55) {
     if (ayahNumber === 1) {
       return {
@@ -1308,69 +1362,69 @@ export function resolveAyahVisualTimeline(
     });
   }
 
-  // 3. Multi-Clause splitting for long verses (> 8.5s or > 140 chars)
-  if (safeDur >= 8.5 || ayahTextArabic.length > 140) {
-    const ar = cleanArabicForMatching(ayahTextArabic);
-    // Find midpoint pause mark or clause connector
-    const midTokens = [' ۚ ', ' ۖ ', ' ۗ ', ' ثم ', ' وان ', ' فان '];
-    let splitIdx = -1;
-    for (const tok of midTokens) {
-      const idx = ayahTextArabic.indexOf(tok);
-      if (idx > 25 && idx < ayahTextArabic.length - 25) {
-        splitIdx = idx + tok.length;
-        break;
-      }
-    }
-    if (splitIdx === -1) {
-      splitIdx = Math.floor(ayahTextArabic.length * 0.5);
-    }
+  // Count words in Arabic text
+  const words = ayahTextArabic.trim().split(/\s+/).filter(Boolean);
 
-    const firstHalfAr = ayahTextArabic.slice(0, splitIdx).trim();
-    const secondHalfAr = ayahTextArabic.slice(splitIdx).trim();
-    const transParts = splitTranslationIntoClauses(translationEn, 2);
-
-    const res1 = resolveSceneForAyah(firstHalfAr, transParts[0], surahNumber, ayahNumber);
-    const res2 = resolveSceneForAyah(secondHalfAr, transParts[1], surahNumber, ayahNumber);
-
+  // RULE 1: NEVER split verses with < 28 words OR duration < 18.0s into sub-clauses!
+  // Preserves Surah Ta-Ha 20:1-5, Ar-Rahman 55:1-5, Ya-Sin 36:1-5, Al-Ikhlas, etc. as 100% complete intact verses.
+  if (words.length < 28 || safeDur < 18.0) {
+    const singleRes = resolveSceneForAyah(ayahTextArabic, translationEn, surahNumber, ayahNumber);
     return [
       {
         startRatio: 0.00,
-        endRatio: 0.50,
-        startTime: 0.00,
-        endTime: safeDur * 0.50,
-        sceneId: res1.sceneId,
-        label: res1.moodLabel,
-        icon: res1.icon,
-        arabicClause: firstHalfAr,
-        translationClause: transParts[0],
-      },
-      {
-        startRatio: 0.50,
         endRatio: 1.00,
-        startTime: safeDur * 0.50,
+        startTime: 0.00,
         endTime: safeDur,
-        sceneId: res2.sceneId,
-        label: res2.moodLabel,
-        icon: res2.icon,
-        arabicClause: secondHalfAr,
-        translationClause: transParts[1],
+        sceneId: singleRes.sceneId,
+        label: singleRes.moodLabel,
+        icon: singleRes.icon,
+        arabicClause: ayahTextArabic,
+        translationClause: translationEn,
       },
     ];
   }
 
-  // Default: 1 unified segment for the Ayah
-  const singleRes = resolveSceneForAyah(ayahTextArabic, translationEn, surahNumber, ayahNumber);
+  // RULE 2: For ultra-long verses (>= 28 words AND >= 18.0s), split ONLY on whitespace word boundaries or Waqf markers.
+  // NEVER character index .slice(), which sliced "الْأَرْضَ" into "خَلَقَ الْ" and "أَرْضَ"!
+  const midWordIndex = Math.floor(words.length * 0.5);
+  let bestSplitWordIdx = midWordIndex;
+  const waqfRegex = /[\u06D6-\u06EDۚۖۗۘۙ]/;
+  for (let w = Math.max(3, midWordIndex - 5); w < Math.min(words.length - 3, midWordIndex + 5); w++) {
+    if (waqfRegex.test(words[w])) {
+      bestSplitWordIdx = w + 1;
+      break;
+    }
+  }
+
+  const firstHalfAr = words.slice(0, bestSplitWordIdx).join(' ').trim();
+  const secondHalfAr = words.slice(bestSplitWordIdx).join(' ').trim();
+  const transParts = splitTranslationIntoClauses(translationEn, 2);
+
+  const res1 = resolveSceneForAyah(firstHalfAr, transParts[0], surahNumber, ayahNumber);
+  const res2 = resolveSceneForAyah(secondHalfAr, transParts[1], surahNumber, ayahNumber);
+
   return [
     {
       startRatio: 0.00,
-      endRatio: 1.00,
+      endRatio: 0.50,
       startTime: 0.00,
+      endTime: safeDur * 0.50,
+      sceneId: res1.sceneId,
+      label: res1.moodLabel,
+      icon: res1.icon,
+      arabicClause: firstHalfAr,
+      translationClause: transParts[0],
+    },
+    {
+      startRatio: 0.50,
+      endRatio: 1.00,
+      startTime: safeDur * 0.50,
       endTime: safeDur,
-      sceneId: singleRes.sceneId,
-      label: singleRes.moodLabel,
-      icon: singleRes.icon,
-      arabicClause: ayahTextArabic,
-      translationClause: translationEn,
+      sceneId: res2.sceneId,
+      label: res2.moodLabel,
+      icon: res2.icon,
+      arabicClause: secondHalfAr,
+      translationClause: transParts[1],
     },
   ];
 }
@@ -1392,10 +1446,13 @@ export function resolveSceneJourney(
     const subTimeline = resolveAyahVisualTimeline(a.textUthmani, a.translation || '', surahNumber, a.ayahNumber, 6.0, subtitleLang);
     res.subTimeline = subTimeline;
 
-    // If identical to the previous Ayah's scene, nudge fallback if it was a generic fallback match
-    if (i > 0 && res.sceneId === result[i - 1].sceneId && !res.matchedKeyword) {
+    // RULE 4: Enforce that no two consecutive Ayahs share the exact same sceneId
+    if (i > 0 && res.sceneId === result[i - 1].sceneId) {
       const nextIndex = (Math.abs(surahNumber * 7 + a.ayahNumber + 1)) % FALLBACK_SCENE_SEQUENCE.length;
-      const nextFallback = FALLBACK_SCENE_SEQUENCE[nextIndex];
+      let nextFallback = FALLBACK_SCENE_SEQUENCE[nextIndex];
+      if (nextFallback.sceneId === result[i - 1].sceneId) {
+        nextFallback = FALLBACK_SCENE_SEQUENCE[(nextIndex + 1) % FALLBACK_SCENE_SEQUENCE.length];
+      }
       res = {
         ayahNumber: a.ayahNumber,
         sceneId: nextFallback.sceneId,
@@ -1411,6 +1468,8 @@ export function resolveSceneJourney(
             sceneId: nextFallback.sceneId,
             label: nextFallback.label,
             icon: nextFallback.icon,
+            arabicClause: a.textUthmani,
+            translationClause: a.translation,
           },
         ],
       };

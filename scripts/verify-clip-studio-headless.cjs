@@ -785,6 +785,7 @@ async function runClipStudioTests() {
     new Function('exports', 'require', rendererTranspiled)(rendererModule, (mod) => {
       if (mod.includes('ayah-meaning-scene-engine')) return engineModule;
       if (mod.includes('tilawah-data')) return tilawahModule;
+      if (mod.includes('diagnostics-engine')) return { beginHeavyOperation: () => {}, endHeavyOperation: () => {} };
       return {};
     });
 
@@ -899,8 +900,123 @@ async function runClipStudioTests() {
     }
     console.log('  ✓ PASS: Zero horizontal overflow! Modal card, scroll body, and journey ribbon strictly contained inside 360px viewport!');
 
+    // -------------------------------------------------------------
+    // TEST 15: SURAH TA-HA (20:1–5) SCENE CHOREOGRAPHY & NO MID-WORD SLICING
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 15: Surah Ta-Ha (20:1–5) Scene Choreography & No Mid-Word Slicing ---');
+    const taHaAyahs = [
+      { ayahNumber: 1, textUthmani: 'طه' },
+      { ayahNumber: 2, textUthmani: 'مَا أَنزَلْنَا عَلَيْكَ الْقُرْآنَ لِتَشْقَىٰ' },
+      { ayahNumber: 3, textUthmani: 'إِلَّا تَذْكِرَةً لِّمَن يَخْشَىٰ' },
+      { ayahNumber: 4, textUthmani: 'تَنزِيلًا مِّمَّنْ خَلَقَ الْأَرْضَ وَالسَّمَاوَاتِ الْعُلَى' },
+      { ayahNumber: 5, textUthmani: 'الرَّحْمَٰنُ عَلَى الْعَرْشِ اسْتَوَىٰ' },
+    ];
+
+    const taHaJourney = engineModule.resolveSceneJourney(taHaAyahs, 20, 'en');
+    console.log('  Ta-Ha 20:1–5 Resolved Journey:', taHaJourney.map(j => `${j.ayahNumber}: ${j.sceneId} (${j.moodLabel})`));
+
+    const expectedTaHaScenes = ['pearly-star', 'illuminated-quran', 'niche-lamp', 'heavens-earth-rays', 'persian-arch'];
+    for (let i = 0; i < 5; i++) {
+      if (taHaJourney[i].sceneId !== expectedTaHaScenes[i]) {
+        throw new Error(`TEST 15 FAILED: Ta-Ha 20:${i + 1} mapped to "${taHaJourney[i].sceneId}", expected "${expectedTaHaScenes[i]}"`);
+      }
+    }
+
+    // Verify no two consecutive scenes are identical
+    for (let i = 1; i < taHaJourney.length; i++) {
+      if (taHaJourney[i].sceneId === taHaJourney[i - 1].sceneId) {
+        throw new Error(`TEST 15 FAILED: Consecutive identical scenes found for Ta-Ha 20:${i} and 20:${i+1}! (${taHaJourney[i].sceneId})`);
+      }
+    }
+
+    // Verify Verse 4 (7 words) is NOT split into sub-clauses (< 28 words guard)
+    const taHa4Timeline = engineModule.resolveAyahVisualTimeline(
+      'تَنزِيلًا مِّمَّنْ خَلَقَ الْأَرْضَ وَالسَّمَاوَاتِ الْعُلَى',
+      'A revelation from He who created the earth and highest heavens',
+      20,
+      4,
+      9.0,
+      'en'
+    );
+    console.log(`  Ta-Ha 20:4 sub-segments count: ${taHa4Timeline.length}`);
+    if (taHa4Timeline.length !== 1) {
+      throw new Error(`TEST 15 FAILED: Ta-Ha 20:4 was split into ${taHa4Timeline.length} sub-clauses! Verses < 28 words must remain 1 intact verse.`);
+    }
+    if (taHa4Timeline[0].arabicClause.includes('خَلَقَ الْ') && !taHa4Timeline[0].arabicClause.includes('الْأَرْضَ')) {
+      throw new Error(`TEST 15 FAILED: Mid-word character slicing detected on Ta-Ha 20:4!`);
+    }
+    console.log('  ✓ PASS: Ta-Ha 20:1–5 maps to 5 distinct cinematic scenes with zero consecutive duplicates and zero mid-word slicing!');
+
+    // -------------------------------------------------------------
+    // TEST 16: ZERO-CPU WARMTH REVERB & REUSABLE CANVAS PIPELINE
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 16: Zero-CPU Warmth Reverb & Reusable Canvas Pipeline ---');
+    if (typeof rendererModule.prerenderAyahOffscreenCanvas !== 'function') {
+      throw new Error('TEST 16 FAILED: prerenderAyahOffscreenCanvas is not exported!');
+    }
+    const dummyAyah = { ayahNumber: 1, textUthmani: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ', surahNumber: 1 };
+    const mockTargetCanvas = {
+      width: 0,
+      height: 0,
+      getContext: () => ({
+        clearRect: () => {},
+        save: () => {},
+        restore: () => {},
+        fillText: () => {},
+        measureText: () => ({ width: 100 }),
+      }),
+    };
+    const retCanvas = rendererModule.prerenderAyahOffscreenCanvas(
+      {
+        width: 720,
+        height: 1280,
+        ayah: dummyAyah,
+        surahNameArabic: 'الفاتحة',
+        surahNameEnglish: 'Al-Fatihah',
+        withTashkeel: true,
+        subtitleLang: 'en',
+      },
+      mockTargetCanvas
+    );
+    if (retCanvas !== mockTargetCanvas) {
+      throw new Error('TEST 16 FAILED: prerenderAyahOffscreenCanvas did not reuse passed targetCanvas!');
+    }
+    console.log('  ✓ PASS: Single reusable text canvas pipeline verified! Target canvas reused without GPU VRAM reallocations.');
+
+    // -------------------------------------------------------------
+    // TEST 17: CENTERED WORD-BY-WORD STUDY MODAL
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 17: Centered Word-by-Word Study Modal Positioning ---');
+    const mushafPageSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'Quran', 'InteractiveMushafPage.tsx'), 'utf-8');
+    if (!mushafPageSrc.includes('createPortal(')) {
+      throw new Error('TEST 17 FAILED: createPortal not used for Word-by-Word Study modal in InteractiveMushafPage.tsx!');
+    }
+    if (!mushafPageSrc.includes('fixed inset-0 z-[9999] flex items-center justify-center')) {
+      throw new Error('TEST 17 FAILED: Word-by-Word Study modal is missing "fixed inset-0 z-[9999] flex items-center justify-center" centering classes!');
+    }
+    if (!mushafPageSrc.includes('max-w-[330px] m-auto relative')) {
+      throw new Error('TEST 17 FAILED: Word-by-Word Study inner card is missing "max-w-[330px] m-auto relative"!');
+    }
+    console.log('  ✓ PASS: Word-by-Word Study Modal rendered via createPortal into centered fixed full-screen backdrop!');
+
+    // -------------------------------------------------------------
+    // TEST 18: DIAGNOSTICS CRASH-BREADCRUMB & WATCHDOG INTEGRITY
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 18: Diagnostics Crash-Recovery Breadcrumb & Freeze Watchdog ---');
+    const diagSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'diagnostics-engine.ts'), 'utf-8');
+    if (!diagSrc.includes('noor_active_heavy_op_v1')) {
+      throw new Error('TEST 18 FAILED: HEAVY_OP_BREADCRUMB_KEY (noor_active_heavy_op_v1) not found in diagnostics-engine.ts!');
+    }
+    if (!diagSrc.includes('NATIVE_RENDER_INTERRUPTED')) {
+      throw new Error('TEST 18 FAILED: [NATIVE_RENDER_INTERRUPTED] crash-recovery event handler not found in diagnostics-engine.ts!');
+    }
+    if (!diagSrc.includes('THREAD_FREEZE')) {
+      throw new Error('TEST 18 FAILED: THREAD_FREEZE watchdog monitor not found in diagnostics-engine.ts!');
+    }
+    console.log('  ✓ PASS: Deep X-Ray Diagnostics persistent crash recovery and main-thread freeze watchdog verified!');
+
     console.log('\n======================================================');
-    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (14/14 PASS)');
+    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (18/18 PASS)');
     console.log('======================================================\n');
   } finally {
     try { client.close(); } catch {}
