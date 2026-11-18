@@ -43,6 +43,7 @@ import {
   resolveSceneForAyah,
   resolveSceneJourney,
   resolveAyahVisualTimeline,
+  stripLeadingBismillah,
   type VisualSegment,
 } from './ayah-meaning-scene-engine';
 
@@ -71,6 +72,9 @@ export type SceneId =
   | 'rawdah-mihrab-prayer'
   | 'iron-chains-veil'
   | 'desert-fortress-history'
+  | 'sun-moon-orbit'
+  | 'celestial-creation'
+  | 'eloquence-light'
   // Legacy aliases
   | 'moonlit-ocean'
   | 'desert-sunset'
@@ -211,6 +215,27 @@ export const SCENE_DEFINITIONS: SceneDefinition[] = [
     subtitle: 'Sandstone Arches & Twilight Sky',
     icon: '🏜️',
     previewGradient: 'linear-gradient(135deg, #1a0928 0%, #7c2d12 50%, #f59e0b 100%)',
+  },
+  {
+    id: 'sun-moon-orbit',
+    name: 'Sun & Moon Orbit',
+    subtitle: 'Astrolabe Rings & Orbiting Luminaries',
+    icon: '🌗',
+    previewGradient: 'linear-gradient(135deg, #020617 0%, #1e1b4b 50%, #f59e0b 100%)',
+  },
+  {
+    id: 'celestial-creation',
+    name: 'Divine Creation',
+    subtitle: 'Ascending Stardust & Clay-Amber Light',
+    icon: '✨',
+    previewGradient: 'linear-gradient(135deg, #0f172a 0%, #2e1065 50%, #d97706 100%)',
+  },
+  {
+    id: 'eloquence-light',
+    name: 'Sacred Wisdom',
+    subtitle: 'Harmonic Soundwaves & Eloquent Light',
+    icon: '🪶',
+    previewGradient: 'linear-gradient(135deg, #022c22 0%, #0369a1 50%, #38bdf8 100%)',
   },
 ];
 
@@ -376,7 +401,8 @@ export function drawProceduralScene(
   w: number,
   h: number,
   timeSec: number,
-  zoomScale: number = 1.0
+  zoomScale: number = 1.0,
+  audioAmplitude: number = 0.0
 ): void {
   ctx.save();
 
@@ -895,8 +921,9 @@ export function drawProceduralScene(
     case 'straight-path': {
       // 6. Sirat al-Mustaqim / Guided Road (Surah Ya-Sin 36:3-4)
       const pGrad = ctx.createLinearGradient(0, 0, 0, h);
-      pGrad.addColorStop(0, '#040612');
-      pGrad.addColorStop(0.5, '#1e1b4b');
+      pGrad.addColorStop(0, '#030712');
+      pGrad.addColorStop(0.38, '#1e1b4b');
+      pGrad.addColorStop(0.72, '#78350f');
       pGrad.addColorStop(1, '#09090b');
       ctx.fillStyle = pGrad;
       ctx.fillRect(0, 0, w, h);
@@ -906,56 +933,131 @@ export function drawProceduralScene(
       ctx.scale(zoomScale, zoomScale);
       ctx.translate(-cx, -stageCenterY);
 
-      const portalY = h * 0.54;
+      const portalY = h * 0.52;
+      const ampPulse = 1.0 + Math.min(1.0, audioAmplitude * 1.5);
 
-      // Flanking rolling hills
+      // Layer 1: Distant Twilight Mountain Ridge with atmospheric haze
       ctx.fillStyle = '#0f172a';
       ctx.beginPath();
       ctx.moveTo(0, h);
-      ctx.lineTo(0, portalY + 30);
-      ctx.quadraticCurveTo(w * 0.25, portalY + 10, cx, portalY);
-      ctx.quadraticCurveTo(w * 0.75, portalY + 10, w, portalY + 30);
+      ctx.lineTo(0, portalY - 10);
+      ctx.lineTo(w * 0.22, portalY - 45);
+      ctx.lineTo(w * 0.42, portalY - 20);
+      ctx.lineTo(w * 0.58, portalY - 35);
+      ctx.lineTo(w * 0.78, portalY - 15);
+      ctx.lineTo(w, portalY - 40);
       ctx.lineTo(w, h);
       ctx.closePath();
       ctx.fill();
 
-      // 3D Perspective Road of Light converging to vanishing point
-      const roadGrad = ctx.createLinearGradient(0, h, 0, portalY);
-      roadGrad.addColorStop(0, '#F59E0B');
-      roadGrad.addColorStop(0.6, '#FDE047');
-      roadGrad.addColorStop(1, '#FFFFFF');
-
-      ctx.fillStyle = roadGrad;
+      // Layer 2: Midground Rolling Mountain Range with golden edge
+      ctx.fillStyle = '#1e1b4b';
       ctx.beginPath();
-      ctx.moveTo(cx - 8, portalY);
-      ctx.lineTo(cx + 8, portalY);
-      ctx.lineTo(cx + w * 0.38, h);
-      ctx.lineTo(cx - w * 0.38, h);
+      ctx.moveTo(0, h);
+      ctx.lineTo(0, portalY + 25);
+      ctx.quadraticCurveTo(w * 0.25, portalY - 15, cx, portalY + 10);
+      ctx.quadraticCurveTo(w * 0.75, portalY - 15, w, portalY + 25);
+      ctx.lineTo(w, h);
       ctx.closePath();
       ctx.fill();
 
-      // Dashed perspective center line
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 3;
-      for (let s = 0; s < 6; s++) {
-        const segProgress = s / 5;
-        const curY = portalY + Math.pow(segProgress, 1.8) * (h - portalY);
-        const nextY = portalY + Math.pow((s + 0.5) / 5, 1.8) * (h - portalY);
+      // Layer 3: Foreground Rocky Slopes
+      ctx.fillStyle = '#09090b';
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      ctx.lineTo(0, portalY + 45);
+      ctx.quadraticCurveTo(w * 0.22, portalY + 30, cx - 18, portalY + 12);
+      ctx.lineTo(cx - 8, portalY + 6);
+      ctx.lineTo(cx - 24, h);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(w, h);
+      ctx.lineTo(w, portalY + 45);
+      ctx.quadraticCurveTo(w * 0.78, portalY + 30, cx + 18, portalY + 12);
+      ctx.lineTo(cx + 8, portalY + 6);
+      ctx.lineTo(cx + 24, h);
+      ctx.closePath();
+      ctx.fill();
+
+      // 3D Perspective Glowing Golden-Mist Pathway with feathered edges
+      const roadGrad = ctx.createLinearGradient(0, h, 0, portalY);
+      roadGrad.addColorStop(0, '#f59e0b');
+      roadGrad.addColorStop(0.55, '#fde047');
+      roadGrad.addColorStop(1, '#ffffff');
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(253, 224, 71, 0.75)';
+      ctx.shadowBlur = Math.round(24 * ampPulse);
+      ctx.fillStyle = roadGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx - 6, portalY);
+      ctx.lineTo(cx + 6, portalY);
+      ctx.lineTo(cx + w * 0.36, h);
+      ctx.lineTo(cx - w * 0.36, h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Core intense white-gold beam of the path
+      const coreGrad = ctx.createLinearGradient(0, h, 0, portalY);
+      coreGrad.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
+      coreGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.95)');
+      coreGrad.addColorStop(1, '#ffffff');
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx - 2, portalY);
+      ctx.lineTo(cx + 2, portalY);
+      ctx.lineTo(cx + w * 0.12, h);
+      ctx.lineTo(cx - w * 0.12, h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Perspective dashed guidance beacons along path
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      for (let s = 0; s < 7; s++) {
+        const segProgress = s / 6;
+        const curY = portalY + Math.pow(segProgress, 2.0) * (h - portalY);
+        const nextY = portalY + Math.pow((s + 0.45) / 6, 2.0) * (h - portalY);
         ctx.beginPath();
         ctx.moveTo(cx, curY);
         ctx.lineTo(cx, nextY);
         ctx.stroke();
       }
 
-      // Radiant Arched Portal at Horizon
-      const pGlow = ctx.createRadialGradient(cx, portalY, 0, cx, portalY, 80);
-      pGlow.addColorStop(0, '#FFFFFF');
-      pGlow.addColorStop(0.4, 'rgba(253, 224, 71, 0.85)');
-      pGlow.addColorStop(1, 'rgba(253, 224, 71, 0)');
+      // Rising Golden Stardust along the road
+      for (let i = 0; i < 22; i++) {
+        const prog = (timeSec * 0.25 + i * 0.045) % 1.0;
+        const sy = h - prog * (h - portalY);
+        const spread = (1 - prog) * w * 0.32;
+        const sx = cx + Math.sin(i * 4.3 + timeSec) * spread;
+        const starAlpha = Math.sin(prog * Math.PI) * 0.85;
+        ctx.fillStyle = `rgba(253, 224, 71, ${starAlpha})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, (i % 2 === 0 ? 2.5 : 1.5) * ampPulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Radiant Arched Portal / Sun at Horizon with Volumetric Rays
+      const pRadius = Math.round(95 * ampPulse);
+      const pGlow = ctx.createRadialGradient(cx, portalY, 0, cx, portalY, pRadius);
+      pGlow.addColorStop(0, '#ffffff');
+      pGlow.addColorStop(0.35, 'rgba(253, 224, 71, 0.92)');
+      pGlow.addColorStop(0.7, 'rgba(245, 158, 11, 0.45)');
+      pGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
       ctx.fillStyle = pGlow;
       ctx.beginPath();
-      ctx.arc(cx, portalY, 80, 0, Math.PI * 2);
+      ctx.arc(cx, portalY, pRadius, 0, Math.PI * 2);
       ctx.fill();
+
+      // Golden horizon arch rim
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(cx, portalY, 32 * ampPulse, Math.PI, 0);
+      ctx.stroke();
 
       ctx.restore();
       break;
@@ -964,8 +1066,9 @@ export function drawProceduralScene(
     case 'blessed-tree-garden': {
       // 7. Blessed Olive Tree & Jannah Gardens
       const tGrad = ctx.createLinearGradient(0, 0, 0, h);
-      tGrad.addColorStop(0, '#022c22');
-      tGrad.addColorStop(0.5, '#064e3b');
+      tGrad.addColorStop(0, '#021811');
+      tGrad.addColorStop(0.42, '#064e3b');
+      tGrad.addColorStop(0.78, '#042f2e');
       tGrad.addColorStop(1, '#020617');
       ctx.fillStyle = tGrad;
       ctx.fillRect(0, 0, w, h);
@@ -976,73 +1079,120 @@ export function drawProceduralScene(
       ctx.translate(-cx, -stageCenterY);
 
       const treeY = h * 0.76;
+      const ampPulse = 1.0 + Math.min(1.0, audioAmplitude * 1.5);
+
+      // Moonlit Jannah Hill in midground
+      ctx.fillStyle = '#064e3b';
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      ctx.lineTo(0, treeY + 35);
+      ctx.quadraticCurveTo(cx * 0.5, treeY - 10, cx, treeY - 15);
+      ctx.quadraticCurveTo(cx * 1.5, treeY - 10, w, treeY + 35);
+      ctx.lineTo(w, h);
+      ctx.closePath();
+      ctx.fill();
 
       // Shimmering Turquoise River in foreground
-      const river = ctx.createLinearGradient(0, treeY + 20, 0, h);
+      const river = ctx.createLinearGradient(0, treeY + 30, 0, h);
       river.addColorStop(0, '#042f2e');
       river.addColorStop(0.5, '#0d9488');
-      river.addColorStop(1, '#0f172a');
+      river.addColorStop(1, '#022c22');
       ctx.fillStyle = river;
-      ctx.fillRect(0, treeY + 20, w, h - (treeY + 20));
+      ctx.fillRect(0, treeY + 30, w, h - (treeY + 30));
 
-      // Sculptural Olive/Jannah Tree
-      // Trunk & Branches
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 14;
+      // Water ripple reflections
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.25)';
+      ctx.lineWidth = 1.2;
+      for (let r = 0; r < 5; r++) {
+        const ry = treeY + 45 + r * 14;
+        const rx = cx + Math.sin(timeSec * 1.5 + r) * 40;
+        ctx.beginPath();
+        ctx.ellipse(rx, ry, 60 + r * 20, 3 + r * 0.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Sculptural Olive/Jannah Tree (Curved Bezier Trunk)
+      ctx.strokeStyle = '#5c2d12';
+      ctx.lineWidth = 18;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(cx, treeY + 20);
-      ctx.quadraticCurveTo(cx - 10, treeY - 40, cx, treeY - 80);
+      ctx.moveTo(cx, treeY + 15);
+      ctx.bezierCurveTo(cx - 24, treeY - 30, cx + 18, treeY - 65, cx, treeY - 105);
       ctx.stroke();
 
-      ctx.lineWidth = 7;
+      // Bark highlight
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 10;
       ctx.beginPath();
-      ctx.moveTo(cx, treeY - 70);
-      ctx.quadraticCurveTo(cx - 35, treeY - 95, cx - 60, treeY - 110);
-      ctx.moveTo(cx, treeY - 70);
-      ctx.quadraticCurveTo(cx + 35, treeY - 95, cx + 60, treeY - 110);
+      ctx.moveTo(cx + 2, treeY + 10);
+      ctx.bezierCurveTo(cx - 18, treeY - 30, cx + 14, treeY - 65, cx + 2, treeY - 100);
       ctx.stroke();
 
-      // Layered Emerald & Golden Foliage Canopy
-      const clusters = [
-        { x: cx, y: treeY - 120, r: 48 },
-        { x: cx - 45, y: treeY - 105, r: 38 },
-        { x: cx + 45, y: treeY - 105, r: 38 },
+      // 12 Organic Tapered Branches
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 6;
+      const branches = [
+        { sx: cx - 4, sy: treeY - 80, cpx: cx - 45, cpy: treeY - 110, ex: cx - 90, ey: treeY - 125 },
+        { sx: cx + 4, sy: treeY - 80, cpx: cx + 45, cpy: treeY - 110, ex: cx + 90, ey: treeY - 125 },
+        { sx: cx - 2, sy: treeY - 95, cpx: cx - 35, cpy: treeY - 130, ex: cx - 70, ey: treeY - 150 },
+        { sx: cx + 2, sy: treeY - 95, cpx: cx + 35, cpy: treeY - 130, ex: cx + 70, ey: treeY - 150 },
+        { sx: cx, sy: treeY - 105, cpx: cx - 18, cpy: treeY - 145, ex: cx - 35, ey: treeY - 170 },
+        { sx: cx, sy: treeY - 105, cpx: cx + 18, cpy: treeY - 145, ex: cx + 35, ey: treeY - 170 },
+      ];
+      for (const b of branches) {
+        ctx.beginPath();
+        ctx.moveTo(b.sx, b.sy);
+        ctx.quadraticCurveTo(b.cpx, b.cpy, b.ex, b.ey);
+        ctx.stroke();
+      }
+
+      // Layered Emerald, Mint & Golden Foliage Clusters (~60 clusters)
+      const foliageNodes = [
+        { x: cx, y: treeY - 175, r: 42 },
+        { x: cx - 40, y: treeY - 165, r: 38 },
+        { x: cx + 40, y: treeY - 165, r: 38 },
+        { x: cx - 75, y: treeY - 140, r: 36 },
+        { x: cx + 75, y: treeY - 140, r: 36 },
+        { x: cx - 95, y: treeY - 115, r: 30 },
+        { x: cx + 95, y: treeY - 115, r: 30 },
         { x: cx - 25, y: treeY - 135, r: 34 },
         { x: cx + 25, y: treeY - 135, r: 34 },
+        { x: cx, y: treeY - 130, r: 35 },
       ];
 
-      for (const c of clusters) {
-        const cG = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+      for (const fn of foliageNodes) {
+        const cG = ctx.createRadialGradient(fn.x, fn.y, 0, fn.x, fn.y, fn.r);
         cG.addColorStop(0, '#34d399');
-        cG.addColorStop(0.6, '#059669');
-        cG.addColorStop(1, '#064e3b');
+        cG.addColorStop(0.55, '#059669');
+        cG.addColorStop(0.85, '#064e3b');
+        cG.addColorStop(1, 'rgba(4, 47, 46, 0.4)');
         ctx.fillStyle = cG;
         ctx.beginPath();
-        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.arc(fn.x, fn.y, fn.r, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Golden Olives / Fruits glowing
-      for (let f = 0; f < 9; f++) {
-        const fx = cx + Math.sin(f * 1.8) * 55;
-        const fy = treeY - 110 + Math.cos(f * 2.3) * 35;
+      // Golden Olives / Jannah Fruits glowing with audio pulse
+      for (let f = 0; f < 12; f++) {
+        const fx = cx + Math.sin(f * 1.7) * 80;
+        const fy = treeY - 145 + Math.cos(f * 2.1) * 45;
         ctx.fillStyle = '#fde047';
         ctx.shadowColor = '#f59e0b';
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10 * ampPulse;
         ctx.beginPath();
-        ctx.arc(fx, fy, 4, 0, Math.PI * 2);
+        ctx.arc(fx, fy, 4.5 * ampPulse, 0, Math.PI * 2);
         ctx.fill();
       }
-
-      // Orbiting Golden Fireflies
       ctx.shadowBlur = 0;
-      for (let i = 0; i < 14; i++) {
-        const flyX = cx + Math.sin(timeSec * 2.5 + i * 0.9) * 85;
-        const flyY = treeY - 100 + Math.cos(timeSec * 1.8 + i * 1.2) * 50;
-        ctx.fillStyle = 'rgba(253, 224, 71, 0.85)';
+
+      // Drifting Golden Fireflies (16 fireflies)
+      for (let i = 0; i < 16; i++) {
+        const flyX = cx + Math.sin(timeSec * 2.0 + i * 0.8) * 110;
+        const flyY = treeY - 135 + Math.cos(timeSec * 1.6 + i * 1.1) * 65;
+        const flyAlpha = 0.4 + 0.5 * Math.sin(timeSec * 3.0 + i);
+        ctx.fillStyle = `rgba(253, 224, 71, ${flyAlpha})`;
         ctx.beginPath();
-        ctx.arc(flyX, flyY, (i % 2 === 0 ? 2.5 : 1.5), 0, Math.PI * 2);
+        ctx.arc(flyX, flyY, (i % 2 === 0 ? 2.5 : 1.6) * ampPulse, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -1431,9 +1581,9 @@ export function drawProceduralScene(
     case 'kaaba-sanctuary': {
       // 13. The Sacred Kaaba & Makkah (Isometric Kiswah & Tawaf)
       const kGrad = ctx.createRadialGradient(cx, stageCenterY, 0, cx, stageCenterY, w * 0.75);
-      kGrad.addColorStop(0, '#18181b');
-      kGrad.addColorStop(0.6, '#09090b');
-      kGrad.addColorStop(1, '#020203');
+      kGrad.addColorStop(0, '#111116');
+      kGrad.addColorStop(0.55, '#08080b');
+      kGrad.addColorStop(1, '#020204');
       ctx.fillStyle = kGrad;
       ctx.fillRect(0, 0, w, h);
 
@@ -1443,28 +1593,43 @@ export function drawProceduralScene(
       ctx.translate(-cx, -stageCenterY);
 
       const kaabaY = h * 0.65;
-      const kw = 70;
-      const kh = 85;
+      const kw = 86;
+      const kh = 100;
+      const ampPulse = 1.0 + Math.min(1.0, audioAmplitude * 1.5);
 
-      // Concentric Tawaf light rings on Mataf floor
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 1.2;
-      for (let r = 1; r <= 3; r++) {
+      // White Marble Mataf Floor with concentric perspective Tawaf orbits
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.28)';
+      ctx.lineWidth = 1.4;
+      for (let r = 1; r <= 4; r++) {
         ctx.beginPath();
-        ctx.ellipse(cx, kaabaY + 45, 95 + r * 30, 35 + r * 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, kaabaY + 55, 110 + r * 32, 42 + r * 12, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // Column of divine Noor ascending into heavens
-      const noor = ctx.createLinearGradient(cx, kaabaY - kh, cx, kaabaY - kh - 200);
-      noor.addColorStop(0, 'rgba(253, 224, 71, 0.35)');
-      noor.addColorStop(1, 'rgba(253, 224, 71, 0)');
-      ctx.fillStyle = noor;
-      ctx.fillRect(cx - 24, kaabaY - kh - 200, 48, 200);
+      // Golden Tawaf light particles orbiting the Kaaba
+      for (let t = 0; t < 18; t++) {
+        const tAngle = timeSec * 1.4 + (t / 18) * Math.PI * 2;
+        const tRadX = 120 + (t % 3) * 35;
+        const tRadY = 46 + (t % 3) * 13;
+        const tx = cx + Math.cos(tAngle) * tRadX;
+        const ty = kaabaY + 55 + Math.sin(tAngle) * tRadY;
+        ctx.fillStyle = 'rgba(253, 224, 71, 0.85)';
+        ctx.beginPath();
+        ctx.arc(tx, ty, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      // Kaaba Cube (Isometric View)
-      // Front Face
-      ctx.fillStyle = '#09090b';
+      // Ascending Pillar of Divine Noor into the celestial skies
+      const noor = ctx.createLinearGradient(cx, kaabaY - kh, cx, kaabaY - kh - 220);
+      noor.addColorStop(0, `rgba(253, 224, 71, ${0.40 * ampPulse})`);
+      noor.addColorStop(0.5, `rgba(212, 175, 55, ${0.20 * ampPulse})`);
+      noor.addColorStop(1, 'rgba(212, 175, 55, 0)');
+      ctx.fillStyle = noor;
+      ctx.fillRect(cx - 30, kaabaY - kh - 220, 60, 220);
+
+      // Authentic 3D Isometric Silhouette of Sacred Kaaba
+      // Left / Front-Left Face (Matte Obsidian)
+      ctx.fillStyle = '#0a0a0d';
       ctx.beginPath();
       ctx.moveTo(cx - kw * 0.5, kaabaY - kh * 0.4);
       ctx.lineTo(cx, kaabaY);
@@ -1473,8 +1638,8 @@ export function drawProceduralScene(
       ctx.closePath();
       ctx.fill();
 
-      // Right Face
-      ctx.fillStyle = '#18181b';
+      // Right Face (Subtle Shadow Obsidian)
+      ctx.fillStyle = '#141419';
       ctx.beginPath();
       ctx.moveTo(cx, kaabaY);
       ctx.lineTo(cx + kw * 0.5, kaabaY - kh * 0.4);
@@ -1483,8 +1648,8 @@ export function drawProceduralScene(
       ctx.closePath();
       ctx.fill();
 
-      // Roof Face
-      ctx.fillStyle = '#27272a';
+      // Top Roof Slab
+      ctx.fillStyle = '#22222a';
       ctx.beginPath();
       ctx.moveTo(cx, kaabaY - kh * 0.8);
       ctx.lineTo(cx + kw * 0.5, kaabaY - kh * 0.4);
@@ -1493,24 +1658,48 @@ export function drawProceduralScene(
       ctx.closePath();
       ctx.fill();
 
-      // Gleaming Golden Hizam Band
+      // Gleaming Golden Kiswah Hizam Band (Belt of the Kaaba)
       ctx.strokeStyle = '#dca349';
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 6;
       ctx.beginPath();
       ctx.moveTo(cx - kw * 0.5, kaabaY - kh * 0.2);
       ctx.lineTo(cx, kaabaY + kh * 0.2);
       ctx.lineTo(cx + kw * 0.5, kaabaY - kh * 0.2);
       ctx.stroke();
 
-      // Bab al-Kaaba (Door)
-      ctx.fillStyle = '#f59e0b';
+      // Embroidered calligraphy dash accents on Kiswah Band
+      ctx.strokeStyle = '#fffbeb';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 4]);
       ctx.beginPath();
-      ctx.moveTo(cx - 20, kaabaY + kh * 0.25);
-      ctx.lineTo(cx - 8, kaabaY + kh * 0.35);
-      ctx.lineTo(cx - 8, kaabaY + kh * 0.55);
-      ctx.lineTo(cx - 20, kaabaY + kh * 0.45);
+      ctx.moveTo(cx - kw * 0.5 + 4, kaabaY - kh * 0.2);
+      ctx.lineTo(cx, kaabaY + kh * 0.2);
+      ctx.lineTo(cx + kw * 0.5 - 4, kaabaY - kh * 0.2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Bab al-Kaaba (Golden Door on Front Face)
+      ctx.fillStyle = '#dca349';
+      ctx.beginPath();
+      ctx.moveTo(cx - 24, kaabaY + kh * 0.22);
+      ctx.lineTo(cx - 10, kaabaY + kh * 0.34);
+      ctx.lineTo(cx - 10, kaabaY + kh * 0.56);
+      ctx.lineTo(cx - 24, kaabaY + kh * 0.44);
       ctx.closePath();
       ctx.fill();
+
+      // Golden door frame highlight
+      ctx.strokeStyle = '#fffbeb';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Meezab al-Rahmah (Golden Rain Spout on Roof)
+      ctx.strokeStyle = '#fde047';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - kw * 0.25, kaabaY - kh * 0.6);
+      ctx.lineTo(cx - kw * 0.35, kaabaY - kh * 0.65);
+      ctx.stroke();
 
       ctx.restore();
       break;
@@ -1672,6 +1861,265 @@ export function drawProceduralScene(
       break;
     }
 
+    case 'sun-moon-orbit': {
+      // 17. Sun & Moon Orbit in Cosmic Balance (Surah Ar-Rahman 55:5)
+      const smGrad = ctx.createRadialGradient(cx, stageCenterY, 0, cx, stageCenterY, w * 0.85);
+      smGrad.addColorStop(0, '#0a0f29');
+      smGrad.addColorStop(0.5, '#020617');
+      smGrad.addColorStop(1, '#000208');
+      ctx.fillStyle = smGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.translate(cx, stageCenterY);
+      ctx.scale(zoomScale, zoomScale);
+      ctx.translate(-cx, -stageCenterY);
+
+      const ampPulse = 1.0 + Math.min(1.0, audioAmplitude * 1.5);
+
+      // Fine background stars
+      for (let s = 0; s < 36; s++) {
+        const sx = (s * 47) % w;
+        const sy = (s * 83) % Math.round(h * 0.85);
+        const sa = 0.3 + 0.6 * Math.sin(timeSec * 2.0 + s);
+        ctx.fillStyle = `rgba(255, 255, 255, ${sa})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, s % 4 === 0 ? 1.8 : 1.0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Intricate Astrolabe Coordinate Rings
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(cx, stageCenterY, 130, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.18)';
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      ctx.arc(cx, stageCenterY, 150, 0, Math.PI * 2);
+      ctx.arc(cx, stageCenterY, 110, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Two Inclined Elliptical Golden Orbit Rings (ecliptic & lunar)
+      ctx.save();
+      ctx.translate(cx, stageCenterY);
+      ctx.rotate(-0.35); // 20 degree tilt
+
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 160, 65, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Calculation of celestial positions in mathematical harmony (Surah 55:5 بحسبان)
+      const sunAngle = timeSec * 0.7;
+      const sunX = Math.cos(sunAngle) * 160;
+      const sunY = Math.sin(sunAngle) * 65;
+
+      const moonAngle = sunAngle + Math.PI; // Exactly opposite node
+      const moonX = Math.cos(moonAngle) * 160;
+      const moonY = Math.sin(moonAngle) * 65;
+
+      // 1. THE RADIANT SUN
+      const sunGlowR = Math.round(38 * ampPulse);
+      const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunGlowR);
+      sunGlow.addColorStop(0, '#ffffff');
+      sunGlow.addColorStop(0.35, '#fde047');
+      sunGlow.addColorStop(0.7, 'rgba(245, 158, 11, 0.6)');
+      sunGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = sunGlow;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunGlowR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sun core & rotating light rays
+      ctx.fillStyle = '#fffbeb';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(253, 224, 71, 0.75)';
+      ctx.lineWidth = 1.8;
+      for (let r = 0; r < 8; r++) {
+        const rAng = timeSec * 0.5 + (r / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(sunX + Math.cos(rAng) * 16, sunY + Math.sin(rAng) * 16);
+        ctx.lineTo(sunX + Math.cos(rAng) * (26 * ampPulse), sunY + Math.sin(rAng) * (26 * ampPulse));
+        ctx.stroke();
+      }
+
+      // 2. THE LUMINOUS SILVER MOON
+      const moonGlowR = Math.round(28 * ampPulse);
+      const moonGlow = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, moonGlowR);
+      moonGlow.addColorStop(0, '#ffffff');
+      moonGlow.addColorStop(0.4, 'rgba(224, 242, 254, 0.6)');
+      moonGlow.addColorStop(1, 'rgba(224, 242, 254, 0)');
+      ctx.fillStyle = moonGlow;
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonGlowR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Crescent Moon silhouette
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0a0f29';
+      ctx.beginPath();
+      ctx.arc(moonX + 3.5, moonY - 2.5, 9.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+      ctx.restore();
+      break;
+    }
+
+    case 'celestial-creation': {
+      // 18. Creation of Man & Stardust (Surah Ar-Rahman 55:3)
+      const cGrad = ctx.createRadialGradient(cx, stageCenterY, 0, cx, stageCenterY, w * 0.85);
+      cGrad.addColorStop(0, '#2e1065');
+      cGrad.addColorStop(0.45, '#180e29');
+      cGrad.addColorStop(0.8, '#451a03');
+      cGrad.addColorStop(1, '#030712');
+      ctx.fillStyle = cGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.translate(cx, stageCenterY);
+      ctx.scale(zoomScale, zoomScale);
+      ctx.translate(-cx, -stageCenterY);
+
+      const ampPulse = 1.0 + Math.min(1.0, audioAmplitude * 1.5);
+      const baseY = h * 0.78;
+
+      // Clay-Amber Warm Glow at base (صلصال كالفخار)
+      const baseAura = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, 140 * ampPulse);
+      baseAura.addColorStop(0, 'rgba(217, 119, 6, 0.75)');
+      baseAura.addColorStop(0.5, 'rgba(180, 83, 9, 0.35)');
+      baseAura.addColorStop(1, 'rgba(180, 83, 9, 0)');
+      ctx.fillStyle = baseAura;
+      ctx.beginPath();
+      ctx.arc(cx, baseY, 140 * ampPulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ascending Double-Helix of Golden Stardust & Ethereal Particles
+      const numParticles = 48;
+      for (let p = 0; p < numParticles; p++) {
+        const prog = (timeSec * 0.22 + p / numParticles) % 1.0;
+        const py = baseY - prog * (baseY - (stageCenterY - 140));
+        const helixAngle = prog * Math.PI * 6 + (p % 2 === 0 ? 0 : Math.PI);
+        const radius = Math.sin(prog * Math.PI) * 55 + 10;
+        const px = cx + Math.cos(helixAngle) * radius;
+
+        const pAlpha = Math.sin(prog * Math.PI) * 0.9;
+        ctx.fillStyle =
+          p % 2 === 0
+            ? `rgba(253, 224, 71, ${pAlpha})`
+            : `rgba(217, 119, 6, ${pAlpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, (p % 3 === 0 ? 3.0 : 1.8) * ampPulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Celestial Crown of Divine Spirit at Zenith (ونفخت فيه من روحي)
+      const crownY = stageCenterY - 140;
+      const crownGlow = ctx.createRadialGradient(cx, crownY, 0, cx, crownY, 70 * ampPulse);
+      crownGlow.addColorStop(0, '#ffffff');
+      crownGlow.addColorStop(0.35, 'rgba(253, 224, 71, 0.85)');
+      crownGlow.addColorStop(0.7, 'rgba(217, 119, 6, 0.35)');
+      crownGlow.addColorStop(1, 'rgba(217, 119, 6, 0)');
+      ctx.fillStyle = crownGlow;
+      ctx.beginPath();
+      ctx.arc(cx, crownY, 70 * ampPulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Radiating golden sparks from celestial crown
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.lineWidth = 1.5;
+      for (let s = 0; s < 8; s++) {
+        const sAng = timeSec * 0.6 + (s / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(sAng) * 12, crownY + Math.sin(sAng) * 12);
+        ctx.lineTo(cx + Math.cos(sAng) * (28 * ampPulse), crownY + Math.sin(sAng) * (28 * ampPulse));
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      break;
+    }
+
+    case 'eloquence-light': {
+      // 19. Sacred Wisdom, Speech & Eloquence (Surah Ar-Rahman 55:4)
+      const eGrad = ctx.createLinearGradient(0, 0, 0, h);
+      eGrad.addColorStop(0, '#020b14');
+      eGrad.addColorStop(0.45, '#082f49');
+      eGrad.addColorStop(0.8, '#064e3b');
+      eGrad.addColorStop(1, '#021811');
+      ctx.fillStyle = eGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.translate(cx, stageCenterY);
+      ctx.scale(zoomScale, zoomScale);
+      ctx.translate(-cx, -stageCenterY);
+
+      const ampPulse = 1.0 + Math.min(1.0, audioAmplitude * 1.5);
+
+      // Concentric Harmonic Soundwave Rings rippling outward (البيان)
+      ctx.lineWidth = 1.5;
+      for (let r = 0; r < 5; r++) {
+        const waveProg = (timeSec * 0.5 + r * 0.2) % 1.0;
+        const waveRadius = 30 + waveProg * 140;
+        const waveAlpha = (1 - waveProg) * 0.45 * ampPulse;
+        ctx.strokeStyle = `rgba(56, 189, 248, ${waveAlpha})`;
+        ctx.beginPath();
+        ctx.arc(cx, stageCenterY, waveRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Sacred Geometry Diamond Star Frame
+      ctx.save();
+      ctx.translate(cx, stageCenterY);
+      ctx.rotate(timeSec * 0.15);
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+      ctx.lineWidth = 1.8;
+      const sz = 65 * ampPulse;
+      ctx.strokeRect(-sz * 0.5, -sz * 0.5, sz, sz);
+      ctx.rotate(Math.PI * 0.25);
+      ctx.strokeRect(-sz * 0.5, -sz * 0.5, sz, sz);
+      ctx.restore();
+
+      // Ascending Calligraphic Light Sparks (Articulation of words & wisdom)
+      for (let s = 0; s < 20; s++) {
+        const prog = (timeSec * 0.35 + s * 0.05) % 1.0;
+        const sy = stageCenterY + 70 - prog * 160;
+        const sx = cx + Math.sin(s * 2.7 + timeSec * 1.2) * (30 + prog * 50);
+        const sAlpha = Math.sin(prog * Math.PI) * 0.85;
+        ctx.fillStyle = `rgba(253, 224, 71, ${sAlpha})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, (s % 3 === 0 ? 2.5 : 1.5) * ampPulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Central Pulsating Light of Wisdom
+      const coreR = Math.round(36 * ampPulse);
+      const coreGlow = ctx.createRadialGradient(cx, stageCenterY, 0, cx, stageCenterY, coreR);
+      coreGlow.addColorStop(0, '#ffffff');
+      coreGlow.addColorStop(0.4, 'rgba(56, 189, 248, 0.85)');
+      coreGlow.addColorStop(0.75, 'rgba(5, 150, 105, 0.4)');
+      coreGlow.addColorStop(1, 'rgba(5, 150, 105, 0)');
+      ctx.fillStyle = coreGlow;
+      ctx.beginPath();
+      ctx.arc(cx, stageCenterY, coreR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+      break;
+    }
+
     case 'auto-meaning':
     default: {
       // Standalone Multi-Hue Celestial Aurora (for Auto Meaning preview)
@@ -1760,22 +2208,45 @@ export function prerenderAyahOffscreenCanvas(params: {
 
   // ZONE A — Upper Typography Stage (y = 8% to 34% of canvas height)
   // 1. Top Small Header (y = 10%)
+  const isAyah1BismillahExcluded =
+    ayah.ayahNumber === 1 && ayah.surahNumber !== 1 && ayah.surahNumber !== 9;
   const headerY = Math.round(height * 0.10);
+
   ctx.save();
   ctx.textAlign = 'center';
-  ctx.font = '700 18px "Amiri", "Scheherazade New", serif';
-  ctx.fillStyle = 'rgba(235, 210, 160, 0.85)';
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-  ctx.shadowBlur = 6;
-  ctx.fillText(
-    `سُورَةُ ${surahNameArabic || 'الْقُرْآن'} • Ayah ${ayah.ayahNumber}`,
-    width * 0.5,
-    headerY
-  );
+  if (isAyah1BismillahExcluded) {
+    // Elegant Ornamental ﷽ Cartouche for Ayah 1 of Surahs 2–114
+    ctx.font = '700 24px "Amiri", "Scheherazade New", serif';
+    ctx.fillStyle = '#DCA349';
+    ctx.shadowColor = 'rgba(212, 175, 55, 0.45)';
+    ctx.shadowBlur = 8;
+    ctx.fillText('﷽', width * 0.5, headerY - 6);
+
+    ctx.font = '700 15px "Amiri", "Scheherazade New", serif';
+    ctx.fillStyle = 'rgba(235, 210, 160, 0.85)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(
+      `سُورَةُ ${surahNameArabic || 'الْقُرْآن'} • Ayah ${ayah.ayahNumber}`,
+      width * 0.5,
+      headerY + 18
+    );
+  } else {
+    ctx.font = '700 18px "Amiri", "Scheherazade New", serif';
+    ctx.fillStyle = 'rgba(235, 210, 160, 0.85)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 6;
+    ctx.fillText(
+      `سُورَةُ ${surahNameArabic || 'الْقُرْآن'} • Ayah ${ayah.ayahNumber}`,
+      width * 0.5,
+      headerY
+    );
+  }
   ctx.restore();
 
   // 2. Arabic Ayah & Translation
-  const arabicTextRaw = withTashkeel ? ayah.textUthmani : stripTashkeel(ayah.textUthmani);
+  const cleanAyahText = stripLeadingBismillah(ayah.textUthmani, ayah.surahNumber, ayah.ayahNumber);
+  const arabicTextRaw = withTashkeel ? cleanAyahText : stripTashkeel(cleanAyahText);
   const arabicContent = arabicTextRaw || 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
 
   let arabicFontSize = isLandscape ? 28 : width < 800 ? 32 : 40;
@@ -2023,6 +2494,29 @@ export async function renderAyahImageCard(params: {
 }
 
 /**
+ * Synthetic Stereo Impulse Response for Sacred Haramain Hall Reverb
+ * 100% Offline, Procedural Exponential Decay Convolution (1.8s duration)
+ */
+export function createHaramainImpulseResponse(
+  ctx: AudioContext,
+  duration = 1.8,
+  decay = 2.4
+): AudioBuffer {
+  const rate = ctx.sampleRate;
+  const length = Math.floor(rate * duration);
+  const impulse = ctx.createBuffer(2, length, rate);
+  const left = impulse.getChannelData(0);
+  const right = impulse.getChannelData(1);
+  for (let i = 0; i < length; i++) {
+    const t = i / rate;
+    const env = Math.exp(-t * decay);
+    left[i] = (Math.random() * 2 - 1) * env;
+    right[i] = (Math.random() * 2 - 1) * env;
+  }
+  return impulse;
+}
+
+/**
  * Tab 1: BULLETPROOF CANVAS + WEBAUDIO RECITATION VIDEO ENGINE
  * Combines 30FPS Animated Canvas + Multi-Ayah Qari Tilawah Audio Sync
  * With Sub-Ayah Phrase Choreography & Ken Burns 1.00x -> 1.08x Camera Push
@@ -2037,6 +2531,7 @@ export async function renderRecitationVideoClip(params: {
   sceneId: SceneId;
   withTashkeel: boolean;
   subtitleLang: string;
+  audioMastering?: 'haramain' | 'pure';
   onProgress?: (info: RenderProgressUpdate) => void;
   signal?: AbortSignal;
 }): Promise<{ blob: Blob; mimeType: string; extension: string; duration: number }> {
@@ -2050,6 +2545,7 @@ export async function renderRecitationVideoClip(params: {
     sceneId,
     withTashkeel,
     subtitleLang,
+    audioMastering = 'haramain',
     onProgress,
     signal,
   } = params;
@@ -2240,13 +2736,57 @@ export async function renderRecitationVideoClip(params: {
   recorder.start(100);
 
   // SAFEGUARD 4 — Schedule AudioBufferSourceNodes on AudioContext Timeline
+  // WebAudio Mastering Chain with Haramain Reverb & 0.25s Fade-In / 0.45s Fade-Out
   const startAudioTime = audioContext.currentTime + 0.05; // 50ms buffer lead-in
   const activeSources: AudioBufferSourceNode[] = [];
+
+  const masterGain = audioContext.createGain();
+  masterGain.connect(streamDest);
+
+  // Audio Analyser for dynamic visual pulsing (< 0.1ms overhead)
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 256;
+  masterGain.connect(analyser);
+  const timeData = new Uint8Array(analyser.frequencyBinCount);
+
+  // Fade-in 0.25s at beginning
+  masterGain.gain.setValueAtTime(0.0001, startAudioTime);
+  masterGain.gain.exponentialRampToValueAtTime(1.0, startAudioTime + 0.25);
+
+  // Fade-out 0.45s at end
+  const fadeOutStart = Math.max(startAudioTime + 0.25, startAudioTime + totalDuration - 0.45);
+  masterGain.gain.setValueAtTime(1.0, fadeOutStart);
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, startAudioTime + totalDuration);
+
+  let dryGain: GainNode;
+  let wetGain: GainNode;
+  let convolver: ConvolverNode | null = null;
+
+  if (audioMastering === 'haramain') {
+    convolver = audioContext.createConvolver();
+    convolver.buffer = createHaramainImpulseResponse(audioContext, 1.8, 2.4);
+
+    dryGain = audioContext.createGain();
+    dryGain.gain.value = 0.78;
+    dryGain.connect(masterGain);
+
+    wetGain = audioContext.createGain();
+    wetGain.gain.value = 0.22;
+    convolver.connect(wetGain);
+    wetGain.connect(masterGain);
+  } else {
+    dryGain = audioContext.createGain();
+    dryGain.gain.value = 1.0;
+    dryGain.connect(masterGain);
+  }
 
   for (const item of timeline) {
     const src = audioContext.createBufferSource();
     src.buffer = item.audioBuffer;
-    src.connect(streamDest);
+    src.connect(dryGain);
+    if (convolver) {
+      src.connect(convolver);
+    }
     src.start(startAudioTime + item.startTime);
     activeSources.push(src);
   }
@@ -2285,6 +2825,16 @@ export async function renderRecitationVideoClip(params: {
       const timeInSeg = Math.max(0, timeInAyah - segStartTime);
       const segDuration = Math.max(0.1, segEndTime - segStartTime);
 
+      // Compute audio amplitude for real-time visual breathing/pulsing
+      analyser.getByteTimeDomainData(timeData);
+      let sum = 0;
+      for (let b = 0; b < timeData.length; b++) {
+        const norm = (timeData[b] - 128) / 128;
+        sum += norm * norm;
+      }
+      const rms = Math.sqrt(sum / timeData.length);
+      const audioAmp = Math.min(1.0, rms * 3.5);
+
       // Ken Burns 1.00x -> 1.08x camera zoom push
       const zoomProgress = Math.min(1.0, Math.max(0.0, timeInSeg / segDuration));
       const zoomScale = 1.00 + 0.08 * zoomProgress;
@@ -2301,27 +2851,44 @@ export async function renderRecitationVideoClip(params: {
         }
 
         if (prevScene !== currScene && timeInSeg < 0.50) {
-          drawProceduralScene(ctx, prevScene, dims.width, dims.height, visualElapsed, 1.08);
+          drawProceduralScene(ctx, prevScene, dims.width, dims.height, visualElapsed, 1.08, audioAmp);
           const crossProgress = timeInSeg / 0.50;
           const easeAlpha = crossProgress * crossProgress * (3 - 2 * crossProgress);
           ctx.save();
           ctx.globalAlpha = Math.max(0, Math.min(1, easeAlpha));
-          drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale);
+          drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale, audioAmp);
           ctx.restore();
         } else {
-          drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale);
+          drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale, audioAmp);
         }
       } else {
-        drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale);
+        drawProceduralScene(ctx, currScene, dims.width, dims.height, visualElapsed, zoomScale, audioAmp);
       }
 
-      // Draw Pre-rendered Active Ayah Bitmap with 0.25s boundary fade
+      // Draw Pre-rendered Active Ayah Bitmap with 0.6s Cinematic Reveal (translateY 14px -> 0px + alpha 0 -> 1)
       const cachedBmp = cachedAyahBitmaps.get(activeTimelineItem.ayahNumber);
       if (cachedBmp) {
-        const textAlpha = Math.min(1.0, timeInAyah / 0.25);
+        const revealProgress = Math.min(1.0, timeInAyah / 0.60);
+        const ease = 1 - Math.pow(1 - revealProgress, 3);
+        const translateY = Math.round(14 * (1 - ease));
+        const textAlpha = ease;
+
         ctx.save();
         ctx.globalAlpha = textAlpha;
-        ctx.drawImage(cachedBmp, 0, 0);
+        ctx.drawImage(cachedBmp, 0, translateY);
+
+        // Golden light sweep across active verse during reveal (first 0.7s)
+        if (timeInAyah < 0.70) {
+          const sweepX = (timeInAyah / 0.70) * (dims.width + 240) - 120;
+          const sweepGrad = ctx.createLinearGradient(sweepX - 80, 0, sweepX + 80, 0);
+          sweepGrad.addColorStop(0, 'rgba(253, 224, 71, 0)');
+          sweepGrad.addColorStop(0.5, 'rgba(253, 224, 71, 0.22)');
+          sweepGrad.addColorStop(1, 'rgba(253, 224, 71, 0)');
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = sweepGrad;
+          ctx.fillRect(0, Math.round(dims.height * 0.08), dims.width, Math.round(dims.height * 0.28));
+        }
+
         ctx.restore();
       }
 
@@ -2399,12 +2966,16 @@ export async function renderRecitationVideoClip(params: {
  */
 export async function exportAndShareClip(params: {
   blob: Blob;
-  fileName: string;
-  mimeType: string;
+  fileName?: string;
+  filename?: string;
+  mimeType?: string;
   title: string;
   text: string;
+  onToast?: (message: string) => void;
 }): Promise<void> {
-  const { blob, fileName, mimeType, title, text } = params;
+  const { blob, title, text, onToast } = params;
+  const fileName = params.fileName || params.filename || 'noor-clip.mp4';
+  const mimeType = params.mimeType || (fileName.endsWith('.png') ? 'image/png' : 'video/mp4');
 
   // 1. Capacitor Native Android Path
   if (Capacitor.isNativePlatform()) {
@@ -2440,6 +3011,7 @@ export async function exportAndShareClip(params: {
       ) {
         return;
       }
+      onToast?.('Opening browser download fallback...');
       // Fall through to browser download on error
     }
   }

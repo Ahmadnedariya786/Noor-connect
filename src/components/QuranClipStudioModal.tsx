@@ -5,7 +5,7 @@
  * Styled purely with Noor Connect's active CSS theme tokens and 360px viewport safety.
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X,
@@ -42,7 +42,7 @@ import {
 import { QURAN_RECITERS, getReciterById } from '@/lib/quran-reciters';
 import { useTilawah } from '@/contexts/TilawahContext';
 import { memoryPageCache } from '@/lib/interactive-mushaf';
-import { resolveSceneJourney } from '@/lib/ayah-meaning-scene-engine';
+import { resolveSceneJourney, stripLeadingBismillah } from '@/lib/ayah-meaning-scene-engine';
 
 export interface QuranClipStudioModalProps {
   isOpen: boolean;
@@ -87,6 +87,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
   const [sceneId, setSceneId] = useState<SceneId>('auto-meaning');
   const [withTashkeel, setWithTashkeel] = useState<boolean>(true);
   const [subtitleLang, setSubtitleLang] = useState<'none' | 'en' | 'ur' | 'hi' | 'gu'>('en');
+  const [audioMastering, setAudioMastering] = useState<'haramain' | 'pure'>('haramain');
 
   // Reciter Selection
   const [selectedReciterId, setSelectedReciterId] = useState<string>(
@@ -342,7 +343,8 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     const list: ClipAyahData[] = [];
     for (let a = fromAyah; a <= toAyah; a++) {
       const data = versesData[a];
-      const text = data?.textUthmani || '';
+      const rawText = data?.textUthmani || '';
+      const text = stripLeadingBismillah(rawText, surahNumber, a);
       const translation = subtitleLang !== 'none' ? data?.translations?.[subtitleLang] : undefined;
       list.push({
         ayahNumber: a,
@@ -374,18 +376,28 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     }
   };
 
+  // 1-Tap Smart Range (selects ~15–28s thematic clip of 3–5 verses)
+  const handleSmartRange = useCallback(() => {
+    const idealAyahCount = 4;
+    const targetTo = Math.min(totalAyahsInSurah, Math.min(fromAyah + 9, fromAyah + idealAyahCount - 1));
+    handleToAyahChange(targetTo);
+    toast.success(`✨ Smart Range: Ayahs ${fromAyah}–${targetTo} selected (~20s reel)`);
+  }, [fromAyah, totalAyahsInSurah, handleToAyahChange]);
+
   // Opening Arabic Snippets for Stepper Previews
   const fromSnippet = useMemo(() => {
     const raw = versesData[fromAyah]?.textUthmani;
     if (!raw) return 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ...';
-    return (withTashkeel ? raw : stripTashkeel(raw)).slice(0, 42) + '...';
-  }, [versesData, fromAyah, withTashkeel]);
+    const clean = stripLeadingBismillah(raw, surahNumber, fromAyah);
+    return (withTashkeel ? clean : stripTashkeel(clean)).slice(0, 42) + '...';
+  }, [versesData, fromAyah, withTashkeel, surahNumber]);
 
   const toSnippet = useMemo(() => {
     const raw = versesData[toAyah]?.textUthmani;
     if (!raw) return '...';
-    return (withTashkeel ? raw : stripTashkeel(raw)).slice(0, 42) + '...';
-  }, [versesData, toAyah, withTashkeel]);
+    const clean = stripLeadingBismillah(raw, surahNumber, toAyah);
+    return (withTashkeel ? clean : stripTashkeel(clean)).slice(0, 42) + '...';
+  }, [versesData, toAyah, withTashkeel, surahNumber]);
 
   // Active Reciter Info
   const activeReciter = useMemo(() => {
@@ -603,6 +615,7 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
         sceneId,
         withTashkeel,
         subtitleLang,
+        audioMastering,
         signal: controller.signal,
         onProgress: (info) => {
           setGenerationPercent(info.percent);
@@ -684,15 +697,36 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     setGenerationStatus('');
   };
 
-  // Share & Export Handlers
+  // Share & Export Handlers with Auto-Attached Viral Social Caption
   const handleShareVideo = async () => {
     if (!videoResult) return;
     const filename = `noor-clip-s${surahNumber}-a${fromAyah}-${toAyah}${videoResult.extension}`;
+    const cleanSurahName = surahNameEnglish.replace(/[^a-zA-Z0-9]/g, '');
+    const firstTranslation = selectedAyahsList[0]?.translation ? `"${selectedAyahsList[0].translation}"\n\n` : '';
+    const cite = fromAyah === toAyah ? `${fromAyah}` : `${fromAyah}–${toAyah}`;
+
+    const viralCaption =
+`﷽
+${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${cite}]
+🎙️ Reciter: ${activeReciter.name}
+✨ Created with Noor Connect
+
+#Quran #QuranRecitation #Surah${cleanSurahName} #NoorConnect #AyahOfTheDay #IslamicReels #Dhikr #Islam`;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(viralCaption);
+        toast.success('📋 Reel caption & hashtags copied!');
+      }
+    } catch (_clipErr) {
+      // Clipboard handled safely
+    }
+
     await exportAndShareClip({
       blob: videoResult.blob,
       filename,
       title: `Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}-${toAyah}]`,
-      text: `Quran Recitation Reel — Surah ${surahNameEnglish} (${fromAyah}-${toAyah}) recited by ${activeReciter.name}.\nCreated with Noor Connect.`,
+      text: viralCaption,
       onToast: (m) => toast.info(m),
     });
   };
@@ -705,11 +739,30 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     const targetBlob = imageResult?.blob;
     if (!targetBlob) return;
 
+    const cleanSurahName = surahNameEnglish.replace(/[^a-zA-Z0-9]/g, '');
+    const firstTranslation = selectedAyahsList[0]?.translation ? `"${selectedAyahsList[0].translation}"\n\n` : '';
+
+    const viralCaption =
+`﷽
+${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
+✨ Created with Noor Connect
+
+#Quran #AyahOfTheDay #Surah${cleanSurahName} #NoorConnect #IslamicQuotes #Dhikr #Islam`;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(viralCaption);
+        toast.success('📋 Ayah caption & hashtags copied!');
+      }
+    } catch (_clipErr) {
+      // Clipboard handled safely
+    }
+
     await exportAndShareClip({
       blob: targetBlob,
       filename,
       title: `Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]`,
-      text: `Ayah Card — Surah ${surahNameEnglish} (${fromAyah})\nCreated with Noor Connect.`,
+      text: viralCaption,
       onToast: (m) => toast.info(m),
     });
   };
@@ -901,11 +954,22 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
 
           {/* 3. AYAH RANGE SELECTOR WITH LIVE ARABIC SNIPPET PREVIEW */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-xs gap-1">
               <span className="font-semibold text-[var(--text-secondary)]">Ayah Selection Range:</span>
-              <span className="text-[11px] text-[var(--accent-text)] font-mono">
-                {toAyah - fromAyah + 1} {toAyah - fromAyah + 1 === 1 ? 'Ayah' : 'Ayahs'} (Max 10)
-              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleSmartRange}
+                  className="px-2 py-0.5 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent-text)] text-[10px] font-bold hover:bg-[var(--accent)]/20 active:scale-95 transition-all flex items-center gap-1"
+                  title="Auto-select a 15–30s thematic clip range"
+                >
+                  <Sparkles className="w-3 h-3 text-[var(--accent)]" />
+                  <span>✨ Smart Range</span>
+                </button>
+                <span className="text-[11px] text-[var(--accent-text)] font-mono">
+                  {toAyah - fromAyah + 1} {toAyah - fromAyah + 1 === 1 ? 'Ayah' : 'Ayahs'}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -1145,6 +1209,35 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Audio Mastering Selector (Video Mode Only) */}
+              <div className="flex items-center justify-between text-xs pt-1.5">
+                <span className="font-semibold text-[var(--text-secondary)]">Audio Mastering:</span>
+                <div className="inline-flex rounded-xl p-0.5 border border-[var(--border)] bg-[var(--surface-2)]">
+                  <button
+                    type="button"
+                    onClick={() => setAudioMastering('haramain')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      audioMastering === 'haramain'
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    🎙️ Haramain Reverb (Auto)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAudioMastering('pure')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      audioMastering === 'pure'
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    🎙️ Pure Studio
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1300,10 +1393,17 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                 <button
                   type="button"
                   onClick={handleShareVideo}
-                  className="flex-1 py-2.5 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
-                  style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+                  className="rounded-2xl font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
+                  style={{
+                    background: 'var(--accent)',
+                    color: 'var(--on-accent)',
+                    flex: '1 1 0%',
+                    whiteSpace: 'nowrap',
+                    fontSize: '0.84rem',
+                    padding: '12px 16px',
+                  }}
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="w-4 h-4 shrink-0" />
                   <span>Share Reel / Story</span>
                 </button>
                 <button

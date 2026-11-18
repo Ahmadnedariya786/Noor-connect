@@ -62,6 +62,39 @@ export function cleanEnglishForMatching(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
 }
 
+/**
+ * Strips leading Bismillah from Ayah 1 of Surahs 2–114 (except Surah 9 At-Tawbah which has no Bismillah).
+ * In Surah Al-Fatihah (1), Bismillah IS Ayah 1, so it is preserved.
+ * In Surahs 2–114, APIs prepend "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ " to Ayah 1.
+ */
+export function stripLeadingBismillah(
+  text: string,
+  surahNumber: number = 1,
+  ayahNumber: number = 1
+): string {
+  if (!text) return '';
+  if (surahNumber === 1 || surahNumber === 9 || ayahNumber !== 1) {
+    return text;
+  }
+  const words = text.trim().split(/\s+/);
+  if (words.length > 4) {
+    const cleanW = words.slice(0, 4).map((w) =>
+      w
+        .replace(/[\u0617-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
+        .replace(/[إأآءٱ]/g, 'ا')
+    );
+    if (
+      cleanW[0] === 'بسم' &&
+      (cleanW[1] === 'الله' || cleanW[1] === 'لله') &&
+      cleanW[2] === 'الرحمن' &&
+      cleanW[3] === 'الرحيم'
+    ) {
+      return words.slice(4).join(' ').trim();
+    }
+  }
+  return text;
+}
+
 // 16 Concrete Illustrated Scenes Metadata
 export const ILLUSTRATED_SCENES: Record<
   string,
@@ -163,17 +196,37 @@ export const ILLUSTRATED_SCENES: Record<
     icon: '🏜️',
     category: 'History & Nations',
   },
+  'sun-moon-orbit': {
+    sceneId: 'sun-moon-orbit',
+    label: 'Sun & Moon Orbit',
+    icon: '🌗',
+    category: 'Cosmic Harmony',
+  },
+  'celestial-creation': {
+    sceneId: 'celestial-creation',
+    label: 'Divine Creation',
+    icon: '✨',
+    category: 'Creation of Man',
+  },
+  'eloquence-light': {
+    sceneId: 'eloquence-light',
+    label: 'Sacred Wisdom',
+    icon: '🪶',
+    category: 'Speech & Eloquence',
+  },
 };
 
-// Harmonic fallback sequence of concrete illustrated scenes
+// Harmonic fallback sequence of concrete illustrated scenes (Safe celestial & guidance themes only, NO kaaba or fire)
 const FALLBACK_SCENE_SEQUENCE: Array<{ sceneId: SceneId; label: string; icon: string; category: string }> = [
   ILLUSTRATED_SCENES['illuminated-quran'],
   ILLUSTRATED_SCENES['heavens-earth-rays'],
   ILLUSTRATED_SCENES['straight-path'],
-  ILLUSTRATED_SCENES['kaaba-sanctuary'],
+  ILLUSTRATED_SCENES['sun-moon-orbit'],
   ILLUSTRATED_SCENES['blessed-tree-garden'],
   ILLUSTRATED_SCENES['two-seas-ship'],
   ILLUSTRATED_SCENES['pearly-star'],
+  ILLUSTRATED_SCENES['celestial-creation'],
+  ILLUSTRATED_SCENES['eloquence-light'],
   ILLUSTRATED_SCENES['rawdah-mihrab-prayer'],
   ILLUSTRATED_SCENES['desert-fortress-history'],
   ILLUSTRATED_SCENES['cosmic-scale'],
@@ -260,7 +313,358 @@ export function resolveSceneForAyah(
     };
   }
 
-  // 3. THE BALANCE SCALE OF JUSTICE (Al-Mizan)
+  // 3. SURAH AR-RAHMAN (55:1–25) — Autonomous Cinematic Reel Director
+  if (surahNumber === 55) {
+    if (ayahNumber === 1) {
+      return {
+        ayahNumber,
+        sceneId: 'heavens-earth-rays',
+        moodLabel: 'Heavens & Noor',
+        icon: '🌅',
+        category: 'Divine Mercy & Light',
+        matchedKeyword: 'الرحمن',
+      };
+    }
+    if (ayahNumber === 2) {
+      return {
+        ayahNumber,
+        sceneId: 'illuminated-quran',
+        moodLabel: 'Wise Quran',
+        icon: '📖',
+        category: 'Divine Scripture',
+        matchedKeyword: 'علم القران',
+      };
+    }
+    if (ayahNumber === 3) {
+      return {
+        ayahNumber,
+        sceneId: 'celestial-creation',
+        moodLabel: 'Divine Creation',
+        icon: '✨',
+        category: 'Creation of Man',
+        matchedKeyword: 'خلق الانسان',
+      };
+    }
+    if (ayahNumber === 4) {
+      return {
+        ayahNumber,
+        sceneId: 'eloquence-light',
+        moodLabel: 'Sacred Wisdom',
+        icon: '🪶',
+        category: 'Speech & Eloquence',
+        matchedKeyword: 'علمه البيان',
+      };
+    }
+    if (ayahNumber === 5) {
+      return {
+        ayahNumber,
+        sceneId: 'sun-moon-orbit',
+        moodLabel: 'Sun & Moon Orbit',
+        icon: '🌗',
+        category: 'Cosmic Harmony',
+        matchedKeyword: 'الشمس والقمر بحسبان',
+      };
+    }
+    if (ayahNumber === 6) {
+      return {
+        ayahNumber,
+        sceneId: 'blessed-tree-garden',
+        moodLabel: 'Creation Prostrates',
+        icon: '🌳',
+        category: 'Creation & Prostration',
+        matchedKeyword: 'والنجم والشجر يسجدان',
+      };
+    }
+    if (ayahNumber >= 7 && ayahNumber <= 9) {
+      return {
+        ayahNumber,
+        sceneId: 'cosmic-scale',
+        moodLabel: 'Cosmic Scale',
+        icon: '⚖️',
+        category: 'Justice & Balance',
+        matchedKeyword: 'وضع الميزان',
+      };
+    }
+    if (ayahNumber >= 10 && ayahNumber <= 13) {
+      return {
+        ayahNumber,
+        sceneId: 'blessed-tree-garden',
+        moodLabel: 'Jannah Tree',
+        icon: '🌳',
+        category: 'Fruits & Jannah Grace',
+        matchedKeyword: 'فيها فاكهه والنخل ذات الاكمام',
+      };
+    }
+    if (ayahNumber >= 19 && ayahNumber <= 25) {
+      return {
+        ayahNumber,
+        sceneId: 'two-seas-ship',
+        moodLabel: 'Ocean & Ship',
+        icon: '🌊',
+        category: 'Signs of the Two Seas',
+        matchedKeyword: 'مرج البحرين يلتقيان الجوار المنشات',
+      };
+    }
+  }
+
+  // 4. PRIORITY 1 — SUN & MOON ORBIT & ASTRONOMICAL HARMONY
+  const sunMoonAr = [
+    'شمس وقمر',
+    'شمس والقمر',
+    'الشمس والقمر',
+    'شمس',
+    'قمر',
+    'حسبان',
+    'فلك يسبحون',
+    'منازل القمر',
+    'سراجا وهاجا',
+    'ضياء ونورا',
+  ];
+  const sunMoonEn = [
+    'sun and moon',
+    'sun and the moon',
+    'sun',
+    'moon',
+    'orbit',
+    'orbits',
+    'swimming in an orbit',
+    'phases of the moon',
+    'solar',
+    'lunar',
+  ];
+  for (const w of sunMoonAr) {
+    if (ar.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'sun-moon-orbit',
+        moodLabel: 'Sun & Moon Orbit',
+        icon: '🌗',
+        category: 'Cosmic Harmony',
+        matchedKeyword: w,
+      };
+    }
+  }
+  for (const w of sunMoonEn) {
+    if (en.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'sun-moon-orbit',
+        moodLabel: 'Sun & Moon Orbit',
+        icon: '🌗',
+        category: 'Cosmic Harmony',
+        matchedKeyword: w,
+      };
+    }
+  }
+
+  // 5. PRIORITY 2 — THE WISE QURAN & SCRIPTURE
+  const quranAr = [
+    'علم القران',
+    'قران',
+    'كتاب',
+    'فرقان',
+    'صحف',
+    'ايات',
+    'تنزيل',
+    'حكيم',
+    'يس',
+    'طه',
+    'الم',
+    'حم',
+    'تبيان',
+    'تذكره',
+  ];
+  const quranEn = [
+    'quran',
+    'book',
+    'scripture',
+    'revelation',
+    'verses',
+    'wise',
+    'reminder',
+    'inscribed',
+  ];
+  for (const w of quranAr) {
+    if (ar.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'illuminated-quran',
+        moodLabel: 'Wise Quran',
+        icon: '📖',
+        category: 'Divine Scripture',
+        matchedKeyword: w,
+      };
+    }
+  }
+  for (const w of quranEn) {
+    if (en.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'illuminated-quran',
+        moodLabel: 'Wise Quran',
+        icon: '📖',
+        category: 'Divine Scripture',
+        matchedKeyword: w,
+      };
+    }
+  }
+
+  // 6. PRIORITY 3 — HUMAN CREATION, STARDUST & CLAY
+  const creationAr = [
+    'خلق الانسان',
+    'خلقكم',
+    'صلصال',
+    'فخار',
+    'طين لازب',
+    'طين',
+    'سواك فعدلك',
+    'نفخ فيه من روحه',
+    'نطفه',
+    'علقه',
+    'مضغه',
+    'بشر',
+    'ذريه',
+    'احسن تقويم',
+  ];
+  const creationEn = [
+    'created man',
+    'created mankind',
+    'creation of man',
+    'clay',
+    'sounding clay',
+    'dust',
+    'fashioned you',
+    'breathed into him of his spirit',
+    'molded',
+    'formed man',
+  ];
+  for (const w of creationAr) {
+    if (ar.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'celestial-creation',
+        moodLabel: 'Divine Creation',
+        icon: '✨',
+        category: 'Creation of Man',
+        matchedKeyword: w,
+      };
+    }
+  }
+  for (const w of creationEn) {
+    if (en.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'celestial-creation',
+        moodLabel: 'Divine Creation',
+        icon: '✨',
+        category: 'Creation of Man',
+        matchedKeyword: w,
+      };
+    }
+  }
+
+  // 7. PRIORITY 4 — SPEECH, ELOQUENCE & SACRED WISDOM
+  const eloquenceAr = [
+    'علمه البيان',
+    'البيان',
+    'لسان',
+    'منطق',
+    'حكمه',
+    'يعلمهم الكتاب والحكمه',
+    'قول سديد',
+    'كلمه طيبه',
+    'فصل الخطاب',
+    'فصح',
+  ];
+  const eloquenceEn = [
+    'eloquence',
+    'speech',
+    'expression',
+    'clear expression',
+    'wisdom',
+    'wisdom and speech',
+    'good word',
+    'clear explanation',
+    'articulat',
+  ];
+  for (const w of eloquenceAr) {
+    if (ar.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'eloquence-light',
+        moodLabel: 'Sacred Wisdom',
+        icon: '🪶',
+        category: 'Speech & Eloquence',
+        matchedKeyword: w,
+      };
+    }
+  }
+  for (const w of eloquenceEn) {
+    if (en.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'eloquence-light',
+        moodLabel: 'Sacred Wisdom',
+        icon: '🪶',
+        category: 'Speech & Eloquence',
+        matchedKeyword: w,
+      };
+    }
+  }
+
+  // 8. PRIORITY 5 — DIVINE MERCY, HEAVENS & DIVINE NOOR
+  const heavensAr = [
+    'رحمن',
+    'رحيم',
+    'رحمه',
+    'وسعت كل شيء',
+    'نور السماوات',
+    'سماوات',
+    'سماء',
+    'فاطر',
+    'عرش',
+    'كرسي',
+    'ملائكه',
+    'نور علي نور',
+    'رب العالمين',
+  ];
+  const heavensEn = [
+    'most merciful',
+    'mercy',
+    'heavens and earth',
+    'heavens',
+    'light of the heavens',
+    'throne',
+    'angels',
+    'light upon light',
+    'lord of the worlds',
+  ];
+  for (const w of heavensAr) {
+    if (ar.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'heavens-earth-rays',
+        moodLabel: 'Heavens & Noor',
+        icon: '🌅',
+        category: 'Divine Mercy & Light',
+        matchedKeyword: w,
+      };
+    }
+  }
+  for (const w of heavensEn) {
+    if (en.includes(w)) {
+      return {
+        ayahNumber,
+        sceneId: 'heavens-earth-rays',
+        moodLabel: 'Heavens & Noor',
+        icon: '🌅',
+        category: 'Divine Mercy & Light',
+        matchedKeyword: w,
+      };
+    }
+  }
+
+  // 9. THE BALANCE SCALE OF JUSTICE (Al-Mizan)
   const scaleAr = ['ميزان', 'موازين', 'وزن', 'قسط', 'عدل', 'وزنوا بالقسطاس'];
   const scaleEn = ['balance', 'scale', 'scales', 'weigh', 'justice', 'just measure'];
   for (const w of scaleAr) {
@@ -283,34 +687,6 @@ export function resolveSceneForAyah(
         moodLabel: 'Cosmic Scale',
         icon: '⚖️',
         category: 'Justice & Balance',
-        matchedKeyword: w,
-      };
-    }
-  }
-
-  // 4. THE WISE QURAN & SCRIPTURE
-  const quranAr = ['قران', 'كتاب', 'فرقان', 'صحف', 'ايات', 'تنزيل', 'حكيم', 'يس', 'طه', 'الم', 'حم', 'تبيان', 'تذكره'];
-  const quranEn = ['quran', 'book', 'scripture', 'revelation', 'verses', 'wise', 'reminder', 'inscribed'];
-  for (const w of quranAr) {
-    if (ar.includes(w)) {
-      return {
-        ayahNumber,
-        sceneId: 'illuminated-quran',
-        moodLabel: 'Wise Quran',
-        icon: '📖',
-        category: 'Divine Scripture',
-        matchedKeyword: w,
-      };
-    }
-  }
-  for (const w of quranEn) {
-    if (en.includes(w)) {
-      return {
-        ayahNumber,
-        sceneId: 'illuminated-quran',
-        moodLabel: 'Wise Quran',
-        icon: '📖',
-        category: 'Divine Scripture',
         matchedKeyword: w,
       };
     }
@@ -401,33 +777,7 @@ export function resolveSceneForAyah(
     }
   }
 
-  // 8. HEAVENS, EARTH & DIVINE NOOR
-  const heavensAr = ['نور السماوات', 'سماوات', 'سماء', 'فاطر', 'عرش', 'كرسي', 'ملائكه', 'نور علي نور'];
-  const heavensEn = ['heavens and earth', 'heavens', 'light of the heavens', 'throne', 'angels', 'light upon light'];
-  for (const w of heavensAr) {
-    if (ar.includes(w)) {
-      return {
-        ayahNumber,
-        sceneId: 'heavens-earth-rays',
-        moodLabel: 'Heavens & Noor',
-        icon: '🌅',
-        category: 'Creation & Heavens',
-        matchedKeyword: w,
-      };
-    }
-  }
-  for (const w of heavensEn) {
-    if (en.includes(w)) {
-      return {
-        ayahNumber,
-        sceneId: 'heavens-earth-rays',
-        moodLabel: 'Heavens & Noor',
-        icon: '🌅',
-        category: 'Creation & Heavens',
-        matchedKeyword: w,
-      };
-    }
-  }
+
 
   // 9. JANNAH GARDENS, BLESSED OLIVE TREE & SPRINGS
   const gardenAr = [

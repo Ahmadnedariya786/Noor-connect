@@ -539,8 +539,59 @@ async function runClipStudioTests() {
     }
     console.log('  ✓ PASS: 16 Illustrated scenes, Ya-Sin 1–4, and An-Nur 24:35 4-part visual choreography verified!');
 
+    // -------------------------------------------------------------
+    // TEST 6: SURAH AR-RAHMAN 55:1–5 SCENE MAPPINGS & BISMILLAH SPLIT
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 6: Surah Ar-Rahman 55:1–5 Scene Mappings & Bismillah Split ---');
+
+    // 1. Verify Bismillah Stripping
+    const rawRahman1 = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ الرَّحْمَٰنُ';
+    const strippedRahman1 = engineModule.stripLeadingBismillah(rawRahman1, 55, 1);
+    console.log(`  Raw Rahman 1: "${rawRahman1}"`);
+    console.log(`  Stripped Rahman 1: "${strippedRahman1}"`);
+    if (strippedRahman1 !== 'الرَّحْمَٰنُ') {
+      throw new Error(`TEST 6 FAILED: Expected "الرَّحْمَٰنُ", got "${strippedRahman1}"`);
+    }
+
+    // Verify Surah 1 Bismillah preserved
+    const rawFatihah1 = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
+    const strippedFatihah1 = engineModule.stripLeadingBismillah(rawFatihah1, 1, 1);
+    if (strippedFatihah1 !== rawFatihah1) {
+      throw new Error(`TEST 6 FAILED: Surah 1 Bismillah should NOT be stripped, got "${strippedFatihah1}"`);
+    }
+
+    // 2. Verify Surah 55:1-5 Scene Resolutions
+    const r1 = engineModule.resolveSceneForAyah('الرَّحْمَٰنُ', 'The Most Merciful', 55, 1);
+    const r2 = engineModule.resolveSceneForAyah('عَلَّمَ الْقُرْآنَ', 'Taught the Qur\'an,', 55, 2);
+    const r3 = engineModule.resolveSceneForAyah('خَلَقَ الْإِنسَانَ', 'Created man,', 55, 3);
+    const r4 = engineModule.resolveSceneForAyah('عَلَّمَهُ الْبَيَانَ', '[And] taught him speech.', 55, 4);
+    const r5 = engineModule.resolveSceneForAyah('الشَّمْسُ وَالْقَمَرُ بِحُسْبَانٍ', 'The sun and the moon [move] by precise calculation,', 55, 5);
+
+    console.log('  Ar-Rahman 1 scene:', r1.sceneId, `(${r1.moodLabel})`);
+    console.log('  Ar-Rahman 2 scene:', r2.sceneId, `(${r2.moodLabel})`);
+    console.log('  Ar-Rahman 3 scene:', r3.sceneId, `(${r3.moodLabel})`);
+    console.log('  Ar-Rahman 4 scene:', r4.sceneId, `(${r4.moodLabel})`);
+    console.log('  Ar-Rahman 5 scene:', r5.sceneId, `(${r5.moodLabel})`);
+
+    if (r1.sceneId !== 'heavens-earth-rays') {
+      throw new Error(`TEST 6 FAILED: Ar-Rahman 1 should map to heavens-earth-rays, got ${r1.sceneId}`);
+    }
+    if (r2.sceneId !== 'illuminated-quran') {
+      throw new Error(`TEST 6 FAILED: Ar-Rahman 2 should map to illuminated-quran, got ${r2.sceneId}`);
+    }
+    if (r3.sceneId !== 'celestial-creation') {
+      throw new Error(`TEST 6 FAILED: Ar-Rahman 3 should map to celestial-creation, got ${r3.sceneId}`);
+    }
+    if (r4.sceneId !== 'eloquence-light') {
+      throw new Error(`TEST 6 FAILED: Ar-Rahman 4 should map to eloquence-light, got ${r4.sceneId}`);
+    }
+    if (r5.sceneId !== 'sun-moon-orbit') {
+      throw new Error(`TEST 6 FAILED: Ar-Rahman 5 should map to sun-moon-orbit, got ${r5.sceneId}`);
+    }
+    console.log('  ✓ PASS: Surah Ar-Rahman 1–5 mapped with 100% precision & Bismillah split cleanly!');
+
     console.log('\n======================================================');
-    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (5/5 PASS)');
+    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (6/6 PASS)');
     console.log('======================================================\n');
   } finally {
     try { client.close(); } catch {}
