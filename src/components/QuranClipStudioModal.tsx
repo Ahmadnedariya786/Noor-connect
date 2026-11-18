@@ -459,29 +459,74 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
       const elapsedSec = isPreviewPlaying ? (now - startTime) / 1000 : 0;
 
       if (sceneId === 'auto-meaning' && targetAyahs.length > 0) {
-        // Dynamic Semantic Scene Journey with 700ms cross-fade per Ayah
-        const ayahDuration = 4.5; // 4.5 seconds preview cycle per ayah
+        // Dynamic Semantic Scene Journey with Ken Burns Push & 500ms Cross-Fade per segment/ayah
+        const ayahDuration = 5.0; // 5.0 seconds preview cycle per ayah
         const totalDuration = targetAyahs.length * ayahDuration;
         const loopTime = elapsedSec % totalDuration;
         const activeIdx = Math.min(targetAyahs.length - 1, Math.floor(loopTime / ayahDuration));
         const timeInAyah = loopTime % ayahDuration;
+        const ayahRatio = timeInAyah / ayahDuration;
 
-        const currStep = sceneJourney[activeIdx] || { sceneId: 'kiswah-gold', label: 'Sanctuary' };
-        const prevIdx = (activeIdx - 1 + targetAyahs.length) % targetAyahs.length;
-        const prevStep = sceneJourney[prevIdx] || currStep;
+        const currJourney = sceneJourney[activeIdx];
+        const subTimeline =
+          currJourney?.subTimeline && currJourney.subTimeline.length > 1
+            ? currJourney.subTimeline
+            : null;
 
-        // 700ms smooth cubic ease cross-fade
-        if (timeInAyah < 0.7 && targetAyahs.length > 1) {
-          const norm = timeInAyah / 0.7;
-          const ease = norm * norm * (3 - 2 * norm);
+        let activeSceneId: SceneId = currJourney?.sceneId || 'kiswah-gold';
+        let prevSceneId: SceneId = activeSceneId;
+        let segmentFade = 1.0;
+        let zoomScale = 1.0 + 0.08 * ayahRatio;
 
-          drawProceduralScene(ctx, prevStep.sceneId, dims.width, dims.height, elapsedSec);
+        if (subTimeline) {
+          const segIdx = subTimeline.findIndex(
+            (s) => ayahRatio >= s.startRatio && ayahRatio < s.endRatio
+          );
+          const currentSeg = segIdx >= 0 ? subTimeline[segIdx] : subTimeline[subTimeline.length - 1];
+          activeSceneId = currentSeg.sceneId;
+
+          const segDuration = Math.max(0.01, currentSeg.endRatio - currentSeg.startRatio);
+          const timeInSegRatio = Math.min(1.0, Math.max(0.0, (ayahRatio - currentSeg.startRatio) / segDuration));
+          zoomScale = 1.0 + 0.08 * timeInSegRatio;
+
+          const segElapsedSec = timeInSegRatio * (segDuration * ayahDuration);
+          if (segIdx > 0 && segElapsedSec < 0.5) {
+            prevSceneId = subTimeline[segIdx - 1].sceneId;
+            const norm = segElapsedSec / 0.5;
+            segmentFade = norm * norm * (3 - 2 * norm);
+          } else if (segIdx === 0 && timeInAyah < 0.5 && targetAyahs.length > 1) {
+            const prevIdx = (activeIdx - 1 + targetAyahs.length) % targetAyahs.length;
+            const prevJ = sceneJourney[prevIdx];
+            const prevSub = prevJ?.subTimeline;
+            prevSceneId =
+              prevSub && prevSub.length > 0
+                ? prevSub[prevSub.length - 1].sceneId
+                : prevJ?.sceneId || 'kiswah-gold';
+            const norm = timeInAyah / 0.5;
+            segmentFade = norm * norm * (3 - 2 * norm);
+          }
+        } else {
+          if (timeInAyah < 0.5 && targetAyahs.length > 1) {
+            const prevIdx = (activeIdx - 1 + targetAyahs.length) % targetAyahs.length;
+            const prevJ = sceneJourney[prevIdx];
+            const prevSub = prevJ?.subTimeline;
+            prevSceneId =
+              prevSub && prevSub.length > 0
+                ? prevSub[prevSub.length - 1].sceneId
+                : prevJ?.sceneId || 'kiswah-gold';
+            const norm = timeInAyah / 0.5;
+            segmentFade = norm * norm * (3 - 2 * norm);
+          }
+        }
+
+        if (segmentFade < 1.0 && prevSceneId !== activeSceneId) {
+          drawProceduralScene(ctx, prevSceneId, dims.width, dims.height, elapsedSec, zoomScale);
           ctx.save();
-          ctx.globalAlpha = ease;
-          drawProceduralScene(ctx, currStep.sceneId, dims.width, dims.height, elapsedSec);
+          ctx.globalAlpha = segmentFade;
+          drawProceduralScene(ctx, activeSceneId, dims.width, dims.height, elapsedSec, zoomScale);
           ctx.restore();
         } else {
-          drawProceduralScene(ctx, currStep.sceneId, dims.width, dims.height, elapsedSec);
+          drawProceduralScene(ctx, activeSceneId, dims.width, dims.height, elapsedSec, zoomScale);
         }
 
         // 0.25s Calligraphy text fade-in
@@ -497,12 +542,15 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
         const simulatedProgress = loopTime / totalDuration;
         drawClipOverlay(ctx, dims.width, dims.height, activeTab === 'video' ? simulatedProgress : 1.0);
       } else {
-        // Single static scene
-        drawProceduralScene(ctx, sceneId, dims.width, dims.height, elapsedSec);
+        // Single static scene with subtle Ken Burns push
+        const ayahDuration = 15.0;
+        const ayahRatio = (elapsedSec % ayahDuration) / ayahDuration;
+        const zoomScale = 1.0 + 0.06 * ayahRatio;
+        drawProceduralScene(ctx, sceneId, dims.width, dims.height, elapsedSec, zoomScale);
         if (offscreens[0]) {
           ctx.drawImage(offscreens[0], 0, 0);
         }
-        const simulatedProgress = (elapsedSec % 15) / 15;
+        const simulatedProgress = ayahRatio;
         drawClipOverlay(ctx, dims.width, dims.height, activeTab === 'video' ? simulatedProgress : 1.0);
       }
 
@@ -1189,19 +1237,27 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
                     Auto Scene Journey ({sceneJourney.length} {sceneJourney.length === 1 ? 'Ayah' : 'Ayahs'}):
                   </span>
                   <span className="text-[10px] text-[var(--text-secondary)] font-medium">
-                    700ms dynamic cross-fade
+                    500ms dynamic cross-fade
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none">
+                <div className="flex flex-wrap items-center gap-1.5 py-0.5">
                   {sceneJourney.map((step, idx) => (
                     <React.Fragment key={step.ayahNumber}>
-                      <div className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[10px]">
-                        <span className="font-bold text-[var(--text-primary)]">v.{step.ayahNumber}</span>
-                        <span className="text-[var(--text-secondary)]">•</span>
-                        <span className="text-[var(--accent-text)] font-semibold whitespace-nowrap">{step.label}</span>
+                      <div
+                        style={{
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          maxWidth: 'none',
+                          padding: '4px 10px',
+                          fontSize: '0.68rem',
+                        }}
+                        className="flex items-center gap-1.5 rounded-xl bg-[var(--surface)] border border-[var(--border)]"
+                      >
+                        <span className="font-bold text-[var(--text-primary)]">Ayah {step.ayahNumber}:</span>
+                        <span className="text-[var(--accent-text)] font-semibold">{step.icon} {step.moodLabel}</span>
                       </div>
                       {idx < sceneJourney.length - 1 && (
-                        <span className="text-[var(--text-secondary)] text-[10px] shrink-0">→</span>
+                        <span className="text-[var(--text-secondary)] text-[11px] shrink-0 font-bold">→</span>
                       )}
                     </React.Fragment>
                   ))}

@@ -244,7 +244,7 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     badgeSystem: 'System',
     trustGroup: 'Trust & Identity',
     badgeNoor: 'Noor',
-    themeAndAppearance: 'Theme & Appearance',
+    themeAndAppearance: 'App Themes',
     themeAndAppearanceSub: '8 royal themes',
     homeWidgets: 'Home Screen Widgets',
     homeWidgetsSub: 'Customize opacity, colors & layout',

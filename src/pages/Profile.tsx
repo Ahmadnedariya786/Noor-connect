@@ -621,7 +621,7 @@ const Profile: React.FC = () => {
                           <span
                             className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors block leading-tight shrink min-w-0"
                             style={{
-                              fontSize: '0.78rem',
+                              fontSize: '0.75rem',
                               fontWeight: 700,
                               lineHeight: 1.2,
                               color: 'var(--text-primary)',
@@ -636,11 +636,11 @@ const Profile: React.FC = () => {
                               <div className="w-7 h-3.5 bg-[var(--surface-2)] rounded-full animate-pulse shrink-0" />
                             ) : val !== null ? (
                               <span
-                                className="settings-value-chip shrink-0 !max-w-none !px-[7px] !py-[2px] !text-[0.62rem]"
+                                className="settings-value-chip shrink-0 !max-w-none !px-[6px] !py-[2px] !text-[0.60rem]"
                                 style={{
                                   maxWidth: 'none',
-                                  fontSize: '0.62rem',
-                                  padding: '2px 7px',
+                                  fontSize: '0.60rem',
+                                  padding: '2px 6px',
                                   whiteSpace: 'nowrap',
                                   flexShrink: 0,
                                 }}

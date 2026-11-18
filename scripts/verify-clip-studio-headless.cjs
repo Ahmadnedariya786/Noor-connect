@@ -271,14 +271,14 @@ async function runClipStudioTests() {
     `);
 
     console.log('  Settings Hub Row Titles:', settingsLabels);
-    const themeRow = settingsLabels.find(t => t.text?.includes('Theme & Appearance'));
+    const themeRow = settingsLabels.find(t => t.text?.includes('App Themes') || t.text?.includes('Theme & Appearance'));
     const zakatRow = settingsLabels.find(t => t.text?.includes('Zakat & Nisab'));
 
-    console.log('  Theme & Appearance row:', themeRow);
+    console.log('  App Themes / Theme & Appearance row:', themeRow);
     console.log('  Zakat & Nisab row:', zakatRow);
 
     if (themeRow && themeRow.isEllipsized) {
-      throw new Error(`TEST 2 FAILED: "Theme & Appearance" is truncated with ellipsis! (${themeRow.scrollWidth}px > ${themeRow.clientWidth}px)`);
+      throw new Error(`TEST 2 FAILED: "${themeRow.text}" is truncated with ellipsis! (${themeRow.scrollWidth}px > ${themeRow.clientWidth}px)`);
     }
     if (zakatRow && zakatRow.isEllipsized) {
       throw new Error(`TEST 2 FAILED: "Zakat & Nisab" is truncated with ellipsis! (${zakatRow.scrollWidth}px > ${zakatRow.clientWidth}px)`);
@@ -304,7 +304,7 @@ async function runClipStudioTests() {
     if (clockChip && clockChip.isEllipsized) {
       throw new Error(`TEST 2 FAILED: "Ottoman Heritage" value chip is truncated!`);
     }
-    console.log('  ✓ PASS: "Theme & Appearance", "Persian Indigo", and "Ottoman Heritage" render with ZERO ellipsis!');
+    console.log('  ✓ PASS: Row 1 Title, "Persian Indigo", and "Ottoman Heritage" render with ZERO ellipsis!');
 
     // -------------------------------------------------------------
     // TEST 3: NOOR CLIP STUDIO MODAL CONTROLS & TRANSLATIONS
@@ -357,8 +357,18 @@ async function runClipStudioTests() {
         const hasGujarati = labels.some(l => l === 'Gujarati');
 
         // Check Auto Meaning theme preset and journey
-        const hasAutoSync = labels.some(l => l.includes('Auto Sync'));
+        const hasAutoSync = labels.some(l => l.includes('Auto Sync') || l.includes('Auto Meaning'));
         const hasJourney = labels.some(l => l.includes('Auto Scene Journey'));
+
+        // Check untruncated chips inside Auto Scene Journey
+        const journeyChips = Array.from(document.querySelectorAll('div')).filter(
+          el => el.textContent?.includes('Ayah ') && el.classList.contains('rounded-xl')
+        ).map(el => ({
+          text: el.textContent?.trim(),
+          isEllipsized: el.scrollWidth > el.clientWidth,
+          scrollWidth: el.scrollWidth,
+          clientWidth: el.clientWidth,
+        }));
 
         return {
           hasModal,
@@ -374,6 +384,7 @@ async function runClipStudioTests() {
           hasGujarati,
           hasAutoSync,
           hasJourney,
+          journeyChips,
         };
       })()
     `);
@@ -392,12 +403,19 @@ async function runClipStudioTests() {
       throw new Error('TEST 3 FAILED: Subtitle pills for Arabic/Hindi/Gujarati missing!');
     }
     if (!modalInfo.hasAutoSync) {
-      throw new Error('TEST 3 FAILED: "✨ Auto Sync" preset button missing!');
+      throw new Error('TEST 3 FAILED: "Auto Meaning" / "Auto Sync" preset button missing!');
     }
     if (!modalInfo.hasJourney) {
       throw new Error('TEST 3 FAILED: "Auto Scene Journey" dynamic strip missing!');
     }
-    console.log('  ✓ PASS: Stepper labels, aspect ratio pills, subtitle selector, and Auto Scene Journey verified!');
+    if (modalInfo.journeyChips.length > 0) {
+      console.log('  Journey chips verified:', modalInfo.journeyChips);
+      const truncated = modalInfo.journeyChips.find(c => c.isEllipsized);
+      if (truncated) {
+        throw new Error(`TEST 3 FAILED: Journey chip "${truncated.text}" is truncated!`);
+      }
+    }
+    console.log('  ✓ PASS: Stepper labels, aspect ratio pills, subtitle selector, and untruncated Auto Scene Journey verified!');
 
     // -------------------------------------------------------------
     // TEST 4: HINDI & GUJARATI TRANSLATION SELECTION IN LIVE PREVIEW
@@ -450,8 +468,79 @@ async function runClipStudioTests() {
     `);
     console.log('  Gujarati translation resolution:', gujaratiData);
 
+    // -------------------------------------------------------------
+    // TEST 5: 16 ILLUSTRATED SCENES & SUB-AYAH TIMELINE (AN-NUR 35 & YA-SIN 1-4)
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 5: 16 Illustrated Scenes & Sub-Ayah Timeline (An-Nur 35 & Ya-Sin 1-4) ---');
+    const ts = require('typescript');
+    const fs = require('fs');
+
+    const engineCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'ayah-meaning-scene-engine.ts'), 'utf8');
+    const transpiled = ts.transpileModule(engineCode, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+    }).outputText;
+
+    const engineModule = {};
+    const evalFn = new Function('exports', 'require', transpiled);
+    evalFn(engineModule, require);
+
+    const sceneCount = Object.keys(engineModule.ILLUSTRATED_SCENES || {}).length;
+    console.log(`  Registered Illustrated Scenes: ${sceneCount}/16`);
+    if (sceneCount < 16) {
+      throw new Error(`TEST 5 FAILED: Expected 16 illustrated scenes, found ${sceneCount}`);
+    }
+
+    // Verify Ya-Sin 1-4 mappings
+    const y1 = engineModule.resolveSceneForAyah('يس', 'Ya-Seen.', 36, 1);
+    const y2 = engineModule.resolveSceneForAyah('وَالْقُرْآنِ الْحَكِيمِ', 'By the wise Qur\'an.', 36, 2);
+    const y3 = engineModule.resolveSceneForAyah('إِنَّكَ لَمِنَ الْمُرْسَلِينَ', 'Indeed you are from among the messengers.', 36, 3);
+    const y4 = engineModule.resolveSceneForAyah('عَلَىٰ صِرَاطٍ مُسْتَقِيمٍ', 'On a straight path.', 36, 4);
+
+    console.log('  Ya-Sin 1 scene:', y1.sceneId, `(${y1.moodLabel})`);
+    console.log('  Ya-Sin 2 scene:', y2.sceneId, `(${y2.moodLabel})`);
+    console.log('  Ya-Sin 3 scene:', y3.sceneId, `(${y3.moodLabel})`);
+    console.log('  Ya-Sin 4 scene:', y4.sceneId, `(${y4.moodLabel})`);
+
+    if (y1.sceneId !== 'parting-monoliths') {
+      throw new Error(`TEST 5 FAILED: Ya-Sin 1 should map to parting-monoliths, got ${y1.sceneId}`);
+    }
+    if (y2.sceneId !== 'illuminated-quran') {
+      throw new Error(`TEST 5 FAILED: Ya-Sin 2 should map to illuminated-quran, got ${y2.sceneId}`);
+    }
+    if (y3.sceneId !== 'straight-path') {
+      throw new Error(`TEST 5 FAILED: Ya-Sin 3 should map to straight-path, got ${y3.sceneId}`);
+    }
+    if (y4.sceneId !== 'straight-path') {
+      throw new Error(`TEST 5 FAILED: Ya-Sin 4 should map to straight-path, got ${y4.sceneId}`);
+    }
+
+    // Verify Surah An-Nur 24:35 4-part sub-timeline
+    const nur35 = engineModule.resolveAyahVisualTimeline(
+      'اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ مَثَلُ نُورِهِ كَمِشْكَاةٍ فِيهَا مِصْبَاحٌ الْمِصْبَاحُ فِي زُجَاجَةٍ الزُّجَاجَةُ كَأَنَّهَا كَوْكَبٌ دُرِّيٌّ',
+      'Allah is the Light of the heavens and the earth. The example of His light is like a niche within which is a lamp, the lamp is within glass, the glass as if it were a pearly star',
+      24,
+      35,
+      12.0
+    );
+
+    console.log(`  An-Nur 24:35 multi-phrase sub-timeline segments: ${nur35.length}`);
+    nur35.forEach((seg, i) => {
+      console.log(`    Segment ${i + 1} (${(seg.startRatio * 100).toFixed(0)}%–${(seg.endRatio * 100).toFixed(0)}%): ${seg.icon} ${seg.sceneId} ("${seg.label}")`);
+    });
+
+    if (nur35.length !== 4) {
+      throw new Error(`TEST 5 FAILED: An-Nur 24:35 should split into 4 visual segments, got ${nur35.length}`);
+    }
+    if (nur35[0].sceneId !== 'heavens-earth-rays' ||
+        nur35[1].sceneId !== 'niche-lamp' ||
+        nur35[2].sceneId !== 'glass-orb-lamp' ||
+        nur35[3].sceneId !== 'pearly-star') {
+      throw new Error(`TEST 5 FAILED: An-Nur 24:35 segments sequence incorrect: ${nur35.map(s => s.sceneId).join(' -> ')}`);
+    }
+    console.log('  ✓ PASS: 16 Illustrated scenes, Ya-Sin 1–4, and An-Nur 24:35 4-part visual choreography verified!');
+
     console.log('\n======================================================');
-    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (4/4 PASS)');
+    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (5/5 PASS)');
     console.log('======================================================\n');
   } finally {
     try { client.close(); } catch {}
