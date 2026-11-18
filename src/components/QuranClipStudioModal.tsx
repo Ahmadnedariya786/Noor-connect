@@ -376,13 +376,58 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
     }
   };
 
-  // 1-Tap Smart Range (selects ~15–28s thematic clip of 3–5 verses)
+  // 1-Tap Smart Range (Word-count aware: selects ~20–35s thematic clip or 1 verse if already long)
   const handleSmartRange = useCallback(() => {
-    const idealAyahCount = 4;
-    const targetTo = Math.min(totalAyahsInSurah, Math.min(fromAyah + 9, fromAyah + idealAyahCount - 1));
+    const getAyahWordCount = (ayahNum: number) => {
+      const raw = versesData[ayahNum]?.textUthmani;
+      if (!raw) return 8;
+      const clean = stripLeadingBismillah(raw, surahNumber, ayahNum);
+      const w = clean.trim().split(/\s+/).filter(Boolean).length;
+      return Math.max(1, w);
+    };
+
+    const firstAyahWords = getAyahWordCount(fromAyah);
+    const firstAyahEst = Math.max(4, Math.round(firstAyahWords * 1.15));
+
+    let targetTo = fromAyah;
+    let totalEstSec = 0;
+
+    // If starting Ayah is already a massive/long verse (>= 25 words, e.g. 24:35 or Ayat al-Kursi):
+    if (firstAyahWords >= 25) {
+      if (toAyah === fromAyah && fromAyah < totalAyahsInSurah) {
+        // Second tap toggles to include the next verse
+        targetTo = Math.min(totalAyahsInSurah, fromAyah + 1);
+        totalEstSec = Math.round((firstAyahWords + getAyahWordCount(targetTo)) * 1.15);
+      } else {
+        targetTo = fromAyah;
+        totalEstSec = firstAyahEst;
+      }
+    } else {
+      // Accumulate consecutive verses to form a ~20s to ~35s thematic reel
+      totalEstSec = 0;
+      for (let a = fromAyah; a <= Math.min(totalAyahsInSurah, fromAyah + 9); a++) {
+        const w = getAyahWordCount(a);
+        const dur = Math.max(2.5, w * 1.15);
+        if (a > fromAyah && totalEstSec + dur > 38) {
+          break;
+        }
+        totalEstSec += dur;
+        targetTo = a;
+        if (totalEstSec >= 20) {
+          break;
+        }
+      }
+      totalEstSec = Math.round(totalEstSec);
+    }
+
     handleToAyahChange(targetTo);
-    toast.success(`✨ Smart Range: Ayahs ${fromAyah}–${targetTo} selected (~20s reel)`);
-  }, [fromAyah, totalAyahsInSurah, handleToAyahChange]);
+    const count = targetTo - fromAyah + 1;
+    toast.success(
+      count === 1
+        ? `✨ Smart Range: Ayah ${fromAyah} selected (~${totalEstSec}s reel)`
+        : `✨ Smart Range: Ayahs ${fromAyah}–${targetTo} (${count} Ayahs, ~${totalEstSec}s reel)`
+    );
+  }, [fromAyah, toAyah, totalAyahsInSurah, versesData, surahNumber, handleToAyahChange]);
 
   // Opening Arabic Snippets for Stepper Previews
   const fromSnippet = useMemo(() => {
@@ -418,8 +463,8 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
 
   // Semantic Ayah-Meaning Scene Journey
   const sceneJourney = useMemo(() => {
-    return resolveSceneJourney(selectedAyahsList, surahNumber);
-  }, [selectedAyahsList, surahNumber]);
+    return resolveSceneJourney(selectedAyahsList, surahNumber, subtitleLang);
+  }, [selectedAyahsList, surahNumber, subtitleLang]);
 
   // Live Canvas Preview Animation Loop (with 700ms Scene Cross-Fade & Ayah Cycling)
   useEffect(() => {
@@ -855,8 +900,8 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 select-none animate-in fade-in duration-200"
-      style={{ background: 'rgba(2, 4, 10, 0.86)' }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 select-none animate-in fade-in duration-200 overflow-x-hidden"
+      style={{ background: 'rgba(2, 4, 10, 0.86)', maxWidth: '100vw', boxSizing: 'border-box' }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !isGenerating) onClose();
       }}
@@ -867,6 +912,8 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
           background: 'var(--surface)',
           borderColor: 'var(--border)',
           boxShadow: '0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
         }}
       >
         {/* HEADER */}
@@ -900,7 +947,7 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
         </div>
 
         {/* SCROLLABLE BODY */}
-        <div className="overflow-y-auto flex-1 p-3 sm:p-4 space-y-4">
+        <div className="overflow-y-auto overflow-x-hidden flex-1 p-3 sm:p-4 space-y-4 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
           {/* 1. MODE SWITCHER TABS (TOP ROW) */}
           <div className="grid grid-cols-2 p-1 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] shrink-0">
             <button
@@ -1350,53 +1397,59 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
 
             {/* Dynamic Auto Scene Journey Ribbon */}
             {sceneId === 'auto-meaning' && (
-              <div className="p-2.5 rounded-2xl border border-[var(--accent)]/30 bg-[var(--surface-2)] space-y-1.5 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-bold text-[var(--accent-text)] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+              <div className="p-2.5 rounded-2xl border border-[var(--accent)]/30 bg-[var(--surface-2)] space-y-2 w-full max-w-full overflow-hidden animate-in fade-in duration-200">
+                <div className="flex items-center justify-between text-[11px] gap-2">
+                  <span className="font-bold text-[var(--accent-text)] flex items-center gap-1.5 truncate">
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
                     Auto Scene Journey ({sceneJourney.length} {sceneJourney.length === 1 ? 'Ayah' : 'Ayahs'}):
                   </span>
-                  <span className="text-[10px] text-[var(--text-secondary)] font-medium">
+                  <span className="text-[10px] text-[var(--text-secondary)] font-medium shrink-0">
                     500ms dynamic cross-fade
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5 py-0.5">
-                  {sceneJourney.map((step, idx) => {
+                <div className="flex flex-col gap-1.5 w-full max-w-full">
+                  {sceneJourney.map((step) => {
                     const hasSubTimeline = step.subTimeline && step.subTimeline.length > 1;
                     return (
-                      <React.Fragment key={step.ayahNumber}>
-                        <div
-                          style={{
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                            maxWidth: 'none',
-                            padding: '4px 10px',
-                            fontSize: '0.68rem',
-                          }}
-                          className="flex items-center gap-1.5 rounded-xl bg-[var(--surface)] border border-[var(--border)]"
-                        >
-                          <span className="font-bold text-[var(--text-primary)]">Ayah {step.ayahNumber}:</span>
-                          {hasSubTimeline ? (
-                            <div className="inline-flex items-center gap-1">
-                              {step.subTimeline!.map((sub, sIdx) => (
-                                <React.Fragment key={sIdx}>
-                                  <span className="text-[var(--accent-text)] font-semibold">
-                                    {sub.icon} {sub.label}
-                                  </span>
-                                  {sIdx < step.subTimeline!.length - 1 && (
-                                    <span className="text-[var(--text-secondary)] text-[10px] shrink-0 font-bold">→</span>
-                                  )}
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-[var(--accent-text)] font-semibold">{step.icon} {step.moodLabel}</span>
+                      <div
+                        key={step.ayahNumber}
+                        className="p-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] flex flex-col gap-1.5 w-full max-w-full overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-[var(--text-primary)]">
+                            Ayah {step.ayahNumber}:
+                          </span>
+                          {hasSubTimeline && (
+                            <span className="text-[10px] text-[var(--accent-text)] font-semibold">
+                              {step.subTimeline!.length} Choreographed Scenes
+                            </span>
                           )}
                         </div>
-                        {idx < sceneJourney.length - 1 && (
-                          <span className="text-[var(--text-secondary)] text-[11px] shrink-0 font-bold">→</span>
+                        {hasSubTimeline ? (
+                          <div className="flex flex-wrap items-center gap-1 w-full max-w-full">
+                            {step.subTimeline!.map((sub, sIdx) => (
+                              <React.Fragment key={sIdx}>
+                                <span
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-[var(--accent-text)] font-semibold text-[10px] max-w-full"
+                                  style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
+                                >
+                                  <span>{sub.icon}</span>
+                                  <span>{sub.label}</span>
+                                </span>
+                                {sIdx < step.subTimeline!.length - 1 && (
+                                  <span className="text-[var(--text-secondary)] text-[10px] shrink-0 font-bold">→</span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            <span className="text-[var(--accent-text)] font-semibold">
+                              {step.icon} {step.moodLabel}
+                            </span>
+                          </div>
                         )}
-                      </React.Fragment>
+                      </div>
                     );
                   })}
                 </div>

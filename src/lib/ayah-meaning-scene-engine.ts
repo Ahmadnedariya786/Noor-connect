@@ -1089,9 +1089,10 @@ export function splitTranslationIntoClauses(fullTranslation: string, count: numb
 
   if (sentences.length >= count) {
     const result: string[] = [];
-    const chunkSize = Math.ceil(sentences.length / count);
     for (let i = 0; i < count; i++) {
-      const slice = sentences.slice(i * chunkSize, (i + 1) * chunkSize).join(' ');
+      const startIdx = Math.round((i * sentences.length) / count);
+      const endIdx = Math.round(((i + 1) * sentences.length) / count);
+      const slice = sentences.slice(startIdx, Math.max(startIdx + 1, endIdx)).join(' ');
       result.push(slice || fullTranslation);
     }
     return result;
@@ -1103,13 +1104,160 @@ export function splitTranslationIntoClauses(fullTranslation: string, count: numb
     return Array(count).fill(fullTranslation);
   }
   const result: string[] = [];
-  const wordsPerSeg = Math.ceil(words.length / count);
   for (let i = 0; i < count; i++) {
-    const chunk = words.slice(i * wordsPerSeg, (i + 1) * wordsPerSeg).join(' ');
-    result.push(chunk || words.slice(-wordsPerSeg).join(' '));
+    const startIdx = Math.round((i * words.length) / count);
+    const endIdx = Math.round(((i + 1) * words.length) / count);
+    const chunk = words.slice(startIdx, Math.max(startIdx + 1, endIdx)).join(' ');
+    result.push(chunk || fullTranslation);
   }
   return result;
 }
+
+// Curated 1:1 Clause Dictionaries for Multi-Clause Masterpiece Verses
+export const CURATED_MASTERPIECE_CLAUSES: Record<
+  string, // `${surahNumber}:${ayahNumber}`
+  {
+    clauses: Array<{
+      arabic: string;
+      sceneId: SceneId;
+      label: string;
+      icon: string;
+      defaultRatio: [number, number]; // [startRatio, endRatio]
+      translations: {
+        en: string;
+        ur: string;
+        hi: string;
+        gu: string;
+      };
+    }>;
+  }
+> = {
+  '24:35': {
+    clauses: [
+      {
+        arabic: 'اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ ۚ',
+        sceneId: 'heavens-earth-rays',
+        label: 'Heavens & Noor',
+        icon: '🌅',
+        defaultRatio: [0.00, 0.10],
+        translations: {
+          en: 'Allah is the Light of the heavens and the earth.',
+          ur: 'اللہ آسمانوں اور زمین کا نور ہے۔',
+          hi: 'अल्लाह आकाशों और धरती का नूर (ज्योति) है।',
+          gu: 'અલ્લાહ આકાશો અને ધરતીનો નૂર (પ્રકાશ) છે.',
+        },
+      },
+      {
+        arabic: 'مَثَلُ نُورِهِ كَمِشْكَاةٍ فِيهَا مِصْبَاحٌ ۖ',
+        sceneId: 'niche-lamp',
+        label: 'Mishkat Lamp',
+        icon: '🏮',
+        defaultRatio: [0.10, 0.20],
+        translations: {
+          en: 'The example of His light is like a niche within which is a lamp;',
+          ur: 'اس کے نور کی مثال ایسی ہے جیسے ایک طاق جس میں ایک چراغ ہو،',
+          hi: 'उसके नूर की मिसाल ऐसी है जैसे एक ताक़ (दीवार का आला) हो जिसमें एक चिराग़ हो,',
+          gu: 'તેના નૂરનું ઉદાહરણ એવું છે જાણે કે એક ગોખલો જેમાં એક દીવો હોય,',
+        },
+      },
+      {
+        arabic: 'الْمِصْبَاحُ فِي زُجَاجَةٍ ۖ الزُّجَاجَةُ كَأَنَّهَا كَوْكَبٌ دُرِّيٌّ',
+        sceneId: 'glass-orb-lamp',
+        label: 'Crystal Orb',
+        icon: '🔮',
+        defaultRatio: [0.20, 0.31],
+        translations: {
+          en: 'the lamp is within glass, the glass as if it were a pearly star,',
+          ur: 'چراغ ایک شیشے کی قندیل میں ہے، قندیل گویا موتی جیسا چمکتا ہوا تارہ ہے،',
+          hi: 'चिराग़ एक शीशे की कंदील में हो, कंदील मानो मोती जैसा चमकता हुआ तारा हो,',
+          gu: 'દીવો એક કાચની કંદીલમાં હોય, કંદીલ જાણે મોતી જેવો ચમકતો તારો હોય,',
+        },
+      },
+      {
+        arabic: 'يُوقَدُ مِن شَجَرَةٍ مُّبَارَكَةٍ زَيْتُونَةٍ لَّا شَرْقِيَّةٍ وَلَا غَرْبِيَّةٍ يَكَادُ زَيْتُهَا يُضِيءُ وَلَوْ لَمْ تَمْسَسْهُ نَارٌ ۚ',
+        sceneId: 'pearly-star',
+        label: 'Blessed Olive Tree',
+        icon: '🫒',
+        defaultRatio: [0.31, 0.66],
+        translations: {
+          en: 'lit from a blessed olive tree, neither of east nor west, whose oil would almost glow even if untouched by fire.',
+          ur: 'وہ زیتون کے بابرکت درخت کے تیل سے جلایا جاتا ہے جو نہ مشرقی ہے نہ مغربی، اس کا تیل آپ ہی آپ بھڑکا پڑتا ہے چاہے آگ اسے نہ بھی چھوئے،',
+          hi: 'जो ज़ैतून के एक बरकत वाले पेड़ के तेल से जलाया जाता हो, जो न पूरब का हो न पच्छिम का; उसका तेल ऐसा हो कि वह खुद ही भड़क उठे चाहे आग उसे न भी छुए,',
+          gu: 'જે ઝૈતૂનના બરકતવાળા વૃક્ષથી પ્રગટાવાયો હોય, જે ન પૂર્વનું હોય ન પશ્ચિમનું; તેનું તેલ એવું હોય કે જાણે પોતે જ સળગી ઊઠશે ભલે આગ તેને અડી પણ ન હોય,',
+        },
+      },
+      {
+        arabic: 'نُّورٌ عَلَىٰ نُورٍ ۗ يَهْدِي اللَّهُ لِنُورِهِ مَن يَشَاءُ ۚ وَيَضْرِبُ اللَّهُ الْأَمْثَالَ لِلنَّاسِ ۗ وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ',
+        sceneId: 'heavens-earth-rays',
+        label: 'Light Upon Light',
+        icon: '✨',
+        defaultRatio: [0.66, 1.00],
+        translations: {
+          en: 'Light upon light. Allah guides to His light whom He wills. And Allah presents examples for the people, and Allah is Knowing of all things.',
+          ur: 'نور پر نور ہے۔ اللہ اپنے نور کی طرف جسے چاہتا ہے رہنمائی فرماتا ہے، اور اللہ لوگوں کے لیے مثالیں بیان فرماتا ہے، اور اللہ ہر چیز کا خوب جاننے والا ہے۔',
+          hi: 'नूर पर नूर! अल्लाह अपने नूर का मार्ग जिसे चाहता है दिखाता है, और अल्लाह लोगों के लिए मिसालें बयान करता है, और अल्लाह हर चीज़ को खूब जानने वाला है।',
+          gu: 'નૂર પર નૂર! અલ્લાહ જેને ચાહે છે પોતાના નૂર તરફ માર્ગદર્શન આપે છે, અને અલ્લાહ લોકો માટે દ્રષ્ટાંતો રજૂ કરે છે, અને અલ્લાહ દરેક વસ્તુને ખૂબ સારી રીતે જાણે છે.',
+        },
+      },
+    ],
+  },
+  '2:255': {
+    clauses: [
+      {
+        arabic: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ',
+        sceneId: 'heavens-earth-rays',
+        label: 'The Ever-Living',
+        icon: '🌅',
+        defaultRatio: [0.00, 0.22],
+        translations: {
+          en: 'Allah - there is no deity except Him, the Ever-Living, the Sustainer of all existence. Neither drowsiness overtakes Him nor sleep.',
+          ur: 'اللہ، اس کے سوا کوئی معبود نہیں، وہ ہمیشہ زندہ رہنے والا اور سب کو سنبھالنے والا ہے۔ نہ اسے اونگھ آتی ہے نہ نیند۔',
+          hi: 'अल्लाह, जिसके सिवा कोई पूज्य नहीं, वह सदा जीवित और सबका संभालने वाला है। न उसे ऊंघ आती है और न नींद।',
+          gu: 'અલ્લાહ, જેના સિવાય કોઈ ઈબાદતને લાયક નથી, તે સદા જીવંત અને સૌનો સંભાળ રાખનાર છે. તેને ન તો ઝોકું આવે છે કે ન ઊંઘ.',
+        },
+      },
+      {
+        arabic: 'لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ ۚ',
+        sceneId: 'celestial-creation',
+        label: 'Sovereignty of Heavens',
+        icon: '✨',
+        defaultRatio: [0.22, 0.44],
+        translations: {
+          en: 'To Him belongs whatever is in the heavens and whatever is on the earth. Who is it that can intercede with Him except by His permission?',
+          ur: 'اسی کا ہے جو کچھ آسمانوں میں ہے اور جو کچھ زمین میں ہے۔ کون ہے جو اس کی اجازت کے بغیر اس کے پاس سفارش کر سکے؟',
+          hi: 'उसी का है जो कुछ आकाशों में है और जो कुछ धरती में है। कौन है जो उसकी अनुमति के बिना उसके पास सिफ़ारिश कर सके?',
+          gu: 'તેનું જ છે જે કંઈ આકાશોમાં છે અને જે કંઈ ધરતીમાં છે. કોણ છે જે તેની પરવાનગી વિના તેની પાસે ભલામણ કરી શકે?',
+        },
+      },
+      {
+        arabic: 'يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ',
+        sceneId: 'cosmic-scale',
+        label: 'All-Encompassing Knowledge',
+        icon: '⚖️',
+        defaultRatio: [0.44, 0.70],
+        translations: {
+          en: 'He knows what is before them and what will be after them, and they encompass not a thing of His knowledge except for what He wills.',
+          ur: 'وہ جانتا ہے جو کچھ ان کے سامنے ہے اور جو کچھ ان کے پیچھے ہے، اور وہ اس کے علم میں سے کسی چیز کا احاطہ نہیں کر سکتے مگر جتنا وہ چاہے۔',
+          hi: 'वह जानता है जो कुछ उनके आगे है और जो कुछ उनके पीछे है, और वे उसके ज्ञान में से किसी चीज़ को अपने घेरे में नहीं ले सकते सिवाय उसके जितना वह चाहे।',
+          gu: 'તે જાણે છે જે કંઈ તેઓની આગળ છે અને જે કંઈ તેઓની પાછળ છે, અને તેઓ તેના જ્ઞાનમાંથી કોઈ વસ્તુનો ઘેરાવ કરી શકતા નથી સિવાય કે જે તે ઇચ્છે.',
+        },
+      },
+      {
+        arabic: 'وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ',
+        sceneId: 'heavens-earth-rays',
+        label: 'Throne of Majesty',
+        icon: '🌅',
+        defaultRatio: [0.70, 1.00],
+        translations: {
+          en: 'His Kursi extends over the heavens and the earth, and their preservation tires Him not. And He is the Most High, the Most Great.',
+          ur: 'اس کی کرسی آسمانوں اور زمین پر چھائی ہوئی ہے، اور ان دونوں کی حفاظت اس پر گراں نہیں گزرتی، اور وہ سب سے بلند اور سب سے بڑا ہے۔',
+          hi: 'उसकी कुर्सी ने आकाशों और धरती को घेर रखा है, और इन दोनों की हिफ़ाज़त उसे थकाती नहीं, और वह सबसे उच्च और सबसे महान है।',
+          gu: 'તેની કુરસી આકાશો અને ધરતી પર છવાયેલી છે, અને આ બંનેનું રક્ષણ તેને થકવતું નથી, અને તે સર્વોચ્ચ અને મહાન છે.',
+        },
+      },
+    ],
+  },
+};
 
 /**
  * Sub-Ayah Phrase Choreography (video_2.mp4 signature feature):
@@ -1122,129 +1270,42 @@ export function resolveAyahVisualTimeline(
   translationEn: string = '',
   surahNumber: number = 1,
   ayahNumber: number = 1,
-  durationSec: number = 8.0
+  durationSec: number = 8.0,
+  subtitleLang: string = 'en'
 ): VisualSegment[] {
   const safeDur = Math.max(1.0, durationSec);
+  const verseKey = `${surahNumber}:${ayahNumber}`;
 
-  // 1. SURAH AN-NUR 24:35 — 5 distinct timed scenes & clause-by-clause choreography (@sufariq style)
-  if (surahNumber === 24 && ayahNumber === 35) {
-    const transClauses = splitTranslationIntoClauses(
-      translationEn ||
-        'Allah is the Light of the heavens and the earth. The example of His light is like a niche within which is a lamp. The lamp is within glass, the glass as if it were a pearly star. Lit from a blessed olive tree, neither east nor west, whose oil would almost glow even if untouched by fire. Light upon light. Allah guides to His light whom He wills.',
-      5
-    );
-    return [
-      {
-        startRatio: 0.00,
-        endRatio: 0.18,
-        startTime: 0.00,
-        endTime: safeDur * 0.18,
-        sceneId: 'heavens-earth-rays',
-        label: 'Heavens & Noor',
-        icon: '🌅',
-        arabicClause: 'اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ',
-        translationClause: transClauses[0] || 'Allah is the Light of the heavens and the earth.',
-      },
-      {
-        startRatio: 0.18,
-        endRatio: 0.38,
-        startTime: safeDur * 0.18,
-        endTime: safeDur * 0.38,
-        sceneId: 'niche-lamp',
-        label: 'Mishkat Lamp',
-        icon: '🏮',
-        arabicClause: 'مَثَلُ نُورِهِ كَمِشْكَاةٍ فِيهَا مِصْبَاحٌ',
-        translationClause: transClauses[1] || 'The example of His light is like a niche within which is a lamp,',
-      },
-      {
-        startRatio: 0.38,
-        endRatio: 0.58,
-        startTime: safeDur * 0.38,
-        endTime: safeDur * 0.58,
-        sceneId: 'glass-orb-lamp',
-        label: 'Crystal Orb',
-        icon: '🔮',
-        arabicClause: 'الْمِصْبَاحُ فِي زُجَاجَةٍ ۖ الزُّجَاجَةُ كَأَنَّهَا كَوْكَبٌ دُرِّيٌّ',
-        translationClause: transClauses[2] || 'the lamp is within glass, the glass as if it were a pearly star,',
-      },
-      {
-        startRatio: 0.58,
-        endRatio: 0.78,
-        startTime: safeDur * 0.58,
-        endTime: safeDur * 0.78,
-        sceneId: 'pearly-star',
-        label: 'Pearly Star',
-        icon: '⭐',
-        arabicClause: 'يُوقَدُ مِن شَجَرَةٍ مُّبَارَكَةٍ زَيْتُونَةٍ لَّا شَرْقِيَّةٍ وَلَا غَرْبِيَّةٍ يَكَادُ زَيْتُهَا يُضِيءُ وَلَوْ لَمْ تَمْسَسْهُ نَارٌ',
-        translationClause: transClauses[3] || 'lit from a blessed olive tree, whose oil would almost glow even if untouched by fire.',
-      },
-      {
-        startRatio: 0.78,
-        endRatio: 1.00,
-        startTime: safeDur * 0.78,
-        endTime: safeDur,
-        sceneId: 'heavens-earth-rays',
-        label: 'Light Upon Light',
-        icon: '✨',
-        arabicClause: 'نُّورٌ عَلَىٰ نُورٍ ۗ يَهْدِي اللَّهُ لِنُورِهِ مَن يَشَاءُ ۚ وَيَضْرِبُ اللَّهُ الْأَمْثَالَ لِلنَّاسِ ۗ وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ',
-        translationClause: transClauses[4] || 'Light upon light. Allah guides to His light whom He wills.',
-      },
-    ];
-  }
+  // Check Curated Masterpiece Verses (Surah An-Nur 24:35 & Ayat al-Kursi 2:255)
+  const curated = CURATED_MASTERPIECE_CLAUSES[verseKey];
+  if (curated) {
+    // Determine language to present
+    let lang = subtitleLang;
+    if (lang === 'none' || lang === 'ar' || !lang) {
+      if (/[\u0600-\u06FF]/.test(translationEn)) lang = 'ur';
+      else if (/[\u0900-\u097F]/.test(translationEn)) lang = 'hi';
+      else if (/[\u0A80-\u0AFF]/.test(translationEn)) lang = 'gu';
+      else lang = 'en';
+    }
 
-  // 2. SURAH AL-BAQARAH 2:255 (Ayat al-Kursi) — 4 distinct timed scenes & clauses
-  if (surahNumber === 2 && ayahNumber === 255) {
-    const transClauses = splitTranslationIntoClauses(
-      translationEn ||
-        'Allah - there is no deity except Him, the Ever-Living, the Sustainer of all existence. Neither drowsiness overtakes Him nor sleep. To Him belongs whatever is in the heavens and whatever is on the earth. Who is it that can intercede with Him except by His permission? He knows what is before them and what will be after them. His Kursi extends over the heavens and the earth.',
-      4
-    );
-    return [
-      {
-        startRatio: 0.00,
-        endRatio: 0.25,
-        startTime: 0.00,
-        endTime: safeDur * 0.25,
-        sceneId: 'heavens-earth-rays',
-        label: 'The Ever-Living',
-        icon: '🌅',
-        arabicClause: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ',
-        translationClause: transClauses[0] || 'Allah - there is no deity except Him, the Ever-Living, the Sustainer of all existence.',
-      },
-      {
-        startRatio: 0.25,
-        endRatio: 0.50,
-        startTime: safeDur * 0.25,
-        endTime: safeDur * 0.50,
-        sceneId: 'celestial-creation',
-        label: 'Sovereignty of Heavens',
-        icon: '✨',
-        arabicClause: 'لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ',
-        translationClause: transClauses[1] || 'To Him belongs whatever is in the heavens and whatever is on the earth.',
-      },
-      {
-        startRatio: 0.50,
-        endRatio: 0.75,
-        startTime: safeDur * 0.50,
-        endTime: safeDur * 0.75,
-        sceneId: 'cosmic-scale',
-        label: 'All-Encompassing Knowledge',
-        icon: '⚖️',
-        arabicClause: 'يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ',
-        translationClause: transClauses[2] || 'He knows what is before them and what will be after them.',
-      },
-      {
-        startRatio: 0.75,
-        endRatio: 1.00,
-        startTime: safeDur * 0.75,
-        endTime: safeDur,
-        sceneId: 'heavens-earth-rays',
-        label: 'Throne of Majesty',
-        icon: '🌅',
-        arabicClause: 'وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ',
-        translationClause: transClauses[3] || 'His Kursi extends over the heavens and the earth, and their preservation tires Him not.',
-      },
-    ];
+    return curated.clauses.map((c) => {
+      const [startRatio, endRatio] = c.defaultRatio;
+      const transText =
+        c.translations[lang as keyof typeof c.translations] ||
+        c.translations.en;
+
+      return {
+        startRatio,
+        endRatio,
+        startTime: safeDur * startRatio,
+        endTime: safeDur * endRatio,
+        sceneId: c.sceneId,
+        label: c.label,
+        icon: c.icon,
+        arabicClause: c.arabic,
+        translationClause: transText,
+      };
+    });
   }
 
   // 3. Multi-Clause splitting for long verses (> 8.5s or > 140 chars)
@@ -1320,14 +1381,15 @@ export function resolveAyahVisualTimeline(
  */
 export function resolveSceneJourney(
   ayahs: Array<{ ayahNumber: number; textUthmani: string; translation?: string }>,
-  surahNumber: number = 1
+  surahNumber: number = 1,
+  subtitleLang: string = 'en'
 ): AyahSceneResolution[] {
   const result: AyahSceneResolution[] = [];
 
   for (let i = 0; i < ayahs.length; i++) {
     const a = ayahs[i];
     let res = resolveSceneForAyah(a.textUthmani, a.translation || '', surahNumber, a.ayahNumber);
-    const subTimeline = resolveAyahVisualTimeline(a.textUthmani, a.translation || '', surahNumber, a.ayahNumber, 6.0);
+    const subTimeline = resolveAyahVisualTimeline(a.textUthmani, a.translation || '', surahNumber, a.ayahNumber, 6.0, subtitleLang);
     res.subTimeline = subTimeline;
 
     // If identical to the previous Ayah's scene, nudge fallback if it was a generic fallback match

@@ -2601,6 +2601,163 @@ export function createHaramainImpulseResponse(
 }
 
 /**
+ * Computes phonetic recitation weight for an Arabic clause based on Tajweed rules:
+ * - Base characters: 1.0 weight
+ * - Madd elongation letters (Maddah, dagger alif, long alif/waw/yaa with sukun/madd): +3.5 weight (2 to 6 harakat)
+ * - Shaddah (consonant doubling / ghunnah): +1.5 weight
+ * - Tanween (nunation with ghunnah): +1.0 weight
+ * - Waqf pause symbol: +2.0 weight
+ */
+export function computeArabicPhoneticWeight(text: string): number {
+  if (!text) return 1.0;
+  let weight = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const code = ch.charCodeAt(0);
+
+    // Whitespace
+    if (/\s/.test(ch)) continue;
+
+    // Maddah above letter (ٓ = \u0653) or Dagger Alif (ٰ = \u0670) or Madd signs (\u06E1, \u06DF)
+    if (code === 0x0653 || code === 0x0670 || code === 0x06E1 || code === 0x06DF) {
+      weight += 3.5;
+    }
+    // Shaddah (ّ = \u0651)
+    else if (code === 0x0651) {
+      weight += 1.5;
+    }
+    // Tanween (ً ٌ ٍ = \u064B, \u064C, \u064D)
+    else if (code >= 0x064B && code <= 0x064D) {
+      weight += 1.0;
+    }
+    // Waqf pause signs (ۚ ۖ ۗ ۘ ۙ)
+    else if (code >= 0x06D6 && code <= 0x06DC) {
+      weight += 2.0;
+    }
+    // Standard Harakat / short vowels (َ ُ ِ ْ = \u064E, \u064F, \u0650, \u0652)
+    else if (code >= 0x064E && code <= 0x0652) {
+      weight += 0.2;
+    }
+    // Arabic letters (ا to ي and hamzas)
+    else if ((code >= 0x0621 && code <= 0x064A) || (code >= 0x0671 && code <= 0x06D3)) {
+      weight += 1.0;
+    } else {
+      weight += 0.5;
+    }
+  }
+  return Math.max(1.0, weight);
+}
+
+/**
+ * Aligns sub-clause boundaries in a multi-clause Ayah with actual Qari audio:
+ * 1. Computes expected boundary timestamps from Arabic Tajweed phonetic weights.
+ * 2. Scans the AudioBuffer PCM data within a +/- 12% search window around each boundary
+ *    for the deepest acoustic silence valley (Waqf breath pause, RMS < 35% mean).
+ * 3. Snaps the boundary to the silence valley so text changes at the exact breath pause.
+ */
+export function alignSubClausesWithAudioBuffer(
+  audioBuffer: AudioBuffer,
+  segments: VisualSegment[],
+  totalDuration: number
+): VisualSegment[] {
+  if (!segments || segments.length <= 1) return segments;
+  if (!audioBuffer || audioBuffer.numberOfChannels === 0 || audioBuffer.length === 0) return segments;
+
+  const numClauses = segments.length;
+  const channelData = audioBuffer.getChannelData(0);
+  const sampleRate = audioBuffer.sampleRate;
+  const bufDuration = audioBuffer.duration;
+  const safeDur = totalDuration > 0 ? totalDuration : bufDuration;
+
+  // 1. Calculate phonetic weights for each clause
+  const weights = segments.map((seg) => {
+    return computeArabicPhoneticWeight(seg.arabicClause || seg.label || '');
+  });
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  // 2. Compute theoretical cumulative boundaries
+  const theoreticalBoundaries: number[] = [];
+  let cumWeight = 0;
+  for (let i = 0; i < numClauses - 1; i++) {
+    cumWeight += weights[i];
+    const ratio = cumWeight / totalWeight;
+    theoreticalBoundaries.push(ratio * safeDur);
+  }
+
+  // 3. Scan PCM data for silence valleys around each boundary
+  const snappedBoundaries: number[] = [];
+  const windowSec = 0.12; // 120ms RMS evaluation window
+  const stepSec = 0.02;   // 20ms step
+  const windowSamples = Math.floor(sampleRate * windowSec);
+  const stepSamples = Math.max(1, Math.floor(sampleRate * stepSec));
+
+  for (let i = 0; i < theoreticalBoundaries.length; i++) {
+    const tExpected = theoreticalBoundaries[i];
+    const prevBoundary = i === 0 ? 0 : snappedBoundaries[i - 1];
+    const nextBoundary = i === theoreticalBoundaries.length - 1 ? safeDur : theoreticalBoundaries[i + 1];
+
+    // Search window: +/- 12% of total duration, clamped so it never overlaps adjacent boundaries
+    const searchRadius = Math.min(2.8, Math.max(0.6, safeDur * 0.12));
+    const searchStartSec = Math.max(prevBoundary + 0.8, tExpected - searchRadius);
+    const searchEndSec = Math.min(nextBoundary - 0.8, tExpected + searchRadius);
+
+    if (searchEndSec <= searchStartSec) {
+      snappedBoundaries.push(tExpected);
+      continue;
+    }
+
+    const startSample = Math.floor(searchStartSec * sampleRate);
+    const endSample = Math.floor(searchEndSec * sampleRate);
+
+    // Compute RMS profile across search window
+    let minRms = Infinity;
+    let minRmsTimeSec = tExpected;
+    let sumRms = 0;
+    let countRms = 0;
+
+    for (let s = startSample; s + windowSamples <= endSample && s + windowSamples <= channelData.length; s += stepSamples) {
+      let sumSq = 0;
+      for (let k = 0; k < windowSamples; k += 4) { // subsample by 4 for instant processing (< 0.5ms)
+        const v = channelData[s + k];
+        sumSq += v * v;
+      }
+      const rms = Math.sqrt((sumSq * 4) / windowSamples);
+      sumRms += rms;
+      countRms++;
+
+      if (rms < minRms) {
+        minRms = rms;
+        // Center of silence window + 40ms to land at trailing edge of breath pause
+        minRmsTimeSec = (s + windowSamples * 0.7) / sampleRate;
+      }
+    }
+
+    const avgRms = countRms > 0 ? sumRms / countRms : 0.05;
+
+    // If a clear silence valley is found (RMS < 35% of average RMS), snap to it!
+    if (minRms < avgRms * 0.35 && minRmsTimeSec >= searchStartSec && minRmsTimeSec <= searchEndSec) {
+      snappedBoundaries.push(minRmsTimeSec);
+    } else {
+      // Otherwise use Tajweed phonetic expectation
+      snappedBoundaries.push(tExpected);
+    }
+  }
+
+  // 4. Build aligned segments with updated times and ratios
+  return segments.map((seg, i) => {
+    const startTime = i === 0 ? 0 : snappedBoundaries[i - 1];
+    const endTime = i === numClauses - 1 ? safeDur : snappedBoundaries[i];
+    return {
+      ...seg,
+      startTime,
+      endTime,
+      startRatio: safeDur > 0 ? startTime / safeDur : 0,
+      endRatio: safeDur > 0 ? endTime / safeDur : 1,
+    };
+  });
+}
+
+/**
  * Tab 1: BULLETPROOF CANVAS + WEBAUDIO RECITATION VIDEO ENGINE
  * Combines 30FPS Animated Canvas + Multi-Ayah Qari Tilawah Audio Sync
  * With Sub-Ayah Phrase Choreography & Ken Burns 1.00x -> 1.08x Camera Push
@@ -2693,7 +2850,8 @@ export async function renderRecitationVideoClip(params: {
     });
   }
 
-  // 4. SAFEGUARD 4 — Compute Deterministic Timeline (Capped at 60s)
+  // 4. SAFEGUARD 4 — Compute Deterministic Timeline (Up to 300s / 5min ceiling)
+  const MAX_VIDEO_SECONDS = 300;
   let accumulatedTime = 0;
   interface ExtendedTimelineItem extends ClipAyahTimelineItem {
     resolvedSceneId: SceneId;
@@ -2707,24 +2865,26 @@ export async function renderRecitationVideoClip(params: {
       textUthmani: a.textUthmani,
       translation: a.translation,
     })),
-    surahNumber
+    surahNumber,
+    subtitleLang
   );
   const sceneMap = new Map<number, SceneId>();
   sceneJourney.forEach((sj) => sceneMap.set(sj.ayahNumber, sj.sceneId));
 
   for (const item of audioItems) {
-    if (accumulatedTime >= 60) break;
-    const dur = Math.min(item.duration, 60 - accumulatedTime);
+    if (accumulatedTime >= MAX_VIDEO_SECONDS) break;
+    const dur = Math.min(item.duration, MAX_VIDEO_SECONDS - accumulatedTime);
     const itemSceneId = sceneId === 'auto-meaning' ? (sceneMap.get(item.ayahNumber) || 'illuminated-quran') : sceneId;
 
     const ayahData = ayahs.find((a) => a.ayahNumber === item.ayahNumber);
-    const itemSubTimeline = sceneId === 'auto-meaning'
+    const rawSubTimeline = sceneId === 'auto-meaning'
       ? resolveAyahVisualTimeline(
           ayahData?.textUthmani || '',
           ayahData?.translation || '',
           surahNumber,
           item.ayahNumber,
-          dur
+          dur,
+          subtitleLang
         )
       : [
           {
@@ -2737,6 +2897,10 @@ export async function renderRecitationVideoClip(params: {
             icon: '',
           },
         ];
+
+    const itemSubTimeline = (rawSubTimeline.length > 1 && item.audioBuffer)
+      ? alignSubClausesWithAudioBuffer(item.audioBuffer, rawSubTimeline, dur)
+      : rawSubTimeline;
 
     timeline.push({
       ayahNumber: item.ayahNumber,

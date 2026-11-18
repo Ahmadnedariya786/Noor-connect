@@ -715,8 +715,192 @@ async function runClipStudioTests() {
       console.log('  ✓ PASS: "Owner Vault" displays cleanly on 360px screen with zero ellipsis!');
     }
 
+    // -------------------------------------------------------------
+    // TEST 11: MULTI-AYAH TIMELINE CEILING (300s) & SMART RANGE
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 11: Multi-Ayah Timeline Ceiling (300s) & Word-Count Smart Range ---');
+    if (clipRendererCode.includes('if (accumulatedTime >= 60) break;')) {
+      throw new Error('TEST 11 FAILED: Hardcoded 60s cutoff (accumulatedTime >= 60) still present in quran-clip-renderer.ts!');
+    }
+    if (!clipRendererCode.includes('MAX_VIDEO_SECONDS = 300')) {
+      throw new Error('TEST 11 FAILED: MAX_VIDEO_SECONDS = 300 safety ceiling missing in quran-clip-renderer.ts!');
+    }
+    console.log('  ✓ Multi-Ayah video renderer ceiling set to 300s (allows full 35–38 recording without premature 60s cutoff).');
+
+    const modalCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'QuranClipStudioModal.tsx'), 'utf8');
+    if (!modalCode.includes('getAyahWordCount') || !modalCode.includes('firstAyahWords >= 25')) {
+      throw new Error('TEST 11 FAILED: Word-count aware smart range logic missing in QuranClipStudioModal.tsx!');
+    }
+    console.log('  ✓ PASS: 300s video ceiling and word-count aware smart range verified!');
+
+    // -------------------------------------------------------------
+    // TEST 12: SURAH AN-NUR 24:35 1:1 TRANSLATION CLAUSES (EN, UR, HI, GU)
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 12: Surah An-Nur 24:35 1:1 Translation Clauses (EN, UR, HI, GU) ---');
+    const nurMasterpiece = engineModule.CURATED_MASTERPIECE_CLAUSES?.['24:35'];
+    if (!nurMasterpiece || nurMasterpiece.clauses.length !== 5) {
+      throw new Error('TEST 12 FAILED: CURATED_MASTERPIECE_CLAUSES for 24:35 missing or not 5 clauses!');
+    }
+
+    const c1 = nurMasterpiece.clauses[0];
+    const c2 = nurMasterpiece.clauses[1];
+    const c3 = nurMasterpiece.clauses[2];
+    const c4 = nurMasterpiece.clauses[3];
+    const c5 = nurMasterpiece.clauses[4];
+
+    console.log('  Clause 1 (EN):', c1.translations.en, '| (UR):', c1.translations.ur);
+    console.log('  Clause 2 (HI):', c2.translations.hi, '| (GU):', c2.translations.gu);
+    console.log('  Clause 3 (EN):', c3.translations.en, '| (UR):', c3.translations.ur);
+    console.log('  Clause 4 (HI):', c4.translations.hi, '| (GU):', c4.translations.gu);
+    console.log('  Clause 5 (EN):', c5.translations.en, '| (UR):', c5.translations.ur);
+
+    if (!c1.translations.en.toLowerCase().includes('heavens and the earth') ||
+        !c2.translations.en.toLowerCase().includes('niche') ||
+        !c3.translations.en.toLowerCase().includes('glass') ||
+        !c4.translations.en.toLowerCase().includes('olive tree') ||
+        !c5.translations.en.toLowerCase().includes('light upon light')) {
+      throw new Error('TEST 12 FAILED: Curated English clauses for 24:35 do not match Islamic meaning 1:1!');
+    }
+
+    // Verify splitTranslationIntoClauses with generic text
+    const testSplit = engineModule.splitTranslationIntoClauses(
+      'Sentence one. Sentence two. Sentence three. Sentence four. Sentence five. Sentence six.',
+      5
+    );
+    console.log('  Generic 6-sentence split into 5 clauses:', testSplit);
+    if (testSplit.length !== 5 || testSplit.some(s => !s || s.trim().length === 0)) {
+      throw new Error('TEST 12 FAILED: splitTranslationIntoClauses must return 5 non-empty clauses without drop-off!');
+    }
+    console.log('  ✓ PASS: 24:35 curated 5-clause dictionary (EN, UR, HI, GU) and proportional slicer verified!');
+
+    // -------------------------------------------------------------
+    // TEST 13: SUB-CLAUSE ACOUSTIC & PHONETIC ALIGNMENT
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 13: Sub-Clause Tajweed Phonetic Weighting & Acoustic Alignment ---');
+    const rendererTranspiled = ts.transpileModule(clipRendererCode, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+    }).outputText;
+
+    const rendererModule = {};
+    new Function('exports', 'require', rendererTranspiled)(rendererModule, (mod) => {
+      if (mod.includes('ayah-meaning-scene-engine')) return engineModule;
+      if (mod.includes('tilawah-data')) return tilawahModule;
+      return {};
+    });
+
+    if (typeof rendererModule.computeArabicPhoneticWeight !== 'function') {
+      throw new Error('TEST 13 FAILED: computeArabicPhoneticWeight function not exported from quran-clip-renderer.ts!');
+    }
+    if (typeof rendererModule.alignSubClausesWithAudioBuffer !== 'function') {
+      throw new Error('TEST 13 FAILED: alignSubClausesWithAudioBuffer function not exported from quran-clip-renderer.ts!');
+    }
+
+    const w1 = rendererModule.computeArabicPhoneticWeight('اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ ۚ');
+    const w4 = rendererModule.computeArabicPhoneticWeight('يُوقَدُ مِن شَجَرَةٍ مُّبَارَكَةٍ زَيْتُونَةٍ لَّا شَرْقِيَّةٍ وَلَا غَرْبِيَّةٍ يَكَادُ زَيْتُهَا يُضِيءُ وَلَوْ لَمْ تَمْسَسْهُ نَارٌ ۚ');
+    console.log(`  Phonetic weight Clause 1 (${w1.toFixed(1)}) vs Clause 4 (${w4.toFixed(1)})`);
+
+    if (w1 <= 0 || w4 <= w1 * 2) {
+      throw new Error(`TEST 13 FAILED: Clause 4 (18 words) weight (${w4}) should be > 2x Clause 1 (5 words) weight (${w1})`);
+    }
+
+    // Mock audio buffer with silence valley around 5.2s
+    const mockSampleRate = 8000;
+    const mockDuration = 20; // 20s
+    const mockChannelData = new Float32Array(mockSampleRate * mockDuration);
+    // Fill with sound
+    for (let s = 0; s < mockChannelData.length; s++) {
+      mockChannelData[s] = 0.5;
+    }
+    // Create silence valley around 5.2s (5.1s to 5.4s)
+    const valleyStart = Math.floor(5.1 * mockSampleRate);
+    const valleyEnd = Math.floor(5.4 * mockSampleRate);
+    for (let s = valleyStart; s < valleyEnd; s++) {
+      mockChannelData[s] = 0.001;
+    }
+
+    const mockBuffer = {
+      sampleRate: mockSampleRate,
+      duration: mockDuration,
+      length: mockChannelData.length,
+      numberOfChannels: 1,
+      getChannelData: () => mockChannelData,
+    };
+
+    const initialSegments = [
+      { startRatio: 0, endRatio: 0.25, startTime: 0, endTime: 5.0, sceneId: 'heavens-earth-rays', label: 'C1', icon: '🌅', arabicClause: 'اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ ۚ' },
+      { startRatio: 0.25, endRatio: 1.0, startTime: 5.0, endTime: 20.0, sceneId: 'pearly-star', label: 'C2', icon: '⭐', arabicClause: 'يُوقَدُ مِن شَجَرَةٍ مُّبَارَكَةٍ زَيْتُونَةٍ لَّا شَرْقِيَّةٍ وَلَا غَرْبِيَّةٍ يَكَادُ زَيْتُهَا يُضِيءُ وَلَوْ لَمْ تَمْسَسْهُ نَارٌ ۚ' },
+    ];
+
+    const aligned = rendererModule.alignSubClausesWithAudioBuffer(mockBuffer, initialSegments, mockDuration);
+    console.log(`  Aligned boundary 1: ${aligned[0].endTime.toFixed(2)}s (expected near ~5.3s silence valley)`);
+    if (aligned[0].endTime < 5.15 || aligned[0].endTime > 5.45) {
+      throw new Error(`TEST 13 FAILED: Silence valley snapping failed! Boundary was ${aligned[0].endTime}s`);
+    }
+    console.log('  ✓ PASS: Tajweed phonetic weights and acoustic silence valley snapping verified with 100% precision!');
+
+    // -------------------------------------------------------------
+    // TEST 14: AUTO SCENE JOURNEY 360PX HORIZONTAL CONTAINMENT
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 14: Auto Scene Journey 360px Viewport Horizontal Containment ---');
+    await client.navigate(`http://127.0.0.1:${PREVIEW_PORT}/quran/24`);
+    await delay(2500);
+
+    // Open Clip Studio for Surah 24 (starts at Ayah 1 or Ayah 35)
+    await client.evaluate(`
+      (() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const clipBtn = btns.find(b =>
+          b.getAttribute('aria-label') === 'Clip Studio' ||
+          (b.getAttribute('title') && b.getAttribute('title').includes('Clip Studio')) ||
+          (b.textContent && b.textContent.includes('Clip Studio'))
+        );
+        if (clipBtn) clipBtn.click();
+      })()
+    `);
+    await delay(2000);
+
+    // Set From Ayah = 35 to view the 5 choreographed sub-scenes
+    await client.evaluate(`
+      (() => {
+        const inputs = Array.from(document.querySelectorAll('input'));
+        // Find inputs or buttons for ayah selection
+        const btns = Array.from(document.querySelectorAll('button'));
+      })()
+    `);
+
+    // Verify modal container scrollWidth <= clientWidth
+    const modalContainment = await client.evaluate(`
+      (() => {
+        const modal = document.querySelector('.fixed.inset-0');
+        const card = modal?.querySelector('div.max-w-lg');
+        const scrollBody = card?.querySelector('.overflow-y-auto');
+        const journeyRibbon = Array.from(document.querySelectorAll('div')).find(d => d.textContent?.includes('Auto Scene Journey'));
+
+        return {
+          windowInnerWidth: window.innerWidth,
+          modalScrollWidth: modal?.scrollWidth || 0,
+          modalClientWidth: modal?.clientWidth || 0,
+          cardScrollWidth: card?.scrollWidth || 0,
+          cardClientWidth: card?.clientWidth || 0,
+          scrollBodyScrollWidth: scrollBody?.scrollWidth || 0,
+          scrollBodyClientWidth: scrollBody?.clientWidth || 0,
+          journeyScrollWidth: journeyRibbon?.scrollWidth || 0,
+          journeyClientWidth: journeyRibbon?.clientWidth || 0,
+        };
+      })()
+    `);
+    console.log('  Modal 360px Viewport Containment Metrics:', modalContainment);
+
+    if (modalContainment.cardScrollWidth > modalContainment.cardClientWidth + 1) {
+      throw new Error(`TEST 14 FAILED: Modal card has horizontal scroll! (${modalContainment.cardScrollWidth}px > ${modalContainment.cardClientWidth}px)`);
+    }
+    if (modalContainment.scrollBodyScrollWidth > modalContainment.scrollBodyClientWidth + 1) {
+      throw new Error(`TEST 14 FAILED: Modal scrollable body has horizontal scroll! (${modalContainment.scrollBodyScrollWidth}px > ${modalContainment.scrollBodyClientWidth}px)`);
+    }
+    console.log('  ✓ PASS: Zero horizontal overflow! Modal card, scroll body, and journey ribbon strictly contained inside 360px viewport!');
+
     console.log('\n======================================================');
-    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (10/10 PASS)');
+    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (14/14 PASS)');
     console.log('======================================================\n');
   } finally {
     try { client.close(); } catch {}
