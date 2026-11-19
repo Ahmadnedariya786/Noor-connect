@@ -9,7 +9,7 @@ const Qibla = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[var(--bg-base)] pb-20">
+      <div className="min-h-screen bg-[var(--bg-base)] pb-32">
         <AppBar title={ui.qibla || t("qibla") || "Qibla"} />
         <div className="flex flex-col min-h-[calc(100vh-64px)]">
           <div className="flex-grow">

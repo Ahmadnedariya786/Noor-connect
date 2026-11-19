@@ -402,7 +402,7 @@ const Profile: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] pb-4">
+    <div className="min-h-screen bg-[var(--bg-base)] pb-32">
       {/* Sticky Glassmorphic Navigation Bar */}
       <header className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bg-base)]/85 border-b border-[var(--border)] px-4 pb-3.5 safe-top transition-all" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
         <div className="max-w-md mx-auto flex items-center justify-between">
