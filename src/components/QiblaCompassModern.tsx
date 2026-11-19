@@ -44,6 +44,14 @@ type DeviceOrientationConstructorWithPermission = typeof DeviceOrientationEvent 
   requestPermission?: () => Promise<string>;
 };
 
+function isIOSPlatform(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
+
 function getFallbackLocationByTimezone(timezone: string) {
   return (
     FALLBACK_LOCATIONS[timezone as keyof typeof FALLBACK_LOCATIONS] || {
@@ -91,8 +99,7 @@ function loadInitialLocation(): { coords: LocationCoordinates; name: string } {
 }
 
 // ─── Constants ────────────────────────────────────────────────
-const SENSOR_FALLBACK_TIMEOUT_MS = 2200;
-const ABSOLUTE_EVENT_FALLBACK_MS = 800;
+const SENSOR_FALLBACK_TIMEOUT_MS = 2500;
 
 // Dial tick marks (72 ticks = every 5°)
 const DIAL_TICKS = Array.from({ length: 72 }, (_, i) => {
@@ -179,7 +186,15 @@ export const QiblaCompassModern = () => {
 
   // ── Compass & Sensor State ───────────────────────────────────
   const [deviceHeading, setDeviceHeading] = useState<number | null>(null);
-  const [compassState, setCompassState] = useState<CompassState>('activating');
+  const [compassState, setCompassState] = useState<CompassState>(() => {
+    if (typeof window !== 'undefined' && isIOSPlatform() && 'DeviceOrientationEvent' in window) {
+      const ctor = window.DeviceOrientationEvent as DeviceOrientationConstructorWithPermission;
+      if (typeof ctor.requestPermission === 'function') {
+        return 'permission-required';
+      }
+    }
+    return 'active';
+  });
   const [sensorError, setSensorError] = useState<string | null>(null);
   const [isSensorInactive, setIsSensorInactive] = useState(false);
   const [compassSignal, setCompassSignal] = useState<number | null>(null);
@@ -196,7 +211,6 @@ export const QiblaCompassModern = () => {
   const locationRef = useRef<LocationCoordinates>(location);
   const isMountedRef = useRef(true);
   const orientationListenerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
-  const fallbackTimeoutRef = useRef<number | null>(null);
   const sensorFallbackTimerRef = useRef<number | null>(null);
   const hasReceivedSensorEventRef = useRef(false);
   const smoothedHeadingRef = useRef<number | null>(null);
@@ -227,11 +241,6 @@ export const QiblaCompassModern = () => {
       orientationListenerRef.current = null;
     }
 
-    if (fallbackTimeoutRef.current !== null) {
-      window.clearTimeout(fallbackTimeoutRef.current);
-      fallbackTimeoutRef.current = null;
-    }
-
     if (sensorFallbackTimerRef.current !== null) {
       window.clearTimeout(sensorFallbackTimerRef.current);
       sensorFallbackTimerRef.current = null;
@@ -252,7 +261,7 @@ export const QiblaCompassModern = () => {
   const attachSafeSensors = useCallback(() => {
     stopCompassTracking();
     setSensorError(null);
-    setCompassState('activating');
+    setCompassState('active');
     setIsSensorInactive(false);
 
     if (typeof window === 'undefined') {
@@ -364,21 +373,11 @@ export const QiblaCompassModern = () => {
     orientationListenerRef.current = onOrientationChange;
 
     try {
-      // 1. Prefer 'deviceorientationabsolute' on Android Chrome / WebView
+      // 1. Immediately attach both 'deviceorientationabsolute' and 'deviceorientation'
       window.addEventListener('deviceorientationabsolute', onOrientationChange, true);
+      window.addEventListener('deviceorientation', onOrientationChange, true);
 
-      // 2. Fall back to standard 'deviceorientation' if absolute does not fire within 800ms
-      fallbackTimeoutRef.current = window.setTimeout(() => {
-        if (!absoluteEventFired && isMountedRef.current) {
-          try {
-            window.addEventListener('deviceorientation', onOrientationChange, true);
-          } catch (listenErr) {
-            console.warn('Fallback deviceorientation attachment failed:', listenErr);
-          }
-        }
-      }, ABSOLUTE_EVENT_FALLBACK_MS);
-
-      // 3. Fallback: if no sensor data arrives after 2.2 seconds, display manual/true-north fallback
+      // 2. Fallback: if no sensor data arrives after 2.5 seconds, display manual/true-north fallback
       sensorFallbackTimerRef.current = window.setTimeout(() => {
         if (!hasReceivedSensorEventRef.current && isMountedRef.current) {
           setIsSensorInactive(true);
@@ -399,8 +398,8 @@ export const QiblaCompassModern = () => {
   useEffect(() => {
     isMountedRef.current = true;
 
-    // Check if iOS requires manual user tap for permission
-    if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
+    // Check if iOS requires manual user tap for permission (strictly iOS only)
+    if (isIOSPlatform() && typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
       const ctor = window.DeviceOrientationEvent as DeviceOrientationConstructorWithPermission;
       if (typeof ctor.requestPermission === 'function') {
         setCompassState('permission-required');
@@ -427,10 +426,10 @@ export const QiblaCompassModern = () => {
 
     try {
       setSensorError(null);
-      setCompassState('activating');
+      setCompassState('active');
 
-      // iOS permission request
-      if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
+      // iOS permission request (strictly guarded for iOS only)
+      if (isIOSPlatform() && typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
         const ctor = window.DeviceOrientationEvent as DeviceOrientationConstructorWithPermission;
         if (typeof ctor.requestPermission === 'function') {
           try {
@@ -978,6 +977,8 @@ export const QiblaCompassModern = () => {
                   backgroundColor:
                     compassState !== 'active'
                       ? '#f59e0b'
+                      : isSensorInactive
+                      ? '#ef4444'
                       : compassSignal === null
                       ? 'var(--accent)'
                       : compassSignal >= 80
@@ -990,6 +991,8 @@ export const QiblaCompassModern = () => {
               <span className="text-[var(--text-primary)] font-bold truncate">
                 {compassState !== 'active'
                   ? '● Standby'
+                  : isSensorInactive
+                  ? '● No Sensor'
                   : compassSignal !== null
                   ? `● Live ${compassSignal}%`
                   : '● Live'}
@@ -1116,11 +1119,15 @@ export const QiblaCompassModern = () => {
                 {deviceHeading !== null ? `${Math.round(deviceHeading)}°` : '--°'}
               </span>
               <span className="text-xs font-semibold text-[var(--accent-text)]">
-                {deviceHeading !== null ? getCardinalDirection(deviceHeading) : `(${ui.standby})`}
+                {deviceHeading !== null
+                  ? getCardinalDirection(deviceHeading)
+                  : compassState === 'active'
+                  ? '(Active)'
+                  : `(${ui.standby})`}
               </span>
             </div>
             <p className="text-[var(--text-secondary)]/70 text-[10px]">
-              {isLiveCompass ? ui.phoneAzimuth : ui.compassPaused}
+              {compassState === 'active' ? ui.phoneAzimuth : ui.compassPaused}
             </p>
           </div>
 
@@ -1147,7 +1154,9 @@ export const QiblaCompassModern = () => {
                   </span>
                 )
               ) : (
-                <span className="text-[var(--text-secondary)]/70">{ui.standby || 'Standby'}</span>
+                <span className="text-[var(--text-secondary)]/70">
+                  {compassState === 'active' ? 'Calibrating...' : (ui.standby || 'Standby')}
+                </span>
               )}
             </div>
           </div>

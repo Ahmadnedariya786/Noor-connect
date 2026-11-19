@@ -281,6 +281,8 @@ async function run() {
         // Check for duplicate checkmarks
         const bodyText = document.body.innerText;
         const hasDuplicateCheckmarks = bodyText.includes('✓ ✓') || bodyText.includes('✓✓');
+        const statusText = controlStrip ? controlStrip.textContent.trim() : 'null';
+        const isAutoStarted = !!controlStrip && (statusText.includes('Live') || statusText.includes('●'));
 
         return {
           hasSvgDial: !!svgDial,
@@ -291,6 +293,8 @@ async function run() {
           hasPauseResumeBtn: !!pauseResumeBtn,
           hasCalibrateBtn: !!calibrateBtn,
           isCalibrateUnclipped,
+          isAutoStarted,
+          statusText,
           calRect,
           hasDuplicateCheckmarks,
           dialRect,
@@ -302,6 +306,7 @@ async function run() {
     if (!compassAudit.hasClockwiseArc) throw new Error('Clockwise True-North Arc missing!');
     if (!compassAudit.hasSpiritBubble) throw new Error('Spirit level bubble inside Kaaba medallion missing!');
     if (!compassAudit.hasControlStrip) throw new Error('Above-the-fold sensor control strip missing!');
+    if (!compassAudit.isAutoStarted) throw new Error('Compass did not auto-start on mount (expected "● Live")!');
     if (!compassAudit.hasCalibrateBtn) throw new Error('Calibrate button missing!');
     if (!compassAudit.isCalibrateUnclipped) {
       throw new Error(`Calibrate button is clipped on 360px viewport: right=${compassAudit.calRect ? compassAudit.calRect.right : 'null'}px`);
@@ -317,8 +322,21 @@ async function run() {
         const canvas = document.querySelector('canvas');
         const flightBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Flight'));
         const roadBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Road'));
-        const globeHeader = Array.from(document.querySelectorAll('span, div, h3')).some(el => el.textContent.trim().includes('QIBLA PATH & DISTANCE'));
+        const globeHeader = Array.from(document.querySelectorAll('span, div, p')).some(el => el.textContent.trim().includes('QIBLA ROUTE'));
         
+        let isRoadUnclipped = false;
+        let roadBox = null;
+        let cardBox = null;
+        if (roadBtn) {
+          const r = roadBtn.getBoundingClientRect();
+          const parentCard = roadBtn.closest('.overflow-hidden') || (canvas ? canvas.closest('.border') : null) || document.body;
+          const c = parentCard.getBoundingClientRect();
+          roadBox = { right: r.right, width: r.width };
+          cardBox = { right: c.right };
+          // Strictly inside parent card right border (<= c.right - 8) with >= 12px spare room inside card
+          isRoadUnclipped = r.right <= (c.right - 8) && r.width >= 35;
+        }
+
         let initialDistanceText = '';
         const distEl = document.querySelector('.text-3xl.font-black');
         if (distEl) initialDistanceText = distEl.textContent.trim();
@@ -332,6 +350,9 @@ async function run() {
           hasFlightBtn: !!flightBtn,
           hasRoadBtn: !!roadBtn,
           hasGlobeHeader: !!globeHeader,
+          isRoadUnclipped,
+          roadBox,
+          cardBox,
           hasBrokenCommaSpace,
           initialDistanceText,
         };
@@ -340,7 +361,10 @@ async function run() {
     console.log('      Globe audit result:', JSON.stringify(globeAudit));
     if (!globeAudit.hasCanvas) throw new Error('Earth Globe 2D Canvas element missing!');
     if (globeAudit.canvasWidth === 0) throw new Error('Earth Globe 2D Canvas has 0 width!');
-    if (!globeAudit.hasGlobeHeader) throw new Error('Single-line "QIBLA PATH & DISTANCE" header missing!');
+    if (!globeAudit.hasGlobeHeader) throw new Error('Single-line "QIBLA ROUTE" header missing!');
+    if (!globeAudit.isRoadUnclipped) {
+      throw new Error(`Road button clipped! roadBox=${JSON.stringify(globeAudit.roadBox)}, cardBox=${JSON.stringify(globeAudit.cardBox)}`);
+    }
     if (globeAudit.hasBrokenCommaSpace) throw new Error(`Distance comma has leading space formatting issue: "${globeAudit.initialDistanceText}"`);
 
     // Toggle Road mode and check distance recalculation with async delay for React render

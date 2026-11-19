@@ -426,40 +426,75 @@ export const QiblaGlobeCard = ({ userLat, userLng, cityName }: QiblaGlobeCardPro
 
   return (
     <Card className="overflow-hidden border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] shadow-sm">
-      <CardContent className="p-4 space-y-4">
-        {/* Card Header (1-line title with segmented toggle) */}
-        <div className="flex justify-between items-center gap-2">
-          <p className="text-[11px] font-extrabold text-[var(--accent-text)] uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
+      <CardContent className="p-3.5 sm:p-4 space-y-4">
+        {/* Card Header (1-line title with segmented toggle, 360px safe with >= 12px spare room) */}
+        <div
+          className="flex items-center justify-between gap-2 w-full box-border"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        >
+          <p
+            className="text-[var(--accent-text)] uppercase tracking-wider flex items-center gap-1.5"
+            style={{
+              fontSize: '0.70rem',
+              fontWeight: 800,
+              letterSpacing: '0.05em',
+              whiteSpace: 'nowrap',
+              flexShrink: 1,
+              minWidth: 0,
+            }}
+          >
             <Navigation className="w-3.5 h-3.5 shrink-0" />
-            <span>QIBLA PATH & DISTANCE</span>
+            <span className="truncate">QIBLA ROUTE</span>
           </p>
 
           {/* Segmented Travel Mode Toggle */}
-          <div className="flex items-center p-0.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] shrink-0">
+          <div
+            className="flex items-center p-0.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] shrink-0"
+            style={{ flexShrink: 0 }}
+          >
             <button
               type="button"
               onClick={() => setTravelMode('flight')}
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all",
+                "flex items-center gap-1 rounded-lg font-bold transition-all",
                 travelMode === 'flight'
                   ? "bg-[var(--accent)] text-[var(--on-accent)] shadow-sm"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
+              style={{
+                padding: '5px 10px',
+                fontSize: '0.72rem',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
             >
-              <Plane className="w-3 h-3" />
+              <Plane className="w-3 h-3 shrink-0" />
               <span>{ui.flight}</span>
             </button>
             <button
               type="button"
               onClick={() => setTravelMode('road')}
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all",
+                "flex items-center gap-1 rounded-lg font-bold transition-all",
                 travelMode === 'road'
                   ? "bg-[var(--accent)] text-[var(--on-accent)] shadow-sm"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
+              style={{
+                padding: '5px 10px',
+                fontSize: '0.72rem',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
             >
-              <Car className="w-3 h-3" />
+              <Car className="w-3 h-3 shrink-0" />
               <span>{ui.road}</span>
             </button>
           </div>
