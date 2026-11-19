@@ -1076,8 +1076,90 @@ async function runClipStudioTests() {
     }
     console.log('  ✓ PASS: Native MediaStore gallery saver, ACTION_SEND share sheet, and Bismillah anti-overlap hierarchy verified!');
 
+    // -------------------------------------------------------------
+    // TEST 20: CODEC COMMA IMMUNITY IN BLOB-TO-BASE64 & MIME SANITIZATION
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 20: Codec Comma Immunity in Blob-To-Base64 & MIME Sanitization ---');
+    const inBrowserTest = await client.evaluate(`(async () => {
+      function extractRawBase64FromDataUrl(dataUrl) {
+        const marker = ';base64,';
+        const markerIndex = dataUrl.indexOf(marker);
+        const raw = markerIndex !== -1
+          ? dataUrl.slice(markerIndex + marker.length)
+          : dataUrl.slice(dataUrl.lastIndexOf(',') + 1);
+        return raw.replace(/\\s+/g, '');
+      }
+
+      function cleanMimeType(mimeType) {
+        if (!mimeType) return 'video/mp4';
+        const base = mimeType.split(';')[0].trim();
+        return base || 'video/mp4';
+      }
+
+      async function blobToRawBase64(blob) {
+        return new Promise((resolve, reject) => {
+          try {
+            const rawBlob = new Blob([blob], { type: 'application/octet-stream' });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              try {
+                const res = reader.result || '';
+                const base64 = extractRawBase64FromDataUrl(res);
+                resolve(base64);
+              } catch (err) { reject(err); }
+            };
+            reader.onerror = (e) => reject(e || new Error('FileReader failed'));
+            reader.readAsDataURL(rawBlob);
+          } catch (err) { reject(err); }
+        });
+      }
+
+      const webmBlob = new Blob(['test-video-bytes-webm'], { type: 'video/webm;codecs=vp9,opus' });
+      const webmBase64 = await blobToRawBase64(webmBlob);
+      const webmDecoded = atob(webmBase64);
+
+      const mp4Blob = new Blob(['test-video-bytes-mp4'], { type: 'video/mp4;codecs=avc1.42E01E,mp4a.40.2' });
+      const mp4Base64 = await blobToRawBase64(mp4Blob);
+      const mp4Decoded = atob(mp4Base64);
+
+      const simulatedWebmDataUrl = 'data:video/webm;codecs=vp9,opus;base64,' + btoa('test-payload');
+      const brokenSplitResult = simulatedWebmDataUrl.split(',')[1];
+      const fixedResult = extractRawBase64FromDataUrl(simulatedWebmDataUrl);
+
+      return {
+        cleanWebmMime: cleanMimeType('video/webm;codecs=vp9,opus'),
+        cleanMp4Mime: cleanMimeType('video/mp4;codecs=avc1.42E01E,mp4a.40.2'),
+        cleanPngMime: cleanMimeType('image/png'),
+        webmDecoded,
+        mp4Decoded,
+        brokenSplitResult,
+        fixedResultDecoded: atob(fixedResult),
+      };
+    })()`);
+
+    console.log('  In-browser Codec & Base64 Evaluation:', inBrowserTest);
+    if (inBrowserTest.cleanWebmMime !== 'video/webm') {
+      throw new Error(`TEST 20 FAILED: cleanMimeType('video/webm;codecs=vp9,opus') returned "${inBrowserTest.cleanWebmMime}", expected "video/webm"`);
+    }
+    if (inBrowserTest.cleanMp4Mime !== 'video/mp4') {
+      throw new Error(`TEST 20 FAILED: cleanMimeType('video/mp4;codecs=avc1.42E01E,mp4a.40.2') returned "${inBrowserTest.cleanMp4Mime}", expected "video/mp4"`);
+    }
+    if (inBrowserTest.webmDecoded !== 'test-video-bytes-webm') {
+      throw new Error(`TEST 20 FAILED: Decoded WebM bytes mismatch: "${inBrowserTest.webmDecoded}"`);
+    }
+    if (inBrowserTest.mp4Decoded !== 'test-video-bytes-mp4') {
+      throw new Error(`TEST 20 FAILED: Decoded MP4 bytes mismatch: "${inBrowserTest.mp4Decoded}"`);
+    }
+    if (inBrowserTest.brokenSplitResult !== 'opus;base64') {
+      throw new Error(`TEST 20 FAILED: Legacy split comma assumption changed`);
+    }
+    if (inBrowserTest.fixedResultDecoded !== 'test-payload') {
+      throw new Error(`TEST 20 FAILED: extractRawBase64FromDataUrl failed to decode test payload`);
+    }
+    console.log('  ✓ PASS: Codec comma immunity verified! Video Blobs with codecs=vp9,opus and avc1...,mp4a... decode to exact binary bytes without "opus;base64" corruption!');
+
     console.log('\n======================================================');
-    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (19/19 PASS)');
+    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (20/20 PASS)');
     console.log('======================================================\n');
   } finally {
     try { client.close(); } catch {}

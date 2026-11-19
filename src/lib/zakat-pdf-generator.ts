@@ -69,18 +69,28 @@ function dataUrlToUint8Array(dataUrl: string): Uint8Array {
  */
 export function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      try {
-        const dataUrl = reader.result as string;
-        const commaIdx = dataUrl.indexOf(',');
-        resolve(commaIdx >= 0 ? dataUrl.slice(commaIdx + 1) : dataUrl);
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = () => reject(new Error('Failed to read blob as Base64'));
-    reader.readAsDataURL(blob);
+    try {
+      const rawBlob = new Blob([blob], { type: 'application/octet-stream' });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        try {
+          const dataUrl = (reader.result as string) || '';
+          const marker = ';base64,';
+          const markerIndex = dataUrl.indexOf(marker);
+          const raw =
+            markerIndex !== -1
+              ? dataUrl.slice(markerIndex + marker.length)
+              : dataUrl.slice(dataUrl.lastIndexOf(',') + 1);
+          resolve(raw.replace(/\s+/g, ''));
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read blob as Base64'));
+      reader.readAsDataURL(rawBlob);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 

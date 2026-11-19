@@ -2525,26 +2525,73 @@ export function getOptimalVideoMimeType(): { mimeType: string; extension: string
 }
 
 /**
- * Convert Blob to Base64 data string (for Capacitor Filesystem)
+ * Extract raw Base64 payload strictly after ';base64,' marker.
+ * Prevents truncation bug when MIME type has codec commas (e.g. video/webm;codecs=vp9,opus).
  */
-export function blobToBase64(blob: Blob): Promise<string> {
+export function extractRawBase64FromDataUrl(dataUrl: string): string {
+  const marker = ';base64,';
+  const markerIndex = dataUrl.indexOf(marker);
+  const raw =
+    markerIndex !== -1
+      ? dataUrl.slice(markerIndex + marker.length)
+      : dataUrl.slice(dataUrl.lastIndexOf(',') + 1);
+  return raw.replace(/\s+/g, '');
+}
+
+/**
+ * Sanitize MIME type by stripping codec parameters (e.g. video/webm;codecs=vp9,opus -> video/webm).
+ * Required for Android MediaStore and Intent.setType().
+ */
+export function cleanMimeType(mimeType?: string): string {
+  if (!mimeType) return 'video/mp4';
+  const base = mimeType.split(';')[0].trim();
+  return base || 'video/mp4';
+}
+
+/**
+ * Convert Blob to Base64 data string (for Capacitor Filesystem).
+ * Neutralizes MIME type to application/octet-stream so readAsDataURL NEVER contains codec commas.
+ */
+export function blobToRawBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const res = reader.result as string;
-      const base64 = res.split(',')[1] || '';
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
+    try {
+      // Rule A: Wrap as neutral binary blob to eliminate any codec commas in the data URL header
+      const rawBlob = new Blob([blob], { type: 'application/octet-stream' });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        try {
+          const res = (reader.result as string) || '';
+          // Rule B: Extract strictly after ;base64,
+          const base64 = extractRawBase64FromDataUrl(res);
+          resolve(base64);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = (e) => reject(e || new Error('FileReader failed to read blob as Base64'));
+      reader.readAsDataURL(rawBlob);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
+
+export const blobToBase64 = blobToRawBase64;
 
 /**
  * Write a Blob to private cache directory and return the cache file name/path
  */
 export async function writeBlobToNativeCache(blob: Blob, fileName: string): Promise<string> {
-  const base64Data = await blobToBase64(blob);
+  const base64Data = await blobToRawBase64(blob);
+
+  // Rule C: Verify non-empty valid base64 before passing to Capacitor Filesystem
+  if (!base64Data || base64Data.length === 0) {
+    throw new Error(`Failed to convert ${fileName} to base64: payload is empty`);
+  }
+  if (!/^[A-Za-z0-9+/]/.test(base64Data) || /[^A-Za-z0-9+/=]/.test(base64Data)) {
+    throw new Error(`The supplied data for ${fileName} is not valid base64 content.`);
+  }
+
   await Filesystem.writeFile({
     path: fileName,
     data: base64Data,
@@ -3384,7 +3431,8 @@ export async function exportAndShareClip(params: {
 }): Promise<void> {
   const { blob, title, text, onToast } = params;
   const fileName = params.fileName || params.filename || 'noor-clip.mp4';
-  const mimeType = params.mimeType || (fileName.endsWith('.png') ? 'image/png' : 'video/mp4');
+  const rawMime = params.mimeType || (fileName.endsWith('.png') ? 'image/png' : 'video/mp4');
+  const sanitizedMime = cleanMimeType(rawMime);
 
   // 1. Capacitor Native Android Path
   if (Capacitor.isNativePlatform()) {
@@ -3393,7 +3441,7 @@ export async function exportAndShareClip(params: {
       try {
         await NoorMediaBridge.shareCachedFile({
           cacheFileName: fileName,
-          mimeType,
+          mimeType: sanitizedMime,
           title,
           caption: text,
         });

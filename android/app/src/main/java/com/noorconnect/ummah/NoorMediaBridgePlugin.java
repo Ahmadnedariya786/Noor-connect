@@ -80,6 +80,12 @@ public class NoorMediaBridgePlugin extends Plugin {
     public void saveToGallery(PluginCall call) {
         String cacheFileName = call.getString("cacheFileName");
         String mimeType = call.getString("mimeType", "video/mp4");
+        if (mimeType != null && mimeType.contains(";")) {
+            mimeType = mimeType.split(";")[0].trim();
+        }
+        if (mimeType == null || mimeType.isEmpty()) {
+            mimeType = "video/mp4";
+        }
         String displayName = call.getString("displayName");
 
         if (cacheFileName == null || cacheFileName.trim().isEmpty()) {
@@ -184,6 +190,12 @@ public class NoorMediaBridgePlugin extends Plugin {
     public void shareCachedFile(PluginCall call) {
         String cacheFileName = call.getString("cacheFileName");
         String mimeType = call.getString("mimeType", "video/mp4");
+        if (mimeType != null && mimeType.contains(";")) {
+            mimeType = mimeType.split(";")[0].trim();
+        }
+        if (mimeType == null || mimeType.isEmpty()) {
+            mimeType = "*/*";
+        }
         String title = call.getString("title", "Noor Connect");
         String caption = call.getString("caption", "");
 

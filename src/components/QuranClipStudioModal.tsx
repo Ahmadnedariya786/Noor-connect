@@ -40,6 +40,8 @@ import {
   renderRecitationVideoClip,
   exportAndShareClip,
   writeBlobToNativeCache,
+  blobToRawBase64,
+  cleanMimeType,
   NoorMediaBridge,
 } from '@/lib/quran-clip-renderer';
 import { QURAN_RECITERS, getReciterById } from '@/lib/quran-reciters';
@@ -819,6 +821,7 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${cite}]
     await exportAndShareClip({
       blob: videoResult.blob,
       filename,
+      mimeType: cleanMimeType(videoResult.mimeType),
       title: `Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}-${toAyah}]`,
       text: viralCaption,
       onToast: (m) => toast.info(m),
@@ -864,6 +867,7 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
   const handleDownloadVideo = async () => {
     if (!videoResult) return;
     const filename = `noor-clip-s${surahNumber}-a${fromAyah}-${toAyah}${videoResult.extension}`;
+    const sanitizedMime = cleanMimeType(videoResult.mimeType);
 
     if (Capacitor.isNativePlatform()) {
       try {
@@ -871,7 +875,7 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
         await writeBlobToNativeCache(videoResult.blob, filename);
         const res = await NoorMediaBridge.saveToGallery({
           cacheFileName: filename,
-          mimeType: videoResult.mimeType,
+          mimeType: sanitizedMime,
           displayName: filename,
         });
         toast.success(`✅ Saved to Gallery (${res.folder})!`);
