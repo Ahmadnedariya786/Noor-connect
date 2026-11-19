@@ -111,15 +111,13 @@ export function formatDurationHours(totalHours: number): string {
 
 /**
  * Computes complete Qibla data with distinct flight vs road telemetries.
+ * Bearing is always the authentic True-North great-circle forward azimuth.
  */
 export function computeQiblaData(
   latitude: number,
-  longitude: number,
-  customDeclination?: number
+  longitude: number
 ): DetailedQiblaData {
   const trueBearing = calculateSphericalBearing(latitude, longitude, KAABA_LAT, KAABA_LNG);
-  const declination = customDeclination ?? estimateMagneticDeclinationDeg(latitude, longitude);
-  const bearing = normalizeDegrees(trueBearing - declination);
   const flightKm = calculateHaversineDistanceKm(latitude, longitude, KAABA_LAT, KAABA_LNG);
   
   // Real-world road distance is approximately 34% longer than great-circle straight flight path
@@ -131,15 +129,15 @@ export function computeQiblaData(
   const roadHours = roadKm / 75;
 
   return {
-    bearing,
+    bearing: trueBearing,
     trueBearing,
     flightKm: Math.round(flightKm),
     roadKm,
     flightDurationText: formatDurationHours(flightHours),
     roadDurationText: formatDurationHours(roadHours),
-    cardinalDirection: getCardinalDirection(bearing),
-    formattedBearing: `${Math.round(bearing)}°`,
-    declinationDeg: declination,
+    cardinalDirection: getCardinalDirection(trueBearing),
+    formattedBearing: `${Math.round(trueBearing)}°`,
+    declinationDeg: 0,
   };
 }
 
@@ -289,20 +287,20 @@ export function computeQiblaOffset(
 
   const delta = shortestSignedAngle(deviceHeading, qiblaBearing);
   const absDelta = Math.abs(delta);
+  const roundedOffset = Math.round(absDelta);
   const isAligned = absDelta <= threshold;
-  const degrees = Math.round(absDelta);
   const direction: 'right' | 'left' = delta >= 0 ? 'right' : 'left';
 
   let label: string;
-  if (isAligned) {
+  if (roundedOffset === 0) {
     label = '0° Exact';
   } else {
-    label = `${degrees}° ${direction === 'right' ? 'Right' : 'Left'}`;
+    label = `${roundedOffset}° ${direction === 'right' ? 'Right' : 'Left'}`;
   }
 
   return {
     delta,
-    degrees,
+    degrees: roundedOffset,
     direction,
     isAligned,
     label,

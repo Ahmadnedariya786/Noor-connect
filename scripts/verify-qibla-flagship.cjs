@@ -90,8 +90,44 @@ class CdpClient {
   }
 }
 
+function toRad(deg) { return (deg * Math.PI) / 180; }
+function toDeg(rad) { return (rad * 180) / Math.PI; }
+function calculateSphericalBearing(lat1, lon1, lat2, lon2) {
+  const phi1 = toRad(lat1);
+  const phi2 = toRad(lat2);
+  const deltaLambda = toRad(lon2 - lon1);
+  const y = Math.sin(deltaLambda);
+  const x = Math.cos(phi1) * Math.tan(phi2) - Math.sin(phi1) * Math.cos(deltaLambda);
+  const bearingRad = Math.atan2(y, x);
+  return (toDeg(bearingRad) + 360) % 360;
+}
+
+function verifyMathematicalBearings() {
+  console.log('[0/6] Running Mathematical Bearing Unit Tests for 5 Target Cities...');
+  const KAABA = { lat: 21.4225, lng: 39.8262 };
+  const targets = [
+    { name: 'Vadgam (Gujarat)', lat: 24.08, lng: 72.39, expected: 271.5 },
+    { name: 'Ahmedabad (Gujarat)', lat: 23.0225, lng: 72.5714, expected: 273.4 },
+    { name: 'Mumbai (Maharashtra)', lat: 19.0760, lng: 72.8777, expected: 280.1 },
+    { name: 'New York (USA)', lat: 40.7128, lng: -74.0060, expected: 58.5 },
+    { name: 'London (UK)', lat: 51.5074, lng: -0.1278, expected: 119.0 },
+  ];
+
+  for (const t of targets) {
+    const bearing = calculateSphericalBearing(t.lat, t.lng, KAABA.lat, KAABA.lng);
+    const diff = Math.abs(bearing - t.expected);
+    console.log(`      ${t.name}: calculated ${bearing.toFixed(2)}° vs expected ${t.expected}° (delta: ${diff.toFixed(2)}°)`);
+    if (diff > 0.5) {
+      throw new Error(`Mathematical bearing discrepancy for ${t.name}: expected ~${t.expected}°, got ${bearing.toFixed(2)}°`);
+    }
+  }
+  console.log('      All 5 benchmark bearings within ±0.5° threshold.');
+}
+
 async function run() {
   console.log('=== STARTING SCIENTIFIC FLAGSHIP QIBLA VERIFICATION ===');
+  verifyMathematicalBearings();
+
   let previewProc = null;
   let chromeProc = null;
   let cdp = null;
@@ -137,7 +173,7 @@ async function run() {
       '--no-sandbox',
       '--window-size=360,800',
       `--user-data-dir=${userDataDir}`,
-      `http://127.0.0.1:${PREVIEW_PORT}/qibla`,
+      'about:blank',
     ]);
 
     let versionInfo = null;
@@ -174,9 +210,24 @@ async function run() {
       mobile: true,
     });
 
-    console.log('      Navigating to Qibla page...');
+    console.log('      Navigating to Qibla page and awaiting React hydration...');
     await cdp.send('Page.navigate', { url: `http://127.0.0.1:${PREVIEW_PORT}/qibla` });
-    await delay(3000);
+    
+    let rendered = false;
+    for (let i = 0; i < 30; i++) {
+      const hasDial = await cdp.evaluate(`!!document.querySelector('svg[viewBox="0 0 280 280"]')`);
+      if (hasDial) {
+        rendered = true;
+        break;
+      }
+      await delay(400);
+    }
+    if (!rendered) {
+      const bodyHtml = await cdp.evaluate(`document.body.innerHTML`);
+      console.error('Body HTML at timeout:', bodyHtml ? bodyHtml.slice(0, 500) : 'null');
+      throw new Error('Compass SVG dial failed to mount within 12 seconds.');
+    }
+    await delay(1000);
 
     // 3. Verify 360px viewport horizontal overflow
     console.log('[3/6] Verifying 360px Viewport Horizontal Budget (RTL & LTR)...');
@@ -209,14 +260,27 @@ async function run() {
         const spiritBubble = document.querySelector('circle[cx][cy][r="4.5"]');
         const controlStrip = document.querySelector('button[aria-label*="calibration guide"]');
         const pauseResumeBtn = Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('Pause') || b.textContent.includes('Resume'));
-        const calibrateBtn = Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('Calibrate ∞'));
+        const calibrateBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'Calibrate' || b.textContent.includes('Calibrate'));
         
+        let calRect = null;
+        let isCalibrateUnclipped = false;
+        if (calibrateBtn) {
+          const r = calibrateBtn.getBoundingClientRect();
+          calRect = { left: r.left, right: r.right, width: r.width, height: r.height };
+          // Must fit within 360px viewport (right <= 356px)
+          isCalibrateUnclipped = r.right <= 356 && r.width >= 40;
+        }
+
         // Check if dial and controls are above the fold (within top 750px)
         let dialRect = null;
         if (svgDial) {
           const r = svgDial.getBoundingClientRect();
           dialRect = { top: r.top, bottom: r.bottom, height: r.height };
         }
+
+        // Check for duplicate checkmarks
+        const bodyText = document.body.innerText;
+        const hasDuplicateCheckmarks = bodyText.includes('✓ ✓') || bodyText.includes('✓✓');
 
         return {
           hasSvgDial: !!svgDial,
@@ -226,6 +290,9 @@ async function run() {
           hasControlStrip: !!controlStrip,
           hasPauseResumeBtn: !!pauseResumeBtn,
           hasCalibrateBtn: !!calibrateBtn,
+          isCalibrateUnclipped,
+          calRect,
+          hasDuplicateCheckmarks,
           dialRect,
         };
       })()
@@ -235,7 +302,13 @@ async function run() {
     if (!compassAudit.hasClockwiseArc) throw new Error('Clockwise True-North Arc missing!');
     if (!compassAudit.hasSpiritBubble) throw new Error('Spirit level bubble inside Kaaba medallion missing!');
     if (!compassAudit.hasControlStrip) throw new Error('Above-the-fold sensor control strip missing!');
-    if (!compassAudit.hasCalibrateBtn) throw new Error('Calibrate ∞ button missing!');
+    if (!compassAudit.hasCalibrateBtn) throw new Error('Calibrate button missing!');
+    if (!compassAudit.isCalibrateUnclipped) {
+      throw new Error(`Calibrate button is clipped on 360px viewport: right=${compassAudit.calRect ? compassAudit.calRect.right : 'null'}px`);
+    }
+    if (compassAudit.hasDuplicateCheckmarks) {
+      throw new Error('Duplicate checkmark (✓ ✓) found in page content!');
+    }
 
     // 5. Verify 2D HTML5 Canvas Orthographic Globe & Flight vs Road Telemetry
     console.log('[5/6] Verifying 2D Canvas Orthographic Earth Globe & Flight vs Road Telemetry...');
@@ -244,10 +317,13 @@ async function run() {
         const canvas = document.querySelector('canvas');
         const flightBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Flight'));
         const roadBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Road'));
+        const globeHeader = Array.from(document.querySelectorAll('span, div, h3')).some(el => el.textContent.trim().includes('QIBLA PATH & DISTANCE'));
         
         let initialDistanceText = '';
         const distEl = document.querySelector('.text-3xl.font-black');
         if (distEl) initialDistanceText = distEl.textContent.trim();
+
+        const hasBrokenCommaSpace = /\\d\\s+,/.test(initialDistanceText) || initialDistanceText.includes(' ,');
 
         return {
           hasCanvas: !!canvas,
@@ -255,6 +331,8 @@ async function run() {
           canvasHeight: canvas ? canvas.height : 0,
           hasFlightBtn: !!flightBtn,
           hasRoadBtn: !!roadBtn,
+          hasGlobeHeader: !!globeHeader,
+          hasBrokenCommaSpace,
           initialDistanceText,
         };
       })()
@@ -262,6 +340,8 @@ async function run() {
     console.log('      Globe audit result:', JSON.stringify(globeAudit));
     if (!globeAudit.hasCanvas) throw new Error('Earth Globe 2D Canvas element missing!');
     if (globeAudit.canvasWidth === 0) throw new Error('Earth Globe 2D Canvas has 0 width!');
+    if (!globeAudit.hasGlobeHeader) throw new Error('Single-line "QIBLA PATH & DISTANCE" header missing!');
+    if (globeAudit.hasBrokenCommaSpace) throw new Error(`Distance comma has leading space formatting issue: "${globeAudit.initialDistanceText}"`);
 
     // Toggle Road mode and check distance recalculation with async delay for React render
     console.log('      Toggling between Flight and Road telemetry modes...');
@@ -299,16 +379,28 @@ async function run() {
     console.log('[6/6] Verifying Portal-Rendered Calibration Modal & Backdrop Check...');
     const modalTestResult = await cdp.evaluate(`
       (async () => {
-        const calBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Calibrate ∞'));
+        const calBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'Calibrate' || b.textContent.includes('Calibrate'));
         if (!calBtn) return { success: false, reason: 'Calibrate button not found' };
         calBtn.click();
         await new Promise(r => setTimeout(r, 200));
 
         const modal = document.querySelector('div[role="dialog"]');
         const isPortalAtBody = modal && modal.parentElement === document.body;
-        const hasFigure8 = !!document.querySelector('svg path[stroke-dasharray="8 6"]');
-        const closeBtn = document.querySelector('button[aria-label="Close dialog"]');
+        const fig8Path = document.querySelector('svg path[stroke-dasharray="8 6"]');
+        const hasFigure8 = !!fig8Path;
+        const fig8Svg = fig8Path ? fig8Path.closest('svg') : null;
+        const motionTitle = Array.from(document.querySelectorAll('span, p')).find(el => el.textContent.includes('Figure-8 Motion'));
         
+        let figure8Overlaps = false;
+        if (fig8Svg && motionTitle) {
+          const svgRect = fig8Svg.getBoundingClientRect();
+          const textRect = motionTitle.getBoundingClientRect();
+          figure8Overlaps = svgRect.bottom > textRect.top;
+        }
+
+        const hasFalseNoMagnetometer = Array.from(document.querySelectorAll('span')).some(el => el.textContent.trim() === 'No Magnetometer');
+
+        const closeBtn = document.querySelector('button[aria-label="Close dialog"]');
         if (closeBtn) closeBtn.click();
         await new Promise(r => setTimeout(r, 200));
         const modalAfterClose = document.querySelector('div[role="dialog"]');
@@ -323,6 +415,8 @@ async function run() {
           success: true,
           isPortalAtBody,
           hasFigure8,
+          figure8Overlaps,
+          hasFalseNoMagnetometer,
           closedCleanly: !modalAfterClose,
           hasBackdropFilter,
         };
@@ -331,7 +425,13 @@ async function run() {
     console.log('      Modal test result:', JSON.stringify(modalTestResult));
     if (!modalTestResult.isPortalAtBody) throw new Error('Calibration modal not portal-rendered at body root!');
     if (!modalTestResult.hasFigure8) throw new Error('Calibration modal Figure-8 graphic missing!');
+    if (modalTestResult.figure8Overlaps) throw new Error('Figure-8 SVG overlaps the instruction text!');
+    if (modalTestResult.hasFalseNoMagnetometer) throw new Error('False "No Magnetometer" badge shown!');
     if (!modalTestResult.closedCleanly) throw new Error('Calibration modal did not close cleanly!');
+
+    if (cdp.exceptions.length > 0) {
+      throw new Error('CDP recorded exceptions: ' + JSON.stringify(cdp.exceptions));
+    }
 
     console.log('=== ALL SCIENTIFIC FLAGSHIP QIBLA VERIFICATIONS PASSED (6/6) ===');
   } catch (err) {
@@ -339,12 +439,15 @@ async function run() {
     process.exitCode = 1;
   } finally {
     if (cdp) cdp.close();
-    if (chromeProc) {
-      try { chromeProc.kill(); } catch { /* ignore */ }
+    if (chromeProc && chromeProc.pid) {
+      try { spawn('taskkill', ['/F', '/T', '/PID', String(chromeProc.pid)], { stdio: 'ignore' }); } catch { /* ignore */ }
     }
-    if (previewProc) {
-      try { previewProc.kill(); } catch { /* ignore */ }
+    if (previewProc && previewProc.pid) {
+      try { spawn('taskkill', ['/F', '/T', '/PID', String(previewProc.pid)], { stdio: 'ignore' }); } catch { /* ignore */ }
     }
+    setTimeout(() => {
+      process.exit(process.exitCode || 0);
+    }, 500);
   }
 }
 

@@ -214,17 +214,15 @@ export interface QiblaResult {
 
 export function calculateQibla(latitude: number, longitude: number): QiblaResult {
   const trueBearing = calculateQiblaBearing(latitude, longitude);
-  const declination = getCachedDeclinationSync(latitude, longitude);
-  const bearing = normalizeDegrees(trueBearing - declination);
   const distanceKm = calculateDistanceToKaabaKm(latitude, longitude);
   return {
-    bearing,
+    bearing: trueBearing,
     trueBearing,
     distanceKm,
-    cardinalDirection: getCardinalDirection(bearing),
-    formattedBearing: formatBearing(bearing),
+    cardinalDirection: getCardinalDirection(trueBearing),
+    formattedBearing: formatBearing(trueBearing),
     formattedDistance: formatDistance(distanceKm),
-    declinationDeg: declination,
+    declinationDeg: 0,
   };
 }
 

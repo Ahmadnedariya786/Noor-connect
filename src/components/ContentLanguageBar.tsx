@@ -78,7 +78,11 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
               fontWeight: isActive ? 700 : 500,
               boxShadow: isActive ? '0 2px 8px var(--accent-glow)' : 'none',
               fontFamily: opt.code === 'ur' ? 'var(--font-urdu)' : 'inherit',
-              lineHeight: 1.4,
+              lineHeight: 1,
+              paddingBottom: opt.code === 'ur' ? '3px' : undefined,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             {compact && !fullWidth ? opt.shortLabel : opt.nativeLabel}

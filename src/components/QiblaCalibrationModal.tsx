@@ -6,20 +6,59 @@ interface QiblaCalibrationModalProps {
   isOpen: boolean;
   onClose: () => void;
   compassSignal: number | null;
+  isCompassActive?: boolean;
+  isSensorInactive?: boolean;
 }
 
 export const QiblaCalibrationModal = ({
   isOpen,
   onClose,
   compassSignal,
+  isCompassActive = true,
+  isSensorInactive = false,
 }: QiblaCalibrationModalProps) => {
   useBodyScrollLock(isOpen);
 
   if (!isOpen || typeof document === 'undefined') return null;
 
+  const isLive = isCompassActive && compassSignal !== null && !isSensorInactive;
+  const isPaused = !isCompassActive && !isSensorInactive;
   const signal = compassSignal ?? 0;
-  const isHigh = signal >= 80;
-  const isMedium = signal >= 50 && signal < 80;
+  const isHigh = isLive && signal >= 80;
+  const isMedium = isLive && signal >= 50 && signal < 80;
+
+  // Determine single-line status badge
+  let badgeLabel = 'Standby';
+  let badgeColor = '#f59e0b';
+  let badgeBg = 'rgba(245, 158, 11, 0.15)';
+  let valueText = 'Standby';
+
+  if (isSensorInactive) {
+    badgeLabel = 'No Sensor';
+    badgeColor = '#ef4444';
+    badgeBg = 'rgba(239, 68, 68, 0.15)';
+    valueText = 'Unavailable';
+  } else if (isPaused) {
+    badgeLabel = 'Standby';
+    badgeColor = '#f59e0b';
+    badgeBg = 'rgba(245, 158, 11, 0.15)';
+    valueText = 'Standby';
+  } else if (isLive) {
+    valueText = `${signal}%`;
+    if (isHigh) {
+      badgeLabel = 'High Accuracy';
+      badgeColor = 'var(--accent-text)';
+      badgeBg = 'var(--accent-soft)';
+    } else if (isMedium) {
+      badgeLabel = 'Moderate';
+      badgeColor = '#f59e0b';
+      badgeBg = 'rgba(245, 158, 11, 0.15)';
+    } else {
+      badgeLabel = 'Calibrate Now';
+      badgeColor = '#ef4444';
+      badgeBg = 'rgba(239, 68, 68, 0.15)';
+    }
+  }
 
   return createPortal(
     <div
@@ -69,89 +108,61 @@ export const QiblaCalibrationModal = ({
           </button>
         </div>
 
-        {/* Current Signal Status Pill */}
-        <div className="p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-between">
+        {/* Current Signal Status Pill (1-line, no stacked badge) */}
+        <div className="p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-between gap-2">
           <div className="space-y-0.5">
             <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)]">
               Sensor Accuracy
             </span>
             <div className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-full"
+                className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{
-                  backgroundColor:
-                    compassSignal === null
-                      ? 'var(--text-secondary)'
-                      : isHigh
-                      ? 'var(--accent)'
-                      : isMedium
-                      ? '#f59e0b'
-                      : '#ef4444',
-                  boxShadow:
-                    compassSignal !== null && isHigh
-                      ? '0 0 8px var(--accent)'
-                      : 'none',
+                  backgroundColor: badgeColor,
+                  boxShadow: isHigh ? '0 0 8px var(--accent)' : 'none',
                 }}
               />
               <span className="text-sm font-black font-mono">
-                {compassSignal !== null ? `${compassSignal}%` : 'Offline / Standby'}
+                {valueText}
               </span>
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <span
-              className="text-xs font-bold px-2.5 py-1 rounded-full border text-[11px]"
+              className="text-xs font-bold px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap inline-block"
               style={{
-                backgroundColor: isHigh
-                  ? 'var(--accent-soft)'
-                  : isMedium
-                  ? 'rgba(245, 158, 11, 0.15)'
-                  : 'rgba(239, 68, 68, 0.15)',
-                color: isHigh
-                  ? 'var(--accent-text)'
-                  : isMedium
-                  ? '#f59e0b'
-                  : '#ef4444',
-                borderColor: isHigh
-                  ? 'var(--accent)'
-                  : isMedium
-                  ? '#f59e0b'
-                  : '#ef4444',
+                backgroundColor: badgeBg,
+                color: badgeColor,
+                borderColor: badgeColor,
               }}
             >
-              {compassSignal === null
-                ? 'No Magnetometer'
-                : isHigh
-                ? 'High Accuracy'
-                : isMedium
-                ? 'Moderate Interference'
-                : 'Calibrate Now'}
+              {badgeLabel}
             </span>
           </div>
         </div>
 
-        {/* Animated Figure-8 Graphic */}
-        <div className="p-4 rounded-2xl bg-[var(--bg-base)] border border-[var(--border)] flex flex-col items-center justify-center text-center space-y-2">
-          <div className="relative w-28 h-14 flex items-center justify-center">
+        {/* Animated Figure-8 Graphic (Clean Vertical Flex Stack with Zero Overlap) */}
+        <div className="p-4 rounded-2xl bg-[var(--bg-base)] border border-[var(--border)] flex flex-col items-center justify-center text-center space-y-3">
+          <div className="flex flex-col items-center justify-center gap-2">
             <svg
               width="100"
-              height="50"
-              viewBox="0 0 100 50"
+              height="46"
+              viewBox="0 0 100 46"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               className="overflow-visible"
             >
               {/* Figure 8 infinity loop track */}
               <path
-                d="M 25,25 C 25,12 37,12 50,25 C 63,38 75,38 75,25 C 75,12 63,12 50,25 C 37,38 25,38 25,25 Z"
+                d="M 25,23 C 25,11 37,11 50,23 C 63,35 75,35 75,23 C 75,11 63,11 50,23 C 37,35 25,35 25,23 Z"
                 stroke="var(--border)"
                 strokeWidth="4"
                 strokeLinecap="round"
                 fill="none"
               />
               <path
-                d="M 25,25 C 25,12 37,12 50,25 C 63,38 75,38 75,25 C 63,12 50,25 37,38 25,38 25,25 Z"
+                d="M 25,23 C 25,11 37,11 50,23 C 63,35 75,35 75,23 C 63,11 50,23 37,35 25,35 25,23 Z"
                 stroke="var(--accent)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
@@ -159,9 +170,9 @@ export const QiblaCalibrationModal = ({
                 fill="none"
               />
             </svg>
-            <div className="absolute text-[11px] font-bold text-[var(--accent-text)] flex items-center gap-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent-text)]">
               <RotateCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
-              <span>Figure-8</span>
+              <span>Figure-8 Motion</span>
             </div>
           </div>
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-medium">

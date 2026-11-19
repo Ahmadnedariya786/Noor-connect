@@ -427,25 +427,15 @@ export const QiblaGlobeCard = ({ userLat, userLng, cityName }: QiblaGlobeCardPro
   return (
     <Card className="overflow-hidden border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] shadow-sm">
       <CardContent className="p-4 space-y-4">
-        {/* Card Header */}
-        <div className="flex justify-between items-start">
-          <div className="space-y-0.5">
-            <p className="text-[11px] font-bold text-[var(--accent-text)] uppercase tracking-wider flex items-center gap-1.5">
-              <Navigation className="w-3.5 h-3.5" />
-              <span>Great-Circle Earth Flight & Road</span>
-            </p>
-            <div className="flex items-baseline gap-1.5 ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
-              <bdi>
-                <span dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }} className="inline-block tabular-nums font-mono text-3xl font-black text-[var(--text-primary)] tracking-tight">
-                  {activeDistance.toLocaleString('en-US')}
-                </span>
-              </bdi>
-              <span className="text-sm font-bold text-[var(--text-secondary)]">km</span>
-            </div>
-          </div>
+        {/* Card Header (1-line title with segmented toggle) */}
+        <div className="flex justify-between items-center gap-2">
+          <p className="text-[11px] font-extrabold text-[var(--accent-text)] uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
+            <Navigation className="w-3.5 h-3.5 shrink-0" />
+            <span>QIBLA PATH & DISTANCE</span>
+          </p>
 
           {/* Segmented Travel Mode Toggle */}
-          <div className="flex items-center p-0.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
+          <div className="flex items-center p-0.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] shrink-0">
             <button
               type="button"
               onClick={() => setTravelMode('flight')}
@@ -475,6 +465,25 @@ export const QiblaGlobeCard = ({ userLat, userLng, cityName }: QiblaGlobeCardPro
           </div>
         </div>
 
+        {/* Big Distance Display (Tight comma kerning) */}
+        <div className="flex items-baseline gap-1.5 ltr-num" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+          <bdi>
+            <span
+              dir="ltr"
+              style={{
+                direction: 'ltr',
+                unicodeBidi: 'isolate',
+                letterSpacing: '-0.02em',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+              className="inline-block text-3xl font-black text-[var(--text-primary)]"
+            >
+              {activeDistance.toLocaleString('en-US')}
+            </span>
+          </bdi>
+          <span className="text-sm font-bold text-[var(--text-secondary)]">km</span>
+        </div>
+
         {/* 2D HTML5 Canvas Orthographic Globe */}
         <div className="flex flex-col items-center justify-center pt-1 pb-1">
           <div className="relative rounded-full border border-[var(--border)] p-1 bg-[var(--bg-base)] shadow-inner">
@@ -496,7 +505,10 @@ export const QiblaGlobeCard = ({ userLat, userLng, cityName }: QiblaGlobeCardPro
               {travelMode === 'flight' ? <Plane className="w-3 h-3" /> : <Car className="w-3 h-3" />}
               <span>{travelMode === 'flight' ? 'Air Flight Path' : 'Overland Route'}</span>
             </div>
-            <p className="text-base font-black text-[var(--text-primary)] font-mono mt-0.5">
+            <p
+              className="text-base font-black text-[var(--text-primary)] mt-0.5 tabular-nums"
+              style={{ letterSpacing: '-0.02em' }}
+            >
               {activeDistance.toLocaleString('en-US')} km
             </p>
             <p className="text-[10px] text-[var(--text-secondary)]">

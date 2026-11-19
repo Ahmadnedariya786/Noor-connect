@@ -606,7 +606,7 @@ export const QiblaCompassModern = () => {
         <div className="pt-0.5 flex justify-center">
           {isAligned ? (
             <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300"
               style={{
                 background: 'var(--accent-soft)',
                 border: '1.5px solid var(--accent)',
@@ -614,8 +614,8 @@ export const QiblaCompassModern = () => {
                 boxShadow: '0 0 16px var(--accent-glow)',
               }}
             >
-              <Check className="h-3.5 w-3.5 stroke-[3]" />
-              <span>✓ {ui.alignedWithQibla}</span>
+              <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>{ui.alignedWithQibla ? ui.alignedWithQibla.replace(/^✓\s*/, '') : 'Aligned with Qibla (Baitullah)'}</span>
             </div>
           ) : isLiveCompass ? (
             <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] shadow-sm">
@@ -626,27 +626,30 @@ export const QiblaCompassModern = () => {
                 }}
               />
               <span>
-                {ui.turnPrefix}{' '}
+                {ui.turnPrefix || 'Turn'}{' '}
                 <span className="text-[var(--accent-text)] font-bold">
                   {offsetResult.degrees}°
                 </span>{' '}
-                {offsetResult.direction === 'right' ? ui.right : ui.left}
+                {offsetResult.direction === 'right' ? (ui.right || 'Right') : (ui.left || 'Left')}
               </span>
             </div>
-          ) : compassState === 'permission-required' ? (
+          ) : (
             <button
               type="button"
               onClick={toggleCompass}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold shadow-sm active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--accent)] text-[var(--accent-text)] text-xs font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
             >
-              <Compass className="h-3.5 w-3.5" />
-              <span>{ui.tapEnableCompass}</span>
+              <Compass className="h-3.5 w-3.5 text-[var(--accent)]" />
+              <span>
+                {compassState === 'idle'
+                  ? 'Compass Paused — Tap to Resume'
+                  : compassState === 'permission-required'
+                  ? (ui.tapEnableCompass || 'Tap Enable Live Compass')
+                  : isSensorInactive
+                  ? 'True North Reference'
+                  : 'Starting Live Compass...'}
+              </span>
             </button>
-          ) : (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-secondary)] text-xs">
-              <Compass className="h-3.5 w-3.5 text-[var(--accent-text)]" />
-              <span>{isSensorInactive ? 'True North Reference' : ui.tapEnableCompass}</span>
-            </div>
           )}
         </div>
 
@@ -948,25 +951,35 @@ export const QiblaCompassModern = () => {
         </div>
       </div>
 
-      {/* ── ABOVE-THE-FOLD CONTROL STRIP (Directly Under Dial) ────────── */}
-      <div className="relative z-10 px-4 pt-1 pb-3 space-y-2">
-        <div className="flex items-center justify-between gap-2">
+      {/* ── ABOVE-THE-FOLD CONTROL STRIP (Directly Under Dial, 360px-safe) ── */}
+      <div className="relative z-10 px-3 pt-1 pb-3 space-y-2">
+        <div
+          className="flex items-center justify-between w-full max-w-full box-border"
+          style={{ gap: '6px' }}
+        >
           {/* Sensor Status Pill (Taps open calibration modal) */}
           <button
             type="button"
             onClick={() => setShowCalibrationModal(true)}
-            className="flex-1 inline-flex items-center justify-between px-3 py-1.5 rounded-full border text-xs font-semibold bg-[var(--surface-2)] border-[var(--border)] active:scale-98 transition-all"
+            className="flex-1 min-w-0 inline-flex items-center justify-between rounded-full border font-semibold bg-[var(--surface-2)] border-[var(--border)] active:scale-98 transition-all overflow-hidden"
+            style={{
+              flex: '1 1 auto',
+              padding: '6px 10px',
+              fontSize: '0.72rem',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+            }}
             aria-label="Compass signal accuracy and calibration guide"
           >
-            <div className="flex items-center gap-2 truncate">
+            <div className="flex items-center gap-1.5 truncate">
               <span
                 className="w-2 h-2 rounded-full shrink-0"
                 style={{
                   backgroundColor:
-                    compassSignal === null
-                      ? isSensorInactive
-                        ? '#f59e0b'
-                        : 'var(--text-secondary)'
+                    compassState !== 'active'
+                      ? '#f59e0b'
+                      : compassSignal === null
+                      ? 'var(--accent)'
                       : compassSignal >= 80
                       ? 'var(--accent)'
                       : compassSignal >= 50
@@ -975,17 +988,15 @@ export const QiblaCompassModern = () => {
                 }}
               />
               <span className="text-[var(--text-primary)] font-bold truncate">
-                {compassSignal !== null
-                  ? `Compass Signal ${compassSignal}%`
-                  : isSensorInactive
-                  ? 'True North Reference'
-                  : compassState === 'active'
-                  ? 'Sensor Active'
-                  : 'Compass Standby'}
+                {compassState !== 'active'
+                  ? '● Standby'
+                  : compassSignal !== null
+                  ? `● Live ${compassSignal}%`
+                  : '● Live'}
               </span>
             </div>
             <span
-              className="w-4 h-4 rounded-full flex items-center justify-center text-[var(--accent)] font-bold text-[10px] border border-[var(--border)] shrink-0 ml-1.5"
+              className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[var(--accent)] font-bold text-[9px] border border-[var(--border)] shrink-0 ml-1"
               style={{ background: 'var(--surface)' }}
             >
               ⓘ
@@ -996,19 +1007,31 @@ export const QiblaCompassModern = () => {
           <button
             type="button"
             onClick={toggleCompass}
-            className="px-3 py-1.5 rounded-full border text-xs font-bold transition-all active:scale-95 shrink-0 bg-[var(--surface)] border-[var(--border)] text-[var(--text-primary)]"
+            className="rounded-full border font-bold transition-all active:scale-95 shrink-0 bg-[var(--surface)] border-[var(--border)] text-[var(--text-primary)] cursor-pointer"
+            style={{
+              flexShrink: 0,
+              padding: '6px 11px',
+              fontSize: '0.72rem',
+              whiteSpace: 'nowrap',
+            }}
           >
             {compassState === 'active' ? 'Pause' : 'Resume'}
           </button>
 
-          {/* Calibrate Button */}
+          {/* Calibrate Button (1-line, unclipped on 360px) */}
           <button
             type="button"
             onClick={() => setShowCalibrationModal(true)}
-            className="px-3 py-1.5 rounded-full border text-xs font-bold transition-all active:scale-95 shrink-0 bg-[var(--surface)] border-[var(--border)] text-[var(--accent-text)]"
+            className="rounded-full border font-bold transition-all active:scale-95 shrink-0 bg-[var(--surface)] border-[var(--border)] text-[var(--accent-text)] cursor-pointer"
+            style={{
+              flexShrink: 0,
+              padding: '6px 11px',
+              fontSize: '0.72rem',
+              whiteSpace: 'nowrap',
+            }}
             title="Recalibrate Compass"
           >
-            Calibrate ∞
+            Calibrate
           </button>
         </div>
 
@@ -1101,7 +1124,7 @@ export const QiblaCompassModern = () => {
             </p>
           </div>
 
-          {/* Right Column: QIBLA OFFSET */}
+          {/* Right Column: QIBLA OFFSET (Honest delta + clean single checkmark) */}
           <div className="rounded-2xl p-3.5 border border-[var(--border)] bg-[var(--surface)] shadow-sm space-y-1">
             <p className="text-[var(--text-secondary)] text-[11px] font-bold uppercase tracking-wider">
               {ui.qiblaOffset}
@@ -1111,13 +1134,22 @@ export const QiblaCompassModern = () => {
                 {deviceHeading !== null ? offsetResult.label : '--°'}
               </span>
             </div>
-            <p className="text-[var(--text-secondary)]/70 text-[10px]">
-              {deviceHeading !== null
-                ? isAligned
-                  ? `✓ ${ui.perfectlyAligned}`
-                  : ui.turnDeviceToAlign
-                : ui.standby}
-            </p>
+            <div className="text-[10px]">
+              {deviceHeading !== null ? (
+                isAligned ? (
+                  <span className="text-[var(--accent-text)] font-semibold inline-flex items-center gap-1">
+                    <Check className="w-3 h-3 stroke-[2.5]" />
+                    <span>Aligned</span>
+                  </span>
+                ) : (
+                  <span className="text-[var(--text-secondary)]/70">
+                    {ui.turnDeviceToAlign || 'Turn device to align'}
+                  </span>
+                )
+              ) : (
+                <span className="text-[var(--text-secondary)]/70">{ui.standby || 'Standby'}</span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1135,6 +1167,8 @@ export const QiblaCompassModern = () => {
         isOpen={showCalibrationModal}
         onClose={() => setShowCalibrationModal(false)}
         compassSignal={compassSignal}
+        isCompassActive={compassState === 'active'}
+        isSensorInactive={isSensorInactive}
       />
     </div>
   );
