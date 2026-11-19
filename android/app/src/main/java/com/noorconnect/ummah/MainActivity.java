@@ -112,6 +112,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(WidgetBridge.class);
         registerPlugin(NativeAdhanPlugin.class);
         registerPlugin(BatteryOptimizationPlugin.class);
+        registerPlugin(NoorMediaBridgePlugin.class);
         super.onCreate(savedInstanceState);
 
         // Apply persisted native theme background color immediately to eliminate cold-start flash

@@ -786,6 +786,29 @@ async function runClipStudioTests() {
       if (mod.includes('ayah-meaning-scene-engine')) return engineModule;
       if (mod.includes('tilawah-data')) return tilawahModule;
       if (mod.includes('diagnostics-engine')) return { beginHeavyOperation: () => {}, endHeavyOperation: () => {} };
+      if (mod.includes('@capacitor/core') || mod.includes('core')) {
+        return {
+          Capacitor: { isNativePlatform: () => false },
+          registerPlugin: () => ({
+            saveToGallery: async () => ({ saved: true, uri: 'mock://uri', folder: 'Movies/NoorConnect' }),
+            shareCachedFile: async () => ({ shared: true }),
+          }),
+        };
+      }
+      if (mod.includes('@capacitor/filesystem') || mod.includes('filesystem')) {
+        return {
+          Filesystem: {
+            writeFile: async () => {},
+            getUri: async () => ({ uri: 'mock://uri' }),
+          },
+          Directory: { Cache: 'CACHE' },
+        };
+      }
+      if (mod.includes('@capacitor/share') || mod.includes('share')) {
+        return {
+          Share: { share: async () => {} },
+        };
+      }
       return {};
     });
 
@@ -1015,8 +1038,46 @@ async function runClipStudioTests() {
     }
     console.log('  ✓ PASS: Deep X-Ray Diagnostics persistent crash recovery and main-thread freeze watchdog verified!');
 
+    // -------------------------------------------------------------
+    // TEST 19: NATIVE ANDROID MEDIASTORE GALLERY & ACTION_SEND SHARE BRIDGE
+    // -------------------------------------------------------------
+    console.log('\n--- TEST 19: Native Android MediaStore Gallery & ACTION_SEND Share Bridge ---');
+    const mainActivitySrc = fs.readFileSync(path.join(__dirname, '..', 'android', 'app', 'src', 'main', 'java', 'com', 'noorconnect', 'ummah', 'MainActivity.java'), 'utf-8');
+    if (!mainActivitySrc.includes('registerPlugin(NoorMediaBridgePlugin.class);')) {
+      throw new Error('TEST 19 FAILED: NoorMediaBridgePlugin not registered in MainActivity.java!');
+    }
+
+    const filePathsSrc = fs.readFileSync(path.join(__dirname, '..', 'android', 'app', 'src', 'main', 'res', 'xml', 'file_paths.xml'), 'utf-8');
+    if (!filePathsSrc.includes('name="my_cache"') || !filePathsSrc.includes('name="my_external_cache"')) {
+      throw new Error('TEST 19 FAILED: file_paths.xml missing my_cache or my_external_cache entries!');
+    }
+
+    const bridgePluginSrc = fs.readFileSync(path.join(__dirname, '..', 'android', 'app', 'src', 'main', 'java', 'com', 'noorconnect', 'ummah', 'NoorMediaBridgePlugin.java'), 'utf-8');
+    if (!bridgePluginSrc.includes('@CapacitorPlugin(name = "NoorMediaBridge")') ||
+        !bridgePluginSrc.includes('public void saveToGallery') ||
+        !bridgePluginSrc.includes('public void shareCachedFile')) {
+      throw new Error('TEST 19 FAILED: NoorMediaBridgePlugin.java missing required plugin annotations or methods!');
+    }
+
+    const rendererSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'quran-clip-renderer.ts'), 'utf-8');
+    if (!rendererSrc.includes('export async function writeBlobToNativeCache') ||
+        !rendererSrc.includes('export const NoorMediaBridge = registerPlugin') ||
+        !rendererSrc.includes('Math.round(height * 0.085)') ||
+        !rendererSrc.includes('Math.round(height * 0.130)') ||
+        !rendererSrc.includes('Math.round(height * 0.190) + arabicFontSize')) {
+      throw new Error('TEST 19 FAILED: quran-clip-renderer.ts missing writeBlobToNativeCache, NoorMediaBridge, or Bismillah anti-overlap coordinates!');
+    }
+
+    const modalSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'QuranClipStudioModal.tsx'), 'utf-8');
+    if (!modalSrc.includes('NoorMediaBridge.saveToGallery') ||
+        !modalSrc.includes('writeBlobToNativeCache(videoResult.blob') ||
+        !modalSrc.includes('writeBlobToNativeCache(currentBlob')) {
+      throw new Error('TEST 19 FAILED: QuranClipStudioModal.tsx missing native MediaStore gallery saving in handleDownloadVideo / handleDownloadImage!');
+    }
+    console.log('  ✓ PASS: Native MediaStore gallery saver, ACTION_SEND share sheet, and Bismillah anti-overlap hierarchy verified!');
+
     console.log('\n======================================================');
-    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (18/18 PASS)');
+    console.log('✅ ALL CLIP STUDIO & DIAGNOSTICS TESTS PASSED (19/19 PASS)');
     console.log('======================================================\n');
   } finally {
     try { client.close(); } catch {}

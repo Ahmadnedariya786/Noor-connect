@@ -19,10 +19,26 @@
  *  7. Bulletproof Android Filesystem.Cache Write & Share.share Handling (with silent cancel catch)
  */
 
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { OFFLINE_AUDIO_CACHE_NAME } from '@/lib/offline-audio';
+
+export interface NoorMediaBridgePlugin {
+  saveToGallery(options: {
+    cacheFileName: string;
+    mimeType: string;
+    displayName?: string;
+  }): Promise<{ saved: boolean; uri: string; folder: string }>;
+  shareCachedFile(options: {
+    cacheFileName: string;
+    mimeType: string;
+    title?: string;
+    caption?: string;
+  }): Promise<{ shared: boolean }>;
+}
+
+export const NoorMediaBridge = registerPlugin<NoorMediaBridgePlugin>('NoorMediaBridge');
 import {
   getPrimaryAyahAudioUrl,
   getSecondaryAyahAudioUrl,
@@ -2293,21 +2309,15 @@ export function prerenderAyahOffscreenCanvas(params: {
   };
 
   // ZONE A — Upper Typography Stage (y = 8% to 34% of canvas height)
-  // 1. Top Small Header (y = 10%)
+  // 1. Top Small Header
   const isAyah1BismillahExcluded =
     ayah.ayahNumber === 1 && ayah.surahNumber !== 1 && ayah.surahNumber !== 9;
-  const headerY = Math.round(height * 0.10);
+  const headerY = Math.round(height * (isAyah1BismillahExcluded ? 0.085 : 0.095));
 
   ctx.save();
   ctx.textAlign = 'center';
   if (isAyah1BismillahExcluded) {
-    // Elegant Ornamental ﷽ Cartouche for Ayah 1 of Surahs 2–114
-    ctx.font = '700 24px "Amiri", "Scheherazade New", serif';
-    ctx.fillStyle = '#DCA349';
-    ctx.shadowColor = 'rgba(212, 175, 55, 0.45)';
-    ctx.shadowBlur = 8;
-    ctx.fillText('﷽', width * 0.5, headerY - 6);
-
+    // 1. Surah Name & Ayah number at the very top:
     ctx.font = '700 15px "Amiri", "Scheherazade New", serif';
     ctx.fillStyle = 'rgba(235, 210, 160, 0.85)';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
@@ -2315,8 +2325,15 @@ export function prerenderAyahOffscreenCanvas(params: {
     ctx.fillText(
       `سُورَةُ ${surahNameArabic || 'الْقُرْآن'} • Ayah ${ayah.ayahNumber}`,
       width * 0.5,
-      headerY + 18
+      Math.round(height * 0.085)
     );
+
+    // 2. Elegant Ornamental ﷽ Cartouche centered beneath it:
+    ctx.font = '700 24px "Amiri", "Scheherazade New", serif';
+    ctx.fillStyle = '#DCA349';
+    ctx.shadowColor = 'rgba(212, 175, 55, 0.45)';
+    ctx.shadowBlur = 8;
+    ctx.fillText('﷽', width * 0.5, Math.round(height * 0.130));
   } else {
     ctx.font = '700 18px "Amiri", "Scheherazade New", serif';
     ctx.fillStyle = 'rgba(235, 210, 160, 0.85)';
@@ -2365,8 +2382,10 @@ export function prerenderAyahOffscreenCanvas(params: {
   const gap = Math.max(14, Math.round(height * 0.018));
   const totalTextHeight = totalArabicHeight + (transLines.length > 0 ? gap + totalTransHeight : 0);
 
-  // Height budget for Upper Typography: strictly y = 0.08 * h to 0.35 * h (budget = 0.25 * h)
-  const maxAvailableHeight = Math.round(height * 0.24);
+  // Height budget for Upper Typography: strictly y = 0.08 * h to 0.35 * h
+  const maxAvailableHeight = isAyah1BismillahExcluded
+    ? Math.round(height * 0.19)
+    : Math.round(height * 0.24);
   if (totalTextHeight > maxAvailableHeight) {
     const scale = maxAvailableHeight / totalTextHeight;
     arabicFontSize = Math.max(20, Math.round(arabicFontSize * scale));
@@ -2385,7 +2404,9 @@ export function prerenderAyahOffscreenCanvas(params: {
   }
 
   // Draw Arabic Text (NO bulky rectangular border box! Open cinema screen aesthetic)
-  let curY = headerY + 28 + arabicFontSize;
+  let curY = isAyah1BismillahExcluded
+    ? Math.round(height * 0.190) + arabicFontSize
+    : headerY + 28 + arabicFontSize;
   ctx.direction = 'rtl';
   ctx.textAlign = 'center';
   ctx.font = `700 ${arabicFontSize}px "Amiri", "Scheherazade New", serif`;
@@ -2517,6 +2538,20 @@ export function blobToBase64(blob: Blob): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+/**
+ * Write a Blob to private cache directory and return the cache file name/path
+ */
+export async function writeBlobToNativeCache(blob: Blob, fileName: string): Promise<string> {
+  const base64Data = await blobToBase64(blob);
+  await Filesystem.writeFile({
+    path: fileName,
+    data: base64Data,
+    directory: Directory.Cache,
+    recursive: true,
+  });
+  return fileName;
 }
 
 /**
@@ -3336,7 +3371,7 @@ export async function renderRecitationVideoClip(params: {
 }
 
 /**
- * SAFEGUARD 7 — Native Android Filesystem.writeFile + Share.share
+ * SAFEGUARD 7 — Native Android NoorMediaBridge shareCachedFile + Share.share
  */
 export async function exportAndShareClip(params: {
   blob: Blob;
@@ -3354,39 +3389,42 @@ export async function exportAndShareClip(params: {
   // 1. Capacitor Native Android Path
   if (Capacitor.isNativePlatform()) {
     try {
-      const base64Data = await blobToBase64(blob);
-      const filePath = `clips/${fileName}`;
-
-      await Filesystem.writeFile({
-        path: filePath,
-        data: base64Data,
-        directory: Directory.Cache,
-        recursive: true,
-      });
-
-      const uriResult = await Filesystem.getUri({
-        path: filePath,
-        directory: Directory.Cache,
-      });
-
-      await Share.share({
-        title,
-        text,
-        url: uriResult.uri,
-        dialogTitle: 'Share Quran Clip',
-      });
-      return;
-    } catch (err: any) {
-      // User cancelled share dialog -> ignore silently
+      await writeBlobToNativeCache(blob, fileName);
+      try {
+        await NoorMediaBridge.shareCachedFile({
+          cacheFileName: fileName,
+          mimeType,
+          title,
+          caption: text,
+        });
+        return;
+      } catch (bridgeErr: unknown) {
+        // Fallback to Capacitor Share.share if native bridge encounters an unexpected issue
+        console.warn('[NoorMediaBridge] Fallback to Share.share:', bridgeErr);
+        const uriResult = await Filesystem.getUri({
+          path: fileName,
+          directory: Directory.Cache,
+        });
+        await Share.share({
+          title,
+          text,
+          url: uriResult.uri,
+          dialogTitle: title || 'Share Quran Clip',
+        });
+        return;
+      }
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : String(err);
       if (
-        err?.message?.includes('cancelled') ||
-        err?.message?.includes('canceled') ||
-        err?.message?.includes('User dismissed')
+        errMessage.includes('cancelled') ||
+        errMessage.includes('canceled') ||
+        errMessage.includes('User dismissed')
       ) {
         return;
       }
-      onToast?.('Opening browser download fallback...');
-      // Fall through to browser download on error
+      console.warn('[NoorMediaBridge] Share failed:', err);
+      onToast?.(errMessage ? `Share failed: ${errMessage}` : 'Unable to share clip');
+      return;
     }
   }
 

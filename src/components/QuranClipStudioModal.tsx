@@ -24,6 +24,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
 import {
   type AspectRatioType,
   type SceneId,
@@ -38,6 +39,8 @@ import {
   renderAyahImageCard,
   renderRecitationVideoClip,
   exportAndShareClip,
+  writeBlobToNativeCache,
+  NoorMediaBridge,
 } from '@/lib/quran-clip-renderer';
 import { QURAN_RECITERS, getReciterById } from '@/lib/quran-reciters';
 import { useTilawah } from '@/contexts/TilawahContext';
@@ -858,9 +861,29 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
     });
   };
 
-  const handleDownloadVideo = () => {
+  const handleDownloadVideo = async () => {
     if (!videoResult) return;
     const filename = `noor-clip-s${surahNumber}-a${fromAyah}-${toAyah}${videoResult.extension}`;
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        toast.info('Saving to Gallery (Movies/NoorConnect)...');
+        await writeBlobToNativeCache(videoResult.blob, filename);
+        const res = await NoorMediaBridge.saveToGallery({
+          cacheFileName: filename,
+          mimeType: videoResult.mimeType,
+          displayName: filename,
+        });
+        toast.success(`✅ Saved to Gallery (${res.folder})!`);
+        return;
+      } catch (saveErr: unknown) {
+        console.warn('[QuranClipStudio] Native gallery save failed:', saveErr);
+        const errMsg = saveErr instanceof Error ? saveErr.message : String(saveErr);
+        toast.error(`Gallery save failed: ${errMsg}`);
+        return;
+      }
+    }
+
     const a = document.createElement('a');
     a.href = videoResult.url;
     a.download = filename;
@@ -904,6 +927,26 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
 
     if (!currentBlob) return;
     const filename = `noor-ayah-s${surahNumber}-a${fromAyah}.png`;
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        toast.info('Saving to Gallery (Pictures/NoorConnect)...');
+        await writeBlobToNativeCache(currentBlob, filename);
+        const res = await NoorMediaBridge.saveToGallery({
+          cacheFileName: filename,
+          mimeType: 'image/png',
+          displayName: filename,
+        });
+        toast.success(`✅ Saved to Gallery (${res.folder})!`);
+        return;
+      } catch (saveErr: unknown) {
+        console.warn('[QuranClipStudio] Native gallery image save failed:', saveErr);
+        const errMsg = saveErr instanceof Error ? saveErr.message : String(saveErr);
+        toast.error(`Gallery save failed: ${errMsg}`);
+        return;
+      }
+    }
+
     const url = URL.createObjectURL(currentBlob);
     const a = document.createElement('a');
     a.href = url;
