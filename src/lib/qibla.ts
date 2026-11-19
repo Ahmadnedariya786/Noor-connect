@@ -8,6 +8,23 @@
  *  3. Embedded WMM-lite approximation — always offline fallback, ±0.5° accuracy
  */
 
+export {
+  KAABA_LAT,
+  KAABA_LNG,
+  computeQiblaData,
+  computeSolarAzimuthDeg,
+  interpolateCircularHeading,
+  computeQiblaOffset,
+  computeDeviceTilt,
+  calculateSphericalBearing,
+  calculateHaversineDistanceKm,
+  formatDurationHours,
+  type DetailedQiblaData,
+  type SolarPosition,
+  type QiblaOffsetResult,
+  type TiltLevelData,
+} from './qibla-precision';
+
 // ─── Kaaba coordinates ─────────────────────────────────────────
 export const KAABA_COORDINATES = { latitude: 21.4225, longitude: 39.8262 } as const;
 
@@ -129,7 +146,6 @@ async function getMagneticDeclination(latitude: number, longitude: number): Prom
   try {
     // BGS World Magnetic Model API — CORS-safe, no auth needed
     const today = new Date().toISOString().split('T')[0];
-    const url = `https://api.geonet.org.nz/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=IGNS:geomagnetic_observations&maxFeatures=1`;
     
     // Primary: BGS geomagnetic calculator
     const bgsUrl = `https://www.geomag.bgs.ac.uk/web_service/GMModels/wmm/v1/?latitude=${latitude}&longitude=${longitude}&altitude=0&date=${today}&resultFormat=json`;
