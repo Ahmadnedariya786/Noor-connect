@@ -518,7 +518,7 @@ const QuranRadio = () => {
     <div className="min-h-screen" style={{ background: "var(--bg-base)", paddingBottom: "calc(180px + env(safe-area-inset-bottom, 0px))" }}>
       {/* ── Functional sticky bar ── */}
       <div
-        className="sticky top-0 z-40 backdrop-blur-md border-b safe-top"
+        className="sticky top-0 z-40 border-b safe-top"
         style={{
           background: "var(--bg-base)",
           borderColor: "var(--border)",

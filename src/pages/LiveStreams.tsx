@@ -90,7 +90,7 @@ export default function LiveStreams() {
 
         {/* Info cards */}
         <div className="grid grid-cols-1 gap-3.5">
-          <div className={`rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-4 space-y-2 ${isRtl ? 'text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+          <div className={`rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-4 space-y-2 ${isRtl ? 'text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
             <div className={`w-8 h-8 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center ${isRtl ? 'ml-auto' : ''}`}>
               <Wifi className="w-4 h-4 text-[var(--accent)]" />
             </div>
@@ -102,7 +102,7 @@ export default function LiveStreams() {
             </p>
           </div>
 
-          <div className={`rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-4 space-y-2 ${isRtl ? 'text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+          <div className={`rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-4 space-y-2 ${isRtl ? 'text-right' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
             <div className={`w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center ${isRtl ? 'ml-auto' : ''}`}>
               <Shield className="w-4 h-4 text-indigo-600" />
             </div>

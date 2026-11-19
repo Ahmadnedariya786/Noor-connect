@@ -403,13 +403,13 @@ const Profile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)] pb-32">
-      {/* Sticky Glassmorphic Navigation Bar */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bg-base)]/85 border-b border-[var(--border)] px-4 pb-3.5 safe-top transition-all" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-30 bg-[var(--bg-base)] border-b border-[var(--border)] px-4 pb-3.5 safe-top" style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}>
         <div className="max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/', { replace: true })}
-              className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-all"
+              className="p-2 -ml-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-95 transition-transform duration-150"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
@@ -447,7 +447,7 @@ const Profile: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div 
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border backdrop-blur-sm"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border"
                   style={{
                     background: 'var(--accent-soft)',
                     color: 'var(--accent-text)',
@@ -466,7 +466,7 @@ const Profile: React.FC = () => {
               </div>
 
               <div 
-                className="w-11 h-11 rounded-2xl border backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm"
+                className="w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 shadow-sm"
                 style={{
                   background: 'var(--surface-2)',
                   borderColor: 'var(--border)',

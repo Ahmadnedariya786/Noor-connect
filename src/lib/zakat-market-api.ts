@@ -34,6 +34,9 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
   { code: 'TRY', symbol: '₺', name: 'Turkish Lira', flag: '🇹🇷', baselineGoldPerGram: 3050, baselineSilverPerGram: 37.20 },
   { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar', flag: '🇨🇦', baselineGoldPerGram: 120.50, baselineSilverPerGram: 1.47 },
   { code: 'AUD', symbol: 'A$', name: 'Australian Dollar', flag: '🇦🇺', baselineGoldPerGram: 134.00, baselineSilverPerGram: 1.64 },
+  { code: 'KWD', symbol: 'د.ك', name: 'Kuwaiti Dinar', flag: '🇰🇼', baselineGoldPerGram: 27.20, baselineSilverPerGram: 0.33 },
+  { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', flag: '🇶🇦', baselineGoldPerGram: 322.00, baselineSilverPerGram: 3.93 },
+  { code: 'OMR', symbol: 'ر.ع', name: 'Omani Rial', flag: '🇴🇲', baselineGoldPerGram: 34.10, baselineSilverPerGram: 0.42 },
 ];
 
 export const GOLD_KARAT_MULTIPLIERS: Record<number, { label: string; multiplier: number }> = {

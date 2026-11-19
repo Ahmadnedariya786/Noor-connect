@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -17,6 +18,7 @@ import {
   ChevronUp,
   Check,
   X,
+  Search,
   Wheat,
   Wallet,
   Building2,
@@ -132,6 +134,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
   const [showOverrideModal, setShowOverrideModal] = useState<boolean>(false);
   const [showCurrencySheet, setShowCurrencySheet] = useState<boolean>(false);
   const [showPuritySheet, setShowPuritySheet] = useState<boolean>(false);
+  const [currencySearch, setCurrencySearch] = useState<string>('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   // Override Form State
@@ -242,6 +245,18 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
     loadRates(newCurr, false);
     toast.success(`Currency switched to ${newCurr}`);
   };
+
+  // Filtered Currencies for Search
+  const filteredCurrencies = useMemo(() => {
+    const q = currencySearch.trim().toLowerCase();
+    if (!q) return SUPPORTED_CURRENCIES;
+    return SUPPORTED_CURRENCIES.filter(
+      (c) =>
+        c.code.toLowerCase().includes(q) ||
+        c.name.toLowerCase().includes(q) ||
+        c.symbol.toLowerCase().includes(q)
+    );
+  }, [currencySearch]);
 
   // Safe parse helper
   const parseNum = (val: string): number => {
@@ -650,7 +665,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
     >
       {/* ── TOP APP BAR (WITH STATUS-BAR & CAMERA SAFE-AREA CLEARANCE) ── */}
       <header
-        className="sticky top-0 z-40 bg-[var(--surface)]/95 backdrop-blur-md border-b border-[var(--border)] px-4 pb-3"
+        className="sticky top-0 z-40 bg-[var(--surface)] border-b border-[var(--border)] px-4 pb-3"
         style={{
           paddingTop: isEmbedded ? '12px' : 'max(calc(env(safe-area-inset-top, 0px) + 16px), 46px)',
         }}
@@ -790,7 +805,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* ── LIVE GOLD & SILVER MARKET RATES CARD (NO TEXT COLLISION) ── */}
             <div
               className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -889,7 +904,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* ── NISAB THRESHOLD SELECTOR CARD (NON-WRAPPING LAYOUT) ── */}
             <div
               className="rounded-2xl p-3.5 bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5 whitespace-nowrap">
@@ -984,7 +999,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 1) Cash & Bank Balances */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1082,7 +1097,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 2) Gold (Jewelry, Coins & Bars) */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1200,7 +1215,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 3) Silver (Utensils, Coins & Bars) */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1299,7 +1314,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 4) Investments, Shares & Crypto */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1364,7 +1379,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 5) Business Inventory & Trade Goods */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1429,7 +1444,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 6) Other Zakatable Assets */}
             <div
               className="rounded-2xl p-4 bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-[var(--border)]/60 pb-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1494,7 +1509,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 7) Agricultural Produce (Optional Expandable Ushr Card) */}
             <div
               className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <button
                 type="button"
@@ -1604,7 +1619,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
             {/* 8) Livestock (Optional Expandable An'am Card - Horizontally Aligned) */}
             <div
               className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-xs"
-              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+              style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
             >
               <button
                 type="button"
@@ -2071,7 +2086,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                   <div
                     key={record.id}
                     className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-3 shadow-xs"
-                    style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))' }}
+                    style={{ boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))', contain: 'layout style paint' }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -2154,14 +2169,20 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* MODAL 1: SIMPLE SHARIAH RULES EXPLAINER                            */}
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {showShariahRulesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+      {showShariahRulesModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-[rgba(2,4,10,0.80)] animate-in fade-in duration-150"
+          onClick={() => setShowShariahRulesModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
           <div
-            className="w-full max-w-lg bg-[var(--surface)] border border-[var(--border)] rounded-[24px] max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+            className="w-full max-w-lg bg-[var(--surface)] border border-[var(--border)] rounded-[24px] max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
             style={{
-              boxShadow: '0 20px 60px -15px rgba(0,0,0,0.5)',
+              boxShadow: '0 20px 60px -15px rgba(0,0,0,0.7)',
               fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
@@ -2176,7 +2197,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
               <button
                 type="button"
                 onClick={() => setShowShariahRulesModal(false)}
-                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0 active:scale-95"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2215,23 +2236,33 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
               <button
                 type="button"
                 onClick={() => setShowShariahRulesModal(false)}
-                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs"
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs active:scale-95 transition-transform"
               >
                 {ui.closeBtn}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* MODAL 2: MANUAL METAL PRICE OVERRIDE                               */}
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {showOverrideModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+      {showOverrideModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-[rgba(2,4,10,0.80)] animate-in fade-in duration-150"
+          onClick={() => setShowOverrideModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
           <div
-            className="w-full max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-[24px] flex flex-col shadow-2xl overflow-hidden"
-            style={{ boxShadow: '0 20px 60px -15px rgba(0,0,0,0.5)' }}
+            className="w-full max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-[24px] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+            style={{
+              boxShadow: '0 20px 60px -15px rgba(0,0,0,0.7)',
+              fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
@@ -2246,7 +2277,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
               <button
                 type="button"
                 onClick={() => setShowOverrideModal(false)}
-                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0 active:scale-95"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2292,7 +2323,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
               <button
                 type="button"
                 onClick={handleResetOverride}
-                className="px-3 py-2 rounded-xl text-xs font-bold text-rose-500 hover:underline"
+                className="px-3 py-2 rounded-xl text-xs font-bold text-rose-500 hover:underline active:scale-95"
               >
                 Reset to Live Market
               </button>
@@ -2301,111 +2332,167 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                 <button
                   type="button"
                   onClick={() => setShowOverrideModal(false)}
-                  className="px-3 py-2 rounded-xl text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  className="px-3 py-2 rounded-xl text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveOverride}
-                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs"
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs active:scale-95"
                 >
                   Apply Override
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* BOTTOM SHEET 1: THEMED CURRENCY SELECTOR                             */}
+      {/* BOTTOM SHEET 1: THEMED CURRENCY SELECTOR (PORTAL MODAL)              */}
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {showCurrencySheet && (
+      {showCurrencySheet && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setShowCurrencySheet(false)}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-[rgba(2,4,10,0.80)] animate-in fade-in duration-150"
+          onClick={() => {
+            setShowCurrencySheet(false);
+            setCurrencySearch('');
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Select Currency"
         >
           <div
-            className="w-full max-w-md bg-[var(--bg-elev)] border-t sm:border border-[var(--border)] rounded-t-[28px] sm:rounded-[28px] flex flex-col shadow-2xl max-h-[82vh] overflow-hidden"
-            style={{ boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.45)' }}
+            className="w-full max-w-[340px] bg-[var(--bg-elev)] border border-[var(--border)] rounded-[24px] flex flex-col shadow-2xl max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-150"
+            style={{
+              boxShadow: '0 20px 60px -15px rgba(0, 0, 0, 0.7)',
+              fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+            <div className="p-3.5 border-b border-[var(--border)] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
                   <Coins className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">
-                  Select Currency
-                </h3>
+                <div>
+                  <h3 className="font-bold text-sm text-[var(--text-primary)]">
+                    Select Currency
+                  </h3>
+                  <p className="text-[10px] text-[var(--text-secondary)]">
+                    Live rates & Nisab thresholds
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
-                onClick={() => setShowCurrencySheet(false)}
-                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+                onClick={() => {
+                  setShowCurrencySheet(false);
+                  setCurrencySearch('');
+                }}
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0 active:scale-95"
                 aria-label="Close currency sheet"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* List */}
-            <div className="p-3 overflow-y-auto space-y-1.5 max-h-[60vh]">
-              {SUPPORTED_CURRENCIES.map((c) => {
-                const isSelected = activeCurrency === c.code;
-                return (
+            {/* Search Input */}
+            <div className="p-2.5 border-b border-[var(--border)] bg-[var(--surface)]">
+              <div className="relative flex items-center">
+                <Search className="w-3.5 h-3.5 text-[var(--text-secondary)] absolute left-2.5 pointer-events-none" />
+                <input
+                  type="text"
+                  value={currencySearch}
+                  onChange={(e) => setCurrencySearch(e.target.value)}
+                  placeholder="Search currency, code, or country..."
+                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+                {currencySearch && (
                   <button
-                    key={c.code}
                     type="button"
-                    onClick={() => {
-                      handleCurrencyChange(c.code);
-                      setShowCurrencySheet(false);
-                    }}
-                    className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all border text-left active:scale-[0.99] ${
-                      isSelected
-                        ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent-text)] ring-1 ring-[var(--accent)]/30'
-                        : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)]/40'
-                    }`}
+                    onClick={() => setCurrencySearch('')}
+                    className="absolute right-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xl leading-none">{c.flag}</span>
-                      <div>
-                        <div className="font-bold text-xs flex items-center gap-1.5">
-                          <span>{c.code}</span>
-                          <span className="text-[11px] text-[var(--text-secondary)]">({c.symbol})</span>
-                        </div>
-                        <div className="text-[10px] text-[var(--text-secondary)] font-medium">
-                          {c.name}
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="p-2.5 overflow-y-auto space-y-1 max-h-[55vh]">
+              {filteredCurrencies.length === 0 ? (
+                <div className="py-6 text-center text-xs text-[var(--text-secondary)]">
+                  No currencies match "{currencySearch}"
+                </div>
+              ) : (
+                filteredCurrencies.map((c) => {
+                  const isSelected = activeCurrency === c.code;
+                  return (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => {
+                        handleCurrencyChange(c.code);
+                        setShowCurrencySheet(false);
+                        setCurrencySearch('');
+                      }}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left active:scale-[0.98] transition-transform duration-100 ${
+                        isSelected
+                          ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent-text)] ring-1 ring-[var(--accent)]/30'
+                          : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)]/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xl leading-none shrink-0">{c.flag}</span>
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs flex items-center gap-1.5">
+                            <span>{c.code}</span>
+                            <span className="text-[11px] text-[var(--text-secondary)] font-normal">({c.symbol})</span>
+                          </div>
+                          <div className="text-[10px] text-[var(--text-secondary)] font-medium truncate">
+                            {c.name}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {isSelected ? (
-                      <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center shrink-0 shadow-sm">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    ) : (
-                      <span className="w-5 h-5 rounded-full border border-[var(--border)] shrink-0" />
-                    )}
-                  </button>
-                );
-              })}
+                      {isSelected ? (
+                        <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center shrink-0 shadow-sm ml-2">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </span>
+                      ) : (
+                        <span className="w-5 h-5 rounded-full border border-[var(--border)] shrink-0 ml-2" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* BOTTOM SHEET 2: THEMED GOLD PURITY SELECTOR                          */}
+      {/* BOTTOM SHEET 2: THEMED GOLD PURITY SELECTOR (PORTAL MODAL)           */}
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {showPuritySheet && (
+      {showPuritySheet && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-[rgba(2,4,10,0.80)] animate-in fade-in duration-150"
           onClick={() => setShowPuritySheet(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={ui.purityLabel || 'Gold Purity (Karat)'}
         >
           <div
-            className="w-full max-w-md bg-[var(--bg-elev)] border-t sm:border border-[var(--border)] rounded-t-[28px] sm:rounded-[28px] flex flex-col shadow-2xl max-h-[75vh] overflow-hidden"
-            style={{ boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.45)' }}
+            className="w-full max-w-md bg-[var(--bg-elev)] border border-[var(--border)] rounded-[24px] flex flex-col shadow-2xl max-h-[75vh] overflow-hidden animate-in zoom-in-95 duration-150"
+            style={{
+              boxShadow: '0 20px 60px -15px rgba(0, 0, 0, 0.7)',
+              fontFamily: isUrdu ? 'var(--font-urdu), serif' : undefined,
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -2421,7 +2508,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
               <button
                 type="button"
                 onClick={() => setShowPuritySheet(false)}
-                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+                className="w-8 h-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0 active:scale-95"
                 aria-label="Close purity sheet"
               >
                 <X className="w-4 h-4" />
@@ -2441,7 +2528,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
                       setGoldKarat(karatNum);
                       setShowPuritySheet(false);
                     }}
-                    className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all border text-left active:scale-[0.99] ${
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl transition-transform duration-100 border text-left active:scale-[0.99] ${
                       isSelected
                         ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent-text)] ring-1 ring-[var(--accent)]/30'
                         : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)]/40'
@@ -2467,7 +2554,8 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

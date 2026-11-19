@@ -411,7 +411,7 @@ export default function QisasReader() {
           />
         </div>
 
-        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 z-40 safe-top">
+        <div className="sticky top-0 bg-[var(--surface)] border-b border-[var(--border)] z-40 safe-top">
           <div className="max-w-3xl mx-auto px-4 pt-3 pb-2 space-y-2.5">
             {/* Row 1: Back Button & Story Title & Action Buttons */}
             <div className="flex items-center justify-between gap-3">
@@ -580,7 +580,7 @@ export default function QisasReader() {
           style={{ maxHeight: "calc(100vh - 220px)", paddingBottom: "160px" }}
         >
           {isTranslating ? (
-            <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/60 backdrop-blur-sm space-y-3 animate-pulse text-center my-6">
+            <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] space-y-3 animate-pulse text-center my-6">
               <div className="flex items-center justify-center gap-2 text-sm text-[var(--accent-text)] font-semibold">
                 <Sparkles className="w-4 h-4 animate-spin text-[var(--accent)]" />
                 <span>

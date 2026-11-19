@@ -79,7 +79,7 @@ export default function QuranProgress() {
         <div className="max-w-4xl mx-auto p-4 space-y-6">
           {/* Overall Progress Summary */}
           <Card
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-[22px] overflow-hidden backdrop-blur-md relative"
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-[22px] overflow-hidden relative"
             style={{
               boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             }}
@@ -238,7 +238,7 @@ export default function QuranProgress() {
 
           {/* Reading Stats */}
           <Card
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-[22px] overflow-hidden backdrop-blur-md relative"
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-[22px] overflow-hidden relative"
             style={{
               boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             }}
@@ -275,7 +275,7 @@ export default function QuranProgress() {
 
           {/* Achievements */}
           <Card
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-[22px] overflow-hidden backdrop-blur-md relative"
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-[22px] overflow-hidden relative"
             style={{
               boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
             }}

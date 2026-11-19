@@ -92,7 +92,7 @@ export const WeeklySalahChart = memo(function WeeklySalahChart() {
 
   return (
     <Card
-      className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden rounded-[22px] backdrop-blur-md relative"
+      className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden rounded-[22px] relative"
       style={{
         boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
       }}

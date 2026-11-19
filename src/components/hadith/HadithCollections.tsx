@@ -168,7 +168,7 @@ export function HadithCollections() {
                   </Button>
                 </div>
                 
-                <div className="bg-background/60 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-primary/20 mb-3 space-y-3">
+                <div className="bg-[var(--surface-2)] rounded-2xl p-4 sm:p-5 border border-[var(--border)] mb-3 space-y-3">
                   {dailyHadith.arabic && (
                     <p className="text-foreground text-xl md:text-2xl font-arabic text-right leading-loose break-words" dir="rtl">
                       {!isExpanded && dailyHadith.arabic.length > 200

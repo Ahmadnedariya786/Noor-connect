@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 interface ThemePreviewCardProps {
   themeId: ThemeId;
   isActive: boolean;
-  onSelect: (themeId: ThemeId, themeName: string) => void;
+  onSelect: (themeId: ThemeId, themeName?: string) => void;
 }
 
 export const ThemePreviewCard = memo<ThemePreviewCardProps>(({
@@ -58,6 +58,7 @@ export const ThemePreviewCard = memo<ThemePreviewCardProps>(({
       style={{
         contentVisibility: 'auto',
         containIntrinsicSize: 'auto 231px',
+        contain: 'layout style paint',
         borderRadius: theme.signature ? theme.signature.radius : '16px',
         padding: '10px 10px',
         height: 'auto',
@@ -291,20 +292,13 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
     });
   }, [currentTheme, toast]);
 
-  const handleSelect = useCallback((themeId: ThemeId, themeName: string) => {
-    // Synchronous DOM + storage update in current frame
+  const handleSelect = useCallback((themeId: ThemeId) => {
+    // Instant DOM update in current frame without toast churn
     setTheme(themeId);
     if (onSelected) {
       onSelected(themeId);
     }
-    // Defer toast off the tap frame
-    setTimeout(() => {
-      toast({
-        title: 'Theme Applied',
-        description: `${themeName} is now active.`,
-      });
-    }, 0);
-  }, [setTheme, onSelected, toast]);
+  }, [setTheme, onSelected]);
 
   return (
     <div className={cn("space-y-4", className)}>

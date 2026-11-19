@@ -444,7 +444,7 @@ export default function EbooksModern() {
     <div className="min-h-screen" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
       {/* Header */}
       <header
-        className="sticky top-0 z-40 backdrop-blur-xl border-b safe-top"
+        className="sticky top-0 z-40 border-b safe-top"
         style={{ background: 'var(--bg-elev)', borderColor: 'var(--border)' }}
       >
         <div className="px-4 py-3">

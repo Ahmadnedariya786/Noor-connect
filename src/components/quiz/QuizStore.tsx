@@ -181,7 +181,7 @@ export function QuizStore({ onClose }: QuizStoreProps) {
     <div className="min-h-screen pb-20" style={{ background: "var(--bg-base)" }}>
       {/* Header */}
       <div
-        className="sticky top-0 z-50 backdrop-blur-md border-b safe-top"
+        className="sticky top-0 z-50 border-b safe-top"
         style={{ background: "var(--bg-base)", borderColor: "var(--border)" }}
       >
         <div className="max-w-4xl mx-auto px-4 py-4">

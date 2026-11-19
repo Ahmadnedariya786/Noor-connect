@@ -875,7 +875,7 @@ export default function IslamicCalendar() {
         {/* Date Details Modal */}
         {showDetailModal && selectedDate && (
           <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
             onClick={closeDateModal}
           >
             <div

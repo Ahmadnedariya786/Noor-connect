@@ -142,7 +142,7 @@ export function DhikrReminder() {
         )}
 
         {/* Dhikr card */}
-        <div className="bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-xl text-center backdrop-blur-sm">
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-xl text-center">
           <p className="text-2xl font-arabic font-bold text-[var(--accent)] mb-2" dir="rtl">
             {currentDhikr.arabic}
           </p>

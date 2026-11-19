@@ -69,12 +69,14 @@
     background: var(--card);
   }
 
-  /* Theme Switching Guard — Suppress transition storms during theme changes (transitions only) */
+  /* Theme Switching Guard — Suppress transition storms during theme changes (transitions and animations) */
   html.theme-switching,
   html.theme-switching *,
   html.theme-switching *::before,
   html.theme-switching *::after {
     transition: none !important;
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
   }
 
   [data-animations="off"] *,
@@ -922,7 +924,7 @@
 
   @keyframes pageEnterInstant {
     from {
-      opacity: 0.96;
+      opacity: 0.94;
       transform: translateZ(0);
     }
     to {
@@ -932,7 +934,8 @@
   }
 
   .animate-page-enter {
-    animation: pageEnterInstant 100ms ease-out forwards;
+    animation: pageEnterInstant 80ms ease-out forwards;
+    will-change: opacity;
   }
 
   /* Toast Viewport 360px Mobile Containment (Part 4) */

@@ -2896,7 +2896,7 @@ const SettingsSubPage: React.FC = () => {
             {showChangelog &&
               createPortal(
                 <div
-                  className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
+                  className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/85 animate-in fade-in duration-150"
                   style={{ position: 'fixed', inset: 0, zIndex: 9996 }}
                   onClick={() => setShowChangelog(false)}
                   onTouchMove={(e) => {

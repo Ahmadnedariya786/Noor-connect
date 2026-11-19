@@ -274,7 +274,7 @@ export function MushafSurahPages({
       {/* Luxury Floating Page Ribbon */}
       <div className="fixed bottom-6 left-0 right-0 flex items-center justify-center z-20 pointer-events-none">
         <div
-          className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md pointer-events-auto shadow-xl"
+          className="flex items-center gap-2 px-4 py-2 rounded-full pointer-events-auto shadow-xl"
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--accent)',

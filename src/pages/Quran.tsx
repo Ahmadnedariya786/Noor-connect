@@ -52,7 +52,7 @@ const SurahRowItem = memo(function SurahRowItem({
       >
         {/* Loading State Overlay */}
         {isNavigating && (
-          <div className="absolute inset-0 bg-[var(--bg-base)]/70 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-2">
+          <div className="absolute inset-0 bg-[var(--bg-base)]/90 z-20 flex flex-col items-center justify-center gap-2">
             <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin shadow-lg" />
             <span className="text-xs font-bold text-[var(--accent-text)] tracking-widest uppercase animate-pulse">{loadingLabel}</span>
           </div>
@@ -222,11 +222,8 @@ const Quran = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/10 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-[var(--accent)]/5 rounded-full blur-[20px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
-            {/* Glassmorphism Overlay */}
-            <div className="absolute inset-0 bg-[var(--surface-2)]/10 backdrop-blur-sm pointer-events-none" />
-
             <div className="relative z-10 p-5 sm:p-8 flex flex-col items-center text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] mb-4 sm:mb-6 backdrop-blur-md">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] mb-4 sm:mb-6">
                 <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-text)]">
                   {ti18n('alQuranAlKareem')}
@@ -240,14 +237,14 @@ const Quran = () => {
                 {ti18n('readListenContemplate')}
               </p>
 
-              {/* Quick Stats Grid with Glassmorphism */}
+              {/* Quick Stats Grid */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm">
                 {[
                   { label: ti18n('surahs'), value: '114' },
                   { label: ti18n('ayahs'), value: '6,236' },
                   { label: ti18n('juz'), value: '30' }
                 ].map((stat, idx) => (
-                  <div key={idx} className="bg-[var(--surface-2)] backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-[var(--border)] transition-colors">
+                  <div key={idx} className="bg-[var(--surface-2)] rounded-2xl p-2.5 sm:p-4 border border-[var(--border)] transition-colors">
                     <p className="text-[var(--accent-text)] text-base sm:text-lg font-bold font-serif italic tracking-tighter">{stat.value}</p>
                     <p className="text-[var(--text-secondary)] text-[10px] sm:text-xs uppercase font-bold tracking-wider mt-1 truncate">{stat.label}</p>
                   </div>
@@ -329,7 +326,7 @@ const Quran = () => {
           )}
 
           {/* Search Header */}
-          <div className="sticky top-[4.5rem] z-30 bg-[var(--bg-base)]/90 backdrop-blur-xl py-2 -mx-5 px-5 border-b border-[var(--border)]">
+          <div className="sticky top-[4.5rem] z-30 bg-[var(--bg-base)] py-2 -mx-5 px-5 border-b border-[var(--border)]">
             <div className="relative group">
               <div className="absolute start-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent)] transition-colors">
                 <Search className="w-4 h-4" />

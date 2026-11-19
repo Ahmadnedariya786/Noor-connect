@@ -245,7 +245,7 @@ export const WidgetSettings: React.FC = () => {
     <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-12">
       {/* Header */}
       <header
-        className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bg-base)]/85 border-b border-[var(--border)] px-4 pb-3.5 safe-top"
+        className="sticky top-0 z-30 bg-[var(--bg-base)] border-b border-[var(--border)] px-4 pb-3.5 safe-top"
         style={{ paddingTop: 'calc(var(--safe-top) + 0.875rem)' }}
       >
         <div className="max-w-md mx-auto flex items-center gap-3">

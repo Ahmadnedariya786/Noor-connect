@@ -438,7 +438,7 @@ const Tafsir = () => {
 
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] backdrop-blur-md flex items-center justify-center border border-[var(--border)]">
+                    <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] flex items-center justify-center border border-[var(--border)]">
                       <BookOpen className="w-6 h-6 text-[var(--accent)]" />
                     </div>
                     <div>
@@ -450,7 +450,7 @@ const Tafsir = () => {
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       onClick={() => setActiveTab("history")}
-                      className="bg-[var(--surface)] hover:bg-[var(--surface-2)] backdrop-blur-sm rounded-2xl p-3 border border-[var(--border)] transition-all text-left group"
+                      className="bg-[var(--surface)] hover:bg-[var(--surface-2)] rounded-2xl p-3 border border-[var(--border)] transition-colors text-left group active:scale-95"
                     >
                       <History className="w-4 h-4 text-[var(--accent)] mb-2 group-hover:scale-110 transition-transform" />
                       <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-tighter">{t('history')}</p>
@@ -458,13 +458,13 @@ const Tafsir = () => {
                     </button>
                     <button
                       onClick={() => setActiveTab("bookmarks")}
-                      className="bg-[var(--surface)] hover:bg-[var(--surface-2)] backdrop-blur-sm rounded-2xl p-3 border border-[var(--border)] transition-all text-left group"
+                      className="bg-[var(--surface)] hover:bg-[var(--surface-2)] rounded-2xl p-3 border border-[var(--border)] transition-colors text-left group active:scale-95"
                     >
                       <Bookmark className="w-4 h-4 text-[var(--accent)] mb-2 group-hover:scale-110 transition-transform" />
                       <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-tighter">{t('saved')}</p>
                       <p className="text-[var(--text-primary)] text-lg font-black">{bookmarks.length}</p>
                     </button>
-                    <div className="bg-[var(--surface)] backdrop-blur-sm rounded-2xl p-3 border border-[var(--border)] text-left">
+                    <div className="bg-[var(--surface)] rounded-2xl p-3 border border-[var(--border)] text-left">
                       <Edit3 className="w-4 h-4 text-[var(--accent)] mb-2" />
                       <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-tighter">{t('notes')}</p>
                       <p className="text-[var(--text-primary)] text-lg font-black">{Object.keys(personalNotes).length}</p>
@@ -1221,7 +1221,7 @@ const Tafsir = () => {
               role="dialog"
               aria-modal="true"
               aria-labelledby="tafsir-settings-modal-title"
-              className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md transition-opacity"
+              className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 transition-opacity"
               onClick={(e) => {
                 if (e.target === e.currentTarget) setIsSettingsOpen(false);
               }}

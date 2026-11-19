@@ -1641,13 +1641,12 @@ function InteractiveMushafPageComponent({
           <div
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-150"
             style={{
-              background: 'rgba(2, 4, 10, 0.78)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(2, 4, 10, 0.82)',
             }}
             onClick={() => setSelectedWord(null)}
           >
             <div
-              className="w-full max-w-[330px] m-auto relative p-3.5 rounded-2xl border shadow-2xl backdrop-blur-md animate-in zoom-in-95 duration-150"
+              className="w-full max-w-[330px] m-auto relative p-3.5 rounded-2xl border shadow-2xl animate-in zoom-in-95 duration-150"
               style={{
                 background: 'var(--surface)',
                 borderColor: 'var(--accent)',

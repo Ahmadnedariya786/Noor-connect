@@ -235,7 +235,7 @@ export default function HaidhTracker() {
 
       {/* ── Bottom Tab Bar ─────────────────────────────────────────────────── */}
       <nav
-        className="shrink-0 border-t border-border/60 bg-card/90 backdrop-blur-xl safe-bottom"
+        className="shrink-0 border-t border-[var(--border)] bg-[var(--surface)] safe-bottom"
         style={{ paddingBottom: "var(--safe-bottom)" }}
       >
         <div className="flex items-stretch h-14 px-1">

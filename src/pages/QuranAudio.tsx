@@ -532,7 +532,7 @@ export default function QuranAudio() {
           </section>
 
           {/* ── Search ── */}
-          <div className="sticky top-[4.5rem] z-30 bg-background/90 backdrop-blur-xl py-2 -mx-5 px-5">
+          <div className="sticky top-[4.5rem] z-30 bg-[var(--bg-base)] py-2 -mx-5 px-5">
             <div className="relative group">
               <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-[var(--accent)] transition-colors pointer-events-none" />
               <Input

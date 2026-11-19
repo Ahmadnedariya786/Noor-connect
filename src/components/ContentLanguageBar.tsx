@@ -48,7 +48,7 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
         fullWidth
           ? 'grid grid-cols-4 w-full gap-1.5 p-1 rounded-2xl'
           : 'inline-flex items-center gap-1.5 p-1 rounded-full'
-      } border border-[var(--border)] select-none transition-all ${className}`}
+      } border border-[var(--border)] select-none transition-colors duration-150 ${className}`}
       style={{
         background: 'var(--surface-2)',
         boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen))',
@@ -65,12 +65,12 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
             role="radio"
             aria-checked={isActive}
             onClick={() => handleSelect(opt.code)}
-            className={`cursor-pointer transition-all duration-200 rounded-full font-medium active:scale-95 flex items-center justify-center ${
+            className={`cursor-pointer transition-transform duration-150 rounded-full font-medium active:scale-95 flex items-center justify-center ${
               fullWidth
-                ? 'w-full py-1.5 text-xs font-semibold'
+                ? 'w-full py-1.5 text-xs font-semibold min-h-[32px]'
                 : compact
-                ? 'px-2.5 py-0.5 text-[11px] leading-tight min-w-[32px]'
-                : 'px-3 py-1 text-xs leading-normal min-w-[56px]'
+                ? 'px-2.5 py-1 text-[11px] min-w-[32px] min-h-[30px]'
+                : 'px-3 py-1 text-xs min-w-[56px] min-h-[32px]'
             } ${opt.code === 'ur' ? 'font-urdu' : ''}`}
             style={{
               background: isActive ? 'var(--accent)' : 'transparent',
@@ -78,6 +78,7 @@ export const ContentLanguageBar: React.FC<ContentLanguageBarProps> = ({
               fontWeight: isActive ? 700 : 500,
               boxShadow: isActive ? '0 2px 8px var(--accent-glow)' : 'none',
               fontFamily: opt.code === 'ur' ? 'var(--font-urdu)' : 'inherit',
+              lineHeight: 1.4,
             }}
           >
             {compact && !fullWidth ? opt.shortLabel : opt.nativeLabel}

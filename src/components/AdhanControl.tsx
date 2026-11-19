@@ -124,7 +124,7 @@ export function AdhanControl({ className }: AdhanControlProps) {
   ];
 
   return (
-    <Card className={`${className} bg-card/95 backdrop-blur-lg border-border`}>
+    <Card className={`${className} bg-card border-border`}>
       <div className="p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">

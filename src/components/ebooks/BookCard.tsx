@@ -94,7 +94,7 @@ export const BookCard = memo(({
         {/* Downloaded badge */}
         {isDownloaded && (
           <div className="absolute top-2 right-2">
-            <div className="w-6 h-6 rounded-full bg-[var(--success)]/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+            <div className="w-6 h-6 rounded-full bg-[var(--success)] flex items-center justify-center shadow-lg">
               <CheckCircle className="w-3.5 h-3.5 text-white" />
             </div>
           </div>
@@ -103,7 +103,7 @@ export const BookCard = memo(({
         {/* Bookmark button */}
         {onBookmark && (
           <button 
-            className="absolute top-2 left-2 w-7 h-7 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-2 left-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={onBookmark}
           >
             {isBookmarked ? (
@@ -117,7 +117,7 @@ export const BookCard = memo(({
         {/* Collection indicator */}
         {collectionsCount > 0 && (
           <div className="absolute top-2 right-2">
-            <div className="w-6 h-6 rounded-full bg-purple-500/90 backdrop-blur-sm flex items-center justify-center shadow-lg" title={`In ${collectionsCount} collection(s)`}>
+            <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center shadow-lg" title={`In ${collectionsCount} collection(s)`}>
               <LibraryBig className="w-3 h-3 text-white" />
             </div>
           </div>
@@ -126,7 +126,7 @@ export const BookCard = memo(({
         {/* Collection button */}
         {onAddToCollection && (
           <button 
-            className="absolute top-2 left-10 w-7 h-7 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-black/50 hover:scale-110"
+            className="absolute top-2 left-10 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-transform hover:scale-110"
             onClick={onAddToCollection}
             title="Add to collection"
           >

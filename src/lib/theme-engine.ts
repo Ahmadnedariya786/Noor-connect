@@ -555,19 +555,20 @@ export const THEME_BG_HEX_MAP: Record<ThemeId, string> = {
 export function setTheme(newThemeId: ThemeId): void {
   const validId = VALID_THEME_IDS.has(newThemeId) ? newThemeId : DEFAULT_THEME_ID;
 
-  try {
-    localStorage.setItem(ALT_THEME_STORAGE_KEY, validId);
-    localStorage.setItem(THEME_STORAGE_KEY, validId);
-    // Ignore and remove legacy theme mode to avoid conflicting states
-    localStorage.removeItem(LEGACY_THEME_KEY);
-  } catch (err) {
-    console.warn('Failed to write theme to localStorage:', err);
-  }
-
+  // 1. Immediately apply tokens to DOM in current frame (<1ms zero-jank)
   applyThemeToDOM(validId);
 
-  // Defer breadcrumbs and global event dispatch off the tap frame
+  // 2. Defer all non-visual storage and native bridging off the tap frame
   setTimeout(() => {
+    try {
+      localStorage.setItem(ALT_THEME_STORAGE_KEY, validId);
+      localStorage.setItem(THEME_STORAGE_KEY, validId);
+      // Ignore and remove legacy theme mode to avoid conflicting states
+      localStorage.removeItem(LEGACY_THEME_KEY);
+    } catch (err) {
+      console.warn('Failed to write theme to localStorage:', err);
+    }
+
     recordBreadcrumb('THEME_CHANGE', `Theme set to: ${validId}`);
 
     if (typeof window !== 'undefined') {

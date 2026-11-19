@@ -596,7 +596,7 @@ export default function QuranReader() {
       >
         {/* TOP READER CONTROL BAR */}
         <div
-          className="sticky top-0 z-30 backdrop-blur-md border-b safe-top bg-[var(--surface)]/95 border-[var(--border)] shadow-sm"
+          className="sticky top-0 z-30 border-b safe-top bg-[var(--surface)] border-[var(--border)] shadow-sm"
           style={{ paddingTop: 'calc(var(--safe-top) + 6px)' }}
         >
           <div
@@ -1134,7 +1134,7 @@ export default function QuranReader() {
 
         {/* IMMERSIVE DISTRACTION-FREE MUSHAF FOOTER BAR (Hides main BottomNav) */}
         <div
-          className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md border-t shadow-lg safe-bottom"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t shadow-lg safe-bottom"
           style={{
             background: 'var(--surface)',
             borderColor: 'var(--border)',

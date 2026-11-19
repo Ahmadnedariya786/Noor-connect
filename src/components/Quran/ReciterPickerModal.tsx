@@ -59,7 +59,7 @@ export const ReciterPickerModal: React.FC<ReciterPickerModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="reciter-modal-title"
-      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm transition-opacity"
+      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 transition-opacity"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

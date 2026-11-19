@@ -71,7 +71,7 @@ export function BatteryOptimizationDialog({ onClose }: BatteryOptimizationDialog
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-xs"
+      className="fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50"
       onClick={onClose}
       onTouchMove={(e) => {
         if (e.target === e.currentTarget) e.preventDefault();

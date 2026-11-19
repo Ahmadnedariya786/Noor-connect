@@ -912,14 +912,12 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Ayah Study & Hifz"
-      className="fixed inset-0 flex flex-col justify-end backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 flex flex-col justify-end animate-in fade-in duration-150"
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 9995,
-        backgroundColor: 'rgba(0, 0, 0, 0.78)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.82)',
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();

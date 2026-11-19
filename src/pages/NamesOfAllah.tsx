@@ -207,7 +207,7 @@ export default function NamesOfAllah() {
 
           {/* Search & Filter Bar */}
           <div
-            className="flex gap-3 sticky top-[4.5rem] z-30 py-2 -mx-5 px-5 backdrop-blur-xl"
+            className="flex gap-3 sticky top-[4.5rem] z-30 py-2 -mx-5 px-5"
             style={{ background: "var(--bg-base)" }}
           >
             <div className="relative flex-1 group">
@@ -368,7 +368,7 @@ export default function NamesOfAllah() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/80"
                 onClick={() => setSelectedName(null)}
               />
               <motion.div

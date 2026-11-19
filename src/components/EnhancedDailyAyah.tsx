@@ -470,8 +470,8 @@ export function EnhancedDailyAyah() {
             </div>
           </div>
           
-          {/* Compact Glass Pill Action Toolbar (34px × 34px rounded hit targets) */}
-          <div className="flex items-center gap-1.5 p-1 rounded-full bg-[var(--surface-2)]/80 border border-[var(--border)] backdrop-blur-sm shrink-0 self-start sm:self-auto shadow-xs">
+          {/* Compact Action Toolbar (34px × 34px rounded hit targets) */}
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] shrink-0 self-start sm:self-auto shadow-xs">
             <Button
               variant="ghost"
               size="icon"

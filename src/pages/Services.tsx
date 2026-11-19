@@ -181,7 +181,7 @@ export default function Services() {
                         </svg>
                         
                         <div className="relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] backdrop-blur-md border border-[var(--border)] mb-3">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] mb-3">
                                 <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
                                 <span className="text-[var(--accent-text)] text-[11px] font-bold uppercase tracking-[0.18em]">{ui.islamicHub}</span>
                             </div>
@@ -241,8 +241,11 @@ export default function Services() {
                                             whileTap: { scale: 0.96 }
                                         })}
                                         onClick={() => navigate(item.path, { replace: true })}
-                                        className="group relative text-left transition-all cursor-pointer"
+                                        className="group relative text-left active:scale-[0.98] transition-transform duration-150 cursor-pointer"
                                         style={{
+                                            contentVisibility: 'auto',
+                                            containIntrinsicSize: 'auto 150px',
+                                            contain: 'layout style paint',
                                             width: '100%',
                                             minWidth: 0,
                                             boxSizing: 'border-box',

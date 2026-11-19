@@ -87,6 +87,11 @@ const SurahCard = memo(
       <button
         onClick={() => onClick(surah.number)}
         className="w-full text-left outline-none active:scale-[0.98] transition-transform duration-150 group"
+        style={{
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 74px',
+          contain: 'layout style paint',
+        }}
       >
         <div
           className="w-full flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-[18px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors"
@@ -2049,7 +2054,7 @@ export default function SurahList() {
 
         {/* # JUMP MODAL */}
         {showJumpModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-in fade-in duration-200">
             <div
               className="w-full max-w-sm rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-5 space-y-4 shadow-2xl"
               style={{ boxShadow: "0 12px 36px rgba(0,0,0,0.4)" }}
@@ -2141,7 +2146,7 @@ export default function SurahList() {
         {/* CUSTOM KHATMAH DAYS MODAL */}
         {showCustomModal && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-in fade-in duration-200"
             onTouchMove={(e) => {
               if (e.target === e.currentTarget) e.preventDefault();
             }}
