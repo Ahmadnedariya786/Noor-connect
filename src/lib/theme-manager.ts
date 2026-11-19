@@ -4,3 +4,4 @@
  */
 
 export * from './theme-engine';
+export * from './navbar-variants';

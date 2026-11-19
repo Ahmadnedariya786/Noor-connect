@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { BookOpen, Settings as SettingsIcon, Compass, LayoutGrid, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext-new";
@@ -8,6 +8,8 @@ import {
   THEME_NAVBAR_VARIANT,
   type NavbarVariantId,
   isNavItemActive,
+  resolveActiveNavbarVariant,
+  NAVBAR_STYLE_CHANGE_EVENT,
 } from "@/lib/navbar-variants";
 
 interface NavItemDef {
@@ -24,7 +26,23 @@ const BottomNav = memo(function BottomNav() {
   const { currentTheme } = useAppTheme();
   const location = useLocation();
 
-  const variant: NavbarVariantId = THEME_NAVBAR_VARIANT[currentTheme] || 'spotlight-beam';
+  const [overrideTick, setOverrideTick] = useState(0);
+
+  useEffect(() => {
+    const handleOverrideChange = () => {
+      setOverrideTick((prev) => prev + 1);
+    };
+    window.addEventListener(NAVBAR_STYLE_CHANGE_EVENT, handleOverrideChange);
+    window.addEventListener('storage', handleOverrideChange);
+    return () => {
+      window.removeEventListener(NAVBAR_STYLE_CHANGE_EVENT, handleOverrideChange);
+      window.removeEventListener('storage', handleOverrideChange);
+    };
+  }, []);
+
+  const variant: NavbarVariantId = useMemo(() => {
+    return resolveActiveNavbarVariant(currentTheme);
+  }, [currentTheme, overrideTick]);
 
   const navItems: NavItemDef[] = useMemo(() => [
     { id: 'qibla', title: t('qibla') || 'Qibla', path: '/qibla', icon: Compass },

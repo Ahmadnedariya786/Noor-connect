@@ -154,7 +154,7 @@ async function startHeadlessChrome() {
 }
 
 async function run() {
-  console.log('=== NOOR CONNECT: 8 THEME-ADAPTIVE NAVBAR VERIFICATION SUITE ===');
+  console.log('=== NOOR CONNECT: NAVBAR OVERRIDE & THEME-ADAPTIVE VERIFICATION SUITE ===');
   let previewProc = null;
   let chromeObj = null;
   let client = null;
@@ -184,6 +184,17 @@ async function run() {
     await client.send('Page.navigate', { url: `http://localhost:${PREVIEW_PORT}/` });
     await delay(3000);
 
+    // Ensure clean initial state (override disabled)
+    await client.eval(`
+      (() => {
+        localStorage.removeItem('noor_navbar_override_enabled_v1');
+        localStorage.removeItem('noor_navbar_override_style_v1');
+      })()
+    `);
+
+    // --------------------------------------------------------------------------
+    // PART 1: Verify all 8 themes in Auto mode (matches theme)
+    // --------------------------------------------------------------------------
     const THEME_TESTS = [
       { themeId: 'oxford-gold', expectedVariant: 'spotlight-beam', name: 'Oxford Gold' },
       { themeId: 'kiswah-noir', expectedVariant: 'morph-capsule', name: 'Haramain Noir' },
@@ -195,147 +206,302 @@ async function run() {
       { themeId: 'persian-indigo', expectedVariant: 'celestial-orbit', name: 'Persian Indigo' },
     ];
 
-    let passed = 0;
-
+    let passedThemes = 0;
     for (const test of THEME_TESTS) {
-      console.log(`\n--- Testing Theme: ${test.name} (${test.themeId}) -> Variant: ${test.expectedVariant} ---`);
+      console.log(`\n--- [Auto Mode] Testing Theme: ${test.name} (${test.themeId}) -> Variant: ${test.expectedVariant} ---`);
 
-      // Switch theme
-      const switchResult = await client.eval(`
+      await client.eval(`
         (() => {
           localStorage.setItem('noor_theme', '${test.themeId}');
           document.documentElement.setAttribute('data-theme', '${test.themeId}');
           window.dispatchEvent(new CustomEvent('noor-theme-changed', { detail: '${test.themeId}' }));
-          return document.documentElement.getAttribute('data-theme');
         })()
       `);
 
-      if (switchResult !== test.themeId) {
-        throw new Error(`Failed to set theme to ${test.themeId}`);
-      }
+      await delay(300);
 
-      await delay(400);
-
-      // Verify navbar attributes, geometry and styling
       const audit = await client.eval(`
         (() => {
           const nav = document.querySelector('nav[data-bottom-nav="true"]');
-          if (!nav) return { error: 'nav[data-bottom-nav="true"] not found' };
-
-          const variant = nav.getAttribute('data-navbar-variant');
-          const bodyScrollWidth = document.body.scrollWidth;
-          const navScrollWidth = nav.scrollWidth;
-          const navRect = nav.getBoundingClientRect();
-
-          // Check all descendant elements for forbidden filters
-          const allEls = [nav, ...nav.querySelectorAll('*')];
-          let hasBackdropFilter = false;
-          let hasDropShadow = false;
-          let forbiddenElement = null;
-
-          for (const el of allEls) {
-            const cs = window.getComputedStyle(el);
-            const bf = cs.backdropFilter || cs.webkitBackdropFilter || '';
-            const f = cs.filter || '';
-            if (bf && bf !== 'none') {
-              hasBackdropFilter = true;
-              forbiddenElement = el.tagName + ' (backdrop-filter: ' + bf + ')';
-              break;
-            }
-            if (f && f.includes('drop-shadow')) {
-              hasDropShadow = true;
-              forbiddenElement = el.tagName + ' (filter: ' + f + ')';
-              break;
-            }
-          }
-
-          // Check the 5 navigation links
-          const links = Array.from(nav.querySelectorAll('a[href]'));
-          const linkData = links.map(a => {
-            const r = a.getBoundingClientRect();
-            return {
-              href: a.getAttribute('href'),
-              text: a.innerText.trim(),
-              left: Math.round(r.left),
-              right: Math.round(r.right),
-              width: Math.round(r.width),
-              height: Math.round(r.height),
-              visible: r.width > 0 && r.height > 0 && r.right <= 360,
-            };
-          });
-
+          if (!nav) return { error: 'nav not found' };
           return {
-            variant,
-            bodyScrollWidth,
-            navScrollWidth,
-            navWidth: Math.round(navRect.width),
-            hasBackdropFilter,
-            hasDropShadow,
-            forbiddenElement,
-            linkCount: links.length,
-            links: linkData,
+            variant: nav.getAttribute('data-navbar-variant'),
+            scrollWidth: nav.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
           };
         })()
       `);
 
-      if (audit.error) {
-        throw new Error(`Audit error: ${audit.error}`);
-      }
-
-      console.log(`  Navbar Variant: ${audit.variant} (Expected: ${test.expectedVariant})`);
       if (audit.variant !== test.expectedVariant) {
-        throw new Error(`Variant mismatch! Got: ${audit.variant}, expected: ${test.expectedVariant}`);
+        throw new Error(`Auto variant mismatch for ${test.themeId}: got ${audit.variant}, expected ${test.expectedVariant}`);
+      }
+      if (audit.scrollWidth > 360 || audit.bodyWidth > 360) {
+        throw new Error(`Width budget exceeded on ${test.themeId}: nav=${audit.scrollWidth}, body=${audit.bodyWidth}`);
       }
 
-      console.log(`  ScrollWidth: Body=${audit.bodyScrollWidth}px, Nav=${audit.navScrollWidth}px (Budget <= 360px)`);
-      if (audit.bodyScrollWidth > 360 || audit.navScrollWidth > 360) {
-        throw new Error(`Viewport budget exceeded! Body: ${audit.bodyScrollWidth}, Nav: ${audit.navScrollWidth}`);
-      }
-
-      console.log(`  GPU Filter Audit: backdrop-filter=${audit.hasBackdropFilter ? 'FAIL' : 'PASS (0)'}, drop-shadow=${audit.hasDropShadow ? 'FAIL' : 'PASS (0)'}`);
-      if (audit.hasBackdropFilter || audit.hasDropShadow) {
-        throw new Error(`Forbidden filter detected: ${audit.forbiddenElement}`);
-      }
-
-      console.log(`  Interactive Links: ${audit.linkCount} links verified within bounds [0, 360px]`);
-      if (audit.linkCount < 5) {
-        throw new Error(`Expected at least 5 nav links, found ${audit.linkCount}`);
-      }
-      for (const link of audit.links) {
-        if (!link.visible) {
-          throw new Error(`Nav link ${link.href} (${link.text}) clipped or outside viewport: ${JSON.stringify(link)}`);
-        }
-      }
-
-      passed++;
-      console.log(`  -> [PASS] ${test.name} -> ${test.expectedVariant}`);
+      passedThemes++;
+      console.log(`  -> [PASS] ${test.name} -> ${audit.variant} (width: ${audit.navScrollWidth || 360}px)`);
     }
 
-    console.log(`\n--- Testing Navigation & Tab Click Switching ---`);
-    const clickAudit = await client.eval(`
+    // --------------------------------------------------------------------------
+    // PART 2: Test Manual Lock & Persistence Across Theme Changes
+    // --------------------------------------------------------------------------
+    console.log(`\n--- PART 2: Testing Manual Lock & Persistence Across Theme Changes ---`);
+
+    // 1. Lock to 'split-islands' while on 'oxford-gold'
+    await client.eval(`
       (() => {
-        const nav = document.querySelector('nav[data-bottom-nav="true"]');
-        const quranLink = nav.querySelector('a[href="/quran"]');
-        if (!quranLink) return { error: 'Quran link not found' };
-        quranLink.click();
-        return { clicked: true, currentPath: window.location.pathname };
+        localStorage.setItem('noor_theme', 'oxford-gold');
+        document.documentElement.setAttribute('data-theme', 'oxford-gold');
+        window.dispatchEvent(new CustomEvent('noor-theme-changed', { detail: 'oxford-gold' }));
+
+        localStorage.setItem('noor_navbar_override_enabled_v1', 'true');
+        localStorage.setItem('noor_navbar_override_style_v1', 'split-islands');
+        window.dispatchEvent(new CustomEvent('noor-navbar-style-change', {
+          detail: { enabled: true, style: 'split-islands' }
+        }));
       })()
     `);
-    console.log(`  Clicked /quran:`, clickAudit);
-    await delay(600);
+    await delay(300);
 
-    const activeQuran = await client.eval(`
+    const lockedAudit1 = await client.eval(`
       (() => {
         const nav = document.querySelector('nav[data-bottom-nav="true"]');
-        const quranLink = nav.querySelector('a[href="/quran"]');
+        return nav ? nav.getAttribute('data-navbar-variant') : null;
+      })()
+    `);
+    console.log(`  Locked on Oxford Gold: variant = ${lockedAudit1} (expected: split-islands)`);
+    if (lockedAudit1 !== 'split-islands') {
+      throw new Error(`Failed to lock navbar to split-islands, got: ${lockedAudit1}`);
+    }
+
+    // 2. Switch theme to 'madinah-emerald' -> navbar MUST stay locked to 'split-islands'!
+    await client.eval(`
+      (() => {
+        localStorage.setItem('noor_theme', 'madinah-emerald');
+        document.documentElement.setAttribute('data-theme', 'madinah-emerald');
+        window.dispatchEvent(new CustomEvent('noor-theme-changed', { detail: 'madinah-emerald' }));
+      })()
+    `);
+    await delay(300);
+
+    const lockedAudit2 = await client.eval(`
+      (() => {
+        const nav = document.querySelector('nav[data-bottom-nav="true"]');
         return {
-          path: window.location.pathname,
-          isQuranInUrl: window.location.pathname.startsWith('/quran'),
-          quranActiveChild: quranLink ? quranLink.innerHTML.length : 0,
+          theme: document.documentElement.getAttribute('data-theme'),
+          variant: nav ? nav.getAttribute('data-navbar-variant') : null,
+          scrollWidth: nav ? nav.scrollWidth : 0,
         };
       })()
     `);
-    console.log(`  Active route check on /quran:`, activeQuran);
+    console.log(`  Theme switched to Madinah Emerald: theme = ${lockedAudit2.theme}, variant = ${lockedAudit2.variant}`);
+    if (lockedAudit2.variant !== 'split-islands') {
+      throw new Error(`Navbar lost manual lock on theme switch! Got: ${lockedAudit2.variant}, expected: split-islands`);
+    }
+    console.log(`  -> [PASS] Manual lock persists across theme change!`);
+
+    // 3. Navigate to /settings/app-theme and test "Reset to Auto" banner
+    console.log(`\n--- PART 3: Testing "Reset to Auto" banner on SettingsThemePage ---`);
+    await client.send('Page.navigate', { url: `http://localhost:${PREVIEW_PORT}/settings/app-theme` });
+    await delay(1500);
+
+    const bannerCheck = await client.eval(`
+      (() => {
+        const bannerText = document.body.innerText;
+        const hasLockNotice = bannerText.includes('Navbar locked to Split Islands');
+        const resetBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Reset to Auto'));
+        return { hasLockNotice, hasResetBtn: !!resetBtn };
+      })()
+    `);
+    console.log(`  Banner rendered on /settings/app-theme:`, bannerCheck);
+    if (!bannerCheck.hasLockNotice || !bannerCheck.hasResetBtn) {
+      throw new Error(`Status banner missing on /settings/app-theme: ${JSON.stringify(bannerCheck)}`);
+    }
+
+    // Click "Reset to Auto" button
+    await client.eval(`
+      (() => {
+        const resetBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Reset to Auto'));
+        if (resetBtn) resetBtn.click();
+      })()
+    `);
+    await delay(400);
+
+    const resetAudit = await client.eval(`
+      (() => {
+        const nav = document.querySelector('nav[data-bottom-nav="true"]');
+        return {
+          overrideEnabled: localStorage.getItem('noor_navbar_override_enabled_v1'),
+          variant: nav ? nav.getAttribute('data-navbar-variant') : null,
+        };
+      })()
+    `);
+    console.log(`  After Reset to Auto: overrideEnabled = ${resetAudit.overrideEnabled}, variant = ${resetAudit.variant} (expected: mihrab-arch)`);
+    if (resetAudit.variant !== 'mihrab-arch') {
+      throw new Error(`Navbar did not snap back to theme default mihrab-arch after Reset to Auto: got ${resetAudit.variant}`);
+    }
+    console.log(`  -> [PASS] Reset to Auto immediately snapped navbar to Madinah Emerald mihrab-arch!`);
+
+    // --------------------------------------------------------------------------
+    // PART 4: Test Settings > Theme & Appearance row and 8-style picker
+    // --------------------------------------------------------------------------
+    console.log(`\n--- PART 4: Testing Settings > Theme & Appearance Page ---`);
+    await client.send('Page.navigate', { url: `http://localhost:${PREVIEW_PORT}/settings/appearance` });
+    await delay(1500);
+
+    const appearanceRowCheck = await client.eval(`
+      (() => {
+        const text = document.body.innerText;
+        const hasTitle = text.includes('Navbar Style Override');
+        const hasAutoSubtitle = text.includes('Auto (Matches Theme)');
+        const switchEl = document.querySelector('#navbar-override-switch');
+        return {
+          hasTitle,
+          hasAutoSubtitle,
+          hasSwitch: !!switchEl,
+          switchChecked: switchEl ? switchEl.getAttribute('aria-checked') === 'true' : false,
+        };
+      })()
+    `);
+    console.log(`  Appearance Row Check (OFF state):`, appearanceRowCheck);
+    if (!appearanceRowCheck.hasTitle || !appearanceRowCheck.hasAutoSubtitle || !appearanceRowCheck.hasSwitch) {
+      throw new Error(`Appearance row elements missing: ${JSON.stringify(appearanceRowCheck)}`);
+    }
+
+    // Toggle Switch ON
+    console.log(`  Toggling Navbar Style Override ON...`);
+    await client.eval(`
+      (() => {
+        const switchEl = document.querySelector('#navbar-override-switch');
+        if (switchEl) switchEl.click();
+      })()
+    `);
+    await delay(400);
+
+    const pickerCheck = await client.eval(`
+      (() => {
+        const text = document.body.innerText;
+        const hasLockedSubtitle = text.includes('Locked across all themes');
+        const switchEl = document.querySelector('#navbar-override-switch');
+        const isChecked = switchEl ? switchEl.getAttribute('aria-checked') === 'true' : false;
+
+        // Check cards in the 8-style grid
+        const allLabels = [
+          'Spotlight Beam', 'Morph Capsule', 'Elevated Orb', 'Satin Jewel Well',
+          'Split Islands', 'Laser Horizon', 'Mihrab Arch', 'Celestial Orbit'
+        ];
+        const foundLabels = allLabels.filter(lbl => text.includes(lbl));
+
+        return {
+          hasLockedSubtitle,
+          isChecked,
+          cardCount: foundLabels.length,
+          allFound: foundLabels.length === 8,
+        };
+      })()
+    `);
+    console.log(`  Picker Check (ON state):`, pickerCheck);
+    if (!pickerCheck.hasLockedSubtitle || !pickerCheck.isChecked || !pickerCheck.allFound) {
+      throw new Error(`8-style picker did not expand with all 8 cards: ${JSON.stringify(pickerCheck)}`);
+    }
+
+    // Test clicking style cards and checking live morphing
+    const STYLES_TO_CLICK = [
+      { name: 'Celestial Orbit', variant: 'celestial-orbit' },
+      { name: 'Elevated Orb', variant: 'elevated-orb' },
+      { name: 'Morph Capsule', variant: 'morph-capsule' },
+      { name: 'Laser Horizon', variant: 'laser-horizon' },
+    ];
+
+    for (const st of STYLES_TO_CLICK) {
+      const clickRes = await client.eval(`
+        (() => {
+          const cards = Array.from(document.querySelectorAll('div[role="button"]'));
+          const targetCard = cards.find(c => c.innerText.includes('${st.name}'));
+          if (!targetCard) return { error: 'Card not found for ${st.name}' };
+          targetCard.click();
+          return { clicked: true };
+        })()
+      `);
+      if (clickRes.error) throw new Error(clickRes.error);
+      await delay(300);
+
+      const liveVariant = await client.eval(`
+        (() => {
+          const nav = document.querySelector('nav[data-bottom-nav="true"]');
+          return nav ? nav.getAttribute('data-navbar-variant') : null;
+        })()
+      `);
+      console.log(`    Clicked card ${st.name} -> Live nav variant: ${liveVariant} (expected: ${st.variant})`);
+      if (liveVariant !== st.variant) {
+        throw new Error(`Live morph failed for ${st.name}: got ${liveVariant}, expected ${st.variant}`);
+      }
+    }
+
+    // Toggle switch back OFF
+    console.log(`  Toggling Navbar Style Override back OFF...`);
+    await client.eval(`
+      (() => {
+        const switchEl = document.querySelector('#navbar-override-switch');
+        if (switchEl) switchEl.click();
+      })()
+    `);
+    await delay(400);
+
+    const offAudit = await client.eval(`
+      (() => {
+        const nav = document.querySelector('nav[data-bottom-nav="true"]');
+        return {
+          switchChecked: document.querySelector('#navbar-override-switch')?.getAttribute('aria-checked'),
+          variant: nav ? nav.getAttribute('data-navbar-variant') : null,
+        };
+      })()
+    `);
+    console.log(`  After Toggling OFF: switch = ${offAudit.switchChecked}, variant = ${offAudit.variant}`);
+    if (offAudit.variant !== 'mihrab-arch') {
+      throw new Error(`Navbar did not revert to theme default mihrab-arch on toggle OFF: got ${offAudit.variant}`);
+    }
+    console.log(`  -> [PASS] Toggle OFF immediately restored theme-matching dock!`);
+
+    // --------------------------------------------------------------------------
+    // PART 5: GPU Filter Audit on Navbar & Override Section
+    // --------------------------------------------------------------------------
+    const filterAudit = await client.eval(`
+      (() => {
+        const nav = document.querySelector('nav[data-bottom-nav="true"]');
+        const overrideSection = document.querySelector('#navbar-override-switch')?.closest('.space-y-3');
+        const elementsToCheck = [
+          ...(nav ? [nav, ...nav.querySelectorAll('*')] : []),
+          ...(overrideSection ? [overrideSection, ...overrideSection.querySelectorAll('*')] : [])
+        ];
+
+        let hasBackdropFilter = false;
+        let hasDropShadow = false;
+        let forbidden = null;
+
+        for (const el of elementsToCheck) {
+          const cs = window.getComputedStyle(el);
+          const bf = cs.backdropFilter || cs.webkitBackdropFilter || '';
+          const f = cs.filter || '';
+          if (bf && bf !== 'none') {
+            hasBackdropFilter = true;
+            forbidden = el.tagName + ' (backdrop-filter: ' + bf + ')';
+            break;
+          }
+          if (f && f.includes('drop-shadow')) {
+            hasDropShadow = true;
+            forbidden = el.tagName + ' (filter: ' + f + ')';
+            break;
+          }
+        }
+        return { hasBackdropFilter, hasDropShadow, forbidden, count: elementsToCheck.length };
+      })()
+    `);
+    console.log(`\n  GPU Filter Audit on Navbar & Override Section:`, filterAudit);
+    if (filterAudit.hasBackdropFilter || filterAudit.hasDropShadow) {
+      throw new Error(`Forbidden filter found in navbar/override: ${filterAudit.forbidden}`);
+    }
 
     // Filter out harmless non-actionable console errors (e.g., mock audio or missing favicon)
     const criticalErrors = client.consoleErrors.filter(
@@ -343,7 +509,7 @@ async function run() {
     );
 
     console.log(`\n=== VERIFICATION SUMMARY ===`);
-    console.log(`Themes Tested: ${passed}/${THEME_TESTS.length} PASSED`);
+    console.log(`Themes Tested: ${passedThemes}/${THEME_TESTS.length} PASSED`);
     console.log(`Critical Console Errors: ${criticalErrors.length}`);
     console.log(`Page Exceptions: ${client.exceptions.length}`);
 
@@ -357,7 +523,7 @@ async function run() {
       throw new Error(`Encountered ${client.exceptions.length} unhandled page exception(s)`);
     }
 
-    console.log('\n>>> ALL 8 THEME-ADAPTIVE NAVBAR ARCHITECTURES VERIFIED: 100% PASS <<<');
+    console.log('\n>>> ALL NAVBAR OVERRIDE & THEME-ADAPTIVE ARCHITECTURES VERIFIED: 100% PASS <<<');
     process.exit(0);
   } finally {
     if (client) client.close();

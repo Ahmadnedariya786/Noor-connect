@@ -120,7 +120,7 @@ import { useLanguage } from '@/contexts/LanguageContext-new';
 import { ClockStylePicker } from '@/components/clocks/ClockStylePicker';
 import { useClockStyle } from '@/lib/clock-style';
 import { CLOCK_STYLES } from '@/types/clock';
-import { ThemePicker, useAppTheme } from '@/components/themes';
+import { ThemePicker, NavbarOverrideSection, useAppTheme } from '@/components/themes';
 
 import { getMadhab, setMadhab, type MadhabType } from '@/lib/storage';
 import { AladhanAPI } from '@/lib/aladhan-api';
@@ -1000,6 +1000,9 @@ const SettingsSubPage: React.FC = () => {
                 </div>
                 <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rtl:rotate-180 group-hover:translate-x-0.5 transition-transform shrink-0 opacity-55" />
               </div>
+
+              {/* Navbar Style Override Row & Expandable 8-Style Dock Picker */}
+              <NavbarOverrideSection />
 
               <div className="flex items-center justify-between py-1 border-t border-[var(--border)] pt-3">
                 <div>

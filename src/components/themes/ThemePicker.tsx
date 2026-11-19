@@ -1,8 +1,14 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import { type ThemeId } from '@/types/theme';
 import { useAppTheme, THEMES } from '@/lib/theme-engine';
-import { THEME_NAVBAR_VARIANT, NAVBAR_VARIANT_NAMES } from '@/lib/navbar-variants';
+import {
+  THEME_NAVBAR_VARIANT,
+  NAVBAR_VARIANT_NAMES,
+  NAVBAR_STYLE_CHANGE_EVENT,
+  getNavbarOverrideConfig,
+  setNavbarOverrideConfig,
+} from '@/lib/navbar-variants';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -260,6 +266,31 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
   const { currentTheme, setTheme, themes } = useAppTheme();
   const { toast } = useToast();
 
+  const [overrideConfig, setOverrideConfig] = useState(() =>
+    getNavbarOverrideConfig(currentTheme)
+  );
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setOverrideConfig(getNavbarOverrideConfig(currentTheme));
+    };
+    window.addEventListener(NAVBAR_STYLE_CHANGE_EVENT, handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener(NAVBAR_STYLE_CHANGE_EVENT, handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [currentTheme]);
+
+  const handleResetToAuto = useCallback(() => {
+    setNavbarOverrideConfig(false);
+    setOverrideConfig(getNavbarOverrideConfig(currentTheme));
+    toast({
+      title: 'Navbar Reset to Auto',
+      description: 'Navbar dock style now automatically matches your active theme.',
+    });
+  }, [currentTheme, toast]);
+
   const handleSelect = useCallback((themeId: ThemeId, themeName: string) => {
     // Synchronous DOM + storage update in current frame
     setTheme(themeId);
@@ -288,6 +319,32 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({
           </p>
         </div>
       </div>
+
+      {/* Subtle Status Banner when Navbar Override is ON */}
+      {overrideConfig.enabled && (
+        <div
+          className="flex items-center justify-between px-3 py-2 rounded-xl border text-xs select-none transition-all"
+          style={{
+            background: 'var(--accent-soft)',
+            borderColor: 'var(--border)',
+            color: 'var(--accent-text)',
+          }}
+        >
+          <span className="flex items-center gap-1.5 truncate min-w-0 font-medium">
+            <span role="img" aria-label="lock" className="shrink-0 text-sm">🔒</span>
+            <span className="truncate">
+              Navbar locked to <strong>{NAVBAR_VARIANT_NAMES[overrideConfig.style]}</strong>
+            </span>
+          </span>
+          <button
+            onClick={handleResetToAuto}
+            className="text-[11px] font-bold underline shrink-0 ml-2 hover:opacity-80 active:scale-95 transition-all cursor-pointer"
+            style={{ color: 'var(--accent-text)' }}
+          >
+            Reset to Auto
+          </button>
+        </div>
+      )}
 
       {/* 2-Column Grid of Preview Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
