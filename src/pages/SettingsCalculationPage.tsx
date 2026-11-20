@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -31,7 +31,7 @@ export default function SettingsCalculationPage() {
   });
   const [maghribIhtiyat, setMaghribIhtiyatState] = useState<number>(() => getMaghribIhtiyatMin());
 
-  const regionalPreset = React.useMemo(() => {
+  const regionalPreset = useMemo(() => {
     return getRegionalPrayerPreset(
       location.country || location.locationName,
       location.latitude || undefined,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -124,7 +124,7 @@ export const PrayerMethodSelector = () => {
     }
   };
 
-  const regionalPreset = React.useMemo(() => {
+  const regionalPreset = useMemo(() => {
     return getRegionalPrayerPreset(
       location.country || location.locationName,
       location.latitude || undefined,

@@ -18,6 +18,8 @@ import { cn } from '@/lib/utils';
 import { evaluateMakruhState, formatCountdownRemaining, type MakruhWindowInfo } from '@/lib/makruh-times';
 import { evaluateNaflPrayers } from '@/lib/nafl-prayers';
 import { computeFullPrayerSchedule, type FullPrayerSchedule } from '@/lib/prayer-times';
+import { getPrimaryMasjid, type MosqueItem } from '@/lib/mosque-service';
+import { islamicCalendarService } from '@/lib/islamic-calendar-service';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 
@@ -406,18 +408,28 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
   const [selectedDateOffset, setSelectedDateOffset] = useState<number>(0);
   const [offsetSchedule, setOffsetSchedule] = useState<LiveDaySchedule | null>(null);
   const [refreshKey, setRefreshKey] = useState<number>(0);
+  const [primaryMasjid, setPrimaryMasjid] = useState<MosqueItem | null>(() => getPrimaryMasjid());
 
-  // Subscribe to offset changes
+  // Subscribe to offset changes and primary masjid changes
   useEffect(() => {
     const handleOffsetsChange = () => {
       setRefreshKey(k => k + 1);
     };
+    const handleMasjidChange = () => {
+      setPrimaryMasjid(getPrimaryMasjid());
+    };
     window.addEventListener('prayer-offsets-changed', handleOffsetsChange);
     window.addEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+    window.addEventListener('hijri-date-offset-changed', handleOffsetsChange);
+    window.addEventListener('noor-primary-masjid-changed', handleMasjidChange);
+    window.addEventListener('storage', handleMasjidChange);
     window.addEventListener('focus', handleOffsetsChange);
     return () => {
       window.removeEventListener('prayer-offsets-changed', handleOffsetsChange);
       window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+      window.removeEventListener('hijri-date-offset-changed', handleOffsetsChange);
+      window.removeEventListener('noor-primary-masjid-changed', handleMasjidChange);
+      window.removeEventListener('storage', handleMasjidChange);
       window.removeEventListener('focus', handleOffsetsChange);
     };
   }, []);
@@ -448,18 +460,44 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     const monthShort = viewedDate.toLocaleString('en-US', { month: 'short' });
     const dayNum = viewedDate.getDate();
     let hijriPart = '';
+
+    let offset = 0;
+    try {
+      offset = parseInt(localStorage.getItem('hijri-date-offset') || '0', 10);
+      if (isNaN(offset)) offset = 0;
+    } catch {
+      offset = 0;
+    }
+
     if (offsetSchedule?.date?.hijri) {
       const h = offsetSchedule.date.hijri;
-      const m = (h.month?.en || '')
+      let dayVal = parseInt(h.day, 10);
+      if (!isNaN(dayVal) && offset !== 0) {
+        dayVal = Math.max(1, dayVal + offset);
+      }
+      const rawMonth = h.month?.en || '';
+      const m = rawMonth
         .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
         .replace(/al-ola/gi, 'al-ūlā')
         .replace(/al-ōlā/gi, 'al-ūlā')
         .replace(/ō/g, 'ū')
-        .replace(/Jumada al-ūlā/gi, 'Jumādā I')
-        .replace(/Jumādā al-ūlā/gi, 'Jumādā I')
-        .replace(/Jumada al-akhir/gi, 'Jumādā II')
-        .replace(/Jumādā al-ākhirah/gi, 'Jumādā II');
-      hijriPart = ` • ${h.day} ${m}`;
+        .replace(/Jumada al-Thani|Jumada al-akhir|Jumada II/gi, 'Jumādā al-ākhirah')
+        .replace(/Jumada al-Awwal|Jumada al-ūlā|Jumādā I/gi, 'Jumādā al-ūlā');
+      hijriPart = ` • ${dayVal} ${m}`;
+    } else {
+      const effDate = new Date(viewedDate);
+      if (offset !== 0) effDate.setDate(effDate.getDate() + offset);
+      try {
+        const calc = islamicCalendarService.calculateIslamicDate(effDate);
+        if (calc?.hijri) {
+          const m = (calc.hijri.month.en || '')
+            .replace(/Jumada al-Thani|Jumada al-akhir|Jumada II/gi, 'Jumādā al-ākhirah')
+            .replace(/Jumada al-Awwal|Jumada al-ūlā|Jumādā I/gi, 'Jumādā al-ūlā');
+          hijriPart = ` • ${calc.hijri.day} ${m}`;
+        }
+      } catch {
+        // Fallback gracefully
+      }
     }
 
     if (selectedDateOffset === 0) return `${ui.today}, ${monthShort} ${dayNum}${hijriPart}`;
@@ -467,7 +505,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     if (selectedDateOffset === 1) return `${ui.tomorrow}, ${monthShort} ${dayNum}${hijriPart}`;
     const weekday = viewedDate.toLocaleString('en-US', { weekday: 'short' });
     return `${weekday}, ${monthShort} ${dayNum}${hijriPart}`;
-  }, [selectedDateOffset, viewedDate, offsetSchedule, ui]);
+  }, [selectedDateOffset, viewedDate, offsetSchedule, ui, refreshKey]);
 
   const displayedPrayers = useMemo(() => {
     void refreshKey;
@@ -652,10 +690,9 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           alternateAsrText: fp.alternateAsrFormatted ? `${fp.alternateMadhabLabel} ${fp.alternateAsrFormatted}` : undefined,
         };
       }
-      return meta;
     }
 
-    // Fallback based on displayedPrayers
+    // Direct alignment based on displayedPrayers to eliminate 04:18 vs 04:17 1-min discrepancy
     const findTime = (name: string) => {
       const found = displayedPrayers.find(p => (p.originalName || p.name).toLowerCase() === name.toLowerCase());
       return found?.time;
@@ -667,11 +704,16 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     const ishaT = findTime('isha');
     const fajrT = findTime('fajr');
 
-    if (sunriseT) meta['fajr'] = { endTimeFormatted: sunriseT };
-    if (asrT) meta['dhuhr'] = { endTimeFormatted: asrT };
-    if (maghribT) meta['asr'] = { endTimeFormatted: maghribT };
-    if (ishaT) meta['maghrib'] = { endTimeFormatted: ishaT };
-    if (fajrT) meta['isha'] = { endTimeFormatted: fajrT };
+    // Fajr ends at Sunrise
+    if (sunriseT) meta['fajr'] = { ...meta['fajr'], endTimeFormatted: sunriseT };
+    // Dhuhr / Jummah Ends EXACTLY when Asr starts (eliminates 04:18 vs 04:17 1-min discrepancy)
+    if (asrT) meta['dhuhr'] = { ...meta['dhuhr'], endTimeFormatted: asrT };
+    // Asr ends at Maghrib
+    if (maghribT) meta['asr'] = { ...meta['asr'], endTimeFormatted: maghribT };
+    // Maghrib ends at Isha
+    if (ishaT) meta['maghrib'] = { ...meta['maghrib'], endTimeFormatted: ishaT };
+    // Isha ends at tomorrow Fajr (or fallback today Fajr)
+    if (fajrT && !meta['isha']) meta['isha'] = { ...meta['isha'], endTimeFormatted: fajrT };
 
     return meta;
   }, [fullSchedule, displayedPrayers]);
@@ -804,16 +846,16 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           <button
             type="button"
             onClick={() => navigate('/mosques')}
-            className="text-[11px] font-semibold flex items-center gap-1 transition-all px-2.5 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)] hover:bg-[var(--accent-soft)] active:scale-95 cursor-pointer"
-            title="Find Nearby Mosques & Jamaat Times"
+            className="text-[11px] font-semibold flex items-center gap-1 transition-all px-2.5 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)] hover:bg-[var(--accent-soft)] active:scale-95 cursor-pointer max-w-[150px]"
+            title={primaryMasjid ? `Primary Masjid: ${primaryMasjid.name}` : "Find Nearby Mosques & Jamaat Times"}
           >
-            <span>🕌 Mosques</span>
+            <span className="truncate">🕌 {primaryMasjid ? primaryMasjid.name : 'Mosques'}</span>
           </button>
           {onLocationClick && (
             <button
               type="button"
               onClick={onLocationClick}
-              className="text-xs font-semibold uppercase tracking-widest transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              className="text-xs font-semibold uppercase tracking-widest transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
             >
               {locationLabel ? ui.changeCity : ui.setCity}
             </button>
@@ -1348,6 +1390,18 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
              (makruhState.activeWindow.relatedRow === 'Dhuhr' && rawName.toLowerCase() === 'jummah'))
           );
 
+          // Pinned Primary Masjid Jamaat time for this prayer
+          let rowJamaatTime: string | undefined;
+          if (primaryMasjid?.jamaatTimes) {
+            if (fardKey === 'fajr') rowJamaatTime = primaryMasjid.jamaatTimes.fajr;
+            else if (fardKey === 'dhuhr') {
+              const isFriday = (prayer.date || new Date()).getDay() === 5;
+              rowJamaatTime = isFriday ? (primaryMasjid.jamaatTimes.jummah || primaryMasjid.jamaatTimes.dhuhr) : primaryMasjid.jamaatTimes.dhuhr;
+            } else if (fardKey === 'asr') rowJamaatTime = primaryMasjid.jamaatTimes.asr;
+            else if (fardKey === 'maghrib') rowJamaatTime = primaryMasjid.jamaatTimes.maghrib;
+            else if (fardKey === 'isha') rowJamaatTime = primaryMasjid.jamaatTimes.isha;
+          }
+
           return (
             <div
               key={rawName}
@@ -1407,6 +1461,26 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                       <MakruhRowBadge />
                     )}
                   </div>
+                  {/* Primary Masjid Jamaat Time sub-line */}
+                  {rowJamaatTime && (
+                    <span
+                      className="ltr-num font-semibold"
+                      dir="ltr"
+                      style={{
+                        fontSize: '0.62rem',
+                        color: 'var(--accent-text)',
+                        whiteSpace: 'nowrap',
+                        lineHeight: 1.1,
+                        marginTop: '2px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                      }}
+                    >
+                      <span>🕌 Jamaat</span>
+                      <strong className="font-mono">{rowJamaatTime}</strong>
+                    </span>
+                  )}
                   {/* On Asr row only, compact muted secondary micro-label beneath Asr showing alternate madhab start */}
                   {fardKey === 'asr' && pMeta?.alternateAsrText && (
                     <span
@@ -1763,7 +1837,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                         { label: 'Khatm Sehri', time: fullSchedule.sunnahTimes.khatmSehriFormatted, desc: 'Fasting threshold' },
                         { label: 'Ishraaq', time: fullSchedule.sunnahTimes.ishraaqFormatted, desc: 'Sunrise +15m' },
                         { label: 'Chaasht (Duha)', time: fullSchedule.sunnahTimes.chaashtFormatted, desc: 'Forenoon' },
-                        { label: 'Zawaal (Solar Noon)', time: fullSchedule.sunnahTimes.zawaalFormatted, desc: 'Meridian peak' },
+                        { label: 'Zawaal (Noon)', time: fullSchedule.sunnahTimes.zawaalFormatted, desc: 'Meridian peak' },
                         { label: 'Guroob (Sunset)', time: fullSchedule.sunnahTimes.sunsetFormatted, desc: 'Astronomical' },
                         { label: 'Iftaar (Maghrib)', time: fullSchedule.sunnahTimes.iftaarFormatted, desc: 'Fast break' },
                         { label: 'Islamic Midnight', time: fullSchedule.sunnahTimes.islamicMidnightFormatted, desc: 'Night midpoint' },
@@ -1771,24 +1845,29 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                       ].map((item) => (
                         <div
                           key={item.label}
-                          className="p-2 rounded-xl border flex flex-col justify-between"
+                          className="p-2 rounded-xl border flex flex-col justify-center"
                           style={{
                             background: 'var(--surface-2)',
                             borderColor: 'var(--border)',
                           }}
                         >
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[11px] font-semibold text-[var(--text-secondary)] truncate">
-                              {item.label}
-                            </span>
-                            <span
-                              className="font-mono font-bold text-xs text-[var(--text-primary)] ltr-num tabular-nums shrink-0"
-                              dir="ltr"
-                            >
-                              {item.time}
-                            </span>
-                          </div>
-                          <span className="text-[9px] text-[var(--text-secondary)] opacity-75 truncate">
+                          <span
+                            className="font-medium text-[var(--text-secondary)] leading-tight"
+                            style={{ fontSize: '0.68rem' }}
+                          >
+                            {item.label}
+                          </span>
+                          <span
+                            className="font-mono font-bold text-[var(--text-primary)] ltr-num tabular-nums mt-0.5 leading-tight"
+                            dir="ltr"
+                            style={{ fontSize: '0.90rem' }}
+                          >
+                            {item.time}
+                          </span>
+                          <span
+                            className="text-[var(--text-secondary)] opacity-75 leading-tight mt-0.5"
+                            style={{ fontSize: '0.60rem' }}
+                          >
                             {item.desc}
                           </span>
                         </div>
@@ -1817,25 +1896,25 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                       {fullSchedule.makruhWindows.map((win) => (
                         <div
                           key={win.id}
-                          className="p-2 rounded-xl border flex items-center justify-between text-xs transition-colors"
+                          className="p-2.5 rounded-xl border flex flex-col gap-1 text-xs transition-colors"
                           style={{
                             background: 'rgba(239, 68, 68, 0.07)',
                             borderColor: 'rgba(239, 68, 68, 0.22)',
                           }}
                         >
-                          <div className="flex flex-col min-w-0 pr-2">
-                            <span className="font-bold text-[var(--text-primary)] text-xs truncate">
+                          <div className="flex items-center justify-between gap-1 flex-wrap">
+                            <span className="font-bold text-[var(--text-primary)] text-xs">
                               {win.title}
                             </span>
-                            <span className="text-[10px] text-[var(--text-secondary)] truncate">
-                              {win.description}
+                            <span
+                              className="font-mono font-bold text-[#FCA5A5] text-xs shrink-0 ltr-num tabular-nums"
+                              dir="ltr"
+                            >
+                              {win.startFormatted} – {win.endFormatted}
                             </span>
                           </div>
-                          <span
-                            className="font-mono font-bold text-[#FCA5A5] text-xs shrink-0 ltr-num tabular-nums"
-                            dir="ltr"
-                          >
-                            {win.startFormatted} – {win.endFormatted}
+                          <span className="text-[10.5px] text-[var(--text-secondary)] leading-tight">
+                            {win.description}
                           </span>
                         </div>
                       ))}

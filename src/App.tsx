@@ -311,6 +311,7 @@ function AppRoutes() {
           <Route path="/settings/app-theme" element={<SettingsThemePage />} />
           <Route path="/settings/calculation" element={<SettingsCalculationPage />} />
           <Route path="/settings/prayer-calculation" element={<SettingsCalculationPage />} />
+          <Route path="/settings/prayer" element={<SettingsCalculationPage />} />
           <Route path="/settings/personal" element={<ZakatCalculator />} />
           <Route path="/settings/zakat" element={<ZakatCalculator />} />
           <Route path="/settings/widgets" element={<WidgetSettings />} />

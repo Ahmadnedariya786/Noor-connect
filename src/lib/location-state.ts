@@ -8,6 +8,7 @@ import { GeolocationService, isAndroidWebView } from '@/lib/geolocation-service'
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
 import { findNearestOfflineCity, type CityData } from '@/data/cities';
 import { recordBreadcrumb } from '@/lib/diagnostics-engine';
+import { autoApplyRegionalPresetIfFirstMigration } from '@/lib/prayer-times';
 
 export { FALLBACK_LOCATIONS } from '@/lib/location-config';
 
@@ -43,11 +44,16 @@ export const loadStoredLocation = (): LocationState => {
     const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
+      if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+        autoApplyRegionalPresetIfFirstMigration(parsed.locationName, parsed.latitude, parsed.longitude);
+      }
       return {
         ...DEFAULT_LOCATION,
         ...parsed,
         isDetecting: false // Reset detecting state on load
       };
+    } else {
+      autoApplyRegionalPresetIfFirstMigration(DEFAULT_LOCATION.locationName, DEFAULT_LOCATION.latitude, DEFAULT_LOCATION.longitude);
     }
   } catch (error) {
     console.error('Failed to load location from storage:', error);

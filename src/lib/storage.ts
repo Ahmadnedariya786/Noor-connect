@@ -113,9 +113,40 @@ export type MadhabType = 'shafi' | 'hanafi';
 const VALID_MADHABS: MadhabType[] = ['shafi', 'hanafi'];
 
 export const getMadhab = (): MadhabType => {
-  const stored = localStorage.getItem(STORAGE_KEYS.MADHAB) as MadhabType | null;
-  // Normalize legacy values (maliki/hanbali → shafi) so old installs migrate cleanly.
-  return stored && VALID_MADHABS.includes(stored) ? stored : 'shafi';
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.MADHAB) as MadhabType | null;
+    // Normalize legacy values (maliki/hanbali → shafi) so old installs migrate cleanly.
+    if (stored && VALID_MADHABS.includes(stored)) {
+      return stored;
+    }
+
+    // Default based on current location / timezone if not explicitly stored
+    const loc = localStorage.getItem(STORAGE_KEYS.USER_LOCATION);
+    if (loc) {
+      const parsed = JSON.parse(loc);
+      if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+        if (
+          parsed.latitude >= 6 &&
+          parsed.latitude <= 38 &&
+          parsed.longitude >= 60 &&
+          parsed.longitude <= 98
+        ) {
+          return 'hanafi';
+        }
+      }
+      if (parsed.country && ['IN', 'PK', 'BD', 'AF', 'LK', 'NP'].includes(parsed.country.toUpperCase())) {
+        return 'hanafi';
+      }
+    }
+
+    const tz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+    if (tz && (tz.includes('Kolkata') || tz.includes('Karachi') || tz.includes('Dhaka') || tz.includes('Calcutta'))) {
+      return 'hanafi';
+    }
+  } catch {
+    // Fallback
+  }
+  return 'shafi';
 };
 
 export const setMadhab = (madhab: MadhabType): void => {

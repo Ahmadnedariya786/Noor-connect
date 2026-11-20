@@ -165,7 +165,7 @@ export function getRegionalPrayerPreset(
     nameLower.includes('sri lanka') ||
     nameLower.includes('nepal');
   const isSouthAsiaCoords = typeof lat === 'number' && typeof lng === 'number' &&
-    lat >= 6 && lat <= 38 && lng >= 68 && lng <= 98;
+    lat >= 6 && lat <= 38 && lng >= 60 && lng <= 98;
 
   if (isSouthAsiaCode || isSouthAsiaName || isSouthAsiaCoords) {
     return REGIONAL_PRESETS.south_asia;
@@ -674,8 +674,8 @@ export function computeFullPrayerSchedule(
   // 3 Daily Prohibited (Makruh) Windows
   // 1. Sunrise (Tulu'): [Sunrise, Sunrise + 15m]
   const sunriseMakruhEnd = new Date(sunrise.getTime() + 15 * 60000);
-  // 2. Zawaal (Istiwa'): [Dhuhr - 10m, Dhuhr start]
-  const zawalMakruhStart = new Date(dhuhr.getTime() - 10 * 60000);
+  // 2. Zawaal (Istiwa'): Astronomical Solar Noon until Dhuhr start (e.g. 12:21 PM – 12:26 PM)
+  const zawalMakruhStart = rawSolarNoon;
   const zawalMakruhEnd = dhuhr;
   // 3. Sunset (Ghurub): [Sunset - 15m, Sunset]
   const sunsetMakruhStart = new Date(sunset.getTime() - 15 * 60000);
