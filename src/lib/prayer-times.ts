@@ -331,6 +331,7 @@ export function applyRegionalPreset(preset: RegionalPrayerPreset): void {
 
     // 8. Dispatch notification events
     window.dispatchEvent(new CustomEvent('prayer-method-changed', { detail: { preset } }));
+    window.dispatchEvent(new CustomEvent('madhab-changed', { detail: { madhab: preset.madhab } }));
     window.dispatchEvent(new Event('hijri-date-offset-changed'));
     window.dispatchEvent(new Event('prayer-offsets-changed'));
   } catch (err) {
@@ -529,11 +530,13 @@ export function computeFullPrayerSchedule(
   const rawFajr = primaryTimes.fajr;
   const rawSunrise = primaryTimes.sunrise;
   // Astronomical Solar Noon (Zawaal)
-  const rawSolarNoon = primaryTimes.dhuhr;
-  // Dhuhr starts after Solar Noon (with +dhuhrSafety safety min if specified)
-  const rawDhuhr = dhuhrSafety > 0
-    ? new Date(rawSolarNoon.getTime() + dhuhrSafety * 60000)
-    : rawSolarNoon;
+  // Fix double +5m offset bug: solarNoon (Zawaal) is computed strictly BEFORE the +5 min safety margin.
+  // rawDhuhr represents the Fard Dhuhr start (12:26 PM for Vadgam/Chhapi on 20 Nov 2026),
+  // while solarNoon is 12:21 PM, giving Zawaal (12:21 PM) and Zawaal Makruh (12:21 PM – 12:26 PM).
+  const rawDhuhr = primaryTimes.dhuhr;
+  const rawSolarNoon = dhuhrSafety > 0
+    ? new Date(rawDhuhr.getTime() - dhuhrSafety * 60000)
+    : rawDhuhr;
   const rawAsr = primaryTimes.asr;
   const rawAltAsr = alternateTimes.asr;
   // Maghrib with Ihtiyat

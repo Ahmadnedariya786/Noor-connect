@@ -151,6 +151,15 @@ export const getMadhab = (): MadhabType => {
 
 export const setMadhab = (madhab: MadhabType): void => {
   localStorage.setItem(STORAGE_KEYS.MADHAB, madhab);
+  try {
+    localStorage.removeItem('cached_prayer_times');
+    localStorage.removeItem('noor_cached_dashboard_prayers');
+  } catch {
+    // Safe storage fallback
+  }
+  // Dispatch custom event for immediate UI updates across components
+  window.dispatchEvent(new CustomEvent('madhab-changed', { detail: { madhab } }));
+  window.dispatchEvent(new Event('prayer-offsets-changed'));
 };
 
 // Time Format

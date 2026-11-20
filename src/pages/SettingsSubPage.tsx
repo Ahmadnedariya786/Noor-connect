@@ -296,7 +296,12 @@ const SettingsSubPage: React.FC = () => {
       getStorageBreakdown().then(setStorageBreakdown).catch(() => {});
       getStorageStats().then(setStorageStats).catch(() => {});
     };
+    const handleMadhabUpdated = () => {
+      setMadhabState(getMadhab());
+    };
     window.addEventListener('noor-cache-updated', handleCacheUpdated);
+    window.addEventListener('madhab-changed', handleMadhabUpdated);
+    window.addEventListener('prayer-method-changed', handleMadhabUpdated);
 
     downloadManager.listDownloaded()
       .then((items) => {
@@ -313,6 +318,8 @@ const SettingsSubPage: React.FC = () => {
 
     return () => {
       window.removeEventListener('noor-cache-updated', handleCacheUpdated);
+      window.removeEventListener('madhab-changed', handleMadhabUpdated);
+      window.removeEventListener('prayer-method-changed', handleMadhabUpdated);
     };
   }, []);
 

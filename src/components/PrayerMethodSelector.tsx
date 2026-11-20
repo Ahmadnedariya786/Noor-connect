@@ -15,6 +15,7 @@ import {
 } from "@/lib/prayer-offsets";
 import { OnlinePrayerAPI } from "@/lib/online-prayer-api";
 import { getRegionalPrayerPreset, applyRegionalPreset } from "@/lib/prayer-times";
+import { setMadhab } from "@/lib/storage";
 
 export const PrayerMethodSelector = () => {
   const location = useLocationState();
@@ -134,6 +135,7 @@ export const PrayerMethodSelector = () => {
 
   const handleUseRecommended = () => {
     applyRegionalPreset(regionalPreset);
+    setMadhab(regionalPreset.madhab);
     const updated = prayerMethods.getSelectedMethod();
     setSelectedMethod(updated);
     toast({
@@ -353,15 +355,20 @@ export const PrayerMethodSelector = () => {
             size="sm"
             onClick={handleUseRecommended}
             disabled={isUpdating}
-            className="w-full font-medium"
+            className="w-full font-bold cursor-pointer"
             style={{
+              width: '100%',
+              maxWidth: '100%',
+              whiteSpace: 'normal',
+              textAlign: 'center',
+              boxSizing: 'border-box',
               borderColor: 'var(--accent)',
               color: 'var(--accent-text)',
               background: 'var(--surface)',
             }}
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Apply Regional Standard ({regionalPreset.summary})
+            <RefreshCw className="w-4 h-4 mr-2 shrink-0" />
+            <span>Apply Regional Standard</span>
           </Button>
         </div>
       )}

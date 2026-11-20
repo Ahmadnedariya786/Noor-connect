@@ -30,6 +30,8 @@ import { AppBar } from "@/components/AppBar";
 import { LayoutManager } from "@/components/LayoutManager";
 import { useToast } from "@/hooks/use-toast";
 import { useLocationState } from "@/lib/location-state";
+import { Capacitor } from "@capacitor/core";
+import { Geolocation } from "@capacitor/geolocation";
 import {
   fetchNearbyMosques,
   searchMosquesOnline,
@@ -44,6 +46,7 @@ import {
   openGoogleMapsSearchNearby,
   type MosqueItem,
   type MosqueJamaatTimes,
+  type StreetLocationResult,
 } from "@/lib/mosque-service";
 
 /* ─────────────────────────────────────────────────────────────
@@ -265,6 +268,7 @@ function AddCustomMosqueModal({
   const [lat, setLat] = useState(defaultLat ? defaultLat.toFixed(5) : "");
   const [lon, setLon] = useState(defaultLon ? defaultLon.toFixed(5) : "");
   const [setAsPrimary, setSetAsPrimary] = useState(true);
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
 
   // Jamaat times
   const [fajr, setFajr] = useState("");
@@ -275,9 +279,60 @@ function AddCustomMosqueModal({
   const [jummah, setJummah] = useState("");
 
   useEffect(() => {
-    if (defaultLat && !lat) setLat(defaultLat.toFixed(5));
-    if (defaultLon && !lon) setLon(defaultLon.toFixed(5));
+    if (defaultLat && !lat) setLat(defaultLat.toFixed(6));
+    if (defaultLon && !lon) setLon(defaultLon.toFixed(6));
   }, [defaultLat, defaultLon, lat, lon]);
+
+  const handleAutoFillGps = async () => {
+    setIsDetectingGps(true);
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 7000 });
+        if (pos?.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+          setLat(pos.coords.latitude.toFixed(6));
+          setLon(pos.coords.longitude.toFixed(6));
+          toast({
+            title: "GPS Captured 📍",
+            description: `Exact pin: ${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° E`,
+          });
+          return;
+        }
+      }
+      if (typeof navigator !== "undefined" && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setLat(pos.coords.latitude.toFixed(6));
+            setLon(pos.coords.longitude.toFixed(6));
+            toast({
+              title: "GPS Captured 📍",
+              description: `Exact pin: ${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° E`,
+            });
+          },
+          () => {
+            if (defaultLat && defaultLon) {
+              setLat(defaultLat.toFixed(6));
+              setLon(defaultLon.toFixed(6));
+              toast({
+                title: "Using Saved City GPS",
+                description: "Live GPS was unavailable or permission denied.",
+              });
+            }
+          },
+          { enableHighAccuracy: true, timeout: 7000 }
+        );
+      } else if (defaultLat && defaultLon) {
+        setLat(defaultLat.toFixed(6));
+        setLon(defaultLon.toFixed(6));
+      }
+    } catch {
+      if (defaultLat && defaultLon) {
+        setLat(defaultLat.toFixed(6));
+        setLon(defaultLon.toFixed(6));
+      }
+    } finally {
+      setIsDetectingGps(false);
+    }
+  };
 
   if (!isOpen || typeof document === "undefined") return null;
 
@@ -338,7 +393,7 @@ function AddCustomMosqueModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[360px] max-h-[92vh] flex flex-col overflow-hidden text-[var(--text-primary)] rounded-[26px] border shadow-2xl transition-colors"
+        className="w-full max-w-[360px] max-h-[88vh] flex flex-col overflow-hidden text-[var(--text-primary)] rounded-[26px] border shadow-2xl transition-colors"
         style={{
           backgroundColor: "var(--bg-elev)",
           borderColor: "var(--border)",
@@ -346,7 +401,7 @@ function AddCustomMosqueModal({
       >
         {/* Header */}
         <div
-          className="p-4 border-b flex items-center justify-between"
+          className="p-4 border-b flex items-center justify-between shrink-0"
           style={{ borderColor: "var(--border)", background: "var(--surface)" }}
         >
           <div className="min-w-0 pr-2">
@@ -368,7 +423,7 @@ function AddCustomMosqueModal({
         </div>
 
         {/* Body */}
-        <div className="p-4 overflow-y-auto space-y-3.5">
+        <div className="p-4 overflow-y-auto space-y-3.5 max-h-[70vh] pb-6">
           <div>
             <Label className="text-[11px] font-bold text-[var(--text-secondary)]">Masjid Name *</Label>
             <Input
@@ -391,27 +446,56 @@ function AddCustomMosqueModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-[10px] font-bold text-[var(--text-secondary)]">Latitude (GPS)</Label>
-              <Input
-                type="text"
-                placeholder="24.08..."
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
-                className="h-8 text-xs mt-1 rounded-xl font-mono"
-              />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <Label className="text-[11px] font-bold text-[var(--text-secondary)]">Coordinates (GPS)</Label>
+              <button
+                type="button"
+                onClick={handleAutoFillGps}
+                disabled={isDetectingGps}
+                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border text-[var(--accent-text)] cursor-pointer active:scale-95 transition-all"
+                style={{
+                  background: "var(--surface)",
+                  borderColor: "var(--border)",
+                }}
+              >
+                <span>📍</span>
+                <span>{isDetectingGps ? "Acquiring..." : "Auto-Fill My Exact GPS"}</span>
+              </button>
             </div>
-            <div>
-              <Label className="text-[10px] font-bold text-[var(--text-secondary)]">Longitude (GPS)</Label>
-              <Input
-                type="text"
-                placeholder="72.39..."
-                value={lon}
-                onChange={(e) => setLon(e.target.value)}
-                className="h-8 text-xs mt-1 rounded-xl font-mono"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-[10px] text-[var(--text-secondary)]">Latitude</Label>
+                <Input
+                  type="text"
+                  placeholder="24.08..."
+                  value={lat}
+                  onChange={(e) => setLat(e.target.value)}
+                  className="h-8 text-xs mt-0.5 rounded-xl font-mono"
+                />
+              </div>
+              <div>
+                <Label className="text-[10px] text-[var(--text-secondary)]">Longitude</Label>
+                <Input
+                  type="text"
+                  placeholder="72.39..."
+                  value={lon}
+                  onChange={(e) => setLon(e.target.value)}
+                  className="h-8 text-xs mt-0.5 rounded-xl font-mono"
+                />
+              </div>
             </div>
+            {Number.isFinite(parseFloat(lat)) && Number.isFinite(parseFloat(lon)) && (
+              <div className="mt-1 flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections(parseFloat(lat), parseFloat(lon))}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)] hover:underline cursor-pointer"
+                >
+                  <span>Open in Google Maps ↗</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Primary Masjid Toggle Checkbox */}
@@ -500,7 +584,7 @@ function AddCustomMosqueModal({
 
         {/* Footer */}
         <div
-          className="p-3 border-t flex items-center justify-end gap-2"
+          className="p-3 border-t flex items-center justify-end gap-2 shrink-0"
           style={{ borderColor: "var(--border)", background: "var(--surface)" }}
         >
           <Button
@@ -628,7 +712,7 @@ export default function MosqueFinder() {
   const [isSearchingOnline, setIsSearchingOnline] = useState<boolean>(false);
   const [selectedMosqueForJamaat, setSelectedMosqueForJamaat] = useState<MosqueItem | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
-  const [streetCoords, setStreetCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [streetCoords, setStreetCoords] = useState<StreetLocationResult | null>(null);
 
   const lat = location.latitude;
   const lon = location.longitude;
@@ -653,7 +737,7 @@ export default function MosqueFinder() {
       try {
         const freshPos = await getCurrentStreetLocation(lat, lon);
         setStreetCoords(freshPos);
-        const results = await fetchNearbyMosques(freshPos.lat, freshPos.lon, radiusMeters, force);
+        const results = await fetchNearbyMosques(freshPos.latitude, freshPos.longitude, radiusMeters, force);
         setMosques(results);
         setPrimaryMasjidState(getPrimaryMasjid());
       } catch (err) {
@@ -681,8 +765,8 @@ export default function MosqueFinder() {
     const timer = setTimeout(async () => {
       setIsSearchingOnline(true);
       try {
-        const activeLat = streetCoords?.lat ?? lat ?? 24.08;
-        const activeLon = streetCoords?.lon ?? lon ?? 72.39;
+        const activeLat = streetCoords?.latitude ?? lat ?? 24.08;
+        const activeLon = streetCoords?.longitude ?? lon ?? 72.39;
         const hits = await searchMosquesOnline(trimmed, activeLat, activeLon);
         setOnlineResults(hits);
       } catch {
@@ -770,8 +854,8 @@ export default function MosqueFinder() {
     loadMosques(false);
   };
 
-  const activeLat = streetCoords?.lat ?? lat;
-  const activeLon = streetCoords?.lon ?? lon;
+  const activeLat = streetCoords?.latitude ?? lat;
+  const activeLon = streetCoords?.longitude ?? lon;
 
   return (
     <LayoutManager activeTab="services">
@@ -786,9 +870,21 @@ export default function MosqueFinder() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)] block">
                   100% Free • OpenStreetMap & Komoot
                 </span>
-                <h1 className="text-lg font-extrabold text-[var(--text-primary)] truncate">
-                  Nearby Mosques
-                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-lg font-extrabold text-[var(--text-primary)] truncate">
+                    Nearby Mosques
+                  </h1>
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 select-none"
+                    style={{
+                      background: streetCoords?.isLiveGps ? "rgba(16, 185, 129, 0.15)" : "var(--surface-2)",
+                      color: streetCoords?.isLiveGps ? "#10B981" : "var(--text-secondary)",
+                      border: `1px solid ${streetCoords?.isLiveGps ? "rgba(16, 185, 129, 0.3)" : "var(--border)"}`,
+                    }}
+                  >
+                    <span>{streetCoords?.isLiveGps ? "📍 Live GPS" : `📍 ${location.locationName?.split(',')[0]?.trim() || "Saved City"}`}</span>
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">

@@ -167,10 +167,10 @@ export function evaluateNaflPrayers(
     });
   }
 
-  // 2. Chasht / Duha (صلاة الضحى / چاشت): [Sunrise + 45 min, Dhuhr - 10 min)
+  // 2. Chasht / Duha (صلاة الضحى / چاشت): [Sunrise + 45 min, Dhuhr - 5 min)
   if (sunriseSec !== null && dhuhrSec !== null) {
     const startSec = sunriseSec + 45 * 60;
-    const endSec = dhuhrSec - 10 * 60;
+    const endSec = dhuhrSec - 5 * 60;
     const isActive = nowSec >= startSec && nowSec < endSec;
     const remaining = isActive ? endSec - nowSec : 0;
     const startFmt = formatSecondsToTime(startSec, timeFormat);

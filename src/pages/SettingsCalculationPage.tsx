@@ -47,14 +47,19 @@ export default function SettingsCalculationPage() {
     };
     window.addEventListener('prayer-offsets-changed', handleOffsetsChange);
     window.addEventListener('hijri-date-offset-changed', handleOffsetsChange);
+    window.addEventListener('madhab-changed', handleOffsetsChange);
+    window.addEventListener('prayer-method-changed', handleOffsetsChange);
     return () => {
       window.removeEventListener('prayer-offsets-changed', handleOffsetsChange);
       window.removeEventListener('hijri-date-offset-changed', handleOffsetsChange);
+      window.removeEventListener('madhab-changed', handleOffsetsChange);
+      window.removeEventListener('prayer-method-changed', handleOffsetsChange);
     };
   }, []);
 
   const handleApplyRegionalStandard = () => {
     applyRegionalPreset(regionalPreset);
+    setMadhab(regionalPreset.madhab);
     setMadhabState(regionalPreset.madhab);
     setHijriOffset(regionalPreset.hijriOffset.toString());
     setMaghribIhtiyatState(regionalPreset.maghribIhtiyatMin);
@@ -66,7 +71,7 @@ export default function SettingsCalculationPage() {
 
   return (
     <LayoutManager activeTab="settings">
-      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-36">
+      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-36 overflow-x-hidden select-none">
         <AppBar title="Prayer Calculation" showBack={true} />
 
         <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
@@ -93,15 +98,20 @@ export default function SettingsCalculationPage() {
               variant="outline"
               size="sm"
               onClick={handleApplyRegionalStandard}
-              className="w-full text-xs font-bold h-10 rounded-xl transition-all"
+              className="w-full text-xs font-bold h-10 rounded-xl transition-all cursor-pointer"
               style={{
+                width: '100%',
+                maxWidth: '100%',
+                whiteSpace: 'normal',
+                textAlign: 'center',
+                boxSizing: 'border-box',
                 borderColor: 'var(--accent)',
                 color: 'var(--accent-text)',
                 background: 'var(--accent-soft)',
               }}
             >
-              <RefreshCw className="w-3.5 h-3.5 mr-2" />
-              Apply Regional Standard ({regionalPreset.summary})
+              <RefreshCw className="w-3.5 h-3.5 mr-2 shrink-0" />
+              <span>Apply Regional Standard</span>
             </Button>
           </Card>
 

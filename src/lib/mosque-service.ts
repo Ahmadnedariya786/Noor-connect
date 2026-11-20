@@ -8,6 +8,9 @@
  * and direct Google Maps navigation.
  */
 
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
+
 export interface MosqueJamaatTimes {
   fajr?: string;
   dhuhr?: string;
@@ -83,54 +86,104 @@ export function formatDistance(meters: number): string {
 }
 
 /**
- * Calculates walking estimate based on average 5 km/h.
+ * Calculates walking estimate based on average 5 km/h (12 min/km).
+ * Only shown for nearby walkable mosques (<= 3.0 km).
  */
 export function formatWalkingEstimate(meters: number): string {
-  const mins = Math.max(1, Math.round((meters / 5000) * 60));
+  if (meters > 3000) return '';
+  const mins = Math.max(1, Math.round((meters / 1000) * 12));
   return `~${mins} min walk`;
 }
 
 /**
- * Calculates driving estimate based on average 30 km/h city speed.
+ * Calculates driving estimate based on average 40 km/h speed.
+ * Only shown for mosques within driving reach (<= 100 km).
  */
 export function formatDrivingEstimate(meters: number): string {
-  const mins = Math.max(1, Math.round((meters / 30000) * 60));
-  return `~${mins} min drive`;
+  if (meters > 100000) return '';
+  const totalMins = Math.max(1, Math.round((meters / 40000) * 60));
+  if (totalMins < 60) {
+    return `~${totalMins} min drive`;
+  }
+  const hrs = Math.floor(totalMins / 60);
+  const remMins = totalMins % 60;
+  return remMins > 0 ? `~${hrs}h ${remMins}m drive` : `~${hrs}h drive`;
+}
+
+export interface StreetLocationResult {
+  latitude: number;
+  longitude: number;
+  lat: number;
+  lon: number;
+  isFresh: boolean;
+  isLiveGps: boolean;
 }
 
 /**
- * Attempt to acquire fresh GPS street-level coordinates (<5s).
- * Falls back to provided coordinates if denied or unavailable.
+ * Attempt to acquire fresh street-level coordinates (<7s).
+ * Queries native Capacitor GPS first on Android/iOS, then web navigator.geolocation,
+ * falling back to provided city coordinates only if unavailable.
  */
 export async function getCurrentStreetLocation(
   fallbackLat: number,
   fallbackLon: number
-): Promise<{ latitude: number; longitude: number; isFresh: boolean }> {
-  if (typeof navigator === 'undefined' || !navigator.geolocation) {
-    return { latitude: fallbackLat, longitude: fallbackLon, isFresh: false };
-  }
-
-  try {
-    const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
+): Promise<StreetLocationResult> {
+  // 1. First attempt @capacitor/geolocation on native devices
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const pos = await Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 60000,
+        timeout: 7000,
+        maximumAge: 30000,
       });
-    });
-
-    if (pos && pos.coords) {
-      return {
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-        isFresh: true,
-      };
+      if (pos && pos.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+        return {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          isFresh: true,
+          isLiveGps: true,
+        };
+      }
+    } catch {
+      // Native GPS failed or timed out
     }
-  } catch {
-    // Silently fall back to cached/city coordinates
   }
 
-  return { latitude: fallbackLat, longitude: fallbackLon, isFresh: false };
+  // 2. Web browser navigator.geolocation
+  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 60000,
+        });
+      });
+      if (pos && pos.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+        return {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          isFresh: true,
+          isLiveGps: true,
+        };
+      }
+    } catch {
+      // Web geolocation denied or unavailable
+    }
+  }
+
+  return {
+    latitude: fallbackLat,
+    longitude: fallbackLon,
+    lat: fallbackLat,
+    lon: fallbackLon,
+    isFresh: false,
+    isLiveGps: false,
+  };
 }
 
 /**
@@ -369,12 +422,27 @@ async function fetchPhotonMosques(
 
       const p = f.properties || {};
       const rawName = p.name || p.street || 'Masjid';
+
+      // Strict Mosque-Only filter:
+      // Must have place_of_worship or match mosque naming pattern.
+      // This eliminates 3,443 km Kazakhstan "Aqsal" (village) and non-mosque locations.
+      const isPlaceOfWorship = p.osm_value === 'place_of_worship' || p.osm_value === 'mosque' || p.osm_key === 'amenity';
+      const matchesMosquePattern = /masjid|mosque|jama|juma|jamiya|eidgah|idgah|musalla|مسجد/i.test(rawName);
+      if (!isPlaceOfWorship && !matchesMosquePattern) {
+        continue;
+      }
+
+      const distMeters = calculateHaversineDistanceMeters(lat, lon, mLat, mLon);
+      // Hard distance cap: discard anything beyond 50 km
+      if (distMeters > 50000) {
+        continue;
+      }
+
       const city = p.city || p.district || p.state || '';
       const street = p.street || '';
       const address = [street, city].filter(Boolean).join(', ') || `${mLat.toFixed(3)}° N, ${mLon.toFixed(3)}° E`;
 
       const id = `photon_${p.osm_type || 'N'}_${p.osm_id || Math.abs(Math.round(mLat * 10000 + mLon * 10000))}`;
-      const distMeters = calculateHaversineDistanceMeters(lat, lon, mLat, mLon);
       const isFav = favSet.has(id);
       const isPrim = primary?.id === id;
 
@@ -652,7 +720,72 @@ export async function fetchNearbyMosques(
 }
 
 /**
- * Live online search across Photon + Local Mosques (for "Aqsa", "Chhapi", "Jumma", etc.).
+ * Query Nominatim bounded search in parallel with Overpass & Photon (<4.5s).
+ * Strictly bounded to +/- 0.5 degrees (~55 km) around user coordinates.
+ */
+async function fetchNominatimMosques(
+  lat: number,
+  lon: number,
+  query: string,
+  limit: number = 10
+): Promise<MosqueItem[]> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4500);
+
+    const viewbox = `${lon - 0.5},${lat + 0.5},${lon + 0.5},${lat - 0.5}`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' masjid')}&format=json&limit=${limit}&viewbox=${viewbox}&bounded=1`;
+    const res = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+
+    const favSet = new Set(getFavouriteMosqueIds());
+    const primary = getPrimaryMasjid();
+    const results: MosqueItem[] = [];
+
+    for (const item of data) {
+      const mLat = parseFloat(item.lat);
+      const mLon = parseFloat(item.lon);
+      if (isNaN(mLat) || isNaN(mLon)) continue;
+
+      const rawName = item.display_name?.split(',')[0] || item.name || 'Masjid';
+      const distMeters = calculateHaversineDistanceMeters(lat, lon, mLat, mLon);
+      if (distMeters > 50000) continue; // enforce 50 km cap
+
+      const isFav = favSet.has(item.osm_id?.toString() || '');
+      const isPrim = primary?.id === item.osm_id?.toString();
+
+      results.push({
+        id: `osm_${item.osm_type || 'N'}_${item.osm_id || Math.abs(Math.round(mLat * 10000 + mLon * 10000))}`,
+        name: rawName,
+        latitude: mLat,
+        longitude: mLon,
+        distanceMeters: distMeters,
+        distanceFormatted: formatDistance(distMeters),
+        walkingEstimate: formatWalkingEstimate(distMeters),
+        drivingEstimate: formatDrivingEstimate(distMeters),
+        address: item.display_name || `${mLat.toFixed(3)}° N, ${mLon.toFixed(3)}° E`,
+        isFavourite: isFav,
+        isPrimary: isPrim,
+        jamaatTimes: getMosqueJamaatTimes(String(item.osm_id)),
+      });
+    }
+
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Live online search across Photon + Nominatim + Local Mosques (for "Aqsa", "Chhapi", "Jumma", etc.).
+ * Strictly capped to <= 50 km.
  */
 export async function searchMosquesOnline(
   query: string,
@@ -664,7 +797,7 @@ export async function searchMosquesOnline(
     return fetchNearbyMosques(lat, lon);
   }
 
-  // 1. Local matching
+  // 1. Local custom matching (always included)
   const custom = getCustomMosques().map((m) => {
     const dist = calculateHaversineDistanceMeters(lat, lon, m.latitude, m.longitude);
     return {
@@ -676,18 +809,23 @@ export async function searchMosquesOnline(
     };
   }).filter((m) => m.name.toLowerCase().includes(cleanQ.toLowerCase()) || m.address.toLowerCase().includes(cleanQ.toLowerCase()));
 
-  // 2. Parallel Photon queries (targeted query + general query)
-  const [q1, q2] = await Promise.allSettled([
+  // 2. Parallel Online Queries: Photon + Bounded Nominatim
+  const [q1, q2, nom] = await Promise.allSettled([
     fetchPhotonMosques(lat, lon, `${cleanQ} masjid`, 25),
     fetchPhotonMosques(lat, lon, cleanQ, 25),
+    fetchNominatimMosques(lat, lon, cleanQ, 10),
   ]);
 
   const pool: MosqueItem[] = [...custom];
   if (q1.status === 'fulfilled') pool.push(...q1.value);
   if (q2.status === 'fulfilled') pool.push(...q2.value);
+  if (nom.status === 'fulfilled') pool.push(...nom.value);
+
+  // 3. Strict 50 km cap across all online results
+  const capped = pool.filter((m) => m.isCustom || m.distanceMeters <= 50000);
 
   // Return deduplicated results sorted by proximity
-  return deduplicateAndSort(pool);
+  return deduplicateAndSort(capped);
 }
 
 /**

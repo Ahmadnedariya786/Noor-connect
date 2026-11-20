@@ -216,9 +216,9 @@ export function evaluateMakruhState(
     });
   }
 
-  // Window 2: Zawal / Istiwa (Midday Zenith) -> [Dhuhr - 10 min, Dhuhr)
+  // Window 2: Zawal / Istiwa (Midday Zenith) -> [Dhuhr - 5 min, Dhuhr)
   if (dhuhrSec !== null) {
-    const startSec = dhuhrSec - 10 * 60;
+    const startSec = dhuhrSec - 5 * 60;
     const endSec = dhuhrSec;
     windows.push({
       id: 'zawal',
