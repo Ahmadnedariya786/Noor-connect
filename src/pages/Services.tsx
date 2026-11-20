@@ -10,7 +10,7 @@ import { getQazaStats } from "@/lib/qaza-tracker";
 import {
     Radio, Target, Heart, Calculator,
     Star, Trophy, Coins, Calendar, Library, Tv, Sparkles, HeartHandshake, BookOpen, BookText, Moon, Headphones,
-    CheckCircle, AlertTriangle, Users, HeartPulse, Music, Search, X
+    CheckCircle, AlertTriangle, Users, HeartPulse, Music, Search, X, MapPin, Building
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SERVICES_TOOLS_BANNER_I18N } from "@/lib/home-prayer-i18n";
@@ -35,6 +35,7 @@ const SERVICE_CATEGORIES: Record<string, string> = {
     "/quiz": "Knowledge",
     "/zakat": "Tools",
     "/calendar": "Tools",
+    "/mosques": "Tools",
     "/ebooks": "Knowledge",
     "/tafsir": "Knowledge",
     "/fitrana-calculator": "Tools",
@@ -118,6 +119,7 @@ export default function Services() {
         { title: ui.namesOfAllah, subtitle: ui.namesOfAllahSub, path: "/names-of-allah", icon: Star },
         { title: ui.quiz, subtitle: ui.quizSub, path: "/quiz", icon: Trophy },
         { title: ui.zakat, subtitle: ui.zakatSub, path: "/zakat", icon: Coins },
+        { title: "Nearby Mosques", subtitle: "Find local masjids, directions & Jamaat times", path: "/mosques", icon: MapPin },
         { title: ui.calendar, subtitle: ui.calendarSub, path: "/calendar", icon: Calendar },
         { title: ui.ebooks, subtitle: ui.ebooksSub, path: "/ebooks", icon: Library },
         { title: ui.tafsir, subtitle: ui.tafsirSub, path: "/tafsir", icon: BookOpen },

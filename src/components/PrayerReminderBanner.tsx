@@ -355,9 +355,11 @@ export const PrayerReminderBanner: React.FC = () => {
                     type="button"
                     onClick={() => handleHadithLangSwitch(opt.id)}
                     aria-label={`Switch Hadith translation to ${opt.label}`}
-                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
+                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer inline-flex items-center justify-center"
                     style={{
                       fontFamily: (opt.id === 'ur' || opt.id === 'hi') ? 'var(--font-urdu), serif' : undefined,
+                      lineHeight: opt.id === 'ur' ? 1.5 : 1.2,
+                      paddingBottom: opt.id === 'ur' ? '2px' : '2px',
                       backgroundColor: isActive ? 'var(--accent)' : 'transparent',
                       color: isActive ? 'var(--on-accent)' : 'var(--text-secondary)',
                       boxShadow: isActive ? '0 1px 2px rgba(0,0,0,0.2)' : 'none',

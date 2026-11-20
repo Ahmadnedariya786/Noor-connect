@@ -3,7 +3,7 @@
  * Fetches monthly calendar data with localStorage persistence
  */
 import { getMadhab } from './storage';
-import { calculatePrayerTimes } from './prayer-calculator';
+import { calculatePrayerTimes, getCalculationMethod } from './prayer-calculator';
 import { getPrayerMinuteOffsets, applyOffsetsToTimings } from './prayer-offsets';
 
 export function sanitizeHijriDiacritics(str: string): string {
@@ -119,6 +119,34 @@ export const ALADHAN_METHODS: Record<string, number> = {
 };
 
 export class AladhanAPI {
+  /**
+   * Resolve method ID for AlAdhan API matching user's calculation method
+   */
+  static getResolvedMethodId(): number {
+    try {
+      const selectedMethodName = getCalculationMethod();
+      const map: Record<string, number> = {
+        Karachi: 1,
+        NorthAmerica: 2,
+        MuslimWorldLeague: 3,
+        UmmAlQura: 4,
+        Egyptian: 5,
+        Tehran: 7,
+        Gulf: 8,
+        Kuwait: 9,
+        Qatar: 10,
+        Singapore: 11,
+        Turkey: 12,
+        Dubai: 16,
+      };
+      if (selectedMethodName && map[selectedMethodName]) {
+        return map[selectedMethodName];
+      }
+    } catch {
+      // Fallback
+    }
+    return 1; // Default Karachi / South Asia
+  }
   /**
    * Generate monthly prayer calendar offline using local calculation engine
    */

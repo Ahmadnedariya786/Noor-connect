@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Moon, Star, ChevronLeft, ChevronRight, X, ArrowLeft, Sparkles, Gift, Heart, Landmark } from "lucide-react";
+import { Calendar, Moon, Star, ChevronLeft, ChevronRight, X, ArrowLeft, Sparkles, Gift, Heart, Landmark, ArrowRightLeft, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { calendarApiResponseSchema, safeParseApiResponse } from "@/lib/api-schemas";
 import { useIslamicCalendar } from "@/hooks/useIslamicCalendar";
@@ -46,6 +46,103 @@ export const normalizeHijriMonth = (val: string): string =>
     .replace(/al-ōlā/gi, 'al-ūlā')
     .replace(/ō/g, 'ū');
 
+export const HIJRI_MONTHS_LIST = [
+  { number: 1, en: "Muharram", ar: "محرم" },
+  { number: 2, en: "Safar", ar: "صفر" },
+  { number: 3, en: "Rabi al-Awwal", ar: "ربيع الأول" },
+  { number: 4, en: "Rabi al-Thani", ar: "ربيع الثاني" },
+  { number: 5, en: "Jumada al-Ula", ar: "جمادى الأولى" },
+  { number: 6, en: "Jumada al-Thani", ar: "جمادى الثانية" },
+  { number: 7, en: "Rajab", ar: "رجب" },
+  { number: 8, en: "Shaban", ar: "شعبان" },
+  { number: 9, en: "Ramadan", ar: "رمضان" },
+  { number: 10, en: "Shawwal", ar: "شوال" },
+  { number: 11, en: "Dhul-Qadah", ar: "ذو القعدة" },
+  { number: 12, en: "Dhul-Hijjah", ar: "ذو الحجة" },
+];
+
+export function convertGregorianToHijri(dateStr: string, offset: number) {
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return null;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const d = new Date(year, month, day);
+    if (isNaN(d.getTime())) return null;
+
+    const eff = new Date(d);
+    if (offset !== 0) eff.setDate(eff.getDate() + offset);
+
+    const calc = islamicCalendarService.calculateIslamicDate(eff);
+    const hijriDay = parseInt(calc.hijri.day, 10);
+    const hijriMonthNum = calc.hijri.month.number;
+    const hijriYear = parseInt(calc.hijri.year, 10);
+    const mInfo = HIJRI_MONTHS_LIST[hijriMonthNum - 1] || HIJRI_MONTHS_LIST[0];
+
+    return {
+      gregorianDate: d,
+      formattedGregorian: d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+      weekday: d.toLocaleDateString('en-US', { weekday: 'long' }),
+      hijriDay,
+      hijriMonthEn: mInfo.en,
+      hijriMonthAr: mInfo.ar,
+      hijriYear,
+      isAyyamAlBeed: hijriDay >= 13 && hijriDay <= 15,
+      isSunnahFastingDay: d.getDay() === 1 || d.getDay() === 4,
+      isRamadan: hijriMonthNum === 9,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function convertHijriToGregorian(hYear: number, hMonth: number, hDay: number, offset: number) {
+  try {
+    const isLeap = (yr: number) => [2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29].includes(yr % 30);
+    let days = 0;
+    for (let y = 1; y < hYear; y++) {
+      days += isLeap(y) ? 355 : 354;
+    }
+    for (let m = 1; m < hMonth; m++) {
+      days += (m % 2 === 1) ? 30 : 29;
+    }
+    days += hDay - 1;
+    const epoch = 1948439.5;
+    const jdn = Math.round(epoch + days);
+    const l = jdn + 68569;
+    const n = Math.floor((4 * l) / 146097);
+    const l2 = l - Math.floor((146097 * n + 3) / 4);
+    const i = Math.floor((4000 * (l2 + 1)) / 1461001);
+    const l3 = l2 - Math.floor((1461 * i) / 4) + 31;
+    const j = Math.floor((80 * l3) / 2447);
+    const gDay = l3 - Math.floor((2447 * j) / 80);
+    const l4 = Math.floor(j / 11);
+    const gMonth = j + 2 - 12 * l4;
+    const gYear = 100 * (n - 49) + i + l4;
+    const d = new Date(gYear, gMonth - 1, gDay);
+    if (offset !== 0) {
+      d.setDate(d.getDate() - offset);
+    }
+    const mInfo = HIJRI_MONTHS_LIST[hMonth - 1] || HIJRI_MONTHS_LIST[0];
+
+    return {
+      gregorianDate: d,
+      formattedGregorian: d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+      weekday: d.toLocaleDateString('en-US', { weekday: 'long' }),
+      hijriDay: hDay,
+      hijriMonthEn: mInfo.en,
+      hijriMonthAr: mInfo.ar,
+      hijriYear: hYear,
+      isAyyamAlBeed: hDay >= 13 && hDay <= 15,
+      isSunnahFastingDay: d.getDay() === 1 || d.getDay() === 4,
+      isRamadan: hMonth === 9,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function IslamicCalendar() {
   const navigate = useNavigate();
   // Use the Maghrib-aware hook (same as Dashboard) for the header date
@@ -58,15 +155,52 @@ export default function IslamicCalendar() {
   const [selectedDayNum, setSelectedDayNum] = useState<number | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
+  // Date Converter state
+  const [showConverter, setShowConverter] = useState(false);
+  const [converterMode, setConverterMode] = useState<'gToH' | 'hToG'>('gToH');
+  const [gregDateInput, setGregDateInput] = useState(() => {
+    const d = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  });
+  const [hijriDayInput, setHijriDayInput] = useState<number>(() => {
+    return islamicInfo?.hijriDay || 9;
+  });
+  const [hijriMonthInput, setHijriMonthInput] = useState<number>(() => {
+    return islamicInfo?.hijriMonth || 6;
+  });
+  const [hijriYearInput, setHijriYearInput] = useState<number>(() => {
+    return islamicInfo?.hijriYear || 1448;
+  });
+  const [copiedConverter, setCopiedConverter] = useState(false);
+  const [hijriOffset, setHijriOffset] = useState<number>(() => {
+    return parseInt(localStorage.getItem('hijri-date-offset') || '0', 10);
+  });
+
   useEffect(() => {
     fetchMonthCalendar(currentMonth, currentYear);
   }, [currentMonth, currentYear]);
 
   useEffect(() => {
-    const handleOffsetChange = () => fetchMonthCalendar(currentMonth, currentYear);
+    const handleOffsetChange = () => {
+      fetchMonthCalendar(currentMonth, currentYear);
+      setHijriOffset(parseInt(localStorage.getItem('hijri-date-offset') || '0', 10));
+    };
     window.addEventListener('hijri-date-offset-changed', handleOffsetChange);
     return () => window.removeEventListener('hijri-date-offset-changed', handleOffsetChange);
   }, [currentMonth, currentYear]);
+
+  const gToHResult = useMemo(() => convertGregorianToHijri(gregDateInput, hijriOffset), [gregDateInput, hijriOffset]);
+  const hToGResult = useMemo(() => convertHijriToGregorian(hijriYearInput, hijriMonthInput, hijriDayInput, hijriOffset), [hijriYearInput, hijriMonthInput, hijriDayInput, hijriOffset]);
+
+  const handleCopyConverter = (text: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedConverter(true);
+      setTimeout(() => setCopiedConverter(false), 2000);
+      toast.success("Date copied to clipboard");
+    }
+  };
 
   const fetchMonthCalendar = async (month: number, year: number) => {
     const key = `${year}-${month}`;
@@ -489,6 +623,248 @@ export default function IslamicCalendar() {
               </>
             )}
           </CardContent>
+        </Card>
+
+        {/* ── GREGORIAN ↔ HIJRI DATE CONVERTER CARD ── */}
+        <Card
+          className="border rounded-3xl overflow-hidden transition-all"
+          style={{
+            background: 'var(--surface)',
+            borderColor: 'var(--border)',
+            boxShadow: 'inset 0 1px 0 var(--card-sheen-line, var(--card-sheen)), 0 10px 30px rgba(0,0,0,0.35)',
+          }}
+        >
+          <div
+            onClick={() => setShowConverter(!showConverter)}
+            className="p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center shrink-0 text-[var(--accent)]">
+                <ArrowRightLeft className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-bold text-base text-[var(--text-primary)]">
+                    Date Converter (Gregorian ↔ Hijri)
+                  </h2>
+                  {hijriOffset !== 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]">
+                      Hilal Offset: {hijriOffset > 0 ? `+${hijriOffset}d` : `${hijriOffset}d`}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] leading-snug">
+                  Bidirectional instant solar-to-lunar conversion
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="w-8 h-8 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-secondary)] shrink-0"
+              aria-label={showConverter ? "Collapse Date Converter" : "Expand Date Converter"}
+            >
+              {showConverter ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {showConverter && (
+            <CardContent className="p-4 sm:p-5 pt-0 space-y-4 border-t border-[var(--border)]">
+              {/* Dual-Mode Selector Tabs */}
+              <div className="grid grid-cols-2 p-1 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] gap-1">
+                <button
+                  type="button"
+                  onClick={() => setConverterMode('gToH')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    converterMode === 'gToH'
+                      ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Gregorian → Hijri</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConverterMode('hToG')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    converterMode === 'hToG'
+                      ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  <Moon className="w-3.5 h-3.5" />
+                  <span>Hijri → Gregorian</span>
+                </button>
+              </div>
+
+              {converterMode === 'gToH' ? (
+                /* Mode 1: Gregorian to Hijri */
+                <div className="space-y-3.5">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[var(--text-primary)]">Select Gregorian Date</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date();
+                          const pad = (n: number) => n.toString().padStart(2, '0');
+                          setGregDateInput(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+                        }}
+                        className="text-[11px] font-bold text-[var(--accent-text)] hover:underline"
+                      >
+                        Reset to Today
+                      </button>
+                    </div>
+                    <input
+                      type="date"
+                      value={gregDateInput}
+                      onChange={(e) => setGregDateInput(e.target.value)}
+                      className="w-full h-10 px-3 rounded-xl text-sm font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
+                    />
+                  </div>
+
+                  {gToHResult && (
+                    <div className="p-4 rounded-2xl border border-[var(--accent)] bg-[var(--surface-2)] space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[var(--text-secondary)]">
+                            Converted Hijri Date
+                          </span>
+                          <div className="text-xl sm:text-2xl font-black text-[var(--accent-text)] mt-0.5">
+                            {gToHResult.hijriDay} {gToHResult.hijriMonthEn} {gToHResult.hijriYear} AH
+                          </div>
+                          <div
+                            className="text-lg sm:text-xl font-arabic text-[var(--accent-text)] mt-1"
+                            dir="rtl"
+                            style={{ fontFamily: 'var(--font-urdu), serif' }}
+                          >
+                            {gToHResult.hijriDay} {gToHResult.hijriMonthAr} {gToHResult.hijriYear} ھ
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleCopyConverter(`${gToHResult.hijriDay} ${gToHResult.hijriMonthEn} ${gToHResult.hijriYear} AH (${gToHResult.formattedGregorian})`)}
+                          className="rounded-xl h-8 w-8 text-[var(--accent-text)] hover:bg-[var(--accent-soft)]"
+                          title="Copy date"
+                        >
+                          {copiedConverter ? <Check className="w-4 h-4 text-[var(--success)]" /> : <Copy className="w-4 h-4" />}
+                        </Button>
+                      </div>
+
+                      <div className="text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border)] flex items-center justify-between flex-wrap gap-1">
+                        <span>Gregorian: {gToHResult.formattedGregorian}</span>
+                        <span>{gToHResult.weekday}</span>
+                      </div>
+
+                      {/* Islamic Badges */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                        {gToHResult.isAyyamAlBeed && (
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent)]">
+                            🌕 Ayyam al-Beed Sunnah Fast
+                          </span>
+                        )}
+                        {gToHResult.isSunnahFastingDay && (
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)]">
+                            🌱 {gToHResult.weekday} Sunnah Fast
+                          </span>
+                        )}
+                        {gToHResult.isRamadan && (
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)]">
+                            🌙 Ramadan Fasting Day
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Mode 2: Hijri to Gregorian */
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Day Input */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[var(--text-primary)]">Day</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={hijriDayInput}
+                        onChange={(e) => setHijriDayInput(Math.min(30, Math.max(1, parseInt(e.target.value, 10) || 1)))}
+                        className="w-full h-10 px-2.5 rounded-xl text-center text-sm font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-colors"
+                      />
+                    </div>
+
+                    {/* Month Dropdown */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[var(--text-primary)]">Month</label>
+                      <select
+                        value={hijriMonthInput}
+                        onChange={(e) => setHijriMonthInput(parseInt(e.target.value, 10) || 1)}
+                        className="w-full h-10 px-1.5 rounded-xl text-xs font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
+                      >
+                        {HIJRI_MONTHS_LIST.map((m) => (
+                          <option key={m.number} value={m.number}>
+                            {m.number}. {m.en}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Year Input */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[var(--text-primary)]">Year (AH)</label>
+                      <input
+                        type="number"
+                        min="1300"
+                        max="1600"
+                        value={hijriYearInput}
+                        onChange={(e) => setHijriYearInput(Math.max(1, parseInt(e.target.value, 10) || 1448))}
+                        className="w-full h-10 px-2.5 rounded-xl text-center text-sm font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {hToGResult && (
+                    <div className="p-4 rounded-2xl border border-[var(--accent)] bg-[var(--surface-2)] space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[var(--text-secondary)]">
+                            Converted Gregorian Date
+                          </span>
+                          <div className="text-xl sm:text-2xl font-black text-[var(--accent-text)] mt-0.5">
+                            {hToGResult.formattedGregorian}
+                          </div>
+                          <div className="text-xs text-[var(--text-secondary)] mt-1">
+                            Hijri: {hToGResult.hijriDay} {hToGResult.hijriMonthEn} {hToGResult.hijriYear} AH ({hToGResult.hijriMonthAr})
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleCopyConverter(`${hToGResult.formattedGregorian} (${hToGResult.hijriDay} ${hToGResult.hijriMonthEn} ${hToGResult.hijriYear} AH)`)}
+                          className="rounded-xl h-8 w-8 text-[var(--accent-text)] hover:bg-[var(--accent-soft)]"
+                          title="Copy date"
+                        >
+                          {copiedConverter ? <Check className="w-4 h-4 text-[var(--success)]" /> : <Copy className="w-4 h-4" />}
+                        </Button>
+                      </div>
+
+                      {/* Sync Offset info */}
+                      <div className="text-[11px] text-[var(--text-secondary)] pt-2 border-t border-[var(--border)] flex items-center justify-between">
+                        <span>Synced with moon-sighting offset: {hijriOffset > 0 ? `+${hijriOffset}d` : `${hijriOffset}d`}</span>
+                        <span className="font-semibold text-[var(--accent-text)]">{hToGResult.weekday}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          )}
         </Card>
 
         {/* Full Calendar View with Laser-Spotlight Card Frame */}

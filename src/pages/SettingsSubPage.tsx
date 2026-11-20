@@ -123,6 +123,7 @@ import { CLOCK_STYLES } from '@/types/clock';
 import { ThemePicker, NavbarOverrideSection, useAppTheme } from '@/components/themes';
 
 import { getMadhab, setMadhab, type MadhabType } from '@/lib/storage';
+import { getMaghribIhtiyatMin, setMaghribIhtiyatMin } from '@/lib/prayer-times';
 import { AladhanAPI } from '@/lib/aladhan-api';
 import { getStorageStats, clearAllBooks, formatFileSize } from '@/lib/ebooks-storage';
 import { downloadManager } from '@/lib/download-manager';
@@ -210,6 +211,7 @@ const SettingsSubPage: React.FC = () => {
   const currentThemeName = theme?.name || 'Oxford Gold';
 
   const [madhab, setMadhabState] = useState<MadhabType>('shafi');
+  const [maghribIhtiyat, setMaghribIhtiyatState] = useState<number>(() => getMaghribIhtiyatMin());
   const [storageStats, setStorageStats] = useState({ totalBooks: 0, totalSize: 0 });
   const [storageBreakdown, setStorageBreakdown] = useState<StorageBreakdown | null>(null);
   const [quranDownloads, setQuranDownloads] = useState({ count: 0, size: 0, reciters: 0 });
@@ -1169,6 +1171,59 @@ const SettingsSubPage: React.FC = () => {
               </div>
             </Card>
 
+            {/* Maghrib Precautionary Ihtiyat (+3m) Toggle */}
+            <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <div className="flex items-center justify-between mb-1">
+                <div>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Maghrib Precaution (Ihtiyat)
+                  </Label>
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                    Precautionary sunset buffer for fasting and Maghrib (Deeniyat timetable standard)
+                  </p>
+                </div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>
+                  {maghribIhtiyat === 3 ? '+3 min' : '0 min'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMaghribIhtiyatState(0);
+                    setMaghribIhtiyatMin(0);
+                    toast({ title: 'Maghrib set to Exact Sunset (0m)' });
+                  }}
+                  className="py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 text-center cursor-pointer"
+                  style={{
+                    background: maghribIhtiyat === 0 ? 'linear-gradient(135deg, var(--accent), var(--accent-2))' : 'transparent',
+                    color: maghribIhtiyat === 0 ? 'var(--on-accent)' : 'var(--text-secondary)',
+                    boxShadow: maghribIhtiyat === 0 ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                  }}
+                >
+                  <span>Exact Sunset (0m)</span>
+                  <span className="text-[10px] font-normal opacity-80">Astronomical (Default)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMaghribIhtiyatState(3);
+                    setMaghribIhtiyatMin(3);
+                    toast({ title: 'Maghrib set to Precautionary (+3m)' });
+                  }}
+                  className="py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 text-center cursor-pointer"
+                  style={{
+                    background: maghribIhtiyat === 3 ? 'linear-gradient(135deg, var(--accent), var(--accent-2))' : 'transparent',
+                    color: maghribIhtiyat === 3 ? 'var(--on-accent)' : 'var(--text-secondary)',
+                    boxShadow: maghribIhtiyat === 3 ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                  }}
+                >
+                  <span>Precautionary (+3m)</span>
+                  <span className="text-[10px] font-normal opacity-80">Deeniyat / South Asia</span>
+                </button>
+              </div>
+            </Card>
+
             <Card className="p-4 space-y-3 rounded-2xl" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <Label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Hijri Date Offset</Label>
               <Select
@@ -1264,6 +1319,9 @@ const SettingsSubPage: React.FC = () => {
                         }`}
                         style={{
                           fontFamily: opt.id === 'ur' ? 'var(--font-urdu), serif' : undefined,
+                          lineHeight: opt.id === 'ur' ? 1.5 : undefined,
+                          paddingTop: opt.id === 'ur' ? '6px' : undefined,
+                          paddingBottom: opt.id === 'ur' ? '6px' : undefined,
                         }}
                       >
                         {opt.nativeLabel}

@@ -195,6 +195,8 @@ const QisasHome = lazy(() => import("./pages/QisasHome"));
 const QisasReader = lazy(() => import("./pages/QisasReader"));
 const MonthlyTimetable = lazy(() => import("./pages/MonthlyTimetable"));
 const WidgetSettings = lazy(() => import("./pages/WidgetSettings"));
+const MosqueFinder = lazy(() => import("./pages/MosqueFinder"));
+const SettingsCalculationPage = lazy(() => import("./pages/SettingsCalculationPage"));
 
 /**
  * Preload heavy secondary routes during browser idle time so first tap never waits.
@@ -258,6 +260,8 @@ function AppRoutes() {
           <Route path="/services/calendar" element={<Navigate to="/calendar" replace />} />
           <Route path="/timetable" element={<MonthlyTimetable />} />
           <Route path="/services/timetable" element={<Navigate to="/timetable" replace />} />
+          <Route path="/mosques" element={<MosqueFinder />} />
+          <Route path="/services/mosques" element={<Navigate to="/mosques" replace />} />
           <Route path="/qibla" element={<Qibla />} />
           <Route path="/duas" element={<Duas />} />
           <Route path="/hadith" element={<Hadith />} />
@@ -305,6 +309,8 @@ function AppRoutes() {
           <Route path="/settings" element={<Navigate to="/profile" replace />} />
           <Route path="/settings/theme" element={<SettingsThemePage />} />
           <Route path="/settings/app-theme" element={<SettingsThemePage />} />
+          <Route path="/settings/calculation" element={<SettingsCalculationPage />} />
+          <Route path="/settings/prayer-calculation" element={<SettingsCalculationPage />} />
           <Route path="/settings/personal" element={<ZakatCalculator />} />
           <Route path="/settings/zakat" element={<ZakatCalculator />} />
           <Route path="/settings/widgets" element={<WidgetSettings />} />

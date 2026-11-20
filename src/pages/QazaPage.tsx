@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Minus, Target, Calendar, RotateCcw, Check, Clock, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Target, Calendar, RotateCcw, Check, Clock, Trash2, Calculator, ChevronDown, ChevronUp, Info, Coins, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { LayoutManager } from "@/components/LayoutManager";
 import { useToast } from "@/hooks/use-toast";
 import { goBackOrFallback } from "@/lib/navigation";
 import { useLanguage } from "@/contexts/LanguageContext-new";
+import { getSavedCurrency, getCurrencyConfig, SUPPORTED_CURRENCIES } from "@/lib/zakat-market-api";
 import { 
   getQazaPrayers, 
   addQazaPrayer, 
@@ -32,6 +33,29 @@ import {
   type DateWiseQazaRecord,
 } from "@/lib/qaza-tracker";
 import { RoyalDatePickerModal } from "@/components/RoyalDatePickerModal";
+
+const DEFAULT_FIDYA_UNIT_COST: Record<string, number> = {
+  INR: 100,
+  PKR: 300,
+  BDT: 120,
+  USD: 5,
+  GBP: 4,
+  EUR: 5,
+  CAD: 7,
+  AUD: 8,
+  SAR: 15,
+  AED: 15,
+  KWD: 1.5,
+  QAR: 15,
+  OMR: 1.5,
+  TRY: 100,
+  MYR: 15,
+  IDR: 45000,
+};
+
+function getDefaultFidyaCost(currencyCode: string): number {
+  return DEFAULT_FIDYA_UNIT_COST[currencyCode.toUpperCase()] || 100;
+}
 
 const PRAYERS: { name: QazaPrayerName; label: string; arabicLabel: string }[] = [
   { name: "fajr", label: "Fajr", arabicLabel: "الفجر" },
@@ -59,6 +83,13 @@ export default function QazaPage() {
   const [editingPrayer, setEditingPrayer] = useState<QazaPrayerName | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+  // Fidya Calculator state
+  const [showFidyaCalc, setShowFidyaCalc] = useState(false);
+  const [activeCurrency, setActiveCurrency] = useState(() => getSavedCurrency());
+  const [customPrayersFidya, setCustomPrayersFidya] = useState<string>("");
+  const [missedFasts, setMissedFasts] = useState<string>("0");
+  const [costPerUnit, setCostPerUnit] = useState<string>(() => getDefaultFidyaCost(getSavedCurrency()).toString());
 
   // Date-Wise Qaza state
   const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -104,11 +135,20 @@ export default function QazaPage() {
     window.addEventListener('qaza-date-updated', refreshDateRecords);
     window.addEventListener('noor-qaza-updated', handleQazaUpdate);
     window.addEventListener('salah-updated', handleSalahUpdate);
+
+    const handleCurrencyUpdate = () => {
+      const cur = getSavedCurrency();
+      setActiveCurrency(cur);
+      setCostPerUnit(getDefaultFidyaCost(cur).toString());
+    };
+    window.addEventListener('noor-currency-updated', handleCurrencyUpdate);
+
     return () => {
       window.removeEventListener('qaza-updated', handleQazaUpdate);
       window.removeEventListener('qaza-date-updated', refreshDateRecords);
       window.removeEventListener('noor-qaza-updated', handleQazaUpdate);
       window.removeEventListener('salah-updated', handleSalahUpdate);
+      window.removeEventListener('noor-currency-updated', handleCurrencyUpdate);
     };
   }, [refreshDateRecords, loadQazaData]);
 
@@ -201,6 +241,41 @@ export default function QazaPage() {
   const selectedDetailed = useMemo(() => {
     return getDetailedHijriDate(selectedDate);
   }, [selectedDate]);
+
+  // Fidya Calculator calculations
+  const currencyConfig = useMemo(() => getCurrencyConfig(activeCurrency), [activeCurrency]);
+  const parsedCustomPrayers = customPrayersFidya.trim() === "" ? totalQaza : Math.max(0, parseInt(customPrayersFidya, 10) || 0);
+  const parsedMissedFasts = Math.max(0, parseInt(missedFasts, 10) || 0);
+  const parsedCostPerUnit = Math.max(0, parseFloat(costPerUnit) || 0);
+  const salahFidyaTotal = parsedCustomPrayers * parsedCostPerUnit;
+  const fastsFidyaTotal = parsedMissedFasts * parsedCostPerUnit;
+  const grandFidyaTotal = salahFidyaTotal + fastsFidyaTotal;
+
+  const handleShareFidya = async () => {
+    const text = `🕋 Noor Connect — Fidya & Kaffarah Calculation
+• Missed Salah: ${parsedCustomPrayers} prayers = ${currencyConfig.symbol}${salahFidyaTotal.toLocaleString()}
+• Missed Ramadan Fasts: ${parsedMissedFasts} days = ${currencyConfig.symbol}${fastsFidyaTotal.toLocaleString()}
+• Fidya Rate: ${currencyConfig.symbol}${parsedCostPerUnit} per unit (Half Sa' ~1.6kg wheat equivalent)
+• Grand Total Fidya: ${currencyConfig.symbol}${grandFidyaTotal.toLocaleString()} ${currencyConfig.code}
+
+(Calculated in Noor Connect)`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: "Fidya Calculation — Noor Connect",
+          text,
+        });
+        return;
+      } catch {
+        // Fallback to clipboard
+      }
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Fidya Calculation Copied", description: "Details copied to clipboard." });
+    }
+  };
 
   return (
     <LayoutManager>
@@ -618,6 +693,224 @@ export default function QazaPage() {
               +1 Month
             </Button>
           </div>
+        </Card>
+
+        {/* ── FIDYA & KAFFARAH CALCULATOR CARD ── */}
+        <Card className="p-4 space-y-3.5 border border-[var(--border)] shadow-md bg-[var(--surface)]">
+          <div
+            onClick={() => setShowFidyaCalc(!showFidyaCalc)}
+            className="flex items-center justify-between gap-2 cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)] flex items-center justify-center shrink-0 text-[var(--accent)]">
+                <Calculator className="w-4 h-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h2 className="font-bold text-sm text-[var(--text-primary)]">
+                    Fidya & Kaffarah Calculator
+                  </h2>
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--border)]">
+                    {currencyConfig.code}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-snug">
+                  Monetary compensation for missed Salah & fasts
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="w-7 h-7 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-secondary)] shrink-0"
+              aria-label={showFidyaCalc ? "Collapse Fidya Calculator" : "Expand Fidya Calculator"}
+            >
+              {showFidyaCalc ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {showFidyaCalc && (
+            <div className="space-y-3.5 pt-2 border-t border-[var(--border)]">
+              {/* Currency Selector Bar */}
+              <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Coins className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                  <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                    Currency: {currencyConfig.flag} {currencyConfig.name} ({currencyConfig.symbol})
+                  </span>
+                </div>
+                <select
+                  value={activeCurrency}
+                  onChange={(e) => {
+                    const nextCur = e.target.value;
+                    setActiveCurrency(nextCur);
+                    setCostPerUnit(getDefaultFidyaCost(nextCur).toString());
+                  }}
+                  className="text-xs font-bold py-1 px-2 rounded-lg bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] cursor-pointer shrink-0 outline-none"
+                >
+                  {SUPPORTED_CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code} ({c.symbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Input 1: Missed Prayers Count */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[var(--text-primary)]">
+                    Missed Prayers Count (Fard + Witr)
+                  </span>
+                  {customPrayersFidya.trim() !== "" && (
+                    <button
+                      type="button"
+                      onClick={() => setCustomPrayersFidya("")}
+                      className="text-[10px] text-[var(--accent-text)] hover:underline font-bold"
+                    >
+                      Reset to Tracker ({totalQaza})
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    value={customPrayersFidya.trim() === "" ? totalQaza : customPrayersFidya}
+                    onChange={(e) => setCustomPrayersFidya(e.target.value)}
+                    placeholder={totalQaza.toString()}
+                    className="h-9 text-xs font-bold bg-[var(--surface-2)] border-[var(--border)] pr-16"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-secondary)] font-bold pointer-events-none">
+                    prayers
+                  </span>
+                </div>
+                <p className="text-[10px] text-[var(--text-secondary)]">
+                  Synced with your Qaza tracker: {totalQaza} pending units (6 units per full missed day: 5 Fard + 1 Witr).
+                </p>
+              </div>
+
+              {/* Input 2: Missed Fasting Days */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[var(--text-primary)]">
+                    Missed Ramadan Fasts (Days)
+                  </span>
+                  <span className="text-[10px] text-[var(--text-secondary)]">
+                    1 unit per missed fast
+                  </span>
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    value={missedFasts}
+                    onChange={(e) => setMissedFasts(e.target.value)}
+                    placeholder="0"
+                    className="h-9 text-xs font-bold bg-[var(--surface-2)] border-[var(--border)] pr-14"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-secondary)] font-bold pointer-events-none">
+                    days
+                  </span>
+                </div>
+              </div>
+
+              {/* Input 3: Rate Per Unit */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[var(--text-primary)]">
+                    Fidya Rate per Unit / Meal ({currencyConfig.symbol})
+                  </span>
+                  <span className="text-[10px] text-[var(--accent-text)] font-bold">
+                    Half Sa' (~1.6kg wheat)
+                  </span>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-secondary)] pointer-events-none">
+                    {currencyConfig.symbol}
+                  </span>
+                  <Input
+                    type="number"
+                    step="any"
+                    min="0"
+                    value={costPerUnit}
+                    onChange={(e) => setCostPerUnit(e.target.value)}
+                    placeholder="100"
+                    className="h-9 text-xs font-bold bg-[var(--surface-2)] border-[var(--border)] pl-8 pr-16"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-secondary)] font-bold pointer-events-none">
+                    / unit
+                  </span>
+                </div>
+                <p className="text-[10px] text-[var(--text-secondary)]">
+                  Standard regional estimate: {currencyConfig.symbol}{getDefaultFidyaCost(activeCurrency)} per meal or ~1.6 kg wheat.
+                </p>
+              </div>
+
+              {/* Grand Total & Summary Card */}
+              <div className="p-3 rounded-2xl border border-[var(--accent)] bg-[var(--surface-2)] space-y-2">
+                <div className="flex items-center justify-between text-xs pb-1.5 border-b border-[var(--border)]">
+                  <span className="text-[var(--text-secondary)]">Missed Salah Fidya ({parsedCustomPrayers}):</span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {currencyConfig.symbol}{salahFidyaTotal.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs pb-1.5 border-b border-[var(--border)]">
+                  <span className="text-[var(--text-secondary)]">Missed Fasts Fidya ({parsedMissedFasts}):</span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {currencyConfig.symbol}{fastsFidyaTotal.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    <span className="text-xs font-extrabold uppercase tracking-wide text-[var(--accent-text)]">
+                      Total Fidya Amount
+                    </span>
+                    <p className="text-[10px] text-[var(--text-secondary)]">
+                      {parsedCustomPrayers + parsedMissedFasts} total units
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-black text-[var(--accent-text)]">
+                      {currencyConfig.symbol}{grandFidyaTotal.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--text-secondary)] ml-1">
+                      {currencyConfig.code}
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleShareFidya}
+                  className="w-full mt-2 h-8 text-xs font-bold gap-1.5 border-[var(--accent)] text-[var(--accent-text)] hover:bg-[var(--accent-soft)] cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share / Copy Fidya Breakdown</span>
+                </Button>
+              </div>
+
+              {/* Authentic Hanafi Fiqh Guidance Note */}
+              <div className="p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-start gap-2">
+                <Info className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                <div className="text-[10.5px] text-[var(--text-secondary)] leading-relaxed space-y-1">
+                  <p className="font-bold text-[var(--text-primary)]">
+                    📖 Authentic Scholarly Guidance (Hanafi Fiqh):
+                  </p>
+                  <p>
+                    • <strong>Living & Able Person:</strong> Monetary Fidya is <strong>NOT</strong> an alternative for missed prayers for a living person capable of prayer. You must pray the actual Qaza Salah.
+                  </p>
+                  <p>
+                    • <strong>Deceased Person:</strong> If a Muslim passes away leaving unperformed prayers or fasts and made a bequest (Wasiyyah), heirs pay Fidya out of up to 1/3 of the remaining estate.
+                  </p>
+                  <p>
+                    • <strong>Chronic Illness / Frail Elderly:</strong> A person permanently unable to fast due to chronic old age or non-recoverable illness pays 1 Fidya unit per missed fast.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Reset Button */}

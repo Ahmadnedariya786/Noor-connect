@@ -37,6 +37,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { getPrayerDisplayName, isMatchingPrayer } from "@/lib/prayer-utils";
 import { calculatePrayerTimes, formatPrayerTime } from "@/lib/prayer-calculator";
+import { autoApplyRegionalPresetIfFirstMigration } from "@/lib/prayer-times";
 import { loadStoredLocation } from "@/lib/location-state";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 
@@ -357,6 +358,10 @@ export default function Dashboard() {
     setLoadingAPI(true);
 
     try {
+      // Auto-apply regional preset on first migration if not already set
+      autoApplyRegionalPresetIfFirstMigration(location.locationName, location.latitude, location.longitude);
+      const resolvedMethodId = AladhanAPI.getResolvedMethodId();
+
       // Check if we have cached data for this specific location
       const hasValidCache = AladhanAPI.isCachedDataValid(location.latitude, location.longitude);
 
@@ -367,12 +372,12 @@ export default function Dashboard() {
           location.longitude,
           undefined,
           undefined,
-          1 // Pakistan/Karachi method
+          resolvedMethodId
         );
       }
 
       // Get today's prayer times and metadata (including timezone)
-      const { timings: rawTimings, timezone: fetchedTimezone } = await AladhanAPI.getTodaysPrayerTimes(location.latitude, location.longitude, 1);
+      const { timings: rawTimings, timezone: fetchedTimezone } = await AladhanAPI.getTodaysPrayerTimes(location.latitude, location.longitude, resolvedMethodId);
       cachedRawTimings = rawTimings;
       const offsets = getPrayerMinuteOffsets();
       cachedOffsetsFingerprint = JSON.stringify(offsets);
@@ -412,7 +417,7 @@ export default function Dashboard() {
       });
 
       // Get next prayer countdown
-      const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, 1, false);
+      const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, resolvedMethodId, false);
       if (nextEvent) {
         const displayName = getPrayerDisplayName(nextEvent.name, nextEvent.targetDate);
         cachedNextPrayerName = displayName;

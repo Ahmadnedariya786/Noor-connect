@@ -17,6 +17,7 @@ import type { LanguageCode } from '@/lib/language-config';
 import { cn } from '@/lib/utils';
 import { evaluateMakruhState, formatCountdownRemaining, type MakruhWindowInfo } from '@/lib/makruh-times';
 import { evaluateNaflPrayers } from '@/lib/nafl-prayers';
+import { computeFullPrayerSchedule, type FullPrayerSchedule } from '@/lib/prayer-times';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 
@@ -623,6 +624,64 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
   const [showAllNafl, setShowAllNafl] = useState(false);
 
+  // Compute authenticated full prayer schedule for Qaza end times and Sunnah times
+  const fullSchedule = useMemo(() => {
+    if (!location.latitude || !location.longitude) return null;
+    try {
+      return computeFullPrayerSchedule(
+        viewedDate,
+        location.latitude,
+        location.longitude,
+        {
+          is24h: timeFormat === '24' || timeFormat === '24h',
+        }
+      );
+    } catch {
+      return null;
+    }
+  }, [viewedDate, location.latitude, location.longitude, timeFormat, refreshKey]);
+
+  // Map each fard prayer to its exact Qaza end time and alternate Asr
+  const fardPrayerMeta = useMemo(() => {
+    const meta: Record<string, { endTimeFormatted: string; alternateAsrText?: string }> = {};
+
+    if (fullSchedule?.fardPrayers) {
+      for (const fp of fullSchedule.fardPrayers) {
+        meta[fp.id] = {
+          endTimeFormatted: fp.endTimeFormatted,
+          alternateAsrText: fp.alternateAsrFormatted ? `${fp.alternateMadhabLabel} ${fp.alternateAsrFormatted}` : undefined,
+        };
+      }
+      return meta;
+    }
+
+    // Fallback based on displayedPrayers
+    const findTime = (name: string) => {
+      const found = displayedPrayers.find(p => (p.originalName || p.name).toLowerCase() === name.toLowerCase());
+      return found?.time;
+    };
+
+    const sunriseT = findTime('sunrise');
+    const asrT = findTime('asr');
+    const maghribT = findTime('maghrib');
+    const ishaT = findTime('isha');
+    const fajrT = findTime('fajr');
+
+    if (sunriseT) meta['fajr'] = { endTimeFormatted: sunriseT };
+    if (asrT) meta['dhuhr'] = { endTimeFormatted: asrT };
+    if (maghribT) meta['asr'] = { endTimeFormatted: maghribT };
+    if (ishaT) meta['maghrib'] = { endTimeFormatted: ishaT };
+    if (fajrT) meta['isha'] = { endTimeFormatted: fajrT };
+
+    return meta;
+  }, [fullSchedule, displayedPrayers]);
+
+  // Active Fard prayer and remaining time before Qaza
+  const activeFardPrayer = useMemo(() => {
+    if (selectedDateOffset !== 0) return null;
+    return fullSchedule?.fardPrayers.find(p => p.isCurrent) || null;
+  }, [selectedDateOffset, fullSchedule]);
+
   // Notification status check for bell styling
   const [notificationsEnabled] = useState(() => {
     return localStorage.getItem('prayer-notifications-enabled') !== 'false';
@@ -730,7 +789,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
   return (
     <div className="w-full flex flex-col">
-      {/* ── Section Header with Change City ── */}
+      {/* ── Section Header with Change City & Nearby Mosques ── */}
       <div className="flex items-center justify-between px-1 mb-3">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
@@ -741,15 +800,25 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
           />
         </div>
-        {onLocationClick && (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onLocationClick}
-            className="text-xs font-semibold uppercase tracking-widest transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            onClick={() => navigate('/mosques')}
+            className="text-[11px] font-semibold flex items-center gap-1 transition-all px-2.5 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--accent-text)] hover:bg-[var(--accent-soft)] active:scale-95 cursor-pointer"
+            title="Find Nearby Mosques & Jamaat Times"
           >
-            {locationLabel ? ui.changeCity : ui.setCity}
+            <span>🕌 Mosques</span>
           </button>
-        )}
+          {onLocationClick && (
+            <button
+              type="button"
+              onClick={onLocationClick}
+              className="text-xs font-semibold uppercase tracking-widest transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            >
+              {locationLabel ? ui.changeCity : ui.setCity}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ═════════════════════════════════════════════════════════════ */}
@@ -871,6 +940,23 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
             >
               {countdownText}
             </span>
+            {activeFardPrayer?.timeUntilEndFormatted && (
+              <span
+                className="tabular-nums ltr-num font-mono"
+                dir="ltr"
+                style={{
+                  color: 'var(--accent-text)',
+                  fontSize: '0.66rem',
+                  fontWeight: 600,
+                  direction: 'ltr',
+                  unicodeBidi: 'isolate',
+                  lineHeight: 1.1,
+                  marginTop: '1px',
+                }}
+              >
+                {activeFardPrayer.name} ends in {activeFardPrayer.timeUntilEndFormatted}
+              </span>
+            )}
           </div>
         </div>
 
@@ -1241,6 +1327,10 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           const rawName = prayer.originalName || prayer.name;
           const canonicalName = getPrayerDisplayName(prayer.name, prayer.date);
           const localizedName = getLocalizedPrayerName(canonicalName, language);
+          const lowerRaw = rawName.toLowerCase();
+          const fardKey = lowerRaw === 'jummah' ? 'dhuhr' : lowerRaw;
+          const isFard = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].includes(fardKey);
+          const pMeta = fardPrayerMeta[fardKey];
           const isRowActive = Boolean(
             selectedDateOffset === 0 && (
               prayer.isActive ||
@@ -1289,7 +1379,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   : 'none',
               }}
             >
-              {/* Row Left Side: Time-of-Day Icon + Prayer Name + Inline Makruh Badge */}
+              {/* Row Left Side: Time-of-Day Icon + Prayer Name + Inline Makruh Badge + Alternate Asr */}
               <div
                 style={{
                   display: 'flex',
@@ -1300,23 +1390,45 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 }}
               >
                 <WaqtIcon name={rawName} isActive={isRowActive} />
-                <span
-                  style={{
-                    color: 'var(--text-primary)',
-                    fontWeight: isRowActive ? 700 : 600,
-                    fontSize: '0.95rem',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  {localizedName}
-                </span>
-                {isMakruhRow && makruhState.activeWindow && (
-                  <MakruhRowBadge />
-                )}
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                    <span
+                      style={{
+                        color: 'var(--text-primary)',
+                        fontWeight: isRowActive ? 700 : 600,
+                        fontSize: '0.95rem',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {localizedName}
+                    </span>
+                    {isMakruhRow && makruhState.activeWindow && (
+                      <MakruhRowBadge />
+                    )}
+                  </div>
+                  {/* On Asr row only, compact muted secondary micro-label beneath Asr showing alternate madhab start */}
+                  {fardKey === 'asr' && pMeta?.alternateAsrText && (
+                    <span
+                      className="ltr-num font-mono"
+                      dir="ltr"
+                      style={{
+                        fontSize: '0.62rem',
+                        color: 'var(--text-secondary)',
+                        whiteSpace: 'nowrap',
+                        lineHeight: 1.1,
+                        marginTop: '2px',
+                        unicodeBidi: 'isolate',
+                        direction: 'ltr',
+                      }}
+                    >
+                      {pMeta.alternateAsrText}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Row Right Side: Formatted Time + Notification Bell Button */}
+              {/* Row Right Side: Formatted Time + Qaza Ends Time + Notification Bell Button */}
               <div
                 style={{
                   display: 'flex',
@@ -1325,27 +1437,54 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   flexShrink: 0,
                 }}
               >
-
-                <span
-                  className="ltr-num tabular-nums"
-                  dir="ltr"
+                <div
                   style={{
-                    color: isMakruhRow
-                      ? '#FCA5A5'
-                      : isRowActive
-                      ? 'var(--accent-text)'
-                      : 'var(--text-primary)',
-                    fontWeight: 600,
-                    fontVariantNumeric: 'tabular-nums',
-                    fontSize: '0.95rem',
-                    direction: 'ltr',
-                    unicodeBidi: 'isolate',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: '1px',
+                    textAlign: 'right',
                   }}
                 >
-                  {prayer.time}
-                </span>
+                  <span
+                    className="ltr-num tabular-nums"
+                    dir="ltr"
+                    style={{
+                      color: isMakruhRow
+                        ? '#FCA5A5'
+                        : isRowActive
+                        ? 'var(--accent-text)'
+                        : 'var(--text-primary)',
+                      fontWeight: 700,
+                      fontVariantNumeric: 'tabular-nums',
+                      fontSize: '0.90rem',
+                      direction: 'ltr',
+                      unicodeBidi: 'isolate',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {prayer.time}
+                  </span>
+                  {/* Secondary Micro-Line: Ends HH:MM for Fard prayers */}
+                  {isFard && pMeta?.endTimeFormatted && (
+                    <span
+                      className="ltr-num tabular-nums font-mono"
+                      dir="ltr"
+                      style={{
+                        fontSize: '0.64rem',
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.1,
+                        whiteSpace: 'nowrap',
+                        direction: 'ltr',
+                        unicodeBidi: 'isolate',
+                      }}
+                    >
+                      Ends {pMeta.endTimeFormatted}
+                    </span>
+                  )}
+                </div>
 
-                {/* Per-Prayer Notification Bell Button: wires to Prayer Notifications settings per Guard 2 */}
+                {/* Per-Prayer Notification Bell Button */}
                 <button
                   type="button"
                   aria-label={`Notification settings for ${localizedName}`}
@@ -1591,7 +1730,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                       onClick={() => setShowAllNafl((prev) => !prev)}
                       className="w-full py-1.5 px-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[11px] font-semibold flex items-center justify-center gap-1 transition-all active:scale-98 cursor-pointer"
                     >
-                      <span>{showAllNafl ? 'Hide inactive Nafl times' : 'Show all 3 Nafl times'}</span>
+                      <span>{showAllNafl ? 'Hide inactive Nafl & Sunnah times' : 'Show all Nafl, Sunnah & Makruh times'}</span>
                       {showAllNafl ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
 
@@ -1603,6 +1742,107 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   naflState.prayers.map((nafl) => renderNaflCard(nafl, false))
                 )}
               </div>
+
+              {/* Enhanced Sunnah & Fasting Times + Static 3-Window Makruh Schedule (When Expanded) */}
+              {(showAllNafl || !hasActive) && fullSchedule && (
+                <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-3">
+                  {/* Sunnah & Fasting Times */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs select-none">🌙</span>
+                      <span
+                        className="font-extrabold uppercase tracking-wider"
+                        style={{ fontSize: '0.72rem', color: 'var(--accent-text)', letterSpacing: '0.04em' }}
+                      >
+                        Sunnah & Fasting Times
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        { label: 'Khatm Sehri', time: fullSchedule.sunnahTimes.khatmSehriFormatted, desc: 'Fasting threshold' },
+                        { label: 'Ishraaq', time: fullSchedule.sunnahTimes.ishraaqFormatted, desc: 'Sunrise +15m' },
+                        { label: 'Chaasht (Duha)', time: fullSchedule.sunnahTimes.chaashtFormatted, desc: 'Forenoon' },
+                        { label: 'Zawaal (Solar Noon)', time: fullSchedule.sunnahTimes.zawaalFormatted, desc: 'Meridian peak' },
+                        { label: 'Guroob (Sunset)', time: fullSchedule.sunnahTimes.sunsetFormatted, desc: 'Astronomical' },
+                        { label: 'Iftaar (Maghrib)', time: fullSchedule.sunnahTimes.iftaarFormatted, desc: 'Fast break' },
+                        { label: 'Islamic Midnight', time: fullSchedule.sunnahTimes.islamicMidnightFormatted, desc: 'Night midpoint' },
+                        { label: 'Tahajjud (Last 1/3)', time: fullSchedule.sunnahTimes.tahajjudFormatted, desc: 'Deep night' },
+                      ].map((item) => (
+                        <div
+                          key={item.label}
+                          className="p-2 rounded-xl border flex flex-col justify-between"
+                          style={{
+                            background: 'var(--surface-2)',
+                            borderColor: 'var(--border)',
+                          }}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[11px] font-semibold text-[var(--text-secondary)] truncate">
+                              {item.label}
+                            </span>
+                            <span
+                              className="font-mono font-bold text-xs text-[var(--text-primary)] ltr-num tabular-nums shrink-0"
+                              dir="ltr"
+                            >
+                              {item.time}
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-[var(--text-secondary)] opacity-75 truncate">
+                            {item.desc}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Static 3-Window Makruh Prohibited Schedule (Reference Table) */}
+                  <div className="space-y-1.5 pt-2 border-t border-[var(--border)]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#EF4444] shrink-0" />
+                        <span
+                          className="font-extrabold uppercase tracking-wider text-[#F87171]"
+                          style={{ fontSize: '0.72rem', letterSpacing: '0.04em' }}
+                        >
+                          Daily Makruh Schedule (Reference)
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-[var(--text-secondary)] font-mono">
+                        Sahih Muslim 831
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {fullSchedule.makruhWindows.map((win) => (
+                        <div
+                          key={win.id}
+                          className="p-2 rounded-xl border flex items-center justify-between text-xs transition-colors"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.07)',
+                            borderColor: 'rgba(239, 68, 68, 0.22)',
+                          }}
+                        >
+                          <div className="flex flex-col min-w-0 pr-2">
+                            <span className="font-bold text-[var(--text-primary)] text-xs truncate">
+                              {win.title}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-secondary)] truncate">
+                              {win.description}
+                            </span>
+                          </div>
+                          <span
+                            className="font-mono font-bold text-[#FCA5A5] text-xs shrink-0 ltr-num tabular-nums"
+                            dir="ltr"
+                          >
+                            {win.startFormatted} – {win.endFormatted}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}

@@ -14,6 +14,7 @@ import {
   type PrayerMinuteOffsets
 } from "@/lib/prayer-offsets";
 import { OnlinePrayerAPI } from "@/lib/online-prayer-api";
+import { getRegionalPrayerPreset, applyRegionalPreset } from "@/lib/prayer-times";
 
 export const PrayerMethodSelector = () => {
   const location = useLocationState();
@@ -123,10 +124,22 @@ export const PrayerMethodSelector = () => {
     }
   };
 
+  const regionalPreset = React.useMemo(() => {
+    return getRegionalPrayerPreset(
+      location.country || location.locationName,
+      location.latitude || undefined,
+      location.longitude || undefined
+    );
+  }, [location.country, location.locationName, location.latitude, location.longitude]);
+
   const handleUseRecommended = () => {
-    if (recommendedMethod) {
-      handleMethodChange(recommendedMethod.id.toString());
-    }
+    applyRegionalPreset(regionalPreset);
+    const updated = prayerMethods.getSelectedMethod();
+    setSelectedMethod(updated);
+    toast({
+      title: "Regional Standard Applied",
+      description: regionalPreset.summary,
+    });
   };
 
   const { fajrDisplay, ishaDisplay } = prayerMethods.getMethodDisplayInfo(selectedMethod);
@@ -348,7 +361,7 @@ export const PrayerMethodSelector = () => {
             }}
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            Use Recommended Method
+            Apply Regional Standard ({regionalPreset.summary})
           </Button>
         </div>
       )}

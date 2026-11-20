@@ -4,6 +4,7 @@
  */
 import { Coordinates, CalculationMethod, PrayerTimes, CalculationParameters, Madhab, Shafaq } from 'adhan';
 import { getMadhab, type MadhabType } from './storage';
+import { getMaghribIhtiyatMin, getRegionalPrayerPreset } from './prayer-times';
 
 export type CalculationMethodName = 
   | 'MuslimWorldLeague'
@@ -69,7 +70,22 @@ export const CALCULATION_METHOD_LABELS: Record<CalculationMethodName, string> = 
 
 // Get stored calculation method
 export const getCalculationMethod = (): CalculationMethodName => {
-  return (localStorage.getItem('calculation-method') as CalculationMethodName) || 'MuslimWorldLeague';
+  const stored = localStorage.getItem('calculation-method') as CalculationMethodName | null;
+  if (stored && CALCULATION_METHODS[stored]) {
+    return stored;
+  }
+  // If not explicitly set, determine by regional preset
+  try {
+    const loc = localStorage.getItem('location-storage');
+    if (loc) {
+      const parsed = JSON.parse(loc);
+      const preset = getRegionalPrayerPreset(parsed.country || parsed.locationName, parsed.latitude, parsed.longitude);
+      return preset.method;
+    }
+  } catch {
+    // Fallback
+  }
+  return 'Karachi';
 };
 
 export const setCalculationMethod = (method: CalculationMethodName): void => {
@@ -96,15 +112,27 @@ export const calculatePrayerTimes = (
   } else {
     params.madhab = Madhab.Shafi; // Shafi, Maliki, Hanbali all use Shafi calculation
   }
+
+  // Align Karachi calculation with regional standard (dhuhr solar noon, 1-min Asr precaution)
+  if (method === 'Karachi' && params.methodAdjustments) {
+    params.methodAdjustments.dhuhr = 0;
+    params.methodAdjustments.asr = 1;
+  }
   
   const prayerTimes = new PrayerTimes(coordinates, date, params);
+
+  // Apply optional Maghrib Precautionary Ihtiyat (+3m or 0m)
+  const maghribIhtiyat = getMaghribIhtiyatMin();
+  const finalMaghrib = maghribIhtiyat > 0
+    ? new Date(prayerTimes.maghrib.getTime() + maghribIhtiyat * 60000)
+    : prayerTimes.maghrib;
   
   return {
     fajr: prayerTimes.fajr,
     sunrise: prayerTimes.sunrise,
     dhuhr: prayerTimes.dhuhr,
     asr: prayerTimes.asr,
-    maghrib: prayerTimes.maghrib,
+    maghrib: finalMaghrib,
     isha: prayerTimes.isha,
   };
 };
