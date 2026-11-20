@@ -14,6 +14,10 @@ export interface PrayerEntry {
   time: number;
   /** "05:15" — already localized for display */
   formattedTime: string;
+  /** Qaza end time in epoch milliseconds (optional) */
+  endTime?: number;
+  /** "06:45" — formatted Qaza end time for display (optional) */
+  formattedEndTime?: string;
 }
 
 export interface PrayerPayload {
@@ -27,6 +31,24 @@ export interface PrayerPayload {
   currentTime24h: string;          // "14:35"
   lastUpdated: number;             // epoch millis
   dstOffset?: number;              // DST offset in hours (0 or usually 1)
+
+  // Flagship Qaza End Time boundaries & customization sync
+  fajrEndFormatted?: string;
+  dhuhrEndFormatted?: string;
+  asrEndFormatted?: string;
+  maghribEndFormatted?: string;
+  ishaEndFormatted?: string;
+  showQazaEndTime?: boolean;
+
+  // Widget visual settings cache
+  surfaceStyle?: string;
+  opacity?: number;
+  accentColorHex?: string;
+  bgColorHex?: string;
+  fontScale?: number;
+  showCity?: boolean;
+  showCountdown?: boolean;
+  showStrip?: boolean;
 }
 
 export interface AyahContent {

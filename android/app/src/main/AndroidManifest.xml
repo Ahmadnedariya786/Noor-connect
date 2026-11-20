@@ -177,6 +177,34 @@
                        android:resource="@xml/widget_next_prayer_info" />
         </receiver>
 
+        <!-- Circular Clock Widget (2×2 / 3×2) -->
+        <receiver android:name=".widgets.circularclock.NoorCircularClockWidget" android:exported="true"
+                  android:label="@string/widget_circular_clock_label"
+                  android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.noorconnect.ummah.WIDGET_REFRESH" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_circular_clock_info" />
+        </receiver>
+
+        <!-- Compact 6-Prayer Strip Widget (4×1) -->
+        <receiver android:name=".widgets.compactstrip.NoorCompactStripWidget" android:exported="true"
+                  android:label="@string/widget_compact_strip_label"
+                  android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.noorconnect.ummah.WIDGET_REFRESH" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_compact_strip_info" />
+        </receiver>
+
         <!-- Daily Ayah Widget (4×2) -->
         <receiver android:name=".widgets.dailyayah.DailyAyahWidget" android:exported="true"
                   android:label="@string/widget_daily_ayah_label"

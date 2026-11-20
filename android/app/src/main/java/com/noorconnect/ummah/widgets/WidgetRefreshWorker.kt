@@ -18,6 +18,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.noorconnect.ummah.R
+import com.noorconnect.ummah.widgets.circularclock.NoorCircularClockWidget
+import com.noorconnect.ummah.widgets.compactstrip.NoorCompactStripWidget
 import com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget
 import com.noorconnect.ummah.widgets.dailyhadith.DailyHadithWidget
 import com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget
@@ -26,7 +28,7 @@ import com.noorconnect.ummah.widgets.tasbeeh.TasbeehWidget
 import java.util.concurrent.TimeUnit
 
 /**
- * Single WorkManager worker that refreshes all 5 widgets.
+ * Single WorkManager worker that refreshes all 7 widgets.
  *
  * Runs:
  *  - Periodic (every 30 minutes) via [enqueuePeriodic]
@@ -49,6 +51,8 @@ class WidgetRefreshWorker(
 
         val WIDGET_PROVIDERS = listOf(
             NextPrayerWidget(),
+            NoorCircularClockWidget(),
+            NoorCompactStripWidget(),
             DailyAyahWidget(),
             DailyHadithWidget(),
             QuranProgressWidget(),

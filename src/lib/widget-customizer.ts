@@ -13,6 +13,7 @@ export interface WidgetStyleConfig {
   showCountdown: boolean;
   showFullStrip: boolean;
   fontScale: number; // 85 to 120 (in 5% steps)
+  showQazaEndTime: boolean; // Display "Ends HH:MM" before Qaza on prayer widgets
 }
 
 export const WIDGET_STORAGE_KEY = 'noor_widget_style_v1';
@@ -25,6 +26,7 @@ export const DEFAULT_WIDGET_STYLE: WidgetStyleConfig = {
   showCountdown: true,
   showFullStrip: true,
   fontScale: 100,
+  showQazaEndTime: true,
 };
 
 export interface AccentPresetDef {
@@ -111,6 +113,9 @@ export function loadWidgetStyleConfig(): WidgetStyleConfig {
       fontScale: typeof parsed.fontScale === 'number'
         ? Math.min(120, Math.max(85, parsed.fontScale))
         : DEFAULT_WIDGET_STYLE.fontScale,
+      showQazaEndTime: typeof parsed.showQazaEndTime === 'boolean'
+        ? parsed.showQazaEndTime
+        : DEFAULT_WIDGET_STYLE.showQazaEndTime,
     };
   } catch {
     return { ...DEFAULT_WIDGET_STYLE };
@@ -222,6 +227,9 @@ export interface WidgetCustomizerI18n {
   title: string;
   subtitle: string;
   livePreview: string;
+  previewNextPrayer: string;
+  previewCircularClock: string;
+  previewCompactStrip: string;
   surfaceStyleTitle: string;
   surfaceStyleSub: string;
   surfaceTheme: string;
@@ -239,6 +247,8 @@ export interface WidgetCustomizerI18n {
   showCountdownSub: string;
   showFullStrip: string;
   showFullStripSub: string;
+  showQazaEndTime: string;
+  showQazaEndTimeSub: string;
   fontScaleTitle: string;
   fontScaleSub: string;
   applyButton: string;
@@ -254,6 +264,8 @@ export interface WidgetCustomizerI18n {
   pinSectionTitle: string;
   pinSectionSub: string;
   pinNextPrayer: string;
+  pinCircularClock: string;
+  pinCompactStrip: string;
   pinDailyAyah: string;
   pinDailyHadith: string;
   pinQuranProgress: string;
@@ -265,11 +277,14 @@ export interface WidgetCustomizerI18n {
   pinFailedDesc: string;
 }
 
-const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
+const WIDGET_I18N: Record<string, Partial<WidgetCustomizerI18n>> = {
   en: {
     title: 'Home Screen Widgets',
     subtitle: 'Customize opacity, colors & layout',
     livePreview: 'Live Widget Preview',
+    previewNextPrayer: 'Next Prayer',
+    previewCircularClock: 'Circular Clock',
+    previewCompactStrip: '6-Prayer Strip',
     surfaceStyleTitle: 'Widget Surface Style',
     surfaceStyleSub: 'Select the visual background base for your widgets',
     surfaceTheme: 'Match Theme',
@@ -287,6 +302,8 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     showCountdownSub: 'Display remaining time until next prayer',
     showFullStrip: 'Show Full 5-Prayer Strip',
     showFullStripSub: 'Display complete Fajr–Isha row across the widget',
+    showQazaEndTime: 'Show Qaza End Time',
+    showQazaEndTimeSub: 'Display "Ends HH:MM" before Qaza on prayer widgets',
     fontScaleTitle: 'Font Size Scale',
     fontScaleSub: 'Adjust text size for better readability on small screens',
     applyButton: 'Apply & Refresh Home Widgets',
@@ -302,6 +319,8 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
     pinSectionTitle: '📌 Pin Widget to Home Screen',
     pinSectionSub: 'Add widgets in 1 tap without dragging',
     pinNextPrayer: '+ Pin Next Prayer Widget',
+    pinCircularClock: '+ Circular Clock',
+    pinCompactStrip: '+ 6-Prayer Strip',
     pinDailyAyah: '+ Daily Ayah',
     pinDailyHadith: '+ Daily Hadith',
     pinQuranProgress: '+ Quran Progress',
@@ -637,5 +656,9 @@ const WIDGET_I18N: Record<string, WidgetCustomizerI18n> = {
 
 export function getWidgetCustomizerI18n(lang: string): WidgetCustomizerI18n {
   const code = (lang || 'en').toLowerCase().split('-')[0];
-  return WIDGET_I18N[code] || WIDGET_I18N.en;
+  const dict = WIDGET_I18N[code] || WIDGET_I18N.en;
+  return {
+    ...(WIDGET_I18N.en as WidgetCustomizerI18n),
+    ...(dict as Partial<WidgetCustomizerI18n>),
+  };
 }

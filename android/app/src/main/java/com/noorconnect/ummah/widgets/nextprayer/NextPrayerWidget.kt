@@ -142,6 +142,24 @@ class NextPrayerWidget : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_prayer_name, nextPrayer.name)
                 views.setTextViewText(R.id.widget_prayer_time, nextPrayer.formattedTime)
 
+                // ─── Qaza End Time Line ───
+                val qazaEndTime = if (nextPrayer.formattedEndTime.isNotBlank()) {
+                    nextPrayer.formattedEndTime
+                } else when (nextPrayer.name.lowercase()) {
+                    "fajr" -> payload.fajrEndFormatted
+                    "dhuhr", "jumu'ah" -> payload.dhuhrEndFormatted
+                    "asr" -> payload.asrEndFormatted
+                    "maghrib" -> payload.maghribEndFormatted
+                    "isha" -> payload.ishaEndFormatted
+                    else -> ""
+                }
+                if (style.showQazaEndTime && qazaEndTime.isNotBlank()) {
+                    views.setTextViewText(R.id.widget_qaza_end_time, "Ends $qazaEndTime")
+                    views.setViewVisibility(R.id.widget_qaza_end_time, View.VISIBLE)
+                } else {
+                    views.setViewVisibility(R.id.widget_qaza_end_time, View.GONE)
+                }
+
                 // ─── 5. Countdown Pill ───
                 val now = System.currentTimeMillis()
                 val remaining = nextPrayer.time - now
@@ -161,8 +179,10 @@ class NextPrayerWidget : AppWidgetProvider() {
                     views.setTextColor(R.id.widget_countdown_pill, accentCol)
                     views.setTextColor(R.id.widget_prayer_name, textCol)
                     views.setTextColor(R.id.widget_prayer_time, textCol)
+                    views.setTextColor(R.id.widget_qaza_end_time, subCol)
                     views.setTextColor(R.id.widget_section_label, subCol)
                     views.setTextColor(R.id.widget_location, subCol)
+                    views.setTextColor(R.id.widget_btn_refresh, accentCol)
                 } catch (e: Throwable) {
                     Log.w(TAG, "Color parsing error", e)
                 }
@@ -216,6 +236,18 @@ class NextPrayerWidget : AppWidgetProvider() {
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
                 views.setOnClickPendingIntent(R.id.widget_root, pi)
+
+                // ─── 13. On-Widget ↻ Refresh Intent ───
+                val refreshIntent = android.content.Intent(context, com.noorconnect.ummah.widgets.WidgetAlarmReceiver::class.java).apply {
+                    action = com.noorconnect.ummah.widgets.WidgetAlarmReceiver.ACTION_REFRESH_ALL
+                }
+                val refreshPi = PendingIntent.getBroadcast(
+                    context,
+                    102,
+                    refreshIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_btn_refresh, refreshPi)
 
                 mgr.updateAppWidget(appWidgetId, views)
             } catch (t: Throwable) {

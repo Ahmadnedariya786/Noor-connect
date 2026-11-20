@@ -65,18 +65,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/widget_chip_shape"
-                android:paddingStart="7dp"
-                android:paddingEnd="7dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:ellipsize="end"
-                android:maxWidth="130dp"
-                android:text="18 Jumādā I 1448"
+                android:maxWidth="100dp"
+                android:text="9 Jumādā II"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="10sp"
+                android:textSize="9sp"
                 android:textStyle="bold"
-                android:layout_marginEnd="6dp" />
+                android:layout_marginEnd="4dp" />
 
             <!-- Countdown pill (Unclipped, wrap_content, weight=0, ellipsize=none) -->
             <TextView
@@ -85,16 +85,29 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
                 android:background="@drawable/widget_chip_emerald"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:ellipsize="none"
                 android:text="In 46m"
                 android:textColor="@color/widget_accent_emerald"
-                android:textSize="10.5sp"
-                android:textStyle="bold" />
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="4dp" />
+
+            <!-- On-Widget ↻ Refresh Button -->
+            <TextView
+                android:id="@+id/widget_btn_refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="↻"
+                android:textColor="@color/widget_accent_gold"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:paddingStart="3dp"
+                android:paddingEnd="1dp" />
 
             <!-- Legacy Clock stub (kept hidden to free top bar room and avoid clipping) -->
             <TextClock
@@ -205,6 +218,19 @@
                     android:textStyle="bold"
                     android:letterSpacing="-0.02"
                     android:includeFontPadding="false" />
+
+                <!-- Optional Qaza End Time Line -->
+                <TextView
+                    android:id="@+id/widget_qaza_end_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ends 05:53 PM"
+                    android:textColor="@color/widget_accent_gold"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:singleLine="true"
+                    android:visibility="gone"
+                    android:layout_marginTop="1dp" />
 
                 <ProgressBar
                     android:id="@+id/widget_progress_bar"

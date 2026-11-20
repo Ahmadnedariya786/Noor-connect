@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Noor Connect Circular Progress-Arc Clock Widget (2×2 / 3×2)
+  ─────────────────────────────────────────────────────────────
+  - High-DPI Canvas-rendered Progress-Arc Disc (Offscreen Bitmap)
+  - Native <TextClock> (Zero battery drain, auto-updates every minute)
+  - Hijri date micro-header + Next Prayer pill + Countdown / Qaza End Time
+  - Direct 1-tap ↻ Refresh button & deep-link tap to app
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <!-- Dynamically rendered offscreen circular dial & progress arc bitmap -->
+    <ImageView
+        android:id="@+id/widget_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="@null" />
+
+    <!-- Center Content Inside Circular Arc -->
+    <LinearLayout
+        android:id="@+id/widget_dial_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Top Hijri Date Micro-Header -->
+        <TextView
+            android:id="@+id/widget_hijri_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="9 Jumādā II"
+            android:textColor="@color/widget_accent_gold"
+            android:textSize="9.5sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:maxWidth="110dp"
+            android:includeFontPadding="false" />
+
+        <!-- Native Zero-Battery TextClock -->
+        <TextClock
+            android:id="@+id/widget_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:format12Hour="hh:mm"
+            android:format24Hour="HH:mm"
+            android:fontFamily="sans-serif-condensed"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="1dp" />
+
+        <!-- Next Prayer Pill -->
+        <TextView
+            android:id="@+id/widget_prayer_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/widget_chip_shape"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:text="Asr • 04:17 PM"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="9.5sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:maxWidth="130dp"
+            android:includeFontPadding="false" />
+
+        <!-- Countdown / Qaza End Time Subline -->
+        <TextView
+            android:id="@+id/widget_subline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2.5dp"
+            android:text="In 1h 35m"
+            android:textColor="@color/widget_accent_emerald"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
+    <!-- Corner ↻ Refresh Hit Target -->
+    <TextView
+        android:id="@+id/widget_btn_refresh"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="top|end"
+        android:gravity="center"
+        android:text="↻"
+        android:textColor="@color/widget_accent_gold"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:alpha="0.75"
+        android:padding="4dp" />
+
+</FrameLayout>

@@ -49,15 +49,23 @@ class DailyAyahWidget : AppWidgetProvider() {
                 // ─── 2. Data Content ───
                 val payload = WidgetPrefs.getDailyContent(context)
 
+                val defaultRef = "Al-Inshirah 94:5-6"
+                val defaultArabic = "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا • إِنَّ مَعَ الْعُسْرِ يُسْرًا"
+                val defaultTrans = "For indeed, with hardship [will be] ease. Indeed, with hardship [will be] ease."
+
                 if (payload == null) {
-                    views.setTextViewText(R.id.widget_quran_ref, context.getString(R.string.widget_quran_ref_default))
-                    views.setTextViewText(R.id.widget_quran_arabic, context.getString(R.string.widget_quran_arabic_default))
-                    views.setTextViewText(R.id.widget_quran_translation, context.getString(R.string.widget_quran_translation_default))
+                    views.setTextViewText(R.id.widget_quran_ref, defaultRef)
+                    views.setTextViewText(R.id.widget_quran_arabic, defaultArabic)
+                    views.setTextViewText(R.id.widget_quran_translation, defaultTrans)
                 } else {
                     val ayah = payload.ayah
-                    views.setTextViewText(R.id.widget_quran_ref, ayah.reference.ifEmpty { context.getString(R.string.widget_quran_ref_default) })
-                    views.setTextViewText(R.id.widget_quran_arabic, ayah.arabic.ifEmpty { context.getString(R.string.widget_quran_arabic_default) })
-                    views.setTextViewText(R.id.widget_quran_translation, ayah.translation.ifEmpty { context.getString(R.string.widget_quran_translation_default) })
+                    val cleanRef = when {
+                        ayah.reference.isBlank() || ayah.reference == "-" || ayah.reference == "—" -> defaultRef
+                        else -> ayah.reference
+                    }
+                    views.setTextViewText(R.id.widget_quran_ref, cleanRef)
+                    views.setTextViewText(R.id.widget_quran_arabic, ayah.arabic.ifEmpty { defaultArabic })
+                    views.setTextViewText(R.id.widget_quran_translation, ayah.translation.ifEmpty { defaultTrans })
                 }
 
                 // ─── 3. Swatches & Colors ───
@@ -69,6 +77,7 @@ class DailyAyahWidget : AppWidgetProvider() {
                     views.setTextColor(R.id.widget_quran_ref, accentCol)
                     views.setTextColor(R.id.widget_quran_arabic, textCol)
                     views.setTextColor(R.id.widget_quran_translation, subCol)
+                    views.setTextColor(R.id.widget_btn_refresh, accentCol)
                 } catch (_: Throwable) {}
 
                 // ─── 4. Font Scaling ───
@@ -93,7 +102,7 @@ class DailyAyahWidget : AppWidgetProvider() {
                 val (surah, ayahNum) = if (payload != null) {
                     Pair(payload.ayah.surahNumber, payload.ayah.ayahNumber)
                 } else {
-                    Pair(1, 1)
+                    Pair(94, 5)
                 }
                 val deeplink = WidgetDeeplink.buildQuran(surah, ayahNum)
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
@@ -104,6 +113,18 @@ class DailyAyahWidget : AppWidgetProvider() {
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
                 views.setOnClickPendingIntent(R.id.widget_root, pi)
+
+                // ─── 8. 1-Tap ↻ Refresh Intent ───
+                val refreshIntent = android.content.Intent(context, com.noorconnect.ummah.widgets.WidgetAlarmReceiver::class.java).apply {
+                    action = com.noorconnect.ummah.widgets.WidgetAlarmReceiver.ACTION_REFRESH_ALL
+                }
+                val refreshPi = PendingIntent.getBroadcast(
+                    context,
+                    103,
+                    refreshIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_btn_refresh, refreshPi)
 
                 mgr.updateAppWidget(appWidgetId, views)
             } catch (t: Throwable) {

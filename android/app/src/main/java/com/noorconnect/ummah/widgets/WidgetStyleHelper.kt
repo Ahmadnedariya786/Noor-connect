@@ -20,6 +20,7 @@ object WidgetStyleHelper {
         val showCity: Boolean,
         val showCountdown: Boolean,
         val showFivePrayerStrip: Boolean,
+        val showQazaEndTime: Boolean,
         val fontScale: Int,
         val themeHex: String,
         val city: String,
@@ -37,9 +38,10 @@ object WidgetStyleHelper {
         var showCity = true
         var showCountdown = true
         var showFivePrayerStrip = true
+        var showQazaEndTime = true
         var fontScale = 100
         var themeHex = "#0B101B"
-        var city = "Chhapi, India"
+        var city = "Vadgām, India"
         var hijriDateFormatted = ""
 
         if (!configJson.isNullOrEmpty()) {
@@ -51,9 +53,10 @@ object WidgetStyleHelper {
                 showCity = json.optBoolean("showCity", true)
                 showCountdown = json.optBoolean("showCountdown", true)
                 showFivePrayerStrip = json.optBoolean("showFullStrip", json.optBoolean("showFivePrayerStrip", true))
+                showQazaEndTime = json.optBoolean("showQazaEndTime", true)
                 fontScale = json.optInt("fontScale", 100)
                 themeHex = json.optString("themeHex", "#0B101B")
-                city = json.optString("city", "Chhapi, India").ifEmpty { "Chhapi, India" }
+                city = json.optString("city", "Vadgām, India").ifEmpty { "Vadgām, India" }
                 hijriDateFormatted = json.optString("hijriDateFormatted", "")
             } catch (t: Throwable) {
                 Log.w(TAG, "Error parsing widget style config", t)
@@ -69,6 +72,7 @@ object WidgetStyleHelper {
             showCity = showCity,
             showCountdown = showCountdown,
             showFivePrayerStrip = showFivePrayerStrip,
+            showQazaEndTime = showQazaEndTime,
             fontScale = fontScale.coerceIn(85, 120),
             themeHex = themeHex,
             city = city,
@@ -150,6 +154,85 @@ object WidgetStyleHelper {
         } catch (t: Throwable) {
             Log.w(TAG, "Error drawing border", t)
         }
+
+        return bitmap
+    }
+
+    @JvmStatic
+    fun renderCircularDialBitmap(
+        surfaceStyle: String,
+        themeHex: String,
+        opacityPercent: Int,
+        accentHex: String,
+        progressPercent: Float
+    ): Bitmap {
+        val size = 260
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val clampedOpacity = opacityPercent.coerceIn(0, 100)
+        val fillAlpha = Math.round((clampedOpacity / 100f) * 255f)
+
+        val baseColor = when (surfaceStyle.lowercase()) {
+            "oled" -> Color.BLACK
+            "frosted" -> Color.parseColor("#141B29")
+            else -> try {
+                Color.parseColor(themeHex)
+            } catch (t: Throwable) {
+                Color.parseColor("#0B101B")
+            }
+        }
+
+        val cx = size / 2f
+        val cy = size / 2f
+        val radius = (size / 2f) - 12f
+
+        // 1. Draw circular background disc
+        if (fillAlpha > 0) {
+            val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.FILL
+                color = baseColor
+                alpha = fillAlpha
+            }
+            canvas.drawCircle(cx, cy, radius, fillPaint)
+        }
+
+        val parsedAccent = try { Color.parseColor(accentHex) } catch (_: Throwable) { Color.parseColor("#D4AF37") }
+
+        // 2. 360-degree track ring (subtle low-opacity)
+        val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 3.5f
+            color = parsedAccent
+            alpha = if (fillAlpha == 0) 55 else 40
+        }
+        canvas.drawCircle(cx, cy, radius - 2f, trackPaint)
+
+        // 3. Glowing Progress Arc sweeping clockwise from 12 o'clock (-90 degrees)
+        val clampedProgress = progressPercent.coerceIn(0.01f, 1f)
+        val sweepAngle = clampedProgress * 360f
+        val arcRect = RectF(cx - radius + 2f, cy - radius + 2f, cx + radius - 2f, cy + radius - 2f)
+
+        val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 5.5f
+            strokeCap = Paint.Cap.ROUND
+            color = parsedAccent
+            alpha = 255
+        }
+        canvas.drawArc(arcRect, -90f, sweepAngle, false, arcPaint)
+
+        // 4. Luminous tip dot at the leading tip of the progress arc
+        val angleRad = Math.toRadians((-90f + sweepAngle).toDouble())
+        val dotRadius = radius - 2f
+        val dotX = (cx + dotRadius * Math.cos(angleRad)).toFloat()
+        val dotY = (cy + dotRadius * Math.sin(angleRad)).toFloat()
+
+        val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = Color.WHITE
+        }
+        canvas.drawCircle(dotX, dotY, 4.0f, dotPaint)
 
         return bitmap
     }

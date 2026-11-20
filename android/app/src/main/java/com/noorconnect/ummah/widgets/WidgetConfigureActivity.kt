@@ -65,7 +65,8 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
         // Setup size spinner based on widget type
         val sizeOptions = when (widgetType) {
-            "tasbeeh" -> arrayOf("2×2 (Compact)")
+            "tasbeeh", "circularclock", "noorcircularclock" -> arrayOf("2×2 (Standard)", "3×2 (Large)")
+            "compactstrip", "noorcompactstrip" -> arrayOf("4×1 (Standard)", "5×1 (Wide)")
             "nextprayer", "dailyayah", "dailyhadith", "quranprogress" -> {
                 arrayOf("4×1 (Wide)", "4×2 (Standard)", "4×3 (Large)")
             }

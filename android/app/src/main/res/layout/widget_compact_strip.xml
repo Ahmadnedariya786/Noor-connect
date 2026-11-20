@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Noor Connect Ultra-Compact 1-Row 6-Prayer Strip Widget (4×1)
+  ─────────────────────────────────────────────────────────────
+  - Top line: Gregorian + Hijri Date · City · ↻ Refresh Button
+  - Bottom row: Equal-Weight 6-Prayer Strip (FAJR | RISE | DHUHR | ASR | MAGH | ISHA)
+  - Active / Next prayer highlighted in rounded pill accent container
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <!-- Dynamically rendered offscreen rounded background bitmap -->
+    <ImageView
+        android:id="@+id/widget_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:id="@+id/widget_content_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:gravity="center_vertical">
+
+        <!-- Top Header Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="2dp">
+
+            <!-- Gregorian & Hijri Date Line -->
+            <TextView
+                android:id="@+id/widget_date_line"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Fri 20 Nov • 9 Jumādā II"
+                android:textColor="@color/widget_accent_gold"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <!-- City Short Name -->
+            <TextView
+                android:id="@+id/widget_city_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vadgām"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="9sp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxWidth="80dp" />
+
+            <!-- Refresh Button -->
+            <TextView
+                android:id="@+id/widget_btn_refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="↻"
+                android:textColor="@color/widget_accent_gold"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:paddingStart="6dp"
+                android:paddingEnd="2dp" />
+        </LinearLayout>
+
+        <!-- 6-Column Equal-Weight Prayer Row -->
+        <LinearLayout
+            android:id="@+id/widget_prayer_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="6"
+            android:gravity="center_vertical">
+
+            <!-- FAJR -->
+            <LinearLayout
+                android:id="@+id/widget_col_fajr"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp"
+                android:layout_marginEnd="1dp">
+                <TextView
+                    android:id="@+id/widget_name_fajr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="FAJR"
+                    android:textSize="7.5sp"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+                <TextView
+                    android:id="@+id/widget_time_fajr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="05:40"
+                    android:textSize="9sp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- SUNRISE / RISE -->
+            <LinearLayout
+                android:id="@+id/widget_col_sunrise"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp"
+                android:layout_marginEnd="1dp">
+                <TextView
+                    android:id="@+id/widget_name_sunrise"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="RISE"
+                    android:textSize="7.5sp"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+                <TextView
+                    android:id="@+id/widget_time_sunrise"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="06:59"
+                    android:textSize="9sp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- DHUHR / JUMA -->
+            <LinearLayout
+                android:id="@+id/widget_col_dhuhr"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp"
+                android:layout_marginEnd="1dp">
+                <TextView
+                    android:id="@+id/widget_name_dhuhr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DHUHR"
+                    android:textSize="7.5sp"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+                <TextView
+                    android:id="@+id/widget_time_dhuhr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12:26"
+                    android:textSize="9sp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- ASR -->
+            <LinearLayout
+                android:id="@+id/widget_col_asr"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp"
+                android:layout_marginEnd="1dp">
+                <TextView
+                    android:id="@+id/widget_name_asr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ASR"
+                    android:textSize="7.5sp"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+                <TextView
+                    android:id="@+id/widget_time_asr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="04:17"
+                    android:textSize="9sp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- MAGHRIB -->
+            <LinearLayout
+                android:id="@+id/widget_col_maghrib"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp"
+                android:layout_marginEnd="1dp">
+                <TextView
+                    android:id="@+id/widget_name_maghrib"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MAGH"
+                    android:textSize="7.5sp"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+                <TextView
+                    android:id="@+id/widget_time_maghrib"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="05:56"
+                    android:textSize="9sp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- ISHA -->
+            <LinearLayout
+                android:id="@+id/widget_col_isha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp">
+                <TextView
+                    android:id="@+id/widget_name_isha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ISHA"
+                    android:textSize="7.5sp"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+                <TextView
+                    android:id="@+id/widget_time_isha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="07:12"
+                    android:textSize="9sp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textStyle="bold"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

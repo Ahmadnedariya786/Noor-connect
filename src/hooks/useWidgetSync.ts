@@ -121,14 +121,32 @@ export function useWidgetSync() {
       }
     };
 
+    const onPrayerSettingsChanged = () => {
+      try {
+        import('@/lib/widget-service').then(({ WidgetService }) => {
+          WidgetService.syncAllWidgets().catch(() => {});
+        }).catch(() => {});
+      } catch {
+        // Safe fallback
+      }
+    };
+
     window.addEventListener(STORAGE_EVENT, onStorage);
     window.addEventListener('noorconnect:quran-progress-changed', onQuranProgressCustom);
     window.addEventListener(TASBEEH_UPDATED_EVENT, onTasbeehCustom);
+    window.addEventListener('prayer-offsets-changed', onPrayerSettingsChanged);
+    window.addEventListener('madhab-changed', onPrayerSettingsChanged);
+    window.addEventListener('time-format-changed', onPrayerSettingsChanged);
+    window.addEventListener('hijri-date-offset-changed', onPrayerSettingsChanged);
 
     return () => {
       window.removeEventListener(STORAGE_EVENT, onStorage);
       window.removeEventListener('noorconnect:quran-progress-changed', onQuranProgressCustom);
       window.removeEventListener(TASBEEH_UPDATED_EVENT, onTasbeehCustom);
+      window.removeEventListener('prayer-offsets-changed', onPrayerSettingsChanged);
+      window.removeEventListener('madhab-changed', onPrayerSettingsChanged);
+      window.removeEventListener('time-format-changed', onPrayerSettingsChanged);
+      window.removeEventListener('hijri-date-offset-changed', onPrayerSettingsChanged);
     };
   }, []);
 }

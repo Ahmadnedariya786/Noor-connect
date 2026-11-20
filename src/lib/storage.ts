@@ -169,6 +169,10 @@ export const getTimeFormat = (): '12' | '24' => {
   return (localStorage.getItem(STORAGE_KEYS.TIME_FORMAT) as '12' | '24') || '24';
 };
 
+export const get24HourTime = (): boolean => {
+  return getTimeFormat() === '24';
+};
+
 export const setTimeFormat = (format: '12' | '24'): void => {
   localStorage.setItem(STORAGE_KEYS.TIME_FORMAT, format);
   // Dispatch custom event for immediate UI updates

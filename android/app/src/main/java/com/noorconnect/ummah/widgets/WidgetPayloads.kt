@@ -30,7 +30,21 @@ data class PrayerPayload(
     val calculationMethod: String,      // "KARACHI" | "MWL" | "ISNA" | ...
     val currentTime24h: String,         // "14:35" — for initial clock render
     val lastUpdated: Long,             // epoch millis
-    val dstOffset: Double = 0.0        // DST offset in hours (0 or usually 1)
+    val dstOffset: Double = 0.0,       // DST offset in hours (0 or usually 1)
+    val fajrEndFormatted: String = "",
+    val dhuhrEndFormatted: String = "",
+    val asrEndFormatted: String = "",
+    val maghribEndFormatted: String = "",
+    val ishaEndFormatted: String = "",
+    val showQazaEndTime: Boolean = true,
+    val surfaceStyle: String = "theme",
+    val opacity: Int = 85,
+    val accentColorHex: String = "#D4AF37",
+    val bgColorHex: String = "#0B101B",
+    val fontScale: Int = 100,
+    val showCity: Boolean = true,
+    val showCountdown: Boolean = true,
+    val showStrip: Boolean = true
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("prayers", JSONArray().also { arr ->
@@ -45,6 +59,20 @@ data class PrayerPayload(
         put("currentTime24h", currentTime24h)
         put("lastUpdated", lastUpdated)
         put("dstOffset", dstOffset)
+        put("fajrEndFormatted", fajrEndFormatted)
+        put("dhuhrEndFormatted", dhuhrEndFormatted)
+        put("asrEndFormatted", asrEndFormatted)
+        put("maghribEndFormatted", maghribEndFormatted)
+        put("ishaEndFormatted", ishaEndFormatted)
+        put("showQazaEndTime", showQazaEndTime)
+        put("surfaceStyle", surfaceStyle)
+        put("opacity", opacity)
+        put("accentColorHex", accentColorHex)
+        put("bgColorHex", bgColorHex)
+        put("fontScale", fontScale)
+        put("showCity", showCity)
+        put("showCountdown", showCountdown)
+        put("showStrip", showStrip)
     }
 
     companion object {
@@ -98,7 +126,21 @@ data class PrayerPayload(
                     calculationMethod = o.optString("calculationMethod", "MWL"),
                     currentTime24h = o.optString("currentTime24h", ""),
                     lastUpdated = o.optLong("lastUpdated", System.currentTimeMillis()),
-                    dstOffset = o.optDouble("dstOffset", 0.0)
+                    dstOffset = o.optDouble("dstOffset", 0.0),
+                    fajrEndFormatted = o.optString("fajrEndFormatted", ""),
+                    dhuhrEndFormatted = o.optString("dhuhrEndFormatted", ""),
+                    asrEndFormatted = o.optString("asrEndFormatted", ""),
+                    maghribEndFormatted = o.optString("maghribEndFormatted", ""),
+                    ishaEndFormatted = o.optString("ishaEndFormatted", ""),
+                    showQazaEndTime = o.optBoolean("showQazaEndTime", true),
+                    surfaceStyle = o.optString("surfaceStyle", "theme"),
+                    opacity = o.optInt("opacity", 85),
+                    accentColorHex = o.optString("accentColorHex", "#D4AF37"),
+                    bgColorHex = o.optString("bgColorHex", "#0B101B"),
+                    fontScale = o.optInt("fontScale", 100),
+                    showCity = o.optBoolean("showCity", true),
+                    showCountdown = o.optBoolean("showCountdown", true),
+                    showStrip = o.optBoolean("showStrip", true)
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to parse PrayerPayload", e)
@@ -111,12 +153,16 @@ data class PrayerPayload(
 data class PrayerEntry(
     val name: String,           // "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha"
     val time: Long,             // epoch millis
-    val formattedTime: String   // "05:15" (already localized)
+    val formattedTime: String,  // "05:15" (already localized)
+    val endTime: Long = 0L,
+    val formattedEndTime: String = ""
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("name", name)
         put("time", time)
         put("formattedTime", formattedTime)
+        put("endTime", endTime)
+        put("formattedEndTime", formattedEndTime)
     }
 
     companion object {
@@ -126,7 +172,9 @@ data class PrayerEntry(
             val entry = PrayerEntry(
                 name = o.optString("name", "—"),
                 time = o.optLong("time", 0L),
-                formattedTime = o.optString("formattedTime", "--:--")
+                formattedTime = o.optString("formattedTime", "--:--"),
+                endTime = o.optLong("endTime", 0L),
+                formattedEndTime = o.optString("formattedEndTime", "")
             )
             // Validate prayer entry
             if (entry.name.isBlank()) {
@@ -191,14 +239,28 @@ data class AyahContent(
     }
 
     companion object {
-        fun fromJson(o: JSONObject) = AyahContent(
-            arabic = o.optString("arabic", ""),
-            translation = o.optString("translation", ""),
-            transliteration = o.optString("transliteration", ""),
-            reference = o.optString("reference", ""),
-            surahNumber = o.optInt("surahNumber", 0),
-            ayahNumber = o.optInt("ayahNumber", 0)
-        )
+        fun fromJson(o: JSONObject): AyahContent {
+            var ref = o.optString("reference", "").trim()
+            if (ref.isEmpty() || ref == "-" || ref == "—") {
+                ref = "Al-Inshirah 94:5-6"
+            }
+            var arabic = o.optString("arabic", "").trim()
+            if (arabic.isEmpty()) {
+                arabic = "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا • إِنَّ مَعَ الْعُسْرِ يُسْرًا"
+            }
+            var trans = o.optString("translation", "").trim()
+            if (trans.isEmpty()) {
+                trans = "For indeed, with hardship [will be] ease. Indeed, with hardship [will be] ease."
+            }
+            return AyahContent(
+                arabic = arabic,
+                translation = trans,
+                transliteration = o.optString("transliteration", ""),
+                reference = ref,
+                surahNumber = o.optInt("surahNumber", 94),
+                ayahNumber = o.optInt("ayahNumber", 5)
+            )
+        }
     }
 }
 

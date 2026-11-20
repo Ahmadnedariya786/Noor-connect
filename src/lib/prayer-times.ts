@@ -18,6 +18,13 @@ import {
   setCalculationMethod,
   CALCULATION_METHOD_LABELS
 } from './prayer-calculator';
+
+export {
+  type CalculationMethodName,
+  getCalculationMethod,
+  setCalculationMethod,
+  CALCULATION_METHOD_LABELS
+};
 import { prayerMethods, type PrayerMethod } from './prayer-methods';
 import { getPrayerMinuteOffsets, applyOffsetToDate, type PrayerMinuteOffsets } from './prayer-offsets';
 

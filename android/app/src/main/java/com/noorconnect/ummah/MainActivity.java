@@ -413,6 +413,16 @@ public class MainActivity extends BridgeActivity {
                                     String type = (widgetType != null) ? widgetType.toLowerCase().trim() : "next_prayer";
                                     Class<?> widgetClass;
                                     switch (type) {
+                                        case "circular_clock":
+                                        case "circular":
+                                        case "clock":
+                                            widgetClass = com.noorconnect.ummah.widgets.circularclock.NoorCircularClockWidget.class;
+                                            break;
+                                        case "compact_strip":
+                                        case "strip":
+                                        case "prayer_strip":
+                                            widgetClass = com.noorconnect.ummah.widgets.compactstrip.NoorCompactStripWidget.class;
+                                            break;
                                         case "daily_ayah":
                                         case "ayah":
                                             widgetClass = com.noorconnect.ummah.widgets.dailyayah.DailyAyahWidget.class;
@@ -473,6 +483,32 @@ public class MainActivity extends BridgeActivity {
                                     sendBroadcast(updateIntent);
                                     for (int id : nextPrayerIds) {
                                         com.noorconnect.ummah.widgets.nextprayer.NextPrayerWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
+                                    }
+                                }
+
+                                // Update Circular Clock Widgets
+                                ComponentName circularClockCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.circularclock.NoorCircularClockWidget.class);
+                                int[] circularClockIds = appWidgetManager.getAppWidgetIds(circularClockCn);
+                                if (circularClockIds != null && circularClockIds.length > 0) {
+                                    Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.setComponent(circularClockCn);
+                                    updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, circularClockIds);
+                                    sendBroadcast(updateIntent);
+                                    for (int id : circularClockIds) {
+                                        com.noorconnect.ummah.widgets.circularclock.NoorCircularClockWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
+                                    }
+                                }
+
+                                // Update Compact 6-Prayer Strip Widgets
+                                ComponentName compactStripCn = new ComponentName(MainActivity.this, com.noorconnect.ummah.widgets.compactstrip.NoorCompactStripWidget.class);
+                                int[] compactStripIds = appWidgetManager.getAppWidgetIds(compactStripCn);
+                                if (compactStripIds != null && compactStripIds.length > 0) {
+                                    Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                                    updateIntent.setComponent(compactStripCn);
+                                    updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, compactStripIds);
+                                    sendBroadcast(updateIntent);
+                                    for (int id : compactStripIds) {
+                                        com.noorconnect.ummah.widgets.compactstrip.NoorCompactStripWidget.Companion.updateWidget(MainActivity.this, appWidgetManager, id);
                                     }
                                 }
 
