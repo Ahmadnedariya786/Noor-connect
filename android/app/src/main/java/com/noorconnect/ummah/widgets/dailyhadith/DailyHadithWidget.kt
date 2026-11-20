@@ -92,16 +92,12 @@ class DailyHadithWidget : AppWidgetProvider() {
                 val scaledTrans = (12f * style.fontScale / 100f).coerceIn(10f, 16f)
                 views.setTextViewTextSize(R.id.widget_hadith_translation, TypedValue.COMPLEX_UNIT_SP, scaledTrans)
 
-                // ─── 5. Tap → deep-link /hadith?collection=X&book=N&number=N ───
-                val deeplink = WidgetDeeplink.buildHadith(
-                    hadith.collection.ifEmpty { "bukhari" },
-                    hadith.bookNumber,
-                    hadith.hadithNumber
-                )
+                // ─── 5. Tap → deep-link /hadith ───
+                val deeplink = WidgetDeeplink.buildHadith()
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
                 val pi = PendingIntent.getActivity(
                     context,
-                    102,
+                    105,
                     intent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )

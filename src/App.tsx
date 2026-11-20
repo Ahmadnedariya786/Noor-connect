@@ -68,18 +68,48 @@ function RouteBreadcrumbTracker() {
  */
 function DeepLinkListener() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const lastHandledUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     const routeFromUrl = (rawUrl: string) => {
-      if (!rawUrl) return;
-      // Accept "noorconnect://app/<path>" and bare "/<path>"
-      const path = rawUrl.replace(/^noorconnect:\/\/app/, '').replace(/^https?:\/\/[^/]+/, '');
-      if (!path || path === '/' || cancelled) return;
+      if (!rawUrl || cancelled) return;
+      if (lastHandledUrlRef.current === rawUrl) return;
+      lastHandledUrlRef.current = rawUrl;
+
+      // Normalize "noorconnect://app/<path>" and bare "/<path>"
+      let path = rawUrl.replace(/^noorconnect:\/\/app/, '').replace(/^https?:\/\/[^/]+/, '');
+      if (!path.startsWith('/')) {
+        path = '/' + path;
+      }
+
+      // Map widget paths to canonical verified routes
+      const pathname = path.split('?')[0].toLowerCase();
+      let targetPath = path;
+
+      if (pathname === '/prayers' || pathname === '/dashboard' || pathname === '') {
+        targetPath = '/';
+      } else if (pathname === '/quran/reading') {
+        targetPath = '/quran-progress';
+      } else if (pathname.startsWith('/hadith')) {
+        targetPath = '/hadith';
+      } else if (pathname.startsWith('/quran')) {
+        targetPath = '/quran';
+      } else if (pathname.startsWith('/tasbeeh') || pathname.startsWith('/tasbih')) {
+        targetPath = '/tasbeeh';
+      }
+
+      // If already at target path, do not navigate again
+      const currentFull = location.pathname + location.search;
+      if (currentFull === targetPath || location.pathname === targetPath) {
+        return;
+      }
+
       try {
-        navigate(path, { replace: true });
+        navigate(targetPath, { replace: true });
       } catch (e) {
-        // ignore navigation errors (e.g. unknown route)
-        console.warn('DeepLinkListener: could not navigate to', path, e);
+        console.warn('DeepLinkListener: could not navigate to', targetPath, e);
       }
     };
 
@@ -90,14 +120,18 @@ function DeepLinkListener() {
 
     // Cold start: if app was launched from a widget tap, get the launch URL
     CapacitorApp.getLaunchUrl()
-      .then(({ url }) => routeFromUrl(url))
+      .then((data) => {
+        if (data?.url) {
+          routeFromUrl(data.url);
+        }
+      })
       .catch(() => {});
 
     return () => {
       cancelled = true;
-      cleanupPromise.then(h => h?.remove?.()).catch(() => {});
+      cleanupPromise.then((h) => h?.remove?.()).catch(() => {});
     };
-  }, [navigate]);
+  }, [navigate, location.pathname, location.search]);
   return null;
 }
 
@@ -316,7 +350,7 @@ function AppRoutes() {
           <Route path="/settings/zakat" element={<ZakatCalculator />} />
           <Route path="/settings/widgets" element={<WidgetSettings />} />
           <Route path="/settings/:sectionId" element={<SettingsSubPage />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </Suspense>
@@ -379,8 +413,19 @@ function AppContent({ splashActive }: { splashActive?: boolean }) {
 }
 
 function AppShell() {
-  const [showSplash, setShowSplash] = useState(true);
+  const isWarmOrWidgetLaunch = typeof window !== 'undefined' && (
+    sessionStorage.getItem('noor_app_booted') === 'true'
+  );
+  const [showSplash, setShowSplash] = useState(!isWarmOrWidgetLaunch);
   const { animationEnabled, splashGreetingEnabled, splashEnabled } = useSettings();
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('noor_app_booted', 'true');
+    } catch {
+      // ignore
+    }
+  }, []);
   // Always-on auto backup: runs immediately, then every 20 minutes of app use
   // while any page is open (not just the Settings page).
   useAutoBackup();

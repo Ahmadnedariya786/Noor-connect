@@ -231,7 +231,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
                 val pi = PendingIntent.getActivity(
                     context,
-                    100,
+                    101,
                     intent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
@@ -243,7 +243,7 @@ class NextPrayerWidget : AppWidgetProvider() {
                 }
                 val refreshPi = PendingIntent.getBroadcast(
                     context,
-                    102,
+                    201,
                     refreshIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
@@ -264,13 +264,20 @@ class NextPrayerWidget : AppWidgetProvider() {
             try {
                 val prayerEntries = payload.prayers
                 fun findPrayerTime(name: String): String {
-                    val match = prayerEntries.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                    val match = prayerEntries.firstOrNull { entry ->
+                        entry.name.equals(name, ignoreCase = true) ||
+                        (name.equals("Dhuhr", ignoreCase = true) &&
+                         (entry.name.contains("jumu", ignoreCase = true) || entry.name.contains("juma", ignoreCase = true)))
+                    }
                     return match?.formattedTime ?: "--:--"
                 }
 
+                val isFriday = payload.gregorianDate.startsWith("Fri", ignoreCase = true)
+                val dhuhrLabel = if (isFriday) "JUMA" else "DHUHR"
+
                 val prayers = listOf(
                     Triple("FAJR", findPrayerTime("Fajr"), R.id.widget_name_fajr to R.id.widget_time_fajr),
-                    Triple("DHUHR", findPrayerTime("Dhuhr"), R.id.widget_name_dhuhr to R.id.widget_time_dhuhr),
+                    Triple(dhuhrLabel, findPrayerTime("Dhuhr"), R.id.widget_name_dhuhr to R.id.widget_time_dhuhr),
                     Triple("ASR", findPrayerTime("Asr"), R.id.widget_name_asr to R.id.widget_time_asr),
                     Triple("MAGHRIB", findPrayerTime("Maghrib"), R.id.widget_name_maghrib to R.id.widget_time_maghrib),
                     Triple("ISHA", findPrayerTime("Isha"), R.id.widget_name_isha to R.id.widget_time_isha)

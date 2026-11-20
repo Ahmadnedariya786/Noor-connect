@@ -109,12 +109,12 @@ class QuranProgressWidget : AppWidgetProvider() {
                 val contentDesc = context.getString(R.string.widget_a11y_quran_progress, percentVal, streakVal)
                 views.setContentDescription(R.id.widget_root, contentDesc)
 
-                // ─── 7. Tap → deep-link /quran/reading ───
+                // ─── 7. Tap → deep-link /quran-progress ───
                 val deeplink = WidgetDeeplink.buildQuranReading()
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
                 val pi = PendingIntent.getActivity(
                     context,
-                    103,
+                    106,
                     intent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )

@@ -46,68 +46,65 @@
                 android:id="@+id/widget_header_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
                 android:text="نور • NEXT PRAYER"
                 android:textColor="@color/widget_accent_gold"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:singleLine="true" />
 
-            <!-- RemoteViews-Safe Spacer (FrameLayout, NEVER <View>) -->
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-            <!-- Hijri Date pill (Concise, single-line, ellipsized so it never encroaches countdown) -->
+            <!-- Hijri Date pill (Middle flexible element: layout_weight="1" absorbs width compression) -->
             <TextView
                 android:id="@+id/widget_hijri_date"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:background="@drawable/widget_chip_shape"
                 android:paddingStart="6dp"
                 android:paddingEnd="6dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
                 android:singleLine="true"
+                android:maxLines="1"
                 android:ellipsize="end"
-                android:maxWidth="100dp"
+                android:gravity="center"
                 android:text="9 Jumādā II"
                 android:textColor="@color/widget_accent_gold"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="4dp" />
+                android:textSize="9.5sp"
+                android:textStyle="bold" />
 
-            <!-- Countdown pill (Unclipped, wrap_content, weight=0, ellipsize=none) -->
+            <!-- Countdown pill (Unclipped, wrap_content, minWidth 46dp, singleLine) -->
             <TextView
                 android:id="@+id/widget_countdown_pill"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
+                android:minWidth="46dp"
                 android:background="@drawable/widget_chip_emerald"
                 android:paddingStart="7dp"
                 android:paddingEnd="7dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:singleLine="true"
+                android:maxLines="1"
                 android:ellipsize="none"
+                android:gravity="center"
                 android:text="In 46m"
                 android:textColor="@color/widget_accent_emerald"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:layout_marginEnd="4dp" />
 
-            <!-- On-Widget ↻ Refresh Button -->
+            <!-- On-Widget ↻ Refresh Button (24dp x 24dp, centered) -->
             <TextView
                 android:id="@+id/widget_btn_refresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:gravity="center"
                 android:text="↻"
                 android:textColor="@color/widget_accent_gold"
                 android:textSize="12sp"
-                android:textStyle="bold"
-                android:paddingStart="3dp"
-                android:paddingEnd="1dp" />
+                android:textStyle="bold" />
 
             <!-- Legacy Clock stub (kept hidden to free top bar room and avoid clipping) -->
             <TextClock

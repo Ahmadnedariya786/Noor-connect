@@ -370,7 +370,8 @@ const MakruhRowBadge: React.FC = memo(() => {
       style={{
         fontSize: '0.60rem',
         fontWeight: 800,
-        padding: '2px 6px',
+        padding: '1.5px 7px',
+        lineHeight: 1.25,
         borderRadius: '9999px',
         whiteSpace: 'nowrap',
         flexShrink: 0,
@@ -1480,23 +1481,22 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                 }}
               >
                 <WaqtIcon name={rawName} isActive={isRowActive} />
-                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-                    <span
-                      style={{
-                        color: 'var(--text-primary)',
-                        fontWeight: isRowActive ? 700 : 600,
-                        fontSize: '0.95rem',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {localizedName}
-                    </span>
-                    {isMakruhRow && makruhState.activeWindow && (
-                      <MakruhRowBadge />
-                    )}
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px', minWidth: 0, flex: 1 }}>
+                  <span
+                    style={{
+                      color: 'var(--text-primary)',
+                      fontWeight: isRowActive ? 700 : 600,
+                      fontSize: '0.95rem',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {localizedName}
+                  </span>
+                  {/* Makruh Badge sits cleanly below prayer name for zero horizontal collision */}
+                  {isMakruhRow && makruhState.activeWindow && (
+                    <MakruhRowBadge />
+                  )}
                   {/* Primary Masjid Jamaat Time sub-line */}
                   {rowJamaatTime && (
                     <span
@@ -1545,6 +1545,7 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   alignItems: 'center',
                   gap: '10px',
                   flexShrink: 0,
+                  marginLeft: '8px',
                 }}
               >
                 <div

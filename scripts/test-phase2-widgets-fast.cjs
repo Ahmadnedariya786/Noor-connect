@@ -91,6 +91,63 @@ assert.ok(circularClockXml.includes('widget_btn_refresh'), 'Circular clock widge
 assert.ok(compactStripXml.includes('widget_btn_refresh'), 'Compact strip widget must have refresh button');
 console.log('✓ PASS: On-widget ↻ refresh button present across all layouts');
 
+// 9. Verify 4x2 Next Prayer top row unclipped layout (middle weight=1, countdown minWidth)
+assert.ok(
+  nextPrayerXml.includes('android:id="@+id/widget_hijri_date"') &&
+  nextPrayerXml.includes('android:layout_width="0dp"') &&
+  nextPrayerXml.includes('android:layout_weight="1"'),
+  'Middle Hijri date pill must absorb width compression via layout_weight="1"'
+);
+assert.ok(
+  nextPrayerXml.includes('android:id="@+id/widget_countdown_pill"') &&
+  nextPrayerXml.includes('android:minWidth="46dp"'),
+  'Countdown pill must have minWidth="46dp" to prevent In 5 clipping'
+);
+console.log('✓ PASS: 4x2 Next Prayer top-right countdown unclipped layout verified');
+
+// 10. Verify Makruh Row Badge stacked cleanly below prayer name with margin-left on time block
+const prayerTimesSectionPath = path.resolve(__dirname, '../src/components/PrayerTimesSection.tsx');
+const prayerTimesSectionCode = fs.readFileSync(prayerTimesSectionPath, 'utf8');
+assert.ok(
+  prayerTimesSectionCode.includes("alignItems: 'flex-start'") &&
+  prayerTimesSectionCode.includes('<MakruhRowBadge />'),
+  'MakruhRowBadge must sit vertically below prayer name in flex column'
+);
+assert.ok(
+  prayerTimesSectionCode.includes("marginLeft: '8px'"),
+  'Right time block must have marginLeft: 8px for >=12px clearance'
+);
+console.log('✓ PASS: Makruh badge zero-overlap placement verified (video_3.mp4 fix)');
+
+// 11. Verify Friday Dhuhr / Jumuah lookup in NextPrayerWidget & NoorCompactStripWidget
+const nextPrayerCode = fs.readFileSync(path.resolve(__dirname, '../android/app/src/main/java/com/noorconnect/ummah/widgets/nextprayer/NextPrayerWidget.kt'), 'utf8');
+const compactStripCode = fs.readFileSync(path.resolve(__dirname, '../android/app/src/main/java/com/noorconnect/ummah/widgets/compactstrip/NoorCompactStripWidget.kt'), 'utf8');
+
+assert.ok(nextPrayerCode.includes('jumu'), 'NextPrayerWidget must match Friday Juma/Jumuah for Dhuhr time');
+assert.ok(compactStripCode.includes('jumu'), 'NoorCompactStripWidget must match Friday Juma/Jumuah for Dhuhr time');
+assert.ok(compactStripCode.includes('JUMA'), 'NoorCompactStripWidget must show JUMA label on Friday');
+console.log('✓ PASS: Friday Dhuhr/Juma non-empty time verified across widgets');
+
+// 12. Verify safe catch-all route and intent consumption
+const appPath = path.resolve(__dirname, '../src/App.tsx');
+const appCode = fs.readFileSync(appPath, 'utf8');
+assert.ok(
+  appCode.includes('<Route path="*" element={<Navigate to="/" replace />} />'),
+  'App.tsx must have safe Navigate to / catch-all route'
+);
+assert.ok(
+  appCode.includes('lastHandledUrlRef.current === rawUrl'),
+  'DeepLinkListener must deduplicate navigation to prevent loops'
+);
+
+const mainActivityPath = path.resolve(__dirname, '../android/app/src/main/java/com/noorconnect/ummah/MainActivity.java');
+const mainActivityCode = fs.readFileSync(mainActivityPath, 'utf8');
+assert.ok(
+  mainActivityCode.includes('consumed.setData(null)'),
+  'MainActivity must clear intent data after consumption to prevent re-delivery loop'
+);
+console.log('✓ PASS: Intent consumption & React Router loop guards verified');
+
 console.log('====================================================');
 console.log('ALL PHASE 2 FAST VERIFICATION CHECKS PASSED (100%)');
 console.log('====================================================');

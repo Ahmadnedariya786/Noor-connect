@@ -120,6 +120,14 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(NoorMediaBridgePlugin.class);
         super.onCreate(savedInstanceState);
 
+        // Consume deep-link data after bridge initialization to prevent redundant re-deliveries on resume
+        Intent coldIntent = getIntent();
+        if (coldIntent != null && coldIntent.getData() != null && "noorconnect".equals(coldIntent.getData().getScheme())) {
+            Intent consumed = new Intent(coldIntent);
+            consumed.setData(null);
+            setIntent(consumed);
+        }
+
         // Apply persisted native theme background color immediately to eliminate cold-start flash
         try {
             String bgHex = getSharedPreferences("noor_native_theme", MODE_PRIVATE).getString("bg_hex", "#050914");
@@ -1856,9 +1864,11 @@ public class MainActivity extends BridgeActivity {
         setIntent(intent);
         Uri data = intent.getData();
         if (data != null && "noorconnect".equals(data.getScheme())) {
-            // BridgeActivity forwards new intents to the App plugin, which fires
-            // appUrlOpen on the JS side. Setting the intent first ensures
-            // getLaunchUrl() / getIntent() also reflect the deep link.
+            // Forward deep link once to Capacitor Bridge
+            // Then consume data from stored intent to prevent repeated launches on resume
+            Intent consumed = new Intent(intent);
+            consumed.setData(null);
+            setIntent(consumed);
         }
     }
 

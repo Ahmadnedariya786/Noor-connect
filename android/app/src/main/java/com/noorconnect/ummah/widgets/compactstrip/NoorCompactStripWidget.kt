@@ -125,12 +125,19 @@ class NoorCompactStripWidget : AppWidgetProvider() {
                 // 5. Populate 6 Prayer Slots
                 val prayerEntries = payload.prayers
                 fun getSlotTime(name: String, fallback: String): String {
-                    val match = prayerEntries.firstOrNull { it.name.contains(name, ignoreCase = true) }
+                    val match = prayerEntries.firstOrNull { entry ->
+                        entry.name.contains(name, ignoreCase = true) ||
+                        (name.equals("dhuhr", ignoreCase = true) &&
+                         (entry.name.contains("jumu", ignoreCase = true) || entry.name.contains("juma", ignoreCase = true)))
+                    }
                     return match?.formattedTime?.replace(" AM", "")?.replace(" PM", "")?.trim() ?: fallback
                 }
 
                 val nextIdx = payload.nextPrayerIndex.coerceIn(0, prayerEntries.size - 1)
                 val targetPrayerName = prayerEntries.getOrNull(nextIdx)?.name?.lowercase() ?: "asr"
+
+                val isFriday = gregDisplay.startsWith("Fri", ignoreCase = true) || payload.gregorianDate.startsWith("Fri", ignoreCase = true)
+                views.setTextViewText(R.id.widget_name_dhuhr, if (isFriday) "JUMA" else "DHUHR")
 
                 val slots = listOf(
                     Triple("fajr", R.id.widget_name_fajr, R.id.widget_time_fajr),
@@ -161,7 +168,7 @@ class NoorCompactStripWidget : AppWidgetProvider() {
                 }
                 val refreshPi = PendingIntent.getBroadcast(
                     context,
-                    301,
+                    203,
                     refreshIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
@@ -172,7 +179,7 @@ class NoorCompactStripWidget : AppWidgetProvider() {
                 val openIntent = WidgetDeeplink.toIntent(context, deeplink)
                 val openPi = PendingIntent.getActivity(
                     context,
-                    302,
+                    103,
                     openIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )

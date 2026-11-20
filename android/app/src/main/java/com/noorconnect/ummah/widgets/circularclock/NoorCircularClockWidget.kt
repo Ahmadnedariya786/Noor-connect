@@ -175,7 +175,7 @@ class NoorCircularClockWidget : AppWidgetProvider() {
                 }
                 val refreshPi = PendingIntent.getBroadcast(
                     context,
-                    201,
+                    202,
                     refreshIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
@@ -186,7 +186,7 @@ class NoorCircularClockWidget : AppWidgetProvider() {
                 val openIntent = WidgetDeeplink.toIntent(context, deeplink)
                 val openPi = PendingIntent.getActivity(
                     context,
-                    202,
+                    102,
                     openIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )

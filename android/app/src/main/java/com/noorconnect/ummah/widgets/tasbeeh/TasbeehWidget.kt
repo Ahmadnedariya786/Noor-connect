@@ -109,7 +109,7 @@ class TasbeehWidget : AppWidgetProvider() {
                 val openAppIntent = WidgetDeeplink.toIntent(context, WidgetDeeplink.buildTasbeeh())
                 val openAppPi = PendingIntent.getActivity(
                     context,
-                    appWidgetId * 10 + 3,
+                    107,
                     openAppIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )

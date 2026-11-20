@@ -108,7 +108,7 @@ class DailyAyahWidget : AppWidgetProvider() {
                 val intent = WidgetDeeplink.toIntent(context, deeplink)
                 val pi = PendingIntent.getActivity(
                     context,
-                    101,
+                    104,
                     intent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
@@ -120,7 +120,7 @@ class DailyAyahWidget : AppWidgetProvider() {
                 }
                 val refreshPi = PendingIntent.getBroadcast(
                     context,
-                    103,
+                    204,
                     refreshIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )

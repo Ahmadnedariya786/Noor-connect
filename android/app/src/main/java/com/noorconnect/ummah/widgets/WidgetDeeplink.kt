@@ -28,35 +28,28 @@ object WidgetDeeplink {
         Uri.Builder()
             .scheme(SCHEME)
             .authority(HOST)
-            .appendPath("prayers")
-            .appendQueryParameter("focus", focus)
+            .appendPath("dashboard")
             .build()
 
-    fun buildQuran(surah: Int, ayah: Int): Uri =
+    fun buildQuran(surah: Int = 1, ayah: Int = 1): Uri =
         Uri.Builder()
             .scheme(SCHEME)
             .authority(HOST)
             .appendPath("quran")
-            .appendQueryParameter("surah", surah.toString())
-            .appendQueryParameter("ayah", ayah.toString())
             .build()
 
-    fun buildHadith(collection: String, book: Int, number: Int): Uri =
+    fun buildHadith(collection: String = "", book: Int = 0, number: Int = 0): Uri =
         Uri.Builder()
             .scheme(SCHEME)
             .authority(HOST)
             .appendPath("hadith")
-            .appendQueryParameter("collection", collection)
-            .appendQueryParameter("book", book.toString())
-            .appendQueryParameter("number", number.toString())
             .build()
 
     fun buildQuranReading(): Uri =
         Uri.Builder()
             .scheme(SCHEME)
             .authority(HOST)
-            .appendPath("quran")
-            .appendPath("reading")
+            .appendPath("quran-progress")
             .build()
 
     fun buildTasbeeh(): Uri =
@@ -68,13 +61,13 @@ object WidgetDeeplink {
 
     /**
      * Build a launcher Intent that opens MainActivity with the deep-link URI.
-     * MainActivity must declare an intent-filter for this scheme in the
-     * AndroidManifest, OR MainActivity handles it via onNewIntent.
+     * Uses FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP to bring existing
+     * MainActivity to the front smoothly without cold-rebooting or flashing.
      */
     fun toIntent(context: Context, uri: Uri): Intent =
         Intent(Intent.ACTION_VIEW).apply {
             data = uri
             setClassName(context.packageName, "com.noorconnect.ummah.MainActivity")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
 }
