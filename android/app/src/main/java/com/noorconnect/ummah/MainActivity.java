@@ -22,6 +22,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
+import android.webkit.GeolocationPermissions;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -63,9 +64,13 @@ public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
     private static final int EXACT_ALARM_PERMISSION_REQUEST = 9001;
     private static final int BATTERY_OPTIMIZATION_REQUEST = 9002;
+    private static final int WEBVIEW_LOCATION_REQUEST_CODE = 9003;
     private static final String PREFS_ONBOARDING = "noor_permission_flow_prefs";
     private static final String KEY_EXACT_ALARM_REDIRECTED = "exact_alarm_redirected";
     private static final String KEY_BATTERY_PROMPTED = "battery_whitelist_prompted";
+
+    private String mPendingGeoOrigin = null;
+    private GeolocationPermissions.Callback mPendingGeoCallback = null;
 
     // Standard Android Chrome User-Agent prevents GitHub CDN / Fastly rate-limiting and connection throttling
     private static final String CHROME_USER_AGENT =
@@ -152,6 +157,27 @@ public class MainActivity extends BridgeActivity {
                 Bridge bridge = getBridge();
                 if (bridge != null) {
                     webView.setWebChromeClient(new BridgeWebChromeClient(bridge) {
+                        @Override
+                        public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+                            try {
+                                if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                                    ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                    callback.invoke(origin, true, false);
+                                } else {
+                                    mPendingGeoOrigin = origin;
+                                    mPendingGeoCallback = callback;
+                                    ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                                        WEBVIEW_LOCATION_REQUEST_CODE);
+                                }
+                            } catch (Throwable t) {
+                                Log.w(TAG, "Error handling WebView geolocation permission prompt", t);
+                                try {
+                                    callback.invoke(origin, false, false);
+                                } catch (Throwable ignored) {}
+                            }
+                        }
+
                         @Override
                         public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
                             if (consoleMessage != null) {
@@ -753,9 +779,9 @@ public class MainActivity extends BridgeActivity {
             }
 
             try {
-                // Explicitly disable WebView geolocation prompts to prevent native Chromium dialog crashes on Android 15.
-                // Noor Connect utilizes privacy-first, secure HTTPS IP and city-level geocoding in JS.
-                webView.getSettings().setGeolocationEnabled(false);
+                // Enable WebView geolocation and configure database storage so standard navigator.geolocation resolves smoothly
+                webView.getSettings().setGeolocationEnabled(true);
+                webView.getSettings().setGeolocationDatabasePath(getFilesDir().getPath());
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to configure WebView geolocation settings", t);
             }
@@ -1851,6 +1877,31 @@ public class MainActivity extends BridgeActivity {
             });
         }
         super.onBackPressed();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == WEBVIEW_LOCATION_REQUEST_CODE) {
+            boolean granted = false;
+            if (grantResults != null && grantResults.length > 0) {
+                for (int res : grantResults) {
+                    if (res == PackageManager.PERMISSION_GRANTED) {
+                        granted = true;
+                        break;
+                    }
+                }
+            }
+            if (mPendingGeoCallback != null) {
+                try {
+                    mPendingGeoCallback.invoke(mPendingGeoOrigin, granted, false);
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed to invoke pending geolocation callback", t);
+                }
+                mPendingGeoCallback = null;
+                mPendingGeoOrigin = null;
+            }
+        }
     }
 
     @Override

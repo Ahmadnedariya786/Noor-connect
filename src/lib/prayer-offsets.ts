@@ -166,20 +166,37 @@ export function adjustTimeStringByMinutes(timeStr: string, minutes: number): str
   return `${newHours24.toString().padStart(2, '0')}:${minPad}${tzSuffix}`;
 }
 
+function getMaghribIhtiyatOffset(): number {
+  try {
+    const val = localStorage.getItem('maghrib_ihtiyat_min');
+    if (val !== null) {
+      const parsed = parseInt(val, 10);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+  } catch {
+    // Storage fallback
+  }
+  return 0;
+}
+
 /**
- * Adjust prayer timings object by saved offsets
+ * Adjust prayer timings object by saved offsets and optional Maghrib precaution (+3m)
  */
 export function applyOffsetsToTimings<T extends Record<string, string>>(
   timings: T,
   offsets?: PrayerMinuteOffsets
 ): T {
   const currentOffsets = offsets || getPrayerMinuteOffsets();
+  const maghribIhtiyat = getMaghribIhtiyatOffset();
   const adjusted: any = { ...timings };
 
   const prayers = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
   for (const prayer of prayers) {
     const key = prayer.toLowerCase() as keyof PrayerMinuteOffsets;
-    const offset = currentOffsets[key];
+    let offset = currentOffsets[key] || 0;
+    if (prayer === 'Maghrib') {
+      offset += maghribIhtiyat;
+    }
     if (offset !== 0 && adjusted[prayer]) {
       adjusted[prayer] = adjustTimeStringByMinutes(adjusted[prayer], offset);
     }

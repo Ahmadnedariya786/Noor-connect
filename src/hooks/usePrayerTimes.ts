@@ -14,7 +14,8 @@ import { isNativePlatform } from '@/lib/capacitor-utils';
 import { getFallbackLocationByTimezone, LOCATION_STORAGE_KEY } from '@/lib/location-config';
 import { getMadhab } from '@/lib/storage';
 import { usePrayerNotifications } from './usePrayerNotifications';
-import { getPrayerMinuteOffsets, applyOffsetToDate, PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
+import { getPrayerMinuteOffsets, applyOffsetToDate, applyOffsetsToTimings, PRAYER_OFFSETS_CHANGED_EVENT } from '@/lib/prayer-offsets';
+import { getMaghribIhtiyatMin } from '@/lib/prayer-times';
 import { PRAYER_DATA_REFRESHED_EVENT } from '@/lib/online-prayer-api';
 import { findNearestOfflineCity } from '@/data/cities';
 
@@ -432,7 +433,7 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
       const dayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const madhab = getMadhab();
       const offsets = getPrayerMinuteOffsets();
-      const offsetsKey = `${offsets.fajr}_${offsets.sunrise}_${offsets.dhuhr}_${offsets.asr}_${offsets.maghrib}_${offsets.isha}`;
+      const offsetsKey = `${offsets.fajr}_${offsets.sunrise}_${offsets.dhuhr}_${offsets.asr}_${offsets.maghrib}_${offsets.isha}_ih${getMaghribIhtiyatMin()}`;
       const fetchSignature = `${locationKey}|${dayKey}|${methodId}|${madhab}|${offsetsKey}`;
 
       if (lastFetchSignatureRef.current === fetchSignature) {
@@ -486,13 +487,15 @@ export function usePrayerTimes(): UsePrayerTimesReturn {
         return d;
       };
 
+      const adjustedTimings = applyOffsetsToTimings(timings, offsets);
+
       const prayerDates = {
-        fajr: applyOffsetToDate(parseTime(timings.Fajr), 'fajr', offsets),
-        sunrise: applyOffsetToDate(parseTime(timings.Sunrise), 'sunrise', offsets),
-        dhuhr: applyOffsetToDate(parseTime(timings.Dhuhr), 'dhuhr', offsets),
-        asr: applyOffsetToDate(parseTime(timings.Asr), 'asr', offsets),
-        maghrib: applyOffsetToDate(parseTime(timings.Maghrib), 'maghrib', offsets),
-        isha: applyOffsetToDate(parseTime(timings.Isha), 'isha', offsets),
+        fajr: parseTime(adjustedTimings.Fajr),
+        sunrise: parseTime(adjustedTimings.Sunrise),
+        dhuhr: parseTime(adjustedTimings.Dhuhr),
+        asr: parseTime(adjustedTimings.Asr),
+        maghrib: parseTime(adjustedTimings.Maghrib),
+        isha: parseTime(adjustedTimings.Isha),
       };
 
       // Parse optional times from API if available

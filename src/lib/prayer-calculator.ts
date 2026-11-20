@@ -25,6 +25,7 @@ export interface PrayerTimesResult {
   sunrise: Date;
   dhuhr: Date;
   asr: Date;
+  sunset?: Date;
   maghrib: Date;
   isha: Date;
 }
@@ -114,10 +115,9 @@ export const calculatePrayerTimes = (
     params.madhab = Madhab.Shafi; // Shafi, Maliki, Hanbali all use Shafi calculation
   }
 
-  // Align Karachi calculation with regional standard (dhuhr solar noon, 1-min Asr precaution)
+  // Align Karachi calculation with regional standard (dhuhr solar noon)
   if (method === 'Karachi' && params.methodAdjustments) {
     params.methodAdjustments.dhuhr = 0;
-    params.methodAdjustments.asr = 1;
   }
   
   const prayerTimes = new PrayerTimes(coordinates, date, params);
@@ -133,6 +133,7 @@ export const calculatePrayerTimes = (
     sunrise: prayerTimes.sunrise,
     dhuhr: prayerTimes.dhuhr,
     asr: prayerTimes.asr,
+    sunset: prayerTimes.maghrib,
     maghrib: finalMaghrib,
     isha: prayerTimes.isha,
   };

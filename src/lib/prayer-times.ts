@@ -256,6 +256,15 @@ export function setMaghribIhtiyatMin(minutes: number): void {
   try {
     localStorage.setItem(STORAGE_MAGHRIB_IHTIYAT, minutes.toString());
     localStorage.removeItem('cached_prayer_times');
+    localStorage.removeItem('noor_cached_dashboard_prayers');
+    localStorage.removeItem('noor_cached_suhoor_iftaar');
+    try {
+      import('@/lib/aladhan-api').then(({ AladhanAPI }) => {
+        AladhanAPI.clearCache();
+      }).catch(() => {});
+    } catch {
+      // Handled silently
+    }
     window.dispatchEvent(new Event('prayer-offsets-changed'));
     window.dispatchEvent(new CustomEvent('prayer-method-changed', { detail: { maghribIhtiyat: minutes } }));
   } catch {

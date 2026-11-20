@@ -37,7 +37,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { widgetRefreshManager } from "@/lib/widget-refresh";
 import { getPrayerDisplayName, isMatchingPrayer } from "@/lib/prayer-utils";
 import { calculatePrayerTimes, formatPrayerTime } from "@/lib/prayer-calculator";
-import { autoApplyRegionalPresetIfFirstMigration } from "@/lib/prayer-times";
+import { autoApplyRegionalPresetIfFirstMigration, getMaghribIhtiyatMin } from "@/lib/prayer-times";
 import { loadStoredLocation } from "@/lib/location-state";
 import { LOCATION_STORAGE_KEY } from "@/lib/location-config";
 
@@ -387,7 +387,7 @@ export default function Dashboard() {
       );
       cachedRawTimings = rawTimings;
       const offsets = getPrayerMinuteOffsets();
-      cachedOffsetsFingerprint = JSON.stringify(offsets);
+      cachedOffsetsFingerprint = `${JSON.stringify(offsets)}_ih${getMaghribIhtiyatMin()}`;
       const timings = applyOffsetsToTimings(rawTimings, offsets);
 
       // Update global location state with the fetched timezone if it's different or not set
@@ -596,7 +596,7 @@ export default function Dashboard() {
   // Re-read offsets on mount or route transition
   const lastOffsetsRef = useRef(cachedOffsetsFingerprint || "");
   useEffect(() => {
-    const currentOffsetsStr = JSON.stringify(getPrayerMinuteOffsets());
+    const currentOffsetsStr = `${JSON.stringify(getPrayerMinuteOffsets())}_ih${getMaghribIhtiyatMin()}`;
     if (lastOffsetsRef.current !== currentOffsetsStr) {
       lastOffsetsRef.current = currentOffsetsStr;
       cachedOffsetsFingerprint = currentOffsetsStr;

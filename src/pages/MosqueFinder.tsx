@@ -631,32 +631,40 @@ function InlineJamaatStrip({ times, onEdit }: InlineJamaatStripProps) {
 
   return (
     <div
-      className="p-2 rounded-xl border space-y-1.5 transition-all select-none"
+      role="button"
+      tabIndex={0}
+      onClick={onEdit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onEdit();
+        }
+      }}
+      className="p-2 rounded-xl border space-y-1.5 transition-all select-none cursor-pointer hover:border-[var(--accent)] active:scale-[0.99] group"
       style={{
         background: "var(--surface-2)",
         borderColor: "var(--border)",
       }}
+      title="Tap anywhere to edit Jamaat times"
     >
       <div className="flex items-center justify-between text-[10px]">
         <span className="font-extrabold uppercase tracking-wider text-[var(--accent-text)] flex items-center gap-1">
           <span>🕌</span>
           <span>Jamaat Schedule</span>
         </span>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="flex items-center gap-0.5 text-[10px] font-bold text-[var(--accent-text)] hover:underline cursor-pointer"
+        <span
+          className="flex items-center gap-0.5 text-[10px] font-bold text-[var(--accent-text)] group-hover:underline"
         >
           <Edit3 className="w-2.5 h-2.5" />
           <span>{hasAnyTime ? "Edit Times" : "+ Add Times"}</span>
-        </button>
+        </span>
       </div>
 
       <div className="grid grid-cols-5 gap-1 text-center">
         {slots.map((s) => (
           <div
             key={s.label}
-            className="p-1 rounded-lg border flex flex-col justify-center"
+            className="p-1 rounded-lg border flex flex-col justify-center transition-colors group-hover:border-[var(--accent)]"
             style={{
               background: "var(--surface)",
               borderColor: "var(--border)",
@@ -708,6 +716,7 @@ function MosqueFinderContent() {
   const [selectedMosqueForJamaat, setSelectedMosqueForJamaat] = useState<MosqueItem | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [streetCoords, setStreetCoords] = useState<StreetLocationResult | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<string>("");
 
   const lat = location.latitude;
   const lon = location.longitude;
@@ -733,12 +742,25 @@ function MosqueFinderContent() {
         let activeLat = lat;
         let activeLon = lon;
         if (userRefresh) {
+          setGpsStatus("Locating GPS...");
           const freshPos = await getCurrentStreetLocation(lat, lon, true);
           setStreetCoords(freshPos);
           if (freshPos.isLiveGps) {
             activeLat = freshPos.latitude;
             activeLon = freshPos.longitude;
             location.setLocation(freshPos.latitude, freshPos.longitude, location.locationName, location.timeZone);
+            setGpsStatus("📍 GPS Locked");
+            toast({
+              title: "📍 GPS Locked",
+              description: `Exact street pin: ${freshPos.latitude.toFixed(4)}° N, ${freshPos.longitude.toFixed(4)}° E`,
+            });
+          } else {
+            setGpsStatus("City Location");
+            toast({
+              title: "City Location Active",
+              description: "Enable location permissions to pinpoint street GPS.",
+              variant: "destructive",
+            });
           }
         }
         let results = await fetchNearbyMosques(activeLat, activeLon, radiusMeters, force);
@@ -762,7 +784,7 @@ function MosqueFinderContent() {
         setIsLoading(false);
       }
     },
-    [lat, lon, radiusMeters, location]
+    [lat, lon, radiusMeters, location, toast]
   );
 
   useEffect(() => {
@@ -897,15 +919,23 @@ function MosqueFinderContent() {
                     disabled={isLoading}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 cursor-pointer transition-all active:scale-95"
                     style={{
-                      background: streetCoords?.isLiveGps ? "rgba(16, 185, 129, 0.15)" : "var(--surface-2)",
-                      color: streetCoords?.isLiveGps ? "#10B981" : "var(--text-secondary)",
-                      border: `1px solid ${streetCoords?.isLiveGps ? "rgba(16, 185, 129, 0.3)" : "var(--border)"}`,
+                      background: (streetCoords?.isLiveGps || gpsStatus === "📍 GPS Locked") ? "rgba(16, 185, 129, 0.15)" : "var(--surface-2)",
+                      color: (streetCoords?.isLiveGps || gpsStatus === "📍 GPS Locked") ? "#10B981" : "var(--text-secondary)",
+                      border: `1px solid ${(streetCoords?.isLiveGps || gpsStatus === "📍 GPS Locked") ? "rgba(16, 185, 129, 0.3)" : "var(--border)"}`,
                     }}
                     title="Tap to acquire fresh street GPS"
                   >
                     <span className={isLoading ? "animate-spin" : ""}>📍</span>
-                    <span>{streetCoords?.isLiveGps ? "Live GPS" : (location.locationName?.split(',')[0]?.trim() || "Saved City")}</span>
-                    {!streetCoords?.isLiveGps && <span className="text-[9px] opacity-75 underline ml-0.5">Live GPS</span>}
+                    <span>
+                      {gpsStatus
+                        ? gpsStatus
+                        : streetCoords?.isLiveGps
+                        ? "Live GPS"
+                        : (location.locationName?.split(',')[0]?.trim() || "Saved City")}
+                    </span>
+                    {!streetCoords?.isLiveGps && !gpsStatus && (
+                      <span className="text-[9px] opacity-75 underline ml-0.5">Live GPS</span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1016,7 +1046,7 @@ function MosqueFinderContent() {
               >
                 <span className="text-base shrink-0">📍</span>
                 <span className="leading-snug">
-                  Showing nearest mosques within 15 km (none tagged in OSM within {autoExpandedFromRadius / 1000} km)
+                  No mosques tagged on OSM within {autoExpandedFromRadius / 1000} km • Showing nearest within 15 km
                 </span>
               </div>
             )}
