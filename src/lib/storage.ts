@@ -154,6 +154,8 @@ export const setMadhab = (madhab: MadhabType): void => {
   try {
     localStorage.removeItem('cached_prayer_times');
     localStorage.removeItem('noor_cached_dashboard_prayers');
+    localStorage.removeItem('noor_aladhan_monthly_cache_v2');
+    localStorage.removeItem('noor_aladhan_monthly_cache');
   } catch {
     // Safe storage fallback
   }

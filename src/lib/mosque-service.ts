@@ -8,8 +8,11 @@
  * and direct Google Maps navigation.
  */
 
-import { Capacitor } from '@capacitor/core';
-import { Geolocation } from '@capacitor/geolocation';
+import {
+  formatDistance,
+  formatWalkingEstimate,
+  calculateHaversineDistanceMeters,
+} from './prayer-offsets';
 
 export interface MosqueJamaatTimes {
   fajr?: string;
@@ -120,48 +123,26 @@ export interface StreetLocationResult {
 }
 
 /**
- * Attempt to acquire fresh street-level coordinates (<7s).
- * Queries native Capacitor GPS first on Android/iOS, then web navigator.geolocation,
- * falling back to provided city coordinates only if unavailable.
+ * Attempt to acquire fresh street-level coordinates safely.
+ * Uses standard browser navigator.geolocation wrapped in try/catch + timeout.
+ * Never calls native Capacitor plugin directly to avoid WebView crash.
+ * Only attempts GPS if userRequested is true, otherwise returns fallback coordinates instantly.
  */
 export async function getCurrentStreetLocation(
   fallbackLat: number,
-  fallbackLon: number
+  fallbackLon: number,
+  userRequested = false
 ): Promise<StreetLocationResult> {
-  // 1. First attempt @capacitor/geolocation on native devices
-  if (Capacitor.isNativePlatform()) {
-    try {
-      const pos = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 7000,
-        maximumAge: 30000,
-      });
-      if (pos && pos.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
-        return {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-          isFresh: true,
-          isLiveGps: true,
-        };
-      }
-    } catch {
-      // Native GPS failed or timed out
-    }
-  }
-
-  // 2. Web browser navigator.geolocation
-  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+  if (userRequested && typeof navigator !== 'undefined' && navigator.geolocation) {
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
-          timeout: 5000,
+          timeout: 4500,
           maximumAge: 60000,
         });
       });
-      if (pos && pos.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+      if (pos?.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
         return {
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
@@ -172,7 +153,7 @@ export async function getCurrentStreetLocation(
         };
       }
     } catch {
-      // Web geolocation denied or unavailable
+      // Safe fallback on denial or timeout
     }
   }
 

@@ -97,14 +97,15 @@ export const calculatePrayerTimes = (
   latitude: number,
   longitude: number,
   date: Date = new Date(),
-  methodName?: CalculationMethodName
+  methodName?: CalculationMethodName,
+  madhabParam?: MadhabType
 ): PrayerTimesResult => {
   const coordinates = new Coordinates(latitude, longitude);
   const method = methodName || getCalculationMethod();
   const params = CALCULATION_METHODS[method]();
   
   // Set madhab for Asr calculation
-  const madhab = getMadhab();
+  const madhab = madhabParam || getMadhab();
   // Maliki and Hanbali follow Shafi for Asr calculation (earlier time)
   // Hanafi uses later Asr time
   if (madhab === 'hanafi') {

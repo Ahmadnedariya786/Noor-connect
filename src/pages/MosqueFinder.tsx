@@ -30,8 +30,6 @@ import { AppBar } from "@/components/AppBar";
 import { LayoutManager } from "@/components/LayoutManager";
 import { useToast } from "@/hooks/use-toast";
 import { useLocationState } from "@/lib/location-state";
-import { Capacitor } from "@capacitor/core";
-import { Geolocation } from "@capacitor/geolocation";
 import {
   fetchNearbyMosques,
   searchMosquesOnline,
@@ -286,39 +284,29 @@ function AddCustomMosqueModal({
   const handleAutoFillGps = async () => {
     setIsDetectingGps(true);
     try {
-      if (Capacitor.isNativePlatform()) {
-        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 7000 });
-        if (pos?.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
-          setLat(pos.coords.latitude.toFixed(6));
-          setLon(pos.coords.longitude.toFixed(6));
-          toast({
-            title: "GPS Captured 📍",
-            description: `Exact pin: ${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° E`,
-          });
-          return;
-        }
-      }
       if (typeof navigator !== "undefined" && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            setLat(pos.coords.latitude.toFixed(6));
-            setLon(pos.coords.longitude.toFixed(6));
-            toast({
-              title: "GPS Captured 📍",
-              description: `Exact pin: ${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° E`,
-            });
+            if (pos?.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+              setLat(pos.coords.latitude.toFixed(6));
+              setLon(pos.coords.longitude.toFixed(6));
+              toast({
+                title: "GPS Captured 📍",
+                description: `Exact pin: ${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° E`,
+              });
+            }
           },
           () => {
             if (defaultLat && defaultLon) {
               setLat(defaultLat.toFixed(6));
               setLon(defaultLon.toFixed(6));
               toast({
-                title: "Using Saved City GPS",
+                title: "Using Saved Location",
                 description: "Live GPS was unavailable or permission denied.",
               });
             }
           },
-          { enableHighAccuracy: true, timeout: 7000 }
+          { enableHighAccuracy: true, timeout: 5000 }
         );
       } else if (defaultLat && defaultLon) {
         setLat(defaultLat.toFixed(6));
@@ -698,7 +686,7 @@ function InlineJamaatStrip({ times, onEdit }: InlineJamaatStripProps) {
 /* ─────────────────────────────────────────────────────────────
    MAIN PAGE: DEENIYAT-GRADE MOSQUE FINDER
    ───────────────────────────────────────────────────────────── */
-export default function MosqueFinder() {
+function MosqueFinderContent() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocationState();
@@ -730,14 +718,20 @@ export default function MosqueFinder() {
     };
   }, []);
 
-  // Fresh street GPS & multi-source fetch
+  // Instant mount fetch (<16ms) with stored coordinates. Fresh GPS only when requested.
   const loadMosques = useCallback(
-    async (force = false) => {
+    async (force = false, userRefresh = false) => {
       setIsLoading(true);
       try {
-        const freshPos = await getCurrentStreetLocation(lat, lon);
-        setStreetCoords(freshPos);
-        const results = await fetchNearbyMosques(freshPos.latitude, freshPos.longitude, radiusMeters, force);
+        let activeLat = lat;
+        let activeLon = lon;
+        if (userRefresh) {
+          const freshPos = await getCurrentStreetLocation(lat, lon, true);
+          setStreetCoords(freshPos);
+          activeLat = freshPos.latitude;
+          activeLon = freshPos.longitude;
+        }
+        const results = await fetchNearbyMosques(activeLat, activeLon, radiusMeters, force);
         setMosques(results);
         setPrimaryMasjidState(getPrimaryMasjid());
       } catch (err) {
@@ -750,7 +744,8 @@ export default function MosqueFinder() {
   );
 
   useEffect(() => {
-    loadMosques();
+    // Mount immediately with 0ms delay and zero native geolocation call
+    loadMosques(false, false);
   }, [loadMosques]);
 
   // Live Server-Side Online Search (debounced 350ms)
@@ -906,7 +901,7 @@ export default function MosqueFinder() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => loadMosques(true)}
+                  onClick={() => loadMosques(true, true)}
                   disabled={isLoading}
                   className="h-8 px-2 rounded-xl border text-xs gap-1 font-semibold cursor-pointer"
                   style={{
@@ -1340,12 +1335,70 @@ export default function MosqueFinder() {
           <AddCustomMosqueModal
             isOpen={isAddModalOpen}
             onClose={() => setIsAddModalOpen(false)}
-            onSaved={() => loadMosques(true)}
+            onSaved={() => loadMosques(true, false)}
             defaultLat={activeLat}
             defaultLon={activeLon}
           />
         )}
       </div>
     </LayoutManager>
+  );
+}
+
+class MosqueFinderErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("[MosqueFinder] Boundary caught render error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <LayoutManager activeTab="services">
+          <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] pb-36 select-none">
+            <AppBar title="Nearby Mosques" showBack={true} />
+            <div className="max-w-lg mx-auto px-4 pt-12 text-center space-y-4">
+              <span className="text-4xl block">🕌</span>
+              <h2 className="text-base font-bold text-[var(--text-primary)]">Unable to Display Mosques</h2>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                A temporary display issue occurred while rendering mosque data.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => this.setState({ hasError: false, error: null })}
+                className="rounded-xl text-xs font-bold cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
+                  color: "var(--on-accent)",
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        </LayoutManager>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function MosqueFinder() {
+  return (
+    <MosqueFinderErrorBoundary>
+      <MosqueFinderContent />
+    </MosqueFinderErrorBoundary>
   );
 }

@@ -10,7 +10,7 @@
  * 5. Static 3-Window Makruh Schedule (synchronized with existing live Makruh engine)
  */
 
-import { Coordinates, CalculationMethod, PrayerTimes, CalculationParameters, Madhab, Rounding } from 'adhan';
+import { Coordinates, CalculationMethod, PrayerTimes, CalculationParameters, Madhab, Rounding, HighLatitudeRule } from 'adhan';
 import { getMadhab, setMadhab, type MadhabType } from './storage';
 import {
   type CalculationMethodName,
@@ -47,11 +47,11 @@ export const REGIONAL_PRESETS: Record<string, RegionalPrayerPreset> = {
     methodName: 'University of Islamic Sciences, Karachi',
     madhab: 'hanafi',
     dhuhrZawaalSafetyMin: 5,
-    maghribIhtiyatMin: 0,
+    maghribIhtiyatMin: 3,
     hijriOffset: -1,
     fajrAngle: 18,
     ishaAngle: 18,
-    summary: 'Karachi (18°/18°) • Hanafi • Dhuhr +5m • -1d Hijri',
+    summary: 'Karachi (18°/18°) • Hanafi • Dhuhr +5m • Maghrib +3m • -1d Hijri',
   },
   saudi_arabia: {
     id: 'saudi_arabia',
@@ -231,7 +231,7 @@ export function getRegionalPrayerPreset(
 
 export const STORAGE_MAGHRIB_IHTIYAT = 'maghrib_ihtiyat_min';
 export const STORAGE_DHUHR_ZAWAAL_SAFETY = 'dhuhr_zawaal_safety_min';
-export const REGIONAL_PRESET_APPLIED_FLAG = 'noor_regional_preset_applied_v1';
+export const REGIONAL_PRESET_APPLIED_FLAG = 'noor_prayer_precision_v2_migrated';
 
 /**
  * Get Maghrib precautionary ihtiyat minutes (0 or 3).
@@ -494,10 +494,9 @@ export function computeFullPrayerSchedule(
   primaryParams.madhab = activeMadhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
   if (primaryParams.methodAdjustments) {
     primaryParams.methodAdjustments.dhuhr = 0;
-    // Align with Karachi / Aladhan standard 1-min Asr precautionary offset
-    if (methodName === 'Karachi') {
-      primaryParams.methodAdjustments.asr = 1;
-    }
+  }
+  if (Math.abs(latitude) > 48) {
+    primaryParams.highLatitudeRule = HighLatitudeRule.recommended(coordinates);
   }
 
   const primaryTimes = new PrayerTimes(coordinates, date, primaryParams);
@@ -507,9 +506,9 @@ export function computeFullPrayerSchedule(
   alternateParams.madhab = activeMadhab === 'hanafi' ? Madhab.Shafi : Madhab.Hanafi;
   if (alternateParams.methodAdjustments) {
     alternateParams.methodAdjustments.dhuhr = 0;
-    if (methodName === 'Karachi') {
-      alternateParams.methodAdjustments.asr = 1;
-    }
+  }
+  if (Math.abs(latitude) > 48) {
+    alternateParams.highLatitudeRule = HighLatitudeRule.recommended(coordinates);
   }
   const alternateTimes = new PrayerTimes(coordinates, date, alternateParams);
 
@@ -520,9 +519,9 @@ export function computeFullPrayerSchedule(
   tomorrowParams.madhab = primaryParams.madhab;
   if (tomorrowParams.methodAdjustments) {
     tomorrowParams.methodAdjustments.dhuhr = 0;
-    if (methodName === 'Karachi') {
-      tomorrowParams.methodAdjustments.asr = 1;
-    }
+  }
+  if (Math.abs(latitude) > 48) {
+    tomorrowParams.highLatitudeRule = HighLatitudeRule.recommended(coordinates);
   }
   const tomorrowTimes = new PrayerTimes(coordinates, tomorrow, tomorrowParams);
 
@@ -639,12 +638,12 @@ export function computeFullPrayerSchedule(
   // Sunnah and Fasting Times calculation
   // Khatm Sehri: 10 mins before Fajr start
   const khatmSehri = new Date(fajr.getTime() - 10 * 60000);
-  // Ishraaq: Sunrise + 15 min (or 20 min)
-  const ishraaq = new Date(sunrise.getTime() + 15 * 60000);
-  // Chaasht / Duha: Sunrise + 45 min
-  const chaasht = new Date(sunrise.getTime() + 45 * 60000);
+  // Ishraaq: Sunrise + 20 min (end of Sunrise Makruh window)
+  const ishraaq = new Date(sunrise.getTime() + 20 * 60000);
   // Zawaal: Astronomical solar transit
   const zawaal = rawSolarNoon;
+  // Chaasht / Duha: dynamic midpoint between Sunrise and Zawaal (~09:40 AM)
+  const chaasht = new Date(sunrise.getTime() + Math.max(0, (zawaal.getTime() - sunrise.getTime()) / 2));
   // Sunset: Astronomical sunset
   const sunset = rawSunset;
   // Iftaar: Maghrib start
@@ -675,8 +674,8 @@ export function computeFullPrayerSchedule(
   };
 
   // 3 Daily Prohibited (Makruh) Windows
-  // 1. Sunrise (Tulu'): [Sunrise, Sunrise + 15m]
-  const sunriseMakruhEnd = new Date(sunrise.getTime() + 15 * 60000);
+  // 1. Sunrise (Tulu'): [Sunrise, Sunrise + 20m]
+  const sunriseMakruhEnd = new Date(sunrise.getTime() + 20 * 60000);
   // 2. Zawaal (Istiwa'): Astronomical Solar Noon until Dhuhr start (e.g. 12:21 PM – 12:26 PM)
   const zawalMakruhStart = rawSolarNoon;
   const zawalMakruhEnd = dhuhr;
@@ -693,7 +692,7 @@ export function computeFullPrayerSchedule(
       end: sunriseMakruhEnd,
       startFormatted: formatScheduleTime(sunrise, is24h),
       endFormatted: formatScheduleTime(sunriseMakruhEnd, is24h),
-      description: 'Until the sun rises above spear length (~15m). Salah & Tilawat prohibited.',
+      description: 'Until the sun rises above spear length (~20m). Salah & Tilawat prohibited.',
     },
     {
       id: 'zawaal',

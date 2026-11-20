@@ -361,23 +361,30 @@ export default function Dashboard() {
       // Auto-apply regional preset on first migration if not already set
       autoApplyRegionalPresetIfFirstMigration(location.locationName, location.latitude, location.longitude);
       const resolvedMethodId = AladhanAPI.getResolvedMethodId();
+      const resolvedSchool = AladhanAPI.getResolvedSchool();
 
-      // Check if we have cached data for this specific location
-      const hasValidCache = AladhanAPI.isCachedDataValid(location.latitude, location.longitude);
+      // Check if we have cached data for this specific location, school, and method
+      const hasValidCache = AladhanAPI.isCachedDataValid(location.latitude, location.longitude, resolvedSchool, resolvedMethodId);
 
       if (!hasValidCache) {
-        // Fetch fresh data for current month
+        // Fetch fresh data for current month with resolved school
         await AladhanAPI.fetchMonthlyCalendar(
           location.latitude,
           location.longitude,
           undefined,
           undefined,
-          resolvedMethodId
+          resolvedMethodId,
+          resolvedSchool
         );
       }
 
-      // Get today's prayer times and metadata (including timezone)
-      const { timings: rawTimings, timezone: fetchedTimezone } = await AladhanAPI.getTodaysPrayerTimes(location.latitude, location.longitude, resolvedMethodId);
+      // Get today's prayer times and metadata (including timezone and school)
+      const { timings: rawTimings, timezone: fetchedTimezone } = await AladhanAPI.getTodaysPrayerTimes(
+        location.latitude,
+        location.longitude,
+        resolvedMethodId,
+        resolvedSchool
+      );
       cachedRawTimings = rawTimings;
       const offsets = getPrayerMinuteOffsets();
       cachedOffsetsFingerprint = JSON.stringify(offsets);
@@ -416,8 +423,8 @@ export default function Dashboard() {
         iftaarLabel: "Iftaar",
       });
 
-      // Get next prayer countdown
-      const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, resolvedMethodId, false);
+      // Get next prayer countdown with resolved school
+      const nextEvent = await AladhanAPI.getNextEventCountdown(location.latitude, location.longitude, resolvedMethodId, false, resolvedSchool);
       if (nextEvent) {
         const displayName = getPrayerDisplayName(nextEvent.name, nextEvent.targetDate);
         cachedNextPrayerName = displayName;
@@ -457,9 +464,10 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Failed to load API prayer times:', error);
-      // Fallback to offline calculation
+      // Fallback to offline calculation honoring active school
       const { calculatePrayerTimes } = await import('@/lib/prayer-calculator');
-      const times = calculatePrayerTimes(location.latitude, location.longitude, new Date());
+      const targetMadhab = AladhanAPI.getResolvedSchool() === 1 ? 'hanafi' : 'shafi';
+      const times = calculatePrayerTimes(location.latitude, location.longitude, new Date(), targetMadhab);
       const offsets = getPrayerMinuteOffsets();
       const rawOfflineTimings = {
         Fajr: times.fajr.toTimeString().slice(0, 5),
@@ -523,7 +531,7 @@ export default function Dashboard() {
     }
   }, [location.latitude, location.longitude, location.timeZone, location.locationName, location.setLocation, formatTimeFromAPI, parseTimeToDate, timeFormat]);
 
-  // Reactive subscription to prayer offsets changes and route focus
+  // Reactive subscription to prayer offsets, madhab, and calculation method changes
   useEffect(() => {
     const handleOffsetsChange = () => {
       const offsets = getPrayerMinuteOffsets();
@@ -560,13 +568,27 @@ export default function Dashboard() {
       loadPrayerTimes();
     };
 
+    const handleSettingsChange = () => {
+      AladhanAPI.clearCachedData();
+      cachedRawTimings = null;
+      cachedDashboardPrayers = [];
+      cachedNextPrayerName = "";
+      cachedNextPrayerTime = "";
+      cachedTargetTime = null;
+      loadPrayerTimes();
+    };
+
     window.addEventListener('prayer-offsets-changed', handleOffsetsChange);
     window.addEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+    window.addEventListener('madhab-changed', handleSettingsChange);
+    window.addEventListener('prayer-method-changed', handleSettingsChange);
     window.addEventListener('focus', handleOffsetsChange);
 
     return () => {
       window.removeEventListener('prayer-offsets-changed', handleOffsetsChange);
       window.removeEventListener(PRAYER_OFFSETS_CHANGED_EVENT, handleOffsetsChange);
+      window.removeEventListener('madhab-changed', handleSettingsChange);
+      window.removeEventListener('prayer-method-changed', handleSettingsChange);
       window.removeEventListener('focus', handleOffsetsChange);
     };
   }, [loadPrayerTimes, formatTimeFromAPI, parseTimeToDate]);

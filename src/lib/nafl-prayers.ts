@@ -133,9 +133,9 @@ export function evaluateNaflPrayers(
   const nowSec = nowDate.getHours() * 3600 + nowDate.getMinutes() * 60 + nowDate.getSeconds();
   const prayers: NaflPrayerInfo[] = [];
 
-  // 1. Ishraq (صلاة الإشراق): [Sunrise + 15 min, Sunrise + 45 min)
+  // 1. Ishraq (صلاة الإشراق): [Sunrise + 20 min, Sunrise + 45 min)
   if (sunriseSec !== null) {
-    const startSec = sunriseSec + 15 * 60;
+    const startSec = sunriseSec + 20 * 60;
     const endSec = sunriseSec + 45 * 60;
     const isActive = nowSec >= startSec && nowSec < endSec;
     const remaining = isActive ? endSec - nowSec : 0;

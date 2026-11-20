@@ -507,20 +507,61 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     return `${weekday}, ${monthShort} ${dayNum}${hijriPart}`;
   }, [selectedDateOffset, viewedDate, offsetSchedule, ui, refreshKey]);
 
+  // Compute authenticated full prayer schedule for Qaza end times and Sunnah times
+  const fullSchedule = useMemo(() => {
+    if (!location.latitude || !location.longitude) return null;
+    try {
+      return computeFullPrayerSchedule(
+        viewedDate,
+        location.latitude,
+        location.longitude,
+        {
+          is24h: timeFormat === '24' || timeFormat === '24h',
+        }
+      );
+    } catch {
+      return null;
+    }
+  }, [viewedDate, location.latitude, location.longitude, timeFormat, refreshKey]);
+
   const displayedPrayers = useMemo(() => {
     void refreshKey;
-    if (selectedDateOffset === 0 && prayers.length > 0) return prayers;
-    if (!offsetSchedule) return prayers;
-    const t = offsetSchedule.timings;
-    return [
-      { name: 'Fajr', time: formatPrayerTime(t.Fajr, timeFormat), date: viewedDate, originalName: 'Fajr' },
-      { name: 'Sunrise', time: formatPrayerTime(t.Sunrise, timeFormat), date: viewedDate, originalName: 'Sunrise' },
-      { name: 'Dhuhr', time: formatPrayerTime(t.Dhuhr, timeFormat), date: viewedDate, originalName: 'Dhuhr' },
-      { name: 'Asr', time: formatPrayerTime(t.Asr, timeFormat), date: viewedDate, originalName: 'Asr' },
-      { name: 'Maghrib', time: formatPrayerTime(t.Maghrib, timeFormat), date: viewedDate, originalName: 'Maghrib' },
-      { name: 'Isha', time: formatPrayerTime(t.Isha, timeFormat), date: viewedDate, originalName: 'Isha' },
-    ];
-  }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat, refreshKey]);
+    let list: PrayerItem[] = [];
+    if (selectedDateOffset === 0 && prayers.length > 0) {
+      list = prayers;
+    } else if (offsetSchedule) {
+      const t = offsetSchedule.timings;
+      list = [
+        { name: 'Fajr', time: formatPrayerTime(t.Fajr, timeFormat), date: viewedDate, originalName: 'Fajr' },
+        { name: 'Sunrise', time: formatPrayerTime(t.Sunrise, timeFormat), date: viewedDate, originalName: 'Sunrise' },
+        { name: 'Dhuhr', time: formatPrayerTime(t.Dhuhr, timeFormat), date: viewedDate, originalName: 'Dhuhr' },
+        { name: 'Asr', time: formatPrayerTime(t.Asr, timeFormat), date: viewedDate, originalName: 'Asr' },
+        { name: 'Maghrib', time: formatPrayerTime(t.Maghrib, timeFormat), date: viewedDate, originalName: 'Maghrib' },
+        { name: 'Isha', time: formatPrayerTime(t.Isha, timeFormat), date: viewedDate, originalName: 'Isha' },
+      ];
+    } else {
+      list = prayers;
+    }
+
+    // Invariant Guard: When fullSchedule is present, ensure Asr row time strictly honors active madhab
+    if (fullSchedule?.fardPrayers && list.length > 0) {
+      const schedAsr = fullSchedule.fardPrayers.find((p) => p.id === 'asr');
+      if (schedAsr) {
+        list = list.map((p) => {
+          const lower = (p.originalName || p.name).toLowerCase();
+          if (lower === 'asr') {
+            return {
+              ...p,
+              time: schedAsr.startTimeFormatted,
+            };
+          }
+          return p;
+        });
+      }
+    }
+
+    return list;
+  }, [selectedDateOffset, offsetSchedule, prayers, viewedDate, timeFormat, refreshKey, fullSchedule]);
 
   // Exact Next-Boundary Scheduler (Part 1A item 4):
   // Derives the state from existing prayer times and schedules ONE timeout for the exact next boundary:
@@ -662,23 +703,6 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
 
   const [showAllNafl, setShowAllNafl] = useState(false);
 
-  // Compute authenticated full prayer schedule for Qaza end times and Sunnah times
-  const fullSchedule = useMemo(() => {
-    if (!location.latitude || !location.longitude) return null;
-    try {
-      return computeFullPrayerSchedule(
-        viewedDate,
-        location.latitude,
-        location.longitude,
-        {
-          is24h: timeFormat === '24' || timeFormat === '24h',
-        }
-      );
-    } catch {
-      return null;
-    }
-  }, [viewedDate, location.latitude, location.longitude, timeFormat, refreshKey]);
-
   // Map each fard prayer to its exact Qaza end time and alternate Asr
   const fardPrayerMeta = useMemo(() => {
     const meta: Record<string, { endTimeFormatted: string; alternateAsrText?: string }> = {};
@@ -708,8 +732,13 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
     if (sunriseT) meta['fajr'] = { ...meta['fajr'], endTimeFormatted: sunriseT };
     // Dhuhr / Jummah Ends EXACTLY when Asr starts (eliminates 04:18 vs 04:17 1-min discrepancy)
     if (asrT) meta['dhuhr'] = { ...meta['dhuhr'], endTimeFormatted: asrT };
-    // Asr ends at Maghrib
-    if (maghribT) meta['asr'] = { ...meta['asr'], endTimeFormatted: maghribT };
+    // Asr ends at exact astronomical Sunset (from fullSchedule, NOT Maghrib +3m)
+    const asrItem = fullSchedule?.fardPrayers.find((p) => p.id === 'asr');
+    if (asrItem?.endTimeFormatted) {
+      meta['asr'] = { ...meta['asr'], endTimeFormatted: asrItem.endTimeFormatted };
+    } else if (maghribT) {
+      meta['asr'] = { ...meta['asr'], endTimeFormatted: maghribT };
+    }
     // Maghrib ends at Isha
     if (ishaT) meta['maghrib'] = { ...meta['maghrib'], endTimeFormatted: ishaT };
     // Isha ends at tomorrow Fajr (or fallback today Fajr)

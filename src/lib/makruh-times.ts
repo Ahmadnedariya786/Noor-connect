@@ -191,10 +191,10 @@ export function evaluateMakruhState(
 
   const windows: MakruhWindowInfo[] = [];
 
-  // Window 1: Sunrise (Tulu' al-Shams) -> [Sunrise, Sunrise + 15 min)
+  // Window 1: Sunrise (Tulu' al-Shams) -> [Sunrise, Sunrise + 20 min)
   if (sunriseSec !== null) {
     const startSec = sunriseSec;
-    const endSec = sunriseSec + 15 * 60;
+    const endSec = sunriseSec + 20 * 60;
     windows.push({
       id: 'tulu',
       title: "Sunrise (Tulu')",
@@ -203,9 +203,9 @@ export function evaluateMakruhState(
       shortLabel: 'Sunrise',
       hadithRef: 'Sahih Muslim 831',
       ruling:
-        'During Sunrise until 15 minutes after, all Salah (Fard, Sunnah, Nafl) and Sajdah at-Tilawat are strictly prohibited (Makruh Tahrimi).',
+        'During Sunrise until 20 minutes after, all Salah (Fard, Sunnah, Nafl) and Sajdah at-Tilawat are strictly prohibited (Makruh Tahrimi).',
       rulingUrdu:
-        'طلوعِ آفتاب کے وقت سے لے کر 15 منٹ تک ہر قسم کی نماز (فرض، سنت و نفل) اور سجدۂ تلاوت پڑھنا ممنوع و مکروہِ تحریمی ہے۔',
+        'طلوعِ آفتاب کے وقت سے لے کر 20 منٹ تک ہر قسم کی نماز (فرض، سنت و نفل) اور سجدۂ تلاوت پڑھنا ممنوع و مکروہِ تحریمی ہے۔',
       start: createDateFromSeconds(nowDate, startSec),
       end: createDateFromSeconds(nowDate, endSec),
       startSecondsOfDay: startSec,

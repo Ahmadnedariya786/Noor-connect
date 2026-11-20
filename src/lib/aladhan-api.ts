@@ -147,6 +147,18 @@ export class AladhanAPI {
     }
     return 1; // Default Karachi / South Asia
   }
+
+  /**
+   * Resolve school ID for AlAdhan API (0 = Shafi'i/Standard, 1 = Hanafi)
+   */
+  static getResolvedSchool(): number {
+    try {
+      const madhab = getMadhab();
+      return madhab === 'hanafi' ? 1 : 0;
+    } catch {
+      return 1; // Default Hanafi for South Asia
+    }
+  }
   /**
    * Generate monthly prayer calendar offline using local calculation engine
    */
@@ -279,10 +291,8 @@ export class AladhanAPI {
     method: number = 1, // Pakistan/Karachi (1), ISNA (2)
     school?: number // 0 for Shafi, 1 for Hanafi
   ): Promise<AladhanMonthlyData> {
-    let url = `${API_BASE}/calendar/${year}/${month}?latitude=${latitude}&longitude=${longitude}&method=${method}`;
-    if (school !== undefined) {
-      url += `&school=${school}`;
-    }
+    const resolvedSchool = school !== undefined ? school : this.getResolvedSchool();
+    const url = `${API_BASE}/calendar/${year}/${month}?latitude=${latitude}&longitude=${longitude}&method=${method}&school=${resolvedSchool}`;
 
     const controller = new AbortController();
 
@@ -318,7 +328,7 @@ export class AladhanAPI {
         latitude,
         longitude,
         method,
-        school: school,
+        school: resolvedSchool,
         data: result.data,
         lastUpdated: new Date().toISOString()
       };
@@ -330,19 +340,25 @@ export class AladhanAPI {
     } catch {
       // API fetch failed (offline, timeout, or unreachable) - fall back to stored cache or local calculation engine
       const stored = this.getStoredMonthlyData();
-      if (stored && stored.month === month && stored.year === year) {
+      if (stored && stored.month === month && stored.year === year && stored.school === resolvedSchool) {
         return stored;
       }
-      return this.generateLocalMonthlyCalendar(latitude, longitude, year, month, method, school);
+      return this.generateLocalMonthlyCalendar(latitude, longitude, year, month, method, resolvedSchool);
     }
   }
 
   /**
    * Get prayer times for a specific date from cached data
    */
-  static getPrayerTimesForDate(date: Date, latitude?: number, longitude?: number): AladhanDayData | null {
+  static getPrayerTimesForDate(date: Date, latitude?: number, longitude?: number, school?: number): AladhanDayData | null {
     const monthlyData = this.getStoredMonthlyData();
     if (!monthlyData) return null;
+
+    // Verify school matches active preference
+    const expectedSchool = school !== undefined ? school : this.getResolvedSchool();
+    if (monthlyData.school === undefined || monthlyData.school !== expectedSchool) {
+      return null;
+    }
 
     // Verify it's the correct location if coordinates provided
     if (latitude !== undefined && longitude !== undefined) {
@@ -407,23 +423,20 @@ export class AladhanAPI {
   static async getTodaysPrayerTimes(
     latitude: number,
     longitude: number,
-    method: number = 1,
+    method?: number,
     school?: number // 0 for Shafi, 1 for Hanafi
   ): Promise<{ timings: AladhanPrayerTime, timezone: string }> {
-    // Check if cached data is valid for this location before making API calls
-    const madhab = getMadhab();
-    // Aladhan API: 0 = Shafi, 1 = Hanafi
-    // Maliki and Hanbali follow Shafi calculation for Asr
-    const schoolParam = madhab === 'hanafi' ? 1 : 0;
-    const hasValidCache = this.isCachedDataValid(latitude, longitude, schoolParam);
+    const resolvedMethod = method ?? this.getResolvedMethodId();
+    const resolvedSchool = school ?? this.getResolvedSchool();
+    const hasValidCache = this.isCachedDataValid(latitude, longitude, resolvedSchool, resolvedMethod);
 
     if (hasValidCache) {
       // Use cached data only, no API call needed
-      const cachedDay = this.getPrayerTimesForDate(new Date(), latitude, longitude);
-      if (cachedDay) {
+      const cachedDay = this.getPrayerTimesForDate(new Date(), latitude, longitude, resolvedSchool);
+      if (cachedDay && cachedDay.timings) {
         return {
           timings: cachedDay.timings,
-          timezone: cachedDay.meta.timezone
+          timezone: cachedDay.meta?.timezone || 'UTC'
         };
       }
     }
@@ -434,27 +447,29 @@ export class AladhanAPI {
     if (isOnline) {
       try {
         // Fetch fresh data for the month to keep cache updated
-        const monthlyData = await this.fetchMonthlyCalendar(latitude, longitude, undefined, undefined, method, schoolParam);
+        const monthlyData = await this.fetchMonthlyCalendar(latitude, longitude, undefined, undefined, resolvedMethod, resolvedSchool);
         const today = monthlyData.data.find(day => {
           const dayDate = new Date(parseInt(day.date.timestamp) * 1000);
           return dayDate.toDateString() === new Date().toDateString();
         }) || monthlyData.data[0];
 
-        return {
-          timings: today.timings,
-          timezone: today.meta.timezone
-        };
+        if (today?.timings) {
+          return {
+            timings: today.timings,
+            timezone: today.meta?.timezone || 'UTC'
+          };
+        }
       } catch (error) {
-        console.warn('API fetch failed while online, falling back to cache');
+        console.warn('API fetch failed while online, falling back to cache:', error);
       }
     }
 
     // Fallback to cache (for offline or failed API fetch)
-    const cachedDay = this.getPrayerTimesForDate(new Date(), latitude, longitude);
-    if (cachedDay) {
+    const cachedDay = this.getPrayerTimesForDate(new Date(), latitude, longitude, resolvedSchool);
+    if (cachedDay && cachedDay.timings) {
       return {
         timings: cachedDay.timings,
-        timezone: cachedDay.meta.timezone
+        timezone: cachedDay.meta?.timezone || 'UTC'
       };
     }
 
@@ -464,8 +479,9 @@ export class AladhanAPI {
       const { findNearestOfflineCity } = await import('@/data/cities');
       const nearest = findNearestOfflineCity(latitude, longitude);
       const isSouthAsia = (latitude >= 6 && latitude <= 38 && longitude >= 68 && longitude <= 98);
-      const calcMethod = (nearest?.calculationMethod || (isSouthAsia ? 'Karachi' : (method === 1 ? 'Karachi' : undefined))) as any;
-      const times = calculatePrayerTimes(latitude, longitude, new Date(), calcMethod);
+      const calcMethod = (nearest?.calculationMethod || (isSouthAsia ? 'Karachi' : (resolvedMethod === 1 ? 'Karachi' : undefined))) as any;
+      const targetMadhab = resolvedSchool === 1 ? 'hanafi' : 'shafi';
+      const times = calculatePrayerTimes(latitude, longitude, new Date(), calcMethod, targetMadhab);
       const timezone = nearest?.timezone || (isSouthAsia ? 'Asia/Kolkata' : Intl.DateTimeFormat().resolvedOptions().timeZone);
 
       return {
@@ -490,9 +506,9 @@ export class AladhanAPI {
   }
 
   /**
-   * Check if cached data is still valid (same month and year)
+   * Check if cached data is still valid (same month, year, school, and method)
    */
-  static isCachedDataValid(latitude?: number, longitude?: number, school?: number): boolean {
+  static isCachedDataValid(latitude?: number, longitude?: number, school?: number, method?: number): boolean {
     const monthlyData = this.getStoredMonthlyData();
     if (!monthlyData) return false;
 
@@ -502,17 +518,23 @@ export class AladhanAPI {
 
     if (!isSameDate) return false;
 
+    // Strict school validation: must match expected school (0 Shafi, 1 Hanafi)
+    const expectedSchool = school !== undefined ? school : this.getResolvedSchool();
+    if (monthlyData.school === undefined || monthlyData.school !== expectedSchool) {
+      return false;
+    }
+
+    // Method validation: must match expected method
+    const expectedMethod = method !== undefined ? method : this.getResolvedMethodId();
+    if (monthlyData.method !== undefined && monthlyData.method !== expectedMethod) {
+      return false;
+    }
+
     // If coordinates provided, check if they match (with tolerance)
     if (latitude !== undefined && longitude !== undefined) {
       const latDiff = Math.abs(monthlyData.latitude - latitude);
       const lngDiff = Math.abs(monthlyData.longitude - longitude);
-      // 0.1 degree tolerance (approx 11km)
       if (latDiff >= 0.1 || lngDiff >= 0.1) return false;
-    }
-
-    // If school provided, check if it matches
-    if (school !== undefined && monthlyData.school !== undefined && monthlyData.school !== school) {
-      return false;
     }
 
     return true;
@@ -578,11 +600,14 @@ export class AladhanAPI {
   static async getNextEventCountdown(
     latitude: number,
     longitude: number,
-    method: number = 1,
-    isRamadan: boolean = false
+    method?: number,
+    isRamadan: boolean = false,
+    school?: number
   ): Promise<{ name: string; time: string; countdown: string; targetDate?: Date } | null> {
     try {
-      const { timings: rawTimings } = await this.getTodaysPrayerTimes(latitude, longitude, method);
+      const resolvedMethod = method ?? this.getResolvedMethodId();
+      const resolvedSchool = school ?? this.getResolvedSchool();
+      const { timings: rawTimings } = await this.getTodaysPrayerTimes(latitude, longitude, resolvedMethod, resolvedSchool);
       const offsets = getPrayerMinuteOffsets();
       const timings = applyOffsetsToTimings(rawTimings, offsets);
       const now = new Date();
