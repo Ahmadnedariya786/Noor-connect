@@ -231,7 +231,7 @@ export function getRegionalPrayerPreset(
 
 export const STORAGE_MAGHRIB_IHTIYAT = 'maghrib_ihtiyat_min';
 export const STORAGE_DHUHR_ZAWAAL_SAFETY = 'dhuhr_zawaal_safety_min';
-export const REGIONAL_PRESET_APPLIED_FLAG = 'noor_prayer_precision_v2_migrated';
+export const REGIONAL_PRESET_APPLIED_FLAG = 'noor_prayer_precision_v3_migrated';
 
 /**
  * Get Maghrib precautionary ihtiyat minutes (0 or 3).
@@ -316,11 +316,8 @@ export function applyRegionalPreset(preset: RegionalPrayerPreset): void {
     // 4. Dhuhr safety min
     localStorage.setItem(STORAGE_DHUHR_ZAWAAL_SAFETY, preset.dhuhrZawaalSafetyMin.toString());
 
-    // 5. Maghrib ihtiyat min (keep user preference if already set, else default)
-    const existingIhtiyat = localStorage.getItem(STORAGE_MAGHRIB_IHTIYAT);
-    if (existingIhtiyat === null) {
-      localStorage.setItem(STORAGE_MAGHRIB_IHTIYAT, preset.maghribIhtiyatMin.toString());
-    }
+    // 5. Maghrib ihtiyat min (apply regional preset value, e.g. 3m for South Asia)
+    localStorage.setItem(STORAGE_MAGHRIB_IHTIYAT, preset.maghribIhtiyatMin.toString());
 
     // 6. Clear cached times
     localStorage.removeItem('cached_prayer_times');
@@ -391,6 +388,9 @@ export interface SunnahFastingTimes {
   islamicMidnightFormatted: string;
   tahajjud: Date;
   tahajjudFormatted: string;
+  tahajjudLastThird?: Date;
+  tahajjudLastThirdFormatted?: string;
+  tahajjudDescription?: string;
 }
 
 export interface StaticMakruhWindow {
@@ -648,11 +648,13 @@ export function computeFullPrayerSchedule(
   const sunset = rawSunset;
   // Iftaar: Maghrib start
   const iftaar = maghrib;
-  // Islamic Midnight: halfway between Maghrib and tomorrow's Fajr
-  const nightDurationMs = tomorrowFajr.getTime() - maghrib.getTime();
-  const islamicMidnight = new Date(maghrib.getTime() + nightDurationMs / 2);
-  // Tahajjud: last third of the night (2/3 of night until tomorrow Fajr)
-  const tahajjud = new Date(tomorrowFajr.getTime() - nightDurationMs / 3);
+  // Islamic Night: from Astronomical Sunset to tomorrow's Fajr
+  const nightDurationMs = tomorrowFajr.getTime() - rawSunset.getTime();
+  const islamicMidnight = new Date(rawSunset.getTime() + Math.round(nightDurationMs / 2));
+  // Tahajjud: South Asia / Hanafi tradition (Deeniyat & Kashkol) specifies the last 1/6th of the night (03:42 AM)
+  const tahajjud = new Date(tomorrowFajr.getTime() - Math.round(nightDurationMs / 6));
+  // Classical Sunnah last 1/3rd of the night (01:44 AM)
+  const tahajjudLastThird = new Date(tomorrowFajr.getTime() - Math.round(nightDurationMs / 3));
 
   const sunnahTimes: SunnahFastingTimes = {
     khatmSehri,
@@ -671,6 +673,9 @@ export function computeFullPrayerSchedule(
     islamicMidnightFormatted: formatScheduleTime(islamicMidnight, is24h),
     tahajjud,
     tahajjudFormatted: formatScheduleTime(tahajjud, is24h),
+    tahajjudLastThird,
+    tahajjudLastThirdFormatted: formatScheduleTime(tahajjudLastThird, is24h),
+    tahajjudDescription: `Last 1/6: ${formatScheduleTime(tahajjud, is24h)} • Last 1/3: ${formatScheduleTime(tahajjudLastThird, is24h)}`,
   };
 
   // 3 Daily Prohibited (Makruh) Windows

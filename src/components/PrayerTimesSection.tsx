@@ -714,6 +714,13 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
           alternateAsrText: fp.alternateAsrFormatted ? `${fp.alternateMadhabLabel} ${fp.alternateAsrFormatted}` : undefined,
         };
       }
+      const asrItem = fullSchedule.fardPrayers.find((p) => p.id === 'asr');
+      if (asrItem?.alternateAsrFormatted && fullSchedule.activeMadhab === 'hanafi') {
+        meta['dhuhr'] = {
+          ...meta['dhuhr'],
+          alternateAsrText: `${asrItem.alternateMadhabLabel} ${asrItem.alternateAsrFormatted}`,
+        };
+      }
     }
 
     // Direct alignment based on displayedPrayers to eliminate 04:18 vs 04:17 1-min discrepancy
@@ -1510,8 +1517,8 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                       <strong className="font-mono">{rowJamaatTime}</strong>
                     </span>
                   )}
-                  {/* On Asr row only, compact muted secondary micro-label beneath Asr showing alternate madhab start */}
-                  {fardKey === 'asr' && pMeta?.alternateAsrText && (
+                  {/* On Asr or Dhuhr (when Hanafi is active), compact muted secondary micro-label beneath prayer name showing alternate madhab time */}
+                  {(fardKey === 'asr' || (fardKey === 'dhuhr' && fullSchedule?.activeMadhab === 'hanafi')) && pMeta?.alternateAsrText && (
                     <span
                       className="ltr-num font-mono"
                       dir="ltr"
@@ -1663,16 +1670,18 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                   >
                     {nafl.arabicName}
                   </span>
-                  <span
-                    className="text-[10px] px-1.5 py-0.5 rounded font-semibold whitespace-nowrap"
+                  <bdi
+                    dir="ltr"
+                    className="text-[10px] px-1.5 py-0.5 rounded font-semibold whitespace-nowrap ltr-num"
                     style={{
                       background: 'var(--surface)',
                       color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
                       border: '1px solid var(--border)',
+                      unicodeBidi: 'isolate',
                     }}
                   >
                     {nafl.rakaat}
-                  </span>
+                  </bdi>
                 </div>
               </div>
 
@@ -1864,13 +1873,19 @@ export const PrayerTimesSectionComponent: React.FC<PrayerTimesSectionProps> = ({
                     <div className="grid grid-cols-2 gap-1.5">
                       {[
                         { label: 'Khatm Sehri', time: fullSchedule.sunnahTimes.khatmSehriFormatted, desc: 'Fasting threshold' },
-                        { label: 'Ishraaq', time: fullSchedule.sunnahTimes.ishraaqFormatted, desc: 'Sunrise +15m' },
+                        { label: 'Ishraaq', time: fullSchedule.sunnahTimes.ishraaqFormatted, desc: 'Sunrise +20m' },
                         { label: 'Chaasht (Duha)', time: fullSchedule.sunnahTimes.chaashtFormatted, desc: 'Forenoon' },
                         { label: 'Zawaal (Noon)', time: fullSchedule.sunnahTimes.zawaalFormatted, desc: 'Meridian peak' },
                         { label: 'Guroob (Sunset)', time: fullSchedule.sunnahTimes.sunsetFormatted, desc: 'Astronomical' },
                         { label: 'Iftaar (Maghrib)', time: fullSchedule.sunnahTimes.iftaarFormatted, desc: 'Fast break' },
                         { label: 'Islamic Midnight', time: fullSchedule.sunnahTimes.islamicMidnightFormatted, desc: 'Night midpoint' },
-                        { label: 'Tahajjud (Last 1/3)', time: fullSchedule.sunnahTimes.tahajjudFormatted, desc: 'Deep night' },
+                        {
+                          label: 'Tahajjud (Last 1/6)',
+                          time: fullSchedule.sunnahTimes.tahajjudFormatted,
+                          desc: fullSchedule.sunnahTimes.tahajjudLastThirdFormatted
+                            ? `Last 1/3: ${fullSchedule.sunnahTimes.tahajjudLastThirdFormatted}`
+                            : 'Deep night',
+                        },
                       ].map((item) => (
                         <div
                           key={item.label}

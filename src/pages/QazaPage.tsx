@@ -260,20 +260,40 @@ export default function QazaPage() {
 
 (Calculated in Noor Connect)`;
 
-    if (typeof navigator !== 'undefined' && navigator.share) {
+    let shared = false;
+    try {
+      const { Share } = await import('@capacitor/share');
+      await Share.share({
+        title: "Fidya Calculation — Noor Connect",
+        text,
+        dialogTitle: "Share Fidya Calculation",
+      });
+      shared = true;
+    } catch {
+      // Fallback to web share or clipboard
+    }
+
+    if (!shared && typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: "Fidya Calculation — Noor Connect",
           text,
         });
-        return;
+        shared = true;
       } catch {
         // Fallback to clipboard
       }
     }
+
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      await navigator.clipboard.writeText(text);
-      toast({ title: "Fidya Calculation Copied", description: "Details copied to clipboard." });
+      try {
+        await navigator.clipboard.writeText(text);
+        if (!shared) {
+          toast({ title: "Fidya Calculation Copied", description: "Details copied to clipboard." });
+        }
+      } catch {
+        // Handled silently
+      }
     }
   };
 

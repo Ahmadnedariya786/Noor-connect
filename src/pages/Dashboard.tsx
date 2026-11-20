@@ -706,6 +706,37 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Safe street GPS auto-refresh on app boot if not locked to manual city
+  useEffect(() => {
+    try {
+      const mode = localStorage.getItem('noor_location_mode');
+      if (mode === 'manual') return;
+
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            if (pos?.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+              const curLat = location.latitude;
+              const curLon = location.longitude;
+              const diffLat = Math.abs(pos.coords.latitude - curLat);
+              const diffLon = Math.abs(pos.coords.longitude - curLon);
+              // If street coordinates differ by > ~100m, refresh to exact street GPS
+              if (diffLat > 0.001 || diffLon > 0.001) {
+                location.setLocation(pos.coords.latitude, pos.coords.longitude, location.locationName, location.timeZone);
+              }
+            }
+          },
+          () => {
+            // Handled silently: no prompt popup disturbance, zero crash
+          },
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+        );
+      }
+    } catch {
+      // Handled silently
+    }
+  }, []);
+
 
   // Stable minute tick ref for nextPrayerInfo to avoid depending on currentTime directly
   const minuteTickRef = useRef(0);
@@ -824,7 +855,25 @@ const handleCheckIn = useCallback((pKey: PrayerName) => {
   const onVerseClick = useCallback(() => navigate('/quran', { replace: true }), [navigate]);
   const onHadithClick = useCallback(() => navigate('/hadith/collections', { replace: true }), [navigate]);
   const onNotificationClick = useCallback(() => navigate('/notification-history', { replace: true }), [navigate]);
-  const onLocationClick = useCallback(() => setShowManualLocationDialog(true), [setShowManualLocationDialog]);
+  const onLocationClick = useCallback(() => {
+    try {
+      const mode = localStorage.getItem('noor_location_mode');
+      if (mode !== 'manual' && typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            if (pos?.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+              location.setLocation(pos.coords.latitude, pos.coords.longitude, location.locationName, location.timeZone);
+            }
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 }
+        );
+      }
+    } catch {
+      // Handled silently
+    }
+    setShowManualLocationDialog(true);
+  }, [location, setShowManualLocationDialog]);
 
 return (
     <PageTransition skipTransition={!isFirstMount || !animationEnabled}>

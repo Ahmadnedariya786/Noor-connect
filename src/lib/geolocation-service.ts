@@ -207,6 +207,28 @@ export class GeolocationService {
 
     if (isAndroidWebView()) {
       const androidPromise = (async (): Promise<LocationCoordinates> => {
+        // Safe WebView browser geolocation attempt (never crashes native WebView)
+        if (typeof navigator !== 'undefined' && navigator.geolocation) {
+          try {
+            const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: Boolean(enableHighAccuracy),
+                timeout: Math.min(timeoutMs, 6000),
+                maximumAge,
+              });
+            });
+            if (pos?.coords && Number.isFinite(pos.coords.latitude) && Number.isFinite(pos.coords.longitude)) {
+              return {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy || 50,
+              };
+            }
+          } catch {
+            // Fallback to IP geolocation safely
+          }
+        }
+
         try {
           const { LocationService } = await import('@/lib/location-service');
           const ipLoc = await LocationService.detectLocationViaIP();

@@ -251,6 +251,7 @@ interface AddMosqueModalProps {
   onSaved: () => void;
   defaultLat?: number | null;
   defaultLon?: number | null;
+  defaultName?: string;
 }
 
 function AddCustomMosqueModal({
@@ -259,14 +260,19 @@ function AddCustomMosqueModal({
   onSaved,
   defaultLat,
   defaultLon,
+  defaultName = "",
 }: AddMosqueModalProps) {
   const { toast } = useToast();
-  const [name, setName] = useState("");
+  const [name, setName] = useState(defaultName);
   const [address, setAddress] = useState("");
-  const [lat, setLat] = useState(defaultLat ? defaultLat.toFixed(5) : "");
-  const [lon, setLon] = useState(defaultLon ? defaultLon.toFixed(5) : "");
+  const [lat, setLat] = useState(defaultLat ? defaultLat.toFixed(6) : "");
+  const [lon, setLon] = useState(defaultLon ? defaultLon.toFixed(6) : "");
   const [setAsPrimary, setSetAsPrimary] = useState(true);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
+
+  useEffect(() => {
+    if (defaultName && !name) setName(defaultName);
+  }, [defaultName, name]);
 
   // Jamaat times
   const [fajr, setFajr] = useState("");
@@ -692,6 +698,7 @@ function MosqueFinderContent() {
   const location = useLocationState();
 
   const [radiusMeters, setRadiusMeters] = useState<number>(5000);
+  const [autoExpandedFromRadius, setAutoExpandedFromRadius] = useState<number | null>(null);
   const [mosques, setMosques] = useState<MosqueItem[]>([]);
   const [primaryMasjid, setPrimaryMasjidState] = useState<MosqueItem | null>(() => getPrimaryMasjid());
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -728,10 +735,25 @@ function MosqueFinderContent() {
         if (userRefresh) {
           const freshPos = await getCurrentStreetLocation(lat, lon, true);
           setStreetCoords(freshPos);
-          activeLat = freshPos.latitude;
-          activeLon = freshPos.longitude;
+          if (freshPos.isLiveGps) {
+            activeLat = freshPos.latitude;
+            activeLon = freshPos.longitude;
+            location.setLocation(freshPos.latitude, freshPos.longitude, location.locationName, location.timeZone);
+          }
         }
-        const results = await fetchNearbyMosques(activeLat, activeLon, radiusMeters, force);
+        let results = await fetchNearbyMosques(activeLat, activeLon, radiusMeters, force);
+        if (results.length === 0 && radiusMeters < 15000) {
+          // Smart Auto-Radius Expansion: when selected radius has 0 mosques, query 15 km
+          const expanded = await fetchNearbyMosques(activeLat, activeLon, 15000, force);
+          if (expanded.length > 0) {
+            results = expanded;
+            setAutoExpandedFromRadius(radiusMeters);
+          } else {
+            setAutoExpandedFromRadius(null);
+          }
+        } else {
+          setAutoExpandedFromRadius(null);
+        }
         setMosques(results);
         setPrimaryMasjidState(getPrimaryMasjid());
       } catch (err) {
@@ -740,7 +762,7 @@ function MosqueFinderContent() {
         setIsLoading(false);
       }
     },
-    [lat, lon, radiusMeters]
+    [lat, lon, radiusMeters, location]
   );
 
   useEffect(() => {
@@ -869,16 +891,22 @@ function MosqueFinderContent() {
                   <h1 className="text-lg font-extrabold text-[var(--text-primary)] truncate">
                     Nearby Mosques
                   </h1>
-                  <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 select-none"
+                  <button
+                    type="button"
+                    onClick={() => loadMosques(true, true)}
+                    disabled={isLoading}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 cursor-pointer transition-all active:scale-95"
                     style={{
                       background: streetCoords?.isLiveGps ? "rgba(16, 185, 129, 0.15)" : "var(--surface-2)",
                       color: streetCoords?.isLiveGps ? "#10B981" : "var(--text-secondary)",
                       border: `1px solid ${streetCoords?.isLiveGps ? "rgba(16, 185, 129, 0.3)" : "var(--border)"}`,
                     }}
+                    title="Tap to acquire fresh street GPS"
                   >
-                    <span>{streetCoords?.isLiveGps ? "📍 Live GPS" : `📍 ${location.locationName?.split(',')[0]?.trim() || "Saved City"}`}</span>
-                  </span>
+                    <span className={isLoading ? "animate-spin" : ""}>📍</span>
+                    <span>{streetCoords?.isLiveGps ? "Live GPS" : (location.locationName?.split(',')[0]?.trim() || "Saved City")}</span>
+                    {!streetCoords?.isLiveGps && <span className="text-[9px] opacity-75 underline ml-0.5">Live GPS</span>}
+                  </button>
                 </div>
               </div>
 
@@ -929,7 +957,10 @@ function MosqueFinderContent() {
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setRadiusMeters(opt.value)}
+                    onClick={() => {
+                      setAutoExpandedFromRadius(null);
+                      setRadiusMeters(opt.value);
+                    }}
                     className="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all text-center cursor-pointer"
                     style={{
                       background: isActive ? "linear-gradient(135deg, var(--accent), var(--accent-2))" : "transparent",
@@ -972,6 +1003,23 @@ function MosqueFinderContent() {
                 </button>
               )}
             </div>
+
+            {/* Smart Auto-Radius Expansion Notice Banner */}
+            {autoExpandedFromRadius && (
+              <div
+                className="p-3 rounded-xl border flex items-center gap-2.5 text-xs font-medium"
+                style={{
+                  background: "var(--accent-soft, rgba(212, 175, 55, 0.08))",
+                  borderColor: "var(--accent)",
+                  color: "var(--accent-text)",
+                }}
+              >
+                <span className="text-base shrink-0">📍</span>
+                <span className="leading-snug">
+                  Showing nearest mosques within 15 km (none tagged in OSM within {autoExpandedFromRadius / 1000} km)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* PINNED PRIMARY MASJID HERO CARD (if set) */}
@@ -1113,7 +1161,7 @@ function MosqueFinderContent() {
                   }}
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ Add Your Local Masjid</span>
+                  <span>{searchFilter ? `+ Add "${searchFilter}" as Local Masjid` : "+ Add Your Local Masjid"}</span>
                 </Button>
 
                 {activeLat !== null && activeLon !== null && (
@@ -1338,6 +1386,7 @@ function MosqueFinderContent() {
             onSaved={() => loadMosques(true, false)}
             defaultLat={activeLat}
             defaultLon={activeLon}
+            defaultName={searchFilter ? (searchFilter.toLowerCase().includes('masjid') ? searchFilter : `Masjid ${searchFilter}`) : ''}
           />
         )}
       </div>
