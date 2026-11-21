@@ -1,5 +1,5 @@
 /**
- * Noor Connect — In-App Offline Quran Audio Caching Engine
+ * Siraj — In-App Offline Quran Audio Caching Engine
  *
  * 100% in-app audio storage using CacheStorage + IndexedDB.
  * Never redirects the user to external Chrome browser or opens target="_blank" tabs.

@@ -79,7 +79,7 @@ export function AutoBackupRestoreDialog() {
         <DialogHeader>
           <DialogTitle>Welcome back! Your data is here</DialogTitle>
           <DialogDescription>
-            Noor Connect found your previous data on this device. Would you like to restore it?
+            Siraj found your previous data on this device. Would you like to restore it?
             Everything will come back — prayer records, bookmarks, and settings.
           </DialogDescription>
         </DialogHeader>

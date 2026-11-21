@@ -240,7 +240,7 @@ export function HaidhSettingsTab({ data, onUpdate }: Props) {
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-          Your data is stored 100% locally on this device. Noor Connect never syncs your sensitive health data to any cloud.
+          Your data is stored 100% locally on this device. Siraj never syncs your sensitive health data to any cloud.
         </p>
         <div className="space-y-3">
           <Button variant="outline" onClick={handleExport} className="w-full h-12 rounded-2xl font-bold">

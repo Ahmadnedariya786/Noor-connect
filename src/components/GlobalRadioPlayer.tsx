@@ -143,7 +143,7 @@ export function GlobalRadioPlayer() {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: station.name,
         artist: 'Quran Reciter',
-        album: 'Noor Connect Radio',
+        album: 'Siraj Radio',
         artwork: [
           { src: artworkUrl, sizes: '96x96', type: artworkMime },
           { src: artworkUrl, sizes: '128x128', type: artworkMime },

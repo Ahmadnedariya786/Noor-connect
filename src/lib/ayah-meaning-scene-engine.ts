@@ -1,5 +1,5 @@
 /**
- * NOOR CONNECT — SEMANTIC AYAH-MEANING SCENE ENGINE (@sufariq Visual Storytelling Edition)
+ * SIRAJ — SEMANTIC AYAH-MEANING SCENE ENGINE (@sufariq Visual Storytelling Edition)
  *
  * 100% Offline, Deterministic Semantic Classifier & Visual Choreographer.
  * Analyzes Arabic root tokens and English translation keywords to dynamically map

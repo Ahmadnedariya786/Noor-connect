@@ -1,0 +1,174 @@
+package com.siraj.app.widgets.dailyhadith
+
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
+import android.content.Context
+import android.graphics.Color
+import android.util.Log
+import android.util.TypedValue
+import android.view.View
+import android.widget.RemoteViews
+import com.siraj.app.R
+import com.siraj.app.widgets.dailyhadith.HadithBundle
+import com.siraj.app.widgets.WidgetDeeplink
+import com.siraj.app.widgets.WidgetForegroundService
+import com.siraj.app.widgets.WidgetPrefs
+import com.siraj.app.widgets.WidgetRefreshWorker
+import com.siraj.app.widgets.WidgetStyleHelper
+
+/**
+ * Daily Hadith Widget (4×2)
+ *
+ * Shows:
+ *  - Source chip ("Sahih Bukhari 1:1")
+ *  - Grade badge (color-coded: Sahih=emerald, Hasan=gold, Daif=red)
+ *  - Arabic hadith (RTL, Amiri Quran font)
+ *  - Translation
+ *  - Narrator row
+ *
+ * Tap → deep-link to /hadith?collection=X&book=N&number=N
+ */
+class DailyHadithWidget : AppWidgetProvider() {
+
+    companion object {
+        private const val TAG = "DailyHadithWidget"
+
+        fun updateWidget(context: Context, mgr: AppWidgetManager, appWidgetId: Int) {
+            try {
+                val views = RemoteViews(context.packageName, R.layout.widget_daily_hadith)
+
+                // ─── 1. Customizer Styles (Background & Colors) ───
+                val style = WidgetStyleHelper.parseConfig(context)
+                val bgBitmap = WidgetStyleHelper.renderBackgroundBitmap(
+                    surfaceStyle = style.surfaceStyle,
+                    themeHex = style.themeHex,
+                    opacityPercent = style.opacity,
+                    accentHex = style.accentHex
+                )
+                views.setImageViewBitmap(R.id.widget_bg_image, bgBitmap)
+
+                // ─── 2. Data Content ───
+                val payload = WidgetPrefs.getDailyContent(context)
+                val hadith = payload?.hadith ?: HadithBundle.getFallbackHadith(context)
+
+                // Source + grade
+                views.setTextViewText(R.id.widget_hadith_source, hadith.source.ifEmpty { context.getString(R.string.widget_hadith_source_default) })
+                views.setTextViewText(R.id.widget_hadith_grade, hadith.grade.ifEmpty { context.getString(R.string.widget_hadith_grade_default) })
+                applyGradeColor(context, views, hadith.grade)
+
+                // Arabic + translation + narrator
+                views.setTextViewText(R.id.widget_hadith_arabic, hadith.arabic.ifEmpty { context.getString(R.string.widget_hadith_arabic_default) })
+                views.setTextViewText(R.id.widget_hadith_translation, hadith.translation.ifEmpty { context.getString(R.string.widget_hadith_translation_default) })
+
+                val narratorDisplay = if (hadith.narrator.isBlank()) {
+                    context.getString(R.string.widget_hadith_narrator_default)
+                } else {
+                    context.getString(R.string.widget_hadith_narrator_format, hadith.narrator)
+                }
+                views.setTextViewText(R.id.widget_hadith_narrator, narratorDisplay)
+
+                // ─── 3. Swatches & Colors ───
+                try {
+                    val accentCol = Color.parseColor(style.accentHex)
+                    val textCol = Color.parseColor(style.textHex)
+                    val subCol = Color.parseColor(style.subHex)
+
+                    views.setTextColor(R.id.widget_hadith_title_bar, accentCol)
+                    views.setTextColor(R.id.widget_hadith_source, accentCol)
+                    views.setTextColor(R.id.widget_hadith_arabic, textCol)
+                    views.setTextColor(R.id.widget_hadith_translation, subCol)
+                    views.setTextColor(R.id.widget_hadith_narrator, subCol)
+                } catch (_: Throwable) {}
+
+                // Stale badge permanently gone
+                views.setViewVisibility(R.id.widget_stale_badge, View.GONE)
+                views.setViewVisibility(R.id.widget_hadith_grade, View.GONE)
+
+                // ─── 4. Font Scaling ───
+                val scaledArabic = (19f * style.fontScale / 100f).coerceIn(15f, 26f)
+                views.setTextViewTextSize(R.id.widget_hadith_arabic, TypedValue.COMPLEX_UNIT_SP, scaledArabic)
+
+                val scaledTrans = (12f * style.fontScale / 100f).coerceIn(10f, 16f)
+                views.setTextViewTextSize(R.id.widget_hadith_translation, TypedValue.COMPLEX_UNIT_SP, scaledTrans)
+
+                // ─── 5. Tap → deep-link /hadith ───
+                val deeplink = WidgetDeeplink.buildHadith()
+                val intent = WidgetDeeplink.toIntent(context, deeplink)
+                val pi = PendingIntent.getActivity(
+                    context,
+                    105,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_root, pi)
+
+                mgr.updateAppWidget(appWidgetId, views)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Critical error updating DailyHadithWidget $appWidgetId", t)
+            }
+        }
+
+        private fun applyGradeColor(context: Context, views: RemoteViews, grade: String) {
+            try {
+                val colorRes = when (grade.lowercase()) {
+                    "sahih" -> R.color.widget_grade_sahih
+                    "hasan" -> R.color.widget_grade_hasan
+                    "daif", "da'if" -> R.color.widget_grade_daif
+                    else -> R.color.widget_grade_sahih
+                }
+                views.setTextColor(R.id.widget_hadith_grade, androidx.core.content.ContextCompat.getColor(context, colorRes))
+            } catch (t: Throwable) {
+                Log.w(TAG, "Failed to apply grade color", t)
+            }
+        }
+    }
+
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        try {
+            appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        } catch (t: Throwable) {
+            Log.e(TAG, "onUpdate fatal error", t)
+        }
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        try {
+            val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+            val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+            val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+            val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+
+            Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
+            updateWidget(context, appWidgetManager, appWidgetId)
+        } catch (t: Throwable) {
+            Log.e(TAG, "onAppWidgetOptionsChanged error", t)
+        }
+    }
+
+    override fun onEnabled(context: Context) {
+        try {
+            WidgetForegroundService.start(context)
+            WidgetRefreshWorker.enqueuePeriodic(context)
+            Log.d(TAG, "Widget enabled")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onEnabled error", t)
+        }
+    }
+
+    override fun onDisabled(context: Context) {
+        try {
+            if (!WidgetForegroundService.hasActiveWidgets(context)) {
+                WidgetForegroundService.stop(context)
+            }
+            Log.d(TAG, "Widget disabled")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onDisabled error", t)
+        }
+    }
+}

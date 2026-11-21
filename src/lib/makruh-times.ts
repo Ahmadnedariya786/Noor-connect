@@ -1,6 +1,6 @@
 /**
  * Real-Time Makruh (Prohibited) Prayer Time Engine
- * Noor Connect - Privacy-First Islamic Companion
+ * Siraj - Privacy-First Islamic Companion
  *
  * Calculates the three authentic Islamic Makruh Tahrimi windows based on Sahih Muslim 831:
  *  1. Sunrise (Tulu' al-Shams): [Sunrise, Sunrise + 15 min) -> relatedRow: 'Sunrise'

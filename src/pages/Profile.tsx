@@ -184,8 +184,8 @@ function getSettingsGroups(ui: any): SettingsGroup[] {
       rows: [
         {
           id: 'about',
-          title: ui.aboutNoorConnect,
-          subtitle: ui.aboutNoorConnectSub,
+          title: ui.aboutSiraj,
+          subtitle: ui.aboutSirajSub,
           icon: Info,
           gradient: 'from-orange-500/10 via-orange-500/5 to-transparent border-orange-500/20',
           iconColor: 'text-orange-600 dark:text-orange-400',
@@ -698,7 +698,7 @@ const Profile: React.FC = () => {
           </div>
 
           <p className="text-xs text-[var(--text-secondary)] font-medium">
-            Noor Connect v{CURRENT_APP_VERSION}
+            Siraj v{CURRENT_APP_VERSION}
           </p>
         </div>
 

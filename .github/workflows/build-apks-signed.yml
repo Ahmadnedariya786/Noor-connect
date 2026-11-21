@@ -85,6 +85,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: noor-connect-apk
+          name: siraj-apk
           path: android/app/build/outputs/apk/**/*.apk
           retention-days: 30

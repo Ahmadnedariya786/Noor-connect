@@ -11,7 +11,7 @@ const __dirname = dirname(__filename);
 
 // Extract the English translations from the current translations.ts
 const englishTranslations = {
-  "appTitle": "Noor Connect",
+  "appTitle": "Siraj",
   "home": "Home",
   "quran": "Quran",
   "qibla": "Qibla",
@@ -75,7 +75,7 @@ const englishTranslations = {
   "notificationsEnabled": "✅ Notifications enabled!",
   "youllReceivePrayerReminders": "You'll now receive prayer times and Islamic event reminders.",
   "permissionDenied": "Permission denied",
-  "goToAndroidSettings": "Go to Android Settings → Apps → Noor Connect → Notifications and turn them on.",
+  "goToAndroidSettings": "Go to Android Settings → Apps → Siraj → Notifications and turn them on.",
   "clickLockIconAllowNotifications": "Click the lock icon in your browser address bar and allow Notifications.",
   "testNotificationSent": "Test notification sent",
   "failedToSendNotification": "Failed to send notification",

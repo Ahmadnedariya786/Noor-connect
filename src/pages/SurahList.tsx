@@ -1106,7 +1106,7 @@ export default function SurahList() {
                 /* No Active Plan: Preset Chooser */
                 <div className="space-y-2.5">
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    Choose a goal — Noor Connect calculates your daily pages and automatically adjusts if you read extra or miss a day.
+                    Choose a goal — Siraj calculates your daily pages and automatically adjusts if you read extra or miss a day.
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5" style={{ minWidth: 0 }}>
                     {[

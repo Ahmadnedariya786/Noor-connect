@@ -1,26 +1,26 @@
 <div align="center">
 
-<img src="public/icon-192x192.png" alt="Noor Connect Logo" width="120" height="120" />
+<img src="branding/siraj-logo.png" alt="Siraj Logo" width="128" height="128" />
 
-# 🌙 Noor Connect
-### Your Sovereign, Privacy-First Islamic Companion
-**Version 2.3.0 • Android & Modern Web • 100% Offline Fallback • Zero Trackers**
+# 🌙 Siraj (`سِـرَاج`)
+### Your Sacred, Privacy-First Islamic Companion
+**Version 3.0.0 • Android (`com.siraj.app`) & Web • 100% Offline Fallback • Zero Trackers**
 
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release: v2.3.0](https://img.shields.io/badge/Release-v2.3.0-emerald.svg)](https://github.com/Ahmadnedariya786/Noor-connect/releases/latest)
-[![Status: Production Stable](https://img.shields.io/badge/Status-Production%20Stable-gold.svg)](https://github.com/Ahmadnedariya786/Noor-connect)
-[![CodeQL: 0 Alerts](https://img.shields.io/badge/CodeQL-0%20Security%20Alerts-brightgreen.svg)](https://github.com/Ahmadnedariya786/Noor-connect/security/code-scanning)
-[![F-Droid Ready](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](.fdroid.yml)
+[![Release: v3.0.0](https://img.shields.io/badge/Release-v3.0.0-emerald.svg)](https://github.com/Ahmadnedariya786/siraj/releases/latest)
+[![Status: Production Stable](https://img.shields.io/badge/Status-Production%20Stable-gold.svg)](https://github.com/Ahmadnedariya786/siraj)
+[![CodeQL: 0 Alerts](https://img.shields.io/badge/CodeQL-0%20Security%20Alerts-brightgreen.svg)](https://github.com/Ahmadnedariya786/siraj/security/code-scanning)
+[![F-Droid Ready](https://img.shields.io/badge/F--Droid-Ready-blue.svg)](metadata/com.siraj.app.yml)
 [![Zero Analytics](https://img.shields.io/badge/Privacy-100%25%20Zero%20Trackers-success.svg)](#-privacy-first-architecture)
 [![Nasheed Partner](https://img.shields.io/badge/Partner-No%20Copyright%20Nasheed-purple.svg)](https://nocopyrightnasheed.com/)
 
 <p align="center">
-  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk">
-    <img src="https://img.shields.io/badge/📲%20Download%20Latest%20APK-v2.3.0%20(Direct)-D4AF37?style=for-the-badge&logo=android&logoColor=white" alt="Download Latest APK" height="42" />
+  <a href="https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/siraj-nightly.apk">
+    <img src="https://img.shields.io/badge/📲%20Download%20Latest%20APK-v3.0.0%20(Direct)-D4AF37?style=for-the-badge&logo=android&logoColor=white" alt="Download Latest APK" height="42" />
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk">
-    <img src="https://img.shields.io/badge/📦%20Download%20Versioned%20APK-NoorConnect--v2.3.0.apk-14213D?style=for-the-badge&logo=github&logoColor=white" alt="Download Versioned APK" height="42" />
+  <a href="https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/Siraj-v3.0.0.apk">
+    <img src="https://img.shields.io/badge/📦%20Download%20Versioned%20APK-Siraj--v3.0.0.apk-14213D?style=for-the-badge&logo=github&logoColor=white" alt="Download Versioned APK" height="42" />
   </a>
 </p>
 
@@ -32,18 +32,18 @@
 
 - [🌙 Overview](#-overview)
 - [📲 Direct Downloads & Installation](#-direct-downloads--installation)
-- [📱 Visual Showcase (v2.3.0 Screenshots)](#-visual-showcase-v230-screenshots)
-- [🌟 Key Subsystems & Highlights](#-key-subsystems--highlights)
-  - [📖 Quran Mushaf & Audio Suite](#-quran-mushaf--audio-suite)
-  - [💰 Shariah-Compliant Zakat & Nisab Calculator](#-shariah-compliant-zakat--nisab-calculator)
-  - [📚 Multi-Language Tafsir & Translations](#-multi-language-tafsir--translations)
-  - [🎨 5 Royal Luxury Themes & 6 Clocks](#-5-royal-luxury-themes--6-clocks)
-  - [✨ Dynamic Living Logo Engine (5 Sacred Editions)](#-dynamic-living-logo-engine-5-sacred-editions)
-  - [🧭 High-Precision Qibla Compass](#-high-precision-qibla-compass)
-  - [🕋 24/7 Makkah & Madinah Live Streams & Radio](#-247-makkah--madinah-live-streams--radio)
-  - [📿 Complete Islamic Tools Hub](#-complete-islamic-tools-hub)
-  - [📱 5 High-Performance Android Widgets](#-5-high-performance-android-widgets)
-- [🛡️ Privacy-First Architecture & Security](#-privacy-first-architecture--security)
+- [📱 Visual Showcase (v3.0.0 Screenshots)](#-visual-showcase-v300-screenshots)
+- [🌟 Flagship Subsystems & Capabilities](#-flagship-subsystems--capabilities)
+  - [🕌 Deeniyat-Grade 4-Season Prayer Engine](#-deeniyat-grade-4-season-prayer-engine)
+  - [🎨 8 Royal Dark-Luxury Themes & 5 Living Logo Editions](#-8-royal-dark-luxury-themes--5-living-logo-editions)
+  - [📱 7 Native Android Home Screen Widgets](#-7-native-android-home-screen-widgets)
+  - [🧭 True-North Qibla Finder & Nearby Mosques](#-true-north-qibla-finder--nearby-mosques)
+  - [⚖️ Single-Source Qaza Tracker & Fidya Ledger](#-single-source-qaza-tracker--fidya-ledger)
+  - [📖 Noble Quran, Audio Suite & Tafsir Explorer](#-noble-quran-audio-suite--tafsir-explorer)
+  - [📚 Cloud E-Books Library (5-Volume Tafseer Anwar-ul-Bayan)](#-cloud-e-books-library-5-volume-tafseer-anwar-ul-bayan)
+  - [💰 Multi-Currency Shariah Zakat & Nisab Calculator](#-multi-currency-shariah-zakat--nisab-calculator)
+  - [🎬 Siraj Clip Studio](#-siraj-clip-studio)
+- [🛡️ Privacy-First Architecture & Security Lock](#-privacy-first-architecture--security-lock)
 - [🛠️ Building & Development](#-building--development)
 - [📜 License & Ummah Dedication](#-license--ummah-dedication)
 
@@ -51,12 +51,12 @@
 
 ## 🌙 Overview
 
-**Noor Connect** (`com.noorconnect.ummah`) is a luxury, privacy-first Islamic companion crafted for the global Ummah. Built with modern web standards and native Android hardware integrations, it offers **zero UI friction, zero ads, zero trackers, and complete offline capability**.
+**Siraj** (`سِـرَاج`, `com.siraj.app`) is a luxury, privacy-first Islamic digital companion crafted for the global Ummah. Built with modern web standards and native Android hardware integrations, it offers **zero UI friction, zero ads, zero trackers, and complete offline capability**.
 
-Unlike conventional Islamic mobile apps that monetize spiritual habits or sell geolocation data to third-party ad brokers, Noor Connect enforces a strict **Zero-Data-Leak guarantee**:
+Unlike conventional commercial Islamic mobile apps that monetize spiritual habits or sell user geolocation data to advertising brokers, Siraj enforces a strict **Zero-Data-Leak guarantee**:
 - **Personal Data Never Leaves Your Device**: Prayer times, Quran progress, bookmarks, notes, Tasbeeh sessions, and Zakat records remain in local, encrypted on-device storage.
-- **Offline-First Astronomy**: Astronomical prayer calculations and Qibla bearings run 100% locally without requiring internet access.
-- **Stealth Owner Protocol**: Protected developer tools and diagnostics remain invisible to normal users, ensuring a distraction-free spiritual environment.
+- **Offline-First Astronomy**: Astronomical prayer calculations and Qibla bearings run 100% locally without requiring internet connectivity.
+- **Stealth Owner Protocol**: Protected developer tools and diagnostics remain invisible to normal users, ensuring an uncompromised spiritual environment.
 
 ---
 
@@ -64,21 +64,21 @@ Unlike conventional Islamic mobile apps that monetize spiritual habits or sell g
 
 | Asset | Target | Size | Direct Link | Checksum |
 | :--- | :--- | :--- | :--- | :--- |
-| **noor-connect-nightly.apk** | Android 8.0+ (ARM64 / ARMv7 / x86_64) | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk.sha256) |
-| **NoorConnect-v2.3.0.apk** | Official Stable Release Asset | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk) | [SHA-256](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/NoorConnect-v2.3.0.apk.sha256) |
-| **version.json** | Fast In-App Auto-Updater Manifest | <1 KB | [View Manifest](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/version.json) | — |
+| **siraj-nightly.apk** | Android 8.0+ (ARM64 / ARMv7 / x86_64) | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/siraj-nightly.apk) | [SHA-256](https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/siraj-nightly.apk.sha256) |
+| **Siraj-v3.0.0.apk** | Official Stable Release Asset | ~14 MB | [**Direct Download**](https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/Siraj-v3.0.0.apk) | [SHA-256](https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/Siraj-v3.0.0.apk.sha256) |
+| **version.json** | Fast In-App Auto-Updater Manifest | <1 KB | [View Manifest](https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/version.json) | — |
 
 ### Installing the APK on Android
-1. Tap **[Download Latest APK](https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk)** directly on your Android phone.
-2. When prompted by Chrome or your browser, select **Download anyway** and then tap **Install**.
+1. Tap **[Download Latest APK](https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/siraj-nightly.apk)** directly on your Android phone.
+2. When prompted by your browser, select **Download anyway** and tap **Install**.
 3. If this is your first manual APK install, enable *"Allow from this source"* in Android Settings.
-4. Noor Connect includes an in-app turbo 4-thread parallel downloader: future updates can be checked and installed in 1 tap from `Settings > About Noor Connect` or the Home update banner.
+4. Siraj includes an in-app turbo 4-thread parallel downloader: future updates can be checked and installed in 1 tap from `Settings > About Siraj` or the Home update banner.
 
 ---
 
-## 📱 Visual Showcase (v2.3.0 Screenshots)
+## 📱 Visual Showcase (v3.0.0 Screenshots)
 
-Captured directly from the live v2.3.0 production build across all **6 Royal Themes**:
+Captured directly from the live v3.0.0 production build across the **Royal Themes**:
 
 <table>
   <tr>
@@ -99,232 +99,189 @@ Captured directly from the live v2.3.0 production build across all **6 Royal The
     <td align="center" width="33%">
       <img src="assets/screenshots/3_mushaf_tajweed.png" alt="Tajweed Mushaf (Madinah Emerald)" width="100%" />
       <br/>
-      <b>Interactive Tajweed Mushaf</b>
+      <b>Tajweed Mushaf</b>
       <br/>
-      <sub>Madinah Emerald • 15L & 7L Reading Views</sub>
+      <sub>15-Line Uthmani DP Page Layout</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
-      <img src="assets/screenshots/4_zakat_calculator.png" alt="Zakat & Nisab Calculator (Burgundy Velvet)" width="100%" />
+      <img src="assets/screenshots/4_zakat_calculator.png" alt="Zakat Calculator (Kiswah Noir)" width="100%" />
       <br/>
-      <b>Zakat & Nisab Calculator</b>
+      <b>Zakat Calculator</b>
       <br/>
-      <sub>Burgundy Velvet • Live Rates & A4 PDF Report</sub>
+      <sub>Kiswah Noir • Multi-Currency Nisab Assessment</sub>
     </td>
     <td align="center" width="33%">
-      <img src="assets/screenshots/5_tafsir_hadith.png" alt="Hadith Library (Desert Scroll)" width="100%" />
+      <img src="assets/screenshots/5_tafsir_hadith.png" alt="Tafsir & Hadith (Istanbul Sapphire)" width="100%" />
       <br/>
-      <b>Hadith Encyclopedia</b>
+      <b>Tafsir & Hadith Hub</b>
       <br/>
-      <sub>Desert Scroll • 52K+ Authentic Traditions</sub>
+      <sub>Istanbul Sapphire • 25+ Authentic Commentaries</sub>
     </td>
     <td align="center" width="33%">
-      <img src="assets/screenshots/6_qibla_compass.png" alt="Qibla Compass (Oxford Gold)" width="100%" />
+      <img src="assets/screenshots/6_qibla_compass.png" alt="Qibla Compass (Imperial Violet)" width="100%" />
       <br/>
-      <b>Qibla Compass</b>
+      <b>True-North Qibla</b>
       <br/>
-      <sub>Oxford Gold • 60 FPS Gyro & Declination</sub>
+      <sub>Imperial Violet • Earth Globe & Sun Azimuth</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
-      <img src="assets/screenshots/7_live_makkah.png" alt="Live Makkah & Madinah (Imperial Violet)" width="100%" />
+      <img src="assets/screenshots/7_live_makkah.png" alt="Live Haramain (Burgundy Velvet)" width="100%" />
       <br/>
-      <b>Live Makkah & Madinah</b>
+      <b>Live Haramain Streams</b>
       <br/>
-      <sub>Imperial Violet • 24/7 Official SBA Streams</sub>
+      <sub>Burgundy Velvet • 24/7 Makkah & Madinah</sub>
     </td>
     <td align="center" width="33%">
-      <img src="assets/screenshots/8_services_hub.png" alt="Islamic Tools Hub (Imperial Violet)" width="100%" />
+      <img src="assets/screenshots/8_services_hub.png" alt="Services Hub (Desert Scroll)" width="100%" />
       <br/>
-      <b>Islamic Services Hub</b>
+      <b>Services Hub</b>
       <br/>
-      <sub>Imperial Violet • Tasbeeh, Duas & Qaza</sub>
+      <sub>Desert Scroll • 17 Integrated Spiritual Tools</sub>
     </td>
     <td align="center" width="33%">
-      <img src="assets/screenshots/9_settings_themes.png" alt="5 Royal Themes (Burgundy Velvet)" width="100%" />
+      <img src="assets/screenshots/9_settings_themes.png" alt="Settings & Themes (Oxford Gold)" width="100%" />
       <br/>
-      <b>5 Royal Themes & Settings</b>
+      <b>Settings & Theme Engine</b>
       <br/>
-      <sub>Burgundy Velvet • Deep X-Ray Diagnostics</sub>
+      <sub>8 Royal Themes • 5 Living Logos • Stealth Vault</sub>
     </td>
   </tr>
 </table>
 
 ---
 
-## 🌟 Key Subsystems & Highlights
+## 🌟 Flagship Subsystems & Capabilities
 
-### 📖 Quran Mushaf & Audio Suite
-- **Dual Mushaf Modes**: Toggle effortlessly between the standard **15-Line Madani Mushaf** (604 pages) and the **7-Line IndoPak Mushaf** with custom line-formatting algorithms.
-- **Word-by-Word Interactive Tajweed**: Color-coded pronunciation guidance (Ghunnah, Ikhfa, Idgham, Qalqalah, Madd) with interactive Ayah Study sheets.
-- **47+ Authentic Reciters**: Murattal, Mujawwad, and Mu'allim (Teacher) recitations by world-renowned Qaris (Mishary Rashid Alafasy, Abdul Basit Abdul Samad, Mahmoud Khalil Al-Husary, Abu Bakr Al-Shatri, Saad Al-Ghamdi, Maher Al-Muaiqly, and more).
-- **Advanced Tilawah Player**:
-  - Repeat Each Ayah (1×, 2×, 3×, 5×, ∞)
-  - Custom Interval Ranges (Start Surah:Ayah → End Surah:Ayah)
-  - Ayah Delay (0s to 15s pause between verses for reflection or memorization)
-  - Speed Controls (0.5×, 0.75×, 1.0×, 1.25×, 1.5×, 2.0×)
-  - 100% In-App Audio Caching for offline playback.
+### 🕌 Deeniyat-Grade 4-Season Prayer Engine
+- **Automatic Regional Presets**: Instant configuration for `Karachi 18°/18°`, `Hanafi 2×` shadow ratio (with dual Shafi'i preview), `Dhuhr +5m Zawaal` ihtiyat buffer, `Maghrib +3m Ihtiyat`, and `India Hilal -1d` regional calendar synchronization.
+- **Start & End (Qaza) Times**: Precise calculation of prayer expiration windows (e.g., `Asr Ends = Sunset`), warning users in advance of impending Qaza.
+- **Live Red Makruh Waqt System**: Instant, real-time warning alerts for the 3 authentic prohibited prayer intervals:
+  1. *Sunrise Window* (`Sunrise` to `Sunrise + 15m`)
+  2. *Zawaal Window* (`Dhuhr - 10m` to `Dhuhr`)
+  3. *Sunset Window* (`Maghrib - 15m` to `Maghrib`)
+  Warnings auto-dismiss at `:00s` the second the window concludes.
+- **Sunnah & Fasting Windows**: Live tracking of `Khatm Sehri`, `Ishraaq`, `Chaasht (Duha)`, and `Tahajjud (Last 1/6th of Night)`.
+- **Monthly Timetable Generator**: Generates beautiful, high-resolution printable timetables and shareable mosque cards.
+- **Auto-DND Silent Mode**: Automatically mutes the phone during Jamaat prayer windows to prevent disruptions.
 
-### 💰 Shariah-Compliant Zakat & Nisab Calculator
-- **Live Multi-Currency Metal Rates**: Real-time spot prices for Gold (**XAU**) and Silver (**XAG**) across INR (₹), USD ($), SAR (﷼), AED (د.إ), and PKR (₨).
-- **Purity Breakdown & Weights**: Support for 24K, 22K, 21K, and 18K purities in Grams and Tolas (1 tola = 11.6638g).
-- **Silver & Gold Nisab Thresholds**: One-tap toggle between classical Silver Nisab (612.36g) and Gold Nisab (87.48g) with instant eligible/ineligible status badge.
-- **8 Wealth Categories**: Cash & Bank Balances, Gold & Silver Jewelry, Business Inventory, Stocks & Mutual Funds, Real Estate Investments, Agriculture & Produce, Livestock (Camels, Cattle, Sheep/Goats), and Deductible Immediate Liabilities.
-- **Professional 1-Page A4 PDF Export**: Clean vector PDF generation containing your complete calculation breakdown, Nisab threshold, currency summary, and native Android share sheet integration.
+### 🎨 8 Royal Dark-Luxury Themes & 5 Living Logo Editions
+- **8 Exquisite Themes**: `Kiswah Noir`, `Istanbul Sapphire`, `Oxford Gold`, `Imperial Violet`, `Burgundy Velvet`, `Desert Scroll`, `Madinah Emerald`, and `Persian Indigo`—all enforced with 17 root CSS tokens and plain CSS fallbacks.
+- **8 Adaptive Navigation Bars**: Floating glass, segmented pill, and luxury dock styles with Navbar Style Override settings.
+- **5 Theme-Adaptive Living Logo Editions**:
+  1. **Edition 1 — Luminous Sanctuary Arch (Flagship)**: Layered translucent pointed Islamic arch with glowing dome and radiant crescent & star.
+  2. **Edition 2 — Kaaba Orbit**: Minimal isometric Kaaba surrounded by a luminous geometric Tawaf orbital ring and 3 celestial light orbs.
+  3. **Edition 3 — Prayer Niche Arch**: Layered dual-arch silhouette with muqarnas stepped fringe accents and central crescent.
+  4. **Edition 4 — Dawn Horizon**: Spherical Fajr/Maghrib dome rising over crisp geometric horizontal reflection lines.
+  5. **Edition 5 — Siraj Star Emblem**: Luminous central lamp (Fanous) framed within an 8-point Rub el Hizb architectural star.
+  *(All logos use pure layered SVG `<linearGradient>` and `<radialGradient>` without any performance-degrading `backdrop-filter` or SVG `drop-shadow`).*
 
-### 📚 Multi-Language Tafsir & Translations
-- **Authentic Commentary Books**: Instant commentary from Ibn Kathir, Tafheem-ul-Quran (Maududi), Jalalayn, Maarif-ul-Quran, and modern scholarly treatises.
-- **Typographic Localization**:
-  - **Urdu** in exquisite **Jameel Noori Nastaliq** with RTL typographic scaling.
-  - **English**, **Gujarati**, **Hindi**, **Arabic**, **Bengali**, **Turkish**, **Russian**, and **French**.
-- **Offline Downloadable Packs**: Download translation packs locally for seamless offline study.
+### 📱 7 Native Android Home Screen Widgets
+Fully native Android app widgets optimized for direct-boot awareness, battery conservation, and zero UI stutter:
+1. **Siraj • Circular Progress-Arc Clock (`2×2` / `3×2`)**: Canvas-rendered circular prayer arc with native `TextClock`.
+2. **Siraj • 6-Prayer Compact Strip (`4×1`)**: Ultra-compact 1-row prayer launcher highlighting the active/next prayer.
+3. **Siraj • Next Prayer (`4×2`)**: High-contrast card with Qaza End Time countdown and quick-refresh button.
+4. **Siraj • Daily Ayah (`4×2`)**: Localized Arabic Ayah of the day with English/Urdu translation.
+5. **Siraj • Daily Hadith (`4×2`)**: Daily Prophetic guidance with narrator, grade, and source citation.
+6. **Siraj • Quran Progress & Streak (`4×2`)**: Real-time tracking of daily pages, active streak, and Khatmah percentage.
+7. **Siraj • Live Interactive Tasbeeh (`2×2`)**: Direct tap-to-increment dhikr counter with native haptic pulses.
 
-### 🎨 5 Royal Luxury Themes & 6 Clocks
-- **5 Custom Palettes**:
-  1. `Oxford Gold` (Classic Midnight & Radiant Gold)
-  2. `Madinah Emerald` (Sacred Green & Polished Brass)
-  3. `Imperial Violet` (Royal Amethyst & Rose Gold)
-  4. `Burgundy Velvet` (Deep Crimson & Vintage Bronze)
-  5. `Desert Scroll` (Warm Papyrus & Antique Terracotta)
-- **6 Dynamic Digital Clocks**: Minimalist, Ottoman Dial, Hijri Dual-Time, Lunar Phase, Arabic Numerals, and Classic Digital.
-- **Theme Variables**: Engineered with CSS custom properties and automatic fallbacks for maximum 60 FPS fluidity.
+### 🧭 True-North Qibla Finder & Nearby Mosques
+- **Sensor Fusion**: Combines accelerometer, magnetometer, and gyroscope readings with NOAA solar azimuth cross-validation and shortest-arc angular smoothing.
+- **Great-Circle Earth Globe**: 3D orthographic globe projection displaying true great-circle geodesic curves, flight distance, and heading to Makkah.
+- **Auto Nearby Mosque Discovery**: Multi-tier zero-key parallel discovery combining Photon, Overpass, and Nominatim endpoints.
+- **Masjid Management**: Add local masjids, configure custom 6-prayer Jamaat schedules, and pin your home masjid to the dashboard.
 
-### ✨ Dynamic Living Logo Engine (5 Sacred Editions)
-- **Living Emblem System**: Rather than a static flat icon, Noor Connect features a dynamic, 3D-metallic vector emblem engine that morphs across **5 handcrafted sacred editions**:
-  1. **Edition 0: Al-Miftah Royal Mihrab & Blooming Mushaf** (Flagship Royal Arch & Open Scripture)
-  2. **Edition 1: Celestial Rub el Hizb Mandala & Sacred Fanous** (8-Point Islamic Star & Glowing Lantern)
-  3. **Edition 2: Haramain Sanctuary Crest & Minarets** (Twin Grand Minarets & Crescent Dome)
-  4. **Edition 3: Noor Al-Quran 3D Flame Medallion** (Light of Divine Revelation Medallion)
-  5. **Edition 4: Mamluk Royal Starburst & Qibla Sanctuary** (Sacred Geometric Starburst)
-- **Automatic Multi-Factor Rotation**: Rotates dynamically across app launches and adapts to spiritual times of day (Fajr sunrise gold, Tahajjud midnight celestial sapphire, Maghrib sunset amber).
-- **Interactive Manual Switch**: Users can tap the emblem or the switcher pill in `Settings > About Noor Connect` to cycle and preview all 5 editions in real time.
-- **Adaptive Android & Web Icons**: Brand-new ultra-high-definition launcher icons (mdpi through xxxhdpi) and PWA app icons rendered with 24K gold foil and deep emerald velvet.
+### ⚖️ Single-Source Qaza Tracker & Fidya Ledger
+- **Bidirectional Ledger Synchronization**: Dated prayer logs and aggregate counters stay in 100% sync.
+- **Makruh Waqt Guard**: Warns users against making up missed prayers during active Makruh intervals.
+- **5-Second Toast Undo**: Immediate revert functionality prevents accidental taps.
+- **Qaza-e-Umri Estimator & Daily Finish Planner**: Calculates remaining makeup prayers and projects estimated completion dates.
+- **Fidya & Kaffarah Calculator**: Accurate Shariah calculations based on prevailing local wheat and barley market rates.
 
-### 🧭 High-Precision Qibla Compass
-- **Hardware-Accelerated Gyro**: Direct magnetometer sensor access with low-pass filters to prevent needle jitter.
-- **True North & Declination**: Real-time World Magnetic Model (WMM) declination correction calculating the exact angle to the Holy Kaaba in Makkah.
-- **Haptic Alignment Lock**: Subtle vibration triggers when your device perfectly aligns with the Qibla.
+### 📖 Noble Quran, Audio Suite & Tafsir Explorer
+- **Balanced Knuth-Plass Mushaf**: Uniform font scaling across `7L`, `13L`, and `15L` traditional page layouts with anti-orphan word distribution.
+- **Synchronous In-Memory Cache**: 6-page memory prefetch sliding window ($N-2$ to $N+4$) delivers instantaneous page flips.
+- **47 Authentic Reciters**: Background continuous audio playback with verse-by-verse highlighting.
+- **25+ Commentary Editions**: Authentic offline commentaries in English, Urdu, Arabic, Bengali, and French.
 
-### 🕋 24/7 Makkah & Madinah Live Streams & Radio
-- **Official SBA CDN Broadcasts**: High-definition video streams direct from the Grand Mosque in Makkah and the Prophet's Mosque in Madinah.
-- **Global Quran Radio**: 200+ online Islamic radio streams covering 24/7 Tilawah, English/Urdu translations, Tafsir explanations, and Islamic lectures.
-- **Partnership with No Copyright Nasheed**: 400+ officially licensed, high-bitrate nasheeds with lyrics sync, sleep timers, and background playback.
+### 📚 Cloud E-Books Library (5-Volume Tafseer Anwar-ul-Bayan)
+- **Multi-Threaded CDN Downloader**: Download and read the complete 5-Volume *Tafseer Anwar-ul-Bayan* in high fidelity.
+- **Offline Byte Cache**: Download once, read forever without internet connectivity.
 
-### 📿 Complete Islamic Tools Hub
-- **Digital Tasbeeh**: Customizable Dhikr counter with Zen Mode, milestone targets (33, 99, 100), and vibration feedback.
-- **Hadith Encyclopedia (52,000+ Traditions)**: 16 complete books (Sahih al-Bukhari, Sahih Muslim, Sunan Abi Dawud, Jami` at-Tirmidhi, Sunan an-Nasa'i, Sunan Ibn Majah, and more) with grade verification badges (Sahih, Hasan, Da'if).
-- **Hisnul Muslim & Duas**: 80+ supplications categorized by daily occasions with transliteration, audio, and search.
-- **99 Names of Allah (Asma-ul-Husna)**: Beautiful calligraphy, meaning, and benefits of reflection.
-- **Prophetic Medicine (Tibb-e-Nabawi)**: Mood-based index offering spiritual remedies from the Quran and Sunnah.
-- **Qaza Salah Tracker & Menstrual Mode**: Comprehensive prayer debt management with intelligent habit preservation during cycles.
+### 💰 Multi-Currency Shariah Zakat & Nisab Calculator
+- **Gold & Silver Nisab Valuation**: Live and manual entry for 24K, 22K, 21K, and 18K gold and silver rates across 30+ global currencies.
+- **Comprehensive Asset Coverage**: Cash, bank balances, trade inventory, shares, mutual funds, gold/silver jewelry, and agricultural produce.
+- **Official Assessment Certificate**: Instant PDF generation with verification stamps for record-keeping.
 
-### 📱 5 High-Performance Android Widgets
-- **Next Prayer (4×2 & 4×1)**: Real-time countdown timer, next prayer badge, and location chip.
-- **Daily Ayah (4×2)**: Beautiful Arabic typography with RTL support and English translation.
-- **Daily Hadith (4×2)**: Rotating daily hadith with color-coded authentication badge.
-- **Quran Progress (4×2)**: Circular completion ring and reading streak tracker.
-- **Tasbeeh Counter (2×2)**: Tap-to-increment counter with zero-latency `PendingIntent` execution.
+### 🎬 Siraj Clip Studio
+- **Islamic Reel & Social Card Generator**: Turn Quranic verses and authentic Hadith into viral video reels and social cards.
+- **Theme-Synchronized Typography**: Uses the app's active color palette with high-contrast calligraphic rendering.
+- **Native Android MediaStore Integration**: Exports directly to device gallery (`Movies/Siraj` and `Pictures/Siraj`).
 
 ---
 
-## 🛡️ Privacy-First Architecture & Security
+## 🛡️ Privacy-First Architecture & Security Lock
 
-```mermaid
-flowchart TD
-    User([User Device]) -->|User Input / Preferences| LocalStorage[(Local Encrypted Storage)]
-    User -->|Sensor Data| CompassEngine[Local Compass & Gyro Sensor]
-    User -->|Date & Location| AstroEngine[Astronomical Solar Calculation Engine]
-    
-    AstroEngine -->|Local Timings| PrayerTimes[Daily Prayer Schedule]
-    CompassEngine -->|Local Math| KaabaBearing[Kaaba Direction]
-    
-    subgraph Device Boundary ["🛡️ 100% On-Device Boundary"]
-        LocalStorage
-        CompassEngine
-        AstroEngine
-        PrayerTimes
-        KaabaBearing
-    end
-    
-    DeviceBoundary -.->|Zero Analytics / Zero Telemetry| ExternalWorld[(Internet / Ad Networks)]
-    classDef safe fill:#14213D,stroke:#D4AF37,stroke-width:2px,color:#FFFFFF;
-    class DeviceBoundary,LocalStorage,CompassEngine,AstroEngine,PrayerTimes,KaabaBearing safe;
-```
-
-1. **Zero Tracking**: No Google Analytics, no Firebase Analytics, no Facebook SDK, no advertising IDs.
-2. **0 CodeQL Alerts**: Clean codebase verified against GitHub CodeQL security analysis with 0 vulnerabilities (`js/incomplete-multi-character-sanitization`, `js/clear-text-storage-of-sensitive-data` fully resolved).
-3. **Stealth 5-Tap Developer Vault**: The developer security vault in `Settings > About Noor Connect` remains completely hidden until tapping the version badge 5 times within 3 seconds, protected by one-way salted SHA-256 zero-knowledge proofs.
+1. **Zero-Tracking Guarantee**:
+   - Zero telemetry SDKs, zero third-party trackers, zero Google Analytics.
+   - All personal data is stored exclusively in IndexedDB and private SQLite databases on your device.
+2. **Stealth 5-Tap Owner Security Vault**:
+   - Access developer tools and diagnostics by tapping the **Version 3.0.0** badge 5 times within 3 seconds.
+   - Protected by salted SHA-256 zero-knowledge cryptographic verification.
+   - Zero plain-text key storage in source code or Git history.
+3. **Deep X-Ray Diagnostics Engine**:
+   - Built-in 8-point automated health scan covering storage integrity, notification channels, exact alarms, widget sync, and sensors.
 
 ---
 
 ## 🛠️ Building & Development
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or newer (v20+ recommended)
-- **JDK**: Java 17 (Temurin)
-- **Android SDK**: API level 34+ (Build tools 34.0.0 / 36.0.0)
+- Node.js `20.x` or later
+- JDK `17` (Temurin recommended)
+- Android SDK (`platforms;android-34` or `36`, `build-tools;36.0.0`)
+- Gradle `8.x`
 
-### 1. Clone & Install Dependencies
+### Quick Start
 ```bash
-git clone https://github.com/Ahmadnedariya786/Noor-connect.git
-cd Noor-connect
+# 1. Clone repository
+git clone https://github.com/Ahmadnedariya786/siraj.git
+cd siraj
+
+# 2. Install dependencies
 npm ci
-```
 
-### 2. Run Local Development Server
-```bash
-npm run dev
-# The web app will launch at http://localhost:5173
-```
+# 3. Synchronous typecheck and lint
+npm run typecheck
+npm run lint
 
-### 3. Verification Pipeline (Typecheck & Lint)
-```bash
-node scripts/typecheck.cjs  # 0 errors
-npm run lint               # 0 errors
-npm run build              # Builds production web bundle in dist/
-```
+# 4. Build web bundle
+npm run build
 
-### 4. Capture Real High-Res Screenshots
-```bash
-# Automated headless Chrome CDP capture across all 5 themes
-node scripts/capture-real-screenshots.cjs
-```
-
-### 5. Build Android Release / Debug APK
-```bash
-# Clean dist and sync Capacitor Android bridge
-node scripts/clean-dist-data.js
+# 5. Sync native Android project
 npx cap sync android
 
-# Build Debug APK
+# 6. Build debug APK
 cd android
 ./gradlew assembleDebug
-
-# Build Release Signed APK
-./gradlew assembleRelease
 ```
-The generated APK will be placed in `android/app/build/outputs/apk/release/app-release.apk`.
 
 ---
 
 ## 📜 License & Ummah Dedication
 
-This project is free and open-source software licensed under the **[GNU General Public License v3.0 (GPL-3.0-or-later)](LICENSE)**.
+Siraj is open-source software licensed under the **GNU General Public License v3.0** (`GPL-3.0-or-later`).
 
 ```
-Noor Connect — Modern Islamic Companion
-Copyright (C) 2026 Ahmad Nedariya and Noor Connect Contributors.
+Siraj — Your Sacred Islamic Companion
+Copyright (C) 2026 Ahmad Nedariya and Siraj Contributors.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 ```
-
-<div align="center">
-  <br/>
-  <p><i>"Indeed, in the remembrance of Allah do hearts find rest." (Surah Ar-Ra'd 13:28)</i></p>
-  <b>Crafted with love and devotion for the global Muslim Ummah 🌍</b>
-</div>

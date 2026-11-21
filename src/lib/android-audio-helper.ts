@@ -282,7 +282,7 @@ import { CapacitorMediaSession } from '@capawesome-team/capacitor-media-session'
 
 CapacitorMediaSession.create({
   title: 'Quran Radio',
-  artist: 'Noor Connect',
+  artist: 'Siraj',
   album: 'Islamic Radio',
   artwork: [{ src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' }]
 });

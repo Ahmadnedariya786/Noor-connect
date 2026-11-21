@@ -151,10 +151,10 @@ export default defineConfig(({ mode }) => ({
         "icon-384x384.png"
       ],
       manifest: {
-        id: "com.noorconnect.ummah.v1.2",
-        name: "Noor Connect - Islamic Companion",
-        short_name: "Noor Connect",
-        description: "Prayer times, Qur'an, Qibla, Tasbeeh, and Daily Hadith. Your complete Islamic companion app.",
+        id: "com.siraj.app.v3.0",
+        name: "Siraj — Your Sacred Islamic Companion",
+        short_name: "Siraj",
+        description: "Prayer times, Qur'an, Qibla, Tasbeeh, and Daily Hadith. Your sacred Islamic companion.",
         theme_color: "#150D2E",
         background_color: "#150D2E",
         display: "standalone",

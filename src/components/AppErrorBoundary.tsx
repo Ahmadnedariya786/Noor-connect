@@ -143,7 +143,7 @@ export class AppErrorBoundary extends Component<Props, State> {
       const route = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
       const commit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || 'unknown';
 
-      let md = `### Noor Connect — Crash Forensic Report\n`;
+      let md = `### Siraj — Crash Forensic Report\n`;
       md += `- **Error:** \`${errorName}: ${cleanMessage}\`\n`;
       md += `- **Route:** \`${route}\`\n`;
       md += `- **Commit:** \`${commit}\`\n`;
@@ -222,7 +222,7 @@ export class AppErrorBoundary extends Component<Props, State> {
               Something went wrong
             </h1>
             <p style={{ fontSize: '13px', color: '#94A3B8', margin: '0 0 20px', lineHeight: 1.5 }}>
-              Noor Connect encountered an unexpected issue during render. Your Quran and Qaza progress remain safely preserved locally.
+              Siraj encountered an unexpected issue during render. Your Quran and Qaza progress remain safely preserved locally.
             </p>
 
             {/* Error Diagnostics Box */}

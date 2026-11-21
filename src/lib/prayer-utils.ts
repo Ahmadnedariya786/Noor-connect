@@ -1,6 +1,6 @@
 /**
  * Prayer Utility Functions
- * Noor Connect - Shared helper for prayer display names and formatting
+ * Siraj - Shared helper for prayer display names and formatting
  */
 
 const PRAYER_CANONICAL_NAMES: Record<string, string> = {

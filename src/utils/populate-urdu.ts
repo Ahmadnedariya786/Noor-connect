@@ -7,7 +7,7 @@ const __dirname = dirname(__filename);
 
 // Urdu translations from the current translations.ts
 const urduTranslations = {
-  "appTitle": "نور کنیکٹ",
+  "appTitle": "سِراج",
   "home": "ہوم",
   "quran": "قرآن",
   "qibla": "قبلہ",
@@ -71,7 +71,7 @@ const urduTranslations = {
   "notificationsEnabled": "✅ نوٹیفیکیشنز فعال ہو گئیں!",
   "youllReceivePrayerReminders": "آب اب نماز کے اوقات اور اسلامی واقعات کی یاد دہانیاں حاصل کریں گے۔",
   "permissionDenied": "اجازت مسترد",
-  "goToAndroidSettings": "اینڈرائیڈ ترتیبات پر جائیں → ایپس → نور کنیکٹ → نوٹیفیکیشنز اور انہیں آن کریں۔",
+  "goToAndroidSettings": "اینڈرائیڈ ترتیبات پر جائیں → ایپس → سِراج → نوٹیفیکیشنز اور انہیں آن کریں۔",
   "clickLockIconAllowNotifications": "براؤزر ایڈریس بار میں لاک آئکن پر کلک کریں اور نوٹیفیکیشنز کی اجازت دیں۔",
   "testNotificationSent": "ٹیسٹ نوٹیفیکیشن بھیجی گئی",
   "failedToSendNotification": "نوٹیفیکیشن بھیجنے میں ناکام",

@@ -108,7 +108,7 @@ class PhotonAPIService {
         signal: this.searchAbortController.signal,
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'Noor-Connect-App/1.0'
+          'User-Agent': 'Siraj-App/3.0'
         }
       });
 
@@ -203,7 +203,7 @@ class PhotonAPIService {
         signal: this.searchAbortController.signal,
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'Noor-Connect-App/1.0'
+          'User-Agent': 'Siraj-App/3.0'
         }
       });
 

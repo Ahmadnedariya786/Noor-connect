@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Dedicated Tilawah Audio Player & Sleep Timer Modal
+ * Siraj — Dedicated Tilawah Audio Player & Sleep Timer Modal
  *
  * Full-screen jewel-styled player featuring:
  * - Now Playing calligraphy & metadata

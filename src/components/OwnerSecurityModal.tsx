@@ -286,7 +286,7 @@ export const OwnerSecurityModal: React.FC<OwnerSecurityModalProps> = ({
           className="text-[10px] text-center pt-1"
           style={{ color: 'var(--text-secondary)' }}
         >
-          Protected by SHA-256 salted cryptographic lock • Noor Connect Security
+          Protected by SHA-256 salted cryptographic lock • Siraj Security
         </div>
       </div>
     </div>

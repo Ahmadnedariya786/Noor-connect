@@ -1,4 +1,4 @@
-# Fixed Signing Key Setup for Noor Connect (Nightly Builds)
+# Fixed Signing Key Setup for Siraj (Nightly Builds)
 
 ## Overview & Goal
 
@@ -22,7 +22,7 @@ Configure the following **4 repository secrets** in GitHub:
 | `KEYSTORE_BASE64` | Base64-encoded content of the `.keystore` file | *(Paste the base64 string below)* |
 | `KEYSTORE_STORE_PASS` | Keystore password | `noor123connect` |
 | `KEYSTORE_KEY_PASS` | Private key alias password | `noor123connect` |
-| `KEYSTORE_ALIAS` | Private key alias | `noor-connect` |
+| `KEYSTORE_ALIAS` | Private key alias | `siraj` |
 
 ---
 
@@ -60,4 +60,4 @@ In `.github/workflows/nightly-apk.yml`:
 ## ⚠️ Security Notes
 
 - Keystore files (`*.keystore`, `keystore.txt`) are ignored by `.gitignore` and must **never** be committed to source control.
-- Backup the `noor-connect-release.keystore` file in a secure location (e.g. password manager or offline secure drive) to ensure signing continuity.
+- Backup the `siraj-release.keystore` file in a secure location (e.g. password manager or offline secure drive) to ensure signing continuity.

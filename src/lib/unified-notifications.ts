@@ -52,7 +52,7 @@ class UnifiedNotificationService {
       try {
         await LocalNotifications.createChannel({
           id: channelId,
-          name: 'Noor Connect Notifications',
+          name: 'Siraj Notifications',
           description: 'Prayer times and daily spiritual reminders',
           importance: 5, // High importance (shows heads-up banner + sound)
           visibility: 1, // Visible on lock screen
@@ -254,7 +254,7 @@ class UnifiedNotificationService {
 
       if (!granted) {
         const error = this.isCapacitor 
-          ? 'Notification permission denied. Please enable notifications in Android Settings → Apps → Noor Connect → Notifications'
+          ? 'Notification permission denied. Please enable notifications in Android Settings → Apps → Siraj → Notifications'
           : 'Notification permission denied. Please enable notifications in your browser settings';
         details.push(`ERROR: ${error}`);
         return {

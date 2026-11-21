@@ -1,4 +1,4 @@
-// Noor Connect — Living Sky Aura Component
+// Siraj — Living Sky Aura Component
 // Mihrab-inspired 60fps pure SVG/CSS celestial backdrop reflecting the active prayer phase
 // (Dawn / Morning Star, Solar Zenith, Maghrib Twilight, or Midnight Starfield & Crescent)
 

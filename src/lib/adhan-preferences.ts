@@ -18,7 +18,7 @@ export const ADHAN_OPTIONS = [
     { id: 'adhan-egyptian', name: 'Egyptian Adhan', url: '/audio/adhan-egyptian.mp3' },
     { id: 'adhan-classic', name: 'Classic Adhan', url: '/audio/adhan-classic.mp3' },
     { id: 'adhan-tvquran', name: 'TV Quran Adhan', url: '/audio/adhan-tvquran.mp3' },
-    { id: 'adhan-lovable', name: 'Noor Connect Adhan', url: '/audio/adhan-lovable.mp3' },
+    { id: 'adhan-lovable', name: 'Siraj Adhan', url: '/audio/adhan-lovable.mp3' },
 ];
 
 // All available adhans including Fajr-specific

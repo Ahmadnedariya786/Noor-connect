@@ -1,5 +1,5 @@
 /**
- * NOOR CONNECT — Zakat Al-Māl Assessment Certificate PDF Generator
+ * SIRAJ — Zakat Al-Māl Assessment Certificate PDF Generator
  * 
  * Spec-Compliant Single-Page A4 PDF (%PDF-1.4) Generator:
  * - High-DPI Offscreen HTML5 Canvas (1240 × 1754 px at 150 DPI)
@@ -649,7 +649,7 @@ interface ZakatPdfStrings {
 
 const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
   en: {
-    brandingSub: 'NOOR CONNECT — ISLAMIC COMPANION',
+    brandingSub: 'SIRAJ — ISLAMIC COMPANION',
     itemizedBreakdown: 'ITEMIZED WEALTH & LIABILITIES BREAKDOWN',
     amountHeader: 'AMOUNT',
     shariahAssessmentVerdict: 'SHARIAH ASSESSMENT & ZAKAT AL-MĀL VERDICT',
@@ -670,11 +670,11 @@ const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
     livestockPrefix: '🐑 Livestock:',
     ayahArabic: 'خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِمْ بِهَا',
     ayahTranslation: '“Take from their wealth a charity by which you purify them and cause them increase.” (Surah At-Tawbah 9:103)',
-    securityNote1: 'Calculated locally on your device according to authentic Islamic Shariah (Hawl & Nisab) • Noor Connect',
+    securityNote1: 'Calculated locally on your device according to authentic Islamic Shariah (Hawl & Nisab) • Siraj',
     securityNote2: 'Personal data never leaves your device • 100% Private, Secure & Offline-First',
   },
   ur: {
-    brandingSub: 'نور کنیکٹ — اسلامی رفیق',
+    brandingSub: 'سِراج — اسلامی رفیق',
     itemizedBreakdown: 'قابلِ زکوٰۃ مال اور واجبات کی تفصیل',
     amountHeader: 'رقم',
     shariahAssessmentVerdict: 'شرعی جائزہ اور زکوٰۃ المال کا حتمی فیصلہ',
@@ -695,7 +695,7 @@ const PDF_STRINGS: Record<ContentLang, ZakatPdfStrings> = {
     livestockPrefix: '🐑 مویشی:',
     ayahArabic: 'خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِمْ بِهَا',
     ayahTranslation: '”ان کے اموال میں سے صدقہ لیجیے جس کے ذریعے آپ انہیں پاک اور بابرکت بنائیں گے۔“ (سورہ التوبہ 9:103)',
-    securityNote1: 'آپ کے آلے پر مستند اسلامی شریعت (حول اور نصاب) کے مطابق حساب کیا گیا • نور کنیکٹ',
+    securityNote1: 'آپ کے آلے پر مستند اسلامی شریعت (حول اور نصاب) کے مطابق حساب کیا گیا • سِراج',
     securityNote2: 'ذاتی معلومات کبھی آپ کے آلے سے باہر نہیں جاتی • 100٪ نجی، محفوظ اور آف لائن',
   },
   gu: {
@@ -885,7 +885,7 @@ export async function generateZakatReportPdf(data: ZakatPdfData): Promise<Blob> 
   // y = 122: Tracked uppercase subtitle
   ctx.fillStyle = '#E2C15A';
   ctx.font = getPdfFont(data.lang, 12.5, true);
-  ctx.fillText('NOOR CONNECT • SHARIAH WEALTH & ZAKAT AL-MĀL CERTIFICATE', 620, 122);
+  ctx.fillText('SIRAJ • SHARIAH WEALTH & ZAKAT AL-MĀL CERTIFICATE', 620, 122);
 
   // y = 162: Bold localized main title + زكاة المال
   ctx.fillStyle = '#FFFFFF';
@@ -1314,7 +1314,7 @@ export async function shareZakatPdfReport(
       if (navigator.canShare({ files: [pdfFile] })) {
         await navigator.share({
           files: [pdfFile],
-          title: 'Noor Connect — Zakat Al-Māl Report',
+          title: 'Siraj — Zakat Al-Māl Report',
           text: summaryText,
         });
         return { success: true, method: 'web-share-file' };
@@ -1339,7 +1339,7 @@ export async function shareZakatPdfReport(
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'Noor Connect — Zakat Al-Māl Report',
+          title: 'Siraj — Zakat Al-Māl Report',
           text: summaryText,
         });
       } catch {

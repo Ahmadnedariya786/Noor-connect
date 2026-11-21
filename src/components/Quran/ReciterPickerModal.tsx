@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Searchable & Filterable 45+ Quran Reciters Modal
+ * Siraj — Searchable & Filterable 45+ Quran Reciters Modal
  *
  * Provides instant search and style filtering across 45+ world-renowned Qaris:
  * Murattal, Mujawwad, and Teacher / Muallim (Pedagogical Hifz repetitions).

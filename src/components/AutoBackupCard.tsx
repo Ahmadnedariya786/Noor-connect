@@ -455,7 +455,7 @@ export function AutoBackupCard() {
               </div>
               <p className="text-[11px] leading-relaxed text-muted-foreground">
                 {t('infoAutoBackupDesc') ||
-                  'Noor Connect automatically saves a snapshot of your data every 20 minutes while you use the app. This backup is stored locally on your phone inside the app\'s private storage. It includes everything — your salah tracker, qaza records, Quran bookmarks, reading progress, settings, habit tracker, quiz stats, and all preferences. The snapshot updates only when you\'re actively using the app, so it never wastes battery in the background.'}
+                  'Siraj automatically saves a snapshot of your data every 20 minutes while you use the app. This backup is stored locally on your phone inside the app\'s private storage. It includes everything — your salah tracker, qaza records, Quran bookmarks, reading progress, settings, habit tracker, quiz stats, and all preferences. The snapshot updates only when you\'re actively using the app, so it never wastes battery in the background.'}
               </p>
             </div>
 
@@ -471,7 +471,7 @@ export function AutoBackupCard() {
               </div>
               <p className="text-[11px] leading-relaxed text-muted-foreground">
                 {t('infoCloudBackupDesc') ||
-                  'On Android, if you have Google Drive backup enabled in your phone settings (Settings → Google → Backup), Noor Connect\'s data is automatically included in your Google cloud backup. This means if you get a new phone or reinstall the app, your data can be restored from Google Drive without you doing anything. Your backup stays under the 25 MB cloud limit — large downloadable content like audio and PDFs are excluded and re-downloaded after restore.'}
+                  'On Android, if you have Google Drive backup enabled in your phone settings (Settings → Google → Backup), Siraj\'s data is automatically included in your Google cloud backup. This means if you get a new phone or reinstall the app, your data can be restored from Google Drive without you doing anything. Your backup stays under the 25 MB cloud limit — large downloadable content like audio and PDFs are excluded and re-downloaded after restore.'}
               </p>
             </div>
 
@@ -503,7 +503,7 @@ export function AutoBackupCard() {
               </div>
               <p className="text-[11px] leading-relaxed text-muted-foreground">
                 {t('infoRestoreDesc') ||
-                  'When you reinstall Noor Connect, the app automatically detects your previous backup and asks if you want to restore it — no file selection needed. This works for both Google Drive cloud restore and local device restore. If you saved a manual backup file, you can also restore from it using the "Restore file" button. Your settings, prayer data, bookmarks, Quran progress, and all other data will come back exactly as you left them. Downloaded e-books and audio will be re-downloaded automatically during restore.'}
+                  'When you reinstall Siraj, the app automatically detects your previous backup and asks if you want to restore it — no file selection needed. This works for both Google Drive cloud restore and local device restore. If you saved a manual backup file, you can also restore from it using the "Restore file" button. Your settings, prayer data, bookmarks, Quran progress, and all other data will come back exactly as you left them. Downloaded e-books and audio will be re-downloaded automatically during restore.'}
               </p>
             </div>
           </div>

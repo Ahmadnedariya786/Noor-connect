@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Centralized Multi-Language Strings for Home, Prayer Names,
+ * Siraj — Centralized Multi-Language Strings for Home, Prayer Names,
  * Countdown Formatting, Quran Progress Badges, Tasbeeh & Micro-Tags (8 Languages)
  * Supports: en, ar, ur, gu, hi, bn, ru, fr with graceful English fallback.
  */
@@ -588,12 +588,12 @@ export const REVELATION_TYPE_I18N: Record<
 };
 
 export const SERVICES_TOOLS_BANNER_I18N: Record<LanguageCode, string> = {
-  en: 'Noor Connect • 17 Spiritual Tools',
+  en: 'Siraj • 17 Spiritual Tools',
   ar: 'نور كونكت • ١٧ أداة روحانية',
-  ur: 'نور کنیکٹ • ۱۷ روحانی ٹولز',
+  ur: 'سِراج • ۱۷ روحانی ٹولز',
   gu: 'નૂર કનેક્ટ • ૧૭ આધ્યાત્મિક સાધનો',
   hi: 'नूर कनेक्ट • १७ आध्यात्मिक साधन',
   bn: 'নূর কানেক্ট • ১৭টি আধ্যাত্মিক সরঞ্জাম',
-  ru: 'Noor Connect • 17 духовных инструментов',
-  fr: 'Noor Connect • 17 outils spirituels',
+  ru: 'Siraj • 17 духовных инструментов',
+  fr: 'Siraj • 17 outils spirituels',
 };

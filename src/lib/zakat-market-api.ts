@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Ultra-Smart Shariah Zakat & Nisab Market Rates Engine
+ * Siraj — Ultra-Smart Shariah Zakat & Nisab Market Rates Engine
  * 100% Offline-First with Live Bullion Fetching & Zero ₹0.00/g Bug Guarantee
  */
 

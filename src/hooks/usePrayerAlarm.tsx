@@ -74,7 +74,7 @@ export const usePrayerAlarm = () => {
         const nowGranted = await nativeAdhan.canScheduleExactAlarms();
         if (!nowGranted) {
           toast('Permission needed', {
-            description: 'Enable "Alarms & reminders" for Noor Connect in Settings to receive Adhan alerts.',
+            description: 'Enable "Alarms & reminders" for Siraj in Settings to receive Adhan alerts.',
           });
           return;
         }

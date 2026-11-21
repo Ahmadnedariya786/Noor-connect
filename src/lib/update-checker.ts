@@ -2,7 +2,7 @@
  * UpdateChecker Service (Native + Web safe)
  *
  * Checks for continuous nightly builds published to:
- * https://api.github.com/repos/Ahmadnedariya786/Noor-connect/releases/tags/nightly
+ * https://api.github.com/repos/Ahmadnedariya786/siraj/releases/tags/nightly
  *
  * Verdict rules:
  * 1. Read SHA from release body:
@@ -50,7 +50,7 @@ export {
   type OtaStatus,
 };
 
-const GITHUB_REPO = 'Ahmadnedariya786/Noor-connect';
+const GITHUB_REPO = 'Ahmadnedariya786/siraj';
 const NIGHTLY_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/tags/nightly`;
 const CACHE_KEY = 'noor_nightly_update_cache';
 const DISMISSED_COMMIT_KEY = 'noor_dismissed_update_commit';
@@ -60,7 +60,7 @@ const FETCH_TIMEOUT_MS = 8000; // 8 seconds
 export const UPDATE_CHECK_CACHE_KEY = 'noor_update_check_cache_v1';
 export const PASSIVE_CHECK_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes (passive check quota saver)
 
-export const DIRECT_APK_FALLBACK_URL = `https://github.com/${GITHUB_REPO}/releases/download/nightly/noor-connect-nightly.apk`;
+export const DIRECT_APK_FALLBACK_URL = `https://github.com/${GITHUB_REPO}/releases/download/nightly/siraj-nightly.apk`;
 
 /**
  * Guarantees the target download URL is the direct .apk asset URL,

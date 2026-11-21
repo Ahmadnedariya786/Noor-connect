@@ -187,7 +187,7 @@ export class LocationService {
       const timeoutId = setTimeout(() => controller.abort(), 3500);
 
       const response = await fetch(url, {
-        headers: { 'User-Agent': 'NoorConnect-IslamicApp/2.2' },
+        headers: { 'User-Agent': 'Siraj-IslamicApp/3.0' },
         signal: controller.signal,
       });
       clearTimeout(timeoutId);

@@ -362,7 +362,7 @@ export class LocalNotificationManager {
             title,
             body,
             largeBody,
-            summaryText: `${prayerName} Prayer • Noor Connect`,
+            summaryText: `${prayerName} Prayer • Siraj`,
             channelId: 'noor_prayer_hadith_alerts_v2',
             schedule: {
               at: prayerDate,

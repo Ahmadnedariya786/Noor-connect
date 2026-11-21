@@ -1,6 +1,6 @@
 /**
  * Nafl (Mustahabb / Sunnah) Prayer Time Calculator
- * Noor Connect — Privacy-First Islamic Companion
+ * Siraj — Privacy-First Islamic Companion
  *
  * Calculates the exact Start and End Time windows for the three highly rewarded Nafl prayers:
  *  1. Ishraq (صلاة الإشراق):

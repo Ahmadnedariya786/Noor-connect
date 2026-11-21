@@ -45,12 +45,12 @@ console.log('✓ PASS: Show Qaza End Time toggle verified');
 
 // 5. Verify Native Android Files exist
 const nativeFiles = [
-  'android/app/src/main/java/com/noorconnect/ummah/widgets/circularclock/NoorCircularClockWidget.kt',
-  'android/app/src/main/java/com/noorconnect/ummah/widgets/compactstrip/NoorCompactStripWidget.kt',
-  'android/app/src/main/java/com/noorconnect/ummah/widgets/nextprayer/NextPrayerWidget.kt',
-  'android/app/src/main/java/com/noorconnect/ummah/widgets/dailyayah/DailyAyahWidget.kt',
-  'android/app/src/main/java/com/noorconnect/ummah/widgets/WidgetStyleHelper.kt',
-  'android/app/src/main/java/com/noorconnect/ummah/widgets/WidgetPayloads.kt',
+  'android/app/src/main/java/com/siraj/app/widgets/circularclock/NoorCircularClockWidget.kt',
+  'android/app/src/main/java/com/siraj/app/widgets/compactstrip/NoorCompactStripWidget.kt',
+  'android/app/src/main/java/com/siraj/app/widgets/nextprayer/NextPrayerWidget.kt',
+  'android/app/src/main/java/com/siraj/app/widgets/dailyayah/DailyAyahWidget.kt',
+  'android/app/src/main/java/com/siraj/app/widgets/WidgetStyleHelper.kt',
+  'android/app/src/main/java/com/siraj/app/widgets/WidgetPayloads.kt',
   'android/app/src/main/res/layout/widget_circular_clock.xml',
   'android/app/src/main/res/layout/widget_compact_strip.xml',
   'android/app/src/main/res/layout/widget_next_prayer.xml',
@@ -120,8 +120,8 @@ assert.ok(
 console.log('✓ PASS: Makruh badge zero-overlap placement verified (video_3.mp4 fix)');
 
 // 11. Verify Friday Dhuhr / Jumuah lookup in NextPrayerWidget & NoorCompactStripWidget
-const nextPrayerCode = fs.readFileSync(path.resolve(__dirname, '../android/app/src/main/java/com/noorconnect/ummah/widgets/nextprayer/NextPrayerWidget.kt'), 'utf8');
-const compactStripCode = fs.readFileSync(path.resolve(__dirname, '../android/app/src/main/java/com/noorconnect/ummah/widgets/compactstrip/NoorCompactStripWidget.kt'), 'utf8');
+const nextPrayerCode = fs.readFileSync(path.resolve(__dirname, '../android/app/src/main/java/com/siraj/app/widgets/nextprayer/NextPrayerWidget.kt'), 'utf8');
+const compactStripCode = fs.readFileSync(path.resolve(__dirname, '../android/app/src/main/java/com/siraj/app/widgets/compactstrip/NoorCompactStripWidget.kt'), 'utf8');
 
 assert.ok(nextPrayerCode.includes('jumu'), 'NextPrayerWidget must match Friday Juma/Jumuah for Dhuhr time');
 assert.ok(compactStripCode.includes('jumu'), 'NoorCompactStripWidget must match Friday Juma/Jumuah for Dhuhr time');
@@ -140,7 +140,7 @@ assert.ok(
   'DeepLinkListener must deduplicate navigation to prevent loops'
 );
 
-const mainActivityPath = path.resolve(__dirname, '../android/app/src/main/java/com/noorconnect/ummah/MainActivity.java');
+const mainActivityPath = path.resolve(__dirname, '../android/app/src/main/java/com/siraj/app/MainActivity.java');
 const mainActivityCode = fs.readFileSync(mainActivityPath, 'utf8');
 assert.ok(
   mainActivityCode.includes('consumed.setData(null)'),

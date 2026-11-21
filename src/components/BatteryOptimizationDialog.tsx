@@ -91,7 +91,7 @@ export function BatteryOptimizationDialog({ onClose }: BatteryOptimizationDialog
               Battery Optimization Detected
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Your device has battery optimization enabled for Noor Connect. This may prevent adhan from playing reliably.
+              Your device has battery optimization enabled for Siraj. This may prevent adhan from playing reliably.
             </p>
           </div>
         </div>
@@ -116,7 +116,7 @@ export function BatteryOptimizationDialog({ onClose }: BatteryOptimizationDialog
                 Is it safe?
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Yes. Noor Connect uses minimal battery and only wakes up briefly at prayer times.
+                Yes. Siraj uses minimal battery and only wakes up briefly at prayer times.
               </p>
             </div>
           </div>
@@ -129,7 +129,7 @@ export function BatteryOptimizationDialog({ onClose }: BatteryOptimizationDialog
             size="lg"
           >
             <ExternalLink className="w-4 h-4 mr-2" />
-            Allow Noor Connect to Ignore Battery Optimization
+            Allow Siraj to Ignore Battery Optimization
           </Button>
           <Button
             onClick={handleOpenSettings}

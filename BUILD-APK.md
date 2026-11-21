@@ -38,8 +38,8 @@ base64 -w 0 noorconnectjks > keystore-base64.txt
 The nightly workflow runs automatically on every push to `main` (and via manual `workflow_dispatch`):
 
 - **Workflow:** `.github/workflows/nightly-apk.yml`
-- **Output:** Fixed GitHub Release tagged `nightly` with `noor-connect-nightly.apk`.
-- **In-App Integration:** Noor Connect automatically checks this release and notifies users when an update is available.
+- **Output:** Fixed GitHub Release tagged `nightly` with `siraj-nightly.apk`.
+- **In-App Integration:** Siraj automatically checks this release and notifies users when an update is available.
 
 ### 2. Tagged Signed Release Workflow
 
@@ -71,7 +71,7 @@ The workflow produces two APK variants:
 
 - Automatically created for each tag push
 - Includes both APK variants as release assets
-- Named: `noor-connect-<version>-standard.apk` and `noor-connect-<version>-fdroid.apk`
+- Named: `siraj-<version>-standard.apk` and `siraj-<version>-fdroid.apk`
 
 ## 🔍 Troubleshooting
 

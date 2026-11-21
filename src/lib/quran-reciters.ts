@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Authentic Quran Reciters Registry (45+ Curated Reciters)
+ * Siraj — Authentic Quran Reciters Registry (45+ Curated Reciters)
  *
  * Backed by the global EveryAyah CDN:
  * https://everyayah.com/data/{everyAyahDir}/{surah3}{ayah3}.mp3

@@ -1,4 +1,4 @@
-// Noor Connect — Word-by-Word Tilawah Recitation Timings Engine
+// Siraj — Word-by-Word Tilawah Recitation Timings Engine
 // Online-first with Quran.com v4 segments + seamless proportional fallback
 // 100% offline-first with zero personal data loss guarantee
 

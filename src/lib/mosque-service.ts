@@ -1,6 +1,6 @@
 /**
  * Free Nearby Mosque Finder & Local Jamaat Times Service
- * Noor Connect — Privacy-First Islamic Companion
+ * Siraj — Privacy-First Islamic Companion
  *
  * Uses OpenStreetMap Overpass API (zero paid API keys) + Photon Komoot Geo-Search
  * with parallel multi-mirror racing (<3s response), 24-hour localStorage caching,

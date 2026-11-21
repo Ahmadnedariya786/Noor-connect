@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Advanced Tilawah Playback Options Drawer
+ * Siraj — Advanced Tilawah Playback Options Drawer
  *
  * Signature recitation controls replicating eQuran:
  * - 45+ Reciter Switcher

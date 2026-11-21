@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Noor Connect Circular Progress-Arc Clock Widget (2×2 / 3×2)
+  Siraj Circular Progress-Arc Clock Widget (2×2 / 3×2)
   ─────────────────────────────────────────────────────────────
   - High-DPI Canvas-rendered Progress-Arc Disc (Offscreen Bitmap)
   - Native <TextClock> (Zero battery drain, auto-updates every minute)

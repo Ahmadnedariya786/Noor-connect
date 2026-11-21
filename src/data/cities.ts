@@ -1,5 +1,5 @@
 /**
- * Offline Cities Database for Noor Connect
+ * Offline Cities Database for Siraj
  * Comprehensive dataset containing major Indian cities and global popular cities
  * Provides instant, zero-network coordinate resolution, prayer calculation methods, and timezone matching.
  */

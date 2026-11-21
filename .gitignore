@@ -41,10 +41,12 @@ bun.lockb
 # Android
 android/app/noorconnectjks
 *.keystore
+*.jks
 keystore.txt
 keystore-base64.txt
 android/app/release.keystore
 android/keystore/
+extract_keys*.cjs
 
 # Build artifacts
 dist/
@@ -52,6 +54,7 @@ dist/
 .temp-probe/
 android/app/src/main/assets/public/
 *.pdf
+AnwarulBayan-Volume*.pdf
 
 # Python & Plugin Cache
 **/.pytest_cache/

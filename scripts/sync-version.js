@@ -73,7 +73,7 @@ function syncVersion() {
             commit,
             shortCommit: commit.length >= 7 ? commit.slice(0, 7) : commit,
             builtAt: new Date().toISOString(),
-            apkUrl: 'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk',
+            apkUrl: 'https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/siraj-nightly.apk',
         };
         fs.mkdirSync(path.join(rootDir, 'public'), { recursive: true });
         fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2));

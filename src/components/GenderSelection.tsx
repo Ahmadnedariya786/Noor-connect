@@ -48,7 +48,7 @@ export function GenderSelection({ onComplete }: GenderSelectionProps) {
       setGender(selectedGender);
       
       toast({
-        title: "Welcome to Noor Connect!",
+        title: "Welcome to Siraj!",
         description: selectedGender === "female" 
           ? "Menstrual mode features are now available for you."
           : "Your preferences have been saved.",
@@ -80,7 +80,7 @@ export function GenderSelection({ onComplete }: GenderSelectionProps) {
           {/* Header */}
           <div className="text-center space-y-2">
             <h2 className="text-xl font-semibold text-foreground">
-              Welcome to Noor Connect
+              Welcome to Siraj
             </h2>
             <p className="text-sm text-muted-foreground">
               Please select your gender to personalize your experience

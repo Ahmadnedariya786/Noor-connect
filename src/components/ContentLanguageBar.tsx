@@ -2,7 +2,7 @@
  * ContentLanguageBar Component
  * ─────────────────────────────────────────────────────────────
  * Royal 4-pill language selector: [ English ] [ اردو ] [ ગુજરાતી ] [ हिन्दी ]
- * Strictly consumes Noor Connect CSS variable tokens:
+ * Strictly consumes Siraj CSS variable tokens:
  *   Active:   var(--accent), var(--on-accent)
  *   Inactive: var(--surface-2), var(--border), var(--text-secondary)
  */

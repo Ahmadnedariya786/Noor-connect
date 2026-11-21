@@ -59,7 +59,7 @@ function RouteBreadcrumbTracker() {
 }
 
 /**
- * DeepLinkListener — subscribes to widget deep-links (noorconnect://app/<path>?<query>)
+ * DeepLinkListener — subscribes to widget deep-links (siraj://app/<path>?<query>)
  * and routes them through React Router. Must live inside <BrowserRouter> so useNavigate works.
 
  *
@@ -78,7 +78,7 @@ function DeepLinkListener() {
       if (lastHandledUrlRef.current === rawUrl) return;
       lastHandledUrlRef.current = rawUrl;
 
-      // Normalize "noorconnect://app/<path>" and bare "/<path>"
+      // Normalize "siraj://app/<path>" and bare "/<path>"
       let path = rawUrl.replace(/^noorconnect:\/\/app/, '').replace(/^https?:\/\/[^/]+/, '');
       if (!path.startsWith('/')) {
         path = '/' + path;

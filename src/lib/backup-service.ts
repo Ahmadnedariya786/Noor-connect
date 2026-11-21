@@ -1,5 +1,5 @@
 /**
- * BackupService — single source of truth for all backup/restore logic in Noor Connect.
+ * BackupService — single source of truth for all backup/restore logic in Siraj.
  *
  * Consolidates the legacy systems:
  *   - backup.ts v2.0 (manual export/import + single auto-backup in Preferences)
@@ -647,10 +647,10 @@ export const importBackupJson = async (text: string): Promise<BackupResult<Resto
   try {
     parsed = JSON.parse(text);
   } catch {
-    return { success: false, error: 'This file is not a Noor Connect backup file.' };
+    return { success: false, error: 'This file is not a Siraj backup file.' };
   }
   if (!parsed || typeof parsed !== 'object') {
-    return { success: false, error: 'This file is not a Noor Connect backup file.' };
+    return { success: false, error: 'This file is not a Siraj backup file.' };
   }
 
   const candidate = parsed as Partial<BackupData> & {
@@ -684,7 +684,7 @@ export const importBackupJson = async (text: string): Promise<BackupResult<Resto
     if (minor > Number(BACKUP_VERSION.split('.')[1] ?? 0)) {
       return {
         success: false,
-        error: 'This backup was made by a newer version of the app. Please update Noor Connect first.',
+        error: 'This backup was made by a newer version of the app. Please update Siraj first.',
       };
     }
     const payload: BackupData = {
@@ -698,7 +698,7 @@ export const importBackupJson = async (text: string): Promise<BackupResult<Resto
     return warnIfOlder(payload.exportedAt, summary);
   }
 
-  return { success: false, error: 'This file is not a Noor Connect backup file.' };
+  return { success: false, error: 'This file is not a Siraj backup file.' };
 };
 
 /** Restore the latest snapshot (used by the first-launch dialog). */
@@ -741,7 +741,7 @@ export const downloadBackup = async (): Promise<BackupResult<{ platform: ExportP
       return { success: false, error: built.error || 'Could not create a backup.' };
     }
     const json = built.data.json;
-    const filename = `noor-connect-backup-${new Date().toISOString().split('T')[0]}.json`;
+    const filename = `siraj-backup-${new Date().toISOString().split('T')[0]}.json`;
 
     if (Capacitor.isNativePlatform()) {
       try {
@@ -752,8 +752,8 @@ export const downloadBackup = async (): Promise<BackupResult<{ platform: ExportP
           encoding: Encoding.UTF8,
         });
         await Share.share({
-          title: 'Noor Connect Backup',
-          text: 'Save this file somewhere safe — it contains your Noor Connect data.',
+          title: 'Siraj Backup',
+          text: 'Save this file somewhere safe — it contains your Siraj data.',
           url: written.uri,
           dialogTitle: 'Save your backup',
         });

@@ -1,8 +1,27 @@
 # Changelog
 
-All notable changes to Noor Connect will be documented in this file.
+All notable changes to Siraj will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [3.0.0] - 2026-11-21
+
+### 🌟 Major Release — Complete Rebrand: Noor Connect to Siraj (`com.siraj.app`, `سِراج`)
+
+- **Full Android Package Migration**: Migrated package namespace and applicationId from `com.noorconnect.ummah` to `com.siraj.app` across Java/Kotlin sources, AndroidManifest, Gradle, Capacitor config, and all 7 native widgets with zero crashes.
+- **Brand Identity**: Rebranded 100% of Web, Android Native, Widgets, Clip Studio, Fastlane, F-Droid metadata, and documentation to **Siraj** (`سِراج`), Tagline: *"Your Sacred Islamic Companion"*.
+- **5 New Glass-Style Living Logo Editions**:
+  1. *Luminous Sanctuary Arch (Flagship)*: Pointed Islamic arch, glowing dome & radiant crescent.
+  2. *Kaaba Orbit*: Minimal isometric Kaaba & 3 Tawaf light orbs.
+  3. *Prayer Niche Arch*: Layered dual-arch prayer silhouette with geometric fringe accent.
+  4. *Dawn Horizon*: Spherical Fajr dome rising over geometric reflection lines.
+  5. *Siraj Star Emblem*: Luminous central lamp mark framed in 8-point Rub el Hizb architectural star.
+  - Zero `backdrop-filter` and zero SVG `drop-shadow`; dynamically adaptive to all 8 Royal Themes via CSS variables.
+- **Android Adaptive Launcher Icons & Splash**: New Android VectorDrawable `ic_launcher_foreground.xml` and luxury dark gradient background, plus regenerated high-res raster mipmaps (`mdpi` through `xxxhdpi`), `branding/siraj-logo.png`, `branding/app-icon-512.png`, and `assets/splash.png`.
+- **In-App Prayer Modal Polish**: Fixed duplicate Hadith reference quote and duplicate Rak'ah breakdown line (`1000598119.jpg`) across all 4 languages (Urdu, English, Gujarati, Hindi).
+- **Repository, OTA & CDN Endpoints**: Updated remote to `Ahmadnedariya786/siraj`, in-app OTA updater, and 5-Volume Anwar-ul-Bayan E-Books Cloud CDN endpoints.
 
 ---
 

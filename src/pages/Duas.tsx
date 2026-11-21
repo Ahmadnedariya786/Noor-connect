@@ -723,7 +723,7 @@ const Duas = memo(function Duas() {
   };
 
   const shareDua = async (dua: Dua) => {
-    const shareText = `"${dua.arabic}"\n\n${dua.transliteration}\n\nTranslation: ${dua.translation}\n— Source: ${dua.reference || "Hisn al-Muslim"}\nShared via Noor Connect`;
+    const shareText = `"${dua.arabic}"\n\n${dua.transliteration}\n\nTranslation: ${dua.translation}\n— Source: ${dua.reference || "Hisn al-Muslim"}\nShared via Siraj`;
     
     if (navigator.share) {
       try {

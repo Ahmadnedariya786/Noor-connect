@@ -1,7 +1,7 @@
 /**
  * 5-Waqt Sunnah Surah Spiritual Spotlight & Fazilat Engine
  *
- * Noor Connect (com.noorconnect.ummah)
+ * Siraj (com.siraj.app)
  * Dynamically spotlights the beloved Sunnah Surah corresponding to the active prayer window
  * (Fajr -> Ya-Sin, Dhuhr -> Ar-Rahman / Friday Al-Kahf, Asr -> Al-Kahf, Maghrib -> Al-Waqi'ah, Isha -> Al-Mulk)
  * and pairs it with an inspiring, heart-touching Fazilat hook across all 8 languages.

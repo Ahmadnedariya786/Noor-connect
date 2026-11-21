@@ -1,4 +1,4 @@
-// Noor Connect — Multi-Tier Universal Cloud E-Book Delivery Engine
+// Siraj — Multi-Tier Universal Cloud E-Book Delivery Engine
 // Streams large PDF volumes directly from GitHub Releases (ebooks-library-v1) via native Android stream proxy
 
 import { savePdfBlob } from './idb-pdf-store';
@@ -43,7 +43,7 @@ export interface DownloadProgressState {
 
 const STORAGE_CATALOG_KEY = 'noor_ebooks_cloud_catalog_v1';
 const REMOTE_CATALOG_URL =
-  'https://raw.githubusercontent.com/Ahmadnedariya786/Noor-connect/main/public/ebooks-catalog.json';
+  'https://raw.githubusercontent.com/Ahmadnedariya786/siraj/main/public/ebooks-catalog.json';
 
 export const FALLBACK_CATALOG: CloudEbookItem[] = [
   {
@@ -63,7 +63,7 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     fileName: 'AnwarulBayan-Volume1.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume1.pdf',
     githubReleaseUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
     localKey: 'anwar-ul-bayan-vol-1',
   },
   {
@@ -83,7 +83,7 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     fileName: 'AnwarulBayan-Volume2.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume2.pdf',
     githubReleaseUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
     localKey: 'anwar-ul-bayan-vol-2',
   },
   {
@@ -103,7 +103,7 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     fileName: 'AnwarulBayan-Volume3.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume3.pdf',
     githubReleaseUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
     localKey: 'anwar-ul-bayan-vol-3',
   },
   {
@@ -123,7 +123,7 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     fileName: 'AnwarulBayan-Volume4.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume4.pdf',
     githubReleaseUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
     localKey: 'anwar-ul-bayan-vol-4',
   },
   {
@@ -143,7 +143,7 @@ export const FALLBACK_CATALOG: CloudEbookItem[] = [
     fileName: 'AnwarulBayan-Volume5.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume5.pdf',
     githubReleaseUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
     localKey: 'anwar-ul-bayan-vol-5',
   },
 ];
@@ -292,7 +292,7 @@ export async function downloadCloudEbook(volId: string): Promise<boolean> {
     percent: 1,
     loadedBytes: 0,
     totalBytes: vol.approxBytes || 160000000,
-    statusText: 'Connecting to Noor Connect Cloud CDN...',
+    statusText: 'Connecting to Siraj Cloud CDN...',
   });
 
   for (let uIdx = 0; uIdx < urlsToTry.length; uIdx++) {

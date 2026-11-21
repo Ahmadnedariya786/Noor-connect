@@ -1,4 +1,4 @@
-// Noor Connect — Worship & Fasting Journal Localization (8 Languages)
+// Siraj — Worship & Fasting Journal Localization (8 Languages)
 // en, ar, ur, gu, hi, bn, ru, fr
 
 import type { LanguageCode } from './language-config';

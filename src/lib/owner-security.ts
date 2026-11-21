@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Cryptographic Owner Authorization & Security Engine
+ * Siraj — Cryptographic Owner Authorization & Security Engine
  *
  * Implements salted SHA-256 one-way hashing for Owner Master Key authentication,
  * session unlock management, brute-force cooldown protection, and diagnostics logging.

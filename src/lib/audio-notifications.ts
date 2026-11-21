@@ -188,7 +188,7 @@ class AudioNotificationService {
     this.mediaSession.metadata = new MediaMetadata({
       title: data.title,
       artist: data.artist,
-      album: data.album || 'Noor Connect',
+      album: data.album || 'Siraj',
       artwork
     });
 

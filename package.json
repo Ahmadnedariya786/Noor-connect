@@ -1,8 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "siraj",
   "private": true,
-  "version": "2.3.0",
-  "author": "Noor Connect Team",
+  "version": "3.0.0",
+  "author": "Siraj Team",
   "type": "module",
   "scripts": {
     "dev": "vite",

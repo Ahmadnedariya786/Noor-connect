@@ -1,4 +1,4 @@
-// Noor Connect — Home Screen Widgets Customizer Page
+// Siraj — Home Screen Widgets Customizer Page
 // Live 60fps Preview Card, 3-Style Live Preview Switcher, Surface Styles & Native Android Sync
 // 100% offline-first with zero personal data loss guarantee
 

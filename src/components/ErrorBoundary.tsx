@@ -127,7 +127,7 @@ export class ErrorBoundary extends Component<Props, State> {
       const now = new Date().toISOString();
       const commit = BUILD_COMMIT || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUILD_COMMIT) || 'unknown';
 
-      let md = `### Noor Connect — Crash Forensic Report\n`;
+      let md = `### Siraj — Crash Forensic Report\n`;
       md += `- **Error:** \`${errorName}: ${cleanMessage}\`\n`;
       md += `- **Route:** \`${route}\`\n`;
       md += `- **Commit:** \`${commit}\`\n`;

@@ -1,7 +1,7 @@
 /**
  * Qibla Precision & Astronomy Engine
  * Scientific horology-grade spherical trigonometry, WMM magnetic declination,
- * NOAA solar azimuth tracking, and shortest-arc angular smoothing for Noor Connect.
+ * NOAA solar azimuth tracking, and shortest-arc angular smoothing for Siraj.
  */
 
 export const KAABA_LAT = 21.422487;

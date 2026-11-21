@@ -1,4 +1,4 @@
-// Noor Connect — Localized Surah Names Mapping
+// Siraj — Localized Surah Names Mapping
 // Supports full native script localization across English, Urdu, Gujarati & Hindi (all 114 Surahs)
 
 export interface LocalizedSurahNames {

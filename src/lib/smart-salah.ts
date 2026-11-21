@@ -1,4 +1,4 @@
-// Noor Connect — Smart Salah Auto-DND, Alarm Stream & Advance Alerts Engine
+// Siraj — Smart Salah Auto-DND, Alarm Stream & Advance Alerts Engine
 // Seamless Native Android Sync with 8-Language Localization
 // 100% offline-first with zero personal data loss guarantee
 
@@ -208,7 +208,7 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     dndFridayExtendedLabel: 'Extend Jumu‘ah on Friday (45 min)',
     dndFridayExtendedSub: 'Automatically extends silence window for Friday Khutbah & Salah',
     dndPermissionTitle: 'Do Not Disturb Permission Required',
-    dndPermissionDesc: 'To automatically silence your phone at prayer time, Noor Connect needs system Do Not Disturb access.',
+    dndPermissionDesc: 'To automatically silence your phone at prayer time, Siraj needs system Do Not Disturb access.',
     dndGrantButton: 'Grant Do Not Disturb Permission →',
     countdownTitle: 'Live Prayer Countdown Notification',
     countdownSub: 'Pinned status bar notification with real-time countdown to next prayer',
@@ -266,7 +266,7 @@ const SMART_SALAH_I18N: Record<string, SmartSalahI18n> = {
     dndFridayExtendedLabel: 'جمعہ کے دن 45 منٹ تک بڑھائیں',
     dndFridayExtendedSub: 'خطبہ جمعہ اور نماز کے لیے خودکار طویل دورانیہ منتخب کریں',
     dndPermissionTitle: 'ڈو ناٹ ڈسٹرب (DND) کی اجازت درکار ہے',
-    dndPermissionDesc: 'نماز کے وقت فون خودکار خاموش کرنے کے لیے نور کنیکٹ کو DND ایکسس کی ضرورت ہے۔',
+    dndPermissionDesc: 'نماز کے وقت فون خودکار خاموش کرنے کے لیے سِراج کو DND ایکسس کی ضرورت ہے۔',
     dndGrantButton: 'ڈو ناٹ ڈسٹرب کی اجازت دیں ←',
     countdownTitle: 'لائیو نماز کاؤنٹ ڈاؤن نوٹیفکیشن',
     countdownSub: 'اسٹیٹس بار میں اگلی نماز تک لائیو چلنے والی ٹائمر نوٹیفکیشن',

@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Quran Clip Studio Canvas & WebAudio Engine
+ * Siraj — Quran Clip Studio Canvas & WebAudio Engine
  *
  * In-app Quran Ayah image card & recitation video (Reel / Story / Post) generator.
  * True "@sufariq"-Style Visual Storytelling:
@@ -2439,7 +2439,7 @@ export function prerenderAyahOffscreenCanvas(params: {
 }
 
 /**
- * Draw Sleek Progress Bar, Outer Golden Filigree Frame & Noor Connect Watermark
+ * Draw Sleek Progress Bar, Outer Golden Filigree Frame & Siraj Watermark
  * Signature "@sufariq" aesthetic (video_2.mp4)
  */
 export function drawClipOverlay(
@@ -2486,14 +2486,14 @@ export function drawClipOverlay(
   ctx.fillStyle = fillGrad;
   ctx.fillRect(barX, barY, barW * Math.min(1, Math.max(0, progress)), barH);
 
-  // 3. Noor Connect Watermark (Bottom)
+  // 3. Siraj Watermark (Bottom)
   const wmY = height - pad - 12;
   ctx.textAlign = 'center';
   ctx.font = '600 12px system-ui, -apple-system, sans-serif';
   ctx.fillStyle = 'rgba(220, 163, 73, 0.80)';
   ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
   ctx.shadowBlur = 6;
-  ctx.fillText('NOOR CONNECT • QURAN CLIP STUDIO', width * 0.5, wmY);
+  ctx.fillText('SIRAJ • CLIP STUDIO', width * 0.5, wmY);
 
   ctx.restore();
 }

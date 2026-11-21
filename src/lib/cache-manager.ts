@@ -1,4 +1,4 @@
-// Noor Connect — Cache Manager
+// Siraj — Cache Manager
 // Separates temporary API/Mushaf cache from protected personal data
 // 100% offline-safe with zero personal data loss guarantee
 

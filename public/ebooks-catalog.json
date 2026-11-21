@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
   "updatedAt": "2026-11-07T03:00:00Z",
-  "description": "Noor Connect Multi-Tier Cloud E-Books Catalog powered by GitHub Release CDN (ebooks-library-v1)",
+  "description": "Siraj Multi-Tier Cloud E-Books Catalog powered by GitHub Release CDN (ebooks-library-v1)",
   "catalog": [
     {
       "id": "anwar-ul-bayan-vol-1",
@@ -19,7 +19,7 @@
       "approxBytes": 165044224,
       "fileName": "AnwarulBayan-Volume1.pdf",
       "androidStreamUrl": "/__gh_ebook__/AnwarulBayan-Volume1.pdf",
-      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf",
+      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf",
       "localKey": "anwar-ul-bayan-vol-1"
     },
     {
@@ -38,7 +38,7 @@
       "approxBytes": 162214912,
       "fileName": "AnwarulBayan-Volume2.pdf",
       "androidStreamUrl": "/__gh_ebook__/AnwarulBayan-Volume2.pdf",
-      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf",
+      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf",
       "localKey": "anwar-ul-bayan-vol-2"
     },
     {
@@ -57,7 +57,7 @@
       "approxBytes": 146486272,
       "fileName": "AnwarulBayan-Volume3.pdf",
       "androidStreamUrl": "/__gh_ebook__/AnwarulBayan-Volume3.pdf",
-      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf",
+      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf",
       "localKey": "anwar-ul-bayan-vol-3"
     },
     {
@@ -76,7 +76,7 @@
       "approxBytes": 168296448,
       "fileName": "AnwarulBayan-Volume4.pdf",
       "androidStreamUrl": "/__gh_ebook__/AnwarulBayan-Volume4.pdf",
-      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf",
+      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf",
       "localKey": "anwar-ul-bayan-vol-4"
     },
     {
@@ -95,7 +95,7 @@
       "approxBytes": 155189248,
       "fileName": "AnwarulBayan-Volume5.pdf",
       "androidStreamUrl": "/__gh_ebook__/AnwarulBayan-Volume5.pdf",
-      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf",
+      "githubReleaseUrl": "https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf",
       "localKey": "anwar-ul-bayan-vol-5"
     }
   ]

@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Quran Guide & Quran UI Multi-Language Translations
+ * Siraj — Quran Guide & Quran UI Multi-Language Translations
  * Complete, natural, idiomatic localization across all 8 app languages:
  * en (English), ur (اردو), gu (ગુજરાતી), ar (العربية), hi (हिन्दी), bn (বাংলা), ru (Русский), fr (Français)
  */

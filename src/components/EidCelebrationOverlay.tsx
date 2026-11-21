@@ -170,7 +170,7 @@ export function EidCelebrationOverlay() {
                   if (navigator.share) {
                     navigator.share({
                       title: 'Eid Mubarak!',
-                      text: `Eid Mubarak! Wishing you and your family a blessed and joyous day. May Allah accept our good deeds. 🌙✨ - Shared via Noor Connect`,
+                      text: `Eid Mubarak! Wishing you and your family a blessed and joyous day. May Allah accept our good deeds. 🌙✨ - Shared via Siraj`,
                       url: window.location.origin
                     }).catch(console.error);
                   }
@@ -183,7 +183,7 @@ export function EidCelebrationOverlay() {
               
               <div className="flex items-center justify-center gap-2 text-white/40 text-xs">
                 <Heart className="w-3 h-3 text-red-500/50" />
-                <span>With love from Noor Connect</span>
+                <span>With love from Siraj</span>
               </div>
             </m.div>
           </div>

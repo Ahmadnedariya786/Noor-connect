@@ -1,5 +1,5 @@
 /**
- * Noor Connect — 5-Colour Smart Bookmarks System
+ * Siraj — 5-Colour Smart Bookmarks System
  *
  * Provides 5 jewel-toned bookmarks (Emerald, Gold, Sapphire, Violet, Ruby)
  * with "Moves as you read" auto-advancing progress tracking.

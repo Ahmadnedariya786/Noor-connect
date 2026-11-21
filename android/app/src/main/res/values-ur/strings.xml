@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">نور کنیکٹ</string>
-    <string name="title_activity_main">نور کنیکٹ</string>
+    <string name="app_name">سِراج</string>
+    <string name="title_activity_main">سِراج</string>
 
     <string name="widget_next_prayer_label">اگلی نماز</string>
     <string name="widget_daily_ayah_label">آج کی آیت</string>
@@ -15,7 +15,7 @@
     <string name="widget_quran_progress_desc">اپنی روزانہ قرآن پڑھنے کی پیش رفت ٹریک کریں۔</string>
     <string name="widget_tasbeeh_desc">تسبیح گننے کے لیے کہیں بھی ٹیپ کریں۔</string>
 
-    <string name="widget_empty_title">نور کنیکٹ</string>
+    <string name="widget_empty_title">سِراج</string>
     <string name="widget_empty_subtitle">ڈیٹا ہموار کرنے کے لیے ایپ کھولیں</string>
 
     <string name="widget_next_prayer_section">اگلی نماز</string>
@@ -60,7 +60,7 @@
     <string name="deeplink_quran_reading">/quran/reading</string>
     <string name="deeplink_tasbeeh">/tasbeeh</string>
 
-    <string name="app_uri_scheme">noorconnect</string>
+    <string name="app_uri_scheme">siraj</string>
     <string name="app_uri_host">app</string>
 
     <string name="notif_channel_widget_sync">وڈجٹ ہموار کرنا</string>

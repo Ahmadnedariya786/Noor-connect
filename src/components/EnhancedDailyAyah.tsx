@@ -337,7 +337,7 @@ export function EnhancedDailyAyah() {
   const shareAyah = async () => {
     if (!ayah) return;
     
-    const text = `"${ayah.translation}"\n\n— Quran ${ayah.surah} (${ayah.surahNumber}:${ayah.ayahNumber})\n\n#NoorConnect #Quran`;
+    const text = `"${ayah.translation}"\n\n— Quran ${ayah.surah} (${ayah.surahNumber}:${ayah.ayahNumber})\n\n#Siraj #Quran`;
     
     try {
       if (navigator.share) {

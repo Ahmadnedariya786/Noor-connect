@@ -240,7 +240,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
       </div>
 
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Noor Connect is privacy-first. We only request permissions necessary for core features like prayer times and notifications. All data stays strictly on your device.
+        Siraj is privacy-first. We only request permissions necessary for core features like prayer times and notifications. All data stays strictly on your device.
       </p>
 
       {/* Location Permission */}
@@ -533,7 +533,7 @@ const PermissionManager = ({ className }: PermissionManagerProps) => {
                 Alarms & Reminders
               </h4>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed break-words">
-                Allows Noor Connect to schedule exact prayer alarms that alert on time, even during Doze and battery saver modes.
+                Allows Siraj to schedule exact prayer alarms that alert on time, even during Doze and battery saver modes.
               </p>
             </div>
           </div>

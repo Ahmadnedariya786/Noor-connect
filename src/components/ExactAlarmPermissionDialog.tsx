@@ -167,7 +167,7 @@ export function ExactAlarmPermissionDialog() {
               <span style={{ color: 'hsl(45,85%,60%)' }}>
                 Alarms &amp; reminders
               </span>{' '}
-              settings page. Enable the toggle for Noor Connect, then return to
+              settings page. Enable the toggle for Siraj, then return to
               the app.
             </p>
           </div>

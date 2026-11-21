@@ -122,7 +122,7 @@ export class GeocodingService {
 
         const response = await fetch(url, {
           headers: {
-            'User-Agent': 'NoorConnect-IslamicApp/2.2 (contact@noorconnect.app)',
+            'User-Agent': 'Siraj-IslamicApp/3.0 (contact@siraj.app)',
             'Accept-Language': 'en',
           },
           signal: controller.signal,

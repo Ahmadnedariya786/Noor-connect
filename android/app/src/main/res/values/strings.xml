@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App name (retained) -->
-    <string name="app_name">Noor Connect</string>
-    <string name="title_activity_main">Noor Connect</string>
+    <string name="app_name">Siraj</string>
+    <string name="title_activity_main">Siraj</string>
 
     <!-- Widget labels (shown in widget picker) -->
-    <string name="widget_next_prayer_label">Next Prayer</string>
-    <string name="widget_circular_clock_label">Circular Clock</string>
-    <string name="widget_compact_strip_label">6-Prayer Strip</string>
-    <string name="widget_daily_ayah_label">Daily Ayah</string>
-    <string name="widget_daily_hadith_label">Daily Hadith</string>
-    <string name="widget_quran_progress_label">Quran Progress</string>
-    <string name="widget_tasbeeh_label">Tasbeeh Counter</string>
+    <string name="widget_next_prayer_label">Siraj • Next Prayer</string>
+    <string name="widget_circular_clock_label">Siraj • Circular Clock</string>
+    <string name="widget_compact_strip_label">Siraj • 6-Prayer Strip</string>
+    <string name="widget_daily_ayah_label">Siraj • Daily Ayah</string>
+    <string name="widget_daily_hadith_label">Siraj • Daily Hadith</string>
+    <string name="widget_quran_progress_label">Siraj • Quran Progress</string>
+    <string name="widget_tasbeeh_label">Siraj • Tasbeeh</string>
 
     <!-- Widget descriptions (shown under label in picker) -->
     <string name="widget_next_prayer_desc">Live countdown to the next salah with progress ring.</string>
@@ -23,7 +23,7 @@
     <string name="widget_tasbeeh_desc">Tap anywhere to count your dhikr, with haptic feedback.</string>
 
     <!-- Empty states -->
-    <string name="widget_empty_title">Noor Connect</string>
+    <string name="widget_empty_title">Siraj</string>
     <string name="widget_empty_subtitle">Open the app to sync your data</string>
     <string name="widget_empty_message">Tap to set up prayer times and start tracking your spiritual journey</string>
     <string name="widget_empty_action">Open App</string>
@@ -76,7 +76,7 @@
     <string name="widget_tasbeeh_total_today_format">Total today: %1$d</string>
     <string name="widget_tasbeeh_total_today_default">Total today: 0</string>
     <string name="widget_tasbeeh_reset_desc">Reset tasbeeh counter</string>
-    <string name="widget_tasbeeh_open_app_desc">Open Noor Connect app</string>
+    <string name="widget_tasbeeh_open_app_desc">Open Siraj app</string>
 
     <!-- Stale data badge -->
     <string name="widget_stale_badge_text">Stale</string>
@@ -99,7 +99,7 @@
     <string name="deeplink_tasbeeh">/tasbeeh</string>
 
     <!-- App URI scheme -->
-    <string name="app_uri_scheme">noorconnect</string>
+    <string name="app_uri_scheme">siraj</string>
     <string name="app_uri_host">app</string>
 
     <!-- Notifications -->
@@ -134,5 +134,7 @@
     <string name="prayer_isha">Isha</string>
 
     <!-- Boot / app events -->
-    <string name="boot_reschedule_action">com.noorconnect.ummah.BOOT_REschedule</string>
+    <string name="boot_reschedule_action">com.siraj.app.BOOT_REschedule</string>
+    <string name="package_name">com.siraj.app</string>
+    <string name="custom_url_scheme">siraj</string>
 </resources>

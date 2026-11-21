@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Noor Connect</string>
-    <string name="title_activity_main">Noor Connect</string>
+    <string name="app_name">Siraj</string>
+    <string name="title_activity_main">Siraj</string>
 
     <string name="widget_next_prayer_label">Sonraki Namaz</string>
     <string name="widget_daily_ayah_label">Günün Ayeti</string>
@@ -15,7 +15,7 @@
     <string name="widget_quran_progress_desc">Günlük Kuran okuma ilerlemenizi takip edin.</string>
     <string name="widget_tasbeeh_desc">Zikir saymak için her yere dokunun.</string>
 
-    <string name="widget_empty_title">Noor Connect</string>
+    <string name="widget_empty_title">Siraj</string>
     <string name="widget_empty_subtitle">Verilerinizi senkronize etmek için uygulamayı açın</string>
 
     <string name="widget_next_prayer_section">SONRAKİ NAMAZ</string>

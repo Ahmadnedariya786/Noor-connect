@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Global Persistent Tilawah Audio Engine & Context
+ * Siraj — Global Persistent Tilawah Audio Engine & Context
  *
  * Provides a single persistent ayah-by-ayah recitation controller at the root App level
  * with gapless preloading, MediaSession lockscreen integration, sleep timer,
@@ -443,7 +443,7 @@ export const TilawahProvider: React.FC<{ children: React.ReactNode }> = ({ child
       navigator.mediaSession.metadata = new MediaMetadata({
         title: `${surahInfo.englishName} • Ayah ${currentSurah}:${currentAyah}`,
         artist: reciter.name,
-        album: 'Noor Connect Tilawah',
+        album: 'Siraj Tilawah',
         artwork: [
           { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },

@@ -93,7 +93,7 @@ function waitForUserReturn(options?: WaitForUserReturnOptions): Promise<void> {
 /**
  * Executes STEP B only:
  * 1. Attaches return listeners BEFORE firing the intent.
- * 2. Opens the system "Alarms & reminders" settings page for Noor Connect.
+ * 2. Opens the system "Alarms & reminders" settings page for Siraj.
  * 3. Waits for the user to return from settings (with 1s grace period and 75s timeout).
  * 4. Shows a small toast hint:
  *    - Success hint if exact-alarm permission is now granted.

@@ -430,19 +430,19 @@ export default function QazaPage() {
   const grandFidyaTotal = salahFidyaTotal + fastsFidyaTotal;
 
   const handleShareFidya = async () => {
-    const text = `🕋 Noor Connect — Fidya & Kaffarah Calculation
+    const text = `🕋 Siraj — Fidya & Kaffarah Calculation
 • Missed Salah: ${parsedCustomPrayers} prayers = ${currencyConfig.symbol}${salahFidyaTotal.toLocaleString()}
 • Missed Ramadan Fasts: ${parsedMissedFasts} days = ${currencyConfig.symbol}${fastsFidyaTotal.toLocaleString()}
 • Fidya Rate: ${currencyConfig.symbol}${parsedCostPerUnit} per unit (Half Sa' ~1.6kg wheat equivalent)
 • Grand Total Fidya: ${currencyConfig.symbol}${grandFidyaTotal.toLocaleString()} ${currencyConfig.code}
 
-(Calculated in Noor Connect)`;
+(Calculated in Siraj)`;
 
     let shared = false;
     try {
       const { Share } = await import('@capacitor/share');
       await Share.share({
-        title: "Fidya Calculation — Noor Connect",
+        title: "Fidya Calculation — Siraj",
         text,
         dialogTitle: "Share Fidya Calculation",
       });
@@ -454,7 +454,7 @@ export default function QazaPage() {
     if (!shared && typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: "Fidya Calculation — Noor Connect",
+          title: "Fidya Calculation — Siraj",
           text,
         });
         shared = true;

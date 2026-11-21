@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Tilawah Audio Data & Reciter Registry
+ * Siraj — Tilawah Audio Data & Reciter Registry
  *
  * Curated online-first ayah-by-ayah recitation engine with dual CDN endpoints:
  * 1. Primary: cdn.islamic.network/quran/audio/128/{reciterId}/{globalAyahNumber}.mp3

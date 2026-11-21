@@ -1,4 +1,4 @@
-// Noor Connect — Interactive Uthmani Mushaf Data Layer
+// Siraj — Interactive Uthmani Mushaf Data Layer
 // Fetches word-by-word data, audio urls, and authentic Tajweed tokens from Quran.com v4 API
 // 100% offline-safe with localStorage caching and seamless fallback
 

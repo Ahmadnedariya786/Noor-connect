@@ -31,6 +31,19 @@ const STORAGE_KEYS = {
 // Changelog data - ordered from newest to oldest
 export const CHANGELOG_DATA: VersionChangelog[] = [
   {
+    version: '3.0.0',
+    date: '2026-11-21',
+    title: 'Major Release — Complete Rebrand: Noor Connect to Siraj (com.siraj.app, سِراج)',
+    changes: [
+      { type: 'feature', description: 'Full Android Package Migration: Migrated package namespace and applicationId from com.noorconnect.ummah to com.siraj.app across all sources, manifest, gradle, capacitor config, and all 7 native widgets.' },
+      { type: 'feature', description: 'Brand Identity: 100% Web, Native, Widgets, Clip Studio, Fastlane, and Docs migration to Siraj (سِراج), Tagline: Your Sacred Islamic Companion.' },
+      { type: 'feature', description: '5 New Glass-Style Living Logo Editions: Luminous Sanctuary Arch (Flagship), Kaaba Orbit, Prayer Niche Arch, Dawn Horizon, and Siraj Star Emblem.' },
+      { type: 'feature', description: 'Android Adaptive Icons & Splash: Crisp VectorDrawable launcher icons, deep luxury dark background, and high-res adaptive raster assets.' },
+      { type: 'fix', description: 'In-App Prayer Modal Polish: Fixed duplicate Hadith reference citation and duplicate Rak\'ah breakdown line across all 4 languages (EN, UR, GU, HI).' },
+      { type: 'improvement', description: 'Repository & Endpoints: Migrated remote to Ahmadnedariya786/siraj, updated OTA endpoints and 5-Volume Anwar-ul-Bayan E-Books CDN downloaders.' },
+    ],
+  },
+  {
     version: '2.3.0',
     date: '2026-11-09',
     title: 'Ultimate Combined Edition — 8 Signature Royal Themes, Smart Home, Mushaf DP & Cloud E-Books',
@@ -38,7 +51,7 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
       { type: 'feature', description: '8 Signature Royal Themes & 5 Logo Editions: Oxford Gold, Haramain Noir, Imperial Violet, Burgundy Velvet, Desert Scroll, Royal Sapphire, Madinah Emerald, and Persian Indigo.' },
       { type: 'feature', description: 'Smart Home Screen & Top Qaza Reminder: Persistent top Qaza makeup banner, collapsible Nafl accordion, Makruh Waqt engine, and Phase 2 Worship & Fasting Journal with 3-month consistency heatmap.' },
       { type: 'feature', description: 'Phase 3 Quran & Cloud E-Books Suite: Knuth-Plass DP balanced 7L/13L/15L Mushaf with 6-page memory prefetch, Smart Khatmah planner + Juz hub, 47 authentic reciters, 14+ Tafsir sources, and 5-Volume Tafseer Anwar-ul-Bayan Cloud CDN downloader.' },
-      { type: 'feature', description: 'Home Screen Widgets & Security: 1-tap pin widgets (including interactive Tasbeeh widget), SHA-256 Owner Security Vault, and 8/8 Deep X-Ray Diagnostics on com.noorconnect.ummah.' },
+      { type: 'feature', description: 'Home Screen Widgets & Security: 1-tap pin widgets (including interactive Tasbeeh widget), SHA-256 Owner Security Vault, and 8/8 Deep X-Ray Diagnostics on com.siraj.app.' },
       { type: 'improvement', description: 'Visual Consistency & Polish: 20-point visual sweep with sequential page fade transitions, themed custom bottom-sheet selectors for Zakat Calculator, 360px viewport zero-truncation guarantee, and full Urdu, Gujarati, & Hindi localization.' },
     ],
   },
@@ -136,7 +149,7 @@ export const CHANGELOG_DATA: VersionChangelog[] = [
   {
     version: '2.0.0',
     date: '2026-07-10',
-    title: 'Noor Connect 2.0 — Major Release',
+    title: 'Siraj 2.0 — Major Release',
     changes: [
       { type: 'feature', description: 'Widget System v2: 5 native Kotlin widgets (Next Prayer, Daily Ayah, Daily Hadith, Quran Progress, Tasbeeh Counter) rebuilt from scratch with Material You dynamic color.' },
       { type: 'feature', description: 'Noor Cycle: ovulation day tracking, cycle insights, fertile window, analytics tab with recharts, and PDF doctor report export.' },

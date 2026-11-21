@@ -1,8 +1,8 @@
 /**
- * Noor Connect — Quran Clip Studio Modal
+ * Siraj — Quran Clip Studio Modal
  *
  * In-app Quran Ayah image card & recitation video (Reel / Story / Post) generator.
- * Styled purely with Noor Connect's active CSS theme tokens and 360px viewport safety.
+ * Styled purely with Siraj's active CSS theme tokens and 360px viewport safety.
  */
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -805,9 +805,9 @@ export const QuranClipStudioModal: React.FC<QuranClipStudioModalProps> = ({
 `﷽
 ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${cite}]
 🎙️ Reciter: ${activeReciter.name}
-✨ Created with Noor Connect
+✨ Created with Siraj
 
-#Quran #QuranRecitation #Surah${cleanSurahName} #NoorConnect #AyahOfTheDay #IslamicReels #Dhikr #Islam`;
+#Quran #QuranRecitation #Surah${cleanSurahName} #Siraj #AyahOfTheDay #IslamicReels #Dhikr #Islam`;
 
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -842,9 +842,9 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${cite}]
     const viralCaption =
 `﷽
 ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
-✨ Created with Noor Connect
+✨ Created with Siraj
 
-#Quran #AyahOfTheDay #Surah${cleanSurahName} #NoorConnect #IslamicQuotes #Dhikr #Islam`;
+#Quran #AyahOfTheDay #Surah${cleanSurahName} #Siraj #IslamicQuotes #Dhikr #Islam`;
 
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -871,7 +871,7 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
 
     if (Capacitor.isNativePlatform()) {
       try {
-        toast.info('Saving to Gallery (Movies/NoorConnect)...');
+        toast.info('Saving to Gallery (Movies/Siraj)...');
         await writeBlobToNativeCache(videoResult.blob, filename);
         const res = await NoorMediaBridge.saveToGallery({
           cacheFileName: filename,
@@ -934,7 +934,7 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
 
     if (Capacitor.isNativePlatform()) {
       try {
-        toast.info('Saving to Gallery (Pictures/NoorConnect)...');
+        toast.info('Saving to Gallery (Pictures/Siraj)...');
         await writeBlobToNativeCache(currentBlob, filename);
         const res = await NoorMediaBridge.saveToGallery({
           cacheFileName: filename,
@@ -993,7 +993,7 @@ ${firstTranslation}📖 Surah ${surahNameEnglish} [${surahNumber}:${fromAyah}]
             </div>
             <div className="min-w-0">
               <h2 className="text-sm font-bold text-[var(--text-primary)] truncate">
-                Noor Clip Studio
+                Siraj Clip Studio
               </h2>
               <p className="text-[11px] text-[var(--text-secondary)] truncate">
                 Surah {surahNameEnglish} • <span dir="rtl" className="font-arabic">{surahNameArabic}</span>

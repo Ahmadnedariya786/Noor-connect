@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Interactive Ayah Study, Multi-Tafsir & Hifz Memorization Sheet
+ * Siraj — Interactive Ayah Study, Multi-Tafsir & Hifz Memorization Sheet
  *
  * Full-featured bottom sheet for /quran/:id featuring:
  * 1. Vocalized Arabic with line-height 2.25, font scaling, audio play/repeat
@@ -836,7 +836,7 @@ export const AyahStudySheet: React.FC<AyahStudySheetProps> = ({
   const handleShareAyah = async () => {
     const textToShare = `Quran ${surahInfo?.englishName || 'Surah'} [${surahNumber}:${activeAyah}]\n\n${arabicText}\n\n"${
       translationsMap[selectedEdition] || ''
-    }"\n\n— Read on Noor Connect`;
+    }"\n\n— Read on Siraj`;
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {

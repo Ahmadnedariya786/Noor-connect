@@ -1,4 +1,4 @@
-// Noor Connect — Interactive Uthmani Mushaf Page Component
+// Siraj — Interactive Uthmani Mushaf Page Component
 // Features: Jewel Ink, Tajweed Colors, Word-by-Word Jewel Popover, Live Recitation Sync & Audio Auto-Follow
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';

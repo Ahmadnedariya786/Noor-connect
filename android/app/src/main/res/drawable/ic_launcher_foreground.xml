@@ -1,3 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@mipmap/ic_launcher_foreground" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Subtle Golden Outer Ring (Safe Zone Boundary 66dp) -->
+    <path
+        android:pathData="M54,54m-33,0a33,33 0 1,1 66,0a33,33 0 1,1 -66,0"
+        android:strokeColor="#80D4AF37"
+        android:strokeWidth="0.8"
+        android:strokeLineJoin="round" />
+
+    <!-- Dome Behind Pointed Arch -->
+    <path
+        android:pathData="M43,62C43,48 65,48 65,62Z"
+        android:fillColor="#33D4AF37"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="0.8" />
+
+    <!-- Luminous Sanctuary Pointed Arch -->
+    <path
+        android:pathData="M38,76L38,55C38,42 54,30 54,30C54,30 70,42 70,55L70,76Z"
+        android:fillColor="#22D4AF37"
+        android:strokeColor="#FFFDF0"
+        android:strokeWidth="1.6"
+        android:strokeLineJoin="round" />
+
+    <!-- Inner Decorative Arch -->
+    <path
+        android:pathData="M42,76L42,57C42,46 54,36 54,36C54,36 66,46 66,57L66,76"
+        android:strokeColor="#FDE08A"
+        android:strokeWidth="0.8" />
+
+    <!-- Radiant Islamic Crescent Inside Sanctuary -->
+    <path
+        android:pathData="M57,47C50.5,47 46,52 46,58C46,64.2 50.8,68.5 57,68.5C60.2,68.5 63,67 64.8,64.8C60.8,66.5 55,64.5 53,59.5C51.2,54.8 53.2,49.2 57,48.2C56.8,47.5 56.9,47 57,47Z"
+        android:fillColor="#FFFDF0" />
+
+    <!-- 5-Point Radiant Star Beside Crescent -->
+    <path
+        android:pathData="M60.5,52L61.2,53.8L63.2,54L61.7,55.4L62.2,57.3L60.5,56.2L58.8,57.3L59.3,55.4L57.8,54L59.8,53.8Z"
+        android:fillColor="#FDE08A" />
+
+    <!-- Arch Top Finial Ornament -->
+    <path
+        android:pathData="M54,30L54,27"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,26m-1.5,0a1.5,1.5 0 1,1 3,0a1.5,1.5 0 1,1 -3,0"
+        android:fillColor="#FFFDF0" />
+
+    <!-- Sanctuary Base Plinth -->
+    <path
+        android:pathData="M34,76L74,76"
+        android:strokeColor="#FFFDF0"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M39,79L69,79"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round" />
+</vector>

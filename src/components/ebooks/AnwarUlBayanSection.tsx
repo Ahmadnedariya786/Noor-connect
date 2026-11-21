@@ -390,7 +390,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
           </div>
 
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-2xl">
-            A celebrated 20th-century exegesis renowned throughout the Muslim world for combining authentic classical sources (Tabari, Ibn Kathir, Qurtubi) with contemporary clarity. Stream directly from Noor Connect Cloud or save 100% offline into app storage.
+            A celebrated 20th-century exegesis renowned throughout the Muslim world for combining authentic classical sources (Tabari, Ibn Kathir, Qurtubi) with contemporary clarity. Stream directly from Siraj Cloud or save 100% offline into app storage.
           </p>
 
           <div className="pt-2 flex items-center gap-2 flex-wrap">
@@ -786,7 +786,7 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
 
               {/* 2 Clear, 100% Working Delivery Options */}
               <div className="space-y-2.5 w-full max-w-full min-w-0">
-                {/* Option 1: High-Speed Native Stream & Download from Noor Connect Cloud */}
+                {/* Option 1: High-Speed Native Stream & Download from Siraj Cloud */}
                 <div
                   className="p-3.5 rounded-xl border border-[var(--accent)] space-y-2.5 w-full max-w-full min-w-0"
                   style={{ background: 'var(--accent-soft)', boxSizing: 'border-box' }}
@@ -794,14 +794,14 @@ export const AnwarUlBayanSection: React.FC<AnwarUlBayanSectionProps> = ({ onOpen
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-text)]">
                       <Cloud className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                      <span>Download & Open from Noor Connect Cloud</span>
+                      <span>Download & Open from Siraj Cloud</span>
                     </div>
                     <span className="text-[10px] font-bold text-[var(--accent-text)] bg-[var(--surface)] px-2 py-0.5 rounded-full border border-[var(--border)]">
                       Permanent Offline
                     </span>
                   </div>
                   <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-                    Streams {overviewVolume.fileName} directly from the Noor Connect Release CDN into app IndexedDB storage. Opens automatically in the reader upon completion.
+                    Streams {overviewVolume.fileName} directly from the Siraj Release CDN into app IndexedDB storage. Opens automatically in the reader upon completion.
                   </p>
 
                   {downloads[overviewVolume.id]?.isDownloading ? (

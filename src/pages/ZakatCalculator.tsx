@@ -577,7 +577,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
 
       const dateFormatted = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       const summaryText = [
-        `🕋 NOOR CONNECT — ZAKAT AL-MĀL ASSESSMENT REPORT`,
+        `🕋 SIRAJ — ZAKAT AL-MĀL ASSESSMENT REPORT`,
         `📅 Date: ${dateFormatted}`,
         `💰 Currency: ${activeCurrency}`,
         `---------------------------------`,
@@ -592,7 +592,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
         ...(ushrResult.due > 0 ? [`🌾 Agricultural Produce Ushr: ${formatCurrencyAmount(ushrResult.due, activeCurrency)} (${ushrResult.label})`] : []),
         ...(livestockResult?.isZakatable ? [`🐑 Livestock Zakat: ${livestockResult.dueText}`] : []),
         `---------------------------------`,
-        `Calculated locally with Noor Connect (100% Offline & Private)`,
+        `Calculated locally with Siraj (100% Offline & Private)`,
       ].join('\n');
 
       const result = await shareZakatPdfReport(pdfData, summaryText);
@@ -613,7 +613,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
   const handleCopyTextReceipt = async () => {
     const dateFormatted = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     const receiptText = [
-      `🕋 NOOR CONNECT — ZAKAT AL-MĀL CALCULATION`,
+      `🕋 SIRAJ — ZAKAT AL-MĀL CALCULATION`,
       `📅 Date: ${dateFormatted}`,
       `💰 Currency: ${activeCurrency}`,
       `---------------------------------`,
@@ -628,7 +628,7 @@ export default function ZakatCalculator({ isEmbedded = false, onBack }: ZakatCal
       ...(ushrResult.due > 0 ? [`🌾 Agricultural Ushr: ${formatCurrencyAmount(ushrResult.due, activeCurrency)} (${ushrResult.label})`] : []),
       ...(livestockResult?.isZakatable ? [`🐑 Livestock Zakat: ${livestockResult.dueText}`] : []),
       `---------------------------------`,
-      `Calculated with Noor Connect (100% Offline & Private)`,
+      `Calculated with Siraj (100% Offline & Private)`,
     ].join('\n');
 
     try {

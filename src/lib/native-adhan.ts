@@ -45,7 +45,7 @@ class NativeAdhanBridge {
 
   /**
    * Show the in-app rationale modal, then (if the user taps Allow)
-   * fire ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent for Noor Connect
+   * fire ACTION_REQUEST_SCHEDULE_EXACT_ALARM intent for Siraj
    * which opens the system "Alarms & reminders" screen with the app focused.
    */
   async requestExactAlarmPermission(): Promise<boolean> {

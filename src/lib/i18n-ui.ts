@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Centralized Multi-Language UI Strings (8 Languages)
+ * Siraj — Centralized Multi-Language UI Strings (8 Languages)
  * Single source of truth for Home, Services, Settings, Qibla, and Quran chrome.
  * Supports: en, ar, ur, gu, hi, bn, ru, fr with graceful English fallback.
  */
@@ -54,8 +54,8 @@ export interface AppUIStrings {
   storageAndCacheSub: string;
   privacyAndSecurity: string;
   privacyAndSecuritySub: string;
-  aboutNoorConnect: string;
-  aboutNoorConnectSub: string;
+  aboutSiraj: string;
+  aboutSirajSub: string;
   contactAndFeedback: string;
   contactAndFeedbackSub: string;
 
@@ -227,7 +227,7 @@ export interface AppUIStrings {
 const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
   en: {
     settings: 'Settings',
-    settingsSubtitle: 'Noor Connect • Mobile Control Hub',
+    settingsSubtitle: 'Siraj • Mobile Control Hub',
     performanceOptimized: 'Performance Optimized',
     islamicMobileExp: 'Islamic Mobile Experience',
     heroDesc: 'Configure prayer alerts, themes, and notifications with zero lag.',
@@ -268,8 +268,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'Cached media & data',
     privacyAndSecurity: 'Privacy & Security',
     privacyAndSecuritySub: '100% local data & app permissions',
-    aboutNoorConnect: 'About Noor Connect',
-    aboutNoorConnectSub: 'Version 2.3.0, changelog & updates',
+    aboutSiraj: 'About Siraj',
+    aboutSirajSub: 'Version 3.0.0, changelog & updates',
     contactAndFeedback: 'Contact & Feedback',
     contactAndFeedbackSub: "We'd love to hear from you",
     appearanceSubpageTitle: 'Theme & Appearance',
@@ -470,8 +470,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'الوسائط والبيانات المخزنة',
     privacyAndSecurity: 'الخصوصية والأمان',
     privacyAndSecuritySub: 'بيانات محلية 100% وأذونات التطبيق',
-    aboutNoorConnect: 'عن نور كونكت',
-    aboutNoorConnectSub: 'الإصدار 2.3.0، التحديثات والسجل',
+    aboutSiraj: 'عن سِراج',
+    aboutSirajSub: 'الإصدار 3.0.0، التحديثات والسجل',
     contactAndFeedback: 'التواصل والملاحظات',
     contactAndFeedbackSub: 'يسعدنا دائماً سماع رأيك',
     appearanceSubpageTitle: 'المظهر والثيمات',
@@ -631,7 +631,7 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
 
   ur: {
     settings: 'ترتیبات',
-    settingsSubtitle: 'نور کنیکٹ • کنٹرول مرکز',
+    settingsSubtitle: 'سِراج • کنٹرول مرکز',
     performanceOptimized: 'اعلیٰ کارکردگی',
     islamicMobileExp: 'اسلامی موبائل تجربہ',
     heroDesc: 'نماز کے اوقات، تھیمز اور اطلاعات کو بغیر کسی تاخیر کے ترتیب دیں۔',
@@ -672,8 +672,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'محفوظ میڈیا اور عارضی ڈیٹا',
     privacyAndSecurity: 'رازداری اور تحفظ',
     privacyAndSecuritySub: '100% مقامی ڈیٹا اور اجازتیں',
-    aboutNoorConnect: 'نور کنیکٹ کے بارے میں',
-    aboutNoorConnectSub: 'ورژن 2.3.0، اپ ڈیٹس اور لاگ',
+    aboutSiraj: 'سِراج کے بارے میں',
+    aboutSirajSub: 'ورژن 3.0.0، اپ ڈیٹس اور لاگ',
     contactAndFeedback: 'رابطہ اور آراء',
     contactAndFeedbackSub: 'ہمیں آپ کی رائے جان کر خوشی ہوگی',
     appearanceSubpageTitle: 'تھیم اور ظاہری شکل',
@@ -874,8 +874,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'કેશ મીડિયા અને ડેટા',
     privacyAndSecurity: 'ગોપનીયતા અને સુરક્ષા',
     privacyAndSecuritySub: '100% સ્થાનિક ડેટા અને પરવાનગીઓ',
-    aboutNoorConnect: 'નૂર કનેક્ટ વિશે',
-    aboutNoorConnectSub: 'આવૃત્તિ 2.3.0, અપડેટ્સ અને ફેરફારો',
+    aboutSiraj: 'સિરાજ વિશે',
+    aboutSirajSub: 'આવૃત્તિ 3.0.0, અપડેટ્સ અને ફેરફારો',
     contactAndFeedback: 'સંપર્ક અને પ્રતિસાદ',
     contactAndFeedbackSub: 'અમે તમારા સૂચનો આવકારીએ છીએ',
     appearanceSubpageTitle: 'થીમ અને દેખાવ',
@@ -1076,8 +1076,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'सुरक्षित मीडिया और डेटा',
     privacyAndSecurity: 'गोपनीयता और सुरक्षा',
     privacyAndSecuritySub: '100% लोकल डेटा और अनुमतियां',
-    aboutNoorConnect: 'नूर कनेक्ट के बारे में',
-    aboutNoorConnectSub: 'संस्करण 2.3.0, अपडेट्स और लॉग',
+    aboutSiraj: 'सिराज के बारे में',
+    aboutSirajSub: 'संस्करण 3.0.0, अपडेट्स और लॉग',
     contactAndFeedback: 'संपर्क और प्रतिक्रिया',
     contactAndFeedbackSub: 'आपकी प्रतिक्रिया हमारे लिए अमूल्य है',
     appearanceSubpageTitle: 'थीम और दिखावट',
@@ -1278,8 +1278,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'সংরক্ষিত মিডিয়া ও ডেটা',
     privacyAndSecurity: 'গোপনীয়তা ও নিরাপত্তা',
     privacyAndSecuritySub: '১০০% লোকাল ডেটা ও অনুমতিসমূহ',
-    aboutNoorConnect: 'নূর কানেক্ট সম্পর্কে',
-    aboutNoorConnectSub: 'সংস্করণ ২.৩.০, আপডেট ও লগ',
+    aboutSiraj: 'সিরাজ সম্পর্কে',
+    aboutSirajSub: 'সংস্করণ ৩.০.০, আপডেট ও লগ',
     contactAndFeedback: 'যোগাযোগ ও মতামত',
     contactAndFeedbackSub: 'আমরা আপনার মতামত সানন্দে গ্রহণ করি',
     appearanceSubpageTitle: 'থিম ও রূপরেখা',
@@ -1439,7 +1439,7 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
 
   ru: {
     settings: 'Настройки',
-    settingsSubtitle: 'Noor Connect • Центр управления',
+    settingsSubtitle: 'Siraj • Центр управления',
     performanceOptimized: 'Оптимизированная скорость',
     islamicMobileExp: 'Исламский мобильный опыт',
     heroDesc: 'Настройте время намаза, темы и уведомления без задержек.',
@@ -1480,8 +1480,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'Сохраненные медиа и данные',
     privacyAndSecurity: 'Приватность и защита',
     privacyAndSecuritySub: '100% локальные данные и доступы',
-    aboutNoorConnect: 'О приложении Noor Connect',
-    aboutNoorConnectSub: 'Версия 2.3.0, журнал обновлений',
+    aboutSiraj: 'О приложении Siraj',
+    aboutSirajSub: 'Версия 3.0.0, журнал обновлений',
     contactAndFeedback: 'Связь и отзывы',
     contactAndFeedbackSub: 'Мы всегда рады вашим отзывам',
     appearanceSubpageTitle: 'Тема и оформление',
@@ -1641,7 +1641,7 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
 
   fr: {
     settings: 'Paramètres',
-    settingsSubtitle: 'Noor Connect • Centre de contrôle',
+    settingsSubtitle: 'Siraj • Centre de contrôle',
     performanceOptimized: 'Performance Optimisée',
     islamicMobileExp: 'Expérience Mobile Islamique',
     heroDesc: 'Configurez vos rappels de prière, thèmes et alertes sans latence.',
@@ -1682,8 +1682,8 @@ const UI_DICTIONARIES: Record<LanguageCode, AppUIStrings> = {
     storageAndCacheSub: 'Médias et données en cache',
     privacyAndSecurity: 'Confidentialité & Sécurité',
     privacyAndSecuritySub: 'Données 100% locales et autorisations',
-    aboutNoorConnect: 'À propos de Noor Connect',
-    aboutNoorConnectSub: 'Version 2.3.0, notes de version et mises à jour',
+    aboutSiraj: 'À propos de Siraj',
+    aboutSirajSub: 'Version 3.0.0, notes de version et mises à jour',
     contactAndFeedback: 'Contact & Retour',
     contactAndFeedbackSub: 'Votre avis compte beaucoup pour nous',
     appearanceSubpageTitle: 'Thème & Apparence',

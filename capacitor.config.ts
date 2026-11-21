@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.noorconnect.ummah',
-  appName: 'Noor Connect',
+  appId: 'com.siraj.app',
+  appName: 'Siraj',
   webDir: 'dist',
   server: {
     androidScheme: 'https'

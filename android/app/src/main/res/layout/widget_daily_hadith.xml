@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/amiri_quran"
-                android:text="نور • DAILY HADITH"
+                android:text="سِراج • DAILY HADITH"
                 android:textColor="@color/widget_accent_gold"
                 android:textSize="11sp"
                 android:textStyle="bold"

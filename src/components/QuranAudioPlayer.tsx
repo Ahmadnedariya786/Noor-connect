@@ -223,7 +223,7 @@ export function QuranAudioPlayer({
           type: 'quran-recitation',
           title: `Surah ${surahNumber}: ${surahName}`,
           artist: reciterName,
-          album: 'Holy Quran - Noor Connect',
+          album: 'Holy Quran - Siraj',
           isPlaying,
           currentTime: progress,
           duration
@@ -235,7 +235,7 @@ export function QuranAudioPlayer({
       navigator.mediaSession.metadata = new MediaMetadata({
         title: `Surah ${surahNumber}: ${surahName}`,
         artist: reciterName,
-        album: 'Holy Quran - Noor Connect',
+        album: 'Holy Quran - Siraj',
         artwork: [
           { src: '/icon-96x96.png', sizes: '96x96', type: 'image/png' },
           { src: '/icon-128x128.png', sizes: '128x128', type: 'image/png' },
@@ -416,7 +416,7 @@ export function QuranAudioPlayer({
               type: 'quran-recitation',
               title: `Surah ${surahNumber}: ${surahName}`,
               artist: reciterName,
-              album: 'Holy Quran - Noor Connect',
+              album: 'Holy Quran - Siraj',
               isPlaying: true,
               currentTime: audio.currentTime,
               duration: audio.duration

@@ -1,0 +1,183 @@
+package com.siraj.app.widgets.dailyayah
+
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
+import android.content.Context
+import android.graphics.Color
+import android.util.Log
+import android.util.TypedValue
+import android.view.View
+import android.widget.RemoteViews
+import com.siraj.app.R
+import com.siraj.app.widgets.WidgetDeeplink
+import com.siraj.app.widgets.WidgetForegroundService
+import com.siraj.app.widgets.WidgetPrefs
+import com.siraj.app.widgets.WidgetRefreshWorker
+import com.siraj.app.widgets.WidgetStyleHelper
+
+/**
+ * Daily Ayah Widget (4×2)
+ *
+ * Shows:
+ *  - Reference chip ("Al-Baqarah 2:255")
+ *  - Arabic verse (RTL, Scheherazade New / Amiri font)
+ *  - Arabesque divider
+ *  - Translation
+ *
+ * Tap → deep-link to /quran?surah=N&ayah=N
+ */
+class DailyAyahWidget : AppWidgetProvider() {
+
+    companion object {
+        private const val TAG = "DailyAyahWidget"
+
+        fun updateWidget(context: Context, mgr: AppWidgetManager, appWidgetId: Int) {
+            try {
+                val views = RemoteViews(context.packageName, R.layout.widget_daily_ayah)
+
+                // ─── 1. Customizer Styles (Background & Colors) ───
+                val style = WidgetStyleHelper.parseConfig(context)
+                val bgBitmap = WidgetStyleHelper.renderBackgroundBitmap(
+                    surfaceStyle = style.surfaceStyle,
+                    themeHex = style.themeHex,
+                    opacityPercent = style.opacity,
+                    accentHex = style.accentHex
+                )
+                views.setImageViewBitmap(R.id.widget_bg_image, bgBitmap)
+
+                // ─── 2. Data Content ───
+                val payload = WidgetPrefs.getDailyContent(context)
+
+                val defaultRef = "Al-Inshirah 94:5-6"
+                val defaultArabic = "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا • إِنَّ مَعَ الْعُسْرِ يُسْرًا"
+                val defaultTrans = "For indeed, with hardship [will be] ease. Indeed, with hardship [will be] ease."
+
+                if (payload == null) {
+                    views.setTextViewText(R.id.widget_quran_ref, defaultRef)
+                    views.setTextViewText(R.id.widget_quran_arabic, defaultArabic)
+                    views.setTextViewText(R.id.widget_quran_translation, defaultTrans)
+                } else {
+                    val ayah = payload.ayah
+                    val cleanRef = when {
+                        ayah.reference.isBlank() || ayah.reference == "-" || ayah.reference == "—" -> defaultRef
+                        else -> ayah.reference
+                    }
+                    views.setTextViewText(R.id.widget_quran_ref, cleanRef)
+                    views.setTextViewText(R.id.widget_quran_arabic, ayah.arabic.ifEmpty { defaultArabic })
+                    views.setTextViewText(R.id.widget_quran_translation, ayah.translation.ifEmpty { defaultTrans })
+                }
+
+                // ─── 3. Swatches & Colors ───
+                try {
+                    val accentCol = Color.parseColor(style.accentHex)
+                    val textCol = Color.parseColor(style.textHex)
+                    val subCol = Color.parseColor(style.subHex)
+
+                    views.setTextColor(R.id.widget_quran_ref, accentCol)
+                    views.setTextColor(R.id.widget_quran_arabic, textCol)
+                    views.setTextColor(R.id.widget_quran_translation, subCol)
+                    views.setTextColor(R.id.widget_btn_refresh, accentCol)
+                } catch (_: Throwable) {}
+
+                // ─── 4. Font Scaling ───
+                val scaledArabic = (21f * style.fontScale / 100f).coerceIn(16f, 28f)
+                views.setTextViewTextSize(R.id.widget_quran_arabic, TypedValue.COMPLEX_UNIT_SP, scaledArabic)
+
+                val scaledTrans = (12f * style.fontScale / 100f).coerceIn(10f, 16f)
+                views.setTextViewTextSize(R.id.widget_quran_translation, TypedValue.COMPLEX_UNIT_SP, scaledTrans)
+
+                // ─── 5. Stale data badge (permanently gone) ───
+                views.setViewVisibility(R.id.widget_stale_badge, View.GONE)
+
+                // ─── 6. Accessibility ───
+                val contentDesc = if (payload != null) {
+                    context.getString(R.string.widget_a11y_daily_ayah, payload.ayah.reference)
+                } else {
+                    context.getString(R.string.widget_a11y_daily_ayah_default)
+                }
+                views.setContentDescription(R.id.widget_root, contentDesc)
+
+                // ─── 7. Tap → deep-link /quran?surah=X&ayah=Y ───
+                val (surah, ayahNum) = if (payload != null) {
+                    Pair(payload.ayah.surahNumber, payload.ayah.ayahNumber)
+                } else {
+                    Pair(94, 5)
+                }
+                val deeplink = WidgetDeeplink.buildQuran(surah, ayahNum)
+                val intent = WidgetDeeplink.toIntent(context, deeplink)
+                val pi = PendingIntent.getActivity(
+                    context,
+                    104,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_root, pi)
+
+                // ─── 8. 1-Tap ↻ Refresh Intent ───
+                val refreshIntent = android.content.Intent(context, com.siraj.app.widgets.WidgetAlarmReceiver::class.java).apply {
+                    action = com.siraj.app.widgets.WidgetAlarmReceiver.ACTION_REFRESH_ALL
+                }
+                val refreshPi = PendingIntent.getBroadcast(
+                    context,
+                    204,
+                    refreshIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                views.setOnClickPendingIntent(R.id.widget_btn_refresh, refreshPi)
+
+                mgr.updateAppWidget(appWidgetId, views)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Critical error updating DailyAyahWidget $appWidgetId", t)
+            }
+        }
+    }
+
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        try {
+            appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        } catch (t: Throwable) {
+            Log.e(TAG, "onUpdate fatal error", t)
+        }
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        try {
+            val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+            val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+            val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+            val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+
+            Log.d(TAG, "Widget resized: min=${minWidth}x${minHeight}, max=${maxWidth}x${maxHeight}")
+            updateWidget(context, appWidgetManager, appWidgetId)
+        } catch (t: Throwable) {
+            Log.e(TAG, "onAppWidgetOptionsChanged error", t)
+        }
+    }
+
+    override fun onEnabled(context: Context) {
+        try {
+            WidgetForegroundService.start(context)
+            WidgetRefreshWorker.enqueuePeriodic(context)
+            Log.d(TAG, "Widget enabled")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onEnabled error", t)
+        }
+    }
+
+    override fun onDisabled(context: Context) {
+        try {
+            if (!WidgetForegroundService.hasActiveWidgets(context)) {
+                WidgetForegroundService.stop(context)
+            }
+            Log.d(TAG, "Widget disabled")
+        } catch (t: Throwable) {
+            Log.e(TAG, "onDisabled error", t)
+        }
+    }
+}

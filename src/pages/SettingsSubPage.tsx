@@ -178,7 +178,7 @@ const SECTION_TITLES: Record<string, { title: string; subtitle: string; icon: an
   backup: { title: 'Backup & Restore', subtitle: 'Cloud backup, sync & export settings', icon: Database, titleKey: 'backupAndRestore' },
   storage: { title: 'Storage & Cache', subtitle: 'Manage temporary cache & protected local data', icon: HardDrive, titleKey: 'storageAndCache' },
   privacy: { title: 'Privacy & Security', subtitle: 'Data usage, local storage & permissions', icon: ShieldCheck, titleKey: 'privacyAndSecurity' },
-  about: { title: 'About Noor Connect', subtitle: 'App version, release notes & updates', icon: Info, titleKey: 'aboutNoorConnect' },
+  about: { title: 'About Siraj', subtitle: 'App version, release notes & updates', icon: Info, titleKey: 'aboutSiraj' },
   contact: { title: 'Contact & Feedback', subtitle: "We'd love to hear from you", icon: Mail, titleKey: 'contactAndFeedback' },
 };
 
@@ -429,8 +429,8 @@ const SettingsSubPage: React.FC = () => {
     }
     if (sectionId === 'about') {
       return {
-        title: ui.aboutNoorConnect,
-        subtitle: ui.aboutNoorConnectSub,
+        title: ui.aboutSiraj,
+        subtitle: ui.aboutSirajSub,
         icon,
       };
     }
@@ -1907,7 +1907,7 @@ const SettingsSubPage: React.FC = () => {
             <Card className="p-4 space-y-2 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border)]">
               <Label className="text-xs font-bold uppercase tracking-wider text-[var(--accent-text)]">Privacy First Guarantee</Label>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Noor Connect stores all your prayer history, bookmarks, and settings locally on your device. We do not track or sell user data.
+                Siraj stores all your prayer history, bookmarks, and settings locally on your device. We do not track or sell user data.
               </p>
             </Card>
 
@@ -1925,7 +1925,7 @@ const SettingsSubPage: React.FC = () => {
                 className="mx-auto my-1 cursor-pointer active:scale-95 transition-transform"
                 onClick={handleVersionTap}
               />
-              <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Noor Connect</h2>
+              <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Siraj</h2>
               <p
                 className="text-xs select-none cursor-pointer active:opacity-60 transition-opacity inline-block font-mono"
                 style={{ color: 'var(--text-secondary)' }}
@@ -1970,7 +1970,7 @@ const SettingsSubPage: React.FC = () => {
               </div>
               <div className="pt-2 space-y-1 max-w-xs mx-auto">
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  Crafted with love for the Ummah — Noor Connect Team
+                  Crafted with love for the Ummah — Siraj Team
                 </p>
                 <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   Personal data stays on your device; prayer times & location sync live with full offline fallback.

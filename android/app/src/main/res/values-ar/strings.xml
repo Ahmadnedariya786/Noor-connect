@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">نور كونكت</string>
-    <string name="title_activity_main">نور كونكت</string>
+    <string name="app_name">سِراج</string>
+    <string name="title_activity_main">سِراج</string>
 
     <string name="widget_next_prayer_label">الصلاة القادمة</string>
     <string name="widget_daily_ayah_label">آية اليوم</string>
@@ -15,7 +15,7 @@
     <string name="widget_quran_progress_desc">تتبع تقدم قراءة القرآن اليومي وسلسلتك.</string>
     <string name="widget_tasbeeh_desc">اضغط في أي مكان لعد التسبيح مع اهتزاز.</string>
 
-    <string name="widget_empty_title">نور كونكت</string>
+    <string name="widget_empty_title">سِراج</string>
     <string name="widget_empty_subtitle">افتح التطبيق لمزامنة بياناتك</string>
 
     <string name="widget_next_prayer_section">الصلاة القادمة</string>
@@ -60,7 +60,7 @@
     <string name="deeplink_quran_reading">/quran/reading</string>
     <string name="deeplink_tasbeeh">/tasbeeh</string>
 
-    <string name="app_uri_scheme">noorconnect</string>
+    <string name="app_uri_scheme">siraj</string>
     <string name="app_uri_host">app</string>
 
     <string name="notif_channel_widget_sync">مزامنة الأدوات</string>

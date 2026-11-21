@@ -1,5 +1,5 @@
 /**
- * Noor Connect — Global Persistent Tilawah Floating Mini-Player Dock
+ * Siraj — Global Persistent Tilawah Floating Mini-Player Dock
  *
  * Renders an elevated floating jewel capsule in the bottom thumb zone above the bottom navigation bar.
  * Zero collision with Android system status bar.

@@ -54,11 +54,11 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume1.pdf',
     primaryDownloadUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
     streamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
     urduStreamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume1.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume1.pdf',
     estimatedSize: '157.4 MB',
     approxBytes: 165044224,
@@ -89,11 +89,11 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume2.pdf',
     primaryDownloadUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
     streamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
     urduStreamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume2.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume2.pdf',
     estimatedSize: '154.7 MB',
     approxBytes: 162214912,
@@ -128,11 +128,11 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume3.pdf',
     primaryDownloadUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
     streamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
     urduStreamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume3.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume3.pdf',
     estimatedSize: '139.7 MB',
     approxBytes: 146486272,
@@ -173,11 +173,11 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume4.pdf',
     primaryDownloadUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
     streamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
     urduStreamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume4.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume4.pdf',
     estimatedSize: '160.5 MB',
     approxBytes: 168296448,
@@ -211,11 +211,11 @@ export const ANWAR_UL_BAYAN_VOLUMES: AnwarUlBayanVolume[] = [
     category: 'Quran & Tafsir',
     fileName: 'AnwarulBayan-Volume5.pdf',
     primaryDownloadUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
     streamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
     urduStreamUrl:
-      'https://github.com/Ahmadnedariya786/Noor-connect/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
+      'https://github.com/Ahmadnedariya786/siraj/releases/download/ebooks-library-v1/AnwarulBayan-Volume5.pdf',
     androidStreamUrl: '/__gh_ebook__/AnwarulBayan-Volume5.pdf',
     estimatedSize: '148.0 MB',
     approxBytes: 155189248,

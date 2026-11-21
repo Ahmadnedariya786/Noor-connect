@@ -1,5 +1,5 @@
 /**
- * Noor Connect - In-App OTA Update Engine
+ * Siraj - In-App OTA Update Engine
  *
  * Implements:
  * 1. Dual-Engine native update handoff (Engine A: direct stream, Engine B: system DownloadManager)

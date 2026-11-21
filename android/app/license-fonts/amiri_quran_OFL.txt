@@ -2,7 +2,7 @@ Amiri Quran — Copyright (c) 2010-2022, Abdollah Aref & Khaled Hosny.
 Licensed under the SIL Open Font License, Version 1.1 (OFL).
 https://scripts.sil.org/OFL
 
-This font is included unmodified in the Noor Connect app for the purpose
+This font is included unmodified in the Siraj app for the purpose
 of rendering the Arabic Noor brand mark in home-screen widgets. The full
 OFL text is at https://openfontlicense.org.
 

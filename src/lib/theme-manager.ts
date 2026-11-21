@@ -1,5 +1,5 @@
 /**
- * Noor Connect - Theme Manager Module
+ * Siraj - Theme Manager Module
  * Re-exports the complete theme engine, tokens, and hooks.
  */
 

@@ -56,7 +56,7 @@ export class NotificationContentGenerator {
       body += `\n📜 ${data.type}`;
     }
     
-    body += '\n🌙 Noor Connect - Holy Quran';
+    body += '\n🌙 Siraj - Holy Quran';
     
     return {
       title: baseTitle,
@@ -118,7 +118,7 @@ export class NotificationContentGenerator {
       body += `\n📍 ${data.location}`;
     }
     
-    body += '\n🌙 Noor Connect - Quran Radio';
+    body += '\n🌙 Siraj - Quran Radio';
     
     return {
       title: baseTitle,
@@ -161,7 +161,7 @@ export class NotificationContentGenerator {
     isPlaying: boolean;
   }): NotificationContent {
     const baseTitle = data.isPlaying ? '🕌 Adhan Playing' : '⏸️ Adhan';
-    const body = `${data.prayerName} in ${data.city}\n⏰ ${data.time}\n🌙 Noor Connect - Prayer Times`;
+    const body = `${data.prayerName} in ${data.city}\n⏰ ${data.time}\n🌙 Siraj - Prayer Times`;
     
     return {
       title: baseTitle,
@@ -206,7 +206,7 @@ export class NotificationContentGenerator {
     };
     
     const title = `${iconMap[data.type]} ${data.title}`;
-    const body = `${data.message}\n🌙 Noor Connect`;
+    const body = `${data.message}\n🌙 Siraj`;
     
     return {
       title,
@@ -238,7 +238,7 @@ export class NotificationContentGenerator {
     isTriggered: boolean;
   }): NotificationContent {
     const baseTitle = data.isTriggered ? '⏰ Quran Alarm' : '🔔 Quran Alarm Set';
-    const body = `${data.alarmName}\n📖 ${data.surahName} • ${data.reciterName}\n⏰ ${data.time}\n🌙 Noor Connect - Quran Alarms`;
+    const body = `${data.alarmName}\n📖 ${data.surahName} • ${data.reciterName}\n⏰ ${data.time}\n🌙 Siraj - Quran Alarms`;
     
     return {
       title: baseTitle,
@@ -301,7 +301,7 @@ export class NotificationContentGenerator {
       body += '\n🎉 Ready for offline listening';
     }
     
-    body += '\n🌙 Noor Connect';
+    body += '\n🌙 Siraj';
     
     return {
       title,

@@ -1,8 +1,8 @@
-# Noor Connect Technical Architecture Report
+# Siraj Technical Architecture Report
 
 ## Executive Summary
 
-**Noor Connect** is a comprehensive, privacy-focused Islamic application built as a hybrid Progressive Web App (PWA) that can be deployed as both a web application and native mobile apps (Android/iOS). The application is licensed under GNU GPL v3.0 and prioritizes data privacy by keeping all information strictly local on user devices.
+**Siraj** is a comprehensive, privacy-focused Islamic application built as a hybrid Progressive Web App (PWA) that can be deployed as both a web application and native mobile apps (Android/iOS). The application is licensed under GNU GPL v3.0 and prioritizes data privacy by keeping all information strictly local on user devices.
 
 ## Project Classification
 
@@ -357,7 +357,7 @@ Widget Architecture:
 
 ## Conclusion
 
-Noor Connect represents a sophisticated hybrid application architecture that successfully combines web technologies with native mobile capabilities while maintaining a strong focus on privacy, performance, and user experience. The application demonstrates advanced patterns in state management, persistence, and cross-platform development, making it a noteworthy example of modern Islamic software development.
+Siraj represents a sophisticated hybrid application architecture that successfully combines web technologies with native mobile capabilities while maintaining a strong focus on privacy, performance, and user experience. The application demonstrates advanced patterns in state management, persistence, and cross-platform development, making it a noteworthy example of modern Islamic software development.
 
 **Key Achievements**:
 

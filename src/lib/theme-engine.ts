@@ -1,5 +1,5 @@
 /**
- * Noor Connect - Premium Token-Based Theme Engine
+ * Siraj - Premium Token-Based Theme Engine
  * Powers 5 custom luxury themes driven by CSS custom properties on document root.
  */
 

@@ -1,6 +1,6 @@
 /**
  * Lightweight Mini World Continents Polygon Data (< 3.5KB)
- * Simplified lat/lon loops for 2D Canvas orthographic globe projection in Noor Connect.
+ * Simplified lat/lon loops for 2D Canvas orthographic globe projection in Siraj.
  */
 
 export interface ContinentPolygon {

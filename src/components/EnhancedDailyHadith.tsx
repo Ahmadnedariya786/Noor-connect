@@ -366,7 +366,7 @@ export function EnhancedDailyHadith() {
   const shareHadith = async () => {
     if (!hadith) return;
     
-    const text = `"${hadith.englishTranslation}"\n\n- ${hadith.source}\nNarrated by: ${hadith.narrator}\n\n#NoorConnect #Hadith`;
+    const text = `"${hadith.englishTranslation}"\n\n- ${hadith.source}\nNarrated by: ${hadith.narrator}\n\n#Siraj #Hadith`;
     
     try {
       if (navigator.share) {

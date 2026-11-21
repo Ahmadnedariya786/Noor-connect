@@ -1,8 +1,8 @@
 /**
- * Type definitions for the Noor Connect widget bridge.
+ * Type definitions for the Siraj widget bridge.
  *
  * These types MUST stay in sync with the Kotlin data classes in
- * android/app/src/main/java/com/noorconnect/ummah/widgets/WidgetPayloads.kt.
+ * android/app/src/main/java/com/siraj/app/widgets/WidgetPayloads.kt.
  *
  * If you change a field on one side, change it on the other.
  */

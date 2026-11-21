@@ -292,7 +292,7 @@ export const GlobalPrayerAlarm = () => {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: `${prayerName} Adhan`,
-          artist: 'Noor Connect',
+          artist: 'Siraj',
           album: 'Prayer Call',
           artwork: [
             { src: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },

@@ -245,7 +245,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                 {/* 1. 5-Edition Living Islamic Emblem */}
                 <NoorDynamicLogo size="xl" animated={shouldAnimate} />
 
-                {/* 2. Brand Title: NOOR CONNECT */}
+                {/* 2. Brand Title: SIRAJ */}
                 <h1
                     style={{
                         margin: '18px 0 0 0',
@@ -259,7 +259,7 @@ export function SplashScreen({ animationsEnabled, showGreeting, onComplete }: Sp
                         fontFamily: 'system-ui, -apple-system, sans-serif',
                     }}
                 >
-                    NOOR CONNECT
+                    SIRAJ
                 </h1>
 
                 {/* 3. Subtitle: ISLAMIC COMPANION */}

@@ -93,7 +93,7 @@ class PermissionManager {
         platform: this.platform,
         title: 'Location Access',
         description: 'Access your device location to provide accurate prayer times based on your current position.',
-        rationale: 'Noor Connect needs location access to calculate accurate prayer times for your specific location and provide Qibla direction.',
+        rationale: 'Siraj needs location access to calculate accurate prayer times for your specific location and provide Qibla direction.',
         benefits: [
           'Accurate prayer times for your location',
           'Automatic Qibla direction',
@@ -102,7 +102,7 @@ class PermissionManager {
         ],
         instructions: {
           web: 'Click the location icon in your browser address bar and allow location access.',
-          mobile: 'Go to Settings → Apps → Noor Connect → Permissions → Location and allow access.'
+          mobile: 'Go to Settings → Apps → Siraj → Permissions → Location and allow access.'
         }
       },
       notifications: {
@@ -110,7 +110,7 @@ class PermissionManager {
         platform: this.platform,
         title: 'Notification Access',
         description: 'Receive prayer time reminders and Islamic event notifications.',
-        rationale: 'Noor Connect needs notification access to remind you of prayer times, Ramadan alerts, and important Islamic events.',
+        rationale: 'Siraj needs notification access to remind you of prayer times, Ramadan alerts, and important Islamic events.',
         benefits: [
           'Prayer time reminders (Fajr to Isha)',
           'Ramadan countdowns and alerts',
@@ -120,7 +120,7 @@ class PermissionManager {
         ],
         instructions: {
           web: 'Click the lock icon in your browser address bar and allow notifications.',
-          mobile: 'Go to Settings → Apps → Noor Connect → Notifications and allow access.'
+          mobile: 'Go to Settings → Apps → Siraj → Notifications and allow access.'
         }
       }
     };

@@ -21,7 +21,7 @@ export function InstallDialog() {
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Install Noor Connect</DialogTitle>
+          <DialogTitle>Install Siraj</DialogTitle>
           <DialogDescription>
             Install our app on your device for the best experience
           </DialogDescription>
@@ -99,7 +99,7 @@ export function InstallDialog() {
                 Download and install the native Android app directly on your device.
               </p>
               <a 
-                href="https://github.com/Ahmadnedariya786/Noor-connect/releases/download/nightly/noor-connect-nightly.apk" 
+                href="https://github.com/Ahmadnedariya786/siraj/releases/download/nightly/siraj-nightly.apk" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 rounded-md text-sm font-medium transition-colors"

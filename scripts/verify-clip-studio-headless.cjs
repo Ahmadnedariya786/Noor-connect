@@ -307,9 +307,9 @@ async function runClipStudioTests() {
     console.log('  ✓ PASS: Row 1 Title, "Persian Indigo", and "Ottoman Heritage" render with ZERO ellipsis!');
 
     // -------------------------------------------------------------
-    // TEST 3: NOOR CLIP STUDIO MODAL CONTROLS & TRANSLATIONS
+    // TEST 3: SIRAJ CLIP STUDIO MODAL CONTROLS & TRANSLATIONS
     // -------------------------------------------------------------
-    console.log('\n--- TEST 3: Noor Clip Studio Modal in Quran Reader ---');
+    console.log('\n--- TEST 3: Siraj Clip Studio Modal in Quran Reader ---');
     await client.navigate(`http://127.0.0.1:${PREVIEW_PORT}/quran/1`);
     await delay(2500);
 
@@ -337,7 +337,7 @@ async function runClipStudioTests() {
     const modalInfo = await client.evaluate(`
       (() => {
         const h2List = Array.from(document.querySelectorAll('h2'));
-        const hasModal = h2List.some(h => h.textContent && h.textContent.includes('Noor Clip Studio'));
+        const hasModal = h2List.some(h => h.textContent && (h.textContent.includes('Siraj Clip Studio') || h.textContent.includes('Clip Studio')));
 
         // Check stepper labels
         const labels = Array.from(document.querySelectorAll('*')).map(el => el.textContent?.trim()).filter(Boolean);
@@ -391,7 +391,7 @@ async function runClipStudioTests() {
 
     console.log('  Clip Studio Modal UI elements:', modalInfo);
     if (!modalInfo.hasModal) {
-      throw new Error('TEST 3 FAILED: Noor Clip Studio modal failed to open!');
+      throw new Error('TEST 3 FAILED: Siraj Clip Studio modal failed to open!');
     }
     if (!modalInfo.hasFromAyah || !modalInfo.hasToAyah) {
       throw new Error('TEST 3 FAILED: Stepper labels "FROM AYAH" / "TO AYAH" missing or truncated!');

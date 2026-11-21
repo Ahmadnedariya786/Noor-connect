@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Noor Connect</string>
-    <string name="title_activity_main">Noor Connect</string>
+    <string name="app_name">Siraj</string>
+    <string name="title_activity_main">Siraj</string>
 
     <string name="widget_next_prayer_label">Sholat Berikutnya</string>
     <string name="widget_daily_ayah_label">Ayat Harian</string>
@@ -15,7 +15,7 @@
     <string name="widget_quran_progress_desc">Lacak progres membaca Quran harian dan rentetan Anda.</string>
     <string name="widget_tasbeeh_desc">Ketuk di mana saja untuk menghitung dzikir Anda.</string>
 
-    <string name="widget_empty_title">Noor Connect</string>
+    <string name="widget_empty_title">Siraj</string>
     <string name="widget_empty_subtitle">Buka aplikasi untuk menyinkronkan data Anda</string>
 
     <string name="widget_next_prayer_section">SHOLAT BERIKUTNYA</string>
@@ -60,7 +60,7 @@
     <string name="deeplink_quran_reading">/quran/reading</string>
     <string name="deeplink_tasbeeh">/tasbeeh</string>
 
-    <string name="app_uri_scheme">noorconnect</string>
+    <string name="app_uri_scheme">siraj</string>
     <string name="app_uri_host">app</string>
 
     <string name="notif_channel_widget_sync">Sinkronisasi Widget</string>

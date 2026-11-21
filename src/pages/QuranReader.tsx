@@ -102,7 +102,7 @@ export default function QuranReader() {
   const [studyInitialAyah, setStudyInitialAyah] = useState(1);
   const [studySurah, setStudySurah] = useState(routeSurahId);
 
-  // Noor Clip Studio state
+  // Siraj Clip Studio state
   const [showClipStudio, setShowClipStudio] = useState(false);
   const [clipStudioSurah, setClipStudioSurah] = useState(routeSurahId);
   const [clipStudioAyah, setClipStudioAyah] = useState(1);
@@ -1068,7 +1068,7 @@ export default function QuranReader() {
                           <button
                             type="button"
                             onClick={async () => {
-                              const shareText = `"${v.text_uthmani}"\n\n${transText || ''}\n— Surah ${currentSurahInfo?.englishName || v.surah_number} (${v.verse_key})\nShared via Noor Connect`;
+                              const shareText = `"${v.text_uthmani}"\n\n${transText || ''}\n— Surah ${currentSurahInfo?.englishName || v.surah_number} (${v.verse_key})\nShared via Siraj`;
                               if (navigator.share) {
                                 try {
                                   await navigator.share({ title: `Ayah ${v.verse_key}`, text: shareText });
@@ -1348,7 +1348,7 @@ export default function QuranReader() {
           onOpenClipStudio={handleOpenClipStudio}
         />
 
-        {/* Noor Clip Studio — Reel & Image Card Generator (Portaled to document.body) */}
+        {/* Siraj Clip Studio — Reel & Image Card Generator (Portaled to document.body) */}
         {showClipStudio && (
           <QuranClipStudioModal
             isOpen={showClipStudio}

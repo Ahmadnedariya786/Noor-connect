@@ -12,6 +12,7 @@ import {
   getPrayerHadithLang,
   setPrayerHadithLang,
   getPrayerHadith,
+  stripTrailingHadithRef,
   PRAYER_HADITH_LANG_OPTIONS,
   PRAYER_HADITH_LANG_EVENT,
   type PrayerHadithLang,
@@ -230,6 +231,7 @@ export const PrayerReminderBanner: React.FC = () => {
     default12h: prayerTime12h,
   };
   const hadithData = getPrayerHadith(prayerName, hadithLang);
+  const cleanTranslation = stripTrailingHadithRef(hadithData.translation, hadithData.reference);
 
   return (
     <div
@@ -384,13 +386,12 @@ export const PrayerReminderBanner: React.FC = () => {
               color: 'var(--text-primary)',
             }}
           >
-            {hadithData.translation}
+            {cleanTranslation}
           </p>
 
           {/* Hadith Reference */}
           <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] pt-1 border-t border-[var(--border)]/40">
             <span className="font-medium">{hadithData.reference}</span>
-            <span className="font-semibold text-[var(--accent)]">{details.rakah}</span>
           </div>
         </div>
 

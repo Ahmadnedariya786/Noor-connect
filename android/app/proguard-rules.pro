@@ -1,18 +1,18 @@
 # ================================================================
-# Noor Connect — ProGuard / R8 rules for release builds
+# Siraj — ProGuard / R8 rules for release builds
 # ================================================================
 
-# ── Noor Connect App Classes ────────────────────────────────────
+# ── Siraj App Classes ────────────────────────────────────
 # BroadcastReceivers, Services, and Plugins referenced in Manifest
--keep class com.noorconnect.ummah.AdhanAlarmReceiver { *; }
--keep class com.noorconnect.ummah.AdhanPlaybackService { *; }
--keep class com.noorconnect.ummah.NativeAdhanScheduler { *; }
--keep class com.noorconnect.ummah.NativeAdhanScheduler$ScheduledAdhan { *; }
--keep class com.noorconnect.ummah.BootReceiver { *; }
--keep class com.noorconnect.ummah.MainActivity { *; }
+-keep class com.siraj.app.AdhanAlarmReceiver { *; }
+-keep class com.siraj.app.AdhanPlaybackService { *; }
+-keep class com.siraj.app.NativeAdhanScheduler { *; }
+-keep class com.siraj.app.NativeAdhanScheduler$ScheduledAdhan { *; }
+-keep class com.siraj.app.BootReceiver { *; }
+-keep class com.siraj.app.MainActivity { *; }
 
 # Widget providers (new unified widget suite)
--keep class com.noorconnect.ummah.widgets.** { *; }
+-keep class com.siraj.app.widgets.** { *; }
 
 # ── Capacitor Framework ──────────────────────────────────────────
 -keep class com.getcapacitor.** { *; }
@@ -37,10 +37,10 @@
 -keepattributes Signature
 -keepattributes InnerClasses
 
-# --- Noor Connect Custom Rules ---
+# --- Siraj Custom Rules ---
 
 # Keep new Kotlin widget classes
--keep class com.noorconnect.ummah.widgets.** { *; }
+-keep class com.siraj.app.widgets.** { *; }
 
 # Keep WorkManager (prevents minification issues with workers)
 -keep class androidx.work.** { *; }

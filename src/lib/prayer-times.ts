@@ -1,6 +1,6 @@
 /**
  * Pinpoint Regional Prayer Time Engine & Schedule Calculator
- * Noor Connect — Privacy-First Islamic Companion
+ * Siraj — Privacy-First Islamic Companion
  *
  * Implements:
  * 1. Smart Country Regional Auto-Preset (Karachi 18°/18° + Hanafi Asr + Zawaal Dhuhr + India Hilal -1d)

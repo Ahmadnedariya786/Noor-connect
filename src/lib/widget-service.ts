@@ -1,7 +1,7 @@
 /**
  * widget-service.ts
  *
- * Single source of truth widget synchronization bridge between Noor Connect
+ * Single source of truth widget synchronization bridge between Siraj
  * (TypeScript) and native Android widgets.
  *
  * Computes exact prayer times and Qaza boundaries from `computeFullPrayerSchedule`,
@@ -34,7 +34,7 @@ import type {
 function getHijriDateString(): string {
   try {
     const stored = localStorage.getItem('noor_cached_hijri_date');
-    if (stored && stored.trim() && !stored.includes('Noor Connect')) {
+    if (stored && stored.trim() && !stored.includes('Siraj')) {
       return stored
         .replace(/[\u014d\u014c\u00f4\u00d4]/g, 'ū')
         .replace(/Jum[aā]d[aā]\s*(al-)?(ula|ūlā|ōlā|ola|1|i)\b/gi, 'Jumādā I')
