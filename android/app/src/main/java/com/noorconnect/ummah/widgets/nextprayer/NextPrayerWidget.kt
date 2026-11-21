@@ -106,9 +106,9 @@ class NextPrayerWidget : AppWidgetProvider() {
                 )
                 views.setImageViewBitmap(R.id.widget_bg_image, bgBitmap)
 
-                // ─── Header Title ("نور • NEXT PRAYER") ───
+                // ─── Header Title ("نور • NEXT") ───
                 try {
-                    views.setTextViewText(R.id.widget_header_title, "نور • NEXT PRAYER")
+                    views.setTextViewText(R.id.widget_header_title, "نور • NEXT")
                 } catch (t: Throwable) {
                     Log.w(TAG, "Header title error", t)
                 }

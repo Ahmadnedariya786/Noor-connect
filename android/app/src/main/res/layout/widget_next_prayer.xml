@@ -41,12 +41,12 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Title: "نور • NEXT PRAYER" -->
+            <!-- Title: "نور • NEXT" -->
             <TextView
                 android:id="@+id/widget_header_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="نور • NEXT PRAYER"
+                android:text="نور • NEXT"
                 android:textColor="@color/widget_accent_gold"
                 android:textSize="10sp"
                 android:textStyle="bold"

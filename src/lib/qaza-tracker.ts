@@ -7,7 +7,9 @@ export type { PrayerName };
 
 export type QazaPrayerName = PrayerName | 'witr';
 
+export const QAZA_STORAGE_KEY = 'qaza-prayers';
 export const QAZA_DATE_RECORDS_KEY = 'noor_qaza_date_records_v1';
+export const QAZA_UNDATED_BACKLOG_KEY = 'noor_qaza_undated_backlog_v1';
 export const QAZA_AUTOSYNC_SLOTS_KEY = 'noor_qaza_autosynced_slots_v1';
 export const QAZA_LAST_ROLLOVER_DATE_KEY = 'noor_qaza_last_rollover_date_v1';
 export const QAZA_BACKUP_PRE_ROLLOVER_KEY = 'noor_qaza_backup_pre_rollover_v1';
@@ -53,7 +55,6 @@ export interface DateWiseQazaRecord {
  * All data stored locally with full offline support
  */
 
-const QAZA_STORAGE_KEY = 'qaza-prayers';
 const PROCESSED_QAZA_KEY = 'processed-salah-qaza';
 const HISTORY_KEY = 'qaza-history';
 const GOAL_KEY = 'qaza-daily-goal';
@@ -83,7 +84,89 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// ── Two-Way Reconciliation Helper ────────────────────────────
+// ── Single-Source-of-Truth Qaza Store (Dated Pending + Undated Backlog) ──
+
+export interface QazaUndoSnapshot {
+  id: string;
+  timestamp: number;
+  prayer: QazaPrayerName;
+  source: 'dated' | 'undated';
+  date?: string;
+}
+
+let activeUndoSnapshot: QazaUndoSnapshot | null = null;
+
+export const setLastQazaUndo = (snapshot: QazaUndoSnapshot): void => {
+  activeUndoSnapshot = snapshot;
+};
+
+export const getLastQazaUndo = (): QazaUndoSnapshot | null => {
+  if (!activeUndoSnapshot) return null;
+  if (Date.now() - activeUndoSnapshot.timestamp > 5000) {
+    activeUndoSnapshot = null;
+    return null;
+  }
+  return activeUndoSnapshot;
+};
+
+export const clearQazaUndo = (): void => {
+  activeUndoSnapshot = null;
+};
+
+export const performQazaUndo = (): boolean => {
+  if (!activeUndoSnapshot) return false;
+  const snapshot = activeUndoSnapshot;
+  activeUndoSnapshot = null;
+
+  if (snapshot.source === 'dated' && snapshot.date) {
+    const records = getDateWiseQazaListInternal();
+    let record = records.find((r) => r.date === snapshot.date);
+    if (!record) {
+      record = {
+        id: `qaza_date_${snapshot.date}`,
+        date: snapshot.date,
+        hijriDate: formatHijriDate(snapshot.date),
+        source: 'manual',
+        prayers: {
+          fajr: 'none',
+          dhuhr: 'none',
+          asr: 'none',
+          maghrib: 'none',
+          isha: 'none',
+          witr: 'none',
+        },
+      };
+      records.push(record);
+    }
+    record.prayers[snapshot.prayer] = 'pending';
+    saveDateWiseQazaList(records);
+  } else {
+    const backlog = getUndatedBacklogInternal();
+    backlog[snapshot.prayer] = (backlog[snapshot.prayer] || 0) + 1;
+    saveUndatedBacklog(backlog);
+  }
+
+  // Decrement today's completed history entry
+  try {
+    const history = getQazaHistory();
+    const today = new Date().toDateString();
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].date === today && history[i].prayer === snapshot.prayer) {
+        history.splice(i, 1);
+        saveQazaHistory(history);
+        break;
+      }
+    }
+  } catch {
+    // Non-critical history adjustment
+  }
+
+  invalidateQazaMemoryCache();
+  window.dispatchEvent(new CustomEvent('qaza-updated'));
+  window.dispatchEvent(new CustomEvent('qaza-date-updated'));
+  window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
+  return true;
+};
 
 /**
  * Reads date records internally without triggering recursive loops.
@@ -102,103 +185,184 @@ const getDateWiseQazaListInternal = (): DateWiseQazaRecord[] => {
 };
 
 /**
- * Reconciles the general Qaza counter with active pending date records.
- * If a date has Asr, Maghrib, Isha, Witr pending, qazaData.prayers is
- * guaranteed to have at least those counts so tiles never display '0 / done'
- * while date-wise prayers are pending.
+ * Reads undated backlog from storage, or initializes it by migrating legacy counters
+ * without sudden count loss or ghost count duplication.
  */
-export const reconcileQazaWithDateRecords = (): Record<QazaPrayerName, number> => {
-  let prayers: Record<QazaPrayerName, number>;
+const getUndatedBacklogInternal = (): Record<QazaPrayerName, number> => {
+  const prayerNames: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
   try {
-    const data = localStorage.getItem(QAZA_STORAGE_KEY);
-    const parsed = data ? JSON.parse(data) : {};
-    prayers = {
-      fajr: Math.max(0, Number(parsed.fajr) || 0),
-      dhuhr: Math.max(0, Number(parsed.dhuhr) || 0),
-      asr: Math.max(0, Number(parsed.asr) || 0),
-      maghrib: Math.max(0, Number(parsed.maghrib) || 0),
-      isha: Math.max(0, Number(parsed.isha) || 0),
-      witr: Math.max(0, Number(parsed.witr) || 0),
-    };
+    const raw = localStorage.getItem(QAZA_UNDATED_BACKLOG_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        fajr: Math.max(0, Number(parsed.fajr) || 0),
+        dhuhr: Math.max(0, Number(parsed.dhuhr) || 0),
+        asr: Math.max(0, Number(parsed.asr) || 0),
+        maghrib: Math.max(0, Number(parsed.maghrib) || 0),
+        isha: Math.max(0, Number(parsed.isha) || 0),
+        witr: Math.max(0, Number(parsed.witr) || 0),
+      };
+    }
   } catch {
-    prayers = {
-      fajr: 0,
-      dhuhr: 0,
-      asr: 0,
-      maghrib: 0,
-      isha: 0,
-      witr: 0,
-    };
+    // Fall through to initial migration
   }
 
-  // Count pending prayers across all active date records
+  // Initial migration from legacy QAZA_STORAGE_KEY:
+  // undatedBacklog[p] = Math.max(0, legacyCounter[p] - countInDatedPending(p))
   const dateRecords = getDateWiseQazaListInternal();
-  const prayerNames: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
-  let modified = false;
+  let legacyPrayers: Record<string, number> = {};
+  try {
+    const legacyRaw = localStorage.getItem(QAZA_STORAGE_KEY);
+    if (legacyRaw) legacyPrayers = JSON.parse(legacyRaw);
+  } catch {
+    legacyPrayers = {};
+  }
+
+  const backlog: Record<QazaPrayerName, number> = {
+    fajr: 0,
+    dhuhr: 0,
+    asr: 0,
+    maghrib: 0,
+    isha: 0,
+    witr: 0,
+  };
 
   for (const p of prayerNames) {
     const pendingInDates = dateRecords.filter((r) => r.prayers && r.prayers[p] === 'pending').length;
-    if (prayers[p] < pendingInDates) {
-      prayers[p] = pendingInDates;
-      modified = true;
+    const legacyCount = Math.max(0, Number(legacyPrayers[p]) || 0);
+    backlog[p] = Math.max(0, legacyCount - pendingInDates);
+  }
+
+  safeSetLocalStorageItem(QAZA_UNDATED_BACKLOG_KEY, JSON.stringify(backlog));
+  return backlog;
+};
+
+export const getUndatedBacklog = (): Record<QazaPrayerName, number> => {
+  return getUndatedBacklogInternal();
+};
+
+export const saveUndatedBacklog = (backlog: Record<QazaPrayerName, number>): void => {
+  invalidateQazaMemoryCache();
+  safeSetLocalStorageItem(QAZA_UNDATED_BACKLOG_KEY, JSON.stringify(backlog));
+};
+
+export const countInDatedPending = (prayer: QazaPrayerName): number => {
+  const dateRecords = getDateWiseQazaListInternal();
+  return dateRecords.filter((r) => r.prayers && r.prayers[prayer] === 'pending').length;
+};
+
+export const getUndatedBacklogTotal = (): number => {
+  const backlog = getUndatedBacklogInternal();
+  return Object.values(backlog).reduce((sum, n) => sum + (Number(n) || 0), 0);
+};
+
+export const getUndatedBacklogSummary = (): string => {
+  const backlog = getUndatedBacklogInternal();
+  const prayerNames: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
+  const labels: Record<QazaPrayerName, string> = {
+    fajr: 'Fajr',
+    dhuhr: 'Dhuhr',
+    asr: 'Asr',
+    maghrib: 'Maghrib',
+    isha: 'Isha',
+    witr: 'Witr',
+  };
+  const parts: string[] = [];
+  for (const p of prayerNames) {
+    if (backlog[p] > 0) {
+      parts.push(`${labels[p]} ×${backlog[p]}`);
     }
   }
+  return parts.join(' • ');
+};
 
-  if (modified) {
-    saveQazaPrayers(prayers);
+/**
+ * Single Source of Truth:
+ * perPrayerTotal[p] = countInDatedPending(p) + undatedBacklog[p]
+ * totalPending = sum(perPrayerTotal)
+ */
+export const getQazaPrayers = (): Record<QazaPrayerName, number> => {
+  const backlog = getUndatedBacklogInternal();
+  const dateRecords = getDateWiseQazaListInternal();
+  const prayerNames: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
+  const result: Record<QazaPrayerName, number> = {
+    fajr: 0,
+    dhuhr: 0,
+    asr: 0,
+    maghrib: 0,
+    isha: 0,
+    witr: 0,
+  };
+
+  for (const p of prayerNames) {
+    const pendingInDates = dateRecords.filter((r) => r.prayers && r.prayers[p] === 'pending').length;
+    result[p] = (backlog[p] || 0) + pendingInDates;
   }
 
-  return prayers;
+  // Atomically mirror to legacy storage key for backward compatibility
+  safeSetLocalStorageItem(QAZA_STORAGE_KEY, JSON.stringify(result));
+  return result;
 };
 
-// Get all Qaza prayers (reconciled with date-wise records)
-export const getQazaPrayers = (): Record<QazaPrayerName, number> => {
-  return reconcileQazaWithDateRecords();
+export const reconcileQazaWithDateRecords = (): Record<QazaPrayerName, number> => {
+  return getQazaPrayers();
 };
 
-// Save Qaza prayers
 const saveQazaPrayers = (prayers: Record<QazaPrayerName, number>): void => {
   invalidateQazaMemoryCache();
   safeSetLocalStorageItem(QAZA_STORAGE_KEY, JSON.stringify(prayers));
 };
 
-// Add Qaza prayer
+/**
+ * Add Qaza prayer (adds directly to undated backlog)
+ */
 export const addQazaPrayer = (prayer: QazaPrayerName, count: number = 1): void => {
-  const prayers = getQazaPrayers();
   const validCount = Math.max(0, Number(count) || 0);
-  prayers[prayer] = Math.max(0, (Number(prayers[prayer]) || 0) + validCount);
-  saveQazaPrayers(prayers);
+  if (validCount <= 0) return;
+
+  const backlog = getUndatedBacklogInternal();
+  backlog[prayer] = (backlog[prayer] || 0) + validCount;
+  saveUndatedBacklog(backlog);
+
+  // Sync derived aggregate
+  getQazaPrayers();
   window.dispatchEvent(new CustomEvent('qaza-updated'));
   window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
 };
 
-// Remove/complete Qaza prayer
-// Also marks the oldest pending date record for this prayer as completed
+/**
+ * Complete Qaza prayer (tile tap -1):
+ * 1. Checks oldest dated pending entry for this prayer first (if any exists).
+ * 2. If found, marks it completed and pushes undo snapshot.
+ * 3. If none exists, decrements undatedBacklog[p] and pushes undo snapshot.
+ * 4. Increments history log.
+ */
 export const completeQazaPrayer = (
   prayer: QazaPrayerName,
   count: number = 1,
   options?: { skipDateReconciliation?: boolean }
 ): void => {
-  const prayers = getQazaPrayers();
-  const current = Math.max(0, Number(prayers[prayer]) || 0);
-  if (current <= 0) return;
   const validCount = Math.max(1, Number(count) || 1);
-  prayers[prayer] = Math.max(0, current - validCount);
-  saveQazaPrayers(prayers);
+  let remaining = validCount;
 
-  // Reconcile with oldest pending date record
   if (!options?.skipDateReconciliation) {
     const records = getDateWiseQazaListInternal();
     const sortedOldest = [...records].sort((a, b) => a.date.localeCompare(b.date));
-    let remainingToMark = validCount;
     let dateModified = false;
 
     for (const r of sortedOldest) {
-      if (remainingToMark <= 0) break;
+      if (remaining <= 0) break;
       if (r.prayers && r.prayers[prayer] === 'pending') {
         r.prayers[prayer] = 'completed';
-        remainingToMark--;
+        remaining--;
         dateModified = true;
+        setLastQazaUndo({
+          id: `undo_${Date.now()}_${Math.random()}`,
+          timestamp: Date.now(),
+          prayer,
+          source: 'dated',
+          date: r.date,
+        });
       }
     }
 
@@ -208,24 +372,48 @@ export const completeQazaPrayer = (
     }
   }
 
+  // If remaining count exists, deduct from undated backlog
+  if (remaining > 0) {
+    const backlog = getUndatedBacklogInternal();
+    const currentBacklog = backlog[prayer] || 0;
+    if (currentBacklog > 0) {
+      const deducted = Math.min(remaining, currentBacklog);
+      backlog[prayer] = Math.max(0, currentBacklog - deducted);
+      saveUndatedBacklog(backlog);
+      setLastQazaUndo({
+        id: `undo_${Date.now()}_${Math.random()}`,
+        timestamp: Date.now(),
+        prayer,
+        source: 'undated',
+      });
+    }
+  }
+
   addQazaHistoryEntry(prayer as PrayerName);
+  getQazaPrayers();
   window.dispatchEvent(new CustomEvent('qaza-updated'));
   window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
 };
 
-// Set specific Qaza count
+/**
+ * Sets specific total Qaza count by adjusting undatedBacklog:
+ * undatedBacklog[p] = Math.max(0, count - countInDatedPending(p))
+ */
 export const setQazaCount = (prayer: QazaPrayerName, count: number): void => {
-  const prayers = getQazaPrayers();
-  prayers[prayer] = Math.max(0, Number(count) || 0);
-  saveQazaPrayers(prayers);
+  const target = Math.max(0, Number(count) || 0);
+  const datedCount = countInDatedPending(prayer);
+  const backlog = getUndatedBacklogInternal();
+  backlog[prayer] = Math.max(0, target - datedCount);
+  saveUndatedBacklog(backlog);
+
+  getQazaPrayers();
   window.dispatchEvent(new CustomEvent('qaza-updated'));
   window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
 };
 
-// Get Qaza stats
 export const getQazaStats = (): QazaStats => {
   if (memoryCachedQazaStats) return memoryCachedQazaStats;
-  const prayers = reconcileQazaWithDateRecords();
+  const prayers = getQazaPrayers();
   const total = Object.values(prayers).reduce((sum, count) => sum + count, 0);
   const stats: QazaStats = {
     total,
@@ -235,13 +423,12 @@ export const getQazaStats = (): QazaStats => {
   return stats;
 };
 
-// Clear all Qaza and reset all date-wise logs
 export const clearAllQaza = (): void => {
   const now = new Date();
   const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-  // 1. Reset all prayer counts to 0
-  saveQazaPrayers({
+  // 1. Reset undated backlog
+  saveUndatedBacklog({
     fajr: 0,
     dhuhr: 0,
     asr: 0,
@@ -254,13 +441,23 @@ export const clearAllQaza = (): void => {
   saveDateWiseQazaList([]);
   safeSetLocalStorageItem(QAZA_DATE_RECORDS_KEY, '[]');
 
-  // 3. Clear history and processed flags
+  // 3. Reset aggregate cache
+  saveQazaPrayers({
+    fajr: 0,
+    dhuhr: 0,
+    asr: 0,
+    maghrib: 0,
+    isha: 0,
+    witr: 0,
+  });
+
+  // 4. Clear history and processed flags
   safeSetLocalStorageItem(HISTORY_KEY, '[]');
   localStorage.removeItem(PROCESSED_QAZA_KEY);
   localStorage.removeItem(GOAL_KEY);
   safeSetLocalStorageItem('noor_qaza_corrupt_history_cleaned', 'v1');
 
-  // 4. Set autosync start date to today and seed today + past 7 days into ledger
+  // 5. Set autosync start date to today and seed today + past 7 days into ledger
   safeSetLocalStorageItem('noor_qaza_autosync_start_date', todayIso);
   const slots: string[] = [];
   const allPrayers: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
@@ -277,7 +474,8 @@ export const clearAllQaza = (): void => {
   }
   safeSetLocalStorageItem(QAZA_AUTOSYNC_SLOTS_KEY, JSON.stringify(slots));
 
-  // 5. Notify all components immediately
+  // 6. Notify all components immediately
+  invalidateQazaMemoryCache();
   window.dispatchEvent(new CustomEvent('qaza-updated'));
   window.dispatchEvent(new CustomEvent('qaza-date-updated'));
   window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
@@ -386,6 +584,20 @@ export const getDetailedHijriDate = (dateStr: string): DetailedHijriDate => {
       const gregorian = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
       const gregorianDay = d.toLocaleDateString('en-US', { weekday: 'long' });
 
+      // Apply regional/stored Hijri offset (-1d for India/Karachi preset default)
+      let offset = -1;
+      if (typeof localStorage !== 'undefined') {
+        const storedOffset = localStorage.getItem('hijri-date-offset');
+        if (storedOffset !== null) {
+          const parsed = parseInt(storedOffset, 10);
+          if (!isNaN(parsed)) offset = parsed;
+        }
+      }
+      const dOffset = new Date(year, month, day);
+      if (offset !== 0) {
+        dOffset.setDate(dOffset.getDate() + offset);
+      }
+
       let hijriDay = 1;
       let hijriMonth = 5;
       let hijriYear = 1448;
@@ -397,7 +609,7 @@ export const getDetailedHijriDate = (dateStr: string): DetailedHijriDate => {
           month: 'numeric',
           year: 'numeric',
         });
-        const p = intl.formatToParts(d);
+        const p = intl.formatToParts(dOffset);
         for (const part of p) {
           if (part.type === 'day') hijriDay = parseInt(part.value, 10);
           else if (part.type === 'month') hijriMonth = parseInt(part.value, 10);
@@ -424,7 +636,7 @@ export const getDetailedHijriDate = (dateStr: string): DetailedHijriDate => {
 
       if (!parsed) {
         try {
-          const calc = islamicCalendarService.calculateIslamicDate(d);
+          const calc = islamicCalendarService.calculateIslamicDate(dOffset);
           hijriDay = parseInt(calc.hijri.day, 10) || 1;
           hijriMonth = calc.hijri.month.number || 5;
           hijriYear = parseInt(calc.hijri.year, 10) || 1448;
@@ -572,43 +784,22 @@ export const saveDateRecordQaza = (
     ? { ...existingRecord.prayers }
     : { fajr: 'none', dhuhr: 'none', asr: 'none', maghrib: 'none', isha: 'none', witr: 'none' };
 
-  let prayers: Record<QazaPrayerName, number>;
-  try {
-    const data = localStorage.getItem(QAZA_STORAGE_KEY);
-    const parsed = data ? JSON.parse(data) : {};
-    prayers = {
-      fajr: Math.max(0, Number(parsed.fajr) || 0),
-      dhuhr: Math.max(0, Number(parsed.dhuhr) || 0),
-      asr: Math.max(0, Number(parsed.asr) || 0),
-      maghrib: Math.max(0, Number(parsed.maghrib) || 0),
-      isha: Math.max(0, Number(parsed.isha) || 0),
-      witr: Math.max(0, Number(parsed.witr) || 0),
-    };
-  } catch {
-    prayers = { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0, witr: 0 };
-  }
-
   const prayerNames: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
-  let countModified = false;
 
   for (const p of prayerNames) {
     const prev = prevStatuses[p] || 'none';
     const draft = draftStatuses[p] || 'none';
 
-    if (prev === 'pending' && draft !== 'pending') {
-      prayers[p] = Math.max(0, (prayers[p] || 0) - 1);
-      countModified = true;
-      if (draft === 'completed') {
-        addQazaHistoryEntry(p as PrayerName);
-      }
-    } else if (prev !== 'pending' && draft === 'pending') {
-      prayers[p] = (prayers[p] || 0) + 1;
-      countModified = true;
+    if (prev === 'pending' && draft === 'completed') {
+      addQazaHistoryEntry(p as PrayerName);
+      setLastQazaUndo({
+        id: `undo_${Date.now()}_${Math.random()}`,
+        timestamp: Date.now(),
+        prayer: p,
+        source: 'dated',
+        date,
+      });
     }
-  }
-
-  if (countModified) {
-    saveQazaPrayers(prayers);
   }
 
   // Update date records list: remove date record if 0 pending
@@ -637,6 +828,7 @@ export const saveDateRecordQaza = (
   }
 
   saveDateWiseQazaList(updatedRecords);
+  getQazaPrayers();
   window.dispatchEvent(new CustomEvent('qaza-updated'));
   window.dispatchEvent(new CustomEvent('qaza-date-updated'));
   window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
@@ -666,19 +858,26 @@ export const toggleDatePrayerQaza = (date: string, prayer: QazaPrayerName): void
   const current = record.prayers[prayer] || 'none';
 
   if (current === 'none') {
-    // 'none' -> 'pending' (increments that prayer's total Qaza count by +1)
+    // 'none' -> 'pending' (increases countInDatedPending by +1)
     record.prayers[prayer] = 'pending';
-    addQazaPrayer(prayer, 1);
   } else if (current === 'pending') {
-    // 'pending' -> 'completed' (decrements pending Qaza by -1, increments completed-today by +1)
+    // 'pending' -> 'completed' (decreases countInDatedPending by -1, increments completed history)
     record.prayers[prayer] = 'completed';
-    completeQazaPrayer(prayer, 1, { skipDateReconciliation: true });
+    addQazaHistoryEntry(prayer as PrayerName);
+    setLastQazaUndo({
+      id: `undo_${Date.now()}_${Math.random()}`,
+      timestamp: Date.now(),
+      prayer,
+      source: 'dated',
+      date,
+    });
   } else {
     // 'completed' -> 'none'
     record.prayers[prayer] = 'none';
   }
 
   saveDateWiseQazaList(records);
+  getQazaPrayers();
   window.dispatchEvent(new CustomEvent('qaza-updated'));
   window.dispatchEvent(new CustomEvent('qaza-date-updated'));
   window.dispatchEvent(new CustomEvent('noor-qaza-updated'));
@@ -692,7 +891,16 @@ export const markSingleDatePrayerCompleted = (date: string, prayer: QazaPrayerNa
   if (record.prayers[prayer] === 'pending') {
     record.prayers[prayer] = 'completed';
     saveDateWiseQazaList(records);
-    completeQazaPrayer(prayer, 1, { skipDateReconciliation: true });
+
+    setLastQazaUndo({
+      id: `undo_${Date.now()}_${Math.random()}`,
+      timestamp: Date.now(),
+      prayer,
+      source: 'dated',
+      date,
+    });
+
+    addQazaHistoryEntry(prayer as PrayerName);
 
     // Bidirectional sync: If prayer is one of the 5 daily prayers, sync to salah-tracker (Worship Journal & Home)
     if (prayer !== 'witr') {

@@ -155,7 +155,7 @@ export const WidgetSettings: React.FC = () => {
     );
 
     // Qaza end time for active or next prayer
-    const currentQazaEnd = activeFard.endTimeFormatted;
+    const currentQazaEnd = target.endTimeFormatted;
 
     return {
       name: localizedName,
@@ -578,9 +578,8 @@ export const WidgetSettings: React.FC = () => {
                     {prayerStripTimes.filter(p => p.id !== 'sunrise').map((item) => (
                       <div
                         key={item.id}
-                        className={`py-1 rounded-lg transition-colors ${
-                          item.active ? 'border shadow-sm' : ''
-                        }`}
+                        className={`py-1 rounded-lg transition-colors ${item.active ? 'border shadow-sm' : ''
+                          }`}
                         style={{
                           backgroundColor: item.active ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
                           borderColor: item.active ? activePreset.borderHex : 'transparent',
@@ -749,11 +748,10 @@ export const WidgetSettings: React.FC = () => {
                 key={opt.id}
                 type="button"
                 onClick={() => updateConfig({ surfaceStyle: opt.id })}
-                className={`py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center gap-1 active:scale-95 ${
-                  config.surfaceStyle === opt.id
+                className={`py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center gap-1 active:scale-95 ${config.surfaceStyle === opt.id
                     ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)] ring-2 ring-[var(--accent)]/30'
                     : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                }`}
+                  }`}
               >
                 <span>{opt.label}</span>
               </button>
@@ -834,11 +832,10 @@ export const WidgetSettings: React.FC = () => {
                   key={preset.id}
                   type="button"
                   onClick={() => updateConfig({ accentPreset: preset.id })}
-                  className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2.5 active:scale-95 cursor-pointer ${
-                    isSelected
+                  className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2.5 active:scale-95 cursor-pointer ${isSelected
                       ? 'border-[var(--accent)] bg-[var(--accent-soft)] ring-2 ring-[var(--accent)]/30'
                       : 'border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--text-secondary)]/40'
-                  }`}
+                    }`}
                 >
                   <div
                     className="w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 shadow-sm"

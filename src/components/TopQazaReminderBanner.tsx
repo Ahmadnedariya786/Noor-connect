@@ -6,10 +6,14 @@ import {
   getDateWiseQazaList,
   markSingleDatePrayerCompleted,
   completeQazaPrayer,
+  getUndatedBacklogTotal,
+  getUndatedBacklogSummary,
+  performQazaUndo,
   type QazaPrayerName,
   type DateWiseQazaRecord,
 } from '@/lib/qaza-tracker';
 import { evaluateMakruhState } from '@/lib/makruh-times';
+import { MakruhQazaConfirmationModal } from '@/components/MakruhQazaConfirmationModal';
 
 interface TopQazaReminderBannerProps {
   prayers?: Array<{ name?: string; originalName?: string; time?: string; date?: Date }>;
@@ -132,26 +136,80 @@ export const TopQazaReminderBannerComponent: React.FC<TopQazaReminderBannerProps
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [dateRecords]);
 
+  const [makruhModalOpen, setMakruhModalOpen] = useState(false);
+  const [pendingMakruhAction, setPendingMakruhAction] = useState<(() => void) | null>(null);
+
+  const undatedBacklogTotal = useMemo(() => getUndatedBacklogTotal(), [stats, dateRecords]);
+  const undatedBacklogSummary = useMemo(() => getUndatedBacklogSummary(), [stats, dateRecords]);
+
   // Actions
-  const handleMarkDateCompleted = useCallback((date: string, prayer: QazaPrayerName) => {
+  const executeMarkDateCompleted = useCallback((date: string, prayer: QazaPrayerName) => {
     markSingleDatePrayerCompleted(date, prayer);
     refreshData();
     const displayName = PRAYER_DISPLAY_NAMES[prayer] || prayer;
     toast({
       title: 'Alhamdulillah! ✨',
-      description: `Qaza ${displayName} for ${formatPillDate(date)} marked completed.`,
+      description: (
+        <div className="flex items-center justify-between gap-2 w-full">
+          <span>Qaza {displayName} ({formatPillDate(date)}) done.</span>
+          <button
+            type="button"
+            onClick={() => {
+              performQazaUndo();
+              refreshData();
+            }}
+            className="px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--accent)] text-[var(--on-accent)] shrink-0 active:scale-95 cursor-pointer"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      duration: 5000,
     });
   }, [refreshData, toast]);
 
-  const handleMarkCountCompleted = useCallback((prayer: QazaPrayerName) => {
+  const handleMarkDateCompleted = useCallback((date: string, prayer: QazaPrayerName) => {
+    if (makruhState.isMakruhNow && makruhState.activeWindow) {
+      setPendingMakruhAction(() => () => executeMarkDateCompleted(date, prayer));
+      setMakruhModalOpen(true);
+      return;
+    }
+    executeMarkDateCompleted(date, prayer);
+  }, [makruhState, executeMarkDateCompleted]);
+
+  const executeMarkCountCompleted = useCallback((prayer: QazaPrayerName) => {
     completeQazaPrayer(prayer, 1);
     refreshData();
     const displayName = PRAYER_DISPLAY_NAMES[prayer] || prayer;
     toast({
       title: 'Alhamdulillah! ✨',
-      description: `1 pending Qaza ${displayName} marked completed.`,
+      description: (
+        <div className="flex items-center justify-between gap-2 w-full">
+          <span>1 {displayName} Qaza done.</span>
+          <button
+            type="button"
+            onClick={() => {
+              performQazaUndo();
+              refreshData();
+            }}
+            className="px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--accent)] text-[var(--on-accent)] shrink-0 active:scale-95 cursor-pointer"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      duration: 5000,
     });
   }, [refreshData, toast]);
+
+  const handleMarkCountCompleted = useCallback((prayer: QazaPrayerName) => {
+    if (makruhState.isMakruhNow && makruhState.activeWindow) {
+      setPendingMakruhAction(() => () => executeMarkCountCompleted(prayer));
+      setMakruhModalOpen(true);
+      return;
+    }
+    executeMarkCountCompleted(prayer);
+  }, [makruhState, executeMarkCountCompleted]);
 
   if (totalPendingQaza <= 0) {
     return null;
@@ -348,6 +406,43 @@ export const TopQazaReminderBannerComponent: React.FC<TopQazaReminderBannerProps
           </div>
         )}
       </div>
+
+      {/* ── Row 4: Undated Backlog Transparency Pill ── */}
+      {undatedBacklogTotal > 0 && (
+        <div className="mt-2 pt-1.5 border-t border-[var(--border)] flex items-center justify-between gap-1.5 flex-wrap">
+          <div
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold"
+            style={{
+              background: 'var(--surface)',
+              borderColor: 'var(--border)',
+              color: 'var(--accent-text)',
+            }}
+          >
+            <span>📦 Undated Backlog: {undatedBacklogTotal}</span>
+            {undatedBacklogSummary && (
+              <span className="opacity-80 font-normal">({undatedBacklogSummary})</span>
+            )}
+          </div>
+          <span className="text-[10px] text-[var(--text-secondary)]">Bulk logged</span>
+        </div>
+      )}
+
+      {/* Makruh Waqt Instant Guard Dialog */}
+      <MakruhQazaConfirmationModal
+        isOpen={makruhModalOpen}
+        makruhName={makruhState.activeWindow?.name || 'Makruh Waqt'}
+        makruhEndTime={makruhState.activeWindow?.endFormatted || 'end of makruh time'}
+        onConfirm={() => {
+          if (pendingMakruhAction) {
+            pendingMakruhAction();
+            setPendingMakruhAction(null);
+          }
+        }}
+        onClose={() => {
+          setMakruhModalOpen(false);
+          setPendingMakruhAction(null);
+        }}
+      />
     </div>
   );
 };

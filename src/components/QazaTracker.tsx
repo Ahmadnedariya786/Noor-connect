@@ -22,9 +22,15 @@ import {
   formatHijriDate,
   getDetailedHijriDate,
   syncUnmarkedDailySalahToQaza,
+  getUndatedBacklogTotal,
+  getUndatedBacklogSummary,
+  performQazaUndo,
+  addPendingDateQazaPrayer,
   type QazaPrayerName,
   type DateWiseQazaRecord,
 } from "@/lib/qaza-tracker";
+import { evaluateMakruhState } from "@/lib/makruh-times";
+import { MakruhQazaConfirmationModal } from "@/components/MakruhQazaConfirmationModal";
 import { RoyalDatePickerModal } from "@/components/RoyalDatePickerModal";
 import { useToast } from "@/hooks/use-toast";
 
@@ -59,6 +65,54 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
   const [editMode, setEditMode] = useState<QazaPrayerName | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [makruhModalOpen, setMakruhModalOpen] = useState(false);
+  const [pendingMakruhAction, setPendingMakruhAction] = useState<(() => void) | null>(null);
+  const [dismissedYesterday, setDismissedYesterday] = useState(false);
+
+  const makruhState = useMemo(() => {
+    return evaluateMakruhState([], new Date(), '12h');
+  }, []);
+
+  const undatedBacklogTotal = useMemo(() => getUndatedBacklogTotal(), [stats, dateRecords]);
+  const undatedBacklogSummary = useMemo(() => getUndatedBacklogSummary(), [stats, dateRecords]);
+
+  // Yesterday unchecked prayers bridge prompt
+  const yesterdayPrompt = useMemo(() => {
+    if (dismissedYesterday) return null;
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yIso = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+      const dismissed = localStorage.getItem(`noor_qaza_yesterday_dismissed_${yIso}`);
+      if (dismissed === 'true') return null;
+
+      const rawSalah = localStorage.getItem('salah-tracker');
+      if (!rawSalah) return null;
+      const days = JSON.parse(rawSalah);
+      const yDay = days[yIso];
+      if (!yDay) return null;
+
+      const fardPrayers: QazaPrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      const hasAnyLogged = fardPrayers.some((p) => yDay[p] === true);
+      if (!hasAnyLogged) return null;
+
+      const unprayed = fardPrayers.filter((p) => yDay[p] !== true);
+      if (unprayed.length === 0) return null;
+
+      const existing = dateRecords.find((r) => r.date === yIso);
+      const trulyUnadded = unprayed.filter((p) => !existing?.prayers || existing.prayers[p] !== 'pending');
+      if (trulyUnadded.length === 0) return null;
+
+      return {
+        dateIso: yIso,
+        dateFormatted: yesterday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        prayers: trulyUnadded,
+      };
+    } catch {
+      return null;
+    }
+  }, [dateRecords, dismissedYesterday]);
 
   const refresh = useCallback(() => {
     setPrayers(getQazaPrayers());
@@ -99,7 +153,7 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
     refresh();
   };
 
-  const handleComplete = (prayer: QazaPrayerName) => {
+  const executeComplete = (prayer: QazaPrayerName) => {
     const currentPrayers = getQazaPrayers();
     const currentCount = Math.max(0, Number(currentPrayers[prayer]) || 0);
     if (currentCount <= 0) {
@@ -107,20 +161,89 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
     }
     completeQazaPrayer(prayer, 1);
     refresh();
+    const label = prayerLabels.find((p) => p.id === prayer)?.label || prayer;
     toast({
-      title: "Prayer completed",
-      description: `MashaAllah! ${prayerLabels.find((p) => p.id === prayer)?.label} Qaza marked as prayed.`,
+      title: "Alhamdulillah! ✨",
+      description: (
+        <div className="flex items-center justify-between gap-2 w-full">
+          <span>{label} Qaza marked as prayed.</span>
+          <button
+            type="button"
+            onClick={() => {
+              performQazaUndo();
+              refresh();
+            }}
+            className="px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--accent)] text-[var(--on-accent)] shrink-0 active:scale-95 cursor-pointer"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      duration: 5000,
     });
   };
 
-  const handleCompleteDatePrayer = (date: string, prayer: QazaPrayerName) => {
+  const handleComplete = (prayer: QazaPrayerName) => {
+    if (makruhState.isMakruhNow && makruhState.activeWindow) {
+      setPendingMakruhAction(() => () => executeComplete(prayer));
+      setMakruhModalOpen(true);
+      return;
+    }
+    executeComplete(prayer);
+  };
+
+  const executeCompleteDatePrayer = (date: string, prayer: QazaPrayerName) => {
     markSingleDatePrayerCompleted(date, prayer);
     refresh();
     const label = prayerLabels.find((p) => p.id === prayer)?.label || prayer;
     toast({
-      title: "Qaza Prayer Completed",
-      description: `MashaAllah! ${label} for ${date} marked as completed.`,
+      title: "Alhamdulillah! ✨",
+      description: (
+        <div className="flex items-center justify-between gap-2 w-full">
+          <span>{label} for {date} marked as completed.</span>
+          <button
+            type="button"
+            onClick={() => {
+              performQazaUndo();
+              refresh();
+            }}
+            className="px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--accent)] text-[var(--on-accent)] shrink-0 active:scale-95 cursor-pointer"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      duration: 5000,
     });
+  };
+
+  const handleCompleteDatePrayer = (date: string, prayer: QazaPrayerName) => {
+    if (makruhState.isMakruhNow && makruhState.activeWindow) {
+      setPendingMakruhAction(() => () => executeCompleteDatePrayer(date, prayer));
+      setMakruhModalOpen(true);
+      return;
+    }
+    executeCompleteDatePrayer(date, prayer);
+  };
+
+  const handleAddYesterdayToQaza = () => {
+    if (!yesterdayPrompt) return;
+    for (const p of yesterdayPrompt.prayers) {
+      addPendingDateQazaPrayer(yesterdayPrompt.dateIso, p);
+    }
+    localStorage.setItem(`noor_qaza_yesterday_dismissed_${yesterdayPrompt.dateIso}`, 'true');
+    setDismissedYesterday(true);
+    refresh();
+    toast({
+      title: 'Added to Qaza Planner',
+      description: `Added ${yesterdayPrompt.prayers.length} missed prayers from yesterday.`,
+    });
+  };
+
+  const handleDismissYesterday = () => {
+    if (!yesterdayPrompt) return;
+    localStorage.setItem(`noor_qaza_yesterday_dismissed_${yesterdayPrompt.dateIso}`, 'true');
+    setDismissedYesterday(true);
   };
 
   const handleEditStart = (prayer: QazaPrayerName) => {
@@ -206,23 +329,22 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                 prayer.id === 'fajr'
                   ? ui.fajr
                   : prayer.id === 'dhuhr'
-                  ? ui.dhuhr
-                  : prayer.id === 'asr'
-                  ? ui.asr
-                  : prayer.id === 'maghrib'
-                  ? ui.maghrib
-                  : prayer.id === 'isha'
-                  ? ui.isha
-                  : prayer.id === 'witr'
-                  ? 'Witr'
-                  : prayer.label;
+                    ? ui.dhuhr
+                    : prayer.id === 'asr'
+                      ? ui.asr
+                      : prayer.id === 'maghrib'
+                        ? ui.maghrib
+                        : prayer.id === 'isha'
+                          ? ui.isha
+                          : prayer.id === 'witr'
+                            ? 'Witr'
+                            : prayer.label;
 
               return (
                 <div
                   key={prayer.id}
-                  className={`flex flex-col items-center justify-between gap-1.5 rounded-[12px] sm:rounded-[14px] transition-all duration-300 group ${
-                    hasPending ? 'qaza-pending-blink' : ''
-                  }`}
+                  className={`flex flex-col items-center justify-between gap-1.5 rounded-[12px] sm:rounded-[14px] transition-all duration-300 group ${hasPending ? 'qaza-pending-blink' : ''
+                    }`}
                   style={{
                     minWidth: 0,
                     width: '100%',
@@ -246,16 +368,16 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
                     style={
                       hasPending
                         ? {
-                            background: 'var(--surface)',
-                            color: 'var(--accent-text)',
-                            border: '1.5px solid var(--accent)',
-                            boxShadow: '0 0 10px var(--accent-glow)',
-                          }
+                          background: 'var(--surface)',
+                          color: 'var(--accent-text)',
+                          border: '1.5px solid var(--accent)',
+                          boxShadow: '0 0 10px var(--accent-glow)',
+                        }
                         : {
-                            background: 'var(--surface)',
-                            color: 'var(--success, #10b981)',
-                            border: '1px solid var(--border)',
-                          }
+                          background: 'var(--surface)',
+                          color: 'var(--success, #10b981)',
+                          border: '1px solid var(--border)',
+                        }
                     }
                   >
                     {hasPending ? (
@@ -504,11 +626,10 @@ export function QazaTracker({ compact = false }: QazaTrackerProps) {
             <div className="flex items-center gap-3">
               <div className="text-center min-w-[40px]">
                 <span
-                  className={`text-xl font-bold ${
-                    prayers[prayer.id] > 0
+                  className={`text-xl font-bold ${prayers[prayer.id] > 0
                       ? 'text-[var(--accent-text)]'
                       : 'text-[var(--text-secondary)]'
-                  }`}
+                    }`}
                 >
                   {prayers[prayer.id]}
                 </span>

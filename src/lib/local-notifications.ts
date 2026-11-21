@@ -13,7 +13,7 @@ import { adhanService, type AdhanConfig } from './adhan-service';
 import { PRAYER_QUOTES } from './prayer-quotes';
 import { getPrayerDisplayName } from './prayer-utils';
 import { calculatePrayerTimes } from './prayer-calculator';
-import { getPrayerHadith } from './prayer-hadith-i18n';
+import { getPrayerHadith, stripTrailingHadithRef } from './prayer-hadith-i18n';
 
 // Task 2: Use SW registration for more robust "Native" notifications
 let swRegistration: ServiceWorkerRegistration | null = null;
@@ -352,9 +352,10 @@ export class LocalNotificationManager {
           const notificationId = this.getNotificationId(prayerName, prayerDate);
           const hadithData = getPrayerHadith(prayerName);
           const time12h = format12HourTime(cleaned);
+          const cleanTranslation = stripTrailingHadithRef(hadithData.translation, hadithData.reference);
           const title = `🕌 ${prayerName} • ${time12h}`;
-          const body = `${hadithData.arabic} — ${hadithData.translation} (${hadithData.reference})`;
-          const largeBody = `🕌 Hayya 'alas-Salah — Time for ${prayerName} (${time12h})\n${hadithData.arabic}\n${hadithData.translation}\n— ${hadithData.reference} • ${hadithData.rakah}`;
+          const body = `${hadithData.arabic} — ${cleanTranslation} (${hadithData.reference})`;
+          const largeBody = `Hayya 'alas-Salah — Time for ${prayerName}\n${hadithData.arabic}\n${cleanTranslation}\n— ${hadithData.reference} • ${hadithData.rakah}`;
 
           const notification: LocalNotificationSchema = {
             id: notificationId,

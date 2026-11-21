@@ -457,12 +457,12 @@ async function raceOverpassMirrors(
   lon: number,
   radiusMeters: number
 ): Promise<MosqueItem[]> {
-  const query = `[out:json][timeout:6];(nwr["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lon});nwr["building"="mosque"](around:${radiusMeters},${lat},${lon});nwr["name"~"Masjid|Mosque|Jama|Juma|Jamiya|Madina|Aqsa|Ibrahim|Eidgah|Idgah|مسجد",i](around:${radiusMeters},${lat},${lon}););out center 40;`;
+  const query = `[out:json][timeout:5];(nwr["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lon});nwr["building"="mosque"](around:${radiusMeters},${lat},${lon});nwr["name"~"Masjid|Mosque|Jama|Juma|Jamiya|Madina|Aqsa|Ibrahim|Eidgah|Idgah|مسجد",i](around:${radiusMeters},${lat},${lon}););out center 40;`;
   const body = 'data=' + encodeURIComponent(query);
 
   const fetchSingleMirror = async (mirror: string): Promise<any> => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6500);
+    const timer = setTimeout(() => controller.abort(), 4500);
 
     const res = await fetch(mirror, {
       method: 'POST',
